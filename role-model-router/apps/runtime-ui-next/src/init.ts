@@ -72,6 +72,13 @@ const initRoute =
           },
         };
       }
+      if (route._tag === "RouterStrategy" || route._tag === "RouterWorkloads" || route._tag === "RouterConfig" || route._tag === "RouterAgentStrategy") {
+        const token = 1;
+        return {
+          commands: [readReadback({ key: "routerConfig", token })],
+          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), routerConfig: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
+        };
+      }
       if (route._tag === "Models" || route._tag === "ModelsRoles") {
         const token = 1;
         return {

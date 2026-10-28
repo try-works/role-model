@@ -47,6 +47,10 @@ const routeCases = {
   SessionReadiness: {},
   Dashboard: {},
   LocalSwap: {},
+  RouterStrategy: {},
+  RouterWorkloads: {},
+  RouterConfig: {},
+  RouterAgentStrategy: {},
   ObserveActivity: {},
   ObserveLogs: {},
   ObserveRouting: {},
@@ -122,6 +126,10 @@ const observeLogsRouter = Route.mapTo(AppRoute.ObserveLogs)(
 const observeRoutingRouter = Route.mapTo(AppRoute.ObserveRouting)(
   pipe(Route.literal("observe"), Route.slash(Route.literal("routing"))),
 );
+const routerStrategyRouter = Route.mapTo(AppRoute.RouterStrategy)(pipe(Route.literal("router"), Route.slash(Route.literal("strategy"))));
+const routerWorkloadsRouter = Route.mapTo(AppRoute.RouterWorkloads)(pipe(Route.literal("router"), Route.slash(Route.literal("workloads"))));
+const routerConfigRouter = Route.mapTo(AppRoute.RouterConfig)(pipe(Route.literal("router"), Route.slash(Route.literal("config"))));
+const routerAgentStrategyRouter = Route.mapTo(AppRoute.RouterAgentStrategy)(pipe(Route.literal("router"), Route.slash(Route.literal("agent-strategy"))));
 const routerRouter = Route.mapTo(AppRoute.Router)(Route.literal("router"));
 const providersRouter = Route.mapTo(AppRoute.Providers)(
   pipe(Route.literal("control"), Route.slash(Route.literal("providers"))),
@@ -166,6 +174,10 @@ export const appRouter = Route.oneOf(
   observeLogsRouter,
   observeRoutingRouter,
   routerRouter,
+  routerStrategyRouter,
+  routerWorkloadsRouter,
+  routerConfigRouter,
+  routerAgentStrategyRouter,
   providersRouter,
   endpointsRouter,
   controlControllerRouter,

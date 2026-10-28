@@ -40,7 +40,8 @@ export type ReadbackKey =
   | "evaluationJobs"
   | "configuredModels"
   | "modelEndpoints"
-  | "runtimeConfig";
+  | "runtimeConfig"
+  | "routerConfig";
 
 export const ReadbackKeySchema = Schema.Literals([
   "storeReceipts",
@@ -77,6 +78,7 @@ export const ReadbackKeySchema = Schema.Literals([
   "configuredModels",
   "modelEndpoints",
   "runtimeConfig",
+  "routerConfig",
 ]);
 
 export interface ReadbackRow {
@@ -134,6 +136,7 @@ export const ReadbacksState = Schema.Struct({
   configuredModels: ReadbackState,
   modelEndpoints: ReadbackState,
   runtimeConfig: ReadbackState,
+  routerConfig: ReadbackState,
   runtime: ReadbackState,
   sessionReadiness: ReadbackState,
   storeReceipts: ReadbackState,
@@ -185,6 +188,7 @@ export const emptyReadbacks = (): ReadbacksState => ({
   configuredModels: idleReadback(),
   modelEndpoints: idleReadback(),
   runtimeConfig: idleReadback(),
+  routerConfig: idleReadback(),
   runtime: idleReadback(),
   sessionReadiness: idleReadback(),
   storeReceipts: idleReadback(),
@@ -655,6 +659,40 @@ const parseModelList = (body: unknown, token: number): ReadbackState => {
   if (list.length > 0 && rows.length === 0) return failedReadback("Models read failed: invalid response", token);
   return okRows(rows, token);
 };
+const parseRouterConfig = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  if (record === undefined) return failedReadback("Router config read failed: invalid response", token);
+  const rows: ReadbackRow[] = [];
+  const persisted = asRecord(record.persisted);
+  if (persisted?.strategy !== undefined) rows.push(row("strategy", "Routing strategy", String(persisted.strategy), "persisted"));
+  if (persisted?.executionMode !== undefined) rows.push(row("executionMode", "Execution mode", String(persisted.executionMode), "persisted"));
+  const routing = asRecord(record.routing);
+  if (routing !== undefined) {
+    for (const [key, value] of Object.entries(routing)) {
+      if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") rows.push(row("routing." + key, "Routing posture: " + key, String(value), "routing"));
+    }
+  }
+  for (const kind of ["agentStrategies", "workloads"] as const) {
+    const prefix = kind === "agentStrategies" ? "agentStrategy." : "workload.";
+    for (const value of asArray(record[kind])) {
+      const entry = asRecord(value);
+      if (entry === undefined) continue;
+      const name = String(entry.name ?? kind);
+      const detail = [entry.routingMode, entry.scoringStrategy].filter((part) => typeof part === "string" && part.length > 0).join(" / ");
+      rows.push(row(prefix + name, (kind === "agentStrategies" ? "Agent strategy: " : "Workload: ") + name, detail, "posture"));
+    }
+  }
+  const diagnostics = asRecord(record.postureDiagnostics);
+  if (rows.length === 0 && persisted === undefined && routing === undefined && record.agentStrategies === undefined && record.workloads === undefined) {
+    return failedReadback("Router config read failed: invalid response", token);
+  }
+  const violations = asArray(diagnostics?.violations);
+  for (const [index, value] of violations.entries()) {
+    const violation = asRecord(value);
+    rows.push(row("diagnostics.violation." + String(index), "Posture violation", String(violation?.message ?? value), "diagnostics"));
+  }
+  return okRows(rows, token);
+};
 const parseRuntimeConfig = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
   if (record === undefined || !("config" in record)) return failedReadback("Runtime config read failed: invalid response", token);
@@ -789,6 +827,13 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     label: "Observe routing",
     parse: parseObserveRouting,
     path: READBACK_PATHS.observeRouting,
+  },
+  routerConfig: {
+    emptyText: "No router config rows available.",
+    key: "routerConfig",
+    label: "Router config",
+    parse: parseRouterConfig,
+    path: READBACK_PATHS.routerConfig,
   },
   router: {
     emptyText: "No router summary available.",
@@ -1035,6 +1080,7 @@ export const createReadbackClients = (
     routerDecisions: client(READBACK_SPECS.routerDecisions),
     runtime: client(READBACK_SPECS.runtime),
     runtimeConfig: client(READBACK_SPECS.runtimeConfig),
+  routerConfig: client(READBACK_SPECS.routerConfig),
     sessionReadiness: client(READBACK_SPECS.sessionReadiness),
     storeReceipts: client(READBACK_SPECS.storeReceipts),
     requestDetail: client(READBACK_SPECS.requestDetail),
@@ -1146,6 +1192,9 @@ export const renderReadbackPage = (
   );
 };
 export const readbackKeyForRouteTag = (tag: string): ReadbackKey | null =>
+  tag === "RouterStrategy" || tag === "RouterWorkloads" || tag === "RouterConfig" || tag === "RouterAgentStrategy"
+    ? "routerConfig"
+    :
   tag === "StoreReceipts"
     ? "storeReceipts"
     : tag === "Queues"

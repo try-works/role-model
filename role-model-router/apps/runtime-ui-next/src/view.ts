@@ -50,6 +50,10 @@ const routeTitle = (route: Model["route"]): string =>
     Learning: () => "Learning | RM3 Foldkit shell",
     Models: () => "Models | RM3 Foldkit shell",
     ModelsRoles: () => "Model roles | RM3 Foldkit shell",
+    RouterStrategy: () => "Router strategy | RM3 Foldkit shell",
+    RouterWorkloads: () => "Router workloads | RM3 Foldkit shell",
+    RouterConfig: () => "Router config | RM3 Foldkit shell",
+    RouterAgentStrategy: () => "Agent strategy | RM3 Foldkit shell",
     Runtime: () => "Runtime | RM3 Foldkit shell",
     SessionReadiness: () => "Session readiness | RM3 Foldkit shell",
     Dashboard: () => "Dashboard | RM3 Foldkit shell",
@@ -174,6 +178,10 @@ const shellNavItems = (route: Model["route"]): ReadonlyArray<ShellNavItem> => [
     label: "Observe routing",
   },
   { active: route._tag === "Router", dataNav: "router", href: "/router", label: "Router" },
+  { active: route._tag === "RouterStrategy", dataNav: "router-strategy", href: "/router/strategy", label: "Router strategy" },
+  { active: route._tag === "RouterWorkloads", dataNav: "router-workloads", href: "/router/workloads", label: "Workloads" },
+  { active: route._tag === "RouterConfig", dataNav: "router-config", href: "/router/config", label: "Router config" },
+  { active: route._tag === "RouterAgentStrategy", dataNav: "router-agent-strategy", href: "/router/agent-strategy", label: "Agent strategy" },
   { active: route._tag === "Studio", dataNav: "studio", href: "/studio", label: "Studio" },
   { active: route._tag === "Learning", dataNav: "learning", href: "/learning", label: "Learning" },
   { active: route._tag === "Models", dataNav: "models", href: "/models", label: "Models" },
@@ -688,6 +696,22 @@ const studioPage = (state: StudioState, h: HtmlBuilder<Message>, configuredModel
   ]);
 };
 
+const routerFamilyPage = (prefixes: readonly string[], label: string, routeName: string, readbacks: ReadbacksState, h: HtmlBuilder<Message>): Html => {
+  const readback = readbacks.routerConfig;
+  const status = readback.status === "idle" ? "loading" : readback.status;
+  const rows = readback.rows.filter((entry) => prefixes.some((prefix) => entry.id === prefix || entry.id.startsWith(prefix)));
+  const state = status === "ok" ? (rows.length === 0 ? "empty" : "ok") : status;
+  const message = state === "loading" ? "Loading " + label.toLowerCase() + "…" : state === "error" ? (readback.message ?? label + " read failed") : state === "empty" ? "No " + label.toLowerCase() + " readback available." : null;
+  return h.section(
+    [h.Class("rm3-next-route mt-4"), h.DataAttribute("route", routeName), h.DataAttribute("router-family-state", state)],
+    [
+      h.h2([h.Class("rm3-next-route-title")], [label]),
+      ...(message === null
+        ? [h.ul([h.Class("rm3-next-route-rows")], rows.map((entry) => h.li([], [entry.label + ": " + entry.value])))]
+        : [h.p([], [message])]),
+    ],
+  );
+};
 const modelsRolesPage = (readbacks: ReadbacksState, h: HtmlBuilder<Message>): Html => {
   const models = readbacks.configuredModels;
   const endpoints = readbacks.modelEndpoints;
@@ -841,6 +865,10 @@ const routeContent = (
     Learning: () => learningPage(readbacks, h),
     Models: () => modelsPage(readbacks, h),
     ModelsRoles: () => modelsRolesPage(readbacks, h),
+    RouterStrategy: () => routerFamilyPage(["strategy", "executionMode", "routing."], "Router strategy", "router-strategy", readbacks, h),
+    RouterWorkloads: () => routerFamilyPage(["workload."], "Workloads", "router-workloads", readbacks, h),
+    RouterConfig: () => routerFamilyPage(["strategy", "executionMode", "routing.", "diagnostics."], "Router config", "router-config", readbacks, h),
+    RouterAgentStrategy: () => routerFamilyPage(["agentStrategy."], "Agent strategy", "router-agent-strategy", readbacks, h),
     LocalChoose: () => h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route","local-choose")], [h.h2([h.Class("rm3-next-route-title")], ["Local choose"]), h.p([], ["Choose peer-backed models or llama-swap models."])]),
     Runtime: () => runtimeConfigPage(runtimeConfigEditor, readbacks.runtimeConfig, readbacks.runtime, h),
     SessionReadiness: () =>
