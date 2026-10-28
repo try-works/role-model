@@ -1,0 +1,23 @@
+{
+  "slice": "s327-drain-shutdown",
+  "requirement": "R27 Drain shutdown-phase wiring",
+  "contract": "ServerOwner drains run between join and interrupt via boundedDrain (DrainTimeoutError) inside runReleaseAll: no early exit, failures aggregate; production cli registers auto-replay, four queue-runtime stops, outbox drain and route-capture join; index exposes the in-flight route-capture drain as a join handle.",
+  "red": "s327-red.log 3/3 failed",
+  "green": "s327-green.log 6 files / 36 tests; tsc exit 0",
+  "tests": [
+    "drains join between join and interrupt; a hung drain is bounded and later releases still run",
+    "a failing drain does not skip later drains or releases (release-all)",
+    "production cli registers the drain phase steps (source wiring)"
+  ],
+  "files": {
+    "src/composition-dag.ts": "C1BECB52BC3310CDE4A12967FFADFCA6F93502FEFBFF7CDEBCF42E2CA419751C",
+    "src/index.ts": "909BB4D20E1A501C1A0A86BEF5961AC9F7C6B13066F5978C74E46DD14D6AE9D0",
+    "src/cli.ts": "BE9BD07853F39D502E5727787E31FB3016941942C0B93531152E73DBB2F3C0F4",
+    "test/s327-drain-shutdown.test.ts": "924BBA70B2742D102DEE49FA2AC19FF3B8A8F4B31E56C622F5D43A93F291C8D3"
+  },
+  "lint": {
+    "dag": "161 (159 require-safety moved-boundary + 2 no-unknown-returns; no new)",
+    "test": "clean (repo-relative target)"
+  },
+  "unproven": "The index route-capture join is proven by source wiring + the captured-promise export, not by an end-to-end drain-during-shutdown integration test; outbox join is source-wired with a null-runtime guard."
+}

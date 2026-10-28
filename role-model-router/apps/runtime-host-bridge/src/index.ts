@@ -20825,6 +20825,7 @@ export interface BridgeServerLifecycleOptions {
   readonly backend?: BackendOwner;
   readonly transport?: ServerTransport;
   readonly readiness?: import("./composition-dag.js").ReadinessContract;
+  readonly drains?: readonly import("./composition-dag.js").ShutdownDrain[];
   readonly handlerFactory?: (options: StartBridgeServerOptions) => BridgeRequestHandler;
   readonly onServerOwner?: (owner: ServerOwner) => void;
   /** TEST SEAM ONLY: bare test options that never went through composeBackendOwner may get the branded
@@ -20857,6 +20858,7 @@ export async function startBridgeServer(
     handlerFactory: (lifecycle?.handlerFactory ?? createRequestHandler) as never,
     transport: lifecycle?.transport ?? bridgeServerTransport,
     ...(lifecycle?.readiness === undefined ? {} : { readiness: lifecycle.readiness }),
+    drains: lifecycle?.drains ?? [],
   });
   lifecycle?.onServerOwner?.(owner);
   const started = await owner.start();
@@ -20976,6 +20978,14 @@ export const runRetentionCleanupAt = (
   } finally {
     database.closeSync();
   }
+};
+
+/** S327: join handle for the in-flight deferred route-capture drain (shutdown phase). */
+let deferredRouteCaptureDrainJoin: (() => Promise<void>) | null = null;
+
+export const drainDeferredRouteCapture = async (): Promise<void> => {
+  const join = deferredRouteCaptureDrainJoin;
+  if (join !== null) await join();
 };
 
 export async function createRuntimeBridgeBackend(
@@ -21200,7 +21210,7 @@ export async function createRuntimeBridgeBackend(
   const scheduleDeferredRouteCaptureDrain = (): void => {
     if (!routeCaptureQueue || routeCaptureDrainActive) return;
     routeCaptureDrainActive = true;
-    void routeCaptureQueue
+    const activeDrain = routeCaptureQueue
       .drain(async (item) => {
         try {
           return await runtimeTrackBOperations.recordLocalRouteCapture({
@@ -21223,7 +21233,9 @@ export async function createRuntimeBridgeBackend(
       })
       .finally(() => {
         routeCaptureDrainActive = false;
+        deferredRouteCaptureDrainJoin = null;
       });
+    deferredRouteCaptureDrainJoin = () => activeDrain.then(() => undefined);
   };
   if (routeCaptureQueue) {
     const routeCaptureDrainTimer = setInterval(scheduleDeferredRouteCaptureDrain, 15_000);

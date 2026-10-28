@@ -105,6 +105,37 @@ export class ServerJoinTimeoutError extends Error {
   }
 }
 
+/** Typed failure: a shutdown drain exceeded its bounded join window. */
+export class DrainTimeoutError extends Error {
+  readonly code = "DRAIN_TIMEOUT";
+  readonly drain: string;
+  readonly timeoutMs: number;
+
+  constructor(drain: string, timeoutMs: number) {
+    super("drain " + drain + " timed out after " + String(timeoutMs) + "ms");
+    this.name = "DrainTimeoutError";
+    this.drain = drain;
+    this.timeoutMs = timeoutMs;
+  }
+}
+
+export interface ShutdownDrain {
+  readonly name: string;
+  readonly run: () => Promise<void> | void;
+  readonly timeoutMs?: number;
+}
+
+export const boundedDrain = async (drain: ShutdownDrain): Promise<void> => {
+  const timeoutMs = drain.timeoutMs ?? 5_000;
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new DrainTimeoutError(drain.name, timeoutMs)), timeoutMs);
+    Promise.resolve(drain.run()).then(
+      () => { clearTimeout(timer); resolve(); },
+      (error: Error) => { clearTimeout(timer); reject(error); },
+    );
+  });
+};
+
 export const runReleaseAll = async (steps: readonly (() => Promise<void>)[]): Promise<void> => {
   const failures: unknown[] = [];
   for (const step of steps) {
@@ -1065,6 +1096,8 @@ export const composeServerOwner = (input: {
   readonly transport: ServerTransport;
   /** DAG readiness owner; when present the Server refuses admission until ready (same 503 shape). */
   readonly readiness?: ServerAdmissionReadiness;
+  /** Registered shutdown-phase drains (bounded; run between join and interrupt, release-all). */
+  readonly drains?: readonly ShutdownDrain[];
   /** Bounded join/drain before interrupt (default 10s). */
   readonly joinTimeoutMs?: number;
 }): ServerOwner => {
@@ -1135,6 +1168,7 @@ export const composeServerOwner = (input: {
               }),
           );
         }
+        for (const drain of input.drains ?? []) steps.push(() => boundedDrain(drain));
         if (input.transport.interrupt !== undefined) steps.push(async () => { input.transport.interrupt!(server); });
         steps.push(() => input.transport.close(server));
         if (brandedBackend.close !== undefined) steps.push(() => brandedBackend.close!());

@@ -29,9 +29,10 @@ import {
   type StartBridgeServerOptions,
   createRuntimeBridgeBackend,
   resolveBridgeServerOptions,
+  drainDeferredRouteCapture,
   startBridgeServer,
 } from "./index.js";
-import { assertComposedBackendOwner, composeBackendOwner, composeReadinessOwner, onceClose } from "./composition-dag.js";
+import { assertComposedBackendOwner, composeBackendOwner, composeReadinessOwner, onceClose, type ShutdownDrain } from "./composition-dag.js";
 import { validateRun88PrivateDistributionIdentity } from "./kw-private-loader.js";
 import {
   describeRouterPolicyResolution,
@@ -5112,6 +5113,11 @@ export async function main(): Promise<void> {
    * itself here, and shutdown/failure release through this scope instead of hand-picking.
    */
   const hostScope = createHostRuntimeScope();
+  // S327 (R27 Drain): the shutdown phase steps are registered here and executed by the DAG Server
+  // owner between join and interrupt (bounded, release-all).
+  const shutdownDrains: ShutdownDrain[] = [];
+  shutdownDrains.push({ name: "auto-replay", run: () => { activeAutoReplayLoop?.stop(); activeAutoReplayLoop = null; } });
+  shutdownDrains.push({ name: "route-capture", run: drainDeferredRouteCapture });
   // S324 (R27 early readiness): the production readiness owner consumed by the Server admission gate.
   const readinessOwner = composeReadinessOwner();
   // S321/S322 (R27): backend teardown runs through the DAG Backend close member; the shared idempotent
@@ -5160,8 +5166,6 @@ export async function main(): Promise<void> {
     }
 
     shutdownPromise = (async () => {
-      activeAutoReplayLoop?.stop();
-      activeAutoReplayLoop = null;
       stopExtensionRuntimeWatchdog?.();
       stopExtensionRuntimeWatchdog = null;
       const releaseResult = await hostScope.close();
@@ -5245,7 +5249,7 @@ export async function main(): Promise<void> {
       },
       closePackagedRuntimeOnce,
     );
-    return startBridgeServer(serverOptions, backendOwner === undefined ? undefined : { backend: backendOwner, readiness: readinessOwner });
+    return startBridgeServer(serverOptions, backendOwner === undefined ? undefined : { backend: backendOwner, drains: shutdownDrains, readiness: readinessOwner });
   };
 
   /**
@@ -8585,6 +8589,7 @@ export async function main(): Promise<void> {
           return autoReplayExecutionFromCommandReceipt(decodedReplayReceipt);
         },
       });
+      shutdownDrains.push({ name: "queue-runtime:replay", run: async () => { await queueRuntime?.stop(); } });
       queueRuntime = startReplayQueueRuntime({
         stateRoot: queueStateRoot,
         shippedRoot: options.repoRoot,
@@ -8612,6 +8617,7 @@ export async function main(): Promise<void> {
        * the tick's sweep uses (`resumeEvaluationsRef`), which is what keeps
        * evidence writing in one place.
        */
+      shutdownDrains.push({ name: "queue-runtime:evaluation", run: async () => { await evaluationQueueRuntime?.stop(); } });
       evaluationQueueRuntime = startEvaluationQueueRuntime({
         stateRoot: queueStateRoot,
         shippedRoot: options.repoRoot,
@@ -8666,6 +8672,7 @@ export async function main(): Promise<void> {
        * comparison) and promotion consumes candidates the worker has not yet
        * validated, one at a time.
        */
+      shutdownDrains.push({ name: "queue-runtime:learner-derive", run: async () => { await learnerDeriveQueueRuntime?.stop(); } });
       learnerDeriveQueueRuntime = startLearnerQueueRuntime({
         kind: "learner.derive",
         options: {
@@ -8723,6 +8730,7 @@ export async function main(): Promise<void> {
           },
         },
       });
+      shutdownDrains.push({ name: "queue-runtime:learner-promote", run: async () => { await learnerPromoteQueueRuntime?.stop(); } });
       learnerPromoteQueueRuntime = startLearnerQueueRuntime({
         kind: "learner.promote",
         options: {
@@ -8871,6 +8879,7 @@ export async function main(): Promise<void> {
             )
           : runTrackBPostObservation(runtime, observation, processingInput);
       };
+    shutdownDrains.push({ name: "post-observation-outbox", run: async () => { if (extensionRuntime !== null) await drainPostObservationOutbox(extensionRuntime); } });
     const drainPostObservationOutbox = async (
       runtime: Awaited<ReturnType<typeof createProductionExtensionRuntime>>,
     ) => postObservationOutbox.drain(postObservationHandler(runtime));

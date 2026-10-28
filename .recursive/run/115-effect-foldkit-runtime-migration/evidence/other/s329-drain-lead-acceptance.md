@@ -1,0 +1,7 @@
+# S329 — B6/R27 Drain shutdown-phase Lead acceptance
+
+- Reviewer: s9 (deepseek-flash) FINAL PASS after one lint HOLD — evidence/other/s328-drain-review.md sha256 `5FDFE4F480BB26A680CEDDA3E58166E28038873E67D4016F019BF9464F1136FD`.
+- Committed bytes verified by Lead: composition-dag.ts `C1BECB52BC3310CDE4A12967FFADFCA6F93502FEFBFF7CDEBCF42E2CA419751C` (64305 B), index.ts `909BB4D20E1A501C1A0A86BEF5961AC9F7C6B13066F5978C74E46DD14D6AE9D0` (1367060 B), cli.ts `BE9BD07853F39D502E5727787E31FB3016941942C0B93531152E73DBB2F3C0F4` (594293 B), test `D7D186C2A1AD24E9E7F4F873487B3A891D6DEA80C1F31FDBBEBA6DDA514C36CC` (4147 B).
+- What landed: the Drain shutdown PHASE between join and interrupt inside runReleaseAll — auto-replay stop (no longer standalone), queue-runtime stops for replay/evaluation/learner-derive/learner-promote (previously NEVER invoked — a real shutdown-correctness gap closed), post-observation outbox drain (joined, null-guarded), route-capture drain join (captured activeDrain promise). Each drain bounded (5s, typed DrainTimeoutError); hung/failing drains cannot skip later releases; order stopAccepting -> join -> drains -> interrupt -> transport.close -> backend.close.
+- Lead verification: suite 36/36 (6 affected files), tsc 0, test lint clean.
+- Named follow-on adopted: end-to-end drain-during-shutdown integration test with a live queue/outbox (honest scope note, not hidden).
