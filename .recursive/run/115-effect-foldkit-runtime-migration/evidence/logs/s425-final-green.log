@@ -1,0 +1,11 @@
+
+# FINAL FROZEN GREEN (Schema-boundary parser rewrite + retry-interval validation)
+command: vitest run test/s425-device-auth-correctness.test.ts test/s397-device-auth-form.test.ts
+result: Test Files 2 passed (2); Tests 26 passed (26); exit 0 (11 S425 + 15 S397)
+typecheck: node_modules/.bin/tsc.cmd --noEmit -p role-model-router/apps/runtime-ui-next/tsconfig.json -> exit 0
+final sha256:
+  src/device-auth.ts 3d0341e54baa69e4fec9d92db45c50d24f28c1ab9cb08121b6f2e25b36a6dca4
+  src/control-view.ts f70a191bbf6f22f3e2cf279a9c91c219c91e81035c39e60bf031ceebd0300c1f
+  src/update.ts 63d12114c2923318d761241da2d20f8b4b0f9988376ad8674b20ef3b8bec4715
+  test/s425-device-auth-correctness.test.ts c97e0cbe250fc57c4268b7eab9af983b5143153f8c9425de37ad883dbdab5589
+note: cancellation is state-only (inflight reset + token fence); the scheduled poll timer is NOT cancelled by this slice, no I/O-lifetime claim is made.

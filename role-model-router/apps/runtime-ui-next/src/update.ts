@@ -73,6 +73,7 @@ import {
   deviceAuthPollDelayMs,
   deviceAuthStartPlan,
   initialDeviceAuthState,
+  mergeDeviceAuthPoll,
   type DeviceAuthState,
 } from "./device-auth";
 import { canonicalHrefForUrl, replaceLegacyUrlCommand } from "./legacy-redirects";
@@ -915,23 +916,33 @@ export const createUpdate =
       DeviceAuthPolled: ({ session, token }) => {
         const state = model.deviceAuth ?? initialDeviceAuthState();
         if (token !== state.token) return { model };
-        if (session.status === "connected") {
+        // S432: the real pending poll body has no userCode/verification URL; keep the restored
+        // challenge for the same authorization so the code/link survive the first poll.
+        const nextSession = mergeDeviceAuthPoll(state.session, session);
+        if (nextSession.status === "connected") {
           const nextToken = state.token + 1;
-          const activations = activationPlanForConnectedSession({ draft: state.draft, session });
+          const activations = activationPlanForConnectedSession({ draft: state.draft, session: nextSession });
           return {
             commands: activations.map((payload) => deviceAuthCommands.activate({ payload: JSON.stringify(payload), token: nextToken })),
-            model: { ...model, deviceAuth: { ...state, error: undefined, inflight: false, session, status: "connected", token: nextToken } },
+            model: { ...model, deviceAuth: { ...state, error: undefined, inflight: false, session: nextSession, status: "connected", token: nextToken } },
           };
         }
-        if (session.status === "pending") {
+        if (nextSession.status === "pending") {
           const nextToken = state.token + 1;
-          const delayMs = deviceAuthPollDelayMs(session);
+          const delayMs = deviceAuthPollDelayMs(nextSession);
           return {
-            commands: [deviceAuthCommands.poll({ authRequestId: session.authRequestId, delayMs, intervalMs: delayMs, token: nextToken })],
-            model: { ...model, deviceAuth: { ...state, error: undefined, inflight: true, session, status: "pending", token: nextToken } },
+            commands: [deviceAuthCommands.poll({ authRequestId: nextSession.authRequestId, delayMs, intervalMs: delayMs, token: nextToken })],
+            model: { ...model, deviceAuth: { ...state, error: undefined, inflight: true, session: nextSession, status: "pending", token: nextToken } },
           };
         }
-        return { model: { ...model, deviceAuth: { ...state, error: "Device authorization failed.", inflight: false, session, status: "error", token } } };
+        // S425: "expired"/"failed" are terminal host statuses. Surface the host reason instead of a
+        // generic message; returning no poll command stops the loop, and inflight is cleared.
+        const reason =
+          nextSession.lastError ??
+          (nextSession.status === "expired"
+            ? "Device authorization expired."
+            : "Device authorization failed.");
+        return { model: { ...model, deviceAuth: { ...state, error: reason, inflight: false, session: nextSession, status: "error", token } } };
       },
       DeviceAuthFailed: ({ message, token }) => {
         const state = model.deviceAuth ?? initialDeviceAuthState();
@@ -962,10 +973,13 @@ export const createUpdate =
       },
       DeviceAuthCancelled: () => {
         const state = model.deviceAuth ?? initialDeviceAuthState();
+        // S425: clear the in-flight marker or DeviceAuthStartRequested refuses every later start.
+        // The scheduled poll timer is not cancelled (the runtime owns it); its result stays fenced by
+        // the advanced token, so a late response cannot resurrect the cancelled session.
         return {
           model: {
             ...model,
-            deviceAuth: { ...state, error: undefined, session: undefined, sessions: undefined, status: "draft", token: state.token + 1 },
+            deviceAuth: { ...state, error: undefined, inflight: false, session: undefined, sessions: undefined, status: "draft", token: state.token + 1 },
           },
         };
       },

@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Option, Schema } from "effect";
 
 /**
  * S396a (M8): provider device-authorization connect form. Pure schema/state/planning plus the
@@ -6,12 +6,21 @@ import { Schema } from "effect";
  * (apps/runtime-ui/app/routes/providers.tsx:1091-1106; lib/runtime-api.ts start/poll/list/activate).
  */
 
+/**
+ * S425: the host publishes the lifecycle as "pending" | "connected" | "expired" | "failed" plus an
+ * optional retry interval and reason (runtime-host-bridge/src/index.ts:7603-7623). "expired"/"failed"
+ * are terminal and must never be reported as pending; lastError/retryAfterSeconds are preserved so the
+ * caller can surface the real reason and keep the host's retry interval.
+ */
 export const DeviceAuthSessionSchema = Schema.Struct({
   authRequestId: Schema.String,
   intervalSeconds: Schema.optional(Schema.Number),
+  lastError: Schema.optional(Schema.String),
   providerAccountId: Schema.String,
-  status: Schema.Literals(["pending", "connected", "error"]),
+  retryAfterSeconds: Schema.optional(Schema.Number),
+  status: Schema.Literals(["pending", "connected", "expired", "failed"]),
   userCode: Schema.optional(Schema.String),
+  verificationUri: Schema.optional(Schema.String),
   verificationUriComplete: Schema.optional(Schema.String),
 });
 export type DeviceAuthSession = typeof DeviceAuthSessionSchema.Type;
@@ -169,8 +178,72 @@ export const activationPlanForConnectedSession = (input: {
   }));
 };
 
-export const deviceAuthPollDelayMs = (session: DeviceAuthSession): number =>
-  Math.max(1_000, (session.intervalSeconds ?? 5) * 1_000);
+/**
+ * A host retry hint must be finite and positive; a zero/negative/NaN hint would otherwise poll on a
+ * busy loop, so it is ignored and the readback interval/default applies.
+ */
+const positiveSeconds = (value: number | null | undefined): number | undefined =>
+  value !== null && value !== undefined && Number.isFinite(value) && value > 0 ? value : undefined;
+
+/**
+ * S425: a poll result carries retryAfterSeconds (runtime-host-bridge/src/index.ts:3275-3280) while a
+ * readback entry carries intervalSeconds, so the host's real retry interval wins over the default.
+ */
+export const deviceAuthPollDelayMs = (session: DeviceAuthSession): number => {
+  const seconds = positiveSeconds(session.retryAfterSeconds) ?? positiveSeconds(session.intervalSeconds) ?? 5;
+  return Math.max(1_000, Math.round(seconds * 1_000));
+};
+
+/**
+ * S432: a real pending poll answer carries only status/retryAfterSeconds/lastError — the operator's
+ * challenge (userCode + verification URL) came from start/readback. Keep the challenge only when the
+ * poll belongs to the SAME authorization and is still pending; a foreign authorization or a terminal
+ * answer keeps the poll's own fields so no stale challenge/metadata is resurrected. Parser optionals
+ * are explicit `undefined`, so the challenge is preserved with nullish coalescing, not a raw spread.
+ */
+export const mergeDeviceAuthPoll = (
+  current: DeviceAuthSession | undefined,
+  polled: DeviceAuthSession,
+): DeviceAuthSession => {
+  if (
+    current === undefined ||
+    current.authRequestId !== polled.authRequestId ||
+    polled.status !== "pending"
+  ) {
+    return polled;
+  }
+  return {
+    ...polled,
+    intervalSeconds: polled.intervalSeconds ?? current.intervalSeconds,
+    userCode: polled.userCode ?? current.userCode,
+    verificationUri: polled.verificationUri ?? current.verificationUri,
+    verificationUriComplete: polled.verificationUriComplete ?? current.verificationUriComplete,
+  };
+};
+
+const SAFE_VERIFICATION_PROTOCOLS = new Set(["https:"]);
+const SAFE_VERIFICATION_URL_MAX_LENGTH = 2_048;
+
+/**
+ * S425: a provider-supplied verification URL is linked only when it parses as an https URL.
+ * javascript:/data:/file: and oversized values are refused instead of rendered as a link.
+ */
+export const deviceAuthVerificationUrl = (session: DeviceAuthSession): string | undefined => {
+  const candidate = session.verificationUriComplete ?? session.verificationUri;
+  if (
+    candidate === undefined ||
+    candidate.length === 0 ||
+    candidate.length > SAFE_VERIFICATION_URL_MAX_LENGTH
+  ) {
+    return undefined;
+  }
+  try {
+    const url = new URL(candidate);
+    return SAFE_VERIFICATION_PROTOCOLS.has(url.protocol) ? url.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+};
 
 interface DeviceAuthFetchOptions {
   readonly baseUrl?: string;
@@ -190,19 +263,45 @@ const asRecord = (value: unknown): Readonly<Record<string, unknown>> | undefined
     ? (value as Readonly<Record<string, unknown>>)
     : undefined;
 
+/**
+ * S425: the host session fields are an external boundary, so they are decoded once through a Schema
+ * (excess host keys are ignored; null/missing optional fields stay optional) instead of ad-hoc
+ * runtime typeof narrowing. The session domain type keeps only the fields the UI consumes.
+ */
+const HostDeviceAuthFieldsSchema = Schema.Struct({
+  authRequestId: Schema.optional(Schema.NullOr(Schema.String)),
+  intervalSeconds: Schema.optional(Schema.NullOr(Schema.Number)),
+  lastError: Schema.optional(Schema.NullOr(Schema.String)),
+  providerAccountId: Schema.optional(Schema.NullOr(Schema.String)),
+  retryAfterSeconds: Schema.optional(Schema.NullOr(Schema.Number)),
+  status: Schema.optional(Schema.NullOr(Schema.String)),
+  userCode: Schema.optional(Schema.NullOr(Schema.String)),
+  verificationUri: Schema.optional(Schema.NullOr(Schema.String)),
+  verificationUriComplete: Schema.optional(Schema.NullOr(Schema.String)),
+});
+type HostDeviceAuthFields = typeof HostDeviceAuthFieldsSchema.Type;
+
+const parseStatus = (value: string | null | undefined): DeviceAuthSession["status"] => {
+  if (value === "connected" || value === "pending" || value === "expired") return value;
+  // S425: "failed" — and any missing/unrecognized status — is terminal, never pending.
+  return "failed";
+};
+
 const parseSession = (value: unknown): DeviceAuthSession => {
   const record = asRecord(value) ?? {};
-  const nested = asRecord(record.deviceAuthorization) ?? record;
-  const status = nested.status;
+  const candidate = asRecord(record.deviceAuthorization) ?? record;
+  const decoded = Schema.decodeUnknownOption(HostDeviceAuthFieldsSchema)(candidate);
+  const fields: Partial<HostDeviceAuthFields> = Option.isNone(decoded) ? {} : decoded.value;
   return {
-    authRequestId: String(nested.authRequestId ?? ""),
-    ...(typeof nested.intervalSeconds === "number" ? { intervalSeconds: nested.intervalSeconds } : {}),
-    providerAccountId: String(nested.providerAccountId ?? ""),
-    status: status === "connected" || status === "error" ? status : "pending",
-    ...(typeof nested.userCode === "string" ? { userCode: nested.userCode } : {}),
-    ...(typeof nested.verificationUriComplete === "string"
-      ? { verificationUriComplete: nested.verificationUriComplete }
-      : {}),
+    authRequestId: fields.authRequestId ?? "",
+    intervalSeconds: positiveSeconds(fields.intervalSeconds),
+    lastError: fields.lastError ?? undefined,
+    providerAccountId: fields.providerAccountId ?? "",
+    retryAfterSeconds: positiveSeconds(fields.retryAfterSeconds),
+    status: parseStatus(fields.status),
+    userCode: fields.userCode ?? undefined,
+    verificationUri: fields.verificationUri ?? undefined,
+    verificationUriComplete: fields.verificationUriComplete ?? undefined,
   };
 };
 

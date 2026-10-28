@@ -1,4 +1,9 @@
-import type { DeviceAuthField, DeviceAuthState } from "./device-auth";
+import {
+  deviceAuthVerificationUrl,
+  type DeviceAuthField,
+  type DeviceAuthSession,
+  type DeviceAuthState,
+} from "./device-auth";
 import type { EndpointAdmissionField, EndpointAdmissionState } from "./endpoint-admission";
 import type { ProviderAccountField, ProviderAccountState } from "./provider-account";
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
@@ -89,6 +94,89 @@ export const renderProviderAccountForm = (state: ProviderAccountState, h: HtmlBu
     ],
   );
 };
+/**
+ * S425: the pending step is where the operator authorizes. It must show the real host userCode and a
+ * safe verification link before authorization (S420 F11), and a terminal host status must never read
+ * as "Connected" (S420 F8).
+ */
+const renderDeviceAuthSession = (session: DeviceAuthSession, h: HtmlBuilder<Message>): Html => {
+  if (session.status === "connected") {
+    return h.p(
+      [h.DataAttribute("device-auth-session", "connected")],
+      ["Connected" + (session.userCode === undefined ? "" : " (code " + session.userCode + ")")],
+    );
+  }
+  if (session.status === "pending") {
+    const verificationUrl = deviceAuthVerificationUrl(session);
+    return h.div(
+      [h.DataAttribute("device-auth-session", "pending"), h.Role("status"), h.AriaLive("polite")],
+      [
+        h.p([], ["Waiting for authorization"]),
+        ...(session.userCode === undefined
+          ? []
+          : [
+              h.p([h.Class("mt-1 text-[12px]")], ["Enter this code on the verification page:"]),
+              h.code(
+                [
+                  h.DataAttribute("device-auth-user-code", ""),
+                  h.Class("mt-1 inline-block font-mono text-[13px] tracking-[0.08em]"),
+                ],
+                [session.userCode],
+              ),
+            ]),
+        ...(verificationUrl === undefined
+          ? [
+              h.p(
+                [
+                  h.DataAttribute("device-auth-verification-unavailable", ""),
+                  h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]"),
+                ],
+                ["Verification link unavailable."],
+              ),
+            ]
+          : [
+              h.p([h.Class("mt-1 text-[12px]")], [
+                h.a(
+                  [
+                    h.Href(verificationUrl),
+                    h.Target("_blank"),
+                    h.Rel("noreferrer noopener"),
+                    h.DataAttribute("device-auth-verification-link", ""),
+                    h.Class("underline"),
+                  ],
+                  ["Open verification page"],
+                ),
+              ]),
+            ]),
+        ...(session.lastError === undefined
+          ? []
+          : [
+              h.p(
+                [
+                  h.DataAttribute("device-auth-note", ""),
+                  h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]"),
+                ],
+                [session.lastError],
+              ),
+            ]),
+      ],
+    );
+  }
+  return h.p(
+    [
+      h.DataAttribute("device-auth-session", session.status),
+      h.Role("alert"),
+      h.Class("mt-1 text-[12px]"),
+    ],
+    [
+      session.lastError ??
+        (session.status === "expired"
+          ? "Device authorization expired."
+          : "Device authorization failed."),
+    ],
+  );
+};
+
 export const renderDeviceAuthorizationForm = (state: DeviceAuthState, h: HtmlBuilder<Message>): Html => {
   const textField = (label: string, field: DeviceAuthField, value: string) =>
     h.label(
@@ -166,9 +254,7 @@ export const renderDeviceAuthorizationForm = (state: DeviceAuthState, h: HtmlBui
       ...(state.error === undefined
         ? []
         : [h.p([h.Role("alert"), h.DataAttribute("device-auth-error", "")], [state.error])]),
-      ...(state.session === undefined
-        ? []
-        : [h.p([h.DataAttribute("device-auth-session", state.session.status)], [state.session.status === "pending" ? "Waiting for authorization" : "Connected" + (state.session.userCode === undefined ? "" : " (code " + state.session.userCode + ")")])]),
+      ...(state.session === undefined ? [] : [renderDeviceAuthSession(state.session, h)]),
     ],
   );
 };
