@@ -25,11 +25,6 @@ const MISSING_PATHS = [
   "/app/local/llama-swap/models",
   "/app/local/llama-swap/policy",
   "/app/local/llama-swap/matrix",
-  "/app/learning/configuration",
-  "/app/learning/decisions",
-  "/app/learning/evidence",
-  "/app/learning/history",
-  "/app/learning/packs",
   "/app/system/extensions",
   "/app/system/operator",
 ] as const;
@@ -375,16 +370,16 @@ describe("S269 original redirect entries: 18 resolvable targets + 2 missing", ()
 });
 
 describe("S269 53-pattern partition", () => {
-  it("partitions 42 supported original paths + / + 10 missing into the 53 original patterns", async () => {
+  it("partitions 47 supported original paths + / + 5 missing into the 53 original patterns", async () => {
     const module = await legacy();
     const supported = module.SUPPORTED_ORIGINAL_PATHS;
-    expect(supported).toHaveLength(42);
-    expect(supported.filter((path) => !path.includes(":requestId"))).toHaveLength(40);
+    expect(supported).toHaveLength(47);
+    expect(supported.filter((path) => !path.includes(":requestId"))).toHaveLength(45);
     expect(supported.filter((path) => path.includes(":requestId"))).toEqual([
       "/app/observe/requests/:requestId",
       "/app/router/decisions/:requestId",
     ]);
-    expect(module.MISSING_ORIGINAL_TARGETS).toHaveLength(10);
+    expect(module.MISSING_ORIGINAL_TARGETS).toHaveLength(5);
     const partition = new Set([
       ...supported,
       "/",

@@ -39,6 +39,11 @@ const routeCases = {
   LocalChoose: {},
   Studio: {},
   Learning: {},
+  LearningConfiguration: {},
+  LearningPacks: {},
+  LearningDecisions: {},
+  LearningEvidence: {},
+  LearningHistory: {},
   Models: {},
   ModelsRoles: {},
   Benchmark: {},
@@ -103,6 +108,11 @@ const modelsRolesRouter = Route.mapTo(AppRoute.ModelsRoles)(
   pipe(Route.literal("models"), Route.slash(Route.literal("roles"))),
 );
 const learningRouter = Route.mapTo(AppRoute.Learning)(Route.literal("learning"));
+const learningConfigurationRouter = Route.mapTo(AppRoute.LearningConfiguration)(pipe(Route.literal("learning"), Route.slash(Route.literal("configuration"))));
+const learningPacksRouter = Route.mapTo(AppRoute.LearningPacks)(pipe(Route.literal("learning"), Route.slash(Route.literal("packs"))));
+const learningDecisionsRouter = Route.mapTo(AppRoute.LearningDecisions)(pipe(Route.literal("learning"), Route.slash(Route.literal("decisions"))));
+const learningEvidenceRouter = Route.mapTo(AppRoute.LearningEvidence)(pipe(Route.literal("learning"), Route.slash(Route.literal("evidence"))));
+const learningHistoryRouter = Route.mapTo(AppRoute.LearningHistory)(pipe(Route.literal("learning"), Route.slash(Route.literal("history"))));
 const studioRouter = Route.mapTo(AppRoute.Studio)(Route.literal("studio"));
 const localChooseRouter = Route.mapTo(AppRoute.LocalChoose)(pipe(Route.literal("local"), Route.slash(Route.literal("choose"))));
 const localModelsRedirectRouter = Route.mapTo(AppRoute.LocalChoose)(pipe(Route.literal("local"), Route.slash(Route.literal("models"))));
@@ -161,6 +171,11 @@ export const appRouter = Route.oneOf(
   localChooseRouter,
   studioRouter,
   learningRouter,
+  learningConfigurationRouter,
+  learningPacksRouter,
+  learningDecisionsRouter,
+  learningEvidenceRouter,
+  learningHistoryRouter,
   modelsRouter,
   modelsRolesRouter,
   benchmarkRouter,

@@ -36,6 +36,11 @@ export type ReadbackKey =
   | "health"
   | "overviewMetrics"
   | "learning"
+  | "learningConfiguration"
+  | "learningPacks"
+  | "learningDecisions"
+  | "learningEvidence"
+  | "learningHistory"
   | "replayJobs"
   | "evaluationJobs"
   | "configuredModels"
@@ -73,6 +78,11 @@ export const ReadbackKeySchema = Schema.Literals([
   "health",
   "overviewMetrics",
   "learning",
+  "learningConfiguration",
+  "learningPacks",
+  "learningDecisions",
+  "learningEvidence",
+  "learningHistory",
   "replayJobs",
   "evaluationJobs",
   "configuredModels",
@@ -131,6 +141,11 @@ export const ReadbacksState = Schema.Struct({
   health: ReadbackState,
   overviewMetrics: ReadbackState,
   learning: ReadbackState,
+  learningConfiguration: ReadbackState,
+  learningPacks: ReadbackState,
+  learningDecisions: ReadbackState,
+  learningEvidence: ReadbackState,
+  learningHistory: ReadbackState,
   replayJobs: ReadbackState,
   evaluationJobs: ReadbackState,
   configuredModels: ReadbackState,
@@ -183,6 +198,11 @@ export const emptyReadbacks = (): ReadbacksState => ({
   health: idleReadback(),
   overviewMetrics: idleReadback(),
   learning: idleReadback(),
+  learningConfiguration: idleReadback(),
+  learningPacks: idleReadback(),
+  learningDecisions: idleReadback(),
+  learningEvidence: idleReadback(),
+  learningHistory: idleReadback(),
   replayJobs: idleReadback(),
   evaluationJobs: idleReadback(),
   configuredModels: idleReadback(),
@@ -610,6 +630,20 @@ const parseModelEndpoints = (body: unknown, token: number): ReadbackState => {
   if (list.length > 0 && rows.length === 0) return failedReadback("Model endpoints read failed: invalid response", token);
   return okRows(rows, token);
 };
+const parseLearningFamily = (label: string) => (body: unknown, token: number): ReadbackState => {
+  if (body === null || body === undefined) return failedReadback(label + " read failed: invalid response", token);
+  const record = asRecord(body);
+  const list = Array.isArray(body) ? body : Array.isArray(record?.items) ? record.items : Array.isArray(record?.rows) ? record.rows : record?.data !== undefined ? (Array.isArray(record.data) ? record.data : [record.data]) : record === undefined ? [] : [record];
+  const rows = list.slice(0, 40).flatMap((value, index) => {
+    const entry = asRecord(value);
+    if (entry === undefined) return [row(String(index), label + " " + String(index), String(value), "readback")];
+    const id = String(entry.id ?? entry.decisionId ?? entry.packId ?? entry.recordId ?? index);
+    const labelText = String(entry.label ?? entry.title ?? entry.kind ?? entry.name ?? id);
+    const valueText = String(entry.value ?? entry.status ?? entry.outcome ?? entry.summary ?? entry.origin ?? "");
+    return [row(labelText, labelText, valueText, JSON.stringify(entry).slice(0, 600))];
+  });
+  return rows.length === 0 ? { rows: [], status: "empty", token } : okRows(rows, token);
+};
 const parseLearning = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
   const knowledge = asRecord(record?.knowledge);
@@ -942,6 +976,11 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     parse: parseLearning,
     path: READBACK_PATHS.learning,
   },
+  learningConfiguration: { emptyText: "No learning configuration rows.", key: "learningConfiguration", label: "Learning configuration", parse: parseLearningFamily("Learning configuration"), path: READBACK_PATHS.learningConfiguration },
+  learningPacks: { emptyText: "No learning packs rows.", key: "learningPacks", label: "Learning packs", parse: parseLearningFamily("Learning packs"), path: READBACK_PATHS.learningPacks },
+  learningDecisions: { emptyText: "No learning decisions rows.", key: "learningDecisions", label: "Learning decisions", parse: parseLearningFamily("Learning decisions"), path: READBACK_PATHS.learningDecisions },
+  learningEvidence: { emptyText: "No learning evidence rows.", key: "learningEvidence", label: "Learning evidence", parse: parseLearningFamily("Learning evidence"), path: READBACK_PATHS.learningEvidence },
+  learningHistory: { emptyText: "No learning history rows.", key: "learningHistory", label: "Learning history", parse: parseLearningFamily("Learning history"), path: READBACK_PATHS.learningHistory },
   replayJobs: {
     emptyText: "No replay jobs.",
     key: "replayJobs",
@@ -1095,6 +1134,11 @@ export const createReadbackClients = (
     runtimeSummary: client(READBACK_SPECS.runtimeSummary),
     health: client(READBACK_SPECS.health),
     learning: client(READBACK_SPECS.learning),
+  learningConfiguration: client(READBACK_SPECS.learningConfiguration),
+  learningPacks: client(READBACK_SPECS.learningPacks),
+  learningDecisions: client(READBACK_SPECS.learningDecisions),
+  learningEvidence: client(READBACK_SPECS.learningEvidence),
+  learningHistory: client(READBACK_SPECS.learningHistory),
     configuredModels: client(READBACK_SPECS.configuredModels),
     modelEndpoints: client(READBACK_SPECS.modelEndpoints),
     replayJobs: client(READBACK_SPECS.replayJobs),

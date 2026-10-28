@@ -90,6 +90,11 @@ const CANONICAL_TARGETS = {
   "/app/connect/downstream": "/integrations/downstream",
   "/app/connect/upstream": "/integrations/upstream",
   "/app/learning": "/learning",
+  "/app/learning/configuration": "/learning/configuration",
+  "/app/learning/decisions": "/learning/decisions",
+  "/app/learning/evidence": "/learning/evidence",
+  "/app/learning/history": "/learning/history",
+  "/app/learning/packs": "/learning/packs",
   "/app/local/choose": "/local/choose",
   "/app/local/endpoints": "/local/peers",
   "/app/local/llama-swap/logs": "/local/logs",
@@ -174,26 +179,6 @@ export const MISSING_ORIGINAL_TARGETS: readonly {
   {
     path: "/app/local/llama-swap/matrix",
     reason: "llama-swap compatibility matrix page is not implemented",
-  },
-  {
-    path: "/app/learning/configuration",
-    reason: "the Learning configuration child panel is not implemented",
-  },
-  {
-    path: "/app/learning/decisions",
-    reason: "the Learning decisions child panel is not implemented",
-  },
-  {
-    path: "/app/learning/evidence",
-    reason: "the Learning evidence child panel is not implemented",
-  },
-  {
-    path: "/app/learning/history",
-    reason: "the Learning history child panel is not implemented",
-  },
-  {
-    path: "/app/learning/packs",
-    reason: "the Learning packs child panel is not implemented",
   },
   { path: "/app/system/extensions", reason: "the extensions surface is not implemented" },
   { path: "/app/system/operator", reason: "operator controls are not implemented" },

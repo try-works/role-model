@@ -48,6 +48,11 @@ const routeTitle = (route: Model["route"]): string =>
     StorageRetention: () => "Storage retention | RM3 Foldkit shell",
     Studio: () => "Studio | RM3 Foldkit shell",
     Learning: () => "Learning | RM3 Foldkit shell",
+    LearningConfiguration: () => "Learning configuration | RM3 Foldkit shell",
+    LearningPacks: () => "Learning packs | RM3 Foldkit shell",
+    LearningDecisions: () => "Learning decisions | RM3 Foldkit shell",
+    LearningEvidence: () => "Learning evidence | RM3 Foldkit shell",
+    LearningHistory: () => "Learning history | RM3 Foldkit shell",
     Models: () => "Models | RM3 Foldkit shell",
     ModelsRoles: () => "Model roles | RM3 Foldkit shell",
     RouterStrategy: () => "Router strategy | RM3 Foldkit shell",
@@ -184,6 +189,11 @@ const shellNavItems = (route: Model["route"]): ReadonlyArray<ShellNavItem> => [
   { active: route._tag === "RouterAgentStrategy", dataNav: "router-agent-strategy", href: "/router/agent-strategy", label: "Agent strategy" },
   { active: route._tag === "Studio", dataNav: "studio", href: "/studio", label: "Studio" },
   { active: route._tag === "Learning", dataNav: "learning", href: "/learning", label: "Learning" },
+  { active: route._tag === "LearningConfiguration", dataNav: "learning-configuration", href: "/learning/configuration", label: "Learning configuration" },
+  { active: route._tag === "LearningPacks", dataNav: "learning-packs", href: "/learning/packs", label: "Learning packs" },
+  { active: route._tag === "LearningDecisions", dataNav: "learning-decisions", href: "/learning/decisions", label: "Learning decisions" },
+  { active: route._tag === "LearningEvidence", dataNav: "learning-evidence", href: "/learning/evidence", label: "Learning evidence" },
+  { active: route._tag === "LearningHistory", dataNav: "learning-history", href: "/learning/history", label: "Learning history" },
   { active: route._tag === "Models", dataNav: "models", href: "/models", label: "Models" },
   {
     active: route._tag === "ModelsRoles",
@@ -785,6 +795,13 @@ const modelsPage = (readbacks: ReadbacksState, h: HtmlBuilder<Message>): Html =>
   return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "models"), h.DataAttribute("models-state", "success")], [h.h2([h.Class("rm3-next-route-title text-[16px] font-semibold")], ["Configured models"]), h.ul([h.Class("mt-3 grid gap-2")], rows)]);
 };
 
+const learningFamilyPage = (label: string, routeName: string, spec: Parameters<typeof renderReadbackPage>[0], readback: ReadbacksState[keyof ReadbacksState], h: HtmlBuilder<Message>): Html => {
+  const status = readback.status === "idle" ? "loading" : readback.status;
+  return h.section(
+    [h.Class("rm3-next-route mt-4"), h.DataAttribute("route", routeName), h.DataAttribute("learning-family-state", status)],
+    [h.h2([h.Class("rm3-next-route-title")], [label]), renderReadbackPage(spec, readback, h)],
+  );
+};
 const learningPage = (readbacks: ReadbacksState, h: HtmlBuilder<Message>): Html =>
   h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "learning")], [
     h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]")], ["Knowledge worker, replay jobs and evaluation jobs. Empty means the capability is available but no work exists."]),
@@ -863,6 +880,11 @@ const routeContent = (
         : [],
     ),
     Learning: () => learningPage(readbacks, h),
+    LearningConfiguration: () => learningFamilyPage("Learning configuration", "learning-configuration", READBACK_SPECS.learningConfiguration, readbacks.learningConfiguration, h),
+    LearningPacks: () => learningFamilyPage("Learning packs", "learning-packs", READBACK_SPECS.learningPacks, readbacks.learningPacks, h),
+    LearningDecisions: () => learningFamilyPage("Learning decisions", "learning-decisions", READBACK_SPECS.learningDecisions, readbacks.learningDecisions, h),
+    LearningEvidence: () => learningFamilyPage("Learning evidence", "learning-evidence", READBACK_SPECS.learningEvidence, readbacks.learningEvidence, h),
+    LearningHistory: () => learningFamilyPage("Learning history", "learning-history", READBACK_SPECS.learningHistory, readbacks.learningHistory, h),
     Models: () => modelsPage(readbacks, h),
     ModelsRoles: () => modelsRolesPage(readbacks, h),
     RouterStrategy: () => routerFamilyPage(["strategy", "executionMode", "routing."], "Router strategy", "router-strategy", readbacks, h),
