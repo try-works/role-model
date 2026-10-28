@@ -1,0 +1,49 @@
+{
+  "slice": "s321-partial-shutdown",
+  "requirement": "R27 partial shutdown: stop admission -> join/drain -> interrupt -> dependencies; release-all; no early exit",
+  "decision": "LANDED (with one disclosed evidence gap: no clean s321-red.log captured before implementation; the first verification run failed the contract tests but is not a RED artifact).",
+  "contract": "ServerOwner.shutdown(): stopAccepting -> join -> interrupt -> transport.close -> backend.close, run through runReleaseAll (every release runs; AggregateError afterwards; no early exit). ServerOwner.start() close delegates to shutdown, so the facade's server.close uses the DAG ordering. BackendOwner gains close?: () => Promise<void> (host-provided, run LAST).",
+  "tests": [
+    "release-all runs every release even when an earlier one fails (AggregateError, no early exit)",
+    "server shutdown order: stop admission -> join -> interrupt -> close transport -> close backend",
+    "a failing dependency close does not skip later releases (backend close still runs)",
+    "the facade's server.close uses the DAG owner's ordered shutdown (identity)",
+    "facadeBackendOwner exposes no backend close (test seam only)"
+  ],
+  "counts": {
+    "tests": 28,
+    "passed": 28,
+    "failed": 0,
+    "typecheck": "exit 0",
+    "files": "6 files"
+  },
+  "redEvidence": "s321-red.log NOT produced (disclosed). First verification failed the contract test; GREEN is s321-green.log (6 files / 28 tests).",
+  "files": {
+    "src/composition-dag.ts": "F971894E44D1E86758EE9A6752BBFE9FC330678E85365B8977FEC7D236408FBB",
+    "src/index.ts": "1366312 B 2D1232F624C1E9699FE0CEF5F6BE210DB357E168F36086A29A02F2C1910D5AAB",
+    "test/s321-partial-shutdown.test.ts": "6154F3E8BB851C1660D4E8B8CDD373DDCABF86F1AAC12DFF67DCFA1D4080AD4E"
+  },
+  "lint": "161 findings {\"no-unknown-returns\":2,\"require-safety-comment-for-type-assertion\":159}",
+  "unproven": "Production backend close still happens via cli hostScope (cli not in task scope); the DAG owner exposes the close member and runs it last when provided, but wiring the host backend close through the owner needs the cli shutdown region.",
+  "repair322": {
+    "boundedJoin": "ServerJoinTimeoutError { code: SERVER_JOIN_TIMEOUT, timeoutMs } added; composeServerOwner accepts joinTimeoutMs (default 10_000); the join step races transport.join() against the timer and rejects typed; runReleaseAll still runs interrupt -> transport.close -> backend.close.",
+    "packagedScope": "cli declares closePackagedScopeRef beside closePackagedRuntimeOnce; the onceClose wrapper closes the packaged SCOPE via Effect.runPromise(Scope.close(packagedScope, Exit.void)) (acquireRelease finalizer owns the runtime); closePackagedScopeRef.current is assigned right after packagedScope creation; hostScope packagedRuntime resource delegates to the same once-closer.",
+    "lint": "SAFETY comments added above the as-never casts in test/s321-partial-shutdown.test.ts:24,25,92,103,104 (test-only structural casts).",
+    "red3": "s321-red3.log: 2 failed (hung-join timed out 30s; scope wiring source test failed).",
+    "green3": "s321-green3.log: 6 files / 33 tests passed; tsc exit 0; hung-join test ~29ms (verbose).",
+    "files": {
+      "src/composition-dag.ts": "DEA2CE1A803AC0C8FEE0A7F6EB0F664433793A68CFDE355AD84F6E902CEEEB3D",
+      "src/cli.ts": "2D374E8FDF106F640573E323B3A90723937A511CB36284BC0EAA81A547C31C85",
+      "test/s321-partial-shutdown.test.ts": "A72476E10D5BBC79F203B25E932B83F00C59B57BC6C11E83DC29F8569D674356"
+    }
+  },
+  "lintRepair323": {
+    "test": "CLEAN — SAFETY comments placed directly above each of the 7 as-never casts; line 161 catch param typed Error.",
+    "dag": "161 findings unchanged: 159 require-safety-comment (moved-boundary casts) + 2 no-unknown-returns; new join rejection param typed Error (no new findings).",
+    "green": "s321-green4.log: 6 files / 33 tests passed; tsc exit 0.",
+    "files": {
+      "src/composition-dag.ts": "9590F9C673B0EE5A8CBB160CB60C97C3B68849F3E101055886EBB5E99E5AE189",
+      "test/s321-partial-shutdown.test.ts": "B8A90157B5F51F1D196C1846C837E65E0FDFBEACD569C2223D1920A75FD139DA"
+    }
+  }
+}

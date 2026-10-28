@@ -82,6 +82,43 @@ export class RetentionAuthority extends Context.Service<
   RetentionAuthorityContract
 >()("RetentionAuthority") {}
 
+/** Runs every release even when earlier ones fail; failures surface as one AggregateError afterwards
+ * (finalizer failure cannot skip later releases and must not force an early exit). */
+/** Wraps a close so it runs exactly once (idempotent finalizer for shared resources). */
+export const onceClose = (close: () => Promise<void>): (() => Promise<void>) => {
+  let promise: Promise<void> | null = null;
+  return () => {
+    if (promise === null) promise = close();
+    return promise;
+  };
+};
+
+/** Typed failure: the bounded join/drain waited past its deadline; interrupt proceeds. */
+export class ServerJoinTimeoutError extends Error {
+  readonly code = "SERVER_JOIN_TIMEOUT";
+  readonly timeoutMs: number;
+
+  constructor(timeoutMs: number) {
+    super("server join timed out after " + String(timeoutMs) + "ms; interrupt proceeds");
+    this.name = "ServerJoinTimeoutError";
+    this.timeoutMs = timeoutMs;
+  }
+}
+
+export const runReleaseAll = async (steps: readonly (() => Promise<void>)[]): Promise<void> => {
+  const failures: unknown[] = [];
+  for (const step of steps) {
+    try {
+      await step();
+    } catch (error) {
+      failures.push(error);
+    }
+  }
+  if (failures.length > 0) {
+    throw new AggregateError(failures, "shutdown releases failed: " + String(failures.length));
+  }
+};
+
 export interface ProviderPermitStats {
   readonly active: number;
   readonly queued: number;
@@ -602,6 +639,8 @@ const readBackendMember = (backend: BackendLike, key: string): ((...args: readon
 const NO_OPTION_OVERRIDES: Readonly<Record<never, never>> = Object.freeze({});
 
 export interface BackendOwner {
+  /** Host-provided dependency teardown; the Server owner runs it LAST in the ordered shutdown. */
+  readonly close?: () => Promise<void>;
   readonly id: string;
   readonly options: StartBridgeServerOptions;
 }
@@ -679,6 +718,8 @@ export interface BackendOwnerInput {
   readonly projectCliStartupReadiness: (state: never) => unknown;
   readonly emptyRegistry: StartBridgeServerOptions["registry"];
   readonly emptyCatalog: ReturnType<NonNullable<StartBridgeServerOptions["getExecutionCatalog"]>>;
+  /** Host-provided backend close (dependency teardown run last by the Server owner). */
+  readonly closeBackend?: () => Promise<void>;
   readonly overrides: Readonly<Partial<Pick<StartBridgeServerOptions,
     | "readCaptureEvidence" | "readLogs" | "readHealthStatus" | "readTrackBReplayStatus"
     | "controlTrackBReplay" | "readTrackBLearningSummary" | "readStoreDegradationReceipts">>>;
@@ -876,7 +917,12 @@ export const composeBackendOwner = (input: BackendOwnerInput): BackendOwner => {
   // The provider methods are wrapped ON THE BACKEND (index.ts createRuntimeBridgeBackend ->
   // withBackendProviderPermits), so both the route binding here and the raw backend consumers (the
   // pairwise judge's executeChatCompletions handle) run under the same DAG permit.
-  const owner = Object.freeze({ [BACKEND_OWNER_BRAND]: true, id: "backend-owner:" + DEFAULT_COMPOSITION_CONFIG.instanceId, options });
+  const owner = Object.freeze({
+    [BACKEND_OWNER_BRAND]: true,
+    id: "backend-owner:" + DEFAULT_COMPOSITION_CONFIG.instanceId,
+    options,
+    close: input.closeBackend,
+  });
   // The owner travels WITH its options (non-enumerable symbol), so the server facade recovers the REAL
   // composed owner instead of re-branding plain options. Object.keys is unaffected (181-key ledger).
   Object.defineProperty(options, BACKEND_OWNER_REF, { enumerable: false, value: owner });
@@ -917,38 +963,81 @@ export interface ServerTransport {
   readonly createServer: (listener: (request: never, response: never) => void, options: StartBridgeServerOptions) => ServerHandle;
   readonly listen: (server: ServerHandle, host: string, port: number) => Promise<number>;
   readonly close: (server: ServerHandle) => Promise<void>;
+  /** Admission stop before join/interrupt; optional so simple test transports keep working. */
+  readonly stopAccepting?: (server: ServerHandle) => Promise<void>;
+  /** Joins in-flight work after admission stopped. */
+  readonly join?: (server: ServerHandle) => Promise<void>;
+  /** Interrupts remaining tasks after the join bound. */
+  readonly interrupt?: (server: ServerHandle) => void;
+}
+
+export interface BackendOwnerClose {
+  readonly close?: () => Promise<void>;
 }
 
 export interface ServerOwner {
   readonly id: string;
   readonly backend: BackendOwner;
   readonly start: () => Promise<{ readonly port: number; readonly close: () => Promise<void> }>;
+  /** Ordered shutdown: stop admission -> join -> interrupt -> close transport -> close backend; release-all. */
+  readonly shutdown: () => Promise<void>;
 }
 
 export const composeServerOwner = (input: {
   readonly backend: BackendOwner;
   readonly handlerFactory: (options: StartBridgeServerOptions) => (request: never, response: never) => Promise<void>;
   readonly transport: ServerTransport;
+  /** Bounded join/drain before interrupt (default 10s). */
+  readonly joinTimeoutMs?: number;
 }): ServerOwner => {
   const backend = assertComposedBackendOwner(input.backend);
   // SAFETY: the brand symbol is the runtime identity marker; the static type is BackendOwner.
   const brandedBackend = backend as BackendOwner;
-  return Object.freeze({
+  let handle: ServerHandle | null = null;
+  let shutdownPromise: Promise<void> | null = null;
+  const owner = Object.freeze({
     [SERVER_OWNER_BRAND]: true,
     backend: brandedBackend,
     id: "server-owner:" + DEFAULT_COMPOSITION_CONFIG.instanceId,
     async start() {
       const listener = input.transport.createListener(backend.options, input.handlerFactory);
       const server = input.transport.createServer(listener, backend.options);
+      handle = server;
       const port = await input.transport.listen(server, backend.options.host, backend.options.port);
       return {
-        async close() {
-          await input.transport.close(server);
-        },
+        close: () => owner.shutdown(),
         port,
       };
     },
+    shutdown() {
+      if (shutdownPromise !== null) return shutdownPromise;
+      shutdownPromise = (async () => {
+        const server = handle;
+        if (server === null) return;
+        const steps: Array<() => Promise<void>> = [];
+        if (input.transport.stopAccepting !== undefined) steps.push(() => input.transport.stopAccepting!(server));
+        if (input.transport.join !== undefined) {
+          const joinTimeoutMs = input.joinTimeoutMs ?? 10_000;
+          steps.push(
+            () =>
+              new Promise<void>((resolve, reject) => {
+                const timer = setTimeout(() => reject(new ServerJoinTimeoutError(joinTimeoutMs)), joinTimeoutMs);
+                input.transport.join!(server).then(
+                  () => { clearTimeout(timer); resolve(); },
+                  (error: Error) => { clearTimeout(timer); reject(error); },
+                );
+              }),
+          );
+        }
+        if (input.transport.interrupt !== undefined) steps.push(async () => { input.transport.interrupt!(server); });
+        steps.push(() => input.transport.close(server));
+        if (brandedBackend.close !== undefined) steps.push(() => brandedBackend.close!());
+        await runReleaseAll(steps);
+      })();
+      return shutdownPromise;
+    },
   });
+  return owner;
 };
 
 /** TEST SEAM ONLY: bare StartBridgeServerOptions (tests that do not go through composeBackendOwner) are

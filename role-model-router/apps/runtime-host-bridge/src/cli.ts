@@ -31,7 +31,7 @@ import {
   resolveBridgeServerOptions,
   startBridgeServer,
 } from "./index.js";
-import { assertComposedBackendOwner, composeBackendOwner } from "./composition-dag.js";
+import { assertComposedBackendOwner, composeBackendOwner, onceClose } from "./composition-dag.js";
 import { validateRun88PrivateDistributionIdentity } from "./kw-private-loader.js";
 import {
   describeRouterPolicyResolution,
@@ -4323,6 +4323,7 @@ export function createCliServerOptions(
   backendOrResolver: CliBackend | CliBackendResolver,
   shutdown?: () => Promise<void>,
   onBackendOwner?: (owner: import("./composition-dag.js").BackendOwner) => void,
+  closeBackend?: () => Promise<void>,
 ): StartBridgeServerOptions {
   void onBackendOwner;
   const resolveBackend = () =>
@@ -4367,6 +4368,7 @@ export function createCliServerOptions(
       projectCliStartupReadiness(state),
     emptyRegistry: EMPTY_REGISTRY,
     emptyCatalog: EMPTY_CATALOG,
+    closeBackend,
     overrides: {
     readCaptureEvidence: (bindBackendMethod as unknown as (method: string) => unknown)(
     "readCaptureEvidence",
@@ -5110,6 +5112,13 @@ export async function main(): Promise<void> {
    * itself here, and shutdown/failure release through this scope instead of hand-picking.
    */
   const hostScope = createHostRuntimeScope();
+  // S321/S322 (R27): backend teardown runs through the DAG Backend close member; the shared idempotent
+  // closer closes the packaged SCOPE (the acquireRelease finalizer owns the runtime), so the DAG path and
+  // the later hostScope path can never close it twice.
+  const closePackagedScopeRef: { current: (() => Promise<void>) | null } = { current: null };
+  const closePackagedRuntimeOnce = onceClose(async () => {
+    if (closePackagedScopeRef.current !== null) await closePackagedScopeRef.current();
+  });
   // R3: the post-observation handler needs the running registry's configured
   // endpoints, but it is defined before the backend exists. The reference is filled
   // in once the runtime is created and read on every observation.
@@ -5231,6 +5240,7 @@ export async function main(): Promise<void> {
       (owner) => {
         backendOwner = owner;
       },
+      closePackagedRuntimeOnce,
     );
     return startBridgeServer(serverOptions, backendOwner === undefined ? undefined : { backend: backendOwner });
   };
@@ -11994,6 +12004,10 @@ export async function main(): Promise<void> {
         await Effect.runPromise(Scope.close(extensionOwnerScope, Exit.void));
       });
       const packagedScope = Effect.runSync(Scope.make());
+      // S322: the onceClose wrapper closes the SCOPE (finalizer owns the packaged runtime).
+      closePackagedScopeRef.current = async () => {
+        await Effect.runPromise(Scope.close(packagedScope, Exit.void));
+      };
       try {
         packagedRuntime = await Effect.runPromise(
           Scope.provide(
@@ -12144,9 +12158,7 @@ export async function main(): Promise<void> {
         },
       );
       backend = packagedRuntime.backend;
-      hostScope.register("packagedRuntime", async () => {
-        await Effect.runPromise(Scope.close(packagedScope, Exit.void));
-      });
+      hostScope.register("packagedRuntime", async () => { await closePackagedRuntimeOnce(); });
       stopExtensionRuntimeWatchdog = startCliExtensionRuntimeWatchdog({
         getRuntime: () => extensionRuntimeRef.current,
         bootstrapState,
