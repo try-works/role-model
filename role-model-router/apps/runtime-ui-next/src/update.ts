@@ -57,10 +57,18 @@ import {
 import {
   endpointAdmissionBusy,
   endpointActivationPayloads,
+  type EndpointAdmissionState,
   endpointBatchPayload,
   initialEndpointAdmissionState,
   validateEndpointAdmissionDraft,
 } from "./endpoint-admission";
+import {
+  beginEndpointActivationRun,
+  endpointActivationFailureText,
+  endpointActivationNeedsReset,
+  resetEndpointActivationRun,
+  settleEndpointActivation,
+} from "./endpoint-activation-tracker";
 import {
   createProviderAccountPayload,
   initialProviderAccountState,
@@ -206,6 +214,34 @@ export const createUpdate =
     learningRankingCommands: LearningRankingCommands = noopLearningRankingCommands,
     requestsRankingCommands: RequestsRankingCommands = noopRequestsRankingCommands,
   ) => {
+const endpointAdmissionCompletion = (
+  model: Model,
+  state: EndpointAdmissionState,
+  run: EndpointAdmissionState["run"],
+): UpdateReturn<Model, Message> => {
+  const failureText = endpointActivationFailureText(run);
+  const status =
+    run.status === "pending"
+      ? "saving"
+      : run.status === "saved"
+        ? "saved"
+        : run.status === "partial"
+          ? "partial"
+          : "error";
+  return {
+    model: {
+      ...model,
+      endpointAdmission: {
+        ...state,
+        error: status === "saving" ? undefined : failureText,
+        pendingAction: status === "saving" ? state.pendingAction : undefined,
+        run,
+        status,
+      },
+    },
+  };
+};
+
     const navigateToRoute = (
       model: Model,
       route: AppRoute,
@@ -1157,16 +1193,19 @@ export const createUpdate =
       },
       EndpointAdmissionFieldChanged: ({ field, value }) => {
         const state = model.endpointAdmission ?? initialEndpointAdmissionState();
+        if (endpointAdmissionBusy(state) || endpointActivationNeedsReset(state.run)) return { model };
         return { model: { ...model, endpointAdmission: { ...state, draft: { ...state.draft, [field]: value }, error: undefined } } };
       },
       EndpointAdmissionModelAdded: () => {
         const state = model.endpointAdmission ?? initialEndpointAdmissionState();
+        if (endpointAdmissionBusy(state) || endpointActivationNeedsReset(state.run)) return { model };
         const modelId = state.draft.modelInput.trim();
         if (modelId.length === 0) return { model };
         return { model: { ...model, endpointAdmission: { ...state, draft: { ...state.draft, modelInput: "", selectedModelIds: [...new Set([...state.draft.selectedModelIds, modelId])] } } } };
       },
       EndpointAdmissionModelRemoved: ({ modelId }) => {
         const state = model.endpointAdmission ?? initialEndpointAdmissionState();
+        if (endpointAdmissionBusy(state) || endpointActivationNeedsReset(state.run)) return { model };
         return { model: { ...model, endpointAdmission: { ...state, draft: { ...state.draft, selectedModelIds: state.draft.selectedModelIds.filter((id) => id !== modelId) } } } };
       },
       EndpointAdmissionSubmitRequested: () => {
@@ -1174,27 +1213,53 @@ export const createUpdate =
         if (endpointAdmissionBusy(state)) return { model };
         const errors = validateEndpointAdmissionDraft(state);
         if (errors.length > 0) return { model: { ...model, endpointAdmission: { ...state, error: errors.join(" "), status: "error" } } };
-        const token = state.token + 1;
+        if (endpointActivationNeedsReset(state.run)) return { model };
         const batch = state.draft.batchMode === "true";
-        const commands = batch
-          ? [endpointAdmissionCommands.activateBatch({ payload: JSON.stringify(endpointBatchPayload(state.draft)), token })]
-          : endpointActivationPayloads(state.draft).map((payload) =>
-              endpointAdmissionCommands.activate({ payload: JSON.stringify(payload), token }),
-            );
+        const planned = batch
+          ? [{ activationId: "batch:" + state.draft.activationBatchId.trim(), payload: endpointBatchPayload(state.draft) }]
+          : endpointActivationPayloads(state.draft).map((payload) => ({ activationId: "model:" + encodeURIComponent(payload.modelId), payload }));
+        const started = beginEndpointActivationRun(state.run, {
+          activationIds: planned.map((entry) => entry.activationId),
+          mode: batch ? "batch" : "single",
+        });
+        if (started.kind === "busy") return { model };
+        if (started.kind === "invalid") {
+          return { model: { ...model, endpointAdmission: { ...state, error: "Select at least one model.", status: "error" } } };
+        }
+        const commands = planned.map((entry) =>
+          batch
+            ? endpointAdmissionCommands.activateBatch({ activationId: entry.activationId, generation: started.generation, payload: JSON.stringify(entry.payload) })
+            : endpointAdmissionCommands.activate({ activationId: entry.activationId, generation: started.generation, payload: JSON.stringify(entry.payload) }),
+        );
         return {
           commands,
-          model: { ...model, endpointAdmission: { ...state, error: undefined, pendingAction: batch ? "batch" : "activate", status: "saving", token } },
+          model: {
+            ...model,
+            endpointAdmission: { ...state, error: undefined, pendingAction: batch ? "batch" : "activate", run: started.run, status: "saving" },
+          },
         };
       },
-      EndpointAdmissionSucceeded: ({ token }) => {
+      EndpointAdmissionResetRequested: () => {
         const state = model.endpointAdmission ?? initialEndpointAdmissionState();
-        if (token !== state.token) return { model };
-        return { model: { ...model, endpointAdmission: { ...state, error: undefined, pendingAction: undefined, status: "saved" } } };
+        if (state.run.pending.length > 0) return { model };
+        return {
+          model: {
+            ...model,
+            endpointAdmission: { ...state, error: undefined, pendingAction: undefined, run: resetEndpointActivationRun(state.run), status: "draft" },
+          },
+        };
       },
-      EndpointAdmissionFailed: ({ message, token }) => {
+      EndpointAdmissionSucceeded: ({ activationId, generation }) => {
         const state = model.endpointAdmission ?? initialEndpointAdmissionState();
-        if (token !== state.token) return { model };
-        return { model: { ...model, endpointAdmission: { ...state, error: message, pendingAction: undefined, status: "error" } } };
+        const result = settleEndpointActivation(state.run, { activationId, generation, outcome: "succeeded" });
+        if (result.kind !== "updated") return { model };
+        return endpointAdmissionCompletion(model, state, result.run);
+      },
+      EndpointAdmissionFailed: ({ activationId, generation, message }) => {
+        const state = model.endpointAdmission ?? initialEndpointAdmissionState();
+        const result = settleEndpointActivation(state.run, { activationId, generation, outcome: "failed", message });
+        if (result.kind !== "updated") return { model };
+        return endpointAdmissionCompletion(model, state, result.run);
       },
       ThemeApplied: () => ({ model }),
       ToggledTheme: () => {

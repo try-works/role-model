@@ -26,8 +26,15 @@ const draft: EndpointAdmissionDraft = {
 const stateWithDraft = (extra: Partial<ReturnType<typeof initialEndpointAdmissionState>> = {}) => ({
   ...initialEndpointAdmissionState(),
   draft,
-  token: 1,
   ...extra,
+});
+
+const pendingRun = (activationIds: readonly string[]) => ({
+  generation: 1,
+  mode: "single" as const,
+  pending: activationIds.map((activationId) => ({ activationId })),
+  settled: [],
+  status: "pending" as const,
 });
 
 const modelWith = (endpointAdmission: ReturnType<typeof initialEndpointAdmissionState>) =>
@@ -95,11 +102,19 @@ describe("S396c endpoint admission state machine", () => {
   });
 
   it("refuses a second submit while saving, keeps the draft on failure and on validation", () => {
-    const saving = stateWithDraft({ status: "saving" as const });
+    const saving = stateWithDraft({ run: pendingRun(["model:gpt-6", "model:gpt-6-mini"]), status: "saving" as const });
     expect(commandsOf(shellUpdate(modelWith(saving), Message.EndpointAdmissionSubmitRequested({})))).toEqual([]);
-    const failed = shellUpdate(modelWith(stateWithDraft({ status: "saving" as const })), Message.EndpointAdmissionFailed({ message: "conflict", token: 1 }));
+    const firstFailure = shellUpdate(
+      modelWith(saving),
+      Message.EndpointAdmissionFailed({ activationId: "model:gpt-6", generation: 1, message: "conflict" }),
+    );
+    expect(firstFailure.model.endpointAdmission?.status).toBe("saving");
+    const failed = shellUpdate(
+      firstFailure.model,
+      Message.EndpointAdmissionFailed({ activationId: "model:gpt-6-mini", generation: 1, message: "conflict" }),
+    );
     expect(failed.model.endpointAdmission?.status).toBe("error");
-    expect(failed.model.endpointAdmission?.error).toBe("conflict");
+    expect(failed.model.endpointAdmission?.error).toContain("conflict");
     expect(failed.model.endpointAdmission?.draft).toEqual(draft);
     const invalid = shellUpdate(
       modelWith(stateWithDraft({ draft: { ...draft, providerAccountId: "", selectedModelIds: [] } })),

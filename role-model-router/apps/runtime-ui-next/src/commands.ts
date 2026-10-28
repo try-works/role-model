@@ -458,8 +458,8 @@ export const noopProviderAccountCommands = defineProviderAccountCommands(noopPro
 
 export const defineEndpointAdmissionCommands = (client: EndpointAdmissionClient) => ({
   activate: Command.define("ActivateEndpoint", {
-    args: { payload: Schema.String, token: Schema.Number },
-    execute: ({ payload, token }) =>
+    args: { activationId: Schema.String, generation: Schema.Number, payload: Schema.String },
+    execute: ({ activationId, generation, payload }) =>
       Effect.flatMap(
         Effect.exit(
           Effect.tryPromise({
@@ -467,13 +467,13 @@ export const defineEndpointAdmissionCommands = (client: EndpointAdmissionClient)
             try: () => client.activate(JSON.parse(payload) as EndpointActivationPayload),
           }),
         ),
-        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.EndpointAdmissionSucceeded({ token }) : Message.EndpointAdmissionFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("endpoint activation failed"))), token })),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.EndpointAdmissionSucceeded({ activationId, generation }) : Message.EndpointAdmissionFailed({ activationId, generation, message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("endpoint activation failed"))) })),
       ),
     messages: [Message.EndpointAdmissionSucceeded, Message.EndpointAdmissionFailed],
   }),
   activateBatch: Command.define("ActivateEndpointBatch", {
-    args: { payload: Schema.String, token: Schema.Number },
-    execute: ({ payload, token }) =>
+    args: { activationId: Schema.String, generation: Schema.Number, payload: Schema.String },
+    execute: ({ activationId, generation, payload }) =>
       Effect.flatMap(
         Effect.exit(
           Effect.tryPromise({
@@ -481,7 +481,7 @@ export const defineEndpointAdmissionCommands = (client: EndpointAdmissionClient)
             try: () => client.activateBatch(JSON.parse(payload) as EndpointBatchPayload),
           }),
         ),
-        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.EndpointAdmissionSucceeded({ token }) : Message.EndpointAdmissionFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("endpoint activation batch failed"))), token })),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.EndpointAdmissionSucceeded({ activationId, generation }) : Message.EndpointAdmissionFailed({ activationId, generation, message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("endpoint activation batch failed"))) })),
       ),
     messages: [Message.EndpointAdmissionSucceeded, Message.EndpointAdmissionFailed],
   }),

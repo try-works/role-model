@@ -1,5 +1,7 @@
 import { Schema } from "effect";
 
+import { EndpointActivationRunSchema, initialEndpointActivationRun } from "./endpoint-activation-tracker";
+
 /**
  * S396c (M8): endpoint admission form. Single mode posts ONE activation per selected model to
  * POST /api/role-model/endpoints; batch mode posts { activationBatchId, activations } to
@@ -33,8 +35,8 @@ export const EndpointAdmissionStateSchema = Schema.Struct({
   draft: EndpointAdmissionDraftSchema,
   error: Schema.optional(Schema.String),
   pendingAction: Schema.optional(Schema.Literals(["activate", "batch"])),
-  status: Schema.Literals(["draft", "saving", "saved", "error"]),
-  token: Schema.Number,
+  run: EndpointActivationRunSchema,
+  status: Schema.Literals(["draft", "saving", "saved", "partial", "error"]),
 });
 export type EndpointAdmissionState = typeof EndpointAdmissionStateSchema.Type;
 
@@ -48,12 +50,12 @@ export const initialEndpointAdmissionState = (): EndpointAdmissionState => ({
     region: "global",
     selectedModelIds: [],
   },
+  run: initialEndpointActivationRun(),
   status: "draft",
-  token: 0,
 });
 
 export const endpointAdmissionBusy = (state: EndpointAdmissionState): boolean =>
-  state.status === "saving" || state.pendingAction !== undefined;
+  state.run.pending.length > 0 || state.status === "saving" || state.pendingAction !== undefined;
 
 export const validateEndpointAdmissionDraft = (state: EndpointAdmissionState): readonly string[] => {
   const errors: string[] = [];

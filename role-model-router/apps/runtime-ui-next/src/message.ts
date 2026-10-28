@@ -91,8 +91,9 @@ export const Message: MessageUnion<{
   readonly EndpointAdmissionModelAdded: EmptyFields;
   readonly EndpointAdmissionModelRemoved: { readonly modelId: typeof Schema.String };
   readonly EndpointAdmissionSubmitRequested: EmptyFields;
-  readonly EndpointAdmissionSucceeded: { readonly token: typeof Schema.Number };
-  readonly EndpointAdmissionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly EndpointAdmissionResetRequested: EmptyFields;
+  readonly EndpointAdmissionSucceeded: { readonly activationId: typeof Schema.String; readonly generation: typeof Schema.Number };
+  readonly EndpointAdmissionFailed: { readonly activationId: typeof Schema.String; readonly generation: typeof Schema.Number; readonly message: typeof Schema.String };
   readonly ProviderAccountFieldChanged: { readonly field: typeof ProviderAccountFieldSchema; readonly value: typeof Schema.String };
   readonly ProviderAccountModelAdded: EmptyFields;
   readonly ProviderAccountModelRemoved: { readonly modelId: typeof Schema.String };
@@ -197,8 +198,9 @@ export const Message: MessageUnion<{
   EndpointAdmissionModelAdded: {},
   EndpointAdmissionModelRemoved: { modelId: Schema.String },
   EndpointAdmissionSubmitRequested: {},
-  EndpointAdmissionSucceeded: { token: Schema.Number },
-  EndpointAdmissionFailed: { message: Schema.String, token: Schema.Number },
+  EndpointAdmissionResetRequested: {},
+  EndpointAdmissionSucceeded: { activationId: Schema.String, generation: Schema.Number },
+  EndpointAdmissionFailed: { activationId: Schema.String, generation: Schema.Number, message: Schema.String },
   ProviderAccountFieldChanged: { field: ProviderAccountFieldSchema, value: Schema.String },
   ProviderAccountModelAdded: {},
   ProviderAccountModelRemoved: { modelId: Schema.String },
