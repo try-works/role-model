@@ -1,3 +1,4 @@
+import { Cause } from "effect";
 import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 
 import {
@@ -3532,6 +3533,11 @@ export interface StartBridgeServerOptions {
     readonly maxCodeBytes?: number;
     readonly instanceId?: string;
     readonly buildId?: string;
+    /**
+     * S365a calibration decision: enabled:true alone is NOT enough; a calibration approval must
+     * accompany it. Absent or approved !== true keeps the writer (and route) disabled.
+     */
+    readonly calibration?: { readonly approved?: boolean; readonly reason?: string };
   };
   readonly registry: EndpointRegistryResult;
   readonly getRegistry?: () => EndpointRegistryResult;
@@ -20542,14 +20548,22 @@ function appendRuntimeHttpTrace(
  * (its finalizers have run) and the unhandled-failure sink has not yet translated the failure to the
  * wire. That catch is the single request-lifecycle edge available in this async handler.
  *
- * R20 GAP (recorded, not approximated): the edge observes ONLY failures that ESCAPE the route
- * handlers; handled failures are translated per route and never reach it. The edge calls
- * recordError, which records every escape as the coarse code "error" - the Fail/Die/Interrupt
- * classification in observe/recordCause is not wired to this edge - and a client-caused escape
- * (a 4xx-ish BridgeHttpError that escapes a route) is still counted as a module failure. Closing
- * this needs an Effect boundary at the request entry or per-route hooks with ONE report owner,
- * plus classification and calibration; R20 remains open on those points.
+ * S365a (R20): the edge now records the CAUSE classification (Fail/Die/Interrupt via recordCause),
+ * excludes client-caused 4xx escapes from module-failure counts, and requires the explicit enabled
+ * flag AND a calibration approval before a writer is constructed. The remaining limitation: the
+ * edge observes ONLY failures that ESCAPE the route handlers; handled failures are translated per
+ * route and never reach it (an Effect boundary at the request entry is still the follow-on).
  */
+export const isClientCausedModuleHealthEscape = (error: unknown): boolean => {
+  if (typeof error !== "object" || error === null) return false;
+  // SAFETY: only an optional numeric statusCode is read; hostile accessors still throw inside the report edge.
+  const statusCode = (error as { readonly statusCode?: unknown }).statusCode;
+  return typeof statusCode === "number" && statusCode >= 400 && statusCode < 500;
+};
+
+export const moduleHealthCauseForEscape = (error: unknown): Cause.Cause<unknown> =>
+  Cause.isCause(error) ? error : Cause.fail(error);
+
 export interface ModuleHealthComposition {
   readonly reportRequestFailure: (error: unknown) => void;
   readonly source: () => LocalDiagnosticsSource;
@@ -20561,7 +20575,7 @@ export function createModuleHealthComposition(
 ): ModuleHealthComposition | undefined {
   const config = options.diagnostics ?? {};
   // DEFAULT OFF. Enablement is the R20 calibration decision; absent/false must not construct a writer.
-  if (config?.enabled !== true) return undefined;
+  if (config?.enabled !== true || config.calibration?.approved !== true) return undefined;
   const writer = makeModuleHealthWriter({
     ...(config.buildId === undefined ? {} : { buildId: config.buildId }),
     ...(config.capacity === undefined ? {} : { capacity: config.capacity }),
@@ -20570,7 +20584,8 @@ export function createModuleHealthComposition(
   });
   return {
     reportRequestFailure: (error: unknown) => {
-      writer.recordError(error);
+      if (isClientCausedModuleHealthEscape(error)) return;
+      writer.recordCause(moduleHealthCauseForEscape(error));
     },
     source: () => writer.source(),
     writer,

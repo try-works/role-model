@@ -37,7 +37,7 @@ const request = (headers: Readonly<Record<string, string | string[] | undefined>
 });
 
 const requireComposition = (options: {
-  readonly diagnostics?: { readonly enabled?: boolean; readonly instanceId?: string; readonly buildId?: string };
+  readonly diagnostics?: { readonly enabled?: boolean; readonly instanceId?: string; readonly buildId?: string; readonly calibration?: { readonly approved?: boolean } };
 }): ModuleHealthComposition => {
   const composition = createModuleHealthComposition(options);
   if (composition === undefined) {
@@ -46,20 +46,18 @@ const requireComposition = (options: {
   return composition;
 };
 
-const recordCodes = (body: Record<string, unknown>): ReadonlyArray<string> => {
+const recordCodes = (body: { readonly records?: unknown }): ReadonlyArray<string> => {
   const records = body.records;
   if (!Array.isArray(records)) return [];
-  return records.flatMap((entry) => {
-    if (entry === null || typeof entry !== "object") return [];
-    const code = (entry as { code?: unknown }).code;
-    return typeof code === "string" ? [code] : [];
-  });
+  // SAFETY: the diagnostics read contract bounds each record to scalars; only the string code is read.
+  const entries = records as ReadonlyArray<{ readonly code?: string }>;
+  return entries.flatMap((entry) => (entry.code === undefined ? [] : [entry.code]));
 };
 
 describe("S10b module-health writer composition", () => {
   it("enabled: a recorded failure appears through the real diagnostics read and business values are unchanged", () => {
     const composition = requireComposition({
-      diagnostics: { buildId: "build-s10b", enabled: true, instanceId: "inst-s10b" },
+      diagnostics: { buildId: "build-s10b", calibration: { approved: true }, enabled: true, instanceId: "inst-s10b" },
     });
 
     // Business behaviour unchanged: the observer returns the success value untouched...
@@ -82,8 +80,7 @@ describe("S10b module-health writer composition", () => {
     expect(result.body.state).toBe("ok");
     expect(result.body.identity).toEqual({ instanceId: "inst-s10b", buildId: "build-s10b" });
     const codes = recordCodes(result.body);
-    expect(codes).toContain("cause.fail");
-    expect(codes).toContain("error");
+    expect(codes).toEqual(["cause.fail", "cause.fail"]);
     expect(result.body.recordCount).toBe(2);
   });
 
