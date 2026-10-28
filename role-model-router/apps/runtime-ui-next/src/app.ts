@@ -3,6 +3,7 @@ import {
   defineDispatchStudio,
   defineDeviceAuthCommands,
   defineProviderAccountCommands,
+  defineEndpointAdmissionCommands,
   defineDispatchControl,
   defineReadControl,
   defineReadDiagnostics,
@@ -12,6 +13,7 @@ import {
   defineSaveRuntimeConfig,
 } from "./commands";
 import { createDeviceAuthClient } from "./device-auth";
+import { createEndpointAdmissionClient } from "./endpoint-admission";
 import { createProviderAccountClient } from "./provider-account";
 import { type ControlClient, createControlClients } from "./control";
 import type { DiagnosticsReader } from "./diagnostics";
@@ -57,6 +59,7 @@ export interface ShellOptions {
   readonly runtimeConfigFetchImpl?: typeof fetch;
   readonly deviceAuthFetchImpl?: typeof fetch;
   readonly providerAccountFetchImpl?: typeof fetch;
+  readonly endpointAdmissionFetchImpl?: typeof fetch;
   readonly controlToken?: string;
 }
 
@@ -134,6 +137,7 @@ export const createShellApp = (options: ShellOptions = {}) => {
       saveRuntimeConfig,
       defineDeviceAuthCommands(createDeviceAuthClient({ ...(options.deviceAuthFetchImpl === undefined ? {} : { fetchImpl: options.deviceAuthFetchImpl }) })),
       defineProviderAccountCommands(createProviderAccountClient({ ...(options.providerAccountFetchImpl === undefined ? {} : { fetchImpl: options.providerAccountFetchImpl }) })),
+      defineEndpointAdmissionCommands(createEndpointAdmissionClient({ ...(options.endpointAdmissionFetchImpl === undefined ? {} : { fetchImpl: options.endpointAdmissionFetchImpl }) })),
     ),
     view,
   };

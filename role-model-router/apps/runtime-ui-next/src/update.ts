@@ -14,6 +14,8 @@ import {
   type ReadDiagnosticsCommand,
   type ReadObservabilityCommand,
   type DeviceAuthCommands,
+  type EndpointAdmissionCommands,
+  noopEndpointAdmissionCommands,
   type ProviderAccountCommands,
   noopProviderAccountCommands,
   noopDeviceAuthCommands,
@@ -36,6 +38,13 @@ import {
   loadingControl,
 } from "./control";
 import { failedDiagnostics, idleDiagnostics, loadingDiagnostics } from "./diagnostics";
+import {
+  endpointAdmissionBusy,
+  endpointActivationPayloads,
+  endpointBatchPayload,
+  initialEndpointAdmissionState,
+  validateEndpointAdmissionDraft,
+} from "./endpoint-admission";
 import {
   createProviderAccountPayload,
   initialProviderAccountState,
@@ -176,6 +185,7 @@ export const createUpdate =
     saveRuntimeConfig: SaveRuntimeConfigCommand | undefined = undefined,
     deviceAuthCommands: DeviceAuthCommands = noopDeviceAuthCommands,
     providerAccountCommands: ProviderAccountCommands = noopProviderAccountCommands,
+    endpointAdmissionCommands: EndpointAdmissionCommands = noopEndpointAdmissionCommands,
   ) => {
     const navigateToRoute = (
       model: Model,
@@ -1009,6 +1019,47 @@ export const createUpdate =
         const state = model.providerAccount ?? initialProviderAccountState();
         if (token !== state.token) return { model };
         return { model: { ...model, providerAccount: { ...state, error: message, pendingAction: undefined, status: "error" } } };
+      },
+      EndpointAdmissionFieldChanged: ({ field, value }) => {
+        const state = model.endpointAdmission ?? initialEndpointAdmissionState();
+        return { model: { ...model, endpointAdmission: { ...state, draft: { ...state.draft, [field]: value }, error: undefined } } };
+      },
+      EndpointAdmissionModelAdded: () => {
+        const state = model.endpointAdmission ?? initialEndpointAdmissionState();
+        const modelId = state.draft.modelInput.trim();
+        if (modelId.length === 0) return { model };
+        return { model: { ...model, endpointAdmission: { ...state, draft: { ...state.draft, modelInput: "", selectedModelIds: [...new Set([...state.draft.selectedModelIds, modelId])] } } } };
+      },
+      EndpointAdmissionModelRemoved: ({ modelId }) => {
+        const state = model.endpointAdmission ?? initialEndpointAdmissionState();
+        return { model: { ...model, endpointAdmission: { ...state, draft: { ...state.draft, selectedModelIds: state.draft.selectedModelIds.filter((id) => id !== modelId) } } } };
+      },
+      EndpointAdmissionSubmitRequested: () => {
+        const state = model.endpointAdmission ?? initialEndpointAdmissionState();
+        if (endpointAdmissionBusy(state)) return { model };
+        const errors = validateEndpointAdmissionDraft(state);
+        if (errors.length > 0) return { model: { ...model, endpointAdmission: { ...state, error: errors.join(" "), status: "error" } } };
+        const token = state.token + 1;
+        const batch = state.draft.batchMode === "true";
+        const commands = batch
+          ? [endpointAdmissionCommands.activateBatch({ payload: JSON.stringify(endpointBatchPayload(state.draft)), token })]
+          : endpointActivationPayloads(state.draft).map((payload) =>
+              endpointAdmissionCommands.activate({ payload: JSON.stringify(payload), token }),
+            );
+        return {
+          commands,
+          model: { ...model, endpointAdmission: { ...state, error: undefined, pendingAction: batch ? "batch" : "activate", status: "saving", token } },
+        };
+      },
+      EndpointAdmissionSucceeded: ({ token }) => {
+        const state = model.endpointAdmission ?? initialEndpointAdmissionState();
+        if (token !== state.token) return { model };
+        return { model: { ...model, endpointAdmission: { ...state, error: undefined, pendingAction: undefined, status: "saved" } } };
+      },
+      EndpointAdmissionFailed: ({ message, token }) => {
+        const state = model.endpointAdmission ?? initialEndpointAdmissionState();
+        if (token !== state.token) return { model };
+        return { model: { ...model, endpointAdmission: { ...state, error: message, pendingAction: undefined, status: "error" } } };
       },
       ThemeApplied: () => ({ model }),
       ToggledTheme: () => {

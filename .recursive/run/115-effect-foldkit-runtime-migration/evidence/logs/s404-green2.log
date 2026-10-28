@@ -1,0 +1,3040 @@
+COMMAND: node vitest run (S405 repair: 7 files)
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s110-nav-links.test.ts (25 tests) 93ms
+ ✓ test/s404-endpoint-admission.test.ts (9 tests) 30ms
+ ✓ test/s401-provider-account-form.test.ts (11 tests) 61ms
+ ✓ test/s278-telemetry-refresh.test.ts (8 tests) 213ms
+ ✓ test/s269-canonical-url.test.ts (81 tests) 432ms
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 54.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Providers' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 54.49859999999899,
+  thresholdMs: 8
+}
+
+stderr | test/s397-device-auth-form.test.ts > S398 device-authorization retry control (DOM) > shows a retry control after a failed read and retries the device read on click
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 62.2ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Providers' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 62.17979999999989,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s397-device-auth-form.test.ts > S398 device-authorization retry control (DOM) > shows a retry control after a failed read and retries the device read on click
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+ ✓ test/s397-device-auth-form.test.ts (15 tests) 852ms
+   ✓ S398 device-authorization retry control (DOM) > shows a retry control after a failed read and retries the device read on click  790ms
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 32.9ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Providers' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 32.85779999999977,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 33.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Providers' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 33.52859999999964,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Providers renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 24.9ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Providers' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 24.9458999999988,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 23.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Endpoints' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 23.066899999999805,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 24.0ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Endpoints' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 24.03490000000056,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 32.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Endpoints' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 32.054700000000594,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 18.6ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Endpoints' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 18.56370000000061,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Endpoints renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 17.7ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'ControlController' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 17.738899999998466,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 18.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'ControlController' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 18.827800000000934,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 18.2ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'ControlController' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 18.154700000000958,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 17.6ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'ControlController' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 17.6200000000008,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > Controller renders success, empty, loading and error on the DOM
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > renders the exact action failure phrase
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 20.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Providers' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 20.454200000000128,
+  thresholdMs: 8
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > renders the exact action failure phrase
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > renders the exact action failure phrase
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > renders the exact action failure phrase
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts > S26k control surface > renders the exact action failure phrase
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s26k-control.test.ts
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s26k-control.test.ts
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+ ✓ test/s26k-control.test.ts (7 tests) 7592ms
+   ✓ S26k control surface > Providers renders success, empty, loading and error on the DOM  2490ms
+   ✓ S26k control surface > Endpoints renders success, empty, loading and error on the DOM  2267ms
+   ✓ S26k control surface > Controller renders success, empty, loading and error on the DOM  2234ms
+   ✓ S26k control surface > renders the exact action failure phrase  569ms
+
+ Test Files  7 passed (7)
+      Tests  156 passed (156)
+   Start at  17:27:36
+   Duration  16.65s (transform 5.40s, setup 0ms, collect 42.79s, tests 9.27s, environment 10.49s, prepare 2.99s)
+
+

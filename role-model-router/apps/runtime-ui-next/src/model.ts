@@ -2,6 +2,7 @@ import { Schema } from "effect";
 
 import { ControlsState } from "./control";
 import { DeviceAuthStateSchema } from "./device-auth";
+import { EndpointAdmissionStateSchema } from "./endpoint-admission";
 import { ProviderAccountStateSchema } from "./provider-account";
 import { DiagnosticsSnapshot } from "./diagnostics";
 import { ObservabilityState } from "./observability";
@@ -15,6 +16,7 @@ const modelFields = {
   controls: ControlsState,
   deviceAuth: Schema.optional(DeviceAuthStateSchema),
   diagnostics: DiagnosticsSnapshot,
+  endpointAdmission: Schema.optional(EndpointAdmissionStateSchema),
   providerAccount: Schema.optional(ProviderAccountStateSchema),
   observability: ObservabilityState,
   overviewFilters: Schema.optional(Schema.Struct({ breakdown: Schema.Literals(["all", "endpoint", "model", "provider"]), breakdownValue: Schema.String, difficulty: Schema.Literals(["all", "easy", "medium", "hard"]), source: Schema.Literals(["all", "local", "remote"]), status: Schema.Literals(["all", "success", "failure", "unknown"]) })),

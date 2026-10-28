@@ -1,0 +1,82 @@
+COMMAND: node vitest run s404 (S396c RED)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s404-endpoint-admission.test.ts (7 tests | 4 failed) 23ms
+   ✓ S396c endpoint admission payloads > builds one exact activation per selected model (single mode) 3ms
+   ✓ S396c endpoint admission payloads > builds the exact batch payload 1ms
+   ✓ S396c endpoint admission payloads > POSTs the exact single and batch bodies 3ms
+   × S396c endpoint admission state machine > single mode emits one ActivateEndpoint per model 7ms
+     → Message.EndpointAdmissionSubmitRequested is not a function
+   × S396c endpoint admission state machine > batch mode emits ONE batch command 1ms
+     → Message.EndpointAdmissionSubmitRequested is not a function
+   × S396c endpoint admission state machine > refuses a second submit while saving, keeps the draft on failure and on validation 1ms
+     → Message.EndpointAdmissionSubmitRequested is not a function
+   × S396c endpoint admission state machine > removes the S208 disabled reason now that the form is real 5ms
+     → expected true to be false // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s404-endpoint-admission.test.ts > S396c endpoint admission state machine > single mode emits one ActivateEndpoint per model
+TypeError: Message.EndpointAdmissionSubmitRequested is not a function
+ ❯ test/s404-endpoint-admission.test.ts:84:69
+     82| describe("S396c endpoint admission state machine", () => {
+     83|   it("single mode emits one ActivateEndpoint per model", () => {
+     84|     const result = shellUpdate(modelWith(stateWithDraft()), Message.En…
+       |                                                                     ^
+     85|     expect(names(result)).toEqual(["ActivateEndpoint", "ActivateEndpoi…
+     86|     const payloads = commandsOf(result).map((command) => JSON.parse(St…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/s404-endpoint-admission.test.ts > S396c endpoint admission state machine > batch mode emits ONE batch command
+TypeError: Message.EndpointAdmissionSubmitRequested is not a function
+ ❯ test/s404-endpoint-admission.test.ts:92:58
+     90|   it("batch mode emits ONE batch command", () => {
+     91|     const state = stateWithDraft({ draft: { ...draft, batchMode: "true…
+     92|     const result = shellUpdate(modelWith(state), Message.EndpointAdmis…
+       |                                                          ^
+     93|     expect(names(result)).toEqual(["ActivateEndpointBatch"]);
+     94|     expect(JSON.parse(String(commandsOf(result)[0]?.args?.payload)).ac…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/s404-endpoint-admission.test.ts > S396c endpoint admission state machine > refuses a second submit while saving, keeps the draft on failure and on validation
+TypeError: Message.EndpointAdmissionSubmitRequested is not a function
+ ❯ test/s404-endpoint-admission.test.ts:99:62
+     97|   it("refuses a second submit while saving, keeps the draft on failure…
+     98|     const saving = stateWithDraft({ status: "saving" as const });
+     99|     expect(commandsOf(shellUpdate(modelWith(saving), Message.EndpointA…
+       |                                                              ^
+    100|     const failed = shellUpdate(modelWith(stateWithDraft({ status: "sav…
+    101|     expect(failed.model.endpointAdmission?.status).toBe("error");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/s404-endpoint-admission.test.ts > S396c endpoint admission state machine > removes the S208 disabled reason now that the form is real
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ test/s404-endpoint-admission.test.ts:114:72
+    112| 
+    113|   it("removes the S208 disabled reason now that the form is real", () …
+    114|     expect("disabledReason" in (CONTROL_SPECS.endpoints.action ?? {}))…
+       |                                                                        ^
+    115|   });
+    116| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 3 passed (7)
+   Start at  17:14:13
+   Duration  6.74s (transform 3.21s, setup 0ms, collect 5.15s, tests 23ms, environment 699ms, prepare 375ms)
+
+

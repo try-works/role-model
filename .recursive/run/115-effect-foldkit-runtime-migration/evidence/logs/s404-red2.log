@@ -1,0 +1,59 @@
+COMMAND: node vitest run s404 (S405 RED)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s404-endpoint-admission.test.ts (9 tests | 1 failed) 36ms
+   ✓ S396c endpoint admission payloads > builds one exact activation per selected model (single mode) 3ms
+   ✓ S396c endpoint admission payloads > builds the exact batch payload 1ms
+   ✓ S396c endpoint admission payloads > POSTs the exact single and batch bodies 3ms
+   ✓ S396c endpoint admission state machine > single mode emits one ActivateEndpoint per model 8ms
+   ✓ S396c endpoint admission state machine > batch mode emits ONE batch command 1ms
+   ✓ S396c endpoint admission state machine > refuses a second submit while saving, keeps the draft on failure and on validation 2ms
+   ✓ S396c endpoint admission state machine > removes the S208 disabled reason now that the form is real 0ms
+   ✓ S405 batch activation bound > accepts 32 selected models in one batch command 1ms
+   × S405 batch activation bound > refuses 33 selected models in batch mode with a typed validation error keeping the draft 13ms
+     → expected [ { …(4) } ] to deeply equal []
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s404-endpoint-admission.test.ts > S405 batch activation bound > refuses 33 selected models in batch mode with a typed validation error keeping the draft
+AssertionError: expected [ { …(4) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "args": {
++       "payload": "{\"activationBatchId\":\"activation-batch-1\",\"activations\":[{\"modelId\":\"model-0\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-1\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-2\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-3\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-4\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-5\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-6\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-7\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-8\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-9\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-10\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-11\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-12\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-13\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-14\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-15\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-16\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-17\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-18\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-19\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-20\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-21\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-22\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-23\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-24\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-25\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-26\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-27\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-28\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-29\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-30\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-31\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"},{\"modelId\":\"model-32\",\"providerAccountId\":\"openai.personal.default\",\"reasoningEffort\":\"high\",\"region\":\"global\"}]}",
++       "token": 2,
++     },
++     "effect": {
++       "_id": "Effect",
++       "args": [Function anonymous],
++       "op": "Suspend",
++     },
++     "messageMappers": [],
++     "name": "ActivateEndpointBatch",
++   },
++ ]
+
+ ❯ test/s404-endpoint-admission.test.ts:129:32
+    127|     const state = stateWithDraft({ draft: { ...draft, batchMode: "true…
+    128|     const result = shellUpdate(modelWith(state), Message.EndpointAdmis…
+    129|     expect(commandsOf(result)).toEqual([]);
+       |                                ^
+    130|     expect(result.model.endpointAdmission?.status).toBe("error");
+    131|     expect(result.model.endpointAdmission?.error).toContain("at most 3…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 8 passed (9)
+   Start at  17:27:09
+   Duration  6.86s (transform 3.24s, setup 0ms, collect 5.16s, tests 36ms, environment 687ms, prepare 327ms)
+
+

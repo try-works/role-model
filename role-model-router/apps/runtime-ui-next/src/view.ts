@@ -3,9 +3,10 @@ import type { Document, Html, HtmlBuilder } from "@role-model-router/foldkit/htm
 import { rm3ButtonClassName, view as rm3ButtonView } from "@role-model/ui/foldkit-button";
 
 import { CONTROL_SPECS, type ControlsState } from "./control";
-import { renderControlPage, renderDeviceAuthorizationForm, renderProviderAccountForm } from "./control-view";
+import { renderControlPage, renderDeviceAuthorizationForm, renderEndpointAdmissionForm, renderProviderAccountForm } from "./control-view";
 import { initialDeviceAuthState, type DeviceAuthState } from "./device-auth";
 import { initialProviderAccountState, type ProviderAccountState } from "./provider-account";
+import { initialEndpointAdmissionState, type EndpointAdmissionState } from "./endpoint-admission";
 import {
   type DiagnosticsSnapshot,
   diagnosticsBuildLabel,
@@ -861,6 +862,7 @@ const routeContent = (
   runtimeConfigEditor: Model["runtimeConfigEditor"],
   deviceAuth: DeviceAuthState,
   providerAccount: ProviderAccountState,
+  endpointAdmission: EndpointAdmissionState,
   h: HtmlBuilder<Message>,
 ) =>
   AppRoute.match(route, {
@@ -933,7 +935,11 @@ const routeContent = (
         renderDeviceAuthorizationForm(deviceAuth, h),
         renderProviderAccountForm(providerAccount, h),
       ]),
-    Endpoints: () => renderControlPage(CONTROL_SPECS.endpoints, controls.endpoints, h),
+    Endpoints: () =>
+      h.section([], [
+        renderControlPage(CONTROL_SPECS.endpoints, controls.endpoints, h),
+        renderEndpointAdmissionForm(endpointAdmission, h),
+      ]),
     ControlController: () =>
       renderControlPage(CONTROL_SPECS.controlController, controls.controlController, h, controls.endpoints.rows.map((row) => row.id)),
     Index: () => overviewPage(readbacks.overviewMetrics, readbacks.routerCandidates, overviewWindowMs, h, overviewFilters),
@@ -1203,6 +1209,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                 model.runtimeConfigEditor,
     model.deviceAuth ?? initialDeviceAuthState(),
     model.providerAccount ?? initialProviderAccountState(),
+    model.endpointAdmission ?? initialEndpointAdmissionState(),
                 h,
               ),
             ],

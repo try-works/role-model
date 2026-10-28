@@ -1,4 +1,5 @@
 import type { DeviceAuthField, DeviceAuthState } from "./device-auth";
+import type { EndpointAdmissionField, EndpointAdmissionState } from "./endpoint-admission";
 import type { ProviderAccountField, ProviderAccountState } from "./provider-account";
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 
@@ -7,6 +8,41 @@ import { Message } from "./message";
 
 
 
+
+export const renderEndpointAdmissionForm = (state: EndpointAdmissionState, h: HtmlBuilder<Message>): Html => {
+  const textField = (label: string, field: EndpointAdmissionField, value: string) =>
+    h.label([h.Class("mt-3 flex flex-col gap-1 text-[12px]")], [
+      h.span([], [label]),
+      h.input([
+        h.Class("w-full max-w-[420px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1.5 text-[12px]"),
+        h.OnInput((next) => Message.EndpointAdmissionFieldChanged({ field, value: next })),
+        h.Type("text"),
+        h.Value(value),
+      ]),
+    ]);
+  const busy = state.status === "saving" || state.pendingAction !== undefined;
+  return h.section(
+    [h.Class("rm3-next-route mt-6"), h.DataAttribute("route", "endpoint-admission"), h.DataAttribute("endpoint-admission-state", state.status)],
+    [
+      h.h3([h.Class("text-[14px] font-semibold")], ["Endpoint admission"]),
+      textField("Provider account", "providerAccountId", state.draft.providerAccountId),
+      textField("Region", "region", state.draft.region),
+      textField("Reasoning effort", "reasoningEffort", state.draft.reasoningEffort),
+      textField("Batch mode (true/false)", "batchMode", state.draft.batchMode),
+      textField("Activation batch id", "activationBatchId", state.draft.activationBatchId),
+      h.label([h.Class("mt-3 flex flex-col gap-1 text-[12px]")], [
+        h.span([], ["Model"]),
+        h.input([h.Class("w-full max-w-[420px] rounded px-2 py-1.5 text-[12px]"), h.OnInput((next) => Message.EndpointAdmissionFieldChanged({ field: "modelInput", value: next })), h.Type("text"), h.Value(state.draft.modelInput)]),
+      ]),
+      h.button([h.Class("mt-2 rounded border px-3 py-1.5 text-[12px]"), h.OnClick(Message.EndpointAdmissionModelAdded({})), h.Type("button")], ["Add model"]),
+      h.ul([h.Class("mt-2 text-[12px]")], state.draft.selectedModelIds.map((modelId) =>
+        h.li([], [modelId + " ", h.button([h.Class("underline"), h.OnClick(Message.EndpointAdmissionModelRemoved({ modelId })), h.Type("button")], ["Remove"])]),
+      )),
+      h.button([h.Class("mt-4 rounded border px-3 py-1.5 text-[12px]"), h.AriaDisabled(busy), h.DataAttribute("endpoint-admission-submit", ""), h.OnClick(Message.EndpointAdmissionSubmitRequested({})), h.Type("button")], ["Activate endpoints"]),
+      ...(state.error === undefined ? [] : [h.p([h.Role("alert")], [state.error])]),
+    ],
+  );
+};
 export const renderProviderAccountForm = (state: ProviderAccountState, h: HtmlBuilder<Message>): Html => {
   const textField = (label: string, field: ProviderAccountField, value: string) =>
     h.label([h.Class("mt-3 flex flex-col gap-1 text-[12px]")], [
@@ -220,25 +256,29 @@ export const renderControlPage = (
             ),
           ]
         : []),
-      h.button(
-        [
-          h.Type("button"),
-          h.Class(
-            "mt-3 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3 py-1.5 text-[12px] font-medium text-[var(--rm-fg)] disabled:opacity-50",
-          ),
-          h.DataAttribute("control-action", spec.action.id),
-          h.AriaDisabled(state.actionStatus === "pending" || state.status === "loading" || spec.action.disabledReason !== undefined),
-          ...(spec.action.disabledReason === undefined ? [] : [h.Disabled(true), h.Title(spec.action.disabledReason)]),
-          h.OnClick(
-            Message.ControlActionRequested({
-              key: spec.key,
-              targetId: spec.key === "controlController" ? (state.selectedEndpointId ?? state.rows[0]?.id) : state.rows[0]?.id,
-              token: state.token,
-            }),
-          ),
-        ],
-        [state.actionStatus === "pending" ? "Dispatching…" : spec.action.label],
-      ),
+      ...(spec.action === undefined
+        ? []
+        : [
+            h.button(
+              [
+                h.Type("button"),
+                h.Class(
+                  "mt-3 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3 py-1.5 text-[12px] font-medium text-[var(--rm-fg)] disabled:opacity-50",
+                ),
+                h.DataAttribute("control-action", spec.action.id),
+                h.AriaDisabled(state.actionStatus === "pending" || state.status === "loading" || spec.action.disabledReason !== undefined),
+                ...(spec.action.disabledReason === undefined ? [] : [h.Disabled(true), h.Title(spec.action.disabledReason)]),
+                h.OnClick(
+                  Message.ControlActionRequested({
+                    key: spec.key,
+                    targetId: spec.key === "controlController" ? (state.selectedEndpointId ?? state.rows[0]?.id) : state.rows[0]?.id,
+                    token: state.token,
+                  }),
+                ),
+              ],
+              [state.actionStatus === "pending" ? "Dispatching…" : spec.action.label],
+            ),
+          ]),
       ...(state.actionMessage === undefined
         ? []
         : [

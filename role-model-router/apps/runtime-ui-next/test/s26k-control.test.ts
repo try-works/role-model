@@ -152,6 +152,7 @@ describe("S26k control surface", () => {
         read: async () => ({ body: [{ id: "provider-1" }], status: 200 }),
       }),
     );
+    // SAFETY: waitFor returns the element it asserts exists; only its aria-disabled attribute is read.
     const button = (await waitFor(
       () => document.querySelector("[data-control-action='reconnect']") ?? undefined,
       "providers action",
@@ -190,9 +191,9 @@ describe("S26k control surface", () => {
         endpoint.method,
       );
     }
-    expect(CONTROL_SPECS.providers.action.method).toBe("POST");
-    expect(CONTROL_SPECS.endpoints.action.method).toBe("POST");
-    expect(CONTROL_SPECS.controlController.action.method).toBe("PATCH");
+    expect(CONTROL_SPECS.providers.action!.method).toBe("POST");
+    expect(CONTROL_SPECS.endpoints.action).toBeUndefined();
+    expect(CONTROL_SPECS.controlController.action!.method).toBe("PATCH");
   });
 
   it("sends the real method, path and body through createControlClients", async () => {
@@ -205,17 +206,17 @@ describe("S26k control surface", () => {
         return new Response(JSON.stringify({ ok: true }), { status: 200 });
       },
     });
-    for (const key of ["providers", "endpoints", "controlController"] as const) await clients.dispatch(key);
+    for (const key of ["providers", "controlController"] as const) await clients.dispatch(key);
+    const refused = await clients.dispatch("endpoints");
+    expect(refused.status).toBe(400);
     expect(calls.map((call) => [call.method, call.path])).toEqual([
-      ["POST", CONTROL_SPECS.providers.action.path],
-      ["POST", CONTROL_SPECS.endpoints.action.path],
-      ["PATCH", CONTROL_SPECS.controlController.action.path],
+      ["POST", CONTROL_SPECS.providers.action!.path],
+      ["PATCH", CONTROL_SPECS.controlController.action!.path],
     ]);
     // S209: the specs no longer carry operator-catalogue sample bodies. Without an acting row the
     // payload is empty; the row id is merged at dispatch time.
     expect(JSON.parse(calls[0].body ?? "{}")).toEqual({});
     expect(JSON.parse(calls[1].body ?? "{}")).toEqual({});
-    expect(JSON.parse(calls[2].body ?? "{}")).toEqual({});
 
     const targeted: Array<{ body?: string; method?: string }> = [];
     const targetedClients = createControlClients({
@@ -226,18 +227,17 @@ describe("S26k control surface", () => {
       },
     });
     await targetedClients.dispatch("providers", "provider-account-1");
-    await targetedClients.dispatch("endpoints", "endpoint-1");
     await targetedClients.dispatch("controlController", "endpoint-2");
     expect(JSON.parse(targeted[0]?.body ?? "{}")).toEqual({ providerAccountId: "provider-account-1" });
-    expect(JSON.parse(targeted[1]?.body ?? "{}")).toEqual({});
-    expect(JSON.parse(targeted[2]?.body ?? "{}")).toEqual({ endpointId: "endpoint-2" });
+    expect(JSON.parse(targeted[1]?.body ?? "{}")).toEqual({ endpointId: "endpoint-2" });
   });
 
   it("keeps action bodies and read methods on the shared specs", () => {
-    for (const spec of Object.values(CONTROL_SPECS)) {
+    for (const spec of Object.values(CONTROL_SPECS).filter((candidate) => candidate.action !== undefined)) {
       expect(spec.read.method).toBe("GET");
-      expect(spec.action.method === "POST" || spec.action.method === "PATCH").toBe(true);
-      expect(spec.action.path.length).toBeGreaterThan(0);
+      expect(spec.action!.method === "POST" || spec.action!.method === "PATCH").toBe(true);
+      expect(spec.action!.path.length).toBeGreaterThan(0);
     }
+    expect(CONTROL_SPECS.endpoints.action).toBeUndefined();
   });
 });

@@ -176,7 +176,7 @@ export interface ControlActionSpec {
   readonly successMessage: string;
 }
 export interface ControlSpec {
-  readonly action: ControlActionSpec;
+  readonly action?: ControlActionSpec;
   readonly emptyText: string;
   readonly key: ControlKey;
   readonly label: string;
@@ -202,15 +202,6 @@ export const CONTROL_SPECS: Readonly<Record<ControlKey, ControlSpec>> = {
     read: CONTROL_ENDPOINTS.providersRead,
   },
   endpoints: {
-    action: {
-      body: {},
-      disabledReason: "Admission needs a provider account, a model and a region; the form is not ported yet (S208).",
-      id: "activate",
-      label: "Activate endpoint",
-      method: "POST",
-      path: CONTROL_ENDPOINTS.endpointsActivate.path,
-      successMessage: "Endpoints action completed.",
-    },
     emptyText: "No endpoints configured yet.",
     key: "endpoints",
     label: "Endpoints",
@@ -267,14 +258,16 @@ export const createControlClients = (options: ControlClientOptions = {}): Contro
   return {
     dispatch: async (key, endpointId) => {
       const spec = CONTROL_SPECS[key];
-      const response = await fetchImpl(url(spec.action.path), {
+      const action = spec.action;
+      if (action === undefined) return { body: { error: "no action for " + key }, status: 400 };
+      const response = await fetchImpl(url(action.path), {
         body: JSON.stringify(
-          endpointId === undefined || spec.action.targetField === undefined
-            ? spec.action.body
-            : { ...spec.action.body, [spec.action.targetField]: endpointId },
+          endpointId === undefined || action.targetField === undefined
+            ? action.body
+            : { ...action.body, [action.targetField]: endpointId },
         ),
         headers: headers(options),
-        method: spec.action.method,
+        method: action.method,
       });
       return { body: await response.json(), status: response.status };
     },

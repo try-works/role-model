@@ -8,6 +8,7 @@ import { DiagnosticsSnapshot } from "./diagnostics";
 import { ObservabilityState } from "./observability";
 import { ReadbackKeySchema, ReadbackState } from "./readback";
 import { DeviceAuthFieldSchema, DeviceAuthSessionSchema, DeviceAuthSessionsSchema } from "./device-auth";
+import { EndpointAdmissionFieldSchema } from "./endpoint-admission";
 import { ProviderAccountFieldSchema } from "./provider-account";
 import { StudioFieldSchema, StudioTabSchema } from "./studio";
 
@@ -74,6 +75,12 @@ export const Message: MessageUnion<{
     readonly snapshot: typeof ObservabilityState;
     readonly token: typeof Schema.Number;
   };
+  readonly EndpointAdmissionFieldChanged: { readonly field: typeof EndpointAdmissionFieldSchema; readonly value: typeof Schema.String };
+  readonly EndpointAdmissionModelAdded: EmptyFields;
+  readonly EndpointAdmissionModelRemoved: { readonly modelId: typeof Schema.String };
+  readonly EndpointAdmissionSubmitRequested: EmptyFields;
+  readonly EndpointAdmissionSucceeded: { readonly token: typeof Schema.Number };
+  readonly EndpointAdmissionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly ProviderAccountFieldChanged: { readonly field: typeof ProviderAccountFieldSchema; readonly value: typeof Schema.String };
   readonly ProviderAccountModelAdded: EmptyFields;
   readonly ProviderAccountModelRemoved: { readonly modelId: typeof Schema.String };
@@ -164,6 +171,12 @@ export const Message: MessageUnion<{
   NavigationCompleted: {},
   ObservabilityFailed: { message: Schema.String, token: Schema.Number },
   ObservabilityLoaded: { snapshot: ObservabilityState, token: Schema.Number },
+  EndpointAdmissionFieldChanged: { field: EndpointAdmissionFieldSchema, value: Schema.String },
+  EndpointAdmissionModelAdded: {},
+  EndpointAdmissionModelRemoved: { modelId: Schema.String },
+  EndpointAdmissionSubmitRequested: {},
+  EndpointAdmissionSucceeded: { token: Schema.Number },
+  EndpointAdmissionFailed: { message: Schema.String, token: Schema.Number },
   ProviderAccountFieldChanged: { field: ProviderAccountFieldSchema, value: Schema.String },
   ProviderAccountModelAdded: {},
   ProviderAccountModelRemoved: { modelId: Schema.String },

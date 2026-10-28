@@ -16,6 +16,7 @@ import {
 } from "./diagnostics";
 import { type DeviceAuthClient, type DeviceAuthStartPayload, type DeviceActivationPayload } from "./device-auth";
 import { type ProviderAccountClient, type ProviderAccountCreatePayload } from "./provider-account";
+import { type EndpointActivationPayload, type EndpointAdmissionClient, type EndpointBatchPayload } from "./endpoint-admission";
 import { Message } from "./message";
 import type { RuntimeConfigClient } from "./runtime-config";
 import { type StudioClient, StudioState, studioRequestFor } from "./studio";
@@ -452,3 +453,40 @@ const noopProviderAccountClient: ProviderAccountClient = {
   updateKey: async () => ({}),
 };
 export const noopProviderAccountCommands = defineProviderAccountCommands(noopProviderAccountClient);
+
+export const defineEndpointAdmissionCommands = (client: EndpointAdmissionClient) => ({
+  activate: Command.define("ActivateEndpoint", {
+    args: { payload: Schema.String, token: Schema.Number },
+    execute: ({ payload, token }) =>
+      Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            try: () => client.activate(JSON.parse(payload) as EndpointActivationPayload),
+          }),
+        ),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.EndpointAdmissionSucceeded({ token }) : Message.EndpointAdmissionFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("endpoint activation failed"))), token })),
+      ),
+    messages: [Message.EndpointAdmissionSucceeded, Message.EndpointAdmissionFailed],
+  }),
+  activateBatch: Command.define("ActivateEndpointBatch", {
+    args: { payload: Schema.String, token: Schema.Number },
+    execute: ({ payload, token }) =>
+      Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            try: () => client.activateBatch(JSON.parse(payload) as EndpointBatchPayload),
+          }),
+        ),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.EndpointAdmissionSucceeded({ token }) : Message.EndpointAdmissionFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("endpoint activation batch failed"))), token })),
+      ),
+    messages: [Message.EndpointAdmissionSucceeded, Message.EndpointAdmissionFailed],
+  }),
+});
+export type EndpointAdmissionCommands = ReturnType<typeof defineEndpointAdmissionCommands>;
+const noopEndpointAdmissionClient: EndpointAdmissionClient = {
+  activate: async () => ({}),
+  activateBatch: async () => ({}),
+};
+export const noopEndpointAdmissionCommands = defineEndpointAdmissionCommands(noopEndpointAdmissionClient);
