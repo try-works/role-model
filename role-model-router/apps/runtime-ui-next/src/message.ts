@@ -75,6 +75,9 @@ export const Message: MessageUnion<{
     readonly snapshot: typeof ObservabilityState;
     readonly token: typeof Schema.Number;
   };
+  readonly ChartPointShown: { readonly label: typeof Schema.String; readonly seriesId: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly ChartTooltipDismissed: { readonly token: typeof Schema.Number };
+  readonly ChartSeriesToggled: { readonly seriesId: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly EndpointAdmissionFieldChanged: { readonly field: typeof EndpointAdmissionFieldSchema; readonly value: typeof Schema.String };
   readonly EndpointAdmissionModelAdded: EmptyFields;
   readonly EndpointAdmissionModelRemoved: { readonly modelId: typeof Schema.String };
@@ -171,6 +174,9 @@ export const Message: MessageUnion<{
   NavigationCompleted: {},
   ObservabilityFailed: { message: Schema.String, token: Schema.Number },
   ObservabilityLoaded: { snapshot: ObservabilityState, token: Schema.Number },
+  ChartPointShown: { label: Schema.String, seriesId: Schema.String, token: Schema.Number },
+  ChartTooltipDismissed: { token: Schema.Number },
+  ChartSeriesToggled: { seriesId: Schema.String, token: Schema.Number },
   EndpointAdmissionFieldChanged: { field: EndpointAdmissionFieldSchema, value: Schema.String },
   EndpointAdmissionModelAdded: {},
   EndpointAdmissionModelRemoved: { modelId: Schema.String },

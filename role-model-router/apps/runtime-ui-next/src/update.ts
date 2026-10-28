@@ -39,6 +39,12 @@ import {
 } from "./control";
 import { failedDiagnostics, idleDiagnostics, loadingDiagnostics } from "./diagnostics";
 import {
+  chartInteractionForRoute,
+  hideChartTooltip,
+  showChartPoint,
+  toggleChartSeries,
+} from "./chart-interaction";
+import {
   endpointAdmissionBusy,
   endpointActivationPayloads,
   endpointBatchPayload,
@@ -192,6 +198,8 @@ export const createUpdate =
       route: AppRoute,
       canonicalUrl: Url,
     ): UpdateReturn<Model, Message> => {
+      // S409: a real navigation resets the route-scoped chart interaction (tooltip cleared, token bumped).
+      const chartInteraction = chartInteractionForRoute(model.chartInteraction, route._tag);
       if (route._tag === "Diagnostics") {
         return {
           commands: [readDiagnostics({ id: route.id }), scrollShellToTopCommand()],
@@ -207,6 +215,7 @@ export const createUpdate =
               status: "idle",
             },
             route,
+            chartInteraction,
           },
         };
       }
@@ -226,6 +235,7 @@ export const createUpdate =
               status: "idle",
             },
             route,
+            chartInteraction,
           },
         };
       }
@@ -248,6 +258,7 @@ export const createUpdate =
               status: "idle",
             },
             route,
+            chartInteraction,
             studio: studioIdle(studioTabFromUrl(canonicalUrl) ?? "chat"),
           },
         };
@@ -270,6 +281,7 @@ export const createUpdate =
               status: "idle",
             },
             route,
+            chartInteraction,
           },
         };
       }
@@ -291,6 +303,7 @@ export const createUpdate =
               status: "idle",
             },
             route,
+            chartInteraction,
           },
         };
       }
@@ -309,6 +322,7 @@ export const createUpdate =
             status: "idle",
           },
           route,
+          chartInteraction,
         },
       };
     };
@@ -1019,6 +1033,18 @@ export const createUpdate =
         const state = model.providerAccount ?? initialProviderAccountState();
         if (token !== state.token) return { model };
         return { model: { ...model, providerAccount: { ...state, error: message, pendingAction: undefined, status: "error" } } };
+      },
+      ChartPointShown: ({ label, seriesId, token }) => {
+        const state = chartInteractionForRoute(model.chartInteraction, model.route._tag);
+        return { model: { ...model, chartInteraction: showChartPoint(state, token, seriesId, label) } };
+      },
+      ChartTooltipDismissed: ({ token }) => {
+        const state = chartInteractionForRoute(model.chartInteraction, model.route._tag);
+        return { model: { ...model, chartInteraction: hideChartTooltip(state, token) } };
+      },
+      ChartSeriesToggled: ({ seriesId, token }) => {
+        const state = chartInteractionForRoute(model.chartInteraction, model.route._tag);
+        return { model: { ...model, chartInteraction: toggleChartSeries(state, token, seriesId) } };
       },
       EndpointAdmissionFieldChanged: ({ field, value }) => {
         const state = model.endpointAdmission ?? initialEndpointAdmissionState();

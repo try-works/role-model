@@ -1,0 +1,40 @@
+COMMAND: node vitest run s408 AGAINST S408 update.ts (no S409 route reset)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s408-chart-interaction.test.ts (7 tests | 1 failed) 33ms
+   ✓ S408 chart keydown mapping > maps Escape to hide and Enter/Space to show 2ms
+   ✓ S408 chart interaction state > shows a tooltip by series+label and dismisses it (Escape path) 1ms
+   ✓ S408 chart interaction state > toggles the legend series and ignores a stale token 1ms
+   ✓ S408 chart interaction state > clears the tooltip and bumps the token on a route change; a late message is ignored 0ms
+   ✓ S408 chart interaction state > maps readback status honestly 1ms
+   ✓ S408 chart interaction update > applies show/hide/toggle through the shell model with the token fence 7ms
+   × S409 route-transition integration > resets the token and clears the tooltip on a real ChangedUrl navigation (away and back) 18ms
+     → expected 'Index' to be 'Models' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s408-chart-interaction.test.ts > S409 route-transition integration > resets the token and clears the tooltip on a real ChangedUrl navigation (away and back)
+AssertionError: expected 'Index' to be 'Models' // Object.is equality
+
+Expected: "Models"
+Received: "Index"
+
+ ❯ test/s408-chart-interaction.test.ts:86:51
+     84|     const away = shellUpdate(model, Message.ChangedUrl({ url: urlOf("/…
+     85|     expect(away.model.route._tag).toBe("Models");
+     86|     expect(away.model.chartInteraction?.routeTag).toBe("Models");
+       |                                                   ^
+     87|     expect(away.model.chartInteraction?.tooltip).toBeNull();
+     88|     expect(away.model.chartInteraction?.token).toBe(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 passed (7)
+   Start at  18:03:06
+   Duration  6.97s (transform 3.33s, setup 0ms, collect 5.29s, tests 33ms, environment 692ms, prepare 344ms)
+
+

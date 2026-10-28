@@ -4,6 +4,7 @@ import { rm3ButtonClassName, view as rm3ButtonView } from "@role-model/ui/foldki
 
 import { CONTROL_SPECS, type ControlsState } from "./control";
 import { renderControlPage, renderDeviceAuthorizationForm, renderEndpointAdmissionForm, renderProviderAccountForm } from "./control-view";
+import { chartInteractionForRoute, chartStateForReadback, type ChartInteractionState } from "./chart-interaction";
 import { initialDeviceAuthState, type DeviceAuthState } from "./device-auth";
 import { initialProviderAccountState, type ProviderAccountState } from "./provider-account";
 import { initialEndpointAdmissionState, type EndpointAdmissionState } from "./endpoint-admission";
@@ -18,7 +19,7 @@ import { Message } from "./message";
 import { DEFAULT_OVERVIEW_FILTERS, OVERVIEW_BREAKDOWNS, OVERVIEW_DIFFICULTIES, OVERVIEW_SOURCES, OVERVIEW_STATUSES, overviewSummary, type OverviewFilters } from "./overview-filters";
 import type { Model } from "./model";
 import type { ObservabilityState } from "./observability";
-import { view as chartView } from "@role-model/ui/foldkit-chart";
+import { chartPointKeyAction, view as chartView } from "@role-model/ui/foldkit-chart";
 
 import { READBACK_SPECS, type ReadbacksState, renderReadbackPage } from "./readback";
 import { type StudioField, type StudioState, StudioTabSchema, studioIdle } from "./studio";
@@ -585,6 +586,7 @@ const overviewPage = (
   windowMs: number,
   h: HtmlBuilder<Message>,
   appliedFilters: OverviewFilters = DEFAULT_OVERVIEW_FILTERS,
+  chartInteraction: ChartInteractionState | undefined = undefined,
 ): Html => {
   const period = windowLabel(windowMs);
   const filters = h.div(
@@ -658,7 +660,20 @@ const overviewPage = (
           h.div([h.Style({ position: "absolute", width: "1px", height: "1px", overflow: "hidden", clipPath: "inset(50%)" })], [h.table([h.Class("sr-only")], [h.caption([], ["Model cost strip data"]), h.thead([], [h.tr([], [h.th([], ["Model"]), h.th([], ["Input cost per 1M"]), h.th([], ["Endpoint"])])]), h.tbody([], modelRows.map((entry) => h.tr([], [h.td([], [entry.label]), h.td([], [String(entry.cost)]), h.td([], [entry.endpoint])])))])]),
         ]),
   ]);
-  const tokenChart = chartView({ title: "Token usage over time", description: "Total tokens per bucket for the last " + period.toLowerCase() + ".", series: [{ id: "tokens", label: "Tokens", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.tokens })) }], state: { status: "ready" }, yUnit: "tokens" }, h);
+    const tokenInteraction = chartInteractionForRoute(chartInteraction, "Index");
+  const tokenChart = chartView({ title: "Token usage over time", description: "Total tokens per bucket for the last " + period.toLowerCase() + ".",
+    interaction: {
+      hiddenSeriesIds: tokenInteraction.hiddenSeriesIds,
+      onHideTooltip: Message.ChartTooltipDismissed({ token: tokenInteraction.token }),
+      onPointKeyDown: (seriesId, label, key) => chartPointKeyAction(key) === "hide"
+        ? Message.ChartTooltipDismissed({ token: tokenInteraction.token })
+        : Message.ChartPointShown({ label, seriesId, token: tokenInteraction.token }),
+      onShowPoint: (seriesId, label) => Message.ChartPointShown({ label, seriesId, token: tokenInteraction.token }),
+      onToggleSeries: (seriesId) => Message.ChartSeriesToggled({ seriesId, token: tokenInteraction.token }),
+      tooltip: tokenInteraction.tooltip,
+    },
+    series: [{ id: "tokens", label: "Tokens", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.tokens })) }],
+    state: chartStateForReadback(state), yUnit: "tokens" }, h);
   const tokenCard = card("Token usage over time", "Total tokens per bucket for the last " + period.toLowerCase() + ".", tokenChart);
   const latencyCard = card("Latency (ms)", "Average and p95 per bucket for the last " + period.toLowerCase() + ".", chartView({ title: "Latency (ms)", description: "Average and p95 per bucket for the last " + period.toLowerCase() + ".", series: [
     { id: "average", label: "Average", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.avg })) },
@@ -863,6 +878,7 @@ const routeContent = (
   deviceAuth: DeviceAuthState,
   providerAccount: ProviderAccountState,
   endpointAdmission: EndpointAdmissionState,
+  chartInteraction: ChartInteractionState | undefined,
   h: HtmlBuilder<Message>,
 ) =>
   AppRoute.match(route, {
@@ -942,7 +958,7 @@ const routeContent = (
       ]),
     ControlController: () =>
       renderControlPage(CONTROL_SPECS.controlController, controls.controlController, h, controls.endpoints.rows.map((row) => row.id)),
-    Index: () => overviewPage(readbacks.overviewMetrics, readbacks.routerCandidates, overviewWindowMs, h, overviewFilters),
+    Index: () => overviewPage(readbacks.overviewMetrics, readbacks.routerCandidates, overviewWindowMs, h, overviewFilters, chartInteraction),
     NotFound: ({ path }) =>
       h.section(
         [
@@ -1210,6 +1226,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
     model.deviceAuth ?? initialDeviceAuthState(),
     model.providerAccount ?? initialProviderAccountState(),
     model.endpointAdmission ?? initialEndpointAdmissionState(),
+    model.chartInteraction,
                 h,
               ),
             ],

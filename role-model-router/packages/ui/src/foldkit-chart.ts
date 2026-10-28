@@ -92,6 +92,12 @@ export type ChartState =
   | { readonly status: "stale"; readonly ageMs: number; readonly ruleMs: number }
   | { readonly status: "truncated"; readonly droppedPoints: number };
 
+export type ChartPointKeyAction = "show" | "hide" | null;
+
+/** S408: keyboard mapping for a focusable chart point (Escape dismisses, Enter/Space shows). */
+export const chartPointKeyAction = (key: string): ChartPointKeyAction =>
+  key === "Escape" ? "hide" : key === "Enter" || key === " " ? "show" : null;
+
 export interface Rm3ChartInteraction<Message> {
   /** Series hidden through the legend. The chart and accessible table both omit them. */
   readonly hiddenSeriesIds?: ReadonlyArray<string>;
@@ -100,6 +106,8 @@ export interface Rm3ChartInteraction<Message> {
   readonly onToggleSeries?: (seriesId: string) => Message;
   readonly onShowPoint?: (seriesId: string, label: string) => Message;
   readonly onHideTooltip?: Message;
+  /** S408: maps a focusable point keydown to a message (Escape should dismiss the tooltip). */
+  readonly onPointKeyDown?: (seriesId: string, label: string, key: string) => Message;
 }
 
 export interface Rm3ChartConfig<Message = never> {
@@ -484,6 +492,7 @@ export const view = <Message>(config: Rm3ChartConfig<Message>, h: HtmlBuilder<Me
       ...item.points.flatMap((point) => {
         if (point.value === null) return [];
         const showPoint = config.interaction?.onShowPoint;
+        const pointKeyDown = config.interaction?.onPointKeyDown;
         return [h.circle(
           [
             h.Cx(String(xFor(labelIndex.get(point.label) ?? 0, labels.length))),
@@ -501,6 +510,9 @@ export const view = <Message>(config: Rm3ChartConfig<Message>, h: HtmlBuilder<Me
                   h.OnClick(showPoint(item.id, point.label)),
                   h.OnMouseEnter(showPoint(item.id, point.label)),
                 ]),
+            ...(pointKeyDown === undefined
+              ? []
+              : [h.OnKeyDown((key) => pointKeyDown(item.id, point.label, key))]),
           ],
           [h.title([], [pointValueText(item.label, point)])],
         )];
