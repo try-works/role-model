@@ -1,0 +1,41 @@
+COMMAND: node vitest run test/s374 (S377 RED)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:67468) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s374-defect-readback.test.ts (3 tests | 1 failed) 365ms
+   × S365c real defect readback (edge -> store -> authorized read) > an injected genuine defect is classified by the edge, lands in the telemetry store and reads back through the authorized path 218ms
+     → expected [ { atMs: 1793171333928, …(3) }, …(1) ] to have a length of 1 but got 2
+   ✓ S365c real defect readback (edge -> store -> authorized read) > client-caused 4xx escapes are still excluded end-to-end 143ms
+   ✓ S365c real defect readback (edge -> store -> authorized read) > stays disabled without calibration (default-off unchanged) 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s374-defect-readback.test.ts > S365c real defect readback (edge -> store -> authorized read) > an injected genuine defect is classified by the edge, lands in the telemetry store and reads back through the authorized path
+AssertionError: expected [ { atMs: 1793171333928, …(3) }, …(1) ] to have a length of 1 but got 2
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ test/s374-defect-readback.test.ts:77:69
+     75|     expect(state).not.toBe("disabled");
+     76|     const visible = records ?? [];
+     77|     expect(visible.filter((record) => record.code === "cause.die")).to…
+       |                                                                     ^
+     78|     expect(visible.some((record) => record.code === "cause.die" && rec…
+     79|     expect(visible.length).toBeLessThanOrEqual(MAX_DIAGNOSTICS_RECORDS…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  15:08:45
+   Duration  8.26s (transform 4.81s, setup 0ms, collect 7.41s, tests 365ms, environment 0ms, prepare 166ms)
+
+

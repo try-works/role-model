@@ -1,0 +1,34 @@
+COMMAND: node vitest run test/s374 (S365c RED)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:27596) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s374-defect-readback.test.ts (3 tests | 1 failed) 301ms
+   × S365c real defect readback (edge -> store -> authorized read) > an injected genuine defect is classified by the edge, lands in the telemetry store and reads back through the authorized path 153ms
+     → expected 0 to be greater than or equal to 1
+   ✓ S365c real defect readback (edge -> store -> authorized read) > client-caused 4xx escapes are still excluded end-to-end 145ms
+   ✓ S365c real defect readback (edge -> store -> authorized read) > stays disabled without calibration (default-off unchanged) 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s374-defect-readback.test.ts > S365c real defect readback (edge -> store -> authorized read) > an injected genuine defect is classified by the edge, lands in the telemetry store and reads back through the authorized path
+AssertionError: expected 0 to be greater than or equal to 1
+ ❯ test/s374-defect-readback.test.ts:69:27
+     67|     // Store leg: the edge's record is persisted in the backend-owned …
+     68|     const stored = storage.diagnosticRecords();
+     69|     expect(stored.length).toBeGreaterThanOrEqual(1);
+       |                           ^
+     70|     expect(stored.some((record) => record.code === "cause.die")).toBe(…
+     71|     expect(stored.some((record) => record.level === "error")).toBe(tru…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  15:02:08
+   Duration  9.17s (transform 5.25s, setup 0ms, collect 8.19s, tests 301ms, environment 0ms, prepare 236ms)
+
+
