@@ -516,7 +516,7 @@ export class ObservationHydrationTimeoutError extends Error {
   readonly code = "OBSERVATION_HYDRATION_TIMEOUT";
   constructor() { super("observation hydration did not drain"); this.name = "ObservationHydrationTimeoutError"; }
 }
-export interface ObservationHydrationJob { readonly key: string; readonly run: () => Promise<object | null | undefined>; }
+export interface ObservationHydrationJob { readonly key: string; readonly run: () => Promise<object | null | undefined>; readonly sequence: number; }
 export interface ObservationStorageContract {
   readonly id: string;
   readonly capacity: number;
@@ -535,21 +535,43 @@ export const liveScoresObservationKey = (endpointId: string, windowStartMs: numb
 const observationStorageOwners = new WeakSet<object>();
 export class ObservationStorageService extends Context.Service<ObservationStorageService, ObservationStorageContract>()("ObservationStorageService") {}
 export const makeObservationStorage = (capacity: number, jobTimeoutMs = 10_000): ObservationStorageContract => {
+  if (!Number.isSafeInteger(capacity) || capacity <= 0) {
+    throw new RangeError("observation storage capacity must be a positive integer");
+  }
   const cache = new Map<string, object>();
   const jobs: ObservationHydrationJob[] = [];
+  // key -> newest write sequence whose snapshot is still undecided. Bounded by the queue/active job count.
+  const pendingWrites = new Map<string, number>();
   let active = false;
   let pending = 0;
   let generation = 0;
-  let activeJobKey: string | null = null;
+  let writeSequence = 0;
+  let activeJob: ObservationHydrationJob | null = null;
   const drainResolvers: (() => void)[] = [];
   let hydrationError: Error | undefined;
+  const boundCache = (): void => {
+    while (cache.size > capacity) {
+      const oldest = cache.keys().next();
+      if (oldest.done === true) return;
+      cache.delete(oldest.value);
+    }
+  };
+  const hasPendingFor = (key: string): boolean =>
+    activeJob?.key === key || jobs.some((job) => job.key === key);
   const abandonActiveJob = (): void => {
     if (!active) return;
     generation += 1;
     pending = Math.max(0, pending - 1);
-    hydrationError = new ObservationHydrationJobTimeoutError(activeJobKey ?? "unknown");
+    hydrationError = new ObservationHydrationJobTimeoutError(activeJob?.key ?? "unknown");
+    if (activeJob !== null) {
+      if (pendingWrites.get(activeJob.key) === activeJob.sequence) {
+        pendingWrites.delete(activeJob.key);
+      } else if (!jobs.some((job) => job.key === activeJob?.key)) {
+        pendingWrites.delete(activeJob.key);
+      }
+    }
     active = false;
-    activeJobKey = null;
+    activeJob = null;
     if (jobs.length > 0) void pump();
   };
   const pump = async (): Promise<void> => {
@@ -558,7 +580,7 @@ export const makeObservationStorage = (capacity: number, jobTimeoutMs = 10_000):
     while (jobs.length > 0) {
       const job = jobs.shift();
       if (job === undefined) break;
-      activeJobKey = job.key;
+      activeJob = job;
       const runGeneration = generation;
       let timer: ReturnType<typeof setTimeout> | undefined;
       try {
@@ -567,14 +589,34 @@ export const makeObservationStorage = (capacity: number, jobTimeoutMs = 10_000):
           new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new ObservationHydrationJobTimeoutError(job.key)), jobTimeoutMs); }),
         ]);
         if (runGeneration !== generation) return;
-        if (value !== null && value !== undefined) cache.set(job.key, value);
-      } catch (error) { hydrationError = error instanceof Error ? error : new Error(String(error)); }
-      finally { if (timer !== undefined) clearTimeout(timer); }
+        if (pendingWrites.get(job.key) === job.sequence) {
+          if (value !== null && value !== undefined) {
+            cache.set(job.key, value);
+            boundCache();
+          }
+          pendingWrites.delete(job.key);
+        }
+      } catch (error) {
+        // S428: an abandoned job's late rejection must not overwrite the typed timeout or
+        // mutate pending-write bookkeeping after the generation moved.
+        if (runGeneration !== generation) return;
+        hydrationError = error instanceof Error ? error : new Error(String(error));
+        if (pendingWrites.get(job.key) === job.sequence) pendingWrites.delete(job.key);
+      } finally {
+        if (timer !== undefined) clearTimeout(timer);
+      }
       if (runGeneration !== generation) return;
+      activeJob = null;
+      if (pendingWrites.get(job.key) !== job.sequence && !jobs.some((pendingJob) => pendingJob.key === job.key)) {
+        pendingWrites.delete(job.key);
+      }
       pending -= 1;
-      if (pending === 0 && jobs.length === 0) { for (const resolve of drainResolvers.splice(0)) resolve(); }
+      if (pending === 0 && jobs.length === 0) {
+        for (const resolve of drainResolvers.splice(0)) resolve();
+      }
     }
     active = false;
+    activeJob = null;
   };
   const owner: ObservationStorageContract = {
     cached: (key) => cache.get(key),
@@ -586,16 +628,31 @@ export const makeObservationStorage = (capacity: number, jobTimeoutMs = 10_000):
           abandonActiveJob();
           reject(new ObservationHydrationTimeoutError());
         }, 5_000);
-        drainResolvers.push(() => { clearTimeout(timer); resolve(); });
+        drainResolvers.push(() => {
+          clearTimeout(timer);
+          resolve();
+        });
       });
     },
     hydrationError: () => hydrationError,
     id: "observation-storage:dso",
     persist: (write, hydrate, key) => {
       write();
-      if (hydrate === undefined) return;
-      if (jobs.length >= capacity) { hydrationError = new ObservationHydrationOverflowError(capacity); return; }
-      jobs.push({ key, run: hydrate });
+      writeSequence += 1;
+      // A successful write invalidates the key's old snapshot at once.
+      cache.delete(key);
+      const pendingForSameKey = hasPendingFor(key);
+      if (hydrate === undefined) {
+        if (pendingForSameKey) pendingWrites.set(key, writeSequence);
+        return;
+      }
+      if (jobs.length >= capacity) {
+        hydrationError = new ObservationHydrationOverflowError(capacity);
+        if (pendingForSameKey) pendingWrites.set(key, writeSequence);
+        return;
+      }
+      jobs.push({ key, run: hydrate, sequence: writeSequence });
+      pendingWrites.set(key, writeSequence);
       pending += 1;
       void pump();
     },
@@ -604,27 +661,13 @@ export const makeObservationStorage = (capacity: number, jobTimeoutMs = 10_000):
     read: <T>(key: string, read: () => T): T => {
       const hit = cache.get(key);
       if (hit === undefined) return read();
-      // SAFETY: the cached value was produced by this storage's hydrate callback for this key;
-      // the generic read-through names the caller's declared type.
+      // SAFETY: the snapshot was produced by this storage's hydrate callback for this exact key.
       return hit as T;
     },
-    readHydrated: <T>(key: string, read: () => T): T => {
-      const hit = cache.get(key);
-      if (hit !== undefined) {
-        // SAFETY: cache entries are written under this exact key by this storage's hydration.
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
-        return hit as T;
-      }
-      const value = read();
-      if (jobs.length < capacity) {
-        // SAFETY: hydration values are the same opaque object types read back from the caller; primitives are not cached.
-        const hydrationValue = value as object | null | undefined;
-        jobs.push({ key, run: async () => hydrationValue });
-        pending += 1;
-        void pump();
-      }
-      return value;
-    },
+    // S424: readHydrated is the MUTABLE read facade. It calls the supplied synchronous reader on
+    // EVERY invocation and never serves a captured snapshot; an old value is never presented as
+    // a fresh read. Explicit snapshots are only the persist()->read()/cached() compatibility path.
+    readHydrated: <T>(_key: string, read: () => T): T => read(),
   };
   observationStorageOwners.add(owner);
   return Object.freeze(owner);

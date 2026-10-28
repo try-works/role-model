@@ -1,0 +1,43 @@
+COMMAND: node vitest run s424 (S428 repair RED2, before product change)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:26412) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s424-observation-cache-correctness.test.ts (12 tests | 1 failed) 5204ms
+   ✓ S424 mutable read freshness > readHydrated invokes the reader on every call and never returns a captured snapshot 3ms
+   ✓ S424 mutable read freshness > fresh readHydrated calls do not create cached async work 1ms
+   ✓ S424 mutable read freshness > read() serves explicit hydration snapshots while readHydrated stays live 1ms
+   ✓ S424 mutable read freshness > a real disposable SQLite mutable read observes newly persisted telemetry 165ms
+   ✓ S424 explicit snapshot bounds and write invalidation > six sequential successful persist/drain cycles retain at most capacity snapshots 1ms
+   ✓ S424 explicit snapshot bounds and write invalidation > a successful write invalidates the old same-key snapshot immediately 1ms
+   ✓ S424 explicit snapshot bounds and write invalidation > failed hydration installs no snapshot 1ms
+   ✓ S424 explicit snapshot bounds and write invalidation > a true queue-full same-key overflow invalidates the old snapshot and a fresh hydration succeeds 1ms
+   ✓ S424 explicit snapshot bounds and write invalidation > a late old hydration cannot restore a value after a newer same-key write 1ms
+   ✓ S424 explicit snapshot bounds and write invalidation > invalid capacities are rejected instead of allowing an unbounded snapshot store 2ms
+   ✓ S424 explicit snapshot bounds and write invalidation > sync reader and write errors retain their identity 0ms
+   × S424 explicit snapshot bounds and write invalidation > a late rejection after the drain timeout does not overwrite the typed timeout 5025ms
+     → expected Error: late-reject to be an instance of ObservationHydrationJobTimeoutError
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s424-observation-cache-correctness.test.ts > S424 explicit snapshot bounds and write invalidation > a late rejection after the drain timeout does not overwrite the typed timeout
+AssertionError: expected Error: late-reject to be an instance of ObservationHydrationJobTimeoutError
+ ❯ test/s424-observation-cache-correctness.test.ts:172:38
+    170|     rejectHung?.(new Error("late-reject"));
+    171|     await new Promise((resolve) => setTimeout(resolve, 10));
+    172|     expect(storage.hydrationError()).toBeInstanceOf(ObservationHydrati…
+       |                                      ^
+    173|     expect(storage.hydrationError()?.message).not.toContain("late-reje…
+    174|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 passed (12)
+   Start at  05:26:45
+   Duration  17.96s (transform 5.01s, setup 0ms, collect 11.85s, tests 5.20s, environment 1ms, prepare 338ms)
+
+

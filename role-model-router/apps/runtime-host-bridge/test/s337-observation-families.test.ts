@@ -6,10 +6,10 @@ import {
   makeObservationStorage,
 } from "../src/composition-dag.js";
 
-/** S338 behavioral: hydration populates the cache; key identity; persistence for persist families. */
+/** S338/S424 behavioral: readHydrated is a fresh mutable read (no snapshot); persist families keep explicit snapshots. */
 
 describe("S338 observation family migration behavior", () => {
-  test("readHydrated populates the cache and a subsequent read hits it (fallback not called)", async () => {
+  test("readHydrated observes the underlying mutable value on every call and never captures a snapshot", async () => {
     const storage = makeObservationStorage(4);
     let fallbackCalls = 0;
     const first = storage.readHydrated("telemetry-summary:k", () => {
@@ -22,8 +22,9 @@ describe("S338 observation family migration behavior", () => {
       return { value: 2 };
     });
     expect(first).toEqual({ value: 1 });
-    expect(second).toEqual({ value: 1 });
-    expect(fallbackCalls).toBe(1);
+    expect(second).toEqual({ value: 2 });
+    expect(fallbackCalls).toBe(2);
+    expect(storage.queueDepth()).toBe(0);
   });
 
   test("a different hydration key falls back instead of serving the other key's cache", async () => {
