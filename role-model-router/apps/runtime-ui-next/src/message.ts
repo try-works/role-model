@@ -8,6 +8,7 @@ import { DiagnosticsSnapshot } from "./diagnostics";
 import { ObservabilityState } from "./observability";
 import { ReadbackKeySchema, ReadbackState } from "./readback";
 import { DeviceAuthFieldSchema, DeviceAuthSessionSchema, DeviceAuthSessionsSchema } from "./device-auth";
+import { LearningRankingStateSchema } from "./learning-ranking";
 import { EndpointAdmissionFieldSchema } from "./endpoint-admission";
 import { ProviderAccountFieldSchema } from "./provider-account";
 import { StudioFieldSchema, StudioTabSchema } from "./studio";
@@ -75,6 +76,9 @@ export const Message: MessageUnion<{
     readonly snapshot: typeof ObservabilityState;
     readonly token: typeof Schema.Number;
   };
+  readonly LearningLadderToggleRequested: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly taskTypeId: typeof Schema.String };
+  readonly LearningLadderUpdated: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly LearningLadderFailed: { readonly message: typeof Schema.String; readonly roleId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly ChartPointShown: { readonly label: typeof Schema.String; readonly seriesId: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly ChartTooltipDismissed: { readonly token: typeof Schema.Number };
   readonly ChartSeriesToggled: { readonly seriesId: typeof Schema.String; readonly token: typeof Schema.Number };
@@ -174,6 +178,9 @@ export const Message: MessageUnion<{
   NavigationCompleted: {},
   ObservabilityFailed: { message: Schema.String, token: Schema.Number },
   ObservabilityLoaded: { snapshot: ObservabilityState, token: Schema.Number },
+  LearningLadderToggleRequested: { rolledBack: Schema.Boolean, roleId: Schema.String, taskTypeId: Schema.String },
+  LearningLadderUpdated: { rolledBack: Schema.Boolean, roleId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
+  LearningLadderFailed: { message: Schema.String, roleId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
   ChartPointShown: { label: Schema.String, seriesId: Schema.String, token: Schema.Number },
   ChartTooltipDismissed: { token: Schema.Number },
   ChartSeriesToggled: { seriesId: Schema.String, token: Schema.Number },

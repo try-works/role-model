@@ -5,6 +5,8 @@ import { rm3ButtonClassName, view as rm3ButtonView } from "@role-model/ui/foldki
 import { CONTROL_SPECS, type ControlsState } from "./control";
 import { renderControlPage, renderDeviceAuthorizationForm, renderEndpointAdmissionForm, renderProviderAccountForm } from "./control-view";
 import { chartInteractionForRoute, chartStateForReadback, type ChartInteractionState } from "./chart-interaction";
+import { type LearningRankingState } from "./learning-ranking";
+import { renderLearningRanking } from "./learning-ranking-view";
 import { initialDeviceAuthState, type DeviceAuthState } from "./device-auth";
 import { initialProviderAccountState, type ProviderAccountState } from "./provider-account";
 import { initialEndpointAdmissionState, type EndpointAdmissionState } from "./endpoint-admission";
@@ -837,10 +839,12 @@ const learningFamilyPage = (label: string, routeName: string, spec: Parameters<t
     [h.h2([h.Class("rm3-next-route-title")], [label]), renderReadbackPage(spec, readback, h)],
   );
 };
-const learningPage = (readbacks: ReadbacksState, h: HtmlBuilder<Message>): Html =>
+const learningPage = (readbacks: ReadbacksState, learningRanking: LearningRankingState | undefined, h: HtmlBuilder<Message>): Html =>
   h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "learning")], [
     h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]")], ["Knowledge worker, replay jobs and evaluation jobs. Empty means the capability is available but no work exists."]),
     renderReadbackPage(READBACK_SPECS.learning, readbacks.learning, h),
+    h.h3([h.Class("mt-6 text-[14px] font-semibold")], ["Endpoint ladder ranking"]),
+    renderLearningRanking(readbacks.learning.rows, learningRanking, h),
     renderReadbackPage(READBACK_SPECS.replayJobs, readbacks.replayJobs, h),
     renderReadbackPage(READBACK_SPECS.evaluationJobs, readbacks.evaluationJobs, h),
   ]);
@@ -879,6 +883,7 @@ const routeContent = (
   providerAccount: ProviderAccountState,
   endpointAdmission: EndpointAdmissionState,
   chartInteraction: ChartInteractionState | undefined,
+  learningRanking: LearningRankingState | undefined,
   h: HtmlBuilder<Message>,
 ) =>
   AppRoute.match(route, {
@@ -918,7 +923,7 @@ const routeContent = (
         ? readbacks.configuredModels.rows.map((entry) => entry.id).filter((id) => id.length > 0)
         : [],
     ),
-    Learning: () => learningPage(readbacks, h),
+    Learning: () => learningPage(readbacks, learningRanking, h),
     LearningConfiguration: () => learningFamilyPage("Learning configuration", "learning-configuration", READBACK_SPECS.learningConfiguration, readbacks.learningConfiguration, h),
     LearningPacks: () => learningFamilyPage("Learning packs", "learning-packs", READBACK_SPECS.learningPacks, readbacks.learningPacks, h),
     LearningDecisions: () => learningFamilyPage("Learning decisions", "learning-decisions", READBACK_SPECS.learningDecisions, readbacks.learningDecisions, h),
@@ -1227,6 +1232,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
     model.providerAccount ?? initialProviderAccountState(),
     model.endpointAdmission ?? initialEndpointAdmissionState(),
     model.chartInteraction,
+    model.learningRanking,
                 h,
               ),
             ],

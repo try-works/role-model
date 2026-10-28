@@ -15,6 +15,8 @@ import {
   type ReadObservabilityCommand,
   type DeviceAuthCommands,
   type EndpointAdmissionCommands,
+  type LearningRankingCommands,
+  noopLearningRankingCommands,
   noopEndpointAdmissionCommands,
   type ProviderAccountCommands,
   noopProviderAccountCommands,
@@ -38,6 +40,11 @@ import {
   loadingControl,
 } from "./control";
 import { failedDiagnostics, idleDiagnostics, loadingDiagnostics } from "./diagnostics";
+import {
+  initialLearningRankingState,
+  learningLadderRowKey,
+  learningRollbackPayload,
+} from "./learning-ranking";
 import {
   chartInteractionForRoute,
   hideChartTooltip,
@@ -192,6 +199,7 @@ export const createUpdate =
     deviceAuthCommands: DeviceAuthCommands = noopDeviceAuthCommands,
     providerAccountCommands: ProviderAccountCommands = noopProviderAccountCommands,
     endpointAdmissionCommands: EndpointAdmissionCommands = noopEndpointAdmissionCommands,
+    learningRankingCommands: LearningRankingCommands = noopLearningRankingCommands,
   ) => {
     const navigateToRoute = (
       model: Model,
@@ -1033,6 +1041,43 @@ export const createUpdate =
         const state = model.providerAccount ?? initialProviderAccountState();
         if (token !== state.token) return { model };
         return { model: { ...model, providerAccount: { ...state, error: message, pendingAction: undefined, status: "error" } } };
+      },
+      LearningLadderToggleRequested: ({ rolledBack, roleId, taskTypeId }) => {
+        const state = model.learningRanking ?? initialLearningRankingState();
+        const key = learningLadderRowKey({ roleId, taskTypeId });
+        const phase = state.phases[key]?.phase ?? "idle";
+        if (phase === "pending") return { model };
+        if (phase !== "confirming") {
+          return { model: { ...model, learningRanking: { ...state, phases: { ...state.phases, [key]: { phase: "confirming" } } } } };
+        }
+        const token = (state.phases[key]?.token ?? 0) + 1;
+        const payload = learningRollbackPayload({ roleId, taskTypeId }, rolledBack, "standalone-runtime-stage");
+        return {
+          commands: [learningRankingCommands.rollbackLadder({ payload: JSON.stringify(payload), roleId, taskTypeId, token })],
+          model: { ...model, learningRanking: { ...state, phases: { ...state.phases, [key]: { phase: "pending", token } } } },
+        };
+      },
+      LearningLadderUpdated: ({ rolledBack, roleId, taskTypeId, token }) => {
+        const state = model.learningRanking ?? initialLearningRankingState();
+        const key = learningLadderRowKey({ roleId, taskTypeId });
+        const entry = state.phases[key];
+        if (entry?.phase !== "pending" || entry.token !== token) return { model };
+        const readbackToken = model.readbacks.learning.token + 1;
+        return {
+          commands: [readReadback({ key: "learning", token: readbackToken })],
+          model: {
+            ...model,
+            learningRanking: { ...state, phases: { ...state.phases, [key]: { phase: "idle", token } } },
+            readbacks: { ...model.readbacks, learning: loadingReadback(readbackToken) },
+          },
+        };
+      },
+      LearningLadderFailed: ({ message, roleId, taskTypeId, token }) => {
+        const state = model.learningRanking ?? initialLearningRankingState();
+        const key = learningLadderRowKey({ roleId, taskTypeId });
+        const entry = state.phases[key];
+        if (entry?.phase !== "pending" || entry.token !== token) return { model };
+        return { model: { ...model, learningRanking: { ...state, phases: { ...state.phases, [key]: { error: message, phase: "error", token } } } } };
       },
       ChartPointShown: ({ label, seriesId, token }) => {
         const state = chartInteractionForRoute(model.chartInteraction, model.route._tag);

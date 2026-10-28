@@ -3,6 +3,7 @@ import { Schema } from "effect";
 
 import type { Message } from "./message";
 import { createReadbackFlightTransport } from "./readback-flight";
+import { type LearningPayloadJson, learningLadderRowKey, parseLearningLadderPayload } from "./learning-ranking";
 import { READBACK_PATHS } from "./runtime-endpoints";
 
 /** S26e/R13 wave 2: one shared readback surface for four read routes. */
@@ -674,6 +675,14 @@ const parseLearning = (body: unknown, token: number): ReadbackState => {
     row("receipts", "Receipts", String(knowledge.retrievalReceipts ?? 0) + " retrieval / " + String(knowledge.rollbackReceipts ?? 0) + " rollback / " + String(knowledge.recoveryReceipts ?? 0) + " recovery", "knowledge"),
     row("degradation", "Degradation count", String(knowledge.degradationCount ?? 0), "knowledge"),
   ];
+  if (body !== null && body !== undefined && asRecord(body)?.ladders !== undefined) {
+    // SAFETY: readback bodies are decoded JSON; the parser validates the ladder shape before use.
+    const parsed = parseLearningLadderPayload(body as LearningPayloadJson);
+    if (!parsed.ok) return failedReadback("Learning ranking read failed: " + parsed.error, token);
+    for (const ladder of parsed.rows) {
+      rows.push(row("ladder:" + learningLadderRowKey(ladder), ladder.roleId + " \u00b7 " + ladder.taskTypeId, ladder.rolledBack?.on === true ? "rolled back" : "active", JSON.stringify(ladder)));
+    }
+  }
   return okRows(rows, token);
 };
 const parseJobList = (label: string) => (body: unknown, token: number): ReadbackState => {

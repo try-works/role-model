@@ -17,6 +17,7 @@ import {
 import { type DeviceAuthClient, type DeviceAuthStartPayload, type DeviceActivationPayload } from "./device-auth";
 import { type ProviderAccountClient, type ProviderAccountCreatePayload } from "./provider-account";
 import { type EndpointActivationPayload, type EndpointAdmissionClient, type EndpointBatchPayload } from "./endpoint-admission";
+import { type LearningRankingClient, type LearningRollbackPayload } from "./learning-ranking";
 import { Message } from "./message";
 import type { RuntimeConfigClient } from "./runtime-config";
 import { type StudioClient, StudioState, studioRequestFor } from "./studio";
@@ -490,3 +491,23 @@ const noopEndpointAdmissionClient: EndpointAdmissionClient = {
   activateBatch: async () => ({}),
 };
 export const noopEndpointAdmissionCommands = defineEndpointAdmissionCommands(noopEndpointAdmissionClient);
+
+export const defineLearningRankingCommands = (client: LearningRankingClient) => ({
+  rollbackLadder: Command.define("RollbackLearningLadder", {
+    args: { payload: Schema.String, roleId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
+    execute: ({ payload, roleId, taskTypeId, token }) =>
+      Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            try: () => client.rollbackLadder(JSON.parse(payload) as LearningRollbackPayload),
+          }),
+        ),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.LearningLadderUpdated({ rolledBack: (JSON.parse(payload) as LearningRollbackPayload).rolledBack, roleId, taskTypeId, token }) : Message.LearningLadderFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("learning ladder rollback failed"))), roleId, taskTypeId, token })),
+      ),
+    messages: [Message.LearningLadderUpdated, Message.LearningLadderFailed],
+  }),
+});
+export type LearningRankingCommands = ReturnType<typeof defineLearningRankingCommands>;
+const noopLearningRankingClient: LearningRankingClient = { rollbackLadder: async () => undefined };
+export const noopLearningRankingCommands = defineLearningRankingCommands(noopLearningRankingClient);

@@ -3,6 +3,7 @@ import {
   defineDispatchStudio,
   defineDeviceAuthCommands,
   defineProviderAccountCommands,
+  defineLearningRankingCommands,
   defineEndpointAdmissionCommands,
   defineDispatchControl,
   defineReadControl,
@@ -14,6 +15,7 @@ import {
 } from "./commands";
 import { createDeviceAuthClient } from "./device-auth";
 import { createEndpointAdmissionClient } from "./endpoint-admission";
+import { createLearningRankingClient } from "./learning-ranking";
 import { createProviderAccountClient } from "./provider-account";
 import { type ControlClient, createControlClients } from "./control";
 import type { DiagnosticsReader } from "./diagnostics";
@@ -60,6 +62,7 @@ export interface ShellOptions {
   readonly deviceAuthFetchImpl?: typeof fetch;
   readonly providerAccountFetchImpl?: typeof fetch;
   readonly endpointAdmissionFetchImpl?: typeof fetch;
+  readonly learningRankingFetchImpl?: typeof fetch;
   readonly controlToken?: string;
 }
 
@@ -138,6 +141,7 @@ export const createShellApp = (options: ShellOptions = {}) => {
       defineDeviceAuthCommands(createDeviceAuthClient({ ...(options.deviceAuthFetchImpl === undefined ? {} : { fetchImpl: options.deviceAuthFetchImpl }) })),
       defineProviderAccountCommands(createProviderAccountClient({ ...(options.providerAccountFetchImpl === undefined ? {} : { fetchImpl: options.providerAccountFetchImpl }) })),
       defineEndpointAdmissionCommands(createEndpointAdmissionClient({ ...(options.endpointAdmissionFetchImpl === undefined ? {} : { fetchImpl: options.endpointAdmissionFetchImpl }) })),
+      defineLearningRankingCommands(createLearningRankingClient({ ...(options.learningRankingFetchImpl === undefined ? {} : { fetchImpl: options.learningRankingFetchImpl }) })),
     ),
     view,
   };
