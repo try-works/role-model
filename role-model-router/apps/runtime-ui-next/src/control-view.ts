@@ -1,10 +1,58 @@
 import type { DeviceAuthField, DeviceAuthState } from "./device-auth";
+import type { ProviderAccountField, ProviderAccountState } from "./provider-account";
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 
 import type { ControlSpec, ControlState } from "./control";
 import { Message } from "./message";
 
 
+
+export const renderProviderAccountForm = (state: ProviderAccountState, h: HtmlBuilder<Message>): Html => {
+  const textField = (label: string, field: ProviderAccountField, value: string) =>
+    h.label([h.Class("mt-3 flex flex-col gap-1 text-[12px]")], [
+      h.span([], [label]),
+      h.input([
+        h.Class("w-full max-w-[420px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1.5 text-[12px]"),
+        h.OnInput((next) => Message.ProviderAccountFieldChanged({ field, value: next })),
+        h.Type("text"),
+        h.Value(value),
+      ]),
+    ]);
+  const busy = state.status === "saving" || state.pendingAction !== undefined;
+  return h.section(
+    [h.Class("rm3-next-route mt-6"), h.DataAttribute("route", "provider-account"), h.DataAttribute("provider-account-state", state.status)],
+    [
+      h.h3([h.Class("text-[14px] font-semibold")], ["Provider account"]),
+      textField("Account id", "providerAccountId", state.draft.providerAccountId),
+      textField("Provider", "providerId", state.draft.providerId),
+      textField("Provider kind", "providerKind", state.draft.providerKind),
+      textField("Variant", "variantId", state.draft.variantId),
+      textField("Auth mode", "authMode", state.draft.authMode),
+      textField("Credential ref", "credentialRef", state.draft.credentialRef),
+      textField("API key", "apiKey", state.draft.apiKey),
+      textField("Base URL override", "baseUrlOverride", state.draft.baseUrlOverride),
+      textField("Role ids (comma separated)", "roleIdsInput", state.draft.roleIdsInput),
+      textField("OAuth connected (true/false)", "oauthConnected", state.draft.oauthConnected),
+      h.label([h.Class("mt-3 flex flex-col gap-1 text-[12px]")], [
+        h.span([], ["Model"]),
+        h.input([
+          h.Class("w-full max-w-[420px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1.5 text-[12px]"),
+          h.OnInput((next) => Message.ProviderAccountFieldChanged({ field: "modelInput", value: next })),
+          h.Type("text"),
+          h.Value(state.draft.modelInput),
+        ]),
+      ]),
+      h.button([h.Class("mt-2 rounded border px-3 py-1.5 text-[12px]"), h.OnClick(Message.ProviderAccountModelAdded({})), h.Type("button")], ["Add model"]),
+      h.ul([h.Class("mt-2 text-[12px]")], state.draft.selectedModelIds.map((modelId) =>
+        h.li([], [modelId + " ", h.button([h.Class("underline"), h.OnClick(Message.ProviderAccountModelRemoved({ modelId })), h.Type("button")], ["Remove"])]),
+      )),
+      h.button([h.Class("mt-4 rounded border px-3 py-1.5 text-[12px]"), h.AriaDisabled(busy), h.DataAttribute("provider-account-save", ""), h.OnClick(Message.ProviderAccountCreateRequested({})), h.Type("button")], ["Save provider account"]),
+      h.button([h.Class("ml-2 mt-4 rounded border px-3 py-1.5 text-[12px]"), h.AriaDisabled(busy), h.DataAttribute("provider-account-update-key", ""), h.OnClick(Message.ProviderAccountUpdateKeyRequested({})), h.Type("button")], ["Update API key"]),
+      ...(state.error === undefined ? [] : [h.p([h.Role("alert"), h.DataAttribute("provider-account-error", "")], [state.error])]),
+      ...(state.status === "saved" ? [h.p([h.DataAttribute("provider-account-saved", "")], ["Provider account saved."])] : []),
+    ],
+  );
+};
 export const renderDeviceAuthorizationForm = (state: DeviceAuthState, h: HtmlBuilder<Message>): Html => {
   const textField = (label: string, field: DeviceAuthField, value: string) =>
     h.label(

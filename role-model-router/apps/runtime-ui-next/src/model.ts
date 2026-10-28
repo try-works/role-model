@@ -2,6 +2,7 @@ import { Schema } from "effect";
 
 import { ControlsState } from "./control";
 import { DeviceAuthStateSchema } from "./device-auth";
+import { ProviderAccountStateSchema } from "./provider-account";
 import { DiagnosticsSnapshot } from "./diagnostics";
 import { ObservabilityState } from "./observability";
 import { ReadbacksState } from "./readback";
@@ -14,6 +15,7 @@ const modelFields = {
   controls: ControlsState,
   deviceAuth: Schema.optional(DeviceAuthStateSchema),
   diagnostics: DiagnosticsSnapshot,
+  providerAccount: Schema.optional(ProviderAccountStateSchema),
   observability: ObservabilityState,
   overviewFilters: Schema.optional(Schema.Struct({ breakdown: Schema.Literals(["all", "endpoint", "model", "provider"]), breakdownValue: Schema.String, difficulty: Schema.Literals(["all", "easy", "medium", "hard"]), source: Schema.Literals(["all", "local", "remote"]), status: Schema.Literals(["all", "success", "failure", "unknown"]) })),
   runtimeConfigEditor: Schema.optional(Schema.Struct({ diff: Schema.Array(Schema.String), message: Schema.optional(Schema.String), notice: Schema.optional(Schema.String), originalText: Schema.String, status: Schema.Literals(["not-loaded", "loading", "editing", "confirming", "invalid", "pending", "saved", "error"]), text: Schema.String, token: Schema.Number })),

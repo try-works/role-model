@@ -15,6 +15,7 @@ import {
   parseDiagnosticsSnapshot,
 } from "./diagnostics";
 import { type DeviceAuthClient, type DeviceAuthStartPayload, type DeviceActivationPayload } from "./device-auth";
+import { type ProviderAccountClient, type ProviderAccountCreatePayload } from "./provider-account";
 import { Message } from "./message";
 import type { RuntimeConfigClient } from "./runtime-config";
 import { type StudioClient, StudioState, studioRequestFor } from "./studio";
@@ -399,3 +400,55 @@ const noopDeviceAuthClient: DeviceAuthClient = {
   start: async () => ({ authRequestId: "", providerAccountId: "", status: "pending" }),
 };
 export const noopDeviceAuthCommands = defineDeviceAuthCommands(noopDeviceAuthClient);
+
+export const defineProviderAccountCommands = (client: ProviderAccountClient) => ({
+  create: Command.define("CreateProviderAccount", {
+    args: { payload: Schema.String, token: Schema.Number },
+    execute: ({ payload, token }) =>
+      Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            try: () => client.create(JSON.parse(payload) as ProviderAccountCreatePayload),
+          }),
+        ),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.ProviderAccountCreateSucceeded({ token }) : Message.ProviderAccountFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("provider account save failed"))), token })),
+      ),
+    messages: [Message.ProviderAccountCreateSucceeded, Message.ProviderAccountFailed],
+  }),
+  deleteModel: Command.define("DeleteProviderAccountModel", {
+    args: { modelId: Schema.String, providerAccountId: Schema.String, token: Schema.Number },
+    execute: ({ modelId, providerAccountId, token }) =>
+      Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            try: () => client.deleteModel(providerAccountId, modelId),
+          }),
+        ),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.ProviderAccountModelDeleted({ modelId, token }) : Message.ProviderAccountFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("provider model removal failed"))), token })),
+      ),
+    messages: [Message.ProviderAccountModelDeleted, Message.ProviderAccountFailed],
+  }),
+  updateKey: Command.define("UpdateProviderAccountKey", {
+    args: { payload: Schema.String, token: Schema.Number },
+    execute: ({ payload, token }) =>
+      Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            try: () => client.updateKey(JSON.parse(payload) as { apiKey: string; providerAccountId: string }),
+          }),
+        ),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.ProviderAccountKeyUpdated({ token }) : Message.ProviderAccountFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("provider key update failed"))), token })),
+      ),
+    messages: [Message.ProviderAccountKeyUpdated, Message.ProviderAccountFailed],
+  }),
+});
+export type ProviderAccountCommands = ReturnType<typeof defineProviderAccountCommands>;
+const noopProviderAccountClient: ProviderAccountClient = {
+  create: async () => ({}),
+  deleteModel: async () => ({}),
+  updateKey: async () => ({}),
+};
+export const noopProviderAccountCommands = defineProviderAccountCommands(noopProviderAccountClient);

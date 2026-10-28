@@ -14,6 +14,8 @@ import {
   type ReadDiagnosticsCommand,
   type ReadObservabilityCommand,
   type DeviceAuthCommands,
+  type ProviderAccountCommands,
+  noopProviderAccountCommands,
   noopDeviceAuthCommands,
   type ReadReadbackCommand,
   type RefreshSnapshotCommand,
@@ -34,6 +36,13 @@ import {
   loadingControl,
 } from "./control";
 import { failedDiagnostics, idleDiagnostics, loadingDiagnostics } from "./diagnostics";
+import {
+  createProviderAccountPayload,
+  initialProviderAccountState,
+  providerAccountBusy,
+  updateProviderKeyPayload,
+  type ProviderAccountState,
+} from "./provider-account";
 import {
   activationPlanForConnectedSession,
   deviceAuthPollDelayMs,
@@ -166,6 +175,7 @@ export const createUpdate =
     dispatchStudio: DispatchStudioCommand = noopDispatchStudio,
     saveRuntimeConfig: SaveRuntimeConfigCommand | undefined = undefined,
     deviceAuthCommands: DeviceAuthCommands = noopDeviceAuthCommands,
+    providerAccountCommands: ProviderAccountCommands = noopProviderAccountCommands,
   ) => {
     const navigateToRoute = (
       model: Model,
@@ -927,6 +937,78 @@ export const createUpdate =
         const state = model.deviceAuth ?? initialDeviceAuthState();
         if (token !== state.token) return { model };
         return { model: { ...model, deviceAuth: { ...state, error: undefined } } };
+      },
+      ProviderAccountFieldChanged: ({ field, value }) => {
+        const state = model.providerAccount ?? initialProviderAccountState();
+        return { model: { ...model, providerAccount: { ...state, draft: { ...state.draft, [field]: value }, error: undefined } } };
+      },
+      ProviderAccountModelAdded: () => {
+        const state = model.providerAccount ?? initialProviderAccountState();
+        const modelId = state.draft.modelInput.trim();
+        if (modelId.length === 0) return { model };
+        return { model: { ...model, providerAccount: { ...state, draft: { ...state.draft, modelInput: "", selectedModelIds: [...new Set([...state.draft.selectedModelIds, modelId])] } } } };
+      },
+      ProviderAccountModelRemoved: ({ modelId }) => {
+        const state = model.providerAccount ?? initialProviderAccountState();
+        return { model: { ...model, providerAccount: { ...state, draft: { ...state.draft, selectedModelIds: state.draft.selectedModelIds.filter((id) => id !== modelId) } } } };
+      },
+      ProviderAccountCreateRequested: () => {
+        const state = model.providerAccount ?? initialProviderAccountState();
+        if (providerAccountBusy(state)) return { model };
+        const token = state.token + 1;
+        return {
+          commands: [providerAccountCommands.create({ payload: JSON.stringify(createProviderAccountPayload(state)), token })],
+          model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: "create", status: "saving", token } },
+        };
+      },
+      ProviderAccountCreateSucceeded: ({ token }) => {
+        const state = model.providerAccount ?? initialProviderAccountState();
+        if (token !== state.token) return { model };
+        return { model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: undefined, status: "saved" } } };
+      },
+      ProviderAccountUpdateKeyRequested: () => {
+        const state = model.providerAccount ?? initialProviderAccountState();
+        if (providerAccountBusy(state)) return { model };
+        const token = state.token + 1;
+        return {
+          commands: [providerAccountCommands.updateKey({ payload: JSON.stringify(updateProviderKeyPayload(state.draft)), token })],
+          model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: "update-key", status: "saving", token } },
+        };
+      },
+      ProviderAccountKeyUpdated: ({ token }) => {
+        const state = model.providerAccount ?? initialProviderAccountState();
+        if (token !== state.token) return { model };
+        return { model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: undefined, status: "saved" } } };
+      },
+      ProviderAccountModelDeleteRequested: ({ modelId }) => {
+        const state = model.providerAccount ?? initialProviderAccountState();
+        if (providerAccountBusy(state)) return { model };
+        const token = state.token + 1;
+        return {
+          commands: [providerAccountCommands.deleteModel({ modelId, providerAccountId: state.draft.providerAccountId.trim(), token })],
+          model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: "delete-model", status: "saving", token } },
+        };
+      },
+      ProviderAccountModelDeleted: ({ modelId, token }) => {
+        const state = model.providerAccount ?? initialProviderAccountState();
+        if (token !== state.token) return { model };
+        return {
+          model: {
+            ...model,
+            providerAccount: {
+              ...state,
+              draft: { ...state.draft, selectedModelIds: state.draft.selectedModelIds.filter((id) => id !== modelId) },
+              error: undefined,
+              pendingAction: undefined,
+              status: "saved",
+            },
+          },
+        };
+      },
+      ProviderAccountFailed: ({ message, token }) => {
+        const state = model.providerAccount ?? initialProviderAccountState();
+        if (token !== state.token) return { model };
+        return { model: { ...model, providerAccount: { ...state, error: message, pendingAction: undefined, status: "error" } } };
       },
       ThemeApplied: () => ({ model }),
       ToggledTheme: () => {

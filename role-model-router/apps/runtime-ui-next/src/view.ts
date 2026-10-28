@@ -3,8 +3,9 @@ import type { Document, Html, HtmlBuilder } from "@role-model-router/foldkit/htm
 import { rm3ButtonClassName, view as rm3ButtonView } from "@role-model/ui/foldkit-button";
 
 import { CONTROL_SPECS, type ControlsState } from "./control";
-import { renderControlPage, renderDeviceAuthorizationForm } from "./control-view";
+import { renderControlPage, renderDeviceAuthorizationForm, renderProviderAccountForm } from "./control-view";
 import { initialDeviceAuthState, type DeviceAuthState } from "./device-auth";
+import { initialProviderAccountState, type ProviderAccountState } from "./provider-account";
 import {
   type DiagnosticsSnapshot,
   diagnosticsBuildLabel,
@@ -859,6 +860,7 @@ const routeContent = (
   overviewFilters: OverviewFilters | undefined,
   runtimeConfigEditor: Model["runtimeConfigEditor"],
   deviceAuth: DeviceAuthState,
+  providerAccount: ProviderAccountState,
   h: HtmlBuilder<Message>,
 ) =>
   AppRoute.match(route, {
@@ -929,6 +931,7 @@ const routeContent = (
       h.section([], [
         renderControlPage(CONTROL_SPECS.providers, controls.providers, h),
         renderDeviceAuthorizationForm(deviceAuth, h),
+        renderProviderAccountForm(providerAccount, h),
       ]),
     Endpoints: () => renderControlPage(CONTROL_SPECS.endpoints, controls.endpoints, h),
     ControlController: () =>
@@ -1199,6 +1202,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                 model.overviewFilters ?? DEFAULT_OVERVIEW_FILTERS,
                 model.runtimeConfigEditor,
     model.deviceAuth ?? initialDeviceAuthState(),
+    model.providerAccount ?? initialProviderAccountState(),
                 h,
               ),
             ],

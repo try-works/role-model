@@ -8,6 +8,7 @@ import { DiagnosticsSnapshot } from "./diagnostics";
 import { ObservabilityState } from "./observability";
 import { ReadbackKeySchema, ReadbackState } from "./readback";
 import { DeviceAuthFieldSchema, DeviceAuthSessionSchema, DeviceAuthSessionsSchema } from "./device-auth";
+import { ProviderAccountFieldSchema } from "./provider-account";
 import { StudioFieldSchema, StudioTabSchema } from "./studio";
 
 type EmptyFields = Record<never, never>;
@@ -73,6 +74,16 @@ export const Message: MessageUnion<{
     readonly snapshot: typeof ObservabilityState;
     readonly token: typeof Schema.Number;
   };
+  readonly ProviderAccountFieldChanged: { readonly field: typeof ProviderAccountFieldSchema; readonly value: typeof Schema.String };
+  readonly ProviderAccountModelAdded: EmptyFields;
+  readonly ProviderAccountModelRemoved: { readonly modelId: typeof Schema.String };
+  readonly ProviderAccountCreateRequested: EmptyFields;
+  readonly ProviderAccountCreateSucceeded: { readonly token: typeof Schema.Number };
+  readonly ProviderAccountUpdateKeyRequested: EmptyFields;
+  readonly ProviderAccountKeyUpdated: { readonly token: typeof Schema.Number };
+  readonly ProviderAccountModelDeleteRequested: { readonly modelId: typeof Schema.String };
+  readonly ProviderAccountModelDeleted: { readonly modelId: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly ProviderAccountFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly ReadbackFailed: {
     readonly key: typeof ReadbackKeySchema;
     readonly message: typeof Schema.String;
@@ -153,6 +164,16 @@ export const Message: MessageUnion<{
   NavigationCompleted: {},
   ObservabilityFailed: { message: Schema.String, token: Schema.Number },
   ObservabilityLoaded: { snapshot: ObservabilityState, token: Schema.Number },
+  ProviderAccountFieldChanged: { field: ProviderAccountFieldSchema, value: Schema.String },
+  ProviderAccountModelAdded: {},
+  ProviderAccountModelRemoved: { modelId: Schema.String },
+  ProviderAccountCreateRequested: {},
+  ProviderAccountCreateSucceeded: { token: Schema.Number },
+  ProviderAccountUpdateKeyRequested: {},
+  ProviderAccountKeyUpdated: { token: Schema.Number },
+  ProviderAccountModelDeleteRequested: { modelId: Schema.String },
+  ProviderAccountModelDeleted: { modelId: Schema.String, token: Schema.Number },
+  ProviderAccountFailed: { message: Schema.String, token: Schema.Number },
   ReadbackFailed: { key: ReadbackKeySchema, message: Schema.String, token: Schema.Number },
   ReadbackLoaded: { key: ReadbackKeySchema, snapshot: ReadbackState, token: Schema.Number },
   StudioTabSelected: { tab: StudioTabSchema },
