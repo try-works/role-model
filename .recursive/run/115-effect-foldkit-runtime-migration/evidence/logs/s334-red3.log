@@ -1,0 +1,49 @@
+COMMAND: node vitest run test/s334 (S335 RED: per-job isolation)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/s334-observation-storage.test.ts (7 tests | 2 failed) 10052ms
+   ✓ S334 observation storage > identity: one DAG-owned instance, branded, no fallback 4ms
+   ✓ S334 observation storage > bounded hydration queue: typed overflow at capacity, writes still applied, drain joins 2ms
+   ✓ S334 observation storage > sync read-through: cached hydration is returned, raw read fallback preserves sync semantics 1ms
+   ✓ S334 observation storage > production wiring: persist families and the bundle read family route through the DAG storage 9ms
+   × S334 observation storage > hung job: drain rejects with the typed 5s timeout and the pump does not stay permanently active 5013ms
+     → The instanceof assertion needs a constructor but undefined was given.
+   × S334 observation storage > later-job progress: after a hung job is abandoned, a queued later job runs 5020ms
+     → observation hydration did not drain
+   ✓ S334 observation storage > failure continues: a failing hydration job does not stop the pump 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s334-observation-storage.test.ts > S334 observation storage > hung job: drain rejects with the typed 5s timeout and the pump does not stay permanently active
+AssertionError: The instanceof assertion needs a constructor but undefined was given.
+ ❯ test/s334-observation-storage.test.ts:69:38
+     67|     storage.persist(() => {}, () => new Promise<object>(() => {}), "hu…
+     68|     await expect(storage.drain()).rejects.toBeInstanceOf(ObservationHy…
+     69|     expect(storage.hydrationError()).toBeInstanceOf(ObservationHydrati…
+       |                                      ^
+     70|     await new Promise((resolve) => setTimeout(resolve, 25));
+     71|     expect(storage.pumpActive()).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s334-observation-storage.test.ts > S334 observation storage > later-job progress: after a hung job is abandoned, a queued later job runs
+ObservationHydrationTimeoutError: observation hydration did not drain
+ ❯ Timeout._onTimeout src/composition-dag.ts:548:47
+    546|       if (pending === 0 && jobs.length === 0) return;
+    547|       await new Promise<void>((resolve, reject) => {
+    548|         const timer = setTimeout(() => reject(new ObservationHydration…
+       |                                               ^
+    549|         drainResolvers.push(() => { clearTimeout(timer); resolve(); });
+    550|       });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 5 passed (7)
+   Start at  10:09:11
+   Duration  13.14s (transform 1.63s, setup 0ms, collect 2.63s, tests 10.05s, environment 0ms, prepare 169ms)
+
+

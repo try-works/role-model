@@ -282,6 +282,7 @@ import {
   type BackendOwner,
   type BootstrapContract,
   benchmarkGate,
+  composeObservationStorage,
   composeMetadataCacheOwner,
   startupReadinessRefusalBody,
   metadataCacheKey,
@@ -21278,6 +21279,8 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
           rootPath: path.join(options.runtimeStateRoot, options.scopeId, "track-b-graph"),
         })
       : undefined;
+  // S334 (R23): Backend-owned observation storage (bounded async hydration + sync read-through).
+  const observationStorage = composeObservationStorage({ capacity: 64 });
   const recordPreExecutionFailure = async (input: {
     readonly requestId: string;
     readonly modelId: string;
@@ -21326,7 +21329,8 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
       toolingUsed: input.toolingUsed,
     });
     persistFailureTelemetrySafely(() =>
-      persistRuntimeTelemetryFailure({
+      observationStorage.persist(
+        () => persistRuntimeTelemetryFailure({
         databasePath: initialization.databasePath,
         requestId: input.requestId,
         clientRequestId: input.clientRequestId ?? null,
@@ -21346,7 +21350,10 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
         dimensions,
         observation: failureObservation,
         ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-      }),
+        }),
+        async () => readRuntimeObservationBundle({ databasePath: initialization.databasePath, requestId: input.requestId, ...(localGraphStore ? { graphStore: localGraphStore } : {}) }),
+        input.requestId,
+      ),
     );
     if (options.trackBPostObservation) {
       try {
@@ -21361,11 +21368,11 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
   };
   const readPersistedRuntimeObservation = (requestId: string) => {
     try {
-      return readRuntimeObservationBundle({
+      return observationStorage.read(requestId, () => readRuntimeObservationBundle({
         databasePath: initialization.databasePath,
         requestId,
         ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-      });
+      }));
     } catch (error) {
       if (!localGraphStore && /graph artifact reader required after cutover/i.test(String(error)))
         return readRuntimeObservationStorageRecord({
@@ -29919,13 +29926,17 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
           } as never);
       try {
         markPhase("observation-persist-start");
-        persistRuntimeObservationBundle({
+        observationStorage.persist(
+        () => persistRuntimeObservationBundle({
           databasePath: initialization.databasePath,
           channel: runtimeChannel,
           observation: persistedObservation,
           ...(artifactRef ? { artifactRef } : {}),
           ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-        });
+          }),
+          async () => readRuntimeObservationBundle({ databasePath: initialization.databasePath, requestId, ...(localGraphStore ? { graphStore: localGraphStore } : {}) }),
+          requestId,
+        );
       } catch (error) {
         // Run 94 SP48 (R11): a storage failure after the provider response was produced must
         // never retroactively fail the client with a raw storage error. Record a bounded

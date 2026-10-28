@@ -1,0 +1,7 @@
+# S336 — R23 observation storage-service Lead acceptance
+
+- Reviewer: s9 (deepseek-flash) FINAL PASS after two HOLD rounds — evidence/other/s335-observation-storage-review.md sha256 `083B3E5FF3F2609ADB6F10BFFE037B02F4521DE3D68A1E1EE75B09722238F1ED`.
+- Committed bytes verified by Lead: composition-dag.ts `6B66B9E2EB35FE1745299F35A999D4A16FC35D55B5BD22ABBFBDE9945D078E2D` (70810 B), index.ts `533868DD0792ACCD5D6745F0C3E162C0A9579A17B488D31E43251A46A1E4B9E5` (1368295 B), test `30576083FA52342E7F6213926D3FF8A2291C0C32D7DCCCE4FE07E89F7911E897` (6103 B).
+- Lead verification: suite 35/35 (6 affected files), tsc 0, test lint clean, DAG 161 classified (no store-region findings).
+- What landed: Backend-owned ObservationStorageService (DAG Effect Context.Service): sync write-before-enqueue + read-through facade (byte-for-byte fallback), deterministic bounded pump (capacity 64, typed overflow with write applied, per-job 10s timeout + 5s drain-watchdog abandonment via generation token — hung jobs cannot block later jobs, no cache write/double-decrement on eventual settle). Migrated families: persistRuntimeTelemetryFailure (first site) + persistRuntimeObservationBundle + readRuntimeObservationBundle. Effect-first justification recorded (Effect Queue did not drain under the synchronous vitest path; registration/ownership stays Effect). Stayed families remain a named follow-on with the caller table.
+- R23 advanced: async hydration with a compatible sync facade, bounded and isolated, in production via the Backend owner.

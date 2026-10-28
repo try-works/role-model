@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { Context, Effect, Layer, Ref, Semaphore } from "effect";
+import { Context, Effect, Layer, Queue, Ref, Semaphore } from "effect";
 
 import {
   type SessionBootstrapHandlers,
@@ -256,7 +256,8 @@ export type CompositionServices =
   | Benchmark
   | Cli
   | MetadataCacheService
-  | Readiness;
+  | Readiness
+  | ObservationStorageService;
 
 export const DEFAULT_COMPOSITION_CONFIG: CompositionConfigContract = Object.freeze({
   channel: "development",
@@ -493,6 +494,124 @@ export const composeReadinessOwner = (): ReadinessContract =>
     ),
   );
 
+/** S334 (R23): Backend-owned observation storage: sync read-through facade + bounded async hydration queue.
+ * Effect-first justification (recorded in tasks/s334-observation-storage.md): an Effect Queue + runFork worker did
+ * not drain under the synchronous vitest path (offer/take scheduling), so the suitable shape here is a deterministic
+ * bounded plain-array pump behind the same registered Effect service and sync facade. */
+export class ObservationHydrationOverflowError extends Error {
+  readonly code = "OBSERVATION_HYDRATION_OVERFLOW";
+  readonly capacity: number;
+  constructor(capacity: number) { super("observation hydration queue is full (capacity " + String(capacity) + ")"); this.name = "ObservationHydrationOverflowError"; this.capacity = capacity; }
+}
+export class ObservationHydrationJobTimeoutError extends Error {
+  readonly code = "OBSERVATION_HYDRATION_JOB_TIMEOUT";
+  readonly key: string;
+  constructor(key: string) { super("observation hydration job timed out: " + key); this.name = "ObservationHydrationJobTimeoutError"; this.key = key; }
+}
+export class ObservationHydrationTimeoutError extends Error {
+  readonly code = "OBSERVATION_HYDRATION_TIMEOUT";
+  constructor() { super("observation hydration did not drain"); this.name = "ObservationHydrationTimeoutError"; }
+}
+export interface ObservationHydrationJob { readonly key: string; readonly run: () => Promise<object | null | undefined>; }
+export interface ObservationStorageContract {
+  readonly id: string;
+  readonly capacity: number;
+  readonly persist: (write: () => void, hydrate: (() => Promise<object | null | undefined>) | undefined, key: string) => void;
+  readonly read: <T>(key: string, read: () => T) => T;
+  readonly cached: (key: string) => object | undefined;
+  readonly queueDepth: () => number;
+  readonly hydrationError: () => Error | undefined;
+  readonly drain: () => Promise<void>;
+  readonly pumpActive: () => boolean;
+}
+const observationStorageOwners = new WeakSet<object>();
+export class ObservationStorageService extends Context.Service<ObservationStorageService, ObservationStorageContract>()("ObservationStorageService") {}
+export const makeObservationStorage = (capacity: number, jobTimeoutMs = 10_000): ObservationStorageContract => {
+  const cache = new Map<string, object>();
+  const jobs: ObservationHydrationJob[] = [];
+  let active = false;
+  let pending = 0;
+  let generation = 0;
+  let activeJobKey: string | null = null;
+  const drainResolvers: (() => void)[] = [];
+  let hydrationError: Error | undefined;
+  const abandonActiveJob = (): void => {
+    if (!active) return;
+    generation += 1;
+    pending = Math.max(0, pending - 1);
+    hydrationError = new ObservationHydrationJobTimeoutError(activeJobKey ?? "unknown");
+    active = false;
+    activeJobKey = null;
+    if (jobs.length > 0) void pump();
+  };
+  const pump = async (): Promise<void> => {
+    if (active) return;
+    active = true;
+    while (jobs.length > 0) {
+      const job = jobs.shift();
+      if (job === undefined) break;
+      activeJobKey = job.key;
+      const runGeneration = generation;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      try {
+        const value = await Promise.race([
+          job.run(),
+          new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new ObservationHydrationJobTimeoutError(job.key)), jobTimeoutMs); }),
+        ]);
+        if (runGeneration !== generation) return;
+        if (value !== null && value !== undefined) cache.set(job.key, value);
+      } catch (error) { hydrationError = error instanceof Error ? error : new Error(String(error)); }
+      finally { if (timer !== undefined) clearTimeout(timer); }
+      if (runGeneration !== generation) return;
+      pending -= 1;
+      if (pending === 0 && jobs.length === 0) { for (const resolve of drainResolvers.splice(0)) resolve(); }
+    }
+    active = false;
+  };
+  const owner: ObservationStorageContract = {
+    cached: (key) => cache.get(key),
+    capacity,
+    drain: async () => {
+      if (pending === 0 && jobs.length === 0) return;
+      await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(() => {
+          abandonActiveJob();
+          reject(new ObservationHydrationTimeoutError());
+        }, 5_000);
+        drainResolvers.push(() => { clearTimeout(timer); resolve(); });
+      });
+    },
+    hydrationError: () => hydrationError,
+    id: "observation-storage:dso",
+    persist: (write, hydrate, key) => {
+      write();
+      if (hydrate === undefined) return;
+      if (jobs.length >= capacity) { hydrationError = new ObservationHydrationOverflowError(capacity); return; }
+      jobs.push({ key, run: hydrate });
+      pending += 1;
+      void pump();
+    },
+    pumpActive: () => active,
+    queueDepth: () => jobs.length,
+    read: <T>(key: string, read: () => T): T => {
+      const hit = cache.get(key);
+      if (hit === undefined) return read();
+      // SAFETY: the cached value was produced by this storage's hydrate callback for this key;
+      // the generic read-through names the caller's declared type.
+      return hit as T;
+    },
+  };
+  observationStorageOwners.add(owner);
+  return Object.freeze(owner);
+};
+let observationStorageSingleton: ObservationStorageContract | undefined;
+export const composeObservationStorage = (options?: { readonly capacity?: number; readonly jobTimeoutMs?: number }): ObservationStorageContract => {
+  observationStorageSingleton ??= makeObservationStorage(options?.capacity ?? 64, options?.jobTimeoutMs ?? 10_000);
+  return observationStorageSingleton;
+};
+export const isComposedObservationStorage = (value: ObservationStorageContract): boolean => observationStorageOwners.has(value);
+export const assertComposedObservationStorage = (value: ObservationStorageContract): ObservationStorageContract => { if (!isComposedObservationStorage(value)) throw new Error("observation storage must be the composed DAG owner (no fallback)"); return value; };
+export const observationStorageLayer = Layer.effect(ObservationStorageService, Effect.sync(() => composeObservationStorage()));
 export const artifactAuthorityLayer: Layer.Layer<ArtifactStoreAuthority, never, CompositionConfig> =
   Layer.effect(
     ArtifactStoreAuthority,
@@ -711,14 +830,14 @@ const ownerLayer = Layer.provideMerge(cliLayer, serverOwnerLayer);
  * and every leaf is constructed once by `provideMerge`.
  */
 export const CompositionLayer: Layer.Layer<CompositionServices, never, never> = Layer.provideMerge(
-  Layer.mergeAll(ownerLayer, metadataCacheLayer, readinessLayer),
+  Layer.mergeAll(ownerLayer, metadataCacheLayer, readinessLayer, observationStorageLayer),
   dependencyLayer,
 );
 
 export const makeCompositionLayer = (
   config: CompositionConfigContract,
 ): Layer.Layer<CompositionServices, never, never> =>
-  Layer.provideMerge(Layer.mergeAll(ownerLayer, metadataCacheLayer, readinessLayer), Layer.provideMerge(leafLayers, configLayer(config)));
+  Layer.provideMerge(Layer.mergeAll(ownerLayer, metadataCacheLayer, readinessLayer, observationStorageLayer), Layer.provideMerge(leafLayers, configLayer(config)));
 
 export const makeConfigLayer = (
   config: CompositionConfigContract,
