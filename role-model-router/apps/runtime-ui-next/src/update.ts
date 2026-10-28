@@ -41,6 +41,7 @@ import {
   emptyReadbacks,
   failedReadback,
   loadingReadback,
+  type ReadbackKey,
   readbackKeyForRouteTag,
 } from "./readback";
 import { type AppRoute, type ResolvedAppUrl, resolveAppUrl, sameRoute } from "./route";
@@ -288,38 +289,54 @@ export const createUpdate =
     // gap/resync token, or claim the topology moved. Routes without a readback or observability
     // reader (control, learning) have no telemetry invalidation yet; that is explicit remaining
     // coverage, not a fabricated refresh.
-    const invalidateCurrentRoute = (model: Model): UpdateReturn<Model, Message> => {
+    /**
+     * S392a (R12): the typed read plan for the current route. EVERY real source of the route is
+     * listed with its per-key token owner; multi-source pages (ModelsRoles, SystemOperator) return
+     * two entries so one telemetry event invalidates all of them, never only the first.
+     */
+    const readPlanForRoute = (model: Model): ReadonlyArray<{ readonly key: ReadbackKey; readonly id?: string; readonly query?: string }> => {
+      if (model.route._tag === "ModelsRoles") return [{ key: "configuredModels" }, { key: "modelEndpoints" }];
+      if (model.route._tag === "SystemOperator") return [{ key: "operatorStatus" }, { key: "operatorTraceRoots" }];
       const readbackKey = readbackKeyForRouteTag(model.route._tag);
-      if (readbackKey !== null) {
-        const token = model.readbacks[readbackKey].token + 1;
-        const detailId =
-          model.route._tag === "RequestDetail" || model.route._tag === "RouterDecisionDetail"
-            ? model.route.requestId
-            : undefined;
-        // S280A: mirror the current route's own read arguments. The Index overview
-        // (readback.ts:914-920) and the Dashboard summary (:757-763) take their window as the query /
-        // id (update.ts:493/503, init.ts:146); omitting them requests an empty windowMs and silently
-        // drops the selected overview window and filters.
-        const windowMs = model.overviewWindowMs ?? 86_400_000;
-        const id = readbackKey === "dashboard" ? String(windowMs) : detailId;
-        const query =
-          readbackKey === "overviewMetrics"
-            ? overviewQuery(model.overviewFilters ?? DEFAULT_OVERVIEW_FILTERS, windowMs)
-            : undefined;
-        return {
+      if (readbackKey === null) return [];
+      const detailId =
+        model.route._tag === "RequestDetail" || model.route._tag === "RouterDecisionDetail"
+          ? model.route.requestId
+          : undefined;
+      const windowMs = model.overviewWindowMs ?? 86_400_000;
+      const id = readbackKey === "dashboard" ? String(windowMs) : detailId;
+      const query =
+        readbackKey === "overviewMetrics"
+          ? overviewQuery(model.overviewFilters ?? DEFAULT_OVERVIEW_FILTERS, windowMs)
+          : undefined;
+      return [{ id, key: readbackKey, query }];
+    };
+
+    const invalidateCurrentRoute = (model: Model): UpdateReturn<Model, Message> => {
+      const plan = readPlanForRoute(model);
+      if (plan.length > 0) {
+        const readbacks = { ...model.readbacks };
+        const commands = plan.map((entry) => {
+          const token = readbacks[entry.key].token + 1;
+          readbacks[entry.key] = loadingReadback(token);
           // The command's id/query args are typed optional, so undefined forwards as "absent".
-          commands: [readReadback({ id, key: readbackKey, query, token })],
-          model: {
-            ...model,
-            readbacks: { ...model.readbacks, [readbackKey]: loadingReadback(token) },
-          },
-        };
+          return readReadback({ id: entry.id, key: entry.key, query: entry.query, token });
+        });
+        return { commands, model: { ...model, readbacks } };
       }
       if (model.route._tag === "Observability") {
         const token = model.observability.token + 1;
         return {
           commands: [readObservability({ token })],
           model: { ...model, observability: loadingObservability(token) },
+        };
+      }
+      const controlKey = controlKeyForRouteTag(model.route._tag);
+      if (controlKey !== null) {
+        const token = model.controls[controlKey].token + 1;
+        return {
+          commands: [readControl({ key: controlKey, token })],
+          model: { ...model, controls: { ...model.controls, [controlKey]: loadingControl(token) } },
         };
       }
       return { model };

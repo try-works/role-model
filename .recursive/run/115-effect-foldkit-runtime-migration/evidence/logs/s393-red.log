@@ -1,0 +1,153 @@
+COMMAND: node vitest run s393 (S392a RED)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s393-telemetry-read-plan.test.ts (15 tests | 13 failed) 74ms
+   × S392a telemetry read plan (R12 exact multiplicity) > invalidates exactly the one readback source for LearningConfiguration 19ms
+     → expected [] to have a length of 1 but got +0
+   × S392a telemetry read plan (R12 exact multiplicity) > invalidates exactly the one readback source for LearningPacks 3ms
+     → expected [] to have a length of 1 but got +0
+   × S392a telemetry read plan (R12 exact multiplicity) > invalidates exactly the one readback source for LearningDecisions 2ms
+     → expected [] to have a length of 1 but got +0
+   × S392a telemetry read plan (R12 exact multiplicity) > invalidates exactly the one readback source for LearningEvidence 2ms
+     → expected [] to have a length of 1 but got +0
+   × S392a telemetry read plan (R12 exact multiplicity) > invalidates exactly the one readback source for LearningHistory 2ms
+     → expected [] to have a length of 1 but got +0
+   × S392a telemetry read plan (R12 exact multiplicity) > invalidates exactly the one readback source for SystemExtensions 2ms
+     → expected [] to have a length of 1 but got +0
+   × S392a telemetry read plan (R12 exact multiplicity) > invalidates exactly the one readback source for LocalLlamaSwapModels 1ms
+     → expected [] to have a length of 1 but got +0
+   × S392a telemetry read plan (R12 exact multiplicity) > invalidates BOTH sources of ModelsRoles with per-key tokens 6ms
+     → expected [] to deeply equal [ Array(2) ]
+   × S392a telemetry read plan (R12 exact multiplicity) > invalidates BOTH sources of SystemOperator with per-key tokens 3ms
+     → expected [] to deeply equal [ 'operatorStatus', …(1) ]
+   × S392a telemetry read plan (R12 exact multiplicity) > invalidates the control surface Providers with ONE ReadControl 2ms
+     → expected [] to have a length of 1 but got +0
+   × S392a telemetry read plan (R12 exact multiplicity) > invalidates the control surface Endpoints with ONE ReadControl 1ms
+     → expected [] to have a length of 1 but got +0
+   × S392a telemetry read plan (R12 exact multiplicity) > invalidates the control surface ControlController with ONE ReadControl 1ms
+     → expected [] to have a length of 1 but got +0
+   ✓ S392a telemetry read plan (R12 exact multiplicity) > emits ZERO commands for a route without a readback or control source 1ms
+   × S392a telemetry read plan (R12 exact multiplicity) > keeps exact multiplicity for two telemetry events (one read each, tokens advance per event) 1ms
+     → expected [] to have a length of 1 but got +0
+   ✓ S392a telemetry read plan (R12 exact multiplicity) > registers ONE listener pair on ONE source and closes it exactly once 26ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 13 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s393-telemetry-read-plan.test.ts > S392a telemetry read plan (R12 exact multiplicity) > invalidates exactly the one readback source for LearningConfiguration
+ FAIL  test/s393-telemetry-read-plan.test.ts > S392a telemetry read plan (R12 exact multiplicity) > invalidates exactly the one readback source for LearningPacks
+ FAIL  test/s393-telemetry-read-plan.test.ts > S392a telemetry read plan (R12 exact multiplicity) > invalidates exactly the one readback source for LearningDecisions
+ FAIL  test/s393-telemetry-read-plan.test.ts > S392a telemetry read plan (R12 exact multiplicity) > invalidates exactly the one readback source for LearningEvidence
+ FAIL  test/s393-telemetry-read-plan.test.ts > S392a telemetry read plan (R12 exact multiplicity) > invalidates exactly the one readback source for LearningHistory
+ FAIL  test/s393-telemetry-read-plan.test.ts > S392a telemetry read plan (R12 exact multiplicity) > invalidates exactly the one readback source for SystemExtensions
+ FAIL  test/s393-telemetry-read-plan.test.ts > S392a telemetry read plan (R12 exact multiplicity) > invalidates exactly the one readback source for LocalLlamaSwapModels
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/s393-telemetry-read-plan.test.ts:75:21
+     73|       const result = shellUpdate(model, telemetry());
+     74|       const reads = readsOf(result, "ReadReadback");
+     75|       expect(reads).toHaveLength(1);
+       |                     ^
+     76|       expect(reads[0]?.args.key).toBe(key);
+     77|       expect(reads[0]?.args.token).toBe(model.readbacks[key as keyof t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/13]⎯
+
+ FAIL  test/s393-telemetry-read-plan.test.ts > S392a telemetry read plan (R12 exact multiplicity) > invalidates BOTH sources of ModelsRoles with per-key tokens
+AssertionError: expected [] to deeply equal [ Array(2) ]
+
+- Expected
++ Received
+
+- [
+-   "configuredModels",
+-   "modelEndpoints",
+- ]
++ []
+
+ ❯ test/s393-telemetry-read-plan.test.ts:87:61
+     85|     const result = shellUpdate(model, telemetry());
+     86|     const reads = readsOf(result, "ReadReadback");
+     87|     expect(reads.map((command) => command.args.key).sort()).toEqual(["…
+       |                                                             ^
+     88|     for (const command of reads) {
+     89|       const key = command.args.key as "configuredModels" | "modelEndpo…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/13]⎯
+
+ FAIL  test/s393-telemetry-read-plan.test.ts > S392a telemetry read plan (R12 exact multiplicity) > invalidates BOTH sources of SystemOperator with per-key tokens
+AssertionError: expected [] to deeply equal [ 'operatorStatus', …(1) ]
+
+- Expected
++ Received
+
+- [
+-   "operatorStatus",
+-   "operatorTraceRoots",
+- ]
++ []
+
+ ❯ test/s393-telemetry-read-plan.test.ts:100:61
+     98|     const result = shellUpdate(model, telemetry());
+     99|     const reads = readsOf(result, "ReadReadback");
+    100|     expect(reads.map((command) => command.args.key).sort()).toEqual(["…
+       |                                                             ^
+    101|     for (const command of reads) {
+    102|       const key = command.args.key as "operatorStatus" | "operatorTrac…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/13]⎯
+
+ FAIL  test/s393-telemetry-read-plan.test.ts > S392a telemetry read plan (R12 exact multiplicity) > invalidates the control surface Providers with ONE ReadControl
+ FAIL  test/s393-telemetry-read-plan.test.ts > S392a telemetry read plan (R12 exact multiplicity) > invalidates the control surface Endpoints with ONE ReadControl
+ FAIL  test/s393-telemetry-read-plan.test.ts > S392a telemetry read plan (R12 exact multiplicity) > invalidates the control surface ControlController with ONE ReadControl
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/s393-telemetry-read-plan.test.ts:118:21
+    116|       expect(readsOf(result, "ReadReadback")).toHaveLength(0);
+    117|       const reads = readsOf(result, "ReadControl");
+    118|       expect(reads).toHaveLength(1);
+       |                     ^
+    119|       expect(reads[0]?.args.key).toBe(key);
+    120|       expect(reads[0]?.args.token).toBe(model.controls[key].token + 1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/13]⎯
+
+ FAIL  test/s393-telemetry-read-plan.test.ts > S392a telemetry read plan (R12 exact multiplicity) > keeps exact multiplicity for two telemetry events (one read each, tokens advance per event)
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/s393-telemetry-read-plan.test.ts:134:44
+    132|   it("keeps exact multiplicity for two telemetry events (one read each…
+    133|     const first = shellUpdate(shellModel({ route: { _tag: "LearningDec…
+    134|     expect(readsOf(first, "ReadReadback")).toHaveLength(1);
+       |                                            ^
+    135|     const second = shellUpdate(first.model, telemetry("req-b"));
+    136|     const reads = readsOf(second, "ReadReadback");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/13]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  13 failed | 2 passed (15)
+   Start at  16:12:43
+   Duration  6.85s (transform 3.22s, setup 0ms, collect 5.13s, tests 74ms, environment 695ms, prepare 265ms)
+
+

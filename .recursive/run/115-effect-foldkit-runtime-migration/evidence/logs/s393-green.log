@@ -1,0 +1,15 @@
+COMMAND: node vitest run (S392a 4 files)
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s110-nav-links.test.ts (25 tests) 84ms
+ ✓ test/s393-telemetry-read-plan.test.ts (15 tests) 63ms
+ ✓ test/s278-telemetry-refresh.test.ts (8 tests) 211ms
+ ✓ test/s269-canonical-url.test.ts (81 tests) 393ms
+
+ Test Files  4 passed (4)
+      Tests  129 passed (129)
+   Start at  16:18:53
+   Duration  8.57s (transform 4.28s, setup 0ms, collect 23.01s, tests 751ms, environment 4.38s, prepare 1.53s)
+
+

@@ -1260,7 +1260,25 @@ export const renderReadbackPage = (
   );
 };
 export const readbackKeyForRouteTag = (tag: string): ReadbackKey | null =>
-  tag === "RouterStrategy" || tag === "RouterWorkloads" || tag === "RouterConfig" || tag === "RouterAgentStrategy"
+  tag === "LearningConfiguration"
+    ? "learningConfiguration"
+    : tag === "LearningPacks"
+      ? "learningPacks"
+      : tag === "LearningDecisions"
+        ? "learningDecisions"
+        : tag === "LearningEvidence"
+          ? "learningEvidence"
+          : tag === "LearningHistory"
+            ? "learningHistory"
+            : tag === "LocalLlamaSwapModels"
+              ? "localLlamaSwapModels"
+              : tag === "SystemExtensions"
+                ? "extensions"
+                : tag === "ModelsRoles"
+                  ? "configuredModels"
+                  : tag === "SystemOperator"
+                    ? "operatorStatus"
+    :  tag === "RouterStrategy" || tag === "RouterWorkloads" || tag === "RouterConfig" || tag === "RouterAgentStrategy"
     ? "routerConfig"
     :
   tag === "StoreReceipts"

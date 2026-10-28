@@ -1,0 +1,6 @@
+# S395 — R12 telemetry read plan Lead acceptance
+
+- Reviewer: s9 (deepseek-flash) PASS (no HOLD) — evidence/other/s394-telemetry-read-plan-review.md sha256 `092C9754BE66E6F40284B3248F4FADCF19C19468F55DD12820C8D8B25961B856`.
+- Committed bytes verified by Lead: readback.ts `BFB075F554748986D4D488CCB93068250701BFC794E5673285C89A7666A96921`, update.ts `236755B9A87D26897A2AEA093CE5E0B14E074FB8852405A54621D35A3AC69ABE`, control.ts unchanged `9E0935495376A1507D150B7E5BCEACA2038E4998BA471AF681B81AB1AE78EDD3`, s393 test `875518702AB3417C888CB551B8331ECF6170DAB04D0571A1ED2E53BB898AA790`.
+- What landed: typed readPlanForRoute covers every mapped route (multi-source ModelsRoles/SystemOperator get ALL sources; control pages get exactly one readControl); invalidateCurrentRoute emits one read per plan entry with per-key tokens; exact-multiplicity tests (one event → exactly N, two events → one each, Studio → zero, one listener pair disposed once); watermark/resync untouched. 129/129, UI tsc 0, lint clean.
+- R12 progress: update contract + exact multiplicity + fallback-absent-honesty land; the stream-unavailable fallback remains explicitly named (no invented polling). M8-M9 forms/device-auth + R9/R10 charts remain the next UI-port slices.
