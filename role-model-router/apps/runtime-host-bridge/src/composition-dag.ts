@@ -1,4 +1,8 @@
 import { createHash } from "node:crypto";
+import path from "node:path";
+import { makeSync } from "@effect/sql-sqlite-node/service";
+import { initializeSqliteMemory } from "@role-model-router/sqlite-memory";
+import { createTrackBFileGraphStore } from "./track-b-runtime.js";
 import { Context, Effect, Layer, Queue, Ref, Semaphore } from "effect";
 
 import {
@@ -633,6 +637,55 @@ export const composeObservationStorage = (options?: { readonly capacity?: number
 export const isComposedObservationStorage = (value: ObservationStorageContract): boolean => observationStorageOwners.has(value);
 export const assertComposedObservationStorage = (value: ObservationStorageContract): ObservationStorageContract => { if (!isComposedObservationStorage(value)) throw new Error("observation storage must be the composed DAG owner (no fallback)"); return value; };
 export const observationStorageLayer = Layer.effect(ObservationStorageService, Effect.sync(() => composeObservationStorage()));
+export const makeRetentionCleanupDatabase = (databasePath: string): ReturnType<typeof makeSync> =>
+  makeSync({ databasePath, setup: (db) => db.exec("PRAGMA busy_timeout = 0") });
+export const graphObservationKey = (scopeId: string, requestId: string): string =>
+  "graph:" + scopeId + ":" + requestId;
+export interface BackendStorageInput {
+  readonly runtimeStateRoot: string;
+  readonly scopeId: string;
+  readonly channel: "development" | "stage" | "production";
+  readonly useFixtures: boolean;
+  readonly trackBOperationsEndpoint?: string;
+  readonly capacity?: number;
+}
+export interface BackendStorageContract {
+  readonly id: string;
+  readonly initialization: ReturnType<typeof initializeSqliteMemory>;
+  readonly graphStore: ReturnType<typeof createTrackBFileGraphStore> | undefined;
+  readonly observationStorage: ObservationStorageContract;
+  readonly openRetentionCleanupDatabase: (databasePath: string) => ReturnType<typeof makeSync>;
+  readonly close: () => Promise<void>;
+}
+const backendStorageRefs = new WeakMap<object, { current: BackendStorageContract | undefined }>();
+/** S341: binds the host storage ref to the options object the backend is constructed with. */
+export const bindBackendStorageRef = <T extends object>(options: T, ref: { current: BackendStorageContract | undefined }): void => { backendStorageRefs.set(options, ref); };
+export const backendStorageRefOf = <T extends object>(options: T): { current: BackendStorageContract | undefined } | undefined => backendStorageRefs.get(options);
+
+export const composeBackendStorage = (input: BackendStorageInput): BackendStorageContract => {
+  const initialization = initializeSqliteMemory({ channel: input.channel, runtimeStateRoot: input.runtimeStateRoot, scopeId: input.scopeId });
+  const graphStore =
+    input.useFixtures && (input.trackBOperationsEndpoint ?? "") === ""
+      ? createTrackBFileGraphStore({ rootPath: path.join(input.runtimeStateRoot, input.scopeId, "track-b-graph"), scopeId: input.scopeId })
+      : undefined;
+  const observationStorage = makeObservationStorage(input.capacity ?? 64);
+  let closed = false;
+  const close = async (): Promise<void> => {
+    if (closed) return;
+    closed = true;
+    try { await observationStorage.drain(); } catch { }
+  };
+  const storage: BackendStorageContract = {
+    close,
+    graphStore,
+    id: "backend-storage:" + input.scopeId,
+    initialization,
+    observationStorage,
+    openRetentionCleanupDatabase: makeRetentionCleanupDatabase,
+  };
+  return Object.freeze(storage);
+};
+
 export const artifactAuthorityLayer: Layer.Layer<ArtifactStoreAuthority, never, CompositionConfig> =
   Layer.effect(
     ArtifactStoreAuthority,
@@ -892,6 +945,8 @@ const readBackendMember = (backend: BackendLike, key: string): ((...args: readon
 const NO_OPTION_OVERRIDES: Readonly<Record<never, never>> = Object.freeze({});
 
 export interface BackendOwner {
+  /** S341: the composed Backend storage (resolved through the owner's storage ref). */
+  readonly storage: BackendStorageContract | undefined;
   /** Host-provided dependency teardown; the Server owner runs it LAST in the ordered shutdown. */
   readonly close?: () => Promise<void>;
   readonly id: string;
@@ -954,6 +1009,8 @@ const withProviderPermit =
     ) as Promise<never>;
 
 export interface BackendOwnerInput {
+  /** S341: mutable holder the host fills with the composed storage; the owner exposes it as a getter. */
+  readonly storageRef?: { current: BackendStorageContract | undefined };
   readonly host: string;
   readonly port: number;
   readonly staticRoot?: string;
@@ -1172,6 +1229,7 @@ export const composeBackendOwner = (input: BackendOwnerInput): BackendOwner => {
   // pairwise judge's executeChatCompletions handle) run under the same DAG permit.
   const owner = Object.freeze({
     [BACKEND_OWNER_BRAND]: true,
+    get storage() { return input.storageRef?.current; },
     id: "backend-owner:" + DEFAULT_COMPOSITION_CONFIG.instanceId,
     options,
     close: input.closeBackend,
@@ -1329,7 +1387,7 @@ export const composeServerOwner = (input: {
 /** TEST SEAM ONLY: bare StartBridgeServerOptions (tests that do not go through composeBackendOwner) are
  * branded for the facade. Production options always carry the REAL composed owner (composedBackendOwnerOf). */
 export const testSeamBackendOwner = (options: StartBridgeServerOptions): BackendOwner => {
-  const owner: BackendOwner = { id: "backend-owner:facade", options };
+  const owner: BackendOwner = { id: "backend-owner:facade", options, storage: undefined };
   Object.defineProperty(owner, BACKEND_OWNER_BRAND, { enumerable: false, value: true });
   return owner;
 };

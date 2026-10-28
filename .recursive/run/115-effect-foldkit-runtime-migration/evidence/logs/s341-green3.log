@@ -1,0 +1,47 @@
+COMMAND: node vitest run (S341 gap2 final)
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:23200) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s334-observation-storage.test.ts (9 tests) 15185ms
+   ✓ S334 observation storage > hung job: drain rejects with the typed 5s timeout and the pump does not stay permanently active  5039ms
+   ✓ S334 observation storage > drain watchdog abandons a hung active job and queued later jobs still run  5037ms
+   ✓ S334 observation storage > eventual settle after abandonment writes no cache entry and does not double-decrement pending  5041ms
+(node:62468) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s341-backend-storage.test.ts (5 tests) 992ms
+   ✓ S341 backend storage factory > composeBackendStorage returns a per-backend lifecycle with initialization, graph store and observation storage  475ms
+(node:23240) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s337-observation-families.test.ts (4 tests) 8ms
+
+ Test Files  3 passed (3)
+      Tests  18 passed (18)
+   Start at  11:07:44
+   Duration  24.45s (transform 2.49s, setup 0ms, collect 6.92s, tests 16.19s, environment 1ms, prepare 506ms)
+
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:77428) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s334-observation-storage.test.ts (9 tests) 15175ms
+   ✓ S334 observation storage > hung job: drain rejects with the typed 5s timeout and the pump does not stay permanently active  5034ms
+   ✓ S334 observation storage > drain watchdog abandons a hung active job and queued later jobs still run  5036ms
+   ✓ S334 observation storage > eventual settle after abandonment writes no cache entry and does not double-decrement pending  5040ms
+(node:60832) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s341-backend-storage.test.ts (5 tests) 750ms
+   ✓ S341 backend storage factory > composeBackendStorage returns a per-backend lifecycle with initialization, graph store and observation storage  391ms
+(node:27604) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s337-observation-families.test.ts (4 tests) 9ms
+
+ Test Files  3 passed (3)
+      Tests  18 passed (18)
+   Start at  11:08:50
+   Duration  26.50s (transform 3.36s, setup 0ms, collect 9.18s, tests 15.93s, environment 1ms, prepare 524ms)
+
+

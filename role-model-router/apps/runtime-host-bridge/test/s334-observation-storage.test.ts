@@ -56,9 +56,9 @@ describe("S334 observation storage", () => {
   test("production wiring: persist families and the bundle read family route through the DAG storage", async () => {
     const { readFileSync } = await import("node:fs");
     const index = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
-    expect(index).toContain("composeObservationStorage(");
+    expect(index).toContain("observationStorage.readHydrated(");
     expect(index).toContain("observationStorage.persist(");
-    expect(index).toContain("observationStorage.readHydrated(requestId");
+    expect(index).toContain("observationStorage.readHydrated(graphObservationKey(");
     expect(index).toContain("persistRuntimeObservationBundle(");
   });
 

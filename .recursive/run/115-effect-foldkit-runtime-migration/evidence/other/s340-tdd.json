@@ -1,0 +1,25 @@
+{
+  "slice": "s340-graph-store-family",
+  "requirement": "R23 graph-store family owned by Backend storage service",
+  "decision": "STOP characterization (S21d). Graph store extraction requires the Backend factory split: initializeSqliteMemory (index.ts:21185-21189) owns the database path used by every backend store call; graph store is fixture-mode conditional (:21276-21282); makeSync is the retention connection (:20970-20974); the storage service is currently a module singleton while this service must be per-backend (runtimeStateRoot/scopeId/channel). A graph-only move would be a dual store. No product edits.",
+  "evidence": {
+    "makeSync": "index.ts:19 import, :20970-20974 construction (retention)",
+    "sqliteInit": "index.ts:21185-21189 initializeSqliteMemory",
+    "graphStore": "index.ts:21276-21282 createTrackBFileGraphStore (useFixtures && !trackBOperationsEndpoint)",
+    "graphCallSites": [
+      "21353",
+      "21355",
+      "21375-21378",
+      "29035-29036",
+      "29772-29782",
+      "29940-29942"
+    ],
+    "observationStorage": "index.ts:21284 composeObservationStorage({capacity:64}) module singleton"
+  },
+  "changedProductFiles": "none",
+  "filesUnchanged": {
+    "src/composition-dag.ts": "C6FF534373CC8DB0DCD946C9466E136E8FD41EBFD1A8A9082A39A41C48C17612",
+    "src/index.ts": "0064D1BC3D7F61AD6A8716F100C0420309874310C07063085FDDE03EB07D5DB6"
+  },
+  "unblock": "Add DAG composeBackendStorage({runtimeStateRoot,scopeId,channel,useFixtures,trackBOperationsEndpoint}) owning makeSync+initializeSqliteMemory+createTrackBFileGraphStore with one close; construct in the Backend factory; expose on BackendOwner; index consumes storage.initialization.databasePath + storage.graphStore with collision-free graph keys; migrate callers family-by-family."
+}

@@ -32,7 +32,7 @@ import {
   drainDeferredRouteCapture,
   startBridgeServer,
 } from "./index.js";
-import { assertComposedBackendOwner, benchmarkGate, composeBackendOwner, composeReadinessOwner, onceClose, type ShutdownDrain } from "./composition-dag.js";
+import { assertComposedBackendOwner, backendStorageRefOf, benchmarkGate, bindBackendStorageRef, composeBackendOwner, composeReadinessOwner, onceClose, type ShutdownDrain } from "./composition-dag.js";
 import { validateRun88PrivateDistributionIdentity } from "./kw-private-loader.js";
 import {
   describeRouterPolicyResolution,
@@ -4350,7 +4350,9 @@ export function createCliServerOptions(
       return method(...args);
     }) as unknown;
 
+  const storageRef: { current: import("./composition-dag.js").BackendStorageContract | undefined } = { current: undefined };
   const owner = composeBackendOwner({
+    storageRef,
     host: options.host,
     port: options.port,
     staticRoot: options.staticRoot,
@@ -4482,6 +4484,7 @@ export function createCliServerOptions(
     },
   });
   assertComposedBackendOwner(owner);
+  bindBackendStorageRef(owner.options, storageRef);
   onBackendOwner?.(owner);
   return owner.options;
 }

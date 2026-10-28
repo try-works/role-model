@@ -1,0 +1,58 @@
+COMMAND: node vitest run test/s341 (S341 RED)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/s341-backend-storage.test.ts (3 tests | 3 failed) 9ms
+   × S341 backend storage factory > composeBackendStorage returns a per-backend lifecycle with initialization, graph store and observation storage 5ms
+     → (0 , composeBackendStorage) is not a function
+   × S341 backend storage factory > graph observation keys are collision-free across scopes and artifacts 1ms
+     → (0 , graphObservationKey) is not a function
+   × S341 backend storage factory > close drains the observation storage and is idempotent 1ms
+     → (0 , composeBackendStorage) is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s341-backend-storage.test.ts > S341 backend storage factory > composeBackendStorage returns a per-backend lifecycle with initialization, graph store and observation storage
+TypeError: (0 , composeBackendStorage) is not a function
+ ❯ test/s341-backend-storage.test.ts:13:15
+     11|   test("composeBackendStorage returns a per-backend lifecycle with ini…
+     12|     const root = mkdtempSync(path.join(os.tmpdir(), "s341-storage-"));
+     13|     const a = composeBackendStorage({ channel: "development", runtimeS…
+       |               ^
+     14|     const b = composeBackendStorage({ channel: "development", runtimeS…
+     15|     expect(a).not.toBe(b);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/s341-backend-storage.test.ts > S341 backend storage factory > graph observation keys are collision-free across scopes and artifacts
+TypeError: (0 , graphObservationKey) is not a function
+ ❯ test/s341-backend-storage.test.ts:25:12
+     23| 
+     24|   test("graph observation keys are collision-free across scopes and ar…
+     25|     expect(graphObservationKey("scope-a", "request-1")).not.toBe(graph…
+       |            ^
+     26|     expect(graphObservationKey("scope-a", "request-1")).not.toBe(graph…
+     27|     expect(graphObservationKey("scope-a", "request-1")).toBe("graph:sc…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/s341-backend-storage.test.ts > S341 backend storage factory > close drains the observation storage and is idempotent
+TypeError: (0 , composeBackendStorage) is not a function
+ ❯ test/s341-backend-storage.test.ts:32:21
+     30|   test("close drains the observation storage and is idempotent", async…
+     31|     const root = mkdtempSync(path.join(os.tmpdir(), "s341-close-"));
+     32|     const storage = composeBackendStorage({ channel: "development", ru…
+       |                     ^
+     33|     let hydrated = 0;
+     34|     storage.observationStorage.persist(() => {}, async () => { hydrate…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  10:42:18
+   Duration  3.14s (transform 1.58s, setup 0ms, collect 2.58s, tests 9ms, environment 0ms, prepare 177ms)
+
+

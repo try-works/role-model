@@ -16,7 +16,6 @@ import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
-import { makeSync } from "@effect/sql-sqlite-node/service";
 import { parse } from "yaml";
 import { evaluateDispatchContextGuard } from "./dispatch-context-guard.js";
 import { persistFailureTelemetrySafely } from "./failure-telemetry-persistence.js";
@@ -282,7 +281,12 @@ import {
   type BackendOwner,
   type BootstrapContract,
   benchmarkGate,
+  backendStorageRefOf,
+  composeBackendStorage,
+  type ObservationStorageContract,
   composeObservationStorage,
+  graphObservationKey,
+  makeRetentionCleanupDatabase,
   liveScoresObservationKey,
   composeMetadataCacheOwner,
   startupReadinessRefusalBody,
@@ -6315,13 +6319,13 @@ function mergeObservedProfileForDifficultyBucket(input: {
   };
 }
 
-function readObservedProfilesForRouting(input: {
+export function readObservedProfilesForRouting(input: {
   readonly databasePath: string;
   readonly registry: EndpointRegistryResult;
   readonly observedDataConfig: ReturnType<typeof resolveUnifiedRuntimeObservedDataConfig>;
   readonly difficultyBucket?: UnifiedRuntimeDifficultyBucket;
   readonly routingTimeMs: number;
-}): {
+}, observationStorage: ObservationStorageContract): {
   readonly observedProfilesByEndpointId: Parameters<
     typeof routeRuntimeRequest
   >[0]["observedProfilesByEndpointId"];
@@ -6336,12 +6340,12 @@ function readObservedProfilesForRouting(input: {
   const endpointIds = [
     ...new Set(input.registry.endpoints.map((endpoint) => endpoint.identity.endpoint_id)),
   ];
-  const endpointWideProfilesByEndpointId = composeObservationStorage().readHydrated("observed-profiles:" + endpointIds.join(","), () => readLatestObservedProfilesByEndpointIds({
+  const endpointWideProfilesByEndpointId = observationStorage.readHydrated("observed-profiles:" + endpointIds.join(","), () => readLatestObservedProfilesByEndpointIds({
     databasePath: input.databasePath,
     endpointIds,
   }));
   const difficultyBucketProfilesByEndpointId = input.difficultyBucket
-    ? composeObservationStorage().readHydrated("observed-profiles:" + endpointIds.join(",") + ":" + String(input.difficultyBucket), () => readLatestObservedProfilesByEndpointIds({
+    ? observationStorage.readHydrated("observed-profiles:" + endpointIds.join(",") + ":" + String(input.difficultyBucket), () => readLatestObservedProfilesByEndpointIds({
         databasePath: input.databasePath,
         endpointIds,
         difficultyBucket: input.difficultyBucket,
@@ -20967,11 +20971,10 @@ export interface ObservabilitySnapshotReadback {
  * DELETE. Exported so the batch can pin busy_timeout=0, the predicate boundary and the deleted
  * count without booting the whole backend. nowMs is a safe integer literal (no external input).
  */
-export const openRetentionCleanupDatabase = (databasePath: string) =>
-  makeSync({
-    databasePath,
-    setup: (db) => db.exec("PRAGMA busy_timeout = 0"),
-  });
+type RetentionCleanupDatabaseFactory = (databasePath: string) => ReturnType<typeof makeRetentionCleanupDatabase>;
+let retentionCleanupDatabaseFactory: RetentionCleanupDatabaseFactory = makeRetentionCleanupDatabase;
+export const openRetentionCleanupDatabase = (databasePath: string): ReturnType<typeof makeRetentionCleanupDatabase> =>
+  retentionCleanupDatabaseFactory(databasePath);
 
 export const runRetentionCleanupAt = (
   databasePath: string,
@@ -21182,13 +21185,19 @@ export async function createRuntimeBridgeBackend(
       ...fixtureProviderPresets.providers,
     },
   };
-  const initialization = initializeSqliteMemory({
-    runtimeStateRoot: options.runtimeStateRoot,
-    scopeId: options.scopeId,
-    channel: runtimeChannel,
-  });
   const configuredTrackBOperationsEndpoint =
     options.trackBOperationsEndpoint ?? process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL?.trim();
+  const storageRef = backendStorageRefOf(options);
+  const backendStorage = storageRef?.current ?? composeBackendStorage({
+    channel: runtimeChannel,
+    runtimeStateRoot: options.runtimeStateRoot,
+    scopeId: options.scopeId,
+    trackBOperationsEndpoint: configuredTrackBOperationsEndpoint,
+    useFixtures,
+  });
+  if (storageRef !== undefined) storageRef.current = backendStorage;
+  retentionCleanupDatabaseFactory = backendStorage.openRetentionCleanupDatabase;
+  const initialization = backendStorage.initialization;
   const runtimeTrackBOperations = createTrackBOperations({
     statePath: path.join(
       options.runtimeStateRoot,
@@ -21273,15 +21282,8 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
       unknown
     >;
   };
-  const localGraphStore =
-    useFixtures && !configuredTrackBOperationsEndpoint
-      ? createTrackBFileGraphStore({
-          scopeId: options.scopeId,
-          rootPath: path.join(options.runtimeStateRoot, options.scopeId, "track-b-graph"),
-        })
-      : undefined;
-  // S334 (R23): Backend-owned observation storage (bounded async hydration + sync read-through).
-  const observationStorage = composeObservationStorage({ capacity: 64 });
+  const localGraphStore = backendStorage.graphStore;
+  const observationStorage = backendStorage.observationStorage;
   const recordPreExecutionFailure = async (input: {
     readonly requestId: string;
     readonly modelId: string;
@@ -21353,7 +21355,7 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
         ...(localGraphStore ? { graphStore: localGraphStore } : {}),
         }),
         async () => readRuntimeObservationBundle({ databasePath: initialization.databasePath, requestId: input.requestId, ...(localGraphStore ? { graphStore: localGraphStore } : {}) }),
-        input.requestId,
+        graphObservationKey(options.scopeId, input.requestId),
       ),
     );
     if (options.trackBPostObservation) {
@@ -21369,7 +21371,7 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
   };
   const readPersistedRuntimeObservation = (requestId: string) => {
     try {
-      return observationStorage.readHydrated(requestId, () => readRuntimeObservationBundle({
+      return observationStorage.readHydrated(graphObservationKey(options.scopeId, requestId), () => readRuntimeObservationBundle({
         databasePath: initialization.databasePath,
         requestId,
         ...(localGraphStore ? { graphStore: localGraphStore } : {}),
@@ -27400,7 +27402,7 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
                   observedDataConfig,
                   difficultyBucket: observedDifficultyBucket,
                   routingTimeMs,
-                }),
+                }, observationStorage),
             )
             .then((profiles) => {
               metadataCacheOwner.setSync(observedProfilesMetadataKey, JSON.stringify(profiles), routingTimeMs);
@@ -29033,7 +29035,7 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
           dimensions: selectedEndpointDimensions,
           observation: failureObservation,
           ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-        }), async () => readRuntimeObservationBundle({ databasePath: initialization.databasePath, requestId, ...(localGraphStore ? { graphStore: localGraphStore } : {}) }), requestId),
+        }), async () => readRuntimeObservationBundle({ databasePath: initialization.databasePath, requestId, ...(localGraphStore ? { graphStore: localGraphStore } : {}) }), graphObservationKey(options.scopeId, requestId)),
       );
       if (options.trackBPostObservation) {
         try {
@@ -29940,7 +29942,7 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
           ...(localGraphStore ? { graphStore: localGraphStore } : {}),
           }),
           async () => readRuntimeObservationBundle({ databasePath: initialization.databasePath, requestId, ...(localGraphStore ? { graphStore: localGraphStore } : {}) }),
-          requestId,
+          graphObservationKey(options.scopeId, requestId),
         );
       } catch (error) {
         // Run 94 SP48 (R11): a storage failure after the provider response was produced must
@@ -34857,6 +34859,7 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
       );
       await Promise.all([currentLlamaSwapVendor?.shutdown(), currentLiteLLMVendor?.shutdown()]);
       await supervisor?.shutdown();
+      await backendStorage.close();
     },
   });
 
