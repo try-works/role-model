@@ -7,6 +7,7 @@ import { ControlKeySchema, ControlState } from "./control";
 import { DiagnosticsSnapshot } from "./diagnostics";
 import { ObservabilityState } from "./observability";
 import { ReadbackKeySchema, ReadbackState } from "./readback";
+import { DeviceAuthFieldSchema, DeviceAuthSessionSchema, DeviceAuthSessionsSchema } from "./device-auth";
 import { StudioFieldSchema, StudioTabSchema } from "./studio";
 
 type EmptyFields = Record<never, never>;
@@ -43,6 +44,17 @@ export const Message: MessageUnion<{
     readonly snapshot: typeof ControlState;
     readonly token: typeof Schema.Number;
   };
+  readonly DeviceAuthFieldChanged: { readonly field: typeof DeviceAuthFieldSchema; readonly value: typeof Schema.String };
+  readonly DeviceAuthModelAdded: EmptyFields;
+  readonly DeviceAuthModelRemoved: { readonly modelId: typeof Schema.String };
+  readonly DeviceAuthStartRequested: EmptyFields;
+  readonly DeviceAuthSessionsLoaded: { readonly sessions: typeof DeviceAuthSessionsSchema; readonly token: typeof Schema.Number };
+  readonly DeviceAuthStarted: { readonly session: typeof DeviceAuthSessionSchema; readonly token: typeof Schema.Number };
+  readonly DeviceAuthPolled: { readonly session: typeof DeviceAuthSessionSchema; readonly token: typeof Schema.Number };
+  readonly DeviceAuthFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly DeviceAuthRetryRequested: EmptyFields;
+  readonly DeviceAuthCancelled: EmptyFields;
+  readonly DeviceAuthActivated: { readonly token: typeof Schema.Number };
   readonly DiagnosticsFailed: {
     readonly id: typeof Schema.String;
     readonly message: typeof Schema.String;
@@ -124,6 +136,17 @@ export const Message: MessageUnion<{
   ControlActionRequested: { key: ControlKeySchema, targetId: Schema.optional(Schema.String), token: Schema.Number },
   ControlFailed: { key: ControlKeySchema, message: Schema.String, token: Schema.Number },
   ControlLoaded: { key: ControlKeySchema, snapshot: ControlState, token: Schema.Number },
+  DeviceAuthFieldChanged: { field: DeviceAuthFieldSchema, value: Schema.String },
+  DeviceAuthModelAdded: {},
+  DeviceAuthModelRemoved: { modelId: Schema.String },
+  DeviceAuthStartRequested: {},
+  DeviceAuthSessionsLoaded: { sessions: DeviceAuthSessionsSchema, token: Schema.Number },
+  DeviceAuthStarted: { session: DeviceAuthSessionSchema, token: Schema.Number },
+  DeviceAuthPolled: { session: DeviceAuthSessionSchema, token: Schema.Number },
+  DeviceAuthFailed: { message: Schema.String, token: Schema.Number },
+  DeviceAuthRetryRequested: {},
+  DeviceAuthCancelled: {},
+  DeviceAuthActivated: { token: Schema.Number },
   DiagnosticsFailed: { id: Schema.String, message: Schema.String },
   DiagnosticsLoaded: { id: Schema.String, snapshot: DiagnosticsSnapshot },
   DiagnosticsRefreshRequested: {},

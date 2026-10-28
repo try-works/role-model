@@ -1,8 +1,93 @@
+import type { DeviceAuthField, DeviceAuthState } from "./device-auth";
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 
 import type { ControlSpec, ControlState } from "./control";
 import { Message } from "./message";
 
+
+export const renderDeviceAuthorizationForm = (state: DeviceAuthState, h: HtmlBuilder<Message>): Html => {
+  const textField = (label: string, field: DeviceAuthField, value: string) =>
+    h.label(
+      [h.Class("mt-3 flex flex-col gap-1 text-[12px]")],
+      [
+        h.span([], [label]),
+        h.input([
+          h.Class("w-full max-w-[420px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1.5 text-[12px]"),
+          h.OnInput((next) => Message.DeviceAuthFieldChanged({ field, value: next })),
+          h.Type("text"),
+          h.Value(value),
+        ]),
+      ],
+    );
+  const busy = state.status === "starting" || state.status === "pending";
+  return h.section(
+    [h.Class("rm3-next-route mt-6"), h.DataAttribute("route", "device-authorization"), h.DataAttribute("device-auth-state", state.status)],
+    [
+      h.h3([h.Class("text-[14px] font-semibold")], ["Provider connection"]),
+      textField("Provider", "providerId", state.draft.providerId),
+      textField("Provider kind", "providerKind", state.draft.providerKind),
+      textField("Variant", "variantId", state.draft.variantId),
+      textField("Auth mode", "authMode", state.draft.authMode),
+      textField("Region", "region", state.draft.region),
+      h.label([h.Class("mt-3 flex flex-col gap-1 text-[12px]")], [
+        h.span([], ["Model"]),
+        h.input([
+          h.Class("w-full max-w-[420px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1.5 text-[12px]"),
+          h.OnInput((next) => Message.DeviceAuthFieldChanged({ field: "modelInput", value: next })),
+          h.Type("text"),
+          h.Value(state.draft.modelInput),
+        ]),
+      ]),
+      h.button(
+        [h.Class("mt-2 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3 py-1.5 text-[12px]"), h.OnClick(Message.DeviceAuthModelAdded({})), h.Type("button")],
+        ["Add model"],
+      ),
+      h.ul(
+        [h.Class("mt-2 text-[12px]")],
+        state.draft.selectedModelIds.map((modelId) =>
+          h.li([], [modelId + " ", h.button([h.Class("underline"), h.OnClick(Message.DeviceAuthModelRemoved({ modelId })), h.Type("button")], ["Remove"])]),
+        ),
+      ),
+      h.button(
+        [
+          h.Class("mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3 py-1.5 text-[12px]"),
+          h.AriaDisabled(busy),
+          h.DataAttribute("device-auth-start", ""),
+          h.OnClick(Message.DeviceAuthStartRequested({})),
+          h.Type("button"),
+        ],
+        ["Start device authorization"],
+      ),
+      ...(busy
+        ? [
+            h.button(
+              [h.Class("ml-2 mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] px-3 py-1.5 text-[12px]"), h.OnClick(Message.DeviceAuthCancelled({})), h.Type("button")],
+              ["Cancel"],
+            ),
+          ]
+        : []),
+      ...(state.status === "error"
+        ? [
+            h.button(
+              [
+                h.Class("ml-2 mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] px-3 py-1.5 text-[12px]"),
+                h.DataAttribute("device-auth-retry", ""),
+                h.OnClick(Message.DeviceAuthRetryRequested({})),
+                h.Type("button"),
+              ],
+              ["Retry"],
+            ),
+          ]
+        : []),
+      ...(state.error === undefined
+        ? []
+        : [h.p([h.Role("alert"), h.DataAttribute("device-auth-error", "")], [state.error])]),
+      ...(state.session === undefined
+        ? []
+        : [h.p([h.DataAttribute("device-auth-session", state.session.status)], [state.session.status === "pending" ? "Waiting for authorization" : "Connected" + (state.session.userCode === undefined ? "" : " (code " + state.session.userCode + ")")])]),
+    ],
+  );
+};
 export const renderControlPage = (
   spec: ControlSpec,
   state: ControlState,

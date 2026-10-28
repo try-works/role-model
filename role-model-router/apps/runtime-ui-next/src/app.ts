@@ -1,6 +1,7 @@
 import {
   type RefreshSnapshotReader,
   defineDispatchStudio,
+  defineDeviceAuthCommands,
   defineDispatchControl,
   defineReadControl,
   defineReadDiagnostics,
@@ -9,6 +10,7 @@ import {
   defineRefreshSnapshot,
   defineSaveRuntimeConfig,
 } from "./commands";
+import { createDeviceAuthClient } from "./device-auth";
 import { type ControlClient, createControlClients } from "./control";
 import type { DiagnosticsReader } from "./diagnostics";
 import { createInit } from "./init";
@@ -51,6 +53,7 @@ export interface ShellOptions {
   readonly controlBaseUrl?: string;
   readonly controlFetchImpl?: typeof fetch;
   readonly runtimeConfigFetchImpl?: typeof fetch;
+  readonly deviceAuthFetchImpl?: typeof fetch;
   readonly controlToken?: string;
 }
 
@@ -126,6 +129,7 @@ export const createShellApp = (options: ShellOptions = {}) => {
       dispatchControl,
       dispatchStudio,
       saveRuntimeConfig,
+      defineDeviceAuthCommands(createDeviceAuthClient({ ...(options.deviceAuthFetchImpl === undefined ? {} : { fetchImpl: options.deviceAuthFetchImpl }) })),
     ),
     view,
   };

@@ -14,6 +14,7 @@ import {
   describeCause,
   parseDiagnosticsSnapshot,
 } from "./diagnostics";
+import { type DeviceAuthClient, type DeviceAuthStartPayload, type DeviceActivationPayload } from "./device-auth";
 import { Message } from "./message";
 import type { RuntimeConfigClient } from "./runtime-config";
 import { type StudioClient, StudioState, studioRequestFor } from "./studio";
@@ -329,3 +330,72 @@ export const defineDispatchStudio = (client: StudioClient) =>
     },
   });
 export type DispatchStudioCommand = ReturnType<typeof defineDispatchStudio>;
+
+export const defineDeviceAuthCommands = (client: DeviceAuthClient) => ({
+  activate: Command.define("ActivateDeviceEndpoint", {
+    args: { payload: Schema.String, token: Schema.Number },
+    execute: ({ payload, token }) =>
+      Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            try: () => client.activate(JSON.parse(payload) as DeviceActivationPayload),
+          }),
+        ),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.DeviceAuthActivated({ token }) : Message.DeviceAuthFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("device authorization request failed"))), token })),
+      ),
+    messages: [Message.DeviceAuthActivated, Message.DeviceAuthFailed],
+  }),
+  poll: Command.define("PollDeviceAuthorization", {
+    args: { authRequestId: Schema.String, delayMs: Schema.Number, intervalMs: Schema.Number, token: Schema.Number },
+    execute: ({ authRequestId, delayMs, intervalMs, token }) =>
+      Effect.flatMap(Effect.sleep(delayMs), () =>
+        Effect.flatMap(
+          Effect.exit(
+            Effect.tryPromise({
+              catch: (cause) => new Error(describeCause(cause)),
+              try: () => client.poll(authRequestId),
+            }),
+          ),
+          (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.DeviceAuthPolled({ session: exit.value, token }) : Message.DeviceAuthFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("device authorization request failed"))), token })),
+        ),
+      ),
+    messages: [Message.DeviceAuthPolled, Message.DeviceAuthFailed],
+  }),
+  read: Command.define("ReadDeviceAuthorizations", {
+    args: { token: Schema.Number },
+    execute: ({ token }) =>
+      Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            try: () => client.list(),
+          }),
+        ),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.DeviceAuthSessionsLoaded({ sessions: [...exit.value], token }) : Message.DeviceAuthFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("device authorization request failed"))), token })),
+      ),
+    messages: [Message.DeviceAuthSessionsLoaded, Message.DeviceAuthFailed],
+  }),
+  start: Command.define("StartDeviceAuthorization", {
+    args: { payload: Schema.String, token: Schema.Number },
+    execute: ({ payload, token }) =>
+      Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            try: () => client.start(JSON.parse(payload) as DeviceAuthStartPayload),
+          }),
+        ),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.DeviceAuthStarted({ session: exit.value, token }) : Message.DeviceAuthFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("device authorization request failed"))), token })),
+      ),
+    messages: [Message.DeviceAuthStarted, Message.DeviceAuthFailed],
+  }),
+});
+export type DeviceAuthCommands = ReturnType<typeof defineDeviceAuthCommands>;
+const noopDeviceAuthClient: DeviceAuthClient = {
+  activate: async () => ({}),
+  list: async () => [],
+  poll: async () => ({ authRequestId: "", providerAccountId: "", status: "pending" }),
+  start: async () => ({ authRequestId: "", providerAccountId: "", status: "pending" }),
+};
+export const noopDeviceAuthCommands = defineDeviceAuthCommands(noopDeviceAuthClient);

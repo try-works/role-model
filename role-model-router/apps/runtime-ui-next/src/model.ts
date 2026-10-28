@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 
 import { ControlsState } from "./control";
+import { DeviceAuthStateSchema } from "./device-auth";
 import { DiagnosticsSnapshot } from "./diagnostics";
 import { ObservabilityState } from "./observability";
 import { ReadbacksState } from "./readback";
@@ -11,6 +12,7 @@ import { AppRoute } from "./route";
 const modelFields = {
   clicks: Schema.Number,
   controls: ControlsState,
+  deviceAuth: Schema.optional(DeviceAuthStateSchema),
   diagnostics: DiagnosticsSnapshot,
   observability: ObservabilityState,
   overviewFilters: Schema.optional(Schema.Struct({ breakdown: Schema.Literals(["all", "endpoint", "model", "provider"]), breakdownValue: Schema.String, difficulty: Schema.Literals(["all", "easy", "medium", "hard"]), source: Schema.Literals(["all", "local", "remote"]), status: Schema.Literals(["all", "success", "failure", "unknown"]) })),

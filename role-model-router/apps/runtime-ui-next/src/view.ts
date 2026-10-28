@@ -3,7 +3,8 @@ import type { Document, Html, HtmlBuilder } from "@role-model-router/foldkit/htm
 import { rm3ButtonClassName, view as rm3ButtonView } from "@role-model/ui/foldkit-button";
 
 import { CONTROL_SPECS, type ControlsState } from "./control";
-import { renderControlPage } from "./control-view";
+import { renderControlPage, renderDeviceAuthorizationForm } from "./control-view";
+import { initialDeviceAuthState, type DeviceAuthState } from "./device-auth";
 import {
   type DiagnosticsSnapshot,
   diagnosticsBuildLabel,
@@ -857,6 +858,7 @@ const routeContent = (
   studio: StudioState,
   overviewFilters: OverviewFilters | undefined,
   runtimeConfigEditor: Model["runtimeConfigEditor"],
+  deviceAuth: DeviceAuthState,
   h: HtmlBuilder<Message>,
 ) =>
   AppRoute.match(route, {
@@ -923,7 +925,11 @@ const routeContent = (
     ObserveRouting: () =>
       renderReadbackPage(READBACK_SPECS.observeRouting, readbacks.observeRouting, h),
     Router: () => renderReadbackPage(READBACK_SPECS.router, readbacks.router, h),
-    Providers: () => renderControlPage(CONTROL_SPECS.providers, controls.providers, h),
+    Providers: () =>
+      h.section([], [
+        renderControlPage(CONTROL_SPECS.providers, controls.providers, h),
+        renderDeviceAuthorizationForm(deviceAuth, h),
+      ]),
     Endpoints: () => renderControlPage(CONTROL_SPECS.endpoints, controls.endpoints, h),
     ControlController: () =>
       renderControlPage(CONTROL_SPECS.controlController, controls.controlController, h, controls.endpoints.rows.map((row) => row.id)),
@@ -1192,6 +1198,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                 model.studio ?? studioIdle(),
                 model.overviewFilters ?? DEFAULT_OVERVIEW_FILTERS,
                 model.runtimeConfigEditor,
+    model.deviceAuth ?? initialDeviceAuthState(),
                 h,
               ),
             ],

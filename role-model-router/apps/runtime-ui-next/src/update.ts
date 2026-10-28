@@ -13,6 +13,8 @@ import {
   type ReadControlCommand,
   type ReadDiagnosticsCommand,
   type ReadObservabilityCommand,
+  type DeviceAuthCommands,
+  noopDeviceAuthCommands,
   type ReadReadbackCommand,
   type RefreshSnapshotCommand,
   defineDispatchControl,
@@ -32,6 +34,13 @@ import {
   loadingControl,
 } from "./control";
 import { failedDiagnostics, idleDiagnostics, loadingDiagnostics } from "./diagnostics";
+import {
+  activationPlanForConnectedSession,
+  deviceAuthPollDelayMs,
+  deviceAuthStartPlan,
+  initialDeviceAuthState,
+  type DeviceAuthState,
+} from "./device-auth";
 import { canonicalHrefForUrl, replaceLegacyUrlCommand } from "./legacy-redirects";
 import { Message } from "./message";
 import type { Model } from "./model";
@@ -156,6 +165,7 @@ export const createUpdate =
     dispatchControl: DispatchControlCommand = noopDispatchControl,
     dispatchStudio: DispatchStudioCommand = noopDispatchStudio,
     saveRuntimeConfig: SaveRuntimeConfigCommand | undefined = undefined,
+    deviceAuthCommands: DeviceAuthCommands = noopDeviceAuthCommands,
   ) => {
     const navigateToRoute = (
       model: Model,
@@ -773,6 +783,151 @@ export const createUpdate =
       // S290: a persisted pageshow restore is a real page-lifecycle fact, not telemetry or a revision:
       // re-read the current route with the same query-preserving invalidator and leave the watermark.
       RuntimePageRestored: () => invalidateCurrentRoute(model),
+      DeviceAuthFieldChanged: ({ field, value }) => {
+        const state = model.deviceAuth ?? initialDeviceAuthState();
+        return {
+          model: {
+            ...model,
+            deviceAuth: { ...state, draft: { ...state.draft, [field]: value }, error: undefined },
+          },
+        };
+      },
+      DeviceAuthModelAdded: () => {
+        const state = model.deviceAuth ?? initialDeviceAuthState();
+        const modelId = state.draft.modelInput.trim();
+        if (modelId.length === 0) return { model };
+        return {
+          model: {
+            ...model,
+            deviceAuth: {
+              ...state,
+              draft: {
+                ...state.draft,
+                modelInput: "",
+                selectedModelIds: [...new Set([...state.draft.selectedModelIds, modelId])],
+              },
+            },
+          },
+        };
+      },
+      DeviceAuthModelRemoved: ({ modelId }) => {
+        const state = model.deviceAuth ?? initialDeviceAuthState();
+        return {
+          model: {
+            ...model,
+            deviceAuth: {
+              ...state,
+              draft: {
+                ...state.draft,
+                selectedModelIds: state.draft.selectedModelIds.filter((id) => id !== modelId),
+              },
+            },
+          },
+        };
+      },
+      DeviceAuthStartRequested: () => {
+        const state = model.deviceAuth ?? initialDeviceAuthState();
+        // S399: a click while a poll is pending or a start is in flight must not issue
+        // another start/read; the token fence alone would only hide the second response.
+        if (state.inflight === true || state.status === "starting" || state.status === "pending") return { model };
+        const token = state.token + 1;
+        return {
+          commands: [deviceAuthCommands.read({ token })],
+          model: { ...model, deviceAuth: { ...state, error: undefined, session: undefined, status: "starting", token } },
+        };
+      },
+      DeviceAuthSessionsLoaded: ({ sessions, token }) => {
+        const state = model.deviceAuth ?? initialDeviceAuthState();
+        if (token !== state.token) return { model };
+        const plan = deviceAuthStartPlan(state, sessions);
+        if (plan.kind === "invalid") {
+          return { model: { ...model, deviceAuth: { ...state, error: plan.errors.join(" "), sessions, status: "error" } } };
+        }
+        const nextToken = state.token + 1;
+        if (plan.kind === "restore") {
+          const delayMs = deviceAuthPollDelayMs(plan.session);
+          return {
+            commands: [deviceAuthCommands.poll({ authRequestId: plan.session.authRequestId, delayMs, intervalMs: delayMs, token: nextToken })],
+            model: { ...model, deviceAuth: { ...state, error: undefined, inflight: true, session: plan.session, sessions, status: "pending", token: nextToken } },
+          };
+        }
+        return {
+          commands: [deviceAuthCommands.start({ payload: JSON.stringify(plan.payload), token: nextToken })],
+          model: { ...model, deviceAuth: { ...state, error: undefined, sessions, status: "starting", token: nextToken } },
+        };
+      },
+      DeviceAuthStarted: ({ session, token }) => {
+        const state = model.deviceAuth ?? initialDeviceAuthState();
+        if (token !== state.token) return { model };
+        const nextToken = state.token + 1;
+        const delayMs = deviceAuthPollDelayMs(session);
+        return {
+          commands: [deviceAuthCommands.poll({ authRequestId: session.authRequestId, delayMs, intervalMs: delayMs, token: nextToken })],
+          model: { ...model, deviceAuth: { ...state, error: undefined, inflight: true, session, status: "pending", token: nextToken } },
+        };
+      },
+      DeviceAuthPolled: ({ session, token }) => {
+        const state = model.deviceAuth ?? initialDeviceAuthState();
+        if (token !== state.token) return { model };
+        if (session.status === "connected") {
+          const nextToken = state.token + 1;
+          const activations = activationPlanForConnectedSession({ draft: state.draft, session });
+          return {
+            commands: activations.map((payload) => deviceAuthCommands.activate({ payload: JSON.stringify(payload), token: nextToken })),
+            model: { ...model, deviceAuth: { ...state, error: undefined, inflight: false, session, status: "connected", token: nextToken } },
+          };
+        }
+        if (session.status === "pending") {
+          const nextToken = state.token + 1;
+          const delayMs = deviceAuthPollDelayMs(session);
+          return {
+            commands: [deviceAuthCommands.poll({ authRequestId: session.authRequestId, delayMs, intervalMs: delayMs, token: nextToken })],
+            model: { ...model, deviceAuth: { ...state, error: undefined, inflight: true, session, status: "pending", token: nextToken } },
+          };
+        }
+        return { model: { ...model, deviceAuth: { ...state, error: "Device authorization failed.", inflight: false, session, status: "error", token } } };
+      },
+      DeviceAuthFailed: ({ message, token }) => {
+        const state = model.deviceAuth ?? initialDeviceAuthState();
+        if (token !== state.token) return { model };
+        return { model: { ...model, deviceAuth: { ...state, error: message, inflight: false, status: "error" } } };
+      },
+      DeviceAuthRetryRequested: () => {
+        const state = model.deviceAuth ?? initialDeviceAuthState();
+        if (state.inflight === true) return { model };
+        const nextToken = state.token + 1;
+        if (state.session === undefined) {
+          return {
+            commands: [deviceAuthCommands.read({ token: nextToken })],
+            model: { ...model, deviceAuth: { ...state, error: undefined, inflight: false, status: "starting", token: nextToken } },
+          };
+        }
+        return {
+          commands: [
+            deviceAuthCommands.poll({
+              authRequestId: state.session.authRequestId,
+              delayMs: 0,
+              intervalMs: deviceAuthPollDelayMs(state.session),
+              token: nextToken,
+            }),
+          ],
+          model: { ...model, deviceAuth: { ...state, error: undefined, inflight: true, status: "pending", token: nextToken } },
+        };
+      },
+      DeviceAuthCancelled: () => {
+        const state = model.deviceAuth ?? initialDeviceAuthState();
+        return {
+          model: {
+            ...model,
+            deviceAuth: { ...state, error: undefined, session: undefined, sessions: undefined, status: "draft", token: state.token + 1 },
+          },
+        };
+      },
+      DeviceAuthActivated: ({ token }) => {
+        const state = model.deviceAuth ?? initialDeviceAuthState();
+        if (token !== state.token) return { model };
+        return { model: { ...model, deviceAuth: { ...state, error: undefined } } };
+      },
       ThemeApplied: () => ({ model }),
       ToggledTheme: () => {
         const theme = model.theme === "light" ? "dark" : "light";
