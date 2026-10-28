@@ -1,0 +1,14 @@
+✔ R32 handshake: unsupported operator protocol version is rejected before the factory (51.6394ms)
+✔ R32 handshake: a required operator extension without a domain capability is rejected before the factory (25.2613ms)
+✔ R32 handshake: a missing required operator binding is rejected before the factory (14.0937ms)
+✔ R32 handshake: accepted operator evidence is not ready until the real factory succeeds (15.7163ms)
+✔ R32 handshake: a factory failure never leaves ready=true (13.9334ms)
+✔ R32 handshake: no manifest preserves honest null semantics (1.5903ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1597.7594
