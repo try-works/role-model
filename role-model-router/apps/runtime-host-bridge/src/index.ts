@@ -22,6 +22,7 @@ import { evaluateDispatchContextGuard } from "./dispatch-context-guard.js";
 import { persistFailureTelemetrySafely } from "./failure-telemetry-persistence.js";
 import {
   LOCAL_DIAGNOSTICS_PATH,
+  MAX_DIAGNOSTICS_RECORDS,
   LOCAL_DIAGNOSTICS_SCHEMA,
   type LocalDiagnosticsReadRequest,
   type LocalDiagnosticsReadResult,
@@ -20587,7 +20588,14 @@ export function createModuleHealthComposition(
       if (isClientCausedModuleHealthEscape(error)) return;
       writer.recordCause(moduleHealthCauseForEscape(error));
     },
-    source: () => writer.source(),
+    source: () => {
+      const storageRef = backendStorageRefOf(options);
+      const queryRecords = storageRef?.current?.diagnosticRecords() ?? [];
+      const records = [...queryRecords, ...writer.source().records()]
+        .sort((left, right) => right.atMs - left.atMs)
+        .slice(0, MAX_DIAGNOSTICS_RECORDS);
+      return { ...writer.source(), records: () => records };
+    },
     writer,
   };
 }
@@ -20621,8 +20629,10 @@ export interface ModuleHealthWiring<
  * `readDiagnosticsSource` injected by identity and (b) the single report wrapper the transport catch
  * calls. When `diagnostics.enabled` is not literally `true` the options pass through unchanged and
  * the report wrapper is a no-op, so the diagnostics route keeps answering the explicit disabled
- * state. See the composition doc above for the recorded R20 gap (escaping failures only, coarse
- * `error` classification, client-caused escapes counted as module failures).
+ * state until BOTH `diagnostics.enabled === true` and the calibration approval are present. The
+ * recorded R20 limitation is now only that escaping failures are observed; their cause is classified
+ * (S365a) and client-caused 4xx escapes are excluded. The query source resolves the backend-owned
+ * storage through the storage ref (S365b'), so the same telemetry store feeds the read path.
  */
 export function wireModuleHealth<Options extends ModuleHealthWiringOptions>(
   options: Options,
