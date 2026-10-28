@@ -30,7 +30,6 @@ const MISSING_PATHS = [
   "/app/learning/evidence",
   "/app/learning/history",
   "/app/learning/packs",
-  "/app/models/roles",
   "/app/router/agent-strategy",
   "/app/router/config",
   "/app/router/strategy",
@@ -291,12 +290,11 @@ describe("S269 redirect/route inventory", () => {
       "/app/local/policy",
       "/app/local/matrix",
       "/app/control/routing-strategy",
-      "/app/control/roles",
     ]);
   });
 });
 
-describe("S269 original redirect entries: 16 resolvable targets + 4 missing", () => {
+describe("S269 original redirect entries: 17 resolvable targets + 3 missing", () => {
   const resolvable = [
     { href: "/local/swap", original: "/app/local/swap", tag: "LocalSwap" },
     { href: "/local/logs", original: "/app/local/logs", tag: "LocalLogs" },
@@ -312,6 +310,7 @@ describe("S269 original redirect entries: 16 resolvable targets + 4 missing", ()
     { href: "/control/endpoints", original: "/app/control/endpoints", tag: "Endpoints" },
     { href: "/system/benchmark", original: "/app/control/benchmark", tag: "Benchmark" },
     { href: "/models", original: "/app/control/models", tag: "Models" },
+    { href: "/models/roles", original: "/app/control/roles", tag: "ModelsRoles" },
     { href: "/requests", original: "/app/observe", tag: "Requests" },
     {
       href: "/integrations/downstream",
@@ -344,12 +343,11 @@ describe("S269 original redirect entries: 16 resolvable targets + 4 missing", ()
     "/app/local/policy",
     "/app/local/matrix",
     "/app/control/routing-strategy",
-    "/app/control/roles",
   ] as const;
 
-  it("pins exactly the 16 resolvable and 4 missing redirect route entries", () => {
-    expect(resolvable).toHaveLength(16);
-    expect(unresolvable).toHaveLength(4);
+  it("pins exactly the 17 resolvable and 3 missing redirect route entries", () => {
+    expect(resolvable).toHaveLength(17);
+    expect(unresolvable).toHaveLength(3);
     expect([...resolvable.map((entry) => entry.original), ...unresolvable].sort()).toEqual(
       [...REDIRECT_ROUTE_ENTRIES].sort(),
     );
@@ -382,16 +380,16 @@ describe("S269 original redirect entries: 16 resolvable targets + 4 missing", ()
 });
 
 describe("S269 53-pattern partition", () => {
-  it("partitions 37 supported original paths + / + 15 missing into the 53 original patterns", async () => {
+  it("partitions 38 supported original paths + / + 14 missing into the 53 original patterns", async () => {
     const module = await legacy();
     const supported = module.SUPPORTED_ORIGINAL_PATHS;
-    expect(supported).toHaveLength(37);
-    expect(supported.filter((path) => !path.includes(":requestId"))).toHaveLength(35);
+    expect(supported).toHaveLength(38);
+    expect(supported.filter((path) => !path.includes(":requestId"))).toHaveLength(36);
     expect(supported.filter((path) => path.includes(":requestId"))).toEqual([
       "/app/observe/requests/:requestId",
       "/app/router/decisions/:requestId",
     ]);
-    expect(module.MISSING_ORIGINAL_TARGETS).toHaveLength(15);
+    expect(module.MISSING_ORIGINAL_TARGETS).toHaveLength(14);
     const partition = new Set([
       ...supported,
       "/",

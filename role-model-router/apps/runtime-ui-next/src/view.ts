@@ -49,6 +49,7 @@ const routeTitle = (route: Model["route"]): string =>
     Studio: () => "Studio | RM3 Foldkit shell",
     Learning: () => "Learning | RM3 Foldkit shell",
     Models: () => "Models | RM3 Foldkit shell",
+    ModelsRoles: () => "Model roles | RM3 Foldkit shell",
     Runtime: () => "Runtime | RM3 Foldkit shell",
     SessionReadiness: () => "Session readiness | RM3 Foldkit shell",
     Dashboard: () => "Dashboard | RM3 Foldkit shell",
@@ -176,6 +177,12 @@ const shellNavItems = (route: Model["route"]): ReadonlyArray<ShellNavItem> => [
   { active: route._tag === "Studio", dataNav: "studio", href: "/studio", label: "Studio" },
   { active: route._tag === "Learning", dataNav: "learning", href: "/learning", label: "Learning" },
   { active: route._tag === "Models", dataNav: "models", href: "/models", label: "Models" },
+  {
+    active: route._tag === "ModelsRoles",
+    dataNav: "models-roles",
+    href: "/models/roles",
+    label: "Model roles",
+  },
 ];
 
 const navGroup = (item: ShellNavItem): string => {
@@ -681,6 +688,52 @@ const studioPage = (state: StudioState, h: HtmlBuilder<Message>, configuredModel
   ]);
 };
 
+const modelsRolesPage = (readbacks: ReadbacksState, h: HtmlBuilder<Message>): Html => {
+  const models = readbacks.configuredModels;
+  const endpoints = readbacks.modelEndpoints;
+  const statuses = [models.status, endpoints.status];
+  const loading = statuses.some((status) => status === "loading" || status === "idle");
+  const error = statuses.includes("error");
+  const empty = models.status === "empty" || models.rows.length === 0 || endpoints.status === "empty";
+  const state = loading ? "loading" : error ? "error" : empty ? "empty" : "ok";
+  if (state !== "ok") {
+    const message = loading
+      ? "Loading model roles…"
+      : error
+        ? (models.message ?? endpoints.message ?? "Model roles read failed")
+        : "No configured models.";
+    return h.section(
+      [h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "models-roles"), h.DataAttribute("models-roles-state", state)],
+      [
+        h.h2([h.Class("rm3-next-route-title")], ["Model roles"]),
+        h.p([], [message]),
+      ],
+    );
+  }
+  const endpointRoles = endpoints.rows.flatMap((entry) => {
+    try {
+      const meta = JSON.parse(entry.meta) as { modelId?: string; roleIds?: string[] };
+      return meta.modelId === undefined ? [] : [{ modelId: meta.modelId, roles: meta.roleIds ?? [] }];
+    } catch {
+      return [];
+    }
+  });
+  const rows = models.rows.map((entry) => {
+    const roles = [...new Set(endpointRoles.filter((endpoint) => endpoint.modelId === entry.id).flatMap((endpoint) => endpoint.roles))];
+    return { id: entry.id, roles };
+  });
+  return h.section(
+    [h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "models-roles"), h.DataAttribute("models-roles-state", "ok")],
+    [
+      h.h2([h.Class("rm3-next-route-title")], ["Model roles"]),
+      h.p([], ["Read-only role eligibility projection from configured models and endpoint role metadata."]),
+      h.ul(
+        [h.Class("rm3-next-role-list")],
+        rows.map((row) => h.li([], [row.id + ": " + (row.roles.length > 0 ? row.roles.join(", ") : "no roles")])),
+      ),
+    ],
+  );
+};
 const modelsPage = (readbacks: ReadbacksState, h: HtmlBuilder<Message>): Html => {
   const models = readbacks.configuredModels;
   const endpoints = readbacks.modelEndpoints;
@@ -787,6 +840,7 @@ const routeContent = (
     ),
     Learning: () => learningPage(readbacks, h),
     Models: () => modelsPage(readbacks, h),
+    ModelsRoles: () => modelsRolesPage(readbacks, h),
     LocalChoose: () => h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route","local-choose")], [h.h2([h.Class("rm3-next-route-title")], ["Local choose"]), h.p([], ["Choose peer-backed models or llama-swap models."])]),
     Runtime: () => runtimeConfigPage(runtimeConfigEditor, readbacks.runtimeConfig, readbacks.runtime, h),
     SessionReadiness: () =>

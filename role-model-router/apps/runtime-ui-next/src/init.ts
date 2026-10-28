@@ -72,7 +72,7 @@ const initRoute =
           },
         };
       }
-      if (route._tag === "Models") {
+      if (route._tag === "Models" || route._tag === "ModelsRoles") {
         const token = 1;
         return {
           commands: [readReadback({ key: "configuredModels", token }), readReadback({ key: "modelEndpoints", token })],

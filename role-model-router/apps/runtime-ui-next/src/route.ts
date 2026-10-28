@@ -40,6 +40,7 @@ const routeCases = {
   Studio: {},
   Learning: {},
   Models: {},
+  ModelsRoles: {},
   Benchmark: {},
   StorageRetention: {},
   Runtime: {},
@@ -94,6 +95,9 @@ const integrationsUpstreamRouter = Route.mapTo(AppRoute.IntegrationsUpstream)(pi
 const benchmarkRouter = Route.mapTo(AppRoute.Benchmark)(pipe(Route.literal("system"), Route.slash(Route.literal("benchmark"))));
 const storageRetentionRouter = Route.mapTo(AppRoute.StorageRetention)(pipe(Route.literal("system"), Route.slash(Route.literal("storage-retention"))));
 const modelsRouter = Route.mapTo(AppRoute.Models)(Route.literal("models"));
+const modelsRolesRouter = Route.mapTo(AppRoute.ModelsRoles)(
+  pipe(Route.literal("models"), Route.slash(Route.literal("roles"))),
+);
 const learningRouter = Route.mapTo(AppRoute.Learning)(Route.literal("learning"));
 const studioRouter = Route.mapTo(AppRoute.Studio)(Route.literal("studio"));
 const localChooseRouter = Route.mapTo(AppRoute.LocalChoose)(pipe(Route.literal("local"), Route.slash(Route.literal("choose"))));
@@ -150,6 +154,7 @@ export const appRouter = Route.oneOf(
   studioRouter,
   learningRouter,
   modelsRouter,
+  modelsRolesRouter,
   benchmarkRouter,
   storageRetentionRouter,
   localModelsRedirectRouter,

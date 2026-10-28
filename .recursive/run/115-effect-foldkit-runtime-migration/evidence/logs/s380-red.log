@@ -1,0 +1,98 @@
+COMMAND: node vitest run s380 (S379a RED)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+
+ ❯ role-model-router/apps/runtime-ui-next/test/s380-models-roles.test.ts (5 tests | 4 failed) 40ms
+   × S379a Models/roles family > parses /models/roles as the typed ModelsRoles route 20ms
+     → expected 'NotFound' to be 'ModelsRoles' // Object.is equality
+   × S379a Models/roles family > canonicalises the original /app/models/roles to /models/roles 3ms
+     → expected undefined to be '/models/roles' // Object.is equality
+   × S379a Models/roles family > redirects legacy /app/control/roles with query/hash preserved and exactly one replace Command 2ms
+     → expected undefined to be '/models/roles?filter=active#roles' // Object.is equality
+   × S379a Models/roles family > keeps the remaining 14 missing families explicit NotFound (never a generic success) 6ms
+     → expected [ { …(2) }, { …(2) }, { …(2) }, …(12) ] to have a length of 14 but got 15
+   ✓ S379a Models/roles family > leaves requestId detail families unchanged 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  role-model-router/apps/runtime-ui-next/test/s380-models-roles.test.ts > S379a Models/roles family > parses /models/roles as the typed ModelsRoles route
+AssertionError: expected 'NotFound' to be 'ModelsRoles' // Object.is equality
+
+Expected: "ModelsRoles"
+Received: "NotFound"
+
+ ❯ role-model-router/apps/runtime-ui-next/test/s380-models-roles.test.ts:25:55
+     23| describe("S379a Models/roles family", () => {
+     24|   it("parses /models/roles as the typed ModelsRoles route", () => {
+     25|     expect(routeFromUrl(urlOf("/models/roles"))._tag).toBe("ModelsRole…
+       |                                                       ^
+     26|   });
+     27| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  role-model-router/apps/runtime-ui-next/test/s380-models-roles.test.ts > S379a Models/roles family > canonicalises the original /app/models/roles to /models/roles
+AssertionError: expected undefined to be '/models/roles' // Object.is equality
+
+- Expected: 
+"/models/roles"
+
++ Received: 
+undefined
+
+ ❯ role-model-router/apps/runtime-ui-next/test/s380-models-roles.test.ts:30:75
+     28|   it("canonicalises the original /app/models/roles to /models/roles", …
+     29|     const module = await legacy();
+     30|     expect(module.legacyRedirectForUrl(urlOf("/app/models/roles"))?.hr…
+       |                                                                           ^
+     31|     expect(routeFromUrl(urlOf("/app/models/roles"))._tag).toBe("Models…
+     32|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  role-model-router/apps/runtime-ui-next/test/s380-models-roles.test.ts > S379a Models/roles family > redirects legacy /app/control/roles with query/hash preserved and exactly one replace Command
+AssertionError: expected undefined to be '/models/roles?filter=active#roles' // Object.is equality
+
+- Expected: 
+"/models/roles?filter=active#roles"
+
++ Received: 
+undefined
+
+ ❯ role-model-router/apps/runtime-ui-next/test/s380-models-roles.test.ts:37:28
+     35|     const module = await legacy();
+     36|     const redirect = module.legacyRedirectForUrl(urlOf("/app/control/r…
+     37|     expect(redirect?.href).toBe("/models/roles?filter=active#roles");
+       |                            ^
+     38|     const result = shellUpdate(
+     39|       shellModel(),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  role-model-router/apps/runtime-ui-next/test/s380-models-roles.test.ts > S379a Models/roles family > keeps the remaining 14 missing families explicit NotFound (never a generic success)
+AssertionError: expected [ { …(2) }, { …(2) }, { …(2) }, …(12) ] to have a length of 14 but got 15
+
+- Expected
++ Received
+
+- 14
++ 15
+
+ ❯ role-model-router/apps/runtime-ui-next/test/s380-models-roles.test.ts:52:45
+     50|   it("keeps the remaining 14 missing families explicit NotFound (never…
+     51|     const module = await legacy();
+     52|     expect(module.MISSING_ORIGINAL_TARGETS).toHaveLength(14);
+       |                                             ^
+     53|     const paths = module.MISSING_ORIGINAL_TARGETS.map((entry) => entry…
+     54|     expect(paths).not.toContain("/app/models/roles");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 1 passed (5)
+   Start at  15:20:07
+   Duration  11.61s (transform 7.25s, setup 0ms, collect 9.67s, tests 40ms, environment 1ms, prepare 524ms)
+
+
