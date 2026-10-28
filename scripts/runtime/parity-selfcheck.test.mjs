@@ -2,8 +2,11 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import os from "node:os";
+import { mkdirSync } from "node:fs";
+import path from "node:path";
 
 import {
+  DEFAULT_TEMP_DRIVE,
   enforceTempRoot,
   evaluateMutationCheck,
   evaluateSelfcheck,
@@ -11,6 +14,7 @@ import {
   launchChrome,
   main,
   partitionCaptureIssues,
+  resolveRequiredTempDrive,
   planTargets,
   runMutationCheck,
   runSelfcheck,
@@ -285,7 +289,7 @@ test("S295 r2 main emits FAILED JSON when the injected launch rejects (no uncaug
     launchChromeImpl: async () => {
       throw new Error("launch boom");
     },
-    requiredTempDrive: "E:",
+    requiredTempDrive: path.parse(os.tmpdir()).root,
     targets: [target("react"), target("foldkit")],
   });
   assert.equal(result.status, "FAILED");
@@ -440,4 +444,84 @@ test("S294 planTargets names the React and Foldkit static roots from the repo ro
   assert.match(String(planned[0]?.staticRoot), /runtime-ui[\\/]build[\\/]client$/);
   assert.equal(planned[1]?.id, "foldkit");
   assert.match(String(planned[1]?.staticRoot), /runtime-ui-next[\\/]dist[\\/]client$/);
+});
+
+
+/** S342c (CI prerequisite): PARITY_SELFCHECK_TEMP_DRIVE override (default E:), empty env falls back. */
+const withTempDriveEnv = async (values, run) => {
+  const prior = {
+    PARITY: process.env.PARITY_SELFCHECK_TEMP_DRIVE,
+    TEMP: process.env.TEMP,
+    TMP: process.env.TMP,
+  };
+  if (values.PARITY === undefined) delete process.env.PARITY_SELFCHECK_TEMP_DRIVE;
+  else process.env.PARITY_SELFCHECK_TEMP_DRIVE = values.PARITY;
+  process.env.TMP = values.tmp;
+  process.env.TEMP = values.tmp;
+  try {
+    return await run();
+  } finally {
+    if (prior.PARITY === undefined) delete process.env.PARITY_SELFCHECK_TEMP_DRIVE;
+    else process.env.PARITY_SELFCHECK_TEMP_DRIVE = prior.PARITY;
+    process.env.TMP = prior.TMP;
+    process.env.TEMP = prior.TEMP;
+  }
+};
+
+const driveOfPath = (targetPath) => {
+  const root = path.parse(targetPath).root;
+  return root.replace(/[\\/]+$/, "") || root;
+};
+
+test("S342c PARITY_SELFCHECK_TEMP_DRIVE selects the required drive for the selfcheck path", async () => {
+  const tempDir = path.join(os.tmpdir(), "s342c-parity");
+  mkdirSync(tempDir, { recursive: true });
+  const result = await withTempDriveEnv({ PARITY: driveOfPath(os.tmpdir()), tmp: tempDir }, () =>
+    main({ repoRoot: tempDir, targets: [] }),
+  );
+  assert.notEqual(result.status, "FAILED");
+  assert.equal(result.reason?.includes("not on the required drive") ?? false, false);
+});
+
+test("S342c an unavailable PARITY_SELFCHECK_TEMP_DRIVE keeps the existing fail-fast", async () => {
+  const tempDir = path.join(os.tmpdir(), "s342c-parity");
+  mkdirSync(tempDir, { recursive: true });
+  const otherDrive = driveOfPath(os.tmpdir()).toUpperCase() === "Z:" ? "Y:" : "Z:";
+  const result = await withTempDriveEnv({ PARITY: otherDrive, tmp: tempDir }, () =>
+    main({ repoRoot: tempDir, targets: [] }),
+  );
+  assert.equal(result.status, "FAILED");
+  assert.equal(result.exitCode, 1);
+  assert.match(String(result.reason), new RegExp("not on the required drive " + otherDrive));
+});
+
+test("S343c an EMPTY PARITY_SELFCHECK_TEMP_DRIVE still applies the default E: guard", async () => {
+  assert.equal(DEFAULT_TEMP_DRIVE, "E:");
+  assert.equal(resolveRequiredTempDrive(""), "E:");
+  assert.equal(resolveRequiredTempDrive("   "), "E:");
+  assert.equal(resolveRequiredTempDrive(" z: "), "z:");
+  const tempDir = path.join(os.tmpdir(), "s342c-parity");
+  mkdirSync(tempDir, { recursive: true });
+  if (driveOfPath(os.tmpdir()) !== "E:") {
+    const result = await withTempDriveEnv({ PARITY: "", tmp: tempDir }, () =>
+      main({ repoRoot: tempDir, targets: [] }),
+    );
+    assert.equal(result.status, "FAILED");
+    assert.match(String(result.reason), /not on the required drive E:/);
+  }
+});
+
+test("S342c the default required drive stays E: when the env override is absent", async () => {
+  assert.equal(DEFAULT_TEMP_DRIVE, "E:");
+  const tempDir = path.join(os.tmpdir(), "s342c-parity");
+  mkdirSync(tempDir, { recursive: true });
+  if (driveOfPath(os.tmpdir()) !== "E:") {
+    const result = await withTempDriveEnv({ PARITY: undefined, tmp: tempDir }, () =>
+      main({ repoRoot: tempDir, targets: [] }),
+    );
+    assert.equal(result.status, "FAILED");
+    assert.match(String(result.reason), /not on the required drive E:/);
+  } else {
+    assert.equal(resolveRequiredTempDrive(undefined), "E:");
+  }
 });

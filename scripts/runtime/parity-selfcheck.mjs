@@ -165,6 +165,12 @@ export const runMutationCheck = async ({ capture, chromeAvailable, repoRoot, tar
 
 export const DEFAULT_TEMP_DRIVE = "E:";
 
+/** S343c: the required temp drive env override; blank/whitespace values fall back to the default. */
+export const resolveRequiredTempDrive = (value) => {
+  const trimmed = String(value ?? "").trim();
+  return trimmed.length > 0 ? trimmed : DEFAULT_TEMP_DRIVE;
+};
+
 /** S295 r2: the temp root must be on the required drive; the required drive is overridable for tests. */
 export const enforceTempRoot = ({ requiredDrive = DEFAULT_TEMP_DRIVE, tempRoot = os.tmpdir() } = {}) => {
   const drive = String(requiredDrive).toUpperCase().replace(/[\\/]$/, "");
@@ -537,7 +543,7 @@ const captureServed = async ({ cdp, evidenceDir, exe, fixtures, label, port: fix
   }
 };
 
-export const main = async ({ chromePath = process.env.CHROME_PATH, evidenceDir, executablePath, fixtureRoot, launchChromeImpl = launchChrome, mutation = false, requiredTempDrive = DEFAULT_TEMP_DRIVE, repoRoot = process.cwd(), runCount = DEFAULT_RUN_COUNT, targets: injectedTargets } = {}) => {
+export const main = async ({ chromePath = process.env.CHROME_PATH, evidenceDir, executablePath, fixtureRoot, launchChromeImpl = launchChrome, mutation = false, requiredTempDrive = resolveRequiredTempDrive(process.env.PARITY_SELFCHECK_TEMP_DRIVE), repoRoot = process.cwd(), runCount = DEFAULT_RUN_COUNT, targets: injectedTargets } = {}) => {
   const tempRoot = os.tmpdir();
   const targets = injectedTargets ?? resolveTargets({ repoRoot });
   const exe = executablePath ?? path.join(repoRoot, "role-model-router", "dist", "release", "win32-x64", "role-model-dev.exe");
