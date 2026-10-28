@@ -281,6 +281,7 @@ import {
 import {
   type BackendOwner,
   type BootstrapContract,
+  benchmarkGate,
   composeMetadataCacheOwner,
   startupReadinessRefusalBody,
   metadataCacheKey,
@@ -3753,7 +3754,7 @@ export interface StartBridgeServerOptions {
   readonly recoverLegacyTerminalFailure?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readEndpointProfile?: (endpointId: string) => Promise<unknown>;
   readonly readBenchmarkSuite?: () => Promise<unknown>;
-  readonly runBenchmark?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly runBenchmark?: (body: Record<string, unknown>, signal: AbortSignal, runId: string) => Promise<unknown>;
   readonly readBenchmarkRun?: (runId: string) => Promise<unknown>;
   readonly readActiveBenchmarkRun?: () => Promise<unknown>;
   readonly clearBenchmarkEndpointData?: (endpointId: string) => Promise<unknown>;
@@ -4083,7 +4084,7 @@ export interface RuntimeBridgeBackend {
     recentSamples: readonly ObservedPerformanceSample[];
   }>;
   readBenchmarkSuite(): Promise<unknown>;
-  runBenchmark(body: Record<string, unknown>): Promise<unknown>;
+  runBenchmark(body: Record<string, unknown>, signal: AbortSignal, runId: string): Promise<unknown>;
   readBenchmarkRun(runId: string): Promise<unknown>;
   readActiveBenchmarkRun(): Promise<unknown>;
   clearBenchmarkEndpointData(endpointId: string): Promise<unknown>;
@@ -19694,12 +19695,20 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         writeJson(response, 404, { error: "not found" });
         return;
       }
+      const benchmarkRunId = randomUUID();
+      const benchmarkRun = benchmarkGate.begin(benchmarkRunId);
+      if (benchmarkRun.ok !== true) {
+        writeJson(response, 409, { activeRunId: benchmarkRun.activeRunId, error: "benchmark_already_running" });
+        return;
+      }
       try {
-        writeJson(response, 202, await options.runBenchmark(await readJsonBody(request)));
+        writeJson(response, 202, await options.runBenchmark(await readJsonBody(request), benchmarkRun.signal, benchmarkRun.runId));
       } catch (error) {
         writeJson(response, 400, {
           error: error instanceof Error ? error.message : "benchmark run failed",
         });
+      } finally {
+        benchmarkRun.finish();
       }
       return;
     }
@@ -34202,7 +34211,7 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
     async readBenchmarkSuite(): Promise<unknown> {
       return readRoutingCapabilityBenchmarkSuite();
     },
-    async runBenchmark(body: Record<string, unknown>): Promise<unknown> {
+    async runBenchmark(body: Record<string, unknown>, signal: AbortSignal, runId: string): Promise<unknown> {
       const endpointIds = Array.isArray(body.endpoint_ids)
         ? body.endpoint_ids.filter((value): value is string => typeof value === "string")
         : Array.isArray(body.endpointIds)
@@ -34246,7 +34255,6 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
       if (judgeEndpointId && resolveHealthyEndpoint(judgeEndpointId)) {
         await writeBenchmarkPreferences(benchmarkPreferencesPath, { judgeEndpointId });
       }
-      const runId = randomUUID();
       const warnings: string[] = [...startGuards.warnings];
       if (preflightProbe && judgeEndpointId && resolveHealthyEndpoint(judgeEndpointId)) {
         const configuredEndpoints = await backend.listEndpoints();
@@ -34298,6 +34306,7 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
       }
       void runRoutingCapabilityBenchmark(
         {
+          signal,
           databasePath: initialization.databasePath,
           benchmarkArtifactRoot,
           listConfiguredEndpoints: async () => {

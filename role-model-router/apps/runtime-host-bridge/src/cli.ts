@@ -32,7 +32,7 @@ import {
   drainDeferredRouteCapture,
   startBridgeServer,
 } from "./index.js";
-import { assertComposedBackendOwner, composeBackendOwner, composeReadinessOwner, onceClose, type ShutdownDrain } from "./composition-dag.js";
+import { assertComposedBackendOwner, benchmarkGate, composeBackendOwner, composeReadinessOwner, onceClose, type ShutdownDrain } from "./composition-dag.js";
 import { validateRun88PrivateDistributionIdentity } from "./kw-private-loader.js";
 import {
   describeRouterPolicyResolution,
@@ -5118,6 +5118,7 @@ export async function main(): Promise<void> {
   const shutdownDrains: ShutdownDrain[] = [];
   shutdownDrains.push({ name: "auto-replay", run: () => { activeAutoReplayLoop?.stop(); activeAutoReplayLoop = null; } });
   shutdownDrains.push({ name: "route-capture", run: drainDeferredRouteCapture });
+  shutdownDrains.push({ name: "benchmark", run: () => { benchmarkGate.cancel("shutdown"); } });
   // S324 (R27 early readiness): the production readiness owner consumed by the Server admission gate.
   const readinessOwner = composeReadinessOwner();
   // S321/S322 (R27): backend teardown runs through the DAG Backend close member; the shared idempotent

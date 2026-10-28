@@ -225,9 +225,13 @@ export interface DrainContract {
 }
 export class Drain extends Context.Service<Drain, DrainContract>()("Drain") {}
 
+import type { BenchmarkGateServiceContract } from "./benchmark-gate.js";
+import * as benchmarkGateModule from "./benchmark-gate.js";
+
 export interface BenchmarkContract {
   readonly id: string;
   readonly providerPermits: ProviderPermitsContract;
+  readonly gate: BenchmarkGateServiceContract;
 }
 export class Benchmark extends Context.Service<Benchmark, BenchmarkContract>()("Benchmark") {}
 
@@ -656,12 +660,14 @@ export const drainLayer = Layer.effect(
   }),
 );
 
+export const benchmarkGate: BenchmarkGateServiceContract = benchmarkGateModule.makeBenchmarkGateOwner({ mode: "reject-overlap" });
+
 export const benchmarkLayer = Layer.effect(
   Benchmark,
   Effect.gen(function* () {
     const config = yield* CompositionConfig;
     const providerPermits = yield* ProviderPermits;
-    return Benchmark.of({ id: `benchmark:${config.instanceId}`, providerPermits });
+    return Benchmark.of({ gate: benchmarkGate, id: `benchmark:${config.instanceId}`, providerPermits });
   }),
 );
 

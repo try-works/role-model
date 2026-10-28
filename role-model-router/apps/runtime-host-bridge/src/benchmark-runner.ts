@@ -263,7 +263,11 @@ export interface BenchmarkRunEndpointGrade extends BenchmarkEndpointGrade {
   readonly reasoningEffort: string | null;
 }
 
+import { BenchmarkCancelledError } from "./benchmark-gate.js";
+
 export interface BenchmarkRunnerDependencies {
+  /** S330: gate cancellation signal. */
+  readonly signal?: AbortSignal;
   readonly databasePath: string;
 
   readonly benchmarkArtifactRoot?: string;
@@ -1645,6 +1649,8 @@ export async function runRoutingCapabilityBenchmark(
   const cases = selectBenchmarkCases(suite, { mode, caseIds: request.caseIds });
 
   const runId = request.runId ?? randomUUID();
+  const throwIfCancelled = (): void => { if (deps.signal?.aborted) throw new BenchmarkCancelledError(runId); };
+  throwIfCancelled();
 
   const startedAtMs = Date.now();
 
@@ -1754,11 +1760,13 @@ export async function runRoutingCapabilityBenchmark(
     }
 
     for (const [endpointIndex, endpoint] of targetEndpoints.entries()) {
+    throwIfCancelled();
       const endpointExecutions = new Map<string, BenchmarkCaseExecution>();
 
       executionByEndpoint.set(endpoint.endpointId, endpointExecutions);
 
       for (const [caseIndex, caseItem] of cases.entries()) {
+    throwIfCancelled();
         const requestId = `bench-${runId}-${caseItem.case_id}-${endpoint.endpointId}`;
 
         updateBenchmarkRunProgress(runId, {
@@ -1920,6 +1928,7 @@ export async function runRoutingCapabilityBenchmark(
     >();
 
     for (const [endpointIndex, endpoint] of gradingEndpoints.entries()) {
+    throwIfCancelled();
       const caseResults: Array<BenchmarkEndpointGrade["caseResults"][number]> = [];
 
       const endpointExecutions = executionByEndpoint.get(endpoint.endpointId);
@@ -2099,6 +2108,7 @@ export async function runRoutingCapabilityBenchmark(
     }
 
     for (const endpoint of targetEndpoints) {
+    throwIfCancelled();
       const caseResults = caseResultsByEndpoint.get(endpoint.endpointId) ?? [];
 
       endpointGrades.push({
