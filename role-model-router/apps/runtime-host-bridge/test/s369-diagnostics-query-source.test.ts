@@ -2,64 +2,59 @@ import { mkdtempSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { describe, expect, it, vi } from "vitest";
+import { Cause } from "effect";
+import { describe, expect, it } from "vitest";
 
-import { backendStorageRefOf, bindBackendStorageRef, composeBackendStorage } from "../src/composition-dag.js";
-import type { BackendStorageContract } from "../src/composition-dag.js";
+import { bindBackendStorageRef, composeBackendStorage } from "../src/composition-dag.js";
 import { createModuleHealthComposition } from "../src/index.js";
 import { MAX_DIAGNOSTICS_RECORDS } from "../src/local-diagnostics-read.js";
-import type { LocalDiagnosticRecord } from "../src/local-diagnostics-read.js";
 
-/**
- * S365b' (R20): the production diagnostics query source is the backend-owned storage. The composition
- * root resolves the SAME BackendStorage the backend composed (via the storage ref), reads its bounded
- * diagnosticRecords(), and keeps the calibration gate and the read contract's caps authoritative.
- */
+/** S421 (R20/R21): diagnostics source is the module-health writer's owner-local ring buffer. */
 
-/**
- * SAFETY: the composition root reads only diagnosticRecords from this stub; the remaining
- * BackendStorageContract members are unused here, so this is a single test-boundary cast.
- */
-const storageStub = (
-  diagnosticRecords: () => readonly LocalDiagnosticRecord[],
-): BackendStorageContract => ({ diagnosticRecords }) as BackendStorageContract;
-const diagnosticsOptions = (records: () => readonly LocalDiagnosticRecord[]) => {
+const setup = (capacity?: number) => {
+  const root = mkdtempSync(path.join(os.tmpdir(), "s369-diagnostics-"));
+  const storage = composeBackendStorage({
+    channel: "development",
+    runtimeStateRoot: root,
+    scopeId: "scope-s369",
+    trackBOperationsEndpoint: undefined,
+    useFixtures: false,
+  });
   const options = {
-    diagnostics: { calibration: { approved: true }, enabled: true },
+    diagnostics: {
+      calibration: { approved: true },
+      enabled: true,
+      capacity,
+    },
   };
-  // SAFETY: the ref starts empty and is filled with the typed stub below; only the undefined case needs the predicate.
-  const storageRef = { current: undefined as BackendStorageContract | undefined };
-  const fakeStorage = storageStub(records);
-  bindBackendStorageRef(options, storageRef);
-  storageRef.current = fakeStorage;
-  return { fakeStorage, options };
+  bindBackendStorageRef(options, { current: storage });
+  return { options, storage };
 };
 
-describe("S365b' production diagnostics query source", () => {
-  it("resolves the SAME backend storage instance and reads its bounded records (identity, no second construction)", () => {
-    const recordsSpy = vi.fn(() => [
-      { atMs: 1000, code: "telemetry.failure", count: 1, level: "error" as const },
-    ]);
-    const { fakeStorage, options } = diagnosticsOptions(recordsSpy);
+describe("S421 production diagnostics source is writer-owned", () => {
+  it("reads the writer ring buffer and never exposes backend telemetry access", async () => {
+    const { options, storage } = setup();
     const composition = createModuleHealthComposition(options);
     if (composition === undefined) throw new Error("composition expected");
+    composition.reportRequestFailure(Cause.die(new Error("injected")));
+    expect("diagnosticRecords" in storage).toBe(false);
     const records = composition.source().records();
-    expect(recordsSpy).toHaveBeenCalledTimes(1);
-    expect(records).toEqual([{ atMs: 1000, code: "telemetry.failure", count: 1, level: "error" }]);
-    expect(backendStorageRefOf(options)?.current).toBe(fakeStorage);
+    expect(records.filter((record) => record.code === "cause.die")).toHaveLength(1);
+    await storage.close();
   });
 
-  it("caps the supplied records at the read contract bound", () => {
-    const many = Array.from({ length: MAX_DIAGNOSTICS_RECORDS + 10 }, (_, index) => ({
-      atMs: index,
-      code: "telemetry.failure",
-      count: 1,
-      level: "error" as const,
-    }));
-    const { options } = diagnosticsOptions(() => many);
+  it("bounds the writer records by its capacity and the read contract", async () => {
+    const { options, storage } = setup(2);
     const composition = createModuleHealthComposition(options);
     if (composition === undefined) throw new Error("composition expected");
-    expect(composition.source().records().length).toBeLessThanOrEqual(MAX_DIAGNOSTICS_RECORDS);
+    composition.reportRequestFailure(Cause.die(new Error("one")));
+    composition.reportRequestFailure(Cause.die(new Error("two")));
+    composition.reportRequestFailure(Cause.die(new Error("three")));
+    const records = composition.source().records();
+    expect(records.length).toBeLessThanOrEqual(2);
+    expect(records.length).toBeLessThanOrEqual(MAX_DIAGNOSTICS_RECORDS);
+    expect(composition.source().loss?.().dropped ?? 0).toBeGreaterThan(0);
+    await storage.close();
   });
 
   it("stays disabled without the enabled flag AND calibration approval", () => {
@@ -70,18 +65,11 @@ describe("S365b' production diagnostics query source", () => {
     ).toBeUndefined();
   });
 
-  it("implements diagnosticRecords over the backend-owned telemetry store (fresh store -> empty, bounded)", async () => {
-    const root = mkdtempSync(path.join(os.tmpdir(), "s369-diagnostics-"));
-    const storage = composeBackendStorage({
-      channel: "development",
-      runtimeStateRoot: root,
-      scopeId: "scope-s369",
-      trackBOperationsEndpoint: undefined,
-      useFixtures: false,
-    });
-    const records = storage.diagnosticRecords();
-    expect(Array.isArray(records)).toBe(true);
-    expect(records.length).toBeLessThanOrEqual(MAX_DIAGNOSTICS_RECORDS);
+  it("a fresh backend composition has no diagnostic records and the writer starts empty", async () => {
+    const { options, storage } = setup();
+    const composition = createModuleHealthComposition(options);
+    if (composition === undefined) throw new Error("composition expected");
+    expect(composition.source().records()).toEqual([]);
     await storage.close();
   });
 });

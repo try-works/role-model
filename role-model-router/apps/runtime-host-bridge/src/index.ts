@@ -22,7 +22,6 @@ import { evaluateDispatchContextGuard } from "./dispatch-context-guard.js";
 import { persistFailureTelemetrySafely } from "./failure-telemetry-persistence.js";
 import {
   LOCAL_DIAGNOSTICS_PATH,
-  MAX_DIAGNOSTICS_RECORDS,
   LOCAL_DIAGNOSTICS_SCHEMA,
   type LocalDiagnosticsReadRequest,
   type LocalDiagnosticsReadResult,
@@ -20565,18 +20564,6 @@ export const isClientCausedModuleHealthEscape = (error: unknown): boolean => {
 export const moduleHealthCauseForEscape = (error: unknown): Cause.Cause<unknown> =>
   Cause.isCause(error) ? error : Cause.fail(error);
 
-let moduleHealthPersistenceSequence = 0;
-
-/** S365c: the dominant cause code persisted with a module-health failure row. */
-const moduleHealthCauseCode = (cause: Cause.Cause<unknown>): string => {
-  if (Cause.hasInterrupts(cause)) return "cause.interrupt";
-  let code = "cause.other";
-  for (const reason of cause.reasons) {
-    if (reason._tag === "Die") return "cause.die";
-    if (reason._tag === "Fail") code = "cause.fail";
-  }
-  return code;
-};
 export interface ModuleHealthComposition {
   readonly reportRequestFailure: (error: unknown) => void;
   readonly source: () => LocalDiagnosticsSource;
@@ -20600,32 +20587,9 @@ export function createModuleHealthComposition(
       if (isClientCausedModuleHealthEscape(error)) return;
       const cause = moduleHealthCauseForEscape(error);
       writer.recordCause(cause);
-      const databasePath = backendStorageRefOf(options)?.current?.initialization?.databasePath;
-      if (databasePath === undefined) return;
-      try {
-        moduleHealthPersistenceSequence += 1;
-        persistRuntimeTelemetryFailure({
-          databasePath,
-          errorClass: moduleHealthCauseCode(cause),
-          requestId: "module-health-" + String(Date.now()) + "-" + String(moduleHealthPersistenceSequence),
-          statusCode: 500,
-        });
-      } catch {
-        // best-effort persistence: the writer already holds the classification
-      }
     },
-    /**
-     * S377: single-source selection. When the backend-owned store is bound, the persisted row is
-     * the canonical record (one row per escape; identity = the module-health requestId it was
-     * written with), so the writer's in-process entry is not concatenated and cannot double-record.
-     * Without a bound store (tests / pre-backend composition) the writer source is the fallback.
-     */
-    source: () => {
-      const backendStorage = backendStorageRefOf(options)?.current;
-      if (backendStorage === undefined) return writer.source();
-      const records = [...backendStorage.diagnosticRecords()].slice(0, MAX_DIAGNOSTICS_RECORDS);
-      return { ...writer.source(), records: () => records };
-    },
+    // S421: module diagnostics are the writer's owner-local ring buffer, never business telemetry rows.
+    source: () => writer.source(),
     writer,
   };
 }

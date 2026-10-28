@@ -1,9 +1,8 @@
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { makeSync } from "@effect/sql-sqlite-node/service";
-import { initializeSqliteMemory, listRuntimeTelemetryRecords } from "@role-model-router/sqlite-memory";
+import { initializeSqliteMemory } from "@role-model-router/sqlite-memory";
 import { createTrackBFileGraphStore } from "./track-b-runtime.js";
-import { MAX_DIAGNOSTICS_RECORDS, type LocalDiagnosticRecord } from "./local-diagnostics-read.js";
 import { Context, Effect, Layer, Queue, Ref, Semaphore } from "effect";
 
 import {
@@ -655,8 +654,6 @@ export interface BackendStorageContract {
   readonly initialization: ReturnType<typeof initializeSqliteMemory>;
   readonly graphStore: ReturnType<typeof createTrackBFileGraphStore> | undefined;
   readonly observationStorage: ObservationStorageContract;
-  /** S365b': bounded diagnostic records read from the backend-owned telemetry store. */
-  readonly diagnosticRecords: () => readonly LocalDiagnosticRecord[];
   readonly openRetentionCleanupDatabase: (databasePath: string) => ReturnType<typeof makeSync>;
   readonly close: () => Promise<void>;
 }
@@ -672,28 +669,6 @@ export const composeBackendStorage = (input: BackendStorageInput): BackendStorag
       ? createTrackBFileGraphStore({ rootPath: path.join(input.runtimeStateRoot, input.scopeId, "track-b-graph"), scopeId: input.scopeId })
       : undefined;
   const observationStorage = makeObservationStorage(input.capacity ?? 64);
-  const diagnosticRecords = (): readonly LocalDiagnosticRecord[] => {
-    try {
-      const rows = listRuntimeTelemetryRecords({
-        databasePath: initialization.databasePath,
-        limit: MAX_DIAGNOSTICS_RECORDS * 4,
-      });
-      const records: LocalDiagnosticRecord[] = [];
-      for (const row of rows) {
-        if (row.statusFamily !== "failure" && row.statusFamily !== "unknown") continue;
-        records.push({
-          atMs: row.createdAtMs,
-          code: row.errorClass ?? (row.statusFamily === "failure" ? "telemetry.failure" : "telemetry.unknown"),
-          count: 1,
-          level: row.statusFamily === "failure" ? "error" : "warn",
-        });
-        if (records.length >= MAX_DIAGNOSTICS_RECORDS) break;
-      }
-      return records;
-    } catch {
-      return [];
-    }
-  };
   let closed = false;
   const close = async (): Promise<void> => {
     if (closed) return;
@@ -702,7 +677,6 @@ export const composeBackendStorage = (input: BackendStorageInput): BackendStorag
   };
   const storage: BackendStorageContract = {
     close,
-    diagnosticRecords,
     graphStore,
     id: "backend-storage:" + input.scopeId,
     initialization,
