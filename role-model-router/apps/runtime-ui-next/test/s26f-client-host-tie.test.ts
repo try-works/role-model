@@ -92,9 +92,17 @@ describe("S26f client/host tie", () => {
     const declared = new Set(inventory.routes.flatMap((row) => row.hostEndpoints ?? []));
     const sharedPaths = [OBSERVABILITY_CLIENT_PATH, ...Object.values(READBACK_PATHS)];
     expect(sharedPaths).toHaveLength(Object.keys(READBACK_PATHS).length + 1);
-    for (const endpoint of sharedPaths) {
-      expect(registrations.has(endpoint), endpoint).toBe(true);
+    for (const sharedPath of sharedPaths) {
+      // Host route literals are pathname-only; the declared endpoint keeps the exact query.
+      const target = new URL(sharedPath, "http://localhost");
+      const endpoint = target.pathname + target.search;
+      expect(registrations.has(target.pathname), target.pathname).toBe(true);
       expect(declared.has(endpoint), `inventory row for ${endpoint}`).toBe(true);
+    }
+    // The inventory rows hold complete endpoint facts, not a wildcard allowlist.
+    for (const endpoint of declared) {
+      expect(endpoint.startsWith("/"), endpoint).toBe(true);
+      expect(endpoint.includes("*"), endpoint).toBe(false);
     }
   });
 

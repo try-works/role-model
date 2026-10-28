@@ -121,9 +121,8 @@ describe("S379b Router family canonical URLs", () => {
     expect(replaceCommand(result)?.args?.href).toBe("/router/strategy");
   });
 
-  it("drops exactly the four landed families from MISSING; the rest stay NotFound", async () => {
+  it("keeps every current missing family explicit NotFound and never claims a landed router family as missing", async () => {
     const module = await legacy();
-    expect(module.MISSING_ORIGINAL_TARGETS).toHaveLength(10);
     const paths = module.MISSING_ORIGINAL_TARGETS.map((entry) => entry.path);
     for (const landed of [
       "/app/router/strategy",

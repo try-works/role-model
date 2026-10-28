@@ -149,7 +149,9 @@
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/control-routing-strategy.tsx",
       "status": "absent",
-      "hostEndpoints": [],
+      "hostEndpoints": [
+        "/api/role-model/router/config"
+      ],
       "requiresHostEndpoint": false,
       "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
@@ -208,7 +210,9 @@
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/extensions.tsx",
       "status": "absent",
-      "hostEndpoints": [],
+      "hostEndpoints": [
+        "/api/role-model/extensions"
+      ],
       "requiresHostEndpoint": false,
       "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
@@ -276,6 +280,11 @@
       "status": "verified",
       "hostEndpoints": [
         "/api/role-model/operator/learning",
+        "/api/role-model/operator/learning/policy",
+        "/api/role-model/operator/learning/records?kind=pack",
+        "/api/role-model/operator/learning/decisions",
+        "/api/role-model/operator/learning/measurement",
+        "/api/role-model/operator/learning/history",
         "/api/role-model/operator/replay/jobs",
         "/api/role-model/operator/evaluation/jobs"
       ],
@@ -338,7 +347,9 @@
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/local-llama-swap-models.tsx",
       "status": "absent",
-      "hostEndpoints": [],
+      "hostEndpoints": [
+        "/api/role-model/local/llama-swap/models"
+      ],
       "requiresHostEndpoint": false,
       "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },
@@ -555,7 +566,9 @@
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/operator-controls.tsx",
       "status": "absent",
-      "hostEndpoints": [],
+      "hostEndpoints": [
+        "/api/role-model/operator/trace-roots"
+      ],
       "requiresHostEndpoint": false,
       "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
     },

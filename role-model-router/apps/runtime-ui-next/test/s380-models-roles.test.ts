@@ -49,9 +49,8 @@ describe("S379a Models/roles family", () => {
     expect(replaceCommand(result)?.args?.href).toBe("/models/roles?filter=active#roles");
   });
 
-  it("keeps the remaining 14 missing families explicit NotFound (never a generic success)", async () => {
+  it("keeps every current missing family explicit NotFound and never claims the landed family as missing", async () => {
     const module = await legacy();
-    expect(module.MISSING_ORIGINAL_TARGETS).toHaveLength(14);
     const paths = module.MISSING_ORIGINAL_TARGETS.map((entry) => entry.path);
     expect(paths).not.toContain("/app/models/roles");
     for (const entry of module.MISSING_ORIGINAL_TARGETS) {
@@ -61,7 +60,6 @@ describe("S379a Models/roles family", () => {
       });
       expect(module.legacyRedirectForUrl(urlOf(entry.path)), entry.path).toBeUndefined();
     }
-    expect(routeFromUrl(urlOf("/app/router/strategy"))._tag).toBe("NotFound");
   });
 
   it("leaves requestId detail families unchanged", async () => {

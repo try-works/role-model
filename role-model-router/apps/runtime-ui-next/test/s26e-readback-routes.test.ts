@@ -341,10 +341,11 @@ afterEach(() => {
 
 describe("S26e shared readback client", () => {
   it("uses each declared host path, sends the bearer only when provisioned, and forwards abort", async () => {
-    const calls: Array<{ init?: RequestInit; path: string }> = [];
+    const calls: Array<{ init?: RequestInit; pathname: string; search: string }> = [];
     const clients = createReadbackClients({
       fetchImpl: async (input, init) => {
-        calls.push({ init, path: new URL(String(input)).pathname });
+        const url = new URL(String(input));
+        calls.push({ init, pathname: url.pathname, search: url.search });
         return json({});
       },
       token: "s26e-token",
@@ -354,8 +355,16 @@ describe("S26e shared readback client", () => {
       const result = await clients[key]({ signal: controller.signal });
       expect(result.status).toBe(200);
     }
-    expect(calls.map((call) => call.path)).toEqual(
-      (Object.keys(READBACK_PATHS) as ReadbackKey[]).map((key) => READBACK_SPECS[key].path),
+    // Record pathname AND search: kind=pack is part of the declared host contract and must not
+    // be silently stripped when comparing the client request to READBACK_SPECS.
+    const expectedTargets = (Object.keys(READBACK_PATHS) as ReadbackKey[]).map((key) => {
+      const spec = READBACK_SPECS[key];
+      // pathFor is the spec's declared default query (windowMs); path carries kind=pack.
+      const target = new URL(spec.pathFor?.("") ?? spec.path, "http://localhost");
+      return { pathname: target.pathname, search: target.search };
+    });
+    expect(calls.map((call) => ({ pathname: call.pathname, search: call.search }))).toEqual(
+      expectedTargets,
     );
     for (const call of calls) {
       expect(new Headers(call.init?.headers).get("authorization")).toBe("Bearer s26e-token");

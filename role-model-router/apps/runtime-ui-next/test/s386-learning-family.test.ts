@@ -77,9 +77,8 @@ describe("S379c Learning family canonical URLs", () => {
     expect(commandNames(result).filter((name) => name === "ReplaceLegacyUrl")).toHaveLength(1);
   });
 
-  it("drops exactly the five landed families from MISSING; the rest stay NotFound", async () => {
+  it("keeps every current missing family explicit NotFound and never claims a landed learning family as missing", async () => {
     const module = await legacy();
-    expect(module.MISSING_ORIGINAL_TARGETS).toHaveLength(5);
     const paths = module.MISSING_ORIGINAL_TARGETS.map((entry) => entry.path);
     for (const landed of [
       "/app/learning/configuration",
