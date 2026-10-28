@@ -626,6 +626,31 @@ jobs:
           }
           if ($LASTEXITCODE -ne 0) { throw "R39 rendered UI audit at 390x844 failed (exit $LASTEXITCODE)" }
 
+      # R14: the real React/Foldkit capture selfcheck lane (S294-S326). Advisory by the same
+      # variable as the other R39 steps: a runner without a browser reports NOT RUN (exit 2),
+      # which is honest, not a pass. PARITY_SELFCHECK_TEMP_DRIVE re-selects the runner's own
+      # temp drive so the lane's fail-fast does not require E: (S342c).
+      - name: Parity selfcheck lane (R14)
+        if: matrix.target == 'win32-x64'
+        shell: pwsh
+        continue-on-error: ${{ vars.R39_VERIFY_BLOCKING != 'true' }}
+        run: |
+          # React target prerequisite: the lane captures BOTH UIs; the React build is not
+          # otherwise part of this job.
+          corepack pnpm --filter @role-model-router/runtime-ui run build
+          if ($LASTEXITCODE -ne 0) { throw "R14 parity selfcheck: React build failed (exit $LASTEXITCODE)" }
+          $runnerDrive = (Get-Item $env:RUNNER_TEMP).PSDrive.Name + ":"
+          $env:PARITY_SELFCHECK_TEMP_DRIVE = $runnerDrive
+          node --import tsx scripts/runtime-parity.mjs --selfcheck
+          if ($LASTEXITCODE -eq 2) {
+            if ("${{ vars.R39_VERIFY_BLOCKING }}" -eq "true") {
+              throw "R14 parity selfcheck did NOT RUN while R39_VERIFY_BLOCKING=true"
+            }
+            Write-Output "NOT RUN: no Chromium-family browser on this runner (set CHROME_PATH to enable)"
+            exit 0
+          }
+          if ($LASTEXITCODE -ne 0) { throw "R14 parity selfcheck failed (exit $LASTEXITCODE)" }
+
       - name: Archive standalone package (Unix)
         if: matrix.target != 'win32-x64'
         run: |
