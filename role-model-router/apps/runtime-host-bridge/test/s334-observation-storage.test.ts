@@ -58,7 +58,7 @@ describe("S334 observation storage", () => {
     const index = readFileSync(new URL("../src/index.ts", import.meta.url), "utf8");
     expect(index).toContain("composeObservationStorage(");
     expect(index).toContain("observationStorage.persist(");
-    expect(index).toContain("observationStorage.read(requestId");
+    expect(index).toContain("observationStorage.readHydrated(requestId");
     expect(index).toContain("persistRuntimeObservationBundle(");
   });
 

@@ -518,12 +518,16 @@ export interface ObservationStorageContract {
   readonly capacity: number;
   readonly persist: (write: () => void, hydrate: (() => Promise<object | null | undefined>) | undefined, key: string) => void;
   readonly read: <T>(key: string, read: () => T) => T;
+  readonly readHydrated: <T>(key: string, read: () => T) => T;
   readonly cached: (key: string) => object | undefined;
   readonly queueDepth: () => number;
   readonly hydrationError: () => Error | undefined;
   readonly drain: () => Promise<void>;
   readonly pumpActive: () => boolean;
 }
+export const liveScoresObservationKey = (endpointId: string, windowStartMs: number, windowEndMs: number, minimumSampleCount: number): string =>
+  "live-scores:" + endpointId + ":" + String(windowStartMs) + ":" + String(windowEndMs) + ":" + String(minimumSampleCount);
+
 const observationStorageOwners = new WeakSet<object>();
 export class ObservationStorageService extends Context.Service<ObservationStorageService, ObservationStorageContract>()("ObservationStorageService") {}
 export const makeObservationStorage = (capacity: number, jobTimeoutMs = 10_000): ObservationStorageContract => {
@@ -599,6 +603,23 @@ export const makeObservationStorage = (capacity: number, jobTimeoutMs = 10_000):
       // SAFETY: the cached value was produced by this storage's hydrate callback for this key;
       // the generic read-through names the caller's declared type.
       return hit as T;
+    },
+    readHydrated: <T>(key: string, read: () => T): T => {
+      const hit = cache.get(key);
+      if (hit !== undefined) {
+        // SAFETY: cache entries are written under this exact key by this storage's hydration.
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion
+        return hit as T;
+      }
+      const value = read();
+      if (jobs.length < capacity) {
+        // SAFETY: hydration values are the same opaque object types read back from the caller; primitives are not cached.
+        const hydrationValue = value as object | null | undefined;
+        jobs.push({ key, run: async () => hydrationValue });
+        pending += 1;
+        void pump();
+      }
+      return value;
     },
   };
   observationStorageOwners.add(owner);

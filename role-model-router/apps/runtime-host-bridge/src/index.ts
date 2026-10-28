@@ -283,6 +283,7 @@ import {
   type BootstrapContract,
   benchmarkGate,
   composeObservationStorage,
+  liveScoresObservationKey,
   composeMetadataCacheOwner,
   startupReadinessRefusalBody,
   metadataCacheKey,
@@ -6335,16 +6336,16 @@ function readObservedProfilesForRouting(input: {
   const endpointIds = [
     ...new Set(input.registry.endpoints.map((endpoint) => endpoint.identity.endpoint_id)),
   ];
-  const endpointWideProfilesByEndpointId = readLatestObservedProfilesByEndpointIds({
+  const endpointWideProfilesByEndpointId = composeObservationStorage().readHydrated("observed-profiles:" + endpointIds.join(","), () => readLatestObservedProfilesByEndpointIds({
     databasePath: input.databasePath,
     endpointIds,
-  });
+  }));
   const difficultyBucketProfilesByEndpointId = input.difficultyBucket
-    ? readLatestObservedProfilesByEndpointIds({
+    ? composeObservationStorage().readHydrated("observed-profiles:" + endpointIds.join(",") + ":" + String(input.difficultyBucket), () => readLatestObservedProfilesByEndpointIds({
         databasePath: input.databasePath,
         endpointIds,
         difficultyBucket: input.difficultyBucket,
-      })
+      }))
     : {};
   const latestProfilesByEndpointId = input.difficultyBucket
     ? Object.fromEntries(
@@ -21368,7 +21369,7 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
   };
   const readPersistedRuntimeObservation = (requestId: string) => {
     try {
-      return observationStorage.read(requestId, () => readRuntimeObservationBundle({
+      return observationStorage.readHydrated(requestId, () => readRuntimeObservationBundle({
         databasePath: initialization.databasePath,
         requestId,
         ...(localGraphStore ? { graphStore: localGraphStore } : {}),
@@ -26035,15 +26036,15 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
             requestRecords.filter((record) => record.sourceType === "remote"),
           ),
         }
-      : readRuntimeTelemetrySourceSummaries({
+      : observationStorage.readHydrated("telemetry-sources:" + JSON.stringify(aggregateQuery), () => readRuntimeTelemetrySourceSummaries({
           databasePath: initialization.databasePath,
           ...aggregateQuery,
-        });
+        }));
     return {
-      ...readRuntimeTelemetrySummary({
+      ...observationStorage.readHydrated("telemetry-summary:" + JSON.stringify(aggregateQuery), () => readRuntimeTelemetrySummary({
         databasePath: initialization.databasePath,
         ...aggregateQuery,
-      }),
+      })),
       sourceBreakdown: sourceSummaries,
       window: { startAtMs, endAtMs: asOfMs, asOfMs },
     };
@@ -26615,28 +26616,32 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
   const readEndpointProfileData = (endpointId: string) => {
     const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
     const telemetryWindowEndMs = Date.now();
-    const telemetryScores = readLiveTaskTelemetryScoresByEndpointIds({
-      databasePath: initialization.databasePath,
-      endpointIds: [endpointId],
-      windowStartMs: Math.max(0, telemetryWindowEndMs - 7 * 24 * 60 * 60 * 1_000),
-      windowEndMs: telemetryWindowEndMs,
-      minimumSampleCount: observedDataConfig.aggregation.minSamples,
-    })[endpointId];
+    const telemetryWindowStartMs = Math.max(0, telemetryWindowEndMs - 7 * 24 * 60 * 60 * 1_000);
+    const telemetryScores = observationStorage.readHydrated(
+      liveScoresObservationKey(endpointId, telemetryWindowStartMs, telemetryWindowEndMs, observedDataConfig.aggregation.minSamples),
+      () => readLiveTaskTelemetryScoresByEndpointIds({
+        databasePath: initialization.databasePath,
+        endpointIds: [endpointId],
+        windowStartMs: telemetryWindowStartMs,
+        windowEndMs: telemetryWindowEndMs,
+        minimumSampleCount: observedDataConfig.aggregation.minSamples,
+      }),
+    )[endpointId];
     const difficultyProfiles = Object.fromEntries(
       (["easy", "medium", "hard"] as const).map((difficultyBucket) => [
         difficultyBucket,
-        readLatestObservedProfile({
+        observationStorage.readHydrated("profile:" + endpointId + ":" + difficultyBucket, () => readLatestObservedProfile({
           databasePath: initialization.databasePath,
           endpointId,
           difficultyBucket,
-        }),
+        })),
       ]),
     ) as Record<UnifiedRuntimeDifficultyBucket, ReturnType<typeof readLatestObservedProfile>>;
 
-    const operationalProfile = readLatestObservedProfile({
+    const operationalProfile = observationStorage.readHydrated("profile:" + endpointId + ":none", () => readLatestObservedProfile({
       databasePath: initialization.databasePath,
       endpointId,
-    });
+    }));
     const recentSamples = readObservedPerformanceSamples({
       databasePath: initialization.databasePath,
       endpointId,
@@ -28947,7 +28952,7 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
         ...(graphEvidence ? { graphEvidence } : {}),
       });
       const persisted = persistFailureTelemetrySafely(() =>
-        persistRuntimeTelemetryFailure({
+        observationStorage.persist(() => persistRuntimeTelemetryFailure({
           databasePath: initialization.databasePath,
           requestId,
           routingDecisionId,
@@ -29028,7 +29033,7 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
           dimensions: selectedEndpointDimensions,
           observation: failureObservation,
           ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-        }),
+        }), async () => readRuntimeObservationBundle({ databasePath: initialization.databasePath, requestId, ...(localGraphStore ? { graphStore: localGraphStore } : {}) }), requestId),
       );
       if (options.trackBPostObservation) {
         try {
