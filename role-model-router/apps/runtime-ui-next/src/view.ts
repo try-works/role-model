@@ -984,8 +984,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
   } = ctx;
   const routeRegistry = {
     Diagnostics: (route) => {
-      // SAFETY: registry dispatch uses this route's own tag, so the Diagnostics payload is present.
-      const { id } = route as Extract<AppRoute, { readonly _tag: "Diagnostics" }>;
+      const { id } = route;
       return h.section(
         [h.Class("rm3-next-route"), h.DataAttribute("route", "diagnostics")],
         [
@@ -1017,16 +1016,16 @@ const routeContent = (ctx: RouteViewContext): Html => {
     Benchmark: () => renderReadbackPage(READBACK_SPECS.benchmarkSuite, readbacks.benchmarkSuite, h),
     StorageRetention: () => renderReadbackPage(READBACK_SPECS.storageRetention, readbacks.storageRetention, h),
     Studio: () => studioRoute({ h, readbacks, studio, studioPage }),
-    Learning: () => learningRoute({ h, learningFamilyPage, learningPage, learningRanking, readbacks }),
-    LearningConfiguration: () => learningConfigurationRoute({ h, learningFamilyPage, learningPage, learningRanking, readbacks }),
-    LearningPacks: () => learningPacksRoute({ h, learningFamilyPage, learningPage, learningRanking, readbacks }),
-    LearningDecisions: () => learningDecisionsRoute({ h, learningFamilyPage, learningPage, learningRanking, readbacks }),
-    LearningEvidence: () => learningEvidenceRoute({ h, learningFamilyPage, learningPage, learningRanking, readbacks }),
+    Learning: () => learningRoute({ h, learningPage, learningRanking, readbacks }),
+    LearningConfiguration: () => learningConfigurationRoute({ h, learningFamilyPage, readbacks }),
+    LearningPacks: () => learningPacksRoute({ h, learningFamilyPage, readbacks }),
+    LearningDecisions: () => learningDecisionsRoute({ h, learningFamilyPage, readbacks }),
+    LearningEvidence: () => learningEvidenceRoute({ h, learningFamilyPage, readbacks }),
     LocalPolicy: () => localPolicyPage(readbacks.localPolicy, h),
     LocalLlamaSwapModels: () => finalFamilyPage("llama-swap models", "local-llama-swap-models", [{ label: "Models", spec: READBACK_SPECS.localLlamaSwapModels, readback: readbacks.localLlamaSwapModels }], h),
     SystemOperator: () => finalFamilyPage("Operator", "system-operator", [{ label: "Operator status", spec: READBACK_SPECS.operatorStatus, readback: readbacks.operatorStatus }, { label: "Trace roots", spec: READBACK_SPECS.operatorTraceRoots, readback: readbacks.operatorTraceRoots }], h),
     SystemExtensions: () => finalFamilyPage("Extensions", "system-extensions", [{ label: "Extensions", spec: READBACK_SPECS.extensions, readback: readbacks.extensions }], h),
-    LearningHistory: () => learningHistoryRoute({ h, learningFamilyPage, learningPage, learningRanking, readbacks }),
+    LearningHistory: () => learningHistoryRoute({ h, learningFamilyPage, readbacks }),
     Models: () => modelsPage(readbacks, h),
     ModelsRoles: () => modelsRolesPage(readbacks, h),
     RouterStrategy: () => routerFamilyPage(["strategy", "executionMode", "routing."], "Router strategy", "router-strategy", readbacks, h),
@@ -1045,14 +1044,13 @@ const routeContent = (ctx: RouteViewContext): Html => {
     ObserveRouting: () =>
       renderReadbackPage(READBACK_SPECS.observeRouting, readbacks.observeRouting, h),
     Router: () => renderReadbackPage(READBACK_SPECS.router, readbacks.router, h),
-    Providers: () => providersRoute({ controls, deviceAuth, deviceAuthDialog, endpointAdmission, h, providerAccount }),
-    Endpoints: () => endpointsRoute({ controls, deviceAuth, deviceAuthDialog, endpointAdmission, h, providerAccount }),
+    Providers: () => providersRoute({ controls, deviceAuth, deviceAuthDialog, h, providerAccount }),
+    Endpoints: () => endpointsRoute({ controls, endpointAdmission, h }),
     ControlController: () =>
       renderControlPage(CONTROL_SPECS.controlController, controls.controlController, h, controls.endpoints.rows.map((row) => row.id)),
     Index: () => indexRoute({ chartInteraction, h, overviewFilters, overviewPage, overviewWindowMs, readbacks }),
     NotFound: (route) => {
-      // SAFETY: registry dispatch uses this route's own tag, so the NotFound path is present.
-      const { path } = route as Extract<AppRoute, { readonly _tag: "NotFound" }>;
+      const { path } = route;
       return h.section(
         [
           h.Class("rm3-next-route mt-4"),
@@ -1086,8 +1084,13 @@ const routeContent = (ctx: RouteViewContext): Html => {
         ],
       );
     },
-  } satisfies Record<AppRoute["_tag"], (route: AppRoute) => Html>;
-  return routeRegistry[route._tag](route);
+  } satisfies {
+    [K in AppRoute["_tag"]]: (route: Extract<AppRoute, { readonly _tag: K }>) => Html;
+  };
+  // SAFETY: the registry is keyed by this exact tag and each entry accepts that tag's payload,
+  // so the selected handler can receive the same route value used for selection.
+  const renderRoute = routeRegistry[route._tag] as (route: AppRoute) => Html;
+  return renderRoute(route);
 };
 
 const railRow = (label: string, value: string | null, reason: string, h: HtmlBuilder<Message>) =>
