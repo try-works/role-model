@@ -5,7 +5,12 @@ import { type Url, toString as urlToString } from "@role-model-router/foldkit/ur
 import { Effect, Schema } from "effect";
 import { type Message as DialogMessage } from "@role-model-router/foldkit-ui/dialog";
 import { type RequestsMetricListboxModel, initRequestsMetricListbox, initRequestsTargetListbox, requestsMetricListbox } from "./ui/listbox";
-import { deviceAuthModalKeyFor, openDeviceAuthDialog, updateDeviceAuthDialog } from "./ui/dialog";
+import { updateDeviceAuthDialog } from "./ui/dialog";
+import {
+  deviceAuthCancelledState,
+  deviceAuthFailedState,
+  withDeviceAuthDialog,
+} from "./features/device-auth/update";
 
 import { DEFAULT_OVERVIEW_FILTERS, overviewQuery, type OverviewFilters } from "./overview-filters";
 import { parseRuntimeConfigRecord, parseRuntimeConfigText, runtimeConfigDiff, runtimeConfigText } from "./runtime-config";
@@ -82,7 +87,6 @@ import {
   deviceAuthStartPlan,
   initialDeviceAuthState,
   mergeDeviceAuthPoll,
-  type DeviceAuthSession,
   type DeviceAuthState,
 } from "./device-auth";
 import { canonicalHrefForUrl, replaceLegacyUrlCommand } from "./legacy-redirects";
@@ -294,17 +298,6 @@ const updateRequestsTargetListbox = (
       Message.GotRequestsRankingTargetListboxMessage({ message: childMessage }),
     ),
     model: nextModel,
-  };
-};
-
-const withDeviceAuthDialog = (model: Model, session: DeviceAuthSession): Model => {
-  if (session.status !== "pending" || session.userCode === undefined) return model;
-  const key = deviceAuthModalKeyFor(session);
-  if (model.deviceAuthModalKey === key) return model;
-  return {
-    ...model,
-    deviceAuthDialog: openDeviceAuthDialog(model.deviceAuthDialog),
-    deviceAuthModalKey: key,
   };
 };
 
@@ -1174,7 +1167,7 @@ const updateLocalPolicyDraft = (
       DeviceAuthFailed: ({ message, token }) => {
         const state = model.deviceAuth ?? initialDeviceAuthState();
         if (token !== state.token) return { model };
-        return { model: { ...model, deviceAuth: { ...state, error: message, inflight: false, status: "error" } } };
+        return { model: { ...model, deviceAuth: deviceAuthFailedState(state, message) } };
       },
       DeviceAuthRetryRequested: () => {
         const state = model.deviceAuth ?? initialDeviceAuthState();
@@ -1227,10 +1220,7 @@ const updateLocalPolicyDraft = (
                     () => Message.DeviceAuthPollCancelCompleted({}),
                   ),
                 ],
-          model: {
-            ...model,
-            deviceAuth: { ...state, error: undefined, inflight: false, session: undefined, sessions: undefined, status: "draft", token: state.token + 1 },
-          },
+          model: { ...model, deviceAuth: deviceAuthCancelledState(state) },
         };
       },
       DeviceAuthPollCancelCompleted: () => ({ model }),
