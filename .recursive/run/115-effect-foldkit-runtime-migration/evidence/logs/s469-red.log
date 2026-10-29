@@ -1,0 +1,32 @@
+(node:35632) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ S469: healthz becomes ready only when all six packaged operator workers are ready (67.5276ms)
+✔ S469: healthz stays honestly degraded when a packaged worker is not ready (12.7957ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 1
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 908.6919
+
+✖ failing tests:
+
+test at tests\track-b\run115-b9-operator-healthz-status.test.mjs:41:1
+✖ S469: healthz becomes ready only when all six packaged operator workers are ready (67.5276ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  503 !== 200
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-operator-healthz-status.test.mjs:45:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 503,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
