@@ -3,12 +3,11 @@ import type { Document, Html, HtmlBuilder } from "@role-model-router/foldkit/htm
 import { rm3ButtonClassName, view as rm3ButtonView } from "@role-model/ui/foldkit-button";
 
 import { CONTROL_SPECS, type ControlsState } from "./control";
-import { renderControlPage, renderDeviceAuthorizationForm, renderEndpointAdmissionForm, renderProviderAccountForm } from "./control-view";
+import { renderControlPage } from "./control-view";
 import { chartInteractionForRoute, chartStateForReadback, type ChartInteractionState } from "./chart-interaction";
 import { type LearningRankingState } from "./learning-ranking";
 import { renderLearningRanking } from "./learning-ranking-view";
-import { RequestsRankingStateSchema, REQUESTS_RANKING_METRIC_OPTIONS, REQUESTS_RANKING_TARGET_OPTIONS, type RequestsRankingState } from "./requests-ranking";
-import { renderRequestsRanking } from "./requests-ranking-view";
+import type { RequestsRankingState } from "./requests-ranking";
 import { initialDeviceAuthState, type DeviceAuthState } from "./device-auth";
 import { initialProviderAccountState, type ProviderAccountState } from "./provider-account";
 import { initialEndpointAdmissionState, type EndpointAdmissionState } from "./endpoint-admission";
@@ -26,6 +25,19 @@ import type { ObservabilityState } from "./observability";
 import { chartPointKeyAction, view as chartView } from "@role-model/ui/foldkit-chart";
 
 import { READBACK_SPECS, type ReadbacksState, localPolicyControls, localPolicyDraftFromReadback, localPolicyFromReadback, renderReadbackPage } from "./readback";
+import { endpointsRoute, providersRoute } from "./features/control/routes";
+import { requestsRoute } from "./features/requests-ranking/routes";
+import {
+  learningConfigurationRoute,
+  learningDecisionsRoute,
+  learningEvidenceRoute,
+  learningHistoryRoute,
+  learningRoute,
+  learningPacksRoute,
+} from "./features/learning-ranking/routes";
+import { studioRoute } from "./features/studio/routes";
+import { runtimeRoute } from "./features/runtime/routes";
+import { indexRoute } from "./features/overview/routes";
 import { type StudioField, type StudioState, StudioTabSchema, studioIdle } from "./studio";
 import { AppRoute } from "./route";
 
@@ -990,10 +1002,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     RouterCandidates: () =>
       renderReadbackPage(READBACK_SPECS.routerCandidates, readbacks.routerCandidates, h),
     Requests: () =>
-      h.section([], [
-        renderRequestsRanking(requestsRanking, requestsRankingMetricListbox, requestsRankingTargetListbox, REQUESTS_RANKING_METRIC_OPTIONS, REQUESTS_RANKING_TARGET_OPTIONS, h),
-        renderReadbackPage(READBACK_SPECS.requests, readbacks.requests, h),
-      ]),
+      requestsRoute({ h, readbacks, requestsRanking, requestsRankingMetricListbox, requestsRankingTargetListbox }),
     RequestDetail: () => renderReadbackPage(READBACK_SPECS.requestDetail, readbacks.requestDetail, h),
     RouterDecisions: () =>
       renderReadbackPage(READBACK_SPECS.routerDecisions, readbacks.routerDecisions, h),
@@ -1007,23 +1016,17 @@ const routeContent = (ctx: RouteViewContext): Html => {
     IntegrationsUpstream: () => renderReadbackPage(READBACK_SPECS.integrationProviders, readbacks.integrationProviders, h),
     Benchmark: () => renderReadbackPage(READBACK_SPECS.benchmarkSuite, readbacks.benchmarkSuite, h),
     StorageRetention: () => renderReadbackPage(READBACK_SPECS.storageRetention, readbacks.storageRetention, h),
-    Studio: () => studioPage(
-      studio,
-      h,
-      readbacks.configuredModels.status === "ok"
-        ? readbacks.configuredModels.rows.map((entry) => entry.id).filter((id) => id.length > 0)
-        : [],
-    ),
-    Learning: () => learningPage(readbacks, learningRanking, h),
-    LearningConfiguration: () => learningFamilyPage("Learning configuration", "learning-configuration", READBACK_SPECS.learningConfiguration, readbacks.learningConfiguration, h),
-    LearningPacks: () => learningFamilyPage("Learning packs", "learning-packs", READBACK_SPECS.learningPacks, readbacks.learningPacks, h),
-    LearningDecisions: () => learningFamilyPage("Learning decisions", "learning-decisions", READBACK_SPECS.learningDecisions, readbacks.learningDecisions, h),
-    LearningEvidence: () => learningFamilyPage("Learning evidence", "learning-evidence", READBACK_SPECS.learningEvidence, readbacks.learningEvidence, h),
+    Studio: () => studioRoute({ h, readbacks, studio, studioPage }),
+    Learning: () => learningRoute({ h, learningFamilyPage, learningPage, learningRanking, readbacks }),
+    LearningConfiguration: () => learningConfigurationRoute({ h, learningFamilyPage, learningPage, learningRanking, readbacks }),
+    LearningPacks: () => learningPacksRoute({ h, learningFamilyPage, learningPage, learningRanking, readbacks }),
+    LearningDecisions: () => learningDecisionsRoute({ h, learningFamilyPage, learningPage, learningRanking, readbacks }),
+    LearningEvidence: () => learningEvidenceRoute({ h, learningFamilyPage, learningPage, learningRanking, readbacks }),
     LocalPolicy: () => localPolicyPage(readbacks.localPolicy, h),
     LocalLlamaSwapModels: () => finalFamilyPage("llama-swap models", "local-llama-swap-models", [{ label: "Models", spec: READBACK_SPECS.localLlamaSwapModels, readback: readbacks.localLlamaSwapModels }], h),
     SystemOperator: () => finalFamilyPage("Operator", "system-operator", [{ label: "Operator status", spec: READBACK_SPECS.operatorStatus, readback: readbacks.operatorStatus }, { label: "Trace roots", spec: READBACK_SPECS.operatorTraceRoots, readback: readbacks.operatorTraceRoots }], h),
     SystemExtensions: () => finalFamilyPage("Extensions", "system-extensions", [{ label: "Extensions", spec: READBACK_SPECS.extensions, readback: readbacks.extensions }], h),
-    LearningHistory: () => learningFamilyPage("Learning history", "learning-history", READBACK_SPECS.learningHistory, readbacks.learningHistory, h),
+    LearningHistory: () => learningHistoryRoute({ h, learningFamilyPage, learningPage, learningRanking, readbacks }),
     Models: () => modelsPage(readbacks, h),
     ModelsRoles: () => modelsRolesPage(readbacks, h),
     RouterStrategy: () => routerFamilyPage(["strategy", "executionMode", "routing."], "Router strategy", "router-strategy", readbacks, h),
@@ -1031,7 +1034,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     RouterConfig: () => routerFamilyPage(["strategy", "executionMode", "routing.", "diagnostics."], "Router config", "router-config", readbacks, h),
     RouterAgentStrategy: () => routerFamilyPage(["agentStrategy."], "Agent strategy", "router-agent-strategy", readbacks, h),
     LocalChoose: () => h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route","local-choose")], [h.h2([h.Class("rm3-next-route-title")], ["Local choose"]), h.p([], ["Choose peer-backed models or llama-swap models."])]),
-    Runtime: () => runtimeConfigPage(runtimeConfigEditor, readbacks.runtimeConfig, readbacks.runtime, h),
+    Runtime: () => runtimeRoute({ h, readbacks, runtimeConfigEditor, runtimeConfigPage }),
     SessionReadiness: () =>
       renderReadbackPage(READBACK_SPECS.sessionReadiness, readbacks.sessionReadiness, h),
     Dashboard: () => renderReadbackPage(READBACK_SPECS.dashboard, readbacks.dashboard, h),
@@ -1042,20 +1045,11 @@ const routeContent = (ctx: RouteViewContext): Html => {
     ObserveRouting: () =>
       renderReadbackPage(READBACK_SPECS.observeRouting, readbacks.observeRouting, h),
     Router: () => renderReadbackPage(READBACK_SPECS.router, readbacks.router, h),
-    Providers: () =>
-      h.section([], [
-        renderControlPage(CONTROL_SPECS.providers, controls.providers, h),
-        renderDeviceAuthorizationForm(deviceAuth, deviceAuthDialog, h),
-        renderProviderAccountForm(providerAccount, h),
-      ]),
-    Endpoints: () =>
-      h.section([], [
-        renderControlPage(CONTROL_SPECS.endpoints, controls.endpoints, h),
-        renderEndpointAdmissionForm(endpointAdmission, h),
-      ]),
+    Providers: () => providersRoute({ controls, deviceAuth, deviceAuthDialog, endpointAdmission, h, providerAccount }),
+    Endpoints: () => endpointsRoute({ controls, deviceAuth, deviceAuthDialog, endpointAdmission, h, providerAccount }),
     ControlController: () =>
       renderControlPage(CONTROL_SPECS.controlController, controls.controlController, h, controls.endpoints.rows.map((row) => row.id)),
-    Index: () => overviewPage(readbacks.overviewMetrics, readbacks.routerCandidates, overviewWindowMs, h, overviewFilters, chartInteraction),
+    Index: () => indexRoute({ chartInteraction, h, overviewFilters, overviewPage, overviewWindowMs, readbacks }),
     NotFound: (route) => {
       // SAFETY: registry dispatch uses this route's own tag, so the NotFound path is present.
       const { path } = route as Extract<AppRoute, { readonly _tag: "NotFound" }>;
