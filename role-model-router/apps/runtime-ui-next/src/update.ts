@@ -47,11 +47,7 @@ import {
 } from "./control";
 import { failedDiagnostics, idleDiagnostics, loadingDiagnostics } from "./diagnostics";
 import { buildRequestsRankingQuery, initialRequestsRankingState, requestsRankingMetricOf, requestsRankingTargetOf } from "./requests-ranking";
-import {
-  initialLearningRankingState,
-  learningLadderRowKey,
-  learningRollbackPayload,
-} from "./learning-ranking";
+import { initialLearningRankingState } from "./learning-ranking";
 import {
   chartInteractionForRoute,
   hideChartTooltip,
@@ -95,6 +91,11 @@ import {
   mergeRequestsRankingLoaded,
   planRequestsRankingFieldChange,
 } from "./features/requests-ranking/update";
+import {
+  mergeLearningLadderFailed,
+  mergeLearningLadderUpdated,
+  planLearningLadderToggle,
+} from "./features/learning-ranking/update";
 import { Message } from "./message";
 import type { Model } from "./model";
 import { failedObservability, idleObservability, loadingObservability } from "./observability";
@@ -1388,75 +1389,43 @@ const updateLocalPolicyDraft = (
         const state = model.learningRanking ?? initialLearningRankingState();
         const packs = model.readbacks.learningPacks;
         const scopeId = packs.status === "ok" || packs.status === "empty" ? packs.scopeId?.trim() : undefined;
-        if (scopeId === undefined || scopeId.length === 0) {
-          const key = learningLadderRowKey({ roleId, taskTypeId });
-          if (state.phases[key]?.phase === "pending") return { model };
-          return {
-            model: {
-              ...model,
-              learningRanking: {
-                ...state,
-                phases: {
-                  ...state.phases,
-                  [key]: { error: "Learning scope is unavailable from the records readback; rollback is disabled.", phase: "error" },
-                },
-              },
-            },
-          };
-        }
-        const key = learningLadderRowKey({ roleId, taskTypeId }, scopeId);
-        const phase = state.phases[key]?.phase ?? "idle";
-        if (phase === "pending") return { model };
-        if (phase !== "confirming") {
-          const phases = Object.fromEntries(Object.entries(state.phases).filter(([, entry]) => entry.phase !== "confirming"));
-          return {
-            model: {
-              ...model,
-              learningRanking: { ...state, phases: { ...phases, [key]: { phase: "confirming", scopeId } }, scopeId },
-            },
-          };
-        }
-        const token = (state.nextToken ?? Math.max(0, ...Object.values(state.phases).map((entry) => entry.token ?? 0))) + 1;
-        const payload = learningRollbackPayload({ roleId, taskTypeId }, rolledBack, scopeId);
+        const plan = planLearningLadderToggle(state, { roleId, rolledBack, scopeId, taskTypeId });
+        if (plan.kind === "noop") return { model };
+        if (plan.kind !== "rollback") return { model: { ...model, learningRanking: plan.state } };
         return {
-          commands: [learningRankingCommands.rollbackLadder({ payload: JSON.stringify(payload), roleId, scopeId, taskTypeId, token })],
-          model: {
-            ...model,
-            learningRanking: { ...state, nextToken: token, phases: { ...state.phases, [key]: { phase: "pending", scopeId, token } }, scopeId },
-          },
+          commands: [learningRankingCommands.rollbackLadder({
+            payload: JSON.stringify(plan.payload),
+            roleId,
+            scopeId: plan.state.scopeId ?? "",
+            taskTypeId,
+            token: plan.token,
+          })],
+          model: { ...model, learningRanking: plan.state },
         };
       },
       LearningLadderUpdated: ({ rolledBack, roleId, scopeId, taskTypeId, token }) => {
         void rolledBack;
         const state = model.learningRanking ?? initialLearningRankingState();
-        const key = learningLadderRowKey({ roleId, taskTypeId }, scopeId);
-        const entry = state.phases[key];
         const packs = model.readbacks.learningPacks;
         const freshScope = packs.status === "ok" || packs.status === "empty" ? packs.scopeId : undefined;
-        if (freshScope !== scopeId || state.scopeId !== scopeId || entry?.phase !== "pending" || entry.scopeId !== scopeId || entry.token !== token) return { model };
+        const next = mergeLearningLadderUpdated(state, { freshScope, roleId, scopeId, taskTypeId, token });
+        if (next === undefined) return { model };
         const readbackToken = model.readbacks.learning.token + 1;
         return {
           commands: [readReadback({ key: "learning", token: readbackToken })],
           model: {
             ...model,
-            learningRanking: { ...state, nextToken: state.nextToken ?? token, phases: { ...state.phases, [key]: { phase: "idle", scopeId, token } } },
+            learningRanking: next,
             readbacks: { ...model.readbacks, learning: loadingReadback(readbackToken) },
           },
         };
       },
       LearningLadderFailed: ({ message, roleId, scopeId, taskTypeId, token }) => {
         const state = model.learningRanking ?? initialLearningRankingState();
-        const key = learningLadderRowKey({ roleId, taskTypeId }, scopeId);
-        const entry = state.phases[key];
         const packs = model.readbacks.learningPacks;
         const freshScope = packs.status === "ok" || packs.status === "empty" ? packs.scopeId : undefined;
-        if (freshScope !== scopeId || state.scopeId !== scopeId || entry?.phase !== "pending" || entry.scopeId !== scopeId || entry.token !== token) return { model };
-        return {
-          model: {
-            ...model,
-            learningRanking: { ...state, phases: { ...state.phases, [key]: { error: message, phase: "error", scopeId, token } } },
-          },
-        };
+        const next = mergeLearningLadderFailed(state, { freshScope, message, roleId, scopeId, taskTypeId, token });
+        return next === undefined ? { model } : { model: { ...model, learningRanking: next } };
       },
       ChartPointShown: ({ label, seriesId, token }) => {
         const state = chartInteractionForRoute(model.chartInteraction, model.route._tag);
