@@ -1,5 +1,6 @@
 import { Option } from "effect";
 
+import { childAttributes } from "@role-model-router/foldkit/html";
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 import * as Listbox from "@role-model-router/foldkit-ui/listbox";
 
@@ -50,6 +51,9 @@ const requestsListboxView = <ParentMessage>(
         labels.get(config.selected) ?? config.selected,
       ]),
       maybeSelectedValue: Option.some(config.selected),
+      buttonAttributes: childAttributes([
+        h.Style({ minHeight: "24px", minWidth: "24px" }),
+      ]),
       anchor: { placement: "bottom-start" },
     },
     toParentMessage: config.toParentMessage,

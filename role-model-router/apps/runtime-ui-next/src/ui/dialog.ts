@@ -15,7 +15,7 @@ const dialogView: SubmodelView<DeviceAuthDialogModel, Dialog.Message, Dialog.Vie
   Dialog.view;
 
 export const initDeviceAuthDialog = (): DeviceAuthDialogModel =>
-  Dialog.boot({ id: "device-auth-modal" }).model;
+  Dialog.boot({ focusSelector: "[data-device-auth-dialog-dismiss]", id: "device-auth-modal" }).model;
 
 export interface DeviceAuthDialogUpdate {
   readonly model: DeviceAuthDialogModel;

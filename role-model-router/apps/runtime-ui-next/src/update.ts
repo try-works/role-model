@@ -1112,7 +1112,10 @@ const updateLocalPolicyDraft = (
           const delayMs = deviceAuthPollDelayMs(plan.session);
           return {
             commands: [deviceAuthCommands.poll({ authRequestId: plan.session.authRequestId, delayMs, intervalMs: delayMs, token: nextToken })],
-            model: { ...model, deviceAuth: { ...state, error: undefined, inflight: true, session: plan.session, sessions, status: "pending", token: nextToken } },
+            model: withDeviceAuthDialog(
+              { ...model, deviceAuth: { ...state, error: undefined, inflight: true, session: plan.session, sessions, status: "pending", token: nextToken } },
+              plan.session,
+            ),
           };
         }
         return {
