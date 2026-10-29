@@ -1,0 +1,20 @@
+# S540 density audit
+
+Method: 40 fixture POST /v1/chat/completions requests seeded on the local packaged :51970 instance, 5s settle, rendered Chrome.
+Strict RED: s540-red.log is 10/11, not 11/11 — the llama-swap swap page already passed the structure assertion at pre-S540 HEAD (S534 state); the other 10 density tests failed.
+
+| route | refLen | portLen | ratio | reference headings present/missing | svg | tables | actual interactive controls |
+|---|---:|---:|---:|---|---:|---:|---|
+| /session-readiness | 1073 | 2426 | 226.1% | 7/7 present; missing none | 1 | 4 | none page-specific |
+| /control/endpoints | 741 | 1645 | 222.0% | 2/2 present; missing none | 1 | 3 | Add model, Activate endpoints |
+| /runtime | 999 | 2261 | 226.3% | 5/5 present; missing none | 1 | 3 | Load runtime config |
+| /router/agent-strategy | 2360 | 3536 | 149.8% | 4/4 present; missing none | 1 | 3 | Save Agent strategy, Add entry, Add agent strategy, templates, Add workload |
+| /observe/queues | 269 | 1348 | 501.1% | 2/2 present; missing none | 1 | 2 | none page-specific |
+| /system/peers | 684 | 2616 | 382.5% | 4/4 present; missing none | 2 | 5 | Refresh peers |
+| /router/workloads | 1012 | 2444 | 241.5% | 5/5 present; missing none | 1 | 2 | Save Workloads, Add workload, Use batch template, Use embedding template |
+| /local/llama-swap/models | 911 | 2278 | 250.1% | 3/3 present; missing none | 2 | 3 | Model ID input, Load model, Open runtime config, Refresh loaded models |
+| /local/llama-swap/policy | 690 | 2115 | 306.5% | 3/3 present; missing none | 2 | 2 | Save policy, Reset, Auto-unload idle models, local-policy-ttl, local-policy-max-concurrency |
+| /local/swap | 807 | 2238 | 277.3% | 3/3 present; missing none | 2 | 3 | none page-specific |
+| /local/peers | implied 1004 | 1888 | 188.0% | 3/3 _app_local_endpoints headings (Local endpoints, Endpoint inventory, Add peer endpoint); missing none | 2 | 3 | Name input, Endpoint URL input, Add endpoint, Auth token (optional) |
+
+All 11 routes >=0.9x reference text. /local/peers has no captured reference JSON key; its refLen is implied by the S539 0.45 ratio at 452 chars (~1004), not a captured artifact.
