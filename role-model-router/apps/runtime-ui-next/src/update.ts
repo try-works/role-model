@@ -90,6 +90,11 @@ import {
   type DeviceAuthState,
 } from "./device-auth";
 import { canonicalHrefForUrl, replaceLegacyUrlCommand } from "./legacy-redirects";
+import {
+  mergeRequestsRankingFailed,
+  mergeRequestsRankingLoaded,
+  planRequestsRankingFieldChange,
+} from "./features/requests-ranking/update";
 import { Message } from "./message";
 import type { Model } from "./model";
 import { failedObservability, idleObservability, loadingObservability } from "./observability";
@@ -233,18 +238,13 @@ const updateRequestsRankingField = (
   value: string,
 ): UpdateReturn<Model, Message> => {
   const state = model.requestsRanking ?? initialRequestsRankingState();
-  const nextState = { ...state, [field]: value, message: undefined };
-  const metric = requestsRankingMetricOf(nextState.metric);
-  const rankingTarget = requestsRankingTargetOf(nextState.rankingTarget);
-  if (metric === undefined || rankingTarget === undefined) {
-    const token = state.token + 1;
-    return { model: { ...model, requestsRanking: { ...nextState, message: "Select a supported metric and ranking target.", status: "error", token } } };
+  const plan = planRequestsRankingFieldChange(state, field, value);
+  if (plan.kind === "error") {
+    return { model: { ...model, requestsRanking: plan.state } };
   }
-  const token = state.token + 1;
-  const payload = buildRequestsRankingQuery({ metric, rankingTarget });
   return {
-    commands: [requestsRankingCommands.query({ payload: JSON.stringify(payload), token })],
-    model: { ...model, requestsRanking: { ...nextState, status: "loading", token } },
+    commands: [requestsRankingCommands.query({ payload: JSON.stringify(plan.payload), token: plan.state.token })],
+    model: { ...model, requestsRanking: plan.state },
   };
 };
 
@@ -1336,13 +1336,13 @@ const updateLocalPolicyDraft = (
       },
       RequestsRankingLoaded: ({ rows, token }) => {
         const state = model.requestsRanking ?? initialRequestsRankingState();
-        if (token !== state.token) return { model };
-        return { model: { ...model, requestsRanking: { ...state, message: undefined, rows, status: rows.length === 0 ? "empty" : "ok" } } };
+        const next = mergeRequestsRankingLoaded(state, rows, token);
+        return next === undefined ? { model } : { model: { ...model, requestsRanking: next } };
       },
       RequestsRankingFailed: ({ message, token }) => {
         const state = model.requestsRanking ?? initialRequestsRankingState();
-        if (token !== state.token) return { model };
-        return { model: { ...model, requestsRanking: { ...state, message, status: "error" } } };
+        const next = mergeRequestsRankingFailed(state, message, token);
+        return next === undefined ? { model } : { model: { ...model, requestsRanking: next } };
       },
       LocalPolicyTtlChanged: ({ value }) => updateLocalPolicyDraft(model, { ttl: Math.max(0, Math.trunc(value)) }),
       LocalPolicyMaxConcurrencyChanged: ({ value }) => updateLocalPolicyDraft(model, { maxConcurrency: Math.max(1, Math.trunc(value)) }),
