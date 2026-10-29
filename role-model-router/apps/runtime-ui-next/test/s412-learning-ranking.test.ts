@@ -12,6 +12,18 @@ import { shellModel, shellUpdate } from "./support/runtime-shell";
 
 /** S412: Learning per-task ladder ranking — typed parse, confirm/pending/error, exact rollback payload. */
 
+const SCOPE = "scope-s412";
+const scopedModel = (extra: Parameters<typeof shellModel>[0] = {}) => {
+  const model = shellModel(extra);
+  return {
+    ...model,
+    readbacks: {
+      ...model.readbacks,
+      learningPacks: { ...model.readbacks.learningPacks, scopeId: SCOPE, status: "ok" as const },
+    },
+  };
+};
+
 const ladderBody = {
   ladders: [
     {
@@ -116,12 +128,13 @@ describe("S412 rollback payload and client", () => {
 });
 
 describe("S412 toggle state machine", () => {
-  const base = () => shellModel();
+  const base = () => scopedModel();
 
   it("confirms on the second click, then submits once and refuses double submits", () => {
     const first = shellUpdate(base(), Message.LearningLadderToggleRequested({ rolledBack: true, roleId: "role.alpha", taskTypeId: "task.code" }));
     expect(first.commands ?? []).toEqual([]);
-    expect(first.model.learningRanking?.phases["role.alpha\u0000task.code"]?.phase).toBe("confirming");
+    const key = learningLadderRowKey({ roleId: "role.alpha", taskTypeId: "task.code" }, SCOPE);
+    expect(first.model.learningRanking?.phases[key]?.phase).toBe("confirming");
     const second = shellUpdate(first.model, Message.LearningLadderToggleRequested({ rolledBack: true, roleId: "role.alpha", taskTypeId: "task.code" }));
     expect((second.commands ?? []).map((command) => command.name)).toEqual(["RollbackLearningLadder"]);
     const payload = JSON.parse(String((second.commands ?? [])[0]?.args?.payload));
@@ -129,7 +142,7 @@ describe("S412 toggle state machine", () => {
       reason: "operator_ui_ladder_rollback",
       roleId: "role.alpha",
       rolledBack: true,
-      scopeId: "standalone-runtime-stage",
+      scopeId: SCOPE,
       taskTypeId: "task.code",
     });
     const third = shellUpdate(second.model, Message.LearningLadderToggleRequested({ rolledBack: true, roleId: "role.alpha", taskTypeId: "task.code" }));
@@ -137,16 +150,18 @@ describe("S412 toggle state machine", () => {
   });
 
   it("keeps the row on failure and re-reads the learning readback on success", () => {
+    const key = learningLadderRowKey({ roleId: "role.alpha", taskTypeId: "task.code" }, SCOPE);
+    const pending = () => scopedModel({ learningRanking: { phases: { [key]: { phase: "pending", scopeId: SCOPE, token: 1 } }, scopeId: SCOPE } });
     const failed = shellUpdate(
-      shellModel({ learningRanking: { phases: { "role.alpha\u0000task.code": { phase: "pending", token: 1 } } } }),
-      Message.LearningLadderFailed({ message: "conflict", roleId: "role.alpha", taskTypeId: "task.code", token: 1 }),
+      pending(),
+      Message.LearningLadderFailed({ message: "conflict", roleId: "role.alpha", scopeId: SCOPE, taskTypeId: "task.code", token: 1 }),
     );
-    expect(failed.model.learningRanking?.phases["role.alpha\u0000task.code"]).toMatchObject({ error: "conflict", phase: "error" });
+    expect(failed.model.learningRanking?.phases[key]).toMatchObject({ error: "conflict", phase: "error" });
     const done = shellUpdate(
-      shellModel({ learningRanking: { phases: { "role.alpha\u0000task.code": { phase: "pending", token: 1 } } } }),
-      Message.LearningLadderUpdated({ rolledBack: true, roleId: "role.alpha", taskTypeId: "task.code", token: 1 }),
+      pending(),
+      Message.LearningLadderUpdated({ rolledBack: true, roleId: "role.alpha", scopeId: SCOPE, taskTypeId: "task.code", token: 1 }),
     );
-    expect(done.model.learningRanking?.phases["role.alpha\u0000task.code"]?.phase).toBe("idle");
+    expect(done.model.learningRanking?.phases[key]?.phase).toBe("idle");
     expect((done.commands ?? []).map((command) => command.name)).toEqual(["ReadReadback"]);
     expect((done.commands ?? [])[0]?.args).toMatchObject({ key: "learning" });
   });
@@ -154,14 +169,16 @@ describe("S412 toggle state machine", () => {
 
 describe("S413 per-row token", () => {
   it("resolves two pending rows independently", () => {
-    const first = shellModel({ learningRanking: { phases: {
-      "role.a\u0000task.a": { phase: "pending", token: 1 },
-      "role.b\u0000task.b": { phase: "pending", token: 1 },
-    } } });
-    const a = shellUpdate(first, Message.LearningLadderUpdated({ rolledBack: true, roleId: "role.a", taskTypeId: "task.a", token: 1 }));
-    expect(a.model.learningRanking?.phases["role.a\u0000task.a"]?.phase).toBe("idle");
-    expect(a.model.learningRanking?.phases["role.b\u0000task.b"]?.phase).toBe("pending");
-    const b = shellUpdate(a.model, Message.LearningLadderUpdated({ rolledBack: false, roleId: "role.b", taskTypeId: "task.b", token: 1 }));
-    expect(b.model.learningRanking?.phases["role.b\u0000task.b"]?.phase).toBe("idle");
+    const keyA = learningLadderRowKey({ roleId: "role.a", taskTypeId: "task.a" }, SCOPE);
+    const keyB = learningLadderRowKey({ roleId: "role.b", taskTypeId: "task.b" }, SCOPE);
+    const first = scopedModel({ learningRanking: { phases: {
+      [keyA]: { phase: "pending", scopeId: SCOPE, token: 1 },
+      [keyB]: { phase: "pending", scopeId: SCOPE, token: 1 },
+    }, scopeId: SCOPE } });
+    const a = shellUpdate(first, Message.LearningLadderUpdated({ rolledBack: true, roleId: "role.a", scopeId: SCOPE, taskTypeId: "task.a", token: 1 }));
+    expect(a.model.learningRanking?.phases[keyA]?.phase).toBe("idle");
+    expect(a.model.learningRanking?.phases[keyB]?.phase).toBe("pending");
+    const b = shellUpdate(a.model, Message.LearningLadderUpdated({ rolledBack: false, roleId: "role.b", scopeId: SCOPE, taskTypeId: "task.b", token: 1 }));
+    expect(b.model.learningRanking?.phases[keyB]?.phase).toBe("idle");
   });
 });

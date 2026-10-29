@@ -1,0 +1,11 @@
+# s448 — Learning action scope authority correctness
+
+Status: pending
+TDD Mode: strict
+Public patchbasis6306dc9e/privateac809d31, originalpaired00-worktree authority unchanged. Read originalrequirements/proposal/plan/ownerdecision/Workspaceaddendum and S420correctiveaudit before acting.
+
+Write scope: PUBLIC UI src/learning-ranking.ts typed payload/scope parser, src/readback.ts Learning state only, src/update.ts LearningLadder handlers only, src/learning-ranking-view.ts scope disabled facts only if required; test/s448-learning-scope.test.ts NEW and affected s412 fixtures. NO auth/endpoint/routes/commands wire shape or private changes.
+
+Read S420 wrongscope finding, R13/R31, original runtime-ui learning.tsx records.scopeId authority and actual host read responses. First identify authoritative scope field and endpoint; do not invent root scope field if host lacks it. Thread actual owner scope to rollback command; eliminate hardcoded standalone-runtime-stage. Missing/invalid scope must failclosed (no mutation), honest disabled/error; never fallback to another channel. Two-click confirmation must be keyed to scope+role+task (or explicitly invalidated) so scope change between confirm clicks cannot mutate a new owner accidentally; pending result for oldscope cannot repaint newscope row. Strict behavioral RED on current shellUpdate shows customscope command still stage; then actual payload parser/readback->action test. Scope A->B confirm/pending and missing scope tests. Existing perrowtokens/originalpayload literals preserved. If real scope endpoint beyond listed source scope is needed STOP precise contract before editing. No paidprovider/operator.
+
+Verify active deepseek-flash with list_agents before substantivework; otherwise stop mismatch. ExistingTeamcontinue only. Allpeers filesystem shared, no format/checkout/reset/wholemonolithwrite. Strict assertion-level RED BEFORE production, missing-module isnotRED; capture s448-red/green commandcounts/exits; tsc ornodecheck; anti_slop_lint absolutetarget filesScanned>0 effect:true where relevant, no newlyintroduced findings or explicitreview. No commit; frozenhashes final. No operatorstate/ports paidprovider secrets; onlydisposabletemps. Independentreview differentmember beforeLeadacceptance; no broadrequirementCOMPLETE.

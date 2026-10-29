@@ -134,6 +134,7 @@ const initRoute =
         return {
           commands: [
             readReadback({ key: "learning", token }),
+            readReadback({ key: "learningPacks", token }),
             readReadback({ key: "replayJobs", token }),
             readReadback({ key: "evaluationJobs", token }),
           ],
@@ -142,7 +143,7 @@ const initRoute =
             controls: emptyControls(),
             diagnostics: idleDiagnostics(),
             observability: idleObservability(),
-            readbacks: { ...emptyReadbacks(), learning: loadingReadback(token), replayJobs: loadingReadback(token), evaluationJobs: loadingReadback(token) },
+            readbacks: { ...emptyReadbacks(), learning: loadingReadback(token), learningPacks: loadingReadback(token), replayJobs: loadingReadback(token), evaluationJobs: loadingReadback(token) },
             refresh: initialRuntimeRefreshState(),
             route,
             theme,

@@ -338,13 +338,18 @@ const endpointAdmissionCompletion = (
       if (readbackKey !== null) {
         const token = model.readbacks[readbackKey].token + 1;
         const readbacks = { ...model.readbacks, [readbackKey]: loadingReadback(token) };
+        const learningPacks = route._tag === "Learning";
         return {
-          commands: [readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : undefined, key: readbackKey, token }), scrollShellToTopCommand()],
+          commands: [
+            readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : undefined, key: readbackKey, token }),
+            ...(learningPacks ? [readReadback({ key: "learningPacks", token })] : []),
+            scrollShellToTopCommand(),
+          ],
           model: {
             ...model,
             diagnostics: idleDiagnostics(),
             observability: idleObservability(),
-            readbacks,
+            readbacks: learningPacks ? { ...readbacks, learningPacks: loadingReadback(token) } : readbacks,
             refresh: {
               ...model.refresh,
               message: undefined,
@@ -388,6 +393,7 @@ const endpointAdmissionCompletion = (
      * two entries so one telemetry event invalidates all of them, never only the first.
      */
     const readPlanForRoute = (model: Model): ReadonlyArray<{ readonly key: ReadbackKey; readonly id?: string; readonly query?: string }> => {
+      if (model.route._tag === "Learning") return [{ key: "learning" }, { key: "learningPacks" }];
       if (model.route._tag === "ModelsRoles") return [{ key: "configuredModels" }, { key: "modelEndpoints" }];
       if (model.route._tag === "SystemOperator") return [{ key: "operatorStatus" }, { key: "operatorTraceRoots" }];
       const readbackKey = readbackKeyForRouteTag(model.route._tag);
@@ -415,7 +421,10 @@ const endpointAdmissionCompletion = (
           // The command's id/query args are typed optional, so undefined forwards as "absent".
           return readReadback({ id: entry.id, key: entry.key, query: entry.query, token });
         });
-        return { commands, model: { ...model, readbacks } };
+        const learningRanking = model.route._tag === "Learning"
+          ? { nextToken: model.learningRanking?.nextToken, phases: {} }
+          : model.learningRanking;
+        return { commands, model: { ...model, learningRanking, readbacks } };
       }
       if (model.route._tag === "Observability") {
         const token = model.observability.token + 1;
@@ -590,16 +599,53 @@ const endpointAdmissionCompletion = (
           : { model },
       ReadbackFailed: ({ key, message, token }) => {
         const routeKey = readbackKeyForRouteTag(model.route._tag);
-        if (routeKey !== key || token !== model.readbacks[key].token) return { model };
+        if ((key !== "learningPacks" && routeKey !== key) || token !== model.readbacks[key].token) return { model };
+        const learningRanking = key === "learningPacks"
+          ? {
+              nextToken: model.learningRanking?.nextToken,
+              phases: Object.fromEntries(
+                Object.entries(model.learningRanking?.phases ?? {}).filter(([, entry]) => entry.scopeId === undefined),
+              ),
+            }
+          : model.learningRanking;
         return {
           model: {
             ...model,
+            learningRanking,
             readbacks: { ...model.readbacks, [key]: failedReadback(message, token) },
           },
         };
       },
       ReadbackLoaded: ({ key, snapshot, token }) => {
         if (token !== model.readbacks[key].token) return { model };
+        if (key === "learningPacks") {
+          if (snapshot.token !== model.readbacks[key].token) return { model };
+          const fresh = snapshot.status === "ok" || snapshot.status === "empty";
+          const nextScope = fresh ? snapshot.scopeId : undefined;
+          const currentScope = model.learningRanking?.scopeId;
+          const scopeChanged = fresh && nextScope !== currentScope;
+          const phases = !fresh
+            ? Object.fromEntries(Object.entries(model.learningRanking?.phases ?? {}).filter(([, entry]) => entry.scopeId === undefined))
+            : scopeChanged
+              ? Object.fromEntries(
+                  Object.entries(model.learningRanking?.phases ?? {}).filter(([, entry]) => entry.scopeId === nextScope),
+                )
+              : (model.learningRanking?.phases ?? {});
+          const nextRanking = nextScope === undefined
+            ? { nextToken: model.learningRanking?.nextToken, phases }
+            : { nextToken: model.learningRanking?.nextToken, phases, scopeId: nextScope };
+          return {
+            model: {
+              ...model,
+              learningRanking: nextRanking,
+              readbacks: { ...model.readbacks, [key]: { ...snapshot, token } },
+              refresh:
+                snapshot.status === "error"
+                  ? model.refresh
+                  : { ...model.refresh, message: undefined, status: "live" },
+            },
+          };
+        }
         if (key === "runtimeConfig") {
           let text = "{}"; let originalText = "{}";
           try { const meta = snapshot.rows[0]?.meta; const parsed = meta === undefined ? undefined : JSON.parse(meta) as { config?: unknown }; if (parsed?.config !== undefined) { text = JSON.stringify(parsed.config, null, 2); originalText = text; } } catch {}
@@ -761,6 +807,24 @@ const endpointAdmissionCompletion = (
         }
         const gap = current.lastAppliedRevision > 0 && revision > current.lastAppliedRevision + 1;
         if (!gap) {
+          if (model.route._tag === "Learning") {
+            const learningToken = model.readbacks.learning.token + 1;
+            const packsToken = model.readbacks.learningPacks.token + 1;
+            return {
+              commands: [readReadback({ key: "learning", token: learningToken }), readReadback({ key: "learningPacks", token: packsToken })],
+              model: {
+                ...model,
+                learningRanking: { nextToken: model.learningRanking?.nextToken, phases: {} },
+                readbacks: { ...model.readbacks, learning: loadingReadback(learningToken), learningPacks: loadingReadback(packsToken) },
+                refresh: {
+                  ...current,
+                  lastAppliedRevision: revision,
+                  message: current.status === "stale" ? current.message : undefined,
+                  status: current.status === "stale" ? "stale" : "live",
+                },
+              },
+            };
+          }
           const readbackKey = readbackKeyForRouteTag(model.route._tag);
           if (readbackKey !== null) {
             const token = model.readbacks[readbackKey].token + 1;
@@ -1144,40 +1208,77 @@ const endpointAdmissionCompletion = (
       },
       LearningLadderToggleRequested: ({ rolledBack, roleId, taskTypeId }) => {
         const state = model.learningRanking ?? initialLearningRankingState();
-        const key = learningLadderRowKey({ roleId, taskTypeId });
+        const packs = model.readbacks.learningPacks;
+        const scopeId = packs.status === "ok" || packs.status === "empty" ? packs.scopeId?.trim() : undefined;
+        if (scopeId === undefined || scopeId.length === 0) {
+          const key = learningLadderRowKey({ roleId, taskTypeId });
+          if (state.phases[key]?.phase === "pending") return { model };
+          return {
+            model: {
+              ...model,
+              learningRanking: {
+                ...state,
+                phases: {
+                  ...state.phases,
+                  [key]: { error: "Learning scope is unavailable from the records readback; rollback is disabled.", phase: "error" },
+                },
+              },
+            },
+          };
+        }
+        const key = learningLadderRowKey({ roleId, taskTypeId }, scopeId);
         const phase = state.phases[key]?.phase ?? "idle";
         if (phase === "pending") return { model };
         if (phase !== "confirming") {
-          return { model: { ...model, learningRanking: { ...state, phases: { ...state.phases, [key]: { phase: "confirming" } } } } };
+          const phases = Object.fromEntries(Object.entries(state.phases).filter(([, entry]) => entry.phase !== "confirming"));
+          return {
+            model: {
+              ...model,
+              learningRanking: { ...state, phases: { ...phases, [key]: { phase: "confirming", scopeId } }, scopeId },
+            },
+          };
         }
-        const token = (state.phases[key]?.token ?? 0) + 1;
-        const payload = learningRollbackPayload({ roleId, taskTypeId }, rolledBack, "standalone-runtime-stage");
+        const token = (state.nextToken ?? Math.max(0, ...Object.values(state.phases).map((entry) => entry.token ?? 0))) + 1;
+        const payload = learningRollbackPayload({ roleId, taskTypeId }, rolledBack, scopeId);
         return {
-          commands: [learningRankingCommands.rollbackLadder({ payload: JSON.stringify(payload), roleId, taskTypeId, token })],
-          model: { ...model, learningRanking: { ...state, phases: { ...state.phases, [key]: { phase: "pending", token } } } },
+          commands: [learningRankingCommands.rollbackLadder({ payload: JSON.stringify(payload), roleId, scopeId, taskTypeId, token })],
+          model: {
+            ...model,
+            learningRanking: { ...state, nextToken: token, phases: { ...state.phases, [key]: { phase: "pending", scopeId, token } }, scopeId },
+          },
         };
       },
-      LearningLadderUpdated: ({ rolledBack, roleId, taskTypeId, token }) => {
+      LearningLadderUpdated: ({ rolledBack, roleId, scopeId, taskTypeId, token }) => {
+        void rolledBack;
         const state = model.learningRanking ?? initialLearningRankingState();
-        const key = learningLadderRowKey({ roleId, taskTypeId });
+        const key = learningLadderRowKey({ roleId, taskTypeId }, scopeId);
         const entry = state.phases[key];
-        if (entry?.phase !== "pending" || entry.token !== token) return { model };
+        const packs = model.readbacks.learningPacks;
+        const freshScope = packs.status === "ok" || packs.status === "empty" ? packs.scopeId : undefined;
+        if (freshScope !== scopeId || state.scopeId !== scopeId || entry?.phase !== "pending" || entry.scopeId !== scopeId || entry.token !== token) return { model };
         const readbackToken = model.readbacks.learning.token + 1;
         return {
           commands: [readReadback({ key: "learning", token: readbackToken })],
           model: {
             ...model,
-            learningRanking: { ...state, phases: { ...state.phases, [key]: { phase: "idle", token } } },
+            learningRanking: { ...state, nextToken: state.nextToken ?? token, phases: { ...state.phases, [key]: { phase: "idle", scopeId, token } } },
             readbacks: { ...model.readbacks, learning: loadingReadback(readbackToken) },
           },
         };
       },
-      LearningLadderFailed: ({ message, roleId, taskTypeId, token }) => {
+      LearningLadderFailed: ({ message, roleId, scopeId, taskTypeId, token }) => {
         const state = model.learningRanking ?? initialLearningRankingState();
-        const key = learningLadderRowKey({ roleId, taskTypeId });
+        const key = learningLadderRowKey({ roleId, taskTypeId }, scopeId);
         const entry = state.phases[key];
-        if (entry?.phase !== "pending" || entry.token !== token) return { model };
-        return { model: { ...model, learningRanking: { ...state, phases: { ...state.phases, [key]: { error: message, phase: "error", token } } } } };
+        const packs = model.readbacks.learningPacks;
+        const freshScope = packs.status === "ok" || packs.status === "empty" ? packs.scopeId : undefined;
+        if (freshScope !== scopeId || state.scopeId !== scopeId || entry?.phase !== "pending" || entry.scopeId !== scopeId || entry.token !== token) return { model };
+        return {
+          model: {
+            ...model,
+            learningRanking: { ...state, phases: { ...state.phases, [key]: { error: message, phase: "error", scopeId, token } } },
+          },
+        };
       },
       ChartPointShown: ({ label, seriesId, token }) => {
         const state = chartInteractionForRoute(model.chartInteraction, model.route._tag);

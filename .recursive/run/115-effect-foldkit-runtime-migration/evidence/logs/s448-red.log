@@ -1,0 +1,132 @@
+COMMAND: node vitest run s448 (S448 scope authority RED, before source edit)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s448-learning-scope.test.ts (4 tests | 4 failed) 60ms
+   × S448 learning mutation scope authority > reads the authoritative records scopeId from the learning/records payload 19ms
+     → expected undefined to be 'scope-owner-b' // Object.is equality
+   × S448 learning mutation scope authority > uses the loaded scope in the rollback payload instead of standalone-runtime-stage 27ms
+     → expected [ { …(5) } ] to deeply equal [ { scopeId: 'scope-owner-b' } ]
+   × S448 learning mutation scope authority > fails closed with an honest error when the loaded scope is missing 6ms
+     → expected [ { …(4) } ] to deeply equal []
+   × S448 learning mutation scope authority > does not confirm the old scope after the loaded scope changes before the second click 5ms
+     → expected [ { …(5) } ] to deeply equal [ { scopeId: 'scope-owner-b' } ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s448-learning-scope.test.ts > S448 learning mutation scope authority > reads the authoritative records scopeId from the learning/records payload
+AssertionError: expected undefined to be 'scope-owner-b' // Object.is equality
+
+- Expected: 
+"scope-owner-b"
+
++ Received: 
+undefined
+
+ ❯ test/s448-learning-scope.test.ts:27:28
+     25|       1,
+     26|     );
+     27|     expect(parsed.scopeId).toBe("scope-owner-b");
+       |                            ^
+     28|   });
+     29| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/s448-learning-scope.test.ts > S448 learning mutation scope authority > uses the loaded scope in the rollback payload instead of standalone-runtime-stage
+AssertionError: expected [ { …(5) } ] to deeply equal [ { scopeId: 'scope-owner-b' } ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "scopeId": "scope-owner-b",
++     "reason": "operator_ui_ladder_rollback",
++     "roleId": "role.alpha",
++     "rolledBack": true,
++     "scopeId": "standalone-runtime-stage",
++     "taskTypeId": "task.code",
+    },
+  ]
+
+ ❯ test/s448-learning-scope.test.ts:34:32
+     32|     expect(commandsOf(first)).toEqual([]);
+     33|     const second = toggle(first.model);
+     34|     expect(payloadsOf(second)).toEqual([{ scopeId: "scope-owner-b" }]);
+       |                                ^
+     35|   });
+     36| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/s448-learning-scope.test.ts > S448 learning mutation scope authority > fails closed with an honest error when the loaded scope is missing
+AssertionError: expected [ { …(4) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "args": {
++       "payload": "{\"reason\":\"operator_ui_ladder_rollback\",\"roleId\":\"role.alpha\",\"rolledBack\":true,\"scopeId\":\"standalone-runtime-stage\",\"taskTypeId\":\"task.code\"}",
++       "roleId": "role.alpha",
++       "taskTypeId": "task.code",
++       "token": 1,
++     },
++     "effect": {
++       "_id": "Effect",
++       "args": [Function anonymous],
++       "op": "Suspend",
++     },
++     "messageMappers": [],
++     "name": "RollbackLearningLadder",
++   },
++ ]
+
+ ❯ test/s448-learning-scope.test.ts:40:32
+     38|     const first = toggle(baseModel());
+     39|     const second = toggle(first.model);
+     40|     expect(commandsOf(second)).toEqual([]);
+       |                                ^
+     41|     const phases = second.model.learningRanking?.phases ?? {};
+     42|     expect(Object.values(phases).some((phase) => phase.phase === "erro…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/s448-learning-scope.test.ts > S448 learning mutation scope authority > does not confirm the old scope after the loaded scope changes before the second click
+AssertionError: expected [ { …(5) } ] to deeply equal [ { scopeId: 'scope-owner-b' } ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "scopeId": "scope-owner-b",
++     "reason": "operator_ui_ladder_rollback",
++     "roleId": "role.alpha",
++     "rolledBack": true,
++     "scopeId": "standalone-runtime-stage",
++     "taskTypeId": "task.code",
+    },
+  ]
+
+ ❯ test/s448-learning-scope.test.ts:51:35
+     49|     expect(commandsOf(switched)).toEqual([]);
+     50|     const confirmed = toggle(switched.model);
+     51|     expect(payloadsOf(confirmed)).toEqual([{ scopeId: "scope-owner-b" …
+       |                                   ^
+     52|     expect(commandsOf(confirmed)).toHaveLength(1);
+     53|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  07:26:35
+   Duration  20.76s (transform 10.33s, setup 0ms, collect 16.29s, tests 60ms, environment 2.39s, prepare 792ms)
+
+

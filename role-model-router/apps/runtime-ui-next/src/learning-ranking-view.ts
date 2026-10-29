@@ -32,7 +32,7 @@ export const renderLearningRanking = (
     h.table([h.Class("mt-2 w-full text-left text-[12px]")], [
       h.thead([], [h.tr([], ["Role", "Task", "Admitted", "Configured", "Ranked", "Top 3", "Action"].map((label) => h.th([h.Class("border-b border-[var(--rm-border)] px-2 py-1")], [label])))]),
       h.tbody([], ladders.map((ladder) => {
-        const key = learningLadderRowKey(ladder);
+        const key = learningLadderRowKey(ladder, state?.scopeId);
         const phase = state?.phases[key]?.phase ?? "idle";
         const phaseError = state?.phases[key]?.error;
         const rolledBack = ladder.rolledBack?.on === true;
@@ -57,7 +57,7 @@ export const renderLearningRanking = (
       })),
     ]),
     ...ladders.flatMap((ladder) => ladder.rungs === undefined ? [] : [
-      h.details([h.DataAttribute("learning-full-ranking", learningLadderRowKey(ladder))], [
+      h.details([h.DataAttribute("learning-full-ranking", learningLadderRowKey(ladder, state?.scopeId))], [
         h.summary([], ["Full endpoint ranking"]),
         h.ul([], ladder.rungs.map((point) => h.li([], [point.endpointId + " (rank " + String(point.rank ?? "?") + ", " + (point.status ?? "unknown") + ")"]))),
       ]),

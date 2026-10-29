@@ -495,17 +495,20 @@ export const noopEndpointAdmissionCommands = defineEndpointAdmissionCommands(noo
 
 export const defineLearningRankingCommands = (client: LearningRankingClient) => ({
   rollbackLadder: Command.define("RollbackLearningLadder", {
-    args: { payload: Schema.String, roleId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
-    execute: ({ payload, roleId, taskTypeId, token }) =>
-      Effect.flatMap(
+    args: { payload: Schema.String, roleId: Schema.String, scopeId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
+    execute: ({ payload, roleId, scopeId, taskTypeId, token }) => {
+      // SAFETY: payload is JSON.stringify of the typed LearningRollbackPayload built by the update handler.
+      const parsed = JSON.parse(payload) as LearningRollbackPayload;
+      return Effect.flatMap(
         Effect.exit(
           Effect.tryPromise({
             catch: (cause) => new Error(describeCause(cause)),
-            try: () => client.rollbackLadder(JSON.parse(payload) as LearningRollbackPayload),
+            try: () => client.rollbackLadder(parsed),
           }),
         ),
-        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.LearningLadderUpdated({ rolledBack: (JSON.parse(payload) as LearningRollbackPayload).rolledBack, roleId, taskTypeId, token }) : Message.LearningLadderFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("learning ladder rollback failed"))), roleId, taskTypeId, token })),
-      ),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.LearningLadderUpdated({ rolledBack: parsed.rolledBack, roleId, scopeId, taskTypeId, token }) : Message.LearningLadderFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("learning ladder rollback failed"))), roleId, scopeId, taskTypeId, token })),
+      );
+    },
     messages: [Message.LearningLadderUpdated, Message.LearningLadderFailed],
   }),
 });

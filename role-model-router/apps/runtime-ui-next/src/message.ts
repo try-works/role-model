@@ -82,8 +82,8 @@ export const Message: MessageUnion<{
   readonly RequestsRankingLoaded: { readonly rows: typeof RequestsRankingRowsSchema; readonly token: typeof Schema.Number };
   readonly RequestsRankingFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LearningLadderToggleRequested: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly taskTypeId: typeof Schema.String };
-  readonly LearningLadderUpdated: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly LearningLadderFailed: { readonly message: typeof Schema.String; readonly roleId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly LearningLadderUpdated: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly scopeId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly LearningLadderFailed: { readonly message: typeof Schema.String; readonly roleId: typeof Schema.String; readonly scopeId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly ChartPointShown: { readonly label: typeof Schema.String; readonly seriesId: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly ChartTooltipDismissed: { readonly token: typeof Schema.Number };
   readonly ChartSeriesToggled: { readonly seriesId: typeof Schema.String; readonly token: typeof Schema.Number };
@@ -189,8 +189,8 @@ export const Message: MessageUnion<{
   RequestsRankingLoaded: { rows: RequestsRankingRowsSchema, token: Schema.Number },
   RequestsRankingFailed: { message: Schema.String, token: Schema.Number },
   LearningLadderToggleRequested: { rolledBack: Schema.Boolean, roleId: Schema.String, taskTypeId: Schema.String },
-  LearningLadderUpdated: { rolledBack: Schema.Boolean, roleId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
-  LearningLadderFailed: { message: Schema.String, roleId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
+  LearningLadderUpdated: { rolledBack: Schema.Boolean, roleId: Schema.String, scopeId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
+  LearningLadderFailed: { message: Schema.String, roleId: Schema.String, scopeId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
   ChartPointShown: { label: Schema.String, seriesId: Schema.String, token: Schema.Number },
   ChartTooltipDismissed: { token: Schema.Number },
   ChartSeriesToggled: { seriesId: Schema.String, token: Schema.Number },

@@ -139,8 +139,11 @@ export const parseStoredLadderRow = (meta: string): LearningLadderRow | null => 
   }
 };
 
-export const learningLadderRowKey = (row: Pick<LearningLadderRow, "roleId" | "taskTypeId">): string =>
-  row.roleId + "\u0000" + row.taskTypeId;
+export const learningLadderRowKey = (
+  row: Pick<LearningLadderRow, "roleId" | "taskTypeId">,
+  scopeId?: string,
+): string =>
+  (scopeId === undefined || scopeId.length === 0 ? "" : scopeId + "\u0000") + row.roleId + "\u0000" + row.taskTypeId;
 
 export interface LearningRollbackPayload {
   readonly reason: "operator_ui_ladder_activate" | "operator_ui_ladder_rollback";
@@ -165,12 +168,15 @@ export const learningRollbackPayload = (
 export const LearningRankingPhaseSchema = Schema.Struct({
   error: Schema.optional(Schema.String),
   phase: Schema.Literals(["idle", "confirming", "pending", "error"]),
+  scopeId: Schema.optional(Schema.String),
   token: Schema.optional(Schema.Number),
 });
 export type LearningRankingPhase = typeof LearningRankingPhaseSchema.Type;
 
 export const LearningRankingStateSchema = Schema.Struct({
+  nextToken: Schema.optional(Schema.Number),
   phases: Schema.Record(Schema.String, LearningRankingPhaseSchema),
+  scopeId: Schema.optional(Schema.String),
 });
 export type LearningRankingState = typeof LearningRankingStateSchema.Type;
 

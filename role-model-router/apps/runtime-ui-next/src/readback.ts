@@ -118,6 +118,7 @@ export const ReadbackState = Schema.Struct({
   detailId: Schema.optional(Schema.String),
   message: Schema.optional(Schema.String),
   rows: Schema.Array(ReadbackRowSchema),
+  scopeId: Schema.optional(Schema.String),
   status: Schema.Literals(["idle", "loading", "ok", "empty", "error"]),
   token: Schema.Number,
 });
@@ -650,7 +651,21 @@ const parseModelEndpoints = (body: unknown, token: number): ReadbackState => {
 const parseLearningFamily = (label: string) => (body: unknown, token: number): ReadbackState => {
   if (body === null || body === undefined) return failedReadback(label + " read failed: invalid response", token);
   const record = asRecord(body);
-  const list = Array.isArray(body) ? body : Array.isArray(record?.items) ? record.items : Array.isArray(record?.rows) ? record.rows : record?.data !== undefined ? (Array.isArray(record.data) ? record.data : [record.data]) : record === undefined ? [] : [record];
+  const rawScope = record?.scopeId;
+  const scopeId = Schema.is(Schema.String)(rawScope) && rawScope.trim().length > 0 ? rawScope.trim() : undefined;
+  const list = Array.isArray(body)
+    ? body
+    : Array.isArray(record?.records)
+      ? record.records
+      : Array.isArray(record?.items)
+        ? record.items
+        : Array.isArray(record?.rows)
+          ? record.rows
+          : record?.data !== undefined
+            ? (Array.isArray(record.data) ? record.data : [record.data])
+            : record === undefined
+              ? []
+              : [record];
   const rows = list.slice(0, 40).flatMap((value, index) => {
     const entry = asRecord(value);
     if (entry === undefined) return [row(String(index), label + " " + String(index), String(value), "readback")];
@@ -659,7 +674,8 @@ const parseLearningFamily = (label: string) => (body: unknown, token: number): R
     const valueText = String(entry.value ?? entry.status ?? entry.outcome ?? entry.summary ?? entry.origin ?? "");
     return [row(labelText, labelText, valueText, JSON.stringify(entry).slice(0, 600))];
   });
-  return rows.length === 0 ? { rows: [], status: "empty", token } : okRows(rows, token);
+  const scoped = scopeId === undefined ? undefined : { scopeId };
+  return rows.length === 0 ? { rows: [], status: "empty", token, ...scoped } : { ...okRows(rows, token), ...scoped };
 };
 const parseLearning = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);

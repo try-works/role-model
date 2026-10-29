@@ -1,0 +1,38 @@
+COMMAND: node vitest run s448 (S448 ABA token reuse RED4, before global counter)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s448-learning-scope.test.ts (9 tests | 1 failed) 82ms
+   ✓ S448 learning mutation scope authority > reads the authoritative records scopeId from the learning/records payload 8ms
+   ✓ S448 learning mutation scope authority > uses the loaded scope in the rollback payload instead of standalone-runtime-stage 20ms
+   ✓ S448 learning mutation scope authority > fails closed with an honest error when the loaded scope is missing 3ms
+   ✓ S448 learning mutation scope authority > invalidates the old confirmation at the accepted learningPacks readback and reconfirms the new scope 9ms
+   ✓ S448 learning mutation scope authority > loading or error readback clears the active scope and fails closed instead of using stale authority 3ms
+   ✓ S448 learning mutation scope authority > a pending old-scope result cannot refresh or mutate the new-scope row 2ms
+   ✓ S448 learning mutation scope authority > RED: loading/failed records cannot fall back to a stale state scope on the second click 3ms
+   ✓ S448 learning mutation scope authority > production command.effect carries the captured scope identity and exact payload to the reducer 11ms
+   × S448 learning mutation scope authority > RED: A->B->A never reuses an old pending token (late result cannot settle the new scope row) 13ms
+     → expected 1 to be greater than 1
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s448-learning-scope.test.ts > S448 learning mutation scope authority > RED: A->B->A never reuses an old pending token (late result cannot settle the new scope row)
+AssertionError: expected 1 to be greater than 1
+ ❯ test/s448-learning-scope.test.ts:185:22
+    183|     const pendingAgain = toggle(confirmA.model);
+    184|     const newToken = Number(commandsOf(pendingAgain)[0]?.args?.token);
+    185|     expect(newToken).toBeGreaterThan(oldToken);
+       |                      ^
+    186|     const late = shellUpdate(
+    187|       pendingAgain.model,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 8 passed (9)
+   Start at  07:47:45
+   Duration  14.44s (transform 6.99s, setup 0ms, collect 11.02s, tests 82ms, environment 1.44s, prepare 546ms)
+
+
