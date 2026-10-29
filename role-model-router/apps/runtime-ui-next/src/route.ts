@@ -45,6 +45,7 @@ const routeCases = {
   LearningEvidence: {},
   LearningHistory: {},
   LocalLlamaSwapModels: {},
+  LocalPolicy: {},
   SystemOperator: {},
   SystemExtensions: {},
   Models: {},
@@ -116,6 +117,7 @@ const learningPacksRouter = Route.mapTo(AppRoute.LearningPacks)(pipe(Route.liter
 const learningDecisionsRouter = Route.mapTo(AppRoute.LearningDecisions)(pipe(Route.literal("learning"), Route.slash(Route.literal("decisions"))));
 const learningEvidenceRouter = Route.mapTo(AppRoute.LearningEvidence)(pipe(Route.literal("learning"), Route.slash(Route.literal("evidence"))));
 const localLlamaSwapModelsRouter = Route.mapTo(AppRoute.LocalLlamaSwapModels)(pipe(Route.literal("local"), Route.slash(Route.literal("llama-swap")), Route.slash(Route.literal("models"))));
+const localPolicyRouter = Route.mapTo(AppRoute.LocalPolicy)(pipe(Route.literal("local"), Route.slash(Route.literal("llama-swap")), Route.slash(Route.literal("policy"))));
 const systemOperatorRouter = Route.mapTo(AppRoute.SystemOperator)(pipe(Route.literal("system"), Route.slash(Route.literal("operator"))));
 const systemExtensionsRouter = Route.mapTo(AppRoute.SystemExtensions)(pipe(Route.literal("system"), Route.slash(Route.literal("extensions"))));
 const learningHistoryRouter = Route.mapTo(AppRoute.LearningHistory)(pipe(Route.literal("learning"), Route.slash(Route.literal("history"))));
@@ -183,6 +185,7 @@ export const appRouter = Route.oneOf(
   learningEvidenceRouter,
   learningHistoryRouter,
   localLlamaSwapModelsRouter,
+  localPolicyRouter,
   systemOperatorRouter,
   systemExtensionsRouter,
   modelsRouter,

@@ -72,6 +72,13 @@ const initRoute =
           },
         };
       }
+      if (route._tag === "LocalPolicy") {
+        const token = 1;
+        return {
+          commands: [readReadback({ key: "localPolicy", token })],
+          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), localPolicy: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
+        };
+      }
       if (route._tag === "LocalLlamaSwapModels" || route._tag === "SystemExtensions") {
         const token = 1;
         const key: "localLlamaSwapModels" | "extensions" = route._tag === "LocalLlamaSwapModels" ? "localLlamaSwapModels" : "extensions";

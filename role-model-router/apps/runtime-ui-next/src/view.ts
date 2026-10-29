@@ -25,13 +25,67 @@ import type { Model } from "./model";
 import type { ObservabilityState } from "./observability";
 import { chartPointKeyAction, view as chartView } from "@role-model/ui/foldkit-chart";
 
-import { READBACK_SPECS, type ReadbacksState, renderReadbackPage } from "./readback";
+import { READBACK_SPECS, type ReadbacksState, localPolicyControls, localPolicyDraftFromReadback, localPolicyFromReadback, renderReadbackPage } from "./readback";
 import { type StudioField, type StudioState, StudioTabSchema, studioIdle } from "./studio";
 import { AppRoute } from "./route";
 
 const focusRingClass =
   "rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--rm-accent)]";
 
+const localPolicyPage = (readback: ReadbacksState["localPolicy"], h: HtmlBuilder<Message>): Html => {
+  const draft = localPolicyDraftFromReadback(readback);
+  const saved = localPolicyFromReadback(readback);
+  const loading = readback.status === "loading" && readback.rows.length === 0;
+  const error = readback.status === "error" ? readback.message ?? "Local policy read failed" : undefined;
+  const { autoUnload, maxConcurrency, ttl } = localPolicyControls(draft);
+  const numberField = (id: string, label: string, value: number, min: string, onInput: (value: number) => Message) =>
+    h.label([h.Class("mt-3 flex flex-col gap-1 text-[12px]")], [
+      h.span([], [label]),
+      h.input([
+        h.Class("w-full max-w-[420px] rounded border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1.5 text-[12px]"),
+        h.Id(id),
+        h.Type("number"),
+        h.Attribute("min", min),
+        h.Value(String(value)),
+        h.OnInput((next) => onInput(Number.parseInt(next, 10) || (min === "1" ? 1 : 0))),
+      ]),
+    ]);
+  return h.section(
+    [h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "local-policy"), h.DataAttribute("local-policy-state", readback.status)],
+    [
+      h.h2([h.Class("rm3-next-route-title")], ["Local policy"]),
+      ...(error === undefined ? [] : [h.p([h.Role("alert"), h.DataAttribute("local-policy-error", "")], [error])]),
+      ...(loading
+        ? [h.p([h.DataAttribute("local-policy-loading", "")], ["Loading policy…"])]
+        : draft === undefined
+          ? [h.p([h.DataAttribute("local-policy-unavailable", "")], ["No local policy readback is available."])]
+          : [
+              h.p([h.Class("text-[12px] text-[var(--rm-secondary)]")], ["Edit runtime behavior for local model loading and unloading."]),
+              numberField("local-policy-ttl", "TTL (seconds)", ttl, "0", (value) => Message.LocalPolicyTtlChanged({ value })),
+              numberField("local-policy-max-concurrency", "Max concurrency", maxConcurrency, "1", (value) => Message.LocalPolicyMaxConcurrencyChanged({ value })),
+              h.button([
+                h.Class("mt-3 rounded border px-3 py-1.5 text-[12px]"),
+                h.Id("autoUnload"),
+                h.AriaPressed(String(autoUnload)),
+                h.DataAttribute("local-policy-auto-unload", String(autoUnload)),
+                h.OnClick(Message.LocalPolicyAutoUnloadToggled({})),
+                h.Type("button"),
+              ], ["Auto-unload idle models: " + (autoUnload ? "on" : "off")]),
+              h.p([h.Class("mt-1 text-[11px] text-[var(--rm-muted)]")], ["Release a model after its TTL expires so inactive weights are not pinned indefinitely."]),
+              ...(readback.message === undefined || readback.status === "error" ? [] : [h.p([h.Role("alert"), h.DataAttribute("local-policy-save-error", "")], [readback.message])]),
+              h.div([h.Class("mt-3 flex flex-wrap gap-2")], [
+                h.button([h.Class("rounded border px-3 py-1.5 text-[12px]"), h.AriaDisabled(readback.status === "loading"), h.DataAttribute("local-policy-save", ""), h.OnClick(Message.LocalPolicySaveRequested({})), h.Type("button")], [readback.status === "loading" ? "Saving…" : "Save policy"]),
+                h.button([h.Class("rounded border px-3 py-1.5 text-[12px]"), h.AriaDisabled(readback.status === "loading"), h.DataAttribute("local-policy-reset", ""), h.OnClick(Message.LocalPolicyResetRequested({})), h.Type("button")], ["Reset"]),
+                h.a([h.Class("rounded border px-3 py-1.5 text-[12px]"), h.Href("/local/llama-swap/models"), h.DataAttribute("local-policy-open-models", "")], ["Open models"]),
+              ]),
+              h.h3([h.Class("mt-5 text-[13px] font-semibold")], ["Raw policy"]),
+              saved === undefined || Object.keys(saved).length === 0
+                ? h.p([h.DataAttribute("local-policy-empty", "")], ["No policy configured. Save a policy to see it here."])
+                : h.pre([h.Class("mt-2 overflow-x-auto rounded border border-[var(--rm-border)] p-3 text-[11px]"), h.DataAttribute("local-policy-raw", "")], [JSON.stringify(saved, null, 2)]),
+            ]),
+    ],
+  );
+};
 const routeTitle = (route: Model["route"]): string =>
   AppRoute.match(route, {
     Diagnostics: ({ id }) => `Diagnostics ${id} | RM3 Foldkit shell`,
@@ -61,6 +115,7 @@ const routeTitle = (route: Model["route"]): string =>
     LearningDecisions: () => "Learning decisions | RM3 Foldkit shell",
     LearningEvidence: () => "Learning evidence | RM3 Foldkit shell",
     LearningHistory: () => "Learning history | RM3 Foldkit shell",
+    LocalPolicy: () => "Local policy | RM3 Foldkit shell",
     LocalLlamaSwapModels: () => "llama-swap models | RM3 Foldkit shell",
     SystemOperator: () => "Operator | RM3 Foldkit shell",
     SystemExtensions: () => "Extensions | RM3 Foldkit shell",
@@ -935,6 +990,7 @@ const routeContent = (
     LearningPacks: () => learningFamilyPage("Learning packs", "learning-packs", READBACK_SPECS.learningPacks, readbacks.learningPacks, h),
     LearningDecisions: () => learningFamilyPage("Learning decisions", "learning-decisions", READBACK_SPECS.learningDecisions, readbacks.learningDecisions, h),
     LearningEvidence: () => learningFamilyPage("Learning evidence", "learning-evidence", READBACK_SPECS.learningEvidence, readbacks.learningEvidence, h),
+    LocalPolicy: () => localPolicyPage(readbacks.localPolicy, h),
     LocalLlamaSwapModels: () => finalFamilyPage("llama-swap models", "local-llama-swap-models", [{ label: "Models", spec: READBACK_SPECS.localLlamaSwapModels, readback: readbacks.localLlamaSwapModels }], h),
     SystemOperator: () => finalFamilyPage("Operator", "system-operator", [{ label: "Operator status", spec: READBACK_SPECS.operatorStatus, readback: readbacks.operatorStatus }, { label: "Trace roots", spec: READBACK_SPECS.operatorTraceRoots, readback: readbacks.operatorTraceRoots }], h),
     SystemExtensions: () => finalFamilyPage("Extensions", "system-extensions", [{ label: "Extensions", spec: READBACK_SPECS.extensions, readback: readbacks.extensions }], h),

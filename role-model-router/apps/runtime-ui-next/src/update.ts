@@ -19,6 +19,7 @@ import {
   noopRequestsRankingCommands,
   type LearningRankingCommands,
   noopLearningRankingCommands,
+  localPolicyCommands,
   noopEndpointAdmissionCommands,
   type ProviderAccountCommands,
   noopProviderAccountCommands,
@@ -91,6 +92,11 @@ import { failedObservability, idleObservability, loadingObservability } from "./
 import {
   READBACK_SPECS,
   emptyReadbacks,
+  localPolicyDraftFromReadback,
+  localPolicyFromReadback,
+  localPolicyReadback,
+  type LocalPolicyObject,
+  withLocalPolicyDraft,
   failedReadback,
   loadingReadback,
   type ReadbackKey,
@@ -158,6 +164,7 @@ const noopReadback = defineReadReadback({
   learningEvidence: async () => ({ body: { items: [] }, status: 200 }),
   learningHistory: async () => ({ body: { items: [] }, status: 200 }),
   localLlamaSwapModels: async () => ({ body: { items: [] }, status: 200 }),
+  localPolicy: async () => ({ body: {}, status: 200 }),
   operatorStatus: async () => ({ body: { items: [] }, status: 200 }),
   operatorTraceRoots: async () => ({ body: { items: [] }, status: 200 }),
   extensions: async () => ({ body: { items: [] }, status: 200 }),
@@ -336,9 +343,9 @@ const endpointAdmissionCompletion = (
       }
       const readbackKey = readbackKeyForRouteTag(route._tag);
       if (readbackKey !== null) {
+        const learningPacks = route._tag === "Learning";
         const token = model.readbacks[readbackKey].token + 1;
         const readbacks = { ...model.readbacks, [readbackKey]: loadingReadback(token) };
-        const learningPacks = route._tag === "Learning";
         return {
           commands: [
             readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : undefined, key: readbackKey, token }),
@@ -392,6 +399,21 @@ const endpointAdmissionCompletion = (
      * listed with its per-key token owner; multi-source pages (ModelsRoles, SystemOperator) return
      * two entries so one telemetry event invalidates all of them, never only the first.
      */
+const updateLocalPolicyDraft = (
+  model: Model,
+  change: Partial<LocalPolicyObject>,
+): UpdateReturn<Model, Message> => {
+  const state = model.readbacks.localPolicy;
+  const draft = localPolicyDraftFromReadback(state);
+  if (draft === undefined || state.status !== "ok") return { model };
+  return {
+    model: {
+      ...model,
+      readbacks: { ...model.readbacks, localPolicy: withLocalPolicyDraft({ ...state, message: undefined }, { ...draft, ...change }) },
+    },
+  };
+};
+
     const readPlanForRoute = (model: Model): ReadonlyArray<{ readonly key: ReadbackKey; readonly id?: string; readonly query?: string }> => {
       if (model.route._tag === "Learning") return [{ key: "learning" }, { key: "learningPacks" }];
       if (model.route._tag === "ModelsRoles") return [{ key: "configuredModels" }, { key: "modelEndpoints" }];
@@ -417,7 +439,9 @@ const endpointAdmissionCompletion = (
         const readbacks = { ...model.readbacks };
         const commands = plan.map((entry) => {
           const token = readbacks[entry.key].token + 1;
-          readbacks[entry.key] = loadingReadback(token);
+          readbacks[entry.key] = entry.key === "localPolicy"
+            ? { ...readbacks.localPolicy, message: undefined, status: "loading", token }
+            : loadingReadback(token);
           // The command's id/query args are typed optional, so undefined forwards as "absent".
           return readReadback({ id: entry.id, key: entry.key, query: entry.query, token });
         });
@@ -608,11 +632,15 @@ const endpointAdmissionCompletion = (
               ),
             }
           : model.learningRanking;
+        const previous = model.readbacks.localPolicy;
+        const nextReadback = key === "localPolicy" && previous.rows.length > 0
+          ? { ...previous, message, status: "ok" as const, token }
+          : failedReadback(message, token);
         return {
           model: {
             ...model,
             learningRanking,
-            readbacks: { ...model.readbacks, [key]: failedReadback(message, token) },
+            readbacks: { ...model.readbacks, [key]: nextReadback },
           },
         };
       },
@@ -828,11 +856,14 @@ const endpointAdmissionCompletion = (
           const readbackKey = readbackKeyForRouteTag(model.route._tag);
           if (readbackKey !== null) {
             const token = model.readbacks[readbackKey].token + 1;
+            const nextReadback = readbackKey === "localPolicy"
+              ? { ...model.readbacks.localPolicy, message: undefined, status: "loading" as const, token }
+              : loadingReadback(token);
             return {
               commands: [readReadback({ id: model.route._tag === "RequestDetail" || model.route._tag === "RouterDecisionDetail" ? model.route.requestId : undefined, key: readbackKey, token })],
               model: {
                 ...model,
-                readbacks: { ...model.readbacks, [readbackKey]: loadingReadback(token) },
+                readbacks: { ...model.readbacks, [readbackKey]: nextReadback },
                 refresh: {
                   ...current,
                   lastAppliedRevision: revision,
@@ -1074,15 +1105,26 @@ const endpointAdmissionCompletion = (
       DeviceAuthCancelled: () => {
         const state = model.deviceAuth ?? initialDeviceAuthState();
         // S425: clear the in-flight marker or DeviceAuthStartRequested refuses every later start.
-        // The scheduled poll timer is not cancelled (the runtime owns it); its result stays fenced by
-        // the advanced token, so a late response cannot resurrect the cancelled session.
+        // S459: interrupt the scheduled poll so cancel ends the sleep/request lifetime; the advanced
+        // token stays the fence for any result already in flight when the interrupt landed.
+        const authRequestId = state.session?.authRequestId;
         return {
+          commands:
+            authRequestId === undefined
+              ? undefined
+              : [
+                  deviceAuthCommands.poll.Interrupt(
+                    { authRequestId },
+                    () => Message.DeviceAuthPollCancelCompleted({}),
+                  ),
+                ],
           model: {
             ...model,
             deviceAuth: { ...state, error: undefined, inflight: false, session: undefined, sessions: undefined, status: "draft", token: state.token + 1 },
           },
         };
       },
+      DeviceAuthPollCancelCompleted: () => ({ model }),
       DeviceAuthActivated: ({ token }) => {
         const state = model.deviceAuth ?? initialDeviceAuthState();
         if (token !== state.token) return { model };
@@ -1205,6 +1247,46 @@ const endpointAdmissionCompletion = (
         const state = model.requestsRanking ?? initialRequestsRankingState();
         if (token !== state.token) return { model };
         return { model: { ...model, requestsRanking: { ...state, message, status: "error" } } };
+      },
+      LocalPolicyTtlChanged: ({ value }) => updateLocalPolicyDraft(model, { ttl: Math.max(0, Math.trunc(value)) }),
+      LocalPolicyMaxConcurrencyChanged: ({ value }) => updateLocalPolicyDraft(model, { maxConcurrency: Math.max(1, Math.trunc(value)) }),
+      LocalPolicyAutoUnloadToggled: () => {
+        const draft = localPolicyDraftFromReadback(model.readbacks.localPolicy);
+        return draft === undefined ? { model } : updateLocalPolicyDraft(model, { autoUnload: draft.autoUnload !== true });
+      },
+      LocalPolicyResetRequested: () => {
+        const state = model.readbacks.localPolicy;
+        const saved = localPolicyFromReadback(state);
+        return saved === undefined || state.status !== "ok" ? { model } : {
+          model: { ...model, readbacks: { ...model.readbacks, localPolicy: withLocalPolicyDraft({ ...state, message: undefined }, saved) } },
+        };
+      },
+      LocalPolicySaveRequested: () => {
+        const state = model.readbacks.localPolicy;
+        const draft = localPolicyDraftFromReadback(state);
+        if (draft === undefined || state.status !== "ok") return { model };
+        const token = state.token + 1;
+        return {
+          commands: [localPolicyCommands.save({ payload: JSON.stringify(draft), token })],
+          model: { ...model, readbacks: { ...model.readbacks, localPolicy: { ...state, message: undefined, status: "loading", token } } },
+        };
+      },
+      LocalPolicySaved: ({ policy, token }) => {
+        const state = model.readbacks.localPolicy;
+        if (token !== state.token || state.status !== "loading") return { model };
+        // SAFETY: the command serialized the PUT response body; the parser validates the record shape.
+        const merged = JSON.parse(policy) as LocalPolicyObject;
+        return {
+          model: {
+            ...model,
+            readbacks: { ...model.readbacks, localPolicy: localPolicyReadback(merged, token) },
+          },
+        };
+      },
+      LocalPolicySaveFailed: ({ message, token }) => {
+        const state = model.readbacks.localPolicy;
+        if (token !== state.token) return { model };
+        return { model: { ...model, readbacks: { ...model.readbacks, localPolicy: { ...state, message, status: state.rows.length > 0 ? "ok" : "error" } } } };
       },
       LearningLadderToggleRequested: ({ rolledBack, roleId, taskTypeId }) => {
         const state = model.learningRanking ?? initialLearningRankingState();

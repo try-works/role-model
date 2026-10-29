@@ -98,6 +98,8 @@ const CANONICAL_TARGETS = {
   "/app/local/choose": "/local/choose",
   "/app/local/endpoints": "/local/peers",
   "/app/local/llama-swap/logs": "/local/logs",
+  "/app/local/llama-swap/matrix": "/local/llama-swap/models?view=grid",
+  "/app/local/llama-swap/policy": "/local/llama-swap/policy",
   "/app/local/llama-swap/swap": "/local/swap",
   "/app/local/models": "/local/choose",
   "/app/local/peer-models": "/local/peer-models",
@@ -171,14 +173,6 @@ export const MISSING_ORIGINAL_TARGETS: readonly {
   readonly path: string;
   readonly reason: string;
 }[] = [
-  {
-    path: "/app/local/llama-swap/policy",
-    reason: "llama-swap policy page is not implemented",
-  },
-  {
-    path: "/app/local/llama-swap/matrix",
-    reason: "llama-swap compatibility matrix page is not implemented",
-  },
 ];
 
 const normalizePath = (pathname: string): string => {
@@ -249,6 +243,16 @@ export const canonicalHrefForUrl = (url: Url): string => {
   return `${url.pathname}${query}${fragment}`;
 };
 
+const FIXED_SEARCH_ORIGINAL_PATHS: ReadonlySet<string> = new Set([
+  "/app/local/matrix",
+  "/app/local/llama-swap/matrix",
+]);
+
+const fixedTargetHref = (target: string): string => {
+  const { hash, pathname, query } = splitTarget(target);
+  return pathname + (query === undefined || query.length === 0 ? "" : "?" + query) + hash;
+};
+
 const canonicalHref = (target: string, url: Url): string => {
   const { hash, pathname, query } = splitTarget(target);
   const incoming = searchAndHash(url);
@@ -266,7 +270,7 @@ const canonicalHref = (target: string, url: Url): string => {
 export const legacyRedirectForUrl = (url: Url): LegacyRedirect | undefined => {
   const target = canonicalTargetForPath(url.pathname);
   if (target === undefined) return undefined;
-  const href = canonicalHref(target, url);
+  const href = FIXED_SEARCH_ORIGINAL_PATHS.has(normalizePath(url.pathname)) ? fixedTargetHref(target) : canonicalHref(target, url);
   const parsed = Option.getOrThrow(urlFromString(`http://foldkit.local${href}`));
   return { href, originalPath: url.pathname, url: parsed };
 };

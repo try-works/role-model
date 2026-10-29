@@ -6,7 +6,7 @@ import { Url } from "@role-model-router/foldkit";
 import { mountShell } from "../src/mount";
 import { Message } from "../src/message";
 import { createReadbackClients } from "../src/readback";
-import { routeFromUrl } from "../src/route";
+import { resolveAppUrl, routeFromUrl } from "../src/route";
 import { shellModel, shellUpdate } from "./support/runtime-shell";
 
 /**
@@ -66,16 +66,11 @@ describe("S379d final F-URL families", () => {
     expect(commandNames(result).filter((name) => name === "ReplaceLegacyUrl")).toHaveLength(1);
   });
 
-  it("drops exactly the three landed families; llama-swap policy/matrix stay explicit NotFound", async () => {
+  it("drops exactly the three landed families; llama-swap policy/matrix are now implemented", async () => {
     const module = await legacy();
-    expect(module.MISSING_ORIGINAL_TARGETS).toHaveLength(2);
-    expect(module.MISSING_ORIGINAL_TARGETS.map((entry) => entry.path).sort()).toEqual([
-      "/app/local/llama-swap/matrix",
-      "/app/local/llama-swap/policy",
-    ]);
-    for (const path of ["/app/local/llama-swap/policy", "/app/local/llama-swap/matrix"]) {
-      expect(routeFromUrl(urlOf(path)), path).toMatchObject({ _tag: "NotFound" });
-    }
+    expect(module.MISSING_ORIGINAL_TARGETS).toHaveLength(0);
+    expect(routeFromUrl(urlOf("/app/local/llama-swap/policy"))).toMatchObject({ _tag: "LocalPolicy" });
+    expect(resolveAppUrl(urlOf("/app/local/llama-swap/matrix")).redirectHref).toBe("/local/llama-swap/models?view=grid");
   });
 
   it("leaves the requestId families unchanged", () => {

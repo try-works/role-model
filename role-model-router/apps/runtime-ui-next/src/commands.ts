@@ -26,10 +26,12 @@ import { type ObservabilityReader, parseObservabilitySnapshot } from "./observab
 import { ReadbackKeySchema } from "./readback";
 import {
   READBACK_SPECS,
+  type LocalPolicyObject,
   type ReadbackKey,
   type ReadbackReader,
   readbackFromResult,
 } from "./readback";
+import { READBACK_PATHS } from "./runtime-endpoints";
 
 /**
  * The diagnostics read is a Command whose execute is an Effect.tryPromise over the injected
@@ -365,6 +367,12 @@ export const defineDeviceAuthCommands = (client: DeviceAuthClient) => ({
         ),
       ),
     messages: [Message.DeviceAuthPolled, Message.DeviceAuthFailed],
+    // S459: the scheduled poll owns the sleep+request lifetime, so cancel must interrupt it by the
+    // authorization identity (the token advances every poll and is not a stable address).
+    interrupt: {
+      keyFields: ["authRequestId"],
+      toKey: ({ authRequestId }) => "device-auth-poll:" + authRequestId,
+    },
   }),
   read: Command.define("ReadDeviceAuthorizations", {
     args: { token: Schema.Number },
@@ -513,6 +521,48 @@ export const defineLearningRankingCommands = (client: LearningRankingClient) => 
   }),
 });
 export type LearningRankingCommands = ReturnType<typeof defineLearningRankingCommands>;
+export interface LocalPolicyClient {
+  readonly save: (payload: LocalPolicyObject) => Promise<LocalPolicyObject>;
+}
+export const defineLocalPolicyCommands = (client: LocalPolicyClient) => ({
+  save: Command.define("SaveLocalPolicy", {
+    args: { payload: Schema.String, token: Schema.Number },
+    execute: ({ payload, token }) => {
+      // SAFETY: payload is JSON.stringify of the local policy draft object built by the update handler.
+      const draft = JSON.parse(payload) as LocalPolicyObject;
+      return Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            try: () => client.save(draft),
+          }),
+        ),
+        (exit) => Effect.succeed(
+          Exit.isSuccess(exit)
+            ? Message.LocalPolicySaved({ policy: JSON.stringify(exit.value), token })
+            : Message.LocalPolicySaveFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("local policy save failed"))), token }),
+        ),
+      );
+    },
+    messages: [Message.LocalPolicySaved, Message.LocalPolicySaveFailed],
+  }),
+});
+export const localPolicyCommands = defineLocalPolicyCommands({
+  save: async (payload) => {
+    const response = await fetch(READBACK_PATHS.localPolicy, {
+      body: JSON.stringify(payload),
+      headers: { accept: "application/json", "content-type": "application/json" },
+      method: "PUT",
+    });
+    const body: LocalPolicyObject = await response.json();
+    if (!response.ok) {
+      const decoded = Schema.decodeUnknownOption(Schema.Struct({ error: Schema.optional(Schema.String) }))(body);
+      throw new Error(Option.isSome(decoded) && decoded.value.error !== undefined ? decoded.value.error : "local policy save failed");
+    }
+    return body;
+  },
+});
+
 const noopLearningRankingClient: LearningRankingClient = { rollbackLadder: async () => undefined };
 export const noopLearningRankingCommands = defineLearningRankingCommands(noopLearningRankingClient);
 

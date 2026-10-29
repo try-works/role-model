@@ -260,18 +260,18 @@ describe("S269 mounted legacy redirects", () => {
     expect(countPath("/api/role-model/telemetry/requests")).toBe(1);
   });
 
-  it("leaves a missing original feature target NotFound instead of redirecting to a generic page", async () => {
+  it("redirects the original policy URL to the real policy page and reads it", async () => {
     mountAt("/app/local/llama-swap/policy");
 
     const page = await waitFor(
-      () => document.querySelector("[data-route='not-found']") ?? undefined,
-      "the explicit not-found state",
+      () => document.querySelector("[data-route='local-policy'][data-local-policy-state='ok']") ?? undefined,
+      "the real local-policy page after the replace redirect and read",
     );
 
-    expect(window.location.pathname).toBe("/app/local/llama-swap/policy");
-    expect(page.textContent).toContain("Not found: /app/local/llama-swap/policy");
-    expect(document.querySelector("[data-route='learning']")).toBeNull();
-    expect(countPath("/api/role-model/operator/learning")).toBe(0);
+    expect(window.location.pathname).toBe("/local/llama-swap/policy");
+    expect(page.getAttribute("data-local-policy-state")).toBe("ok");
+    expect(countPath("/api/role-model/local/policy")).toBe(1);
+    expect(document.querySelector("[data-route='not-found']")).toBeNull();
   });
 
   it("keeps a bare canonical URL untouched and reads it once", async () => {

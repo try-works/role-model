@@ -43,6 +43,7 @@ export type ReadbackKey =
   | "learningEvidence"
   | "learningHistory"
   | "localLlamaSwapModels"
+  | "localPolicy"
   | "operatorStatus"
   | "operatorTraceRoots"
   | "extensions"
@@ -89,6 +90,7 @@ export const ReadbackKeySchema = Schema.Literals([
   "learningEvidence",
   "learningHistory",
   "localLlamaSwapModels",
+  "localPolicy",
   "operatorStatus",
   "operatorTraceRoots",
   "extensions",
@@ -157,6 +159,7 @@ export const ReadbacksState = Schema.Struct({
   learningEvidence: ReadbackState,
   learningHistory: ReadbackState,
   localLlamaSwapModels: ReadbackState,
+  localPolicy: ReadbackState,
   operatorStatus: ReadbackState,
   operatorTraceRoots: ReadbackState,
   extensions: ReadbackState,
@@ -218,6 +221,7 @@ export const emptyReadbacks = (): ReadbacksState => ({
   learningEvidence: idleReadback(),
   learningHistory: idleReadback(),
   localLlamaSwapModels: idleReadback(),
+  localPolicy: idleReadback(),
   operatorStatus: idleReadback(),
   operatorTraceRoots: idleReadback(),
   extensions: idleReadback(),
@@ -677,6 +681,69 @@ const parseLearningFamily = (label: string) => (body: unknown, token: number): R
   const scoped = scopeId === undefined ? undefined : { scopeId };
   return rows.length === 0 ? { rows: [], status: "empty", token, ...scoped } : { ...okRows(rows, token), ...scoped };
 };
+export const localPolicyReadback = (policy: LocalPolicyObject, token: number): ReadbackState =>
+  // SAFETY: LocalPolicyObject is a JSON object record; parseLocalPolicy re-validates the body.
+  parseLocalPolicy(policy as LearningPayloadJson, token);
+
+export interface LocalPolicyObject {
+  readonly autoUnload?: boolean;
+  readonly maxConcurrency?: number;
+  readonly ttl?: number;
+}
+
+export interface LocalPolicyControls {
+  readonly autoUnload: boolean;
+  readonly maxConcurrency: number;
+  readonly ttl: number;
+}
+
+export const localPolicyControls = (draft: LocalPolicyObject | undefined): LocalPolicyControls => ({
+  autoUnload: Schema.is(Schema.Boolean)(draft?.autoUnload) ? draft.autoUnload : true,
+  maxConcurrency: Schema.is(Schema.Number)(draft?.maxConcurrency) ? draft.maxConcurrency : 1,
+  ttl: Schema.is(Schema.Number)(draft?.ttl) ? draft.ttl : 300,
+});
+
+const parseLocalPolicy = (body: LearningPayloadJson, token: number): ReadbackState => {
+  const policy = asRecord(body);
+  if (policy === undefined) return failedReadback("Local policy read failed: invalid response", token);
+  const meta = JSON.stringify(policy);
+  return {
+    rows: [row("policy", "Persisted policy", "", meta), row("draft", "Draft policy", "", meta)],
+    status: "ok",
+    token,
+  };
+};
+
+export const localPolicyFromReadback = (state: ReadbackState): LocalPolicyObject | undefined => {
+  const meta = state.rows.find((entry) => entry.id === "policy")?.meta;
+  if (meta === undefined) return undefined;
+  try {
+    // SAFETY: readback meta for this row is JSON serialized by parseLocalPolicy from an object.
+    return JSON.parse(meta) as LocalPolicyObject;
+  } catch {
+    return undefined;
+  }
+};
+
+export const localPolicyDraftFromReadback = (state: ReadbackState): LocalPolicyObject | undefined => {
+  const meta = state.rows.find((entry) => entry.id === "draft")?.meta;
+  if (meta === undefined) return undefined;
+  try {
+    // SAFETY: readback meta for this row is JSON serialized by parseLocalPolicy or withLocalPolicyDraft.
+    return JSON.parse(meta) as LocalPolicyObject;
+  } catch {
+    return undefined;
+  }
+};
+
+export const withLocalPolicyDraft = (state: ReadbackState, draft: LocalPolicyObject): ReadbackState => {
+  const meta = JSON.stringify(draft);
+  return {
+    ...state,
+    rows: state.rows.map((entry) => entry.id === "draft" ? { ...entry, meta } : entry),
+  };
+};
+
 const parseLearning = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
   const knowledge = asRecord(record?.knowledge);
@@ -1023,6 +1090,14 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
   learningEvidence: { emptyText: "No learning evidence rows.", key: "learningEvidence", label: "Learning evidence", parse: parseLearningFamily("Learning evidence"), path: READBACK_PATHS.learningEvidence },
   learningHistory: { emptyText: "No learning history rows.", key: "learningHistory", label: "Learning history", parse: parseLearningFamily("Learning history"), path: READBACK_PATHS.learningHistory },
   localLlamaSwapModels: { emptyText: "No llama-swap models rows.", key: "localLlamaSwapModels", label: "llama-swap models", parse: parseLearningFamily("llama-swap models"), path: READBACK_PATHS.localLlamaSwapModels },
+  localPolicy: {
+    emptyText: "No local policy configured. Save a policy to see it here.",
+    key: "localPolicy",
+    label: "Local policy",
+    // SAFETY: local policy bodies are JSON records; parseLocalPolicy rejects non-objects.
+    parse: (body, token) => parseLocalPolicy(body as LearningPayloadJson, token),
+    path: READBACK_PATHS.localPolicy,
+  },
   operatorStatus: { emptyText: "No operator status rows.", key: "operatorStatus", label: "Operator status", parse: parseLearningFamily("Operator status"), path: READBACK_PATHS.operatorStatus },
   operatorTraceRoots: { emptyText: "No operator trace-root rows.", key: "operatorTraceRoots", label: "Operator trace roots", parse: parseLearningFamily("Operator trace roots"), path: READBACK_PATHS.operatorTraceRoots },
   extensions: { emptyText: "No extension rows.", key: "extensions", label: "Extensions", parse: parseLearningFamily("Extensions"), path: READBACK_PATHS.extensions },
@@ -1185,6 +1260,7 @@ export const createReadbackClients = (
   learningEvidence: client(READBACK_SPECS.learningEvidence),
   learningHistory: client(READBACK_SPECS.learningHistory),
   localLlamaSwapModels: client(READBACK_SPECS.localLlamaSwapModels),
+  localPolicy: client(READBACK_SPECS.localPolicy),
   operatorStatus: client(READBACK_SPECS.operatorStatus),
   operatorTraceRoots: client(READBACK_SPECS.operatorTraceRoots),
   extensions: client(READBACK_SPECS.extensions),
@@ -1285,7 +1361,9 @@ export const renderReadbackPage = (
   );
 };
 export const readbackKeyForRouteTag = (tag: string): ReadbackKey | null =>
-  tag === "LearningConfiguration"
+  tag === "LocalPolicy"
+    ? "localPolicy"
+    : tag === "LearningConfiguration"
     ? "learningConfiguration"
     : tag === "LearningPacks"
       ? "learningPacks"

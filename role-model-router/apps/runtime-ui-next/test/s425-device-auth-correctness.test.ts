@@ -456,7 +456,11 @@ describe("S442 pending view (scene + real client bridge)", () => {
       })),
       sceneExpect(role("button", { name: "Cancel" })).toExist(),
       click(role("button", { name: "Cancel" })),
-      Command.expectNone(),
+      Command.expectHas({ name: "PollDeviceAuthorization.Interrupt", args: { authRequestId: "auth-pending" } }),
+      Command.resolve(
+        commands.poll.Interrupt({ authRequestId: "auth-pending" }, () => Message.DeviceAuthPollCancelCompleted({})),
+        Message.DeviceAuthPollCancelCompleted({}),
+      ),
       sceneExpect(role("button", { name: "Cancel" })).toBeAbsent(),
       sceneExpect(role("button", { name: "Start device authorization" })).toBeEnabled(),
       click(role("button", { name: "Start device authorization" })),

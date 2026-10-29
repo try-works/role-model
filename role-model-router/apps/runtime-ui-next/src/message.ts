@@ -58,6 +58,7 @@ export const Message: MessageUnion<{
   readonly DeviceAuthFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly DeviceAuthRetryRequested: EmptyFields;
   readonly DeviceAuthCancelled: EmptyFields;
+  readonly DeviceAuthPollCancelCompleted: EmptyFields;
   readonly DeviceAuthActivated: { readonly token: typeof Schema.Number };
   readonly DiagnosticsFailed: {
     readonly id: typeof Schema.String;
@@ -84,6 +85,13 @@ export const Message: MessageUnion<{
   readonly LearningLadderToggleRequested: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly taskTypeId: typeof Schema.String };
   readonly LearningLadderUpdated: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly scopeId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LearningLadderFailed: { readonly message: typeof Schema.String; readonly roleId: typeof Schema.String; readonly scopeId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly LocalPolicyAutoUnloadToggled: EmptyFields;
+  readonly LocalPolicyMaxConcurrencyChanged: { readonly value: typeof Schema.Number };
+  readonly LocalPolicyResetRequested: EmptyFields;
+  readonly LocalPolicySaveFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly LocalPolicySaveRequested: EmptyFields;
+  readonly LocalPolicySaved: { readonly policy: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly LocalPolicyTtlChanged: { readonly value: typeof Schema.Number };
   readonly ChartPointShown: { readonly label: typeof Schema.String; readonly seriesId: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly ChartTooltipDismissed: { readonly token: typeof Schema.Number };
   readonly ChartSeriesToggled: { readonly seriesId: typeof Schema.String; readonly token: typeof Schema.Number };
@@ -177,6 +185,7 @@ export const Message: MessageUnion<{
   DeviceAuthFailed: { message: Schema.String, token: Schema.Number },
   DeviceAuthRetryRequested: {},
   DeviceAuthCancelled: {},
+  DeviceAuthPollCancelCompleted: {},
   DeviceAuthActivated: { token: Schema.Number },
   DiagnosticsFailed: { id: Schema.String, message: Schema.String },
   DiagnosticsLoaded: { id: Schema.String, snapshot: DiagnosticsSnapshot },
@@ -191,6 +200,13 @@ export const Message: MessageUnion<{
   LearningLadderToggleRequested: { rolledBack: Schema.Boolean, roleId: Schema.String, taskTypeId: Schema.String },
   LearningLadderUpdated: { rolledBack: Schema.Boolean, roleId: Schema.String, scopeId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
   LearningLadderFailed: { message: Schema.String, roleId: Schema.String, scopeId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
+  LocalPolicyAutoUnloadToggled: {},
+  LocalPolicyMaxConcurrencyChanged: { value: Schema.Number },
+  LocalPolicyResetRequested: {},
+  LocalPolicySaveFailed: { message: Schema.String, token: Schema.Number },
+  LocalPolicySaveRequested: {},
+  LocalPolicySaved: { policy: Schema.String, token: Schema.Number },
+  LocalPolicyTtlChanged: { value: Schema.Number },
   ChartPointShown: { label: Schema.String, seriesId: Schema.String, token: Schema.Number },
   ChartTooltipDismissed: { token: Schema.Number },
   ChartSeriesToggled: { seriesId: Schema.String, token: Schema.Number },

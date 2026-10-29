@@ -234,7 +234,9 @@ describe("S396a device-authorization update transitions", () => {
     const cancelled = shellUpdate(modelWith(state), Message.DeviceAuthCancelled({}));
     expect(authOf(cancelled.model).session).toBeUndefined();
     expect(authOf(cancelled.model).status).toBe("draft");
-    expect(commandNames(cancelled)).toEqual([]);
+    // S459: cancel now interrupts the scheduled poll; the advanced token still fences a late result.
+    expect(commandNames(cancelled)).toEqual(["PollDeviceAuthorization.Interrupt"]);
+    expect((cancelled.commands ?? [])[0]?.args).toEqual({ authRequestId: "auth-1" });
     const late = shellUpdate(cancelled.model, Message.DeviceAuthPolled({ session: session({ status: "connected" }), token: 1 }));
     expect(commandNames(late)).toEqual([]);
     expect(authOf(late.model).status).toBe("draft");

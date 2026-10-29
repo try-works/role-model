@@ -84,3 +84,24 @@ Lint: `anti_slop_lint` absolute targets, `effect:true`, `filesScanned=1` each �
 
 Scope honesty / concurrency hazard: another worker's S458 local-policy changes were present in the same package and shared files (`init.ts`, `legacy-redirects.ts`, `readback.ts`, `route.ts`, `runtime-endpoints.ts`, `view.ts`, plus hunks in `commands.ts`/`update.ts`/`message.ts` and an untracked `test/s458-local-policy.test.ts`). The two slices co-edited three files; the hashes above freeze the whole files at 09:40, so they include the S458 hunks too. No commit; no runtime/vendor/resourceProvider change; no provider/port use; the optional AbortSignal layer was NOT added (contract drift avoided).
 
+
+## 9. S463 repair evidence (s397 expectation + update.ts re-apply after concurrent overwrite)
+
+Blocker encountered and repaired: the first S463 run found another worker actively writing the shared `src/update.ts`; it removed the two S459 hunks and left the file mid-refactor (learning-ranking imports/type errors, no S459 symbols). Per the Lead's WAIT/GO, the writer was serialized (S458 reported settled/frozen at `update.ts` sha256 `e9f2730965a846f50900520eebceb146d0c281cb9a9ab49747e345b12707719a`, 69912 B). I verified that exact hash before touching the file, then re-applied ONLY the two S459 hunks to it: `DeviceAuthCancelled` returning `deviceAuthCommands.poll.Interrupt({authRequestId}, () => Message.DeviceAuthPollCancelCompleted({}))` when a session exists (state clear/token advance kept) and the no-op `DeviceAuthPollCancelCompleted` handler. No other file was written; no S458/S269 file was touched.
+
+s397 expectation repair: the reducer cancel test now asserts `["PollDeviceAuthorization.Interrupt"]` with args `{ authRequestId: "auth-1" }` instead of `[]`; the late-poll token-fence assertions are unchanged.
+
+Refrozen gates (settled tree):
+- `vitest run test/s397-device-auth-form.test.ts test/s425-device-auth-correctness.test.ts test/s459-auth-cancel.test.ts` → 3 files, 37 tests passed, exit 0.
+- `tsc --noEmit -p tsconfig.json` → exit 0.
+- `anti_slop_lint` absolute, `effect:true`, `filesScanned=1`: update.ts 10 pre-existing findings (elsewhere in the file), s397 0 findings; zero findings in the S463/S459 regions.
+
+Refrozen hashes (sha256):
+- src/update.ts `30cbaf209e569021f300fdcd6a6fac18f76c52d78fd57e95826a21d45a4f8576`
+- test/s397-device-auth-form.test.ts `4a0a503d5735398f3c41ec2ddefe8e0f49331ab4cdbba2d8e23e26d828131a5e`
+- src/commands.ts `2dfb7a7b38487d64f17d6d9cb1d16bb462a74881a120a10bd9127e470d5bcb5c`
+- src/message.ts `529926f2da856b127e28b962d70919c6c7a86805637af17b812ac0ea4d27e830`
+- test/s425-device-auth-correctness.test.ts `93044e1ce111b7b212f9709cbf7b2aa650dab92ec0fbb6cd9161034f68ec7f55`
+- test/s459-auth-cancel.test.ts `bdfa904769eefb6aaa600941331ac3f695687e42a18fd7962e527f6fd2b87f4f`
+
+Limitations: uncommitted shared worktree; the S458 worker's hunks are present in update.ts and its hash includes them; any further write to update.ts invalidates the freeze. No commit, no provider/ports; UI tests use the fake client + real interrupt registry; no packaged/browser proof.

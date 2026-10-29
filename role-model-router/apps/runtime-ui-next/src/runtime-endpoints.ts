@@ -25,6 +25,7 @@ export const READBACK_PATHS = {
   learningEvidence: "/api/role-model/operator/learning/measurement",
   learningHistory: "/api/role-model/operator/learning/history",
   localLlamaSwapModels: "/api/role-model/local/llama-swap/models",
+  localPolicy: "/api/role-model/local/policy",
   operatorStatus: "/api/role-model/operator/status",
   operatorTraceRoots: "/api/role-model/operator/trace-roots",
   extensions: "/api/role-model/extensions",

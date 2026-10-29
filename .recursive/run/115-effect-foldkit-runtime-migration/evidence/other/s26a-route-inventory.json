@@ -440,10 +440,13 @@
         "/app/local/llama-swap/policy"
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/local-policy.tsx",
-      "status": "absent",
-      "hostEndpoints": [],
-      "requiresHostEndpoint": false,
-      "absenceReason": "Destructive configuration write; no confirmation flow in this slice."
+      "status": "verified",
+      "hostEndpoints": [
+        "/api/role-model/local/policy"
+      ],
+      "requiresHostEndpoint": true,
+      "proofTest": "role-model-router/apps/runtime-ui-next/test/s458-local-policy.test.ts",
+      "proofTestName": "parses /local/llama-swap/policy as the LocalPolicy route"
     },
     {
       "category": "read",
