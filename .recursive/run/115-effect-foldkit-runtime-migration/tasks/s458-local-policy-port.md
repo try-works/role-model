@@ -1,6 +1,6 @@
 # S458 — original local-policy + matrix redirect port
 
-Status: pending
+Status: verified-bounded (independent S466 final PASS; commit 835efac8; whole R13-R18 remains open)
 TDD Mode: strict
 Public patch basis b9841f94; private3d03ad78 unchanged; original paired00-worktree authority unchanged.
 

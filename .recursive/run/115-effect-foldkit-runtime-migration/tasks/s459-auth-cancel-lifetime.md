@@ -1,6 +1,6 @@
 # S459 — device-auth poll cancellation lifetime (DESIGN-ONLY first)
 
-Status: design complete (read-only) — awaiting Lead approval of implementation write scope
+Status: verified-bounded (independent S463 final PASS; commit 835efac8; AbortSignal/broad lifetime remains open)
 TDD Mode: not-applicable until design freeze (read-only)
 Public patch basis b9841f94; private3d03ad78.
 
