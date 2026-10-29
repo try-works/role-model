@@ -3,7 +3,9 @@ import { UrlRequest } from "@role-model-router/foldkit/navigation";
 import type { Return as UpdateReturn } from "@role-model-router/foldkit/update";
 import { type Url, toString as urlToString } from "@role-model-router/foldkit/url";
 import { Effect, Schema } from "effect";
+import { type Message as DialogMessage } from "@role-model-router/foldkit-ui/dialog";
 import { type RequestsMetricListboxModel, initRequestsMetricListbox, initRequestsTargetListbox, requestsMetricListbox } from "./ui/listbox";
+import { deviceAuthModalKeyFor, openDeviceAuthDialog, updateDeviceAuthDialog } from "./ui/dialog";
 
 import { DEFAULT_OVERVIEW_FILTERS, overviewQuery, type OverviewFilters } from "./overview-filters";
 import { parseRuntimeConfigRecord, parseRuntimeConfigText, runtimeConfigDiff, runtimeConfigText } from "./runtime-config";
@@ -84,6 +86,7 @@ import {
   deviceAuthStartPlan,
   initialDeviceAuthState,
   mergeDeviceAuthPoll,
+  type DeviceAuthSession,
   type DeviceAuthState,
 } from "./device-auth";
 import { canonicalHrefForUrl, replaceLegacyUrlCommand } from "./legacy-redirects";
@@ -290,6 +293,17 @@ const updateRequestsTargetListbox = (
       Message.GotRequestsRankingTargetListboxMessage({ message: childMessage }),
     ),
     model: nextModel,
+  };
+};
+
+const withDeviceAuthDialog = (model: Model, session: DeviceAuthSession): Model => {
+  if (session.status !== "pending" || session.userCode === undefined) return model;
+  const key = deviceAuthModalKeyFor(session);
+  if (model.deviceAuthModalKey === key) return model;
+  return {
+    ...model,
+    deviceAuthDialog: openDeviceAuthDialog(model.deviceAuthDialog),
+    deviceAuthModalKey: key,
   };
 };
 
@@ -1113,7 +1127,10 @@ const updateLocalPolicyDraft = (
         const delayMs = deviceAuthPollDelayMs(session);
         return {
           commands: [deviceAuthCommands.poll({ authRequestId: session.authRequestId, delayMs, intervalMs: delayMs, token: nextToken })],
-          model: { ...model, deviceAuth: { ...state, error: undefined, inflight: true, session, status: "pending", token: nextToken } },
+          model: withDeviceAuthDialog(
+            { ...model, deviceAuth: { ...state, error: undefined, inflight: true, session, status: "pending", token: nextToken } },
+            session,
+          ),
         };
       },
       DeviceAuthPolled: ({ session, token }) => {
@@ -1135,7 +1152,10 @@ const updateLocalPolicyDraft = (
           const delayMs = deviceAuthPollDelayMs(nextSession);
           return {
             commands: [deviceAuthCommands.poll({ authRequestId: nextSession.authRequestId, delayMs, intervalMs: delayMs, token: nextToken })],
-            model: { ...model, deviceAuth: { ...state, error: undefined, inflight: true, session: nextSession, status: "pending", token: nextToken } },
+            model: withDeviceAuthDialog(
+              { ...model, deviceAuth: { ...state, error: undefined, inflight: true, session: nextSession, status: "pending", token: nextToken } },
+              nextSession,
+            ),
           };
         }
         // S425: "expired"/"failed" are terminal host statuses. Surface the host reason instead of a
@@ -1172,6 +1192,19 @@ const updateLocalPolicyDraft = (
             }),
           ],
           model: { ...model, deviceAuth: { ...state, error: undefined, inflight: true, status: "pending", token: nextToken } },
+        };
+      },
+      GotDeviceAuthDialogMessage: ({ message }) => {
+        const result = updateDeviceAuthDialog(
+          model.deviceAuthDialog,
+          // SAFETY: this tag is only produced by the dialog submodel view/commands.
+          message as DialogMessage,
+        );
+        return {
+          commands: Command.mapMessages(result.commands, (childMessage) =>
+            Message.GotDeviceAuthDialogMessage({ message: childMessage }),
+          ),
+          model: { ...model, deviceAuthDialog: result.model },
         };
       },
       DeviceAuthCancelled: () => {

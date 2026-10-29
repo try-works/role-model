@@ -18,6 +18,8 @@ const modelFields = {
   clicks: Schema.Number,
   controls: ControlsState,
   deviceAuth: Schema.optional(DeviceAuthStateSchema),
+  deviceAuthDialog: Schema.optional(Schema.Any),
+  deviceAuthModalKey: Schema.optional(Schema.String),
   chartInteraction: Schema.optional(ChartInteractionStateSchema),
   diagnostics: DiagnosticsSnapshot,
   requestsRanking: Schema.optional(RequestsRankingStateSchema),

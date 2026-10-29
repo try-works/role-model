@@ -937,6 +937,7 @@ const routeContent = (
   overviewFilters: OverviewFilters | undefined,
   runtimeConfigEditor: Model["runtimeConfigEditor"],
   deviceAuth: DeviceAuthState,
+  deviceAuthDialog: Model["deviceAuthDialog"],
   providerAccount: ProviderAccountState,
   endpointAdmission: EndpointAdmissionState,
   chartInteraction: ChartInteractionState | undefined,
@@ -1018,7 +1019,7 @@ const routeContent = (
     Providers: () =>
       h.section([], [
         renderControlPage(CONTROL_SPECS.providers, controls.providers, h),
-        renderDeviceAuthorizationForm(deviceAuth, h),
+        renderDeviceAuthorizationForm(deviceAuth, deviceAuthDialog, h),
         renderProviderAccountForm(providerAccount, h),
       ]),
     Endpoints: () =>
@@ -1294,6 +1295,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                 model.overviewFilters ?? DEFAULT_OVERVIEW_FILTERS,
                 model.runtimeConfigEditor,
     model.deviceAuth ?? initialDeviceAuthState(),
+    model.deviceAuthDialog,
     model.providerAccount ?? initialProviderAccountState(),
     model.endpointAdmission ?? initialEndpointAdmissionState(),
     model.chartInteraction,

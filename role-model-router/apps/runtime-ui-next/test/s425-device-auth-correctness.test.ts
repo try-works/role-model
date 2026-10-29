@@ -8,6 +8,7 @@ import {
   given,
   inside,
   label,
+  Mount,
   role,
   scene,
   selector,
@@ -17,6 +18,7 @@ import {
   type SceneSimulation,
 } from "@role-model-router/foldkit/scene";
 import { renderToString } from "@role-model-router/foldkit/experimental/server";
+import * as Dialog from "@role-model-router/foldkit-ui/dialog";
 
 import { defineDeviceAuthCommands } from "../src/commands";
 import {
@@ -320,7 +322,12 @@ describe("S442 pending view (scene + real client bridge)", () => {
    * the labels Provider / Provider kind / Variant / Model. Scope the typing and Add model click to the
    * device-authorization section so no locator can resolve into the provider-account form.
    */
-  const draftSteps = () => [
+  const acknowledgeAcquireResources = Mount.resolve(
+  Dialog.AcquireResources,
+  Dialog.Message.SucceededAcquireResources(),
+);
+
+const draftSteps = () => [
     inside(
       selector('[data-route="device-authorization"]'),
       type(label("Provider"), "openai"),
@@ -355,6 +362,7 @@ describe("S442 pending view (scene + real client bridge)", () => {
       captureCommand("ReadDeviceAuthorizations", readArgs),
       Command.expectHas({ name: "ReadDeviceAuthorizations", args: readArgs }),
       Command.resolve(commands.read, readMessage),
+      acknowledgeAcquireResources,
       sceneExpect(selector("[data-device-auth-user-code]")).toContainText("ABCD-EFGH"),
       sceneExpect(role("link", { name: "Open verification page" })).toHaveAttr("href", SAFE_URL),
       sceneExpect(role("link", { name: "Open verification page" })).toHaveAttr("target", "_blank"),
@@ -393,6 +401,7 @@ describe("S442 pending view (scene + real client bridge)", () => {
       captureCommand("ReadDeviceAuthorizations", readArgs),
       Command.expectHas({ name: "ReadDeviceAuthorizations", args: readArgs }),
       Command.resolve(commands.read, readMessage),
+      acknowledgeAcquireResources,
       sceneExpect(selector("[data-device-auth-user-code]")).toContainText("ABCD-EFGH"),
       captureCommand("PollDeviceAuthorization", restorePollArgs),
       Command.expectHas({ name: "PollDeviceAuthorization", args: restorePollArgs }),
@@ -422,6 +431,7 @@ describe("S442 pending view (scene + real client bridge)", () => {
       click(role("button", { name: "Start device authorization" })),
       captureCommand("ReadDeviceAuthorizations", readArgs),
       Command.resolve(commands.read, readMessage),
+      acknowledgeAcquireResources,
       sceneExpect(text("Verification link unavailable.")).toExist(),
       sceneExpect(role("link", { name: "Open verification page" })).toBeAbsent(),
       sceneExpect(selector('a[href^="javascript:"]')).toBeAbsent(),
@@ -454,6 +464,7 @@ describe("S442 pending view (scene + real client bridge)", () => {
         },
         route: { _tag: "Providers" },
       })),
+      acknowledgeAcquireResources,
       sceneExpect(role("button", { name: "Cancel" })).toExist(),
       click(role("button", { name: "Cancel" })),
       Command.expectHas({ name: "PollDeviceAuthorization.Interrupt", args: { authRequestId: "auth-pending" } }),
@@ -461,6 +472,7 @@ describe("S442 pending view (scene + real client bridge)", () => {
         commands.poll.Interrupt({ authRequestId: "auth-pending" }, () => Message.DeviceAuthPollCancelCompleted({})),
         Message.DeviceAuthPollCancelCompleted({}),
       ),
+      Mount.expectEnded(Dialog.AcquireResources),
       sceneExpect(role("button", { name: "Cancel" })).toBeAbsent(),
       sceneExpect(role("button", { name: "Start device authorization" })).toBeEnabled(),
       click(role("button", { name: "Start device authorization" })),

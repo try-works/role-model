@@ -49,6 +49,7 @@ export const Message: MessageUnion<{
     readonly token: typeof Schema.Number;
   };
   readonly DeviceAuthFieldChanged: { readonly field: typeof DeviceAuthFieldSchema; readonly value: typeof Schema.String };
+  readonly GotDeviceAuthDialogMessage: { readonly message: typeof Schema.Unknown };
   readonly DeviceAuthModelAdded: EmptyFields;
   readonly DeviceAuthModelRemoved: { readonly modelId: typeof Schema.String };
   readonly DeviceAuthStartRequested: EmptyFields;
@@ -178,6 +179,7 @@ export const Message: MessageUnion<{
   ControlFailed: { key: ControlKeySchema, message: Schema.String, token: Schema.Number },
   ControlLoaded: { key: ControlKeySchema, snapshot: ControlState, token: Schema.Number },
   DeviceAuthFieldChanged: { field: DeviceAuthFieldSchema, value: Schema.String },
+GotDeviceAuthDialogMessage: { message: Schema.Unknown },
   DeviceAuthModelAdded: {},
   DeviceAuthModelRemoved: { modelId: Schema.String },
   DeviceAuthStartRequested: {},

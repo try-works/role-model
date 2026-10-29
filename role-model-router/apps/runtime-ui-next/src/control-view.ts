@@ -1,3 +1,4 @@
+import { deviceAuthDialogView, type DeviceAuthDialogModel } from "./ui/dialog";
 import {
   deviceAuthVerificationUrl,
   type DeviceAuthField,
@@ -210,7 +211,11 @@ const renderDeviceAuthSession = (session: DeviceAuthSession, h: HtmlBuilder<Mess
   );
 };
 
-export const renderDeviceAuthorizationForm = (state: DeviceAuthState, h: HtmlBuilder<Message>): Html => {
+export const renderDeviceAuthorizationForm = (
+  state: DeviceAuthState,
+  dialogModel: DeviceAuthDialogModel | undefined,
+  h: HtmlBuilder<Message>,
+): Html => {
   const textField = (label: string, field: DeviceAuthField, value: string) =>
     h.label(
       [h.Class("mt-3 flex flex-col gap-1 text-[12px]")],
@@ -225,7 +230,7 @@ export const renderDeviceAuthorizationForm = (state: DeviceAuthState, h: HtmlBui
       ],
     );
   const busy = state.status === "starting" || state.status === "pending";
-  return h.section(
+  const form = h.section(
     [h.Class("rm3-next-route mt-6"), h.DataAttribute("route", "device-authorization"), h.DataAttribute("device-auth-state", state.status)],
     [
       h.h3([h.Class("text-[14px] font-semibold")], ["Provider connection"]),
@@ -263,14 +268,6 @@ export const renderDeviceAuthorizationForm = (state: DeviceAuthState, h: HtmlBui
         ],
         ["Start device authorization"],
       ),
-      ...(busy
-        ? [
-            h.button(
-              [h.Class("ml-2 mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] px-3 py-1.5 text-[12px]"), h.OnClick(Message.DeviceAuthCancelled({})), h.Type("button")],
-              ["Cancel"],
-            ),
-          ]
-        : []),
       ...(state.status === "error"
         ? [
             h.button(
@@ -287,9 +284,34 @@ export const renderDeviceAuthorizationForm = (state: DeviceAuthState, h: HtmlBui
       ...(state.error === undefined
         ? []
         : [h.p([h.Role("alert"), h.DataAttribute("device-auth-error", "")], [state.error])]),
-      ...(state.session === undefined ? [] : [renderDeviceAuthSession(state.session, h)]),
     ],
   );
+  const session = state.session;
+  return h.div([], [
+    form,
+    ...(session === undefined
+      ? []
+      : [
+          deviceAuthDialogView(
+            {
+              model: dialogModel,
+              content: h.div([], [
+                renderDeviceAuthSession(session, h),
+                ...(busy
+                  ? [
+                      h.button(
+                        [h.Class("ml-2 mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] px-3 py-1.5 text-[12px]"), h.OnClick(Message.DeviceAuthCancelled({})), h.Type("button")],
+                        ["Cancel"],
+                      ),
+                    ]
+                  : []),
+              ]),
+              toParentMessage: (message) => Message.GotDeviceAuthDialogMessage({ message }),
+            },
+            h,
+          ),
+        ]),
+  ]);
 };
 export const renderControlPage = (
   spec: ControlSpec,
