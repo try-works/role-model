@@ -1,0 +1,19 @@
+S533 learning/models families structure gate
+RED: s533-red.log (9/9 structural assertions fail against HEAD view.ts)
+TSC=0
+SUITES: 77/77 (10 files) incl s533 9/9
+S247: 3/3
+LINT: learning/models routes and test clean; view added-line clean
+AUDIT nine routes: 9/9 PASS in rendered Chrome
+STRUCTURE GATE: PASS - each page renders thead+tbody (honest empty row) and inline SVG chart; s533 asserts SVG>=1 and table>=1
+DATA-DEPENDENT TEXT GATE (:51970, empty/fixture local data; reference lengths from gaps-a):
+/learning 658 vs 797 = 82.6% FAIL
+/learning/configuration 534 vs 569 = 93.8% PASS
+/learning/decisions 525 vs 639 = 82.2% FAIL
+/learning/evidence 598 vs 1375 = 43.5% FAIL
+/learning/history 414 vs 503 = 82.3% FAIL
+/learning/packs 558 vs 887 = 62.9% FAIL
+/models 1192 vs 1570 = 75.9% FAIL
+/models/roles 734 vs 4689 = 15.6% FAIL
+/system/benchmark 8526 vs 1428 = 597.1% PASS
+No fabricated rows; renderers scale with data.

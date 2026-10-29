@@ -1,0 +1,183 @@
+S533 strict RED: learning/models structural test against pre-S533 view.ts (HEAD)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s533-learning-models.test.ts (9 tests | 9 failed) 1170ms
+   × S533 learning/models structural parity > learning overview 279ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Learning overview'
+   × S533 learning/models structural parity > learning configuration 170ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Operator token'
+   × S533 learning/models structural parity > learning decisions 104ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Decision receipts'
+   × S533 learning/models structural parity > learning evidence 107ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Cohort evidence'
+   × S533 learning/models structural parity > learning history 198ms
+     → expected 0 to be greater than or equal to 1
+   × S533 learning/models structural parity > learning packs 74ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Learned packs'
+   × S533 learning/models structural parity > models inventory 82ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Model inventory'
+   × S533 learning/models structural parity > models roles 69ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Create role'
+   × S533 learning/models structural parity > models benchmark 82ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Capability benchmark'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s533-learning-models.test.ts > S533 learning/models structural parity > learning overview
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Learning overview'
+
+Expected: "Learning overview"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeLearningToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesKnowledge worker, replay jobs and evaluation jobs. Empty means the capability is available but no work exists.Runtime readbackKnowledge workerWaiting for the knowledge worker read.Refresh follows the shell's single runtime subscription; this page does not open its own.Endpoint ladder rankingNo endpoint ladder ranking rows reported.Runtime readbackReplay jobsWaiting for the replay jobs read.Refresh follows the shell's single runtime subscription; this page does not open its own.Runtime readbackEvaluation jobsWaiting for the evaluation jobs read.Refresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ check test/s533-learning-models.test.ts:23:44
+     21|   const container = await renderContainer(tag);
+     22|   const text = container.textContent ?? "";
+     23|   for (const label of labels) expect(text).toContain(label);
+       |                                            ^
+     24|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+     25|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+ ❯ test/s533-learning-models.test.ts:30:41
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  test/s533-learning-models.test.ts > S533 learning/models structural parity > learning configuration
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Operator token'
+
+Expected: "Operator token"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeLearning configurationToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesLearning configurationRuntime readbackLearning configurationWaiting for the learning configuration read.Refresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ check test/s533-learning-models.test.ts:23:44
+     21|   const container = await renderContainer(tag);
+     22|   const text = container.textContent ?? "";
+     23|   for (const label of labels) expect(text).toContain(label);
+       |                                            ^
+     24|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+     25|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+ ❯ test/s533-learning-models.test.ts:31:46
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  test/s533-learning-models.test.ts > S533 learning/models structural parity > learning decisions
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Decision receipts'
+
+Expected: "Decision receipts"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeLearning decisionsToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesLearning decisionsRuntime readbackLearning decisionsWaiting for the learning decisions read.Refresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ check test/s533-learning-models.test.ts:23:44
+     21|   const container = await renderContainer(tag);
+     22|   const text = container.textContent ?? "";
+     23|   for (const label of labels) expect(text).toContain(label);
+       |                                            ^
+     24|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+     25|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+ ❯ test/s533-learning-models.test.ts:32:42
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  test/s533-learning-models.test.ts > S533 learning/models structural parity > learning evidence
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Cohort evidence'
+
+Expected: "Cohort evidence"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeLearning evidenceToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesLearning evidenceRuntime readbackLearning evidenceWaiting for the learning evidence read.Refresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ check test/s533-learning-models.test.ts:23:44
+     21|   const container = await renderContainer(tag);
+     22|   const text = container.textContent ?? "";
+     23|   for (const label of labels) expect(text).toContain(label);
+       |                                            ^
+     24|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+     25|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+ ❯ test/s533-learning-models.test.ts:33:41
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  test/s533-learning-models.test.ts > S533 learning/models structural parity > learning history
+AssertionError: expected 0 to be greater than or equal to 1
+ ❯ check test/s533-learning-models.test.ts:24:52
+     22|   const text = container.textContent ?? "";
+     23|   for (const label of labels) expect(text).toContain(label);
+     24|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+       |                                                    ^
+     25|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+     26|   return text;
+ ❯ test/s533-learning-models.test.ts:34:40
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  test/s533-learning-models.test.ts > S533 learning/models structural parity > learning packs
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Learned packs'
+
+Expected: "Learned packs"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeLearning packsToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesLearning packsRuntime readbackLearning packsWaiting for the learning packs read.Refresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ check test/s533-learning-models.test.ts:23:44
+     21|   const container = await renderContainer(tag);
+     22|   const text = container.textContent ?? "";
+     23|   for (const label of labels) expect(text).toContain(label);
+       |                                            ^
+     24|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+     25|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+ ❯ test/s533-learning-models.test.ts:35:38
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  test/s533-learning-models.test.ts > S533 learning/models structural parity > models inventory
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Model inventory'
+
+Expected: "Model inventory"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeModelsToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesConfigured modelsNo configured models."
+
+ ❯ check test/s533-learning-models.test.ts:23:44
+     21|   const container = await renderContainer(tag);
+     22|   const text = container.textContent ?? "";
+     23|   for (const label of labels) expect(text).toContain(label);
+       |                                            ^
+     24|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+     25|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+ ❯ test/s533-learning-models.test.ts:36:40
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  test/s533-learning-models.test.ts > S533 learning/models structural parity > models roles
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Create role'
+
+Expected: "Create role"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeModel rolesToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesModel rolesLoading model roles…"
+
+ ❯ check test/s533-learning-models.test.ts:23:44
+     21|   const container = await renderContainer(tag);
+     22|   const text = container.textContent ?? "";
+     23|   for (const label of labels) expect(text).toContain(label);
+       |                                            ^
+     24|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+     25|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+ ❯ test/s533-learning-models.test.ts:37:36
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  test/s533-learning-models.test.ts > S533 learning/models structural parity > models benchmark
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Capability benchmark'
+
+Expected: "Capability benchmark"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeBenchmarkToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime readbackBenchmark suiteWaiting for the benchmark suite read.Refresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ check test/s533-learning-models.test.ts:23:44
+     21|   const container = await renderContainer(tag);
+     22|   const text = container.textContent ?? "";
+     23|   for (const label of labels) expect(text).toContain(label);
+       |                                            ^
+     24|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+     25|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+ ❯ test/s533-learning-models.test.ts:38:40
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  9 failed (9)
+   Start at  04:18:59
+   Duration  22.44s (transform 10.70s, setup 0ms, collect 17.16s, tests 1.17s, environment 1.72s, prepare 650ms)
+
+
