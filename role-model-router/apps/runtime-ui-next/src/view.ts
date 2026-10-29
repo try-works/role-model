@@ -926,36 +926,62 @@ const runtimeConfigPage = (state: Model["runtimeConfigEditor"], configReadback: 
   ]);
 };
 
-const routeContent = (
-  route: Model["route"],
-  diagnostics: DiagnosticsSnapshot,
-  observability: ObservabilityState,
-  readbacks: ReadbacksState,
-  controls: ControlsState,
-  overviewWindowMs: number,
-  studio: StudioState,
-  overviewFilters: OverviewFilters | undefined,
-  runtimeConfigEditor: Model["runtimeConfigEditor"],
-  deviceAuth: DeviceAuthState,
-  deviceAuthDialog: Model["deviceAuthDialog"],
-  providerAccount: ProviderAccountState,
-  endpointAdmission: EndpointAdmissionState,
-  chartInteraction: ChartInteractionState | undefined,
-  learningRanking: LearningRankingState | undefined,
-  requestsRanking: RequestsRankingState | undefined,
-  requestsRankingMetricListbox: Model["requestsRankingMetricListbox"],
-  requestsRankingTargetListbox: Model["requestsRankingTargetListbox"],
-  h: HtmlBuilder<Message>,
-) =>
-  AppRoute.match(route, {
-    Diagnostics: ({ id }) =>
-      h.section(
+interface RouteViewContext {
+  readonly route: Model["route"];
+  readonly diagnostics: DiagnosticsSnapshot;
+  readonly observability: ObservabilityState;
+  readonly readbacks: ReadbacksState;
+  readonly controls: ControlsState;
+  readonly overviewWindowMs: number;
+  readonly studio: StudioState;
+  readonly overviewFilters: OverviewFilters | undefined;
+  readonly runtimeConfigEditor: Model["runtimeConfigEditor"];
+  readonly deviceAuth: DeviceAuthState;
+  readonly deviceAuthDialog: Model["deviceAuthDialog"];
+  readonly providerAccount: ProviderAccountState;
+  readonly endpointAdmission: EndpointAdmissionState;
+  readonly chartInteraction: ChartInteractionState | undefined;
+  readonly learningRanking: LearningRankingState | undefined;
+  readonly requestsRanking: RequestsRankingState | undefined;
+  readonly requestsRankingMetricListbox: Model["requestsRankingMetricListbox"];
+  readonly requestsRankingTargetListbox: Model["requestsRankingTargetListbox"];
+  readonly h: HtmlBuilder<Message>;
+}
+
+const routeContent = (ctx: RouteViewContext): Html => {
+  const {
+    route,
+    diagnostics,
+    observability,
+    readbacks,
+    controls,
+    overviewWindowMs,
+    studio,
+    overviewFilters,
+    runtimeConfigEditor,
+    deviceAuth,
+    deviceAuthDialog,
+    providerAccount,
+    endpointAdmission,
+    chartInteraction,
+    learningRanking,
+    requestsRanking,
+    requestsRankingMetricListbox,
+    requestsRankingTargetListbox,
+    h,
+  } = ctx;
+  const routeRegistry = {
+    Diagnostics: (route) => {
+      // SAFETY: registry dispatch uses this route's own tag, so the Diagnostics payload is present.
+      const { id } = route as Extract<AppRoute, { readonly _tag: "Diagnostics" }>;
+      return h.section(
         [h.Class("rm3-next-route"), h.DataAttribute("route", "diagnostics")],
         [
-          h.h2([h.Class("rm3-next-route-title")], [`Diagnostics: ${id}`]),
+          h.h2([h.Class("rm3-next-route-title")], ["Diagnostics: " + id]),
           diagnosticsPage(diagnostics, h),
         ],
-      ),
+      );
+    },
     Observability: () => observabilityPage(observability, h),
     StoreReceipts: () =>
       renderReadbackPage(READBACK_SPECS.storeReceipts, readbacks.storeReceipts, h),
@@ -1030,8 +1056,10 @@ const routeContent = (
     ControlController: () =>
       renderControlPage(CONTROL_SPECS.controlController, controls.controlController, h, controls.endpoints.rows.map((row) => row.id)),
     Index: () => overviewPage(readbacks.overviewMetrics, readbacks.routerCandidates, overviewWindowMs, h, overviewFilters, chartInteraction),
-    NotFound: ({ path }) =>
-      h.section(
+    NotFound: (route) => {
+      // SAFETY: registry dispatch uses this route's own tag, so the NotFound path is present.
+      const { path } = route as Extract<AppRoute, { readonly _tag: "NotFound" }>;
+      return h.section(
         [
           h.Class("rm3-next-route mt-4"),
           h.DataAttribute("route", "not-found"),
@@ -1062,8 +1090,11 @@ const routeContent = (
             ["Back to overview"],
           ),
         ],
-      ),
-  });
+      );
+    },
+  } satisfies Record<AppRoute["_tag"], (route: AppRoute) => Html>;
+  return routeRegistry[route._tag](route);
+};
 
 const railRow = (label: string, value: string | null, reason: string, h: HtmlBuilder<Message>) =>
   h.div(
@@ -1284,27 +1315,27 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                     ),
                   ]
                 : []),
-              routeContent(
-                model.route,
-                model.diagnostics,
-                model.observability,
-                model.readbacks,
-                model.controls,
-                model.overviewWindowMs ?? 86400000,
-                model.studio ?? studioIdle(),
-                model.overviewFilters ?? DEFAULT_OVERVIEW_FILTERS,
-                model.runtimeConfigEditor,
-    model.deviceAuth ?? initialDeviceAuthState(),
-    model.deviceAuthDialog,
-    model.providerAccount ?? initialProviderAccountState(),
-    model.endpointAdmission ?? initialEndpointAdmissionState(),
-    model.chartInteraction,
-    model.learningRanking,
-    model.requestsRanking,
-    model.requestsRankingMetricListbox,
-    model.requestsRankingTargetListbox,
+              routeContent({
+                route: model.route,
+                diagnostics: model.diagnostics,
+                observability: model.observability,
+                readbacks: model.readbacks,
+                controls: model.controls,
+                overviewWindowMs: model.overviewWindowMs ?? 86400000,
+                studio: model.studio ?? studioIdle(),
+                overviewFilters: model.overviewFilters ?? DEFAULT_OVERVIEW_FILTERS,
+                runtimeConfigEditor: model.runtimeConfigEditor,
+                deviceAuth: model.deviceAuth ?? initialDeviceAuthState(),
+                deviceAuthDialog: model.deviceAuthDialog,
+                providerAccount: model.providerAccount ?? initialProviderAccountState(),
+                endpointAdmission: model.endpointAdmission ?? initialEndpointAdmissionState(),
+                chartInteraction: model.chartInteraction,
+                learningRanking: model.learningRanking,
+                requestsRanking: model.requestsRanking,
+                requestsRankingMetricListbox: model.requestsRankingMetricListbox,
+                requestsRankingTargetListbox: model.requestsRankingTargetListbox,
                 h,
-              ),
+              }),
             ],
           ),
         ],
