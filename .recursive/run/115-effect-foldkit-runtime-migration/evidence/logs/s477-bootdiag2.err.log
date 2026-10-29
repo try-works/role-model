@@ -1,0 +1,24 @@
+(node:19180) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `role-model-dev --trace-warnings ...` to show where the warning was created)
+[bootdiag] cli:before-createPackagedProductionRuntime
+[bootdiag] trackB:before-start
+[track-b-sidecar] (node:22128) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[track-b-sidecar] (Use `node --trace-warnings ...` to show where the warning was created)
+[bootdiag] sidecar:ready-line-parsed:http://127.0.0.1:63521
+[bootdiag] trackB:after-start
+[bootdiag] trackB:before-createBackend
+[run101] replay queue plane:queue queue:replay.dispatch worker:running
+[run101] evaluation queue plane:queue worker:running
+[bootdiag] trackB:after-createBackend
+[bootdiag] cli:after-createPackagedProductionRuntime
+[bootdiag] cli:before-awaitCliExtensionRuntime
+[bootdiag] beforeReady:start
+[bootdiag] beforeReady:qa-loop-start
+[bootdiag] beforeReady:retryContributionAggregates-before
+[bootdiag] beforeReady:retryContributionAggregates-after
+[bootdiag] beforeReady:advisory-refresh-before
+[bootdiag] beforeReady:advisory-refresh-after
+[bootdiag] cli:after-awaitCliExtensionRuntime
+[bootdiag] cli:packaged-branch-end
+[bootdiag] cli:setup-end
+[run105] durable task advisory refresh: scope=standalone-runtime-dev pairs=0 stage=S4
