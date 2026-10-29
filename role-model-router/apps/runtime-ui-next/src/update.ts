@@ -3,6 +3,7 @@ import { UrlRequest } from "@role-model-router/foldkit/navigation";
 import type { Return as UpdateReturn } from "@role-model-router/foldkit/update";
 import { type Url, toString as urlToString } from "@role-model-router/foldkit/url";
 import { Effect, Schema } from "effect";
+import { type RequestsMetricListboxModel, initRequestsMetricListbox, requestsMetricListbox } from "./ui/listbox";
 
 import { DEFAULT_OVERVIEW_FILTERS, overviewQuery, type OverviewFilters } from "./overview-filters";
 import { parseRuntimeConfigRecord, parseRuntimeConfigText, runtimeConfigDiff, runtimeConfigText } from "./runtime-config";
@@ -221,6 +222,53 @@ export const createUpdate =
     learningRankingCommands: LearningRankingCommands = noopLearningRankingCommands,
     requestsRankingCommands: RequestsRankingCommands = noopRequestsRankingCommands,
   ) => {
+
+
+const updateRequestsRankingField = (
+  model: Model,
+  field: "metric" | "rankingTarget",
+  value: string,
+): UpdateReturn<Model, Message> => {
+  const state = model.requestsRanking ?? initialRequestsRankingState();
+  const nextState = { ...state, [field]: value, message: undefined };
+  const metric = requestsRankingMetricOf(nextState.metric);
+  const rankingTarget = requestsRankingTargetOf(nextState.rankingTarget);
+  if (metric === undefined || rankingTarget === undefined) {
+    const token = state.token + 1;
+    return { model: { ...model, requestsRanking: { ...nextState, message: "Select a supported metric and ranking target.", status: "error", token } } };
+  }
+  const token = state.token + 1;
+  const payload = buildRequestsRankingQuery({ metric, rankingTarget });
+  return {
+    commands: [requestsRankingCommands.query({ payload: JSON.stringify(payload), token })],
+    model: { ...model, requestsRanking: { ...nextState, status: "loading", token } },
+  };
+};
+
+const updateRequestsMetricListbox = (
+  model: Model,
+  message: Parameters<typeof requestsMetricListbox.update>[1],
+): UpdateReturn<Model, Message> => {
+  const child = requestsMetricListbox.update(
+    model.requestsRankingMetricListbox ?? initRequestsMetricListbox(),
+    message,
+  );
+  const nextModel: Model = {
+    ...model,
+    // SAFETY: the child model comes from this single-select Listbox's own update, whose Model schema is the bound child type.
+    requestsRankingMetricListbox: child.model as RequestsMetricListboxModel,
+  };
+  if (child.outMessage !== undefined) {
+    return updateRequestsRankingField(nextModel, "metric", child.outMessage.value);
+  }
+  return {
+    commands: Command.mapMessages(child.commands ?? [], (childMessage) =>
+      Message.GotRequestsRankingMetricListboxMessage({ message: childMessage }),
+    ),
+    model: nextModel,
+  };
+};
+
 const endpointAdmissionCompletion = (
   model: Model,
   state: EndpointAdmissionState,
@@ -1202,26 +1250,11 @@ const updateLocalPolicyDraft = (
         if (token !== state.token) return { model };
         return { model: { ...model, providerAccount: { ...state, error: message, pendingAction: undefined, status: "error" } } };
       },
-      RequestsRankingFieldChanged: ({ field, value }) => {
-        const state = model.requestsRanking ?? initialRequestsRankingState();
-        const nextState = { ...state, [field]: value, message: undefined };
-        const metric = requestsRankingMetricOf(nextState.metric);
-        const rankingTarget = requestsRankingTargetOf(nextState.rankingTarget);
-        if (metric === undefined || rankingTarget === undefined) {
-          // S418: invalidate the active token so a late result for the previous valid selection
-          // cannot clear this validation error or publish its stale rows.
-          const token = state.token + 1;
-          return { model: { ...model, requestsRanking: { ...nextState, message: "Select a supported metric and ranking target.", status: "error", token } } };
-        }
-        // S417: latest selection wins. A change while a query is loading bumps the token and
-        // supersedes the in-flight query, so an old result can never render under new labels.
-        const token = state.token + 1;
-        const payload = buildRequestsRankingQuery({ metric, rankingTarget });
-        return {
-          commands: [requestsRankingCommands.query({ payload: JSON.stringify(payload), token })],
-          model: { ...model, requestsRanking: { ...nextState, status: "loading", token } },
-        };
-      },
+      GotRequestsRankingMetricListboxMessage: ({ message }) =>
+        // SAFETY: this tag is only produced by the Listbox submodel view/commands, so the carried value is its Message.
+        updateRequestsMetricListbox(model, message as Parameters<typeof requestsMetricListbox.update>[1]),
+      RequestsRankingFieldChanged: ({ field, value }) =>
+        updateRequestsRankingField(model, field, value),
       RequestsRankingSubmitRequested: () => {
         const state = model.requestsRanking ?? initialRequestsRankingState();
         if (state.status === "loading") return { model };

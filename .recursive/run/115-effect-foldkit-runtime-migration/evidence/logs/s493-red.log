@@ -1,0 +1,6 @@
+{
+  "ok": false,
+  "issues": [
+    "eventlog-methods:append: placeholder path is not an enumerated source citation"
+  ]
+}

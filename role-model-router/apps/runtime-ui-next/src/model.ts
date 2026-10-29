@@ -21,6 +21,7 @@ const modelFields = {
   chartInteraction: Schema.optional(ChartInteractionStateSchema),
   diagnostics: DiagnosticsSnapshot,
   requestsRanking: Schema.optional(RequestsRankingStateSchema),
+  requestsRankingMetricListbox: Schema.optional(Schema.Any),
   learningRanking: Schema.optional(LearningRankingStateSchema),
   endpointAdmission: Schema.optional(EndpointAdmissionStateSchema),
   providerAccount: Schema.optional(ProviderAccountStateSchema),
