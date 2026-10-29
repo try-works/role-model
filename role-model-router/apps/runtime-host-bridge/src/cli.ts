@@ -626,6 +626,7 @@ import {
   runTrackBShadowPipeline,
   trackBDistributionRequiresSQLiteMaintenance,
   validateProductionExtensionSet,
+  extensionHostTiming,
   validateRecoveredReplayCapture,
   validateRun88ProviderResponseObservation,
   verifyTrackBExtensionClosureAfterRestart,
@@ -3436,6 +3437,27 @@ export function projectCliStartupReadiness(state: CliBootstrapState): {
     status: state.status,
     ...(state.message ? { message: state.message } : {}),
   };
+}
+
+export async function runQaStartupInvoke<T>(input: {
+  readonly extensionId: string;
+  readonly invoke: () => Promise<T>;
+  readonly timeoutMs: number;
+}): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      input.invoke(),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(`QA extension startup invoke timed out after ${input.timeoutMs}ms: ${input.extensionId}`)),
+          input.timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
 }
 
 export async function awaitCliExtensionRuntime<
@@ -12129,6 +12151,7 @@ export async function main(): Promise<void> {
             hostScope.register("extensionRuntime", async () => {
               await Effect.runPromise(Scope.close(extensionOwnerScope, Exit.void));
             });
+            const qaInvokeTimeoutMs = extensionHostTiming().timeoutMs;
             for (const extension of qaExtensions) {
               const capability = extension.descriptor.capabilities.find(
                 (candidate) => candidate !== "health:probe",
@@ -12138,14 +12161,18 @@ export async function main(): Promise<void> {
                   `QA extension has no business capability: ${extension.descriptor.id}`,
                 );
               const requestId = `run87:packaged-qa:${extension.descriptor.id}`;
-              const receipt = await runtime.invoke(extension.descriptor.id, {
-                requestId,
-                protocolVersion: extension.descriptor.protocolVersion,
-                channel: packagedProfile?.channel ?? "development",
-                scope: options.scopeId,
-                authorizationEpoch: 1,
-                capability,
-                payload: { packagedQa: true },
+              const receipt = await runQaStartupInvoke({
+                extensionId: extension.descriptor.id,
+                invoke: () => runtime.invoke(extension.descriptor.id, {
+                  requestId,
+                  protocolVersion: extension.descriptor.protocolVersion,
+                  channel: packagedProfile?.channel ?? "development",
+                  scope: options.scopeId,
+                  authorizationEpoch: 1,
+                  capability,
+                  payload: { packagedQa: true },
+                }),
+                timeoutMs: qaInvokeTimeoutMs,
               });
               qaStartupReceipts.set(extension.descriptor.id, { ...receipt, requestId });
             }
