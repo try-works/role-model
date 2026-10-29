@@ -1,0 +1,76 @@
+COMMAND: node vitest run s458 (S458 local policy RED, before source edit)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s458-local-policy.test.ts (3 tests | 3 failed) 80ms
+   × S458 local policy port RED > parses /local/llama-swap/policy as the LocalPolicy route 61ms
+     → expected { _tag: 'NotFound', …(1) } to match object { _tag: 'LocalPolicy' }
+(1 matching property omitted from actual)
+   × S458 local policy port RED > registers a real localPolicy readback for GET /api/role-model/local/policy 4ms
+     → expected undefined to be defined
+   × S458 local policy port RED > replaces the original policy and matrix URLs with the canonical targets 9ms
+     → expected undefined to be '/local/llama-swap/policy' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s458-local-policy.test.ts > S458 local policy port RED > parses /local/llama-swap/policy as the LocalPolicy route
+AssertionError: expected { _tag: 'NotFound', …(1) } to match object { _tag: 'LocalPolicy' }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "_tag": "LocalPolicy",
++   "_tag": "NotFound",
+  }
+
+ ❯ test/s458-local-policy.test.ts:17:61
+     15| describe("S458 local policy port RED", () => {
+     16|   it("parses /local/llama-swap/policy as the LocalPolicy route", () =>…
+     17|     expect(routeFromUrl(urlOf("/local/llama-swap/policy"))).toMatchObj…
+       |                                                             ^
+     18|   });
+     19| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/s458-local-policy.test.ts > S458 local policy port RED > registers a real localPolicy readback for GET /api/role-model/local/policy
+AssertionError: expected undefined to be defined
+ ❯ test/s458-local-policy.test.ts:22:18
+     20|   it("registers a real localPolicy readback for GET /api/role-model/lo…
+     21|     const spec = specs.localPolicy;
+     22|     expect(spec).toBeDefined();
+       |                  ^
+     23|     expect(spec?.parse({ autoUnload: false, maxConcurrency: 2, ttl: 12…
+     24|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/s458-local-policy.test.ts > S458 local policy port RED > replaces the original policy and matrix URLs with the canonical targets
+AssertionError: expected undefined to be '/local/llama-swap/policy' // Object.is equality
+
+- Expected: 
+"/local/llama-swap/policy"
+
++ Received: 
+undefined
+
+ ❯ test/s458-local-policy.test.ts:27:68
+     25| 
+     26|   it("replaces the original policy and matrix URLs with the canonical …
+     27|     expect(resolveAppUrl(urlOf("/app/local/policy")).redirectHref).toB…
+       |                                                                    ^
+     28|     expect(resolveAppUrl(urlOf("/app/local/matrix")).redirectHref).toB…
+     29|     expect(resolveAppUrl(urlOf("/app/local/llama-swap/matrix")).redire…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  09:18:10
+   Duration  17.06s (transform 8.01s, setup 0ms, collect 12.46s, tests 80ms, environment 2.22s, prepare 680ms)
+
+
