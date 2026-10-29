@@ -1,0 +1,24 @@
+COMMAND: audit-rendered-ui final6 exe + rebuilt current static + fixtures, fresh state root audit-s520-fresh
+EXIT_CODE=0
+PASS / (327 chars)
+PASS /runtime (449 chars)
+PASS /models (1201 chars)
+PASS /router (247 chars)
+PASS /router/candidates (784 chars)
+PASS /router/decisions (157 chars)
+PASS /control/providers (473 chars)
+PASS /control/endpoints (298 chars)
+PASS /control/controller (507 chars)
+PASS /observe/queues (302 chars)
+PASS /observe/observability-snapshot (154 chars)
+PASS /local/logs (145 chars)
+PASS /local/swap (152 chars)
+PASS /system/peers (151 chars)
+PASS /requests (365 chars)
+PASS /session-readiness (287 chars)
+PASS /dashboard (152 chars)
+PASS /studio (121 chars)
+PASS /learning (872 chars)
+PASS /diagnostics/42 (198 chars)
+{"routes":20,"failures":0,"focus":false}
+

@@ -535,385 +535,144 @@ const updateLocalPolicyDraft = (
       return { model };
     };
 
-    return (model: Model, message: Message): UpdateReturn<Model, Message> =>
-    Message.match<UpdateReturn<Model, Message>>(message, {
-      ChangedUrl: ({ url }) => {
-        const resolved = resolveAppUrl(url);
-        const incomingHref = canonicalHrefForUrl(url);
-        // S272: consume exactly the pending replace echo of our own Navigation.replaceUrl
-        // Command. The marker is keyed to the exact canonical href, so a genuine same-route
-        // navigation (the same URL after the echo, a changed query, another detail ID, or an
-        // interleaved route) runs the baseline read/reset/resync/scroll instead of being dropped.
-        if (isPendingRedirectEcho(model, resolved, incomingHref)) {
-          return { model: { ...model, pendingRedirectHref: undefined } };
-        }
-        const result = navigateToRoute(model, resolved.route, resolved.canonicalUrl);
-        if (resolved.redirectHref === undefined) {
-          return { ...result, model: { ...result.model, pendingRedirectHref: undefined } };
-        }
-        return {
-          ...result,
-          commands: [
-            ...(result.commands ?? []),
-            replaceLegacyUrlCommand({ href: resolved.redirectHref }),
-          ],
-          model: { ...result.model, pendingRedirectHref: resolved.redirectHref },
-        };
-      },
-      Clicked: () => ({ model: { ...model, clicks: model.clicks + 1 } }),
-      ClickedLink: ({ request }) =>
-        UrlRequest.match<UpdateReturn<Model, Message>>(request, {
-          External: () => ({ model }),
-          Internal: ({ url }) => ({
-            commands: [pushInternal({ href: urlToString(url) })],
-            model,
-          }),
-        }),
-      ControllerEndpointSelected: ({ endpointId }) => {
-        const current = model.controls.controlController;
-        return { model: { ...model, controls: { ...model.controls, controlController: { ...current, selectedEndpointId: endpointId } } } };
-      },
-      ControllerSaveRequested: ({ endpointId }) => {
-        const current = model.controls.controlController;
-        if (current.actionStatus === "pending") return { model };
-        const token = current.token + 1;
-        return {
-          commands: [dispatchControl({ endpointId, key: "controlController", token })],
-          model: {
-            ...model,
-            controls: {
-              ...model.controls,
-              controlController: { ...current, actionMessage: undefined, actionStatus: "pending", notice: undefined, selectedEndpointId: endpointId, token },
-            },
-          },
-        };
-      },
-      ControlActionCompleted: ({ key, message, serverEndpointId, token }) => {
-        const current = model.controls[key];
-        if (token !== current.token) return { model };
-        return {
-          commands: key === "controlController" ? [readControl({ key, token })] : [],
-          model: {
-            ...model,
-            controls: {
-              ...model.controls,
-              [key]: {
-                ...current,
-                actionMessage: message,
-                actionStatus: "ok",
-                notice: key === "controlController" && serverEndpointId !== undefined ? "Server assigned " + serverEndpointId : current.notice,
-                selectedEndpointId: key === "controlController" && serverEndpointId !== undefined ? serverEndpointId : current.selectedEndpointId,
-              },
-            },
-          },
-        };
-      },
-      ControlActionFailed: ({ key, message, token }) => {
-        const current = model.controls[key];
-        if (token !== current.token) return { model };
-        return {
-          model: {
-            ...model,
-            controls: {
-              ...model.controls,
-              [key]: { ...current, actionMessage: message, actionStatus: "error" },
-            },
-          },
-        };
-      },
-      ControlActionRequested: ({ key, targetId }) => {
-        const current = model.controls[key];
-        if (current.actionStatus === "pending") return { model };
-        const token = current.token + 1;
-        return {
-          commands: [dispatchControl({ endpointId: targetId, key, token })],
-          model: {
-            ...model,
-            controls: {
-              ...model.controls,
-              [key]: { ...current, actionMessage: undefined, actionStatus: "pending", token },
-            },
-          },
-        };
-      },
-      ControlFailed: ({ key, message, token }) => {
-        if (token !== model.controls[key].token) return { model };
-        return {
-          model: {
-            ...model,
-            controls: { ...model.controls, [key]: failedControl(message, token) },
-          },
-        };
-      },
-      ControlLoaded: ({ key, snapshot, token }) => {
-        if (token !== model.controls[key].token) return { model };
-        const previous = model.controls[key];
-        return {
-          model: { ...model, controls: { ...model.controls, [key]: { ...snapshot, notice: previous.notice, selectedEndpointId: previous.selectedEndpointId ?? snapshot.selectedEndpointId, token } } },
-        };
-      },
-      DiagnosticsFailed: ({ id, message }) =>
-        model.route._tag === "Diagnostics" && model.route.id === id
-          ? { model: { ...model, diagnostics: failedDiagnostics(id, message) } }
-          : { model },
-      DiagnosticsLoaded: ({ id, snapshot }) =>
-        model.route._tag === "Diagnostics" && model.route.id === id
-          ? { model: { ...model, diagnostics: snapshot } }
-          : { model },
-      DiagnosticsRefreshRequested: () =>
-        model.route._tag === "Diagnostics"
-          ? {
-              commands: [readDiagnostics({ id: model.route.id })],
-              model: {
-                ...model,
-                diagnostics: loadingDiagnostics(model.route.id),
-              },
-            }
-          : { model },
-      NavigationCompleted: () => ({ model }),
-      ObservabilityFailed: ({ message, token }) =>
-        model.route._tag === "Observability" && token === model.observability.token
-          ? { model: { ...model, observability: failedObservability(message, token) } }
-          : { model },
-      ObservabilityLoaded: ({ snapshot, token }) =>
-        model.route._tag === "Observability" && token === model.observability.token
-          ? {
-              model: {
-                ...model,
-                observability: { ...snapshot, token },
-                refresh:
-                  snapshot.status === "error"
-                    ? model.refresh
-                    : { ...model.refresh, message: undefined, status: "live" },
-              },
-            }
-          : { model },
-      ReadbackFailed: ({ key, message, token }) => {
-        const routeKey = readbackKeyForRouteTag(model.route._tag);
-        if ((key !== "learningPacks" && routeKey !== key) || token !== model.readbacks[key].token) return { model };
-        const learningRanking = key === "learningPacks"
-          ? {
-              nextToken: model.learningRanking?.nextToken,
-              phases: Object.fromEntries(
-                Object.entries(model.learningRanking?.phases ?? {}).filter(([, entry]) => entry.scopeId === undefined),
-              ),
-            }
-          : model.learningRanking;
-        const previous = model.readbacks.localPolicy;
-        const nextReadback = key === "localPolicy" && previous.rows.length > 0
-          ? { ...previous, message, status: "ok" as const, token }
-          : failedReadback(message, token);
-        return {
-          model: {
-            ...model,
-            learningRanking,
-            readbacks: { ...model.readbacks, [key]: nextReadback },
-          },
-        };
-      },
-      ReadbackLoaded: ({ key, snapshot, token }) => {
-        if (token !== model.readbacks[key].token) return { model };
-        if (key === "learningPacks") {
-          if (snapshot.token !== model.readbacks[key].token) return { model };
-          const fresh = snapshot.status === "ok" || snapshot.status === "empty";
-          const nextScope = fresh ? snapshot.scopeId : undefined;
-          const currentScope = model.learningRanking?.scopeId;
-          const scopeChanged = fresh && nextScope !== currentScope;
-          const phases = !fresh
-            ? Object.fromEntries(Object.entries(model.learningRanking?.phases ?? {}).filter(([, entry]) => entry.scopeId === undefined))
-            : scopeChanged
-              ? Object.fromEntries(
-                  Object.entries(model.learningRanking?.phases ?? {}).filter(([, entry]) => entry.scopeId === nextScope),
-                )
-              : (model.learningRanking?.phases ?? {});
-          const nextRanking = nextScope === undefined
-            ? { nextToken: model.learningRanking?.nextToken, phases }
-            : { nextToken: model.learningRanking?.nextToken, phases, scopeId: nextScope };
+    return (model: Model, message: Message): UpdateReturn<Model, Message> => {
+      const shellHandlers = {
+        ChangedUrl: ({ url }: Extract<Message, { readonly _tag: "ChangedUrl" }>): UpdateReturn<Model, Message> => {
+          const resolved = resolveAppUrl(url);
+          const incomingHref = canonicalHrefForUrl(url);
+          // S272: consume exactly the pending replace echo of our own Navigation.replaceUrl
+          // Command. The marker is keyed to the exact canonical href, so a genuine same-route
+          // navigation (the same URL after the echo, a changed query, another detail ID, or an
+          // interleaved route) runs the baseline read/reset/resync/scroll instead of being dropped.
+          if (isPendingRedirectEcho(model, resolved, incomingHref)) {
+            return { model: { ...model, pendingRedirectHref: undefined } };
+          }
+          const result = navigateToRoute(model, resolved.route, resolved.canonicalUrl);
+          if (resolved.redirectHref === undefined) {
+            return { ...result, model: { ...result.model, pendingRedirectHref: undefined } };
+          }
           return {
-            model: {
-              ...model,
-              learningRanking: nextRanking,
-              readbacks: { ...model.readbacks, [key]: { ...snapshot, token } },
-              refresh:
-                snapshot.status === "error"
-                  ? model.refresh
-                  : { ...model.refresh, message: undefined, status: "live" },
-            },
+            ...result,
+            commands: [
+              ...(result.commands ?? []),
+              replaceLegacyUrlCommand({ href: resolved.redirectHref }),
+            ],
+            model: { ...result.model, pendingRedirectHref: resolved.redirectHref },
           };
-        }
-        if (key === "runtimeConfig") {
-          let text = "{}"; let originalText = "{}";
-          try { const meta = snapshot.rows[0]?.meta; const parsed = meta === undefined ? undefined : JSON.parse(meta) as { config?: unknown }; if (parsed?.config !== undefined) { text = JSON.stringify(parsed.config, null, 2); originalText = text; } } catch {}
-          return { model: { ...model, readbacks: { ...model.readbacks, runtimeConfig: { ...snapshot, token } }, runtimeConfigEditor: { diff: [], originalText, status: "editing", text, token } } };
-        }
-        return {
-          model: {
-            ...model,
-            readbacks: { ...model.readbacks, [key]: { ...snapshot, token } },
-            refresh:
-              snapshot.status === "error"
-                ? model.refresh
-                : { ...model.refresh, message: undefined, status: "live" },
-          },
-        };
-      },
-      SelectedOverviewWindow: ({ windowMs }) => {
-        const current = model.readbacks.overviewMetrics;
-        const token = current.token + 1;
-        const filters = model.overviewFilters ?? DEFAULT_OVERVIEW_FILTERS;
-        return {
-          commands: [readReadback({ key: "overviewMetrics", query: overviewQuery(filters, windowMs), token })],
-          model: { ...model, overviewWindowMs: windowMs, readbacks: { ...model.readbacks, overviewMetrics: loadingReadback(token) } },
-        };
-      },
-      OverviewFilterChanged: ({ filter, value }) => {
-        const current = model.readbacks.overviewMetrics;
-        const token = current.token + 1;
-        const previous = model.overviewFilters ?? DEFAULT_OVERVIEW_FILTERS;
-        const filters: OverviewFilters = { ...previous, [filter]: value } as OverviewFilters;
-        return {
-          commands: [readReadback({ key: "overviewMetrics", query: overviewQuery(filters, model.overviewWindowMs ?? 86400000), token })],
-          model: { ...model, overviewFilters: filters, readbacks: { ...model.readbacks, overviewMetrics: loadingReadback(token) } },
-        };
-      },
-  RuntimeConfigLoadRequested: () => {
-    const token = model.readbacks.runtimeConfig.token + 1;
-    const previous = model.runtimeConfigEditor;
-    return { commands: [readReadback({ key: "runtimeConfig", token })], model: { ...model, ...(previous === undefined ? {} : { runtimeConfigEditor: { ...previous, status: "loading" } }), readbacks: { ...model.readbacks, runtimeConfig: loadingReadback(token) } } };
-  },
-  RuntimeConfigTextChanged: ({ text }) => {
-    const snapshot = runtimeConfigSnapshot(model);
-    const current = model.runtimeConfigEditor ?? { diff: [], originalText: snapshot.text, status: "editing" as const, text: snapshot.text, token: 0 };
-    return { model: { ...model, runtimeConfigEditor: { ...current, diff: [], message: undefined, notice: undefined, status: "editing", text } } };
-  },
-  RuntimeConfigSaveRequested: () => {
-    const snapshot = runtimeConfigSnapshot(model);
-    const current = model.runtimeConfigEditor ?? { diff: [], originalText: snapshot.text, status: "editing" as const, text: snapshot.text, token: 0 };
-    const parsed = parseRuntimeConfigText(current.text);
-    if ("error" in parsed) return { model: { ...model, runtimeConfigEditor: { ...current, message: parsed.error, status: "invalid" } } };
-    const diff = runtimeConfigDiff(snapshot.config, parsed.config);
-    if (diff.length === 0) return { model: { ...model, runtimeConfigEditor: { ...current, diff, message: "No top-level changes.", status: "editing" } } };
-    return { model: { ...model, runtimeConfigEditor: { ...current, diff, message: undefined, notice: undefined, status: "confirming" } } };
-  },
-  RuntimeConfigConfirmRequested: ({ token }) => {
-    const current = model.runtimeConfigEditor;
-    if (current === undefined || current.status !== "confirming" || saveRuntimeConfig === undefined) return { model };
-    return { commands: [saveRuntimeConfig({ configText: current.text, originalText: current.originalText, token })], model: { ...model, runtimeConfigEditor: { ...current, message: undefined, status: "pending", token } } };
-  },
-  RuntimeConfigSaved: ({ recordJson, token }) => {
-    const current = model.runtimeConfigEditor;
-    if (current === undefined || token !== current.token) return { model };
-    let parsedRecord: unknown; try { parsedRecord = JSON.parse(recordJson); } catch { parsedRecord = undefined; }
-    const record = parseRuntimeConfigRecord(parsedRecord);
-    if (record === undefined) return { model: { ...model, runtimeConfigEditor: { ...current, message: "Runtime config read failed: invalid response", status: "error" } } };
-    const text = runtimeConfigText(record);
-    return { model: { ...model, runtimeConfigEditor: { ...current, diff: [], notice: "Applied snapshot from server", originalText: text, status: "saved", text } } };
-  },
-  RuntimeConfigSaveFailed: ({ message, token }) => {
-    const current = model.runtimeConfigEditor;
-    if (current === undefined || token !== current.token) return { model };
-    return { model: { ...model, runtimeConfigEditor: { ...current, message, status: "error" } } };
-  },
-  StudioTabSelected: ({ tab }) => {
-    const current = model.studio ?? studioIdle();
-    return { model: { ...model, studio: studioIdle(tab) } };
-  },
-  StudioTabKey: ({ key }) => {
-    const current = model.studio ?? studioIdle();
-    const tabs = ["chat", "images", "audio", "rerank", "advanced"] as const;
-    const index = tabs.indexOf(current.tab);
-    const next = key === "Home" ? 0 : key === "End" ? tabs.length - 1 : key === "ArrowRight" ? (index + 1) % tabs.length : key === "ArrowLeft" ? (index - 1 + tabs.length) % tabs.length : index;
-    return { model: { ...model, studio: studioIdle(tabs[next] ?? current.tab) } };
-  },
-  StudioFieldChanged: ({ field, value }) => {
-    const current = model.studio ?? studioIdle();
-    return { model: { ...model, studio: { ...current, [field]: value } } };
-  },
-  StudioRunRequested: ({ token }) => {
-    const current = model.studio ?? studioIdle();
-    if (current.status === "loading") return { model };
-    // S207: send a model this host serves. The Studio default is a fixed id; when the catalogue does
-    // not contain it the request fails with no_eligible_target.
-    const catalogueState = model.readbacks.configuredModels;
-    const catalogue = catalogueState.status === "ok" ? catalogueState.rows.map((entry) => entry.id).filter((id) => id.length > 0) : [];
-    const modelForRequest = catalogue.length > 0 && !catalogue.includes(current.model) ? catalogue[0]! : current.model;
-    const next = { ...studioLoading(token), ...current, model: modelForRequest, message: undefined, responseText: "Waiting for the runtime…", status: "loading" as const, statusCode: 0, token };
-    return { commands: [dispatchStudio({ state: next, token })], model: { ...model, studio: next } };
-  },
-  StudioLoaded: ({ responseText, statusCode, tab, token }) => {
-    const current = model.studio;
-    if (current === undefined || token !== current.token) return { model };
-    return {
-      model: {
-        ...model,
-        studio: statusCode >= 400
-          ? { ...current, message: "HTTP " + String(statusCode), responseText, status: "error", statusCode, tab }
-          : { ...current, message: undefined, responseText, status: "success", statusCode, tab },
-      },
-    };
-  },
-  StudioFailed: ({ message, responseText, statusCode, token }) => {
-    const current = model.studio;
-    if (current === undefined || token !== current.token) return { model };
-    return { model: { ...model, studio: { ...current, message, responseText, status: "error", statusCode } } };
-  },
-  RefreshResynced: ({ routeId, snapshot, token }) => {
-        if (token !== model.refresh.resyncToken) {
-          // An older resync resolving last must not win.
-          return { model };
-        }
-        if (model.route._tag !== "Diagnostics" || model.route.id !== routeId) {
-          // Navigation invalidated this resync. Do not let an older route's payload touch the new
-          // route's fresh data or stale state.
-          return { model };
-        }
-        return {
-          model: {
-            ...model,
-            diagnostics: snapshot,
-            refresh: {
-              ...model.refresh,
-              message: undefined,
-              status: "live",
-            },
-          },
-        };
-      },
-      RefreshResyncFailed: ({ message, routeId, token }) =>
-        token === model.refresh.resyncToken &&
-        model.route._tag === "Diagnostics" &&
-        model.route.id === routeId
-          ? {
-              model: {
-                ...model,
-                refresh: {
-                  ...model.refresh,
-                  message,
-                  status: "stale",
+        },
+        Clicked: (): UpdateReturn<Model, Message> => ({ model: { ...model, clicks: model.clicks + 1 } }),
+        ClickedLink: ({ request }: Extract<Message, { readonly _tag: "ClickedLink" }>): UpdateReturn<Model, Message> =>
+          UrlRequest.match<UpdateReturn<Model, Message>>(request, {
+            External: () => ({ model }),
+            Internal: ({ url }) => ({
+              commands: [pushInternal({ href: urlToString(url) })],
+              model,
+            }),
+          }),
+        NavigationCompleted: (): UpdateReturn<Model, Message> => ({ model }),
+        SelectedOverviewWindow: ({ windowMs }: Extract<Message, { readonly _tag: "SelectedOverviewWindow" }>): UpdateReturn<Model, Message> => {
+          const current = model.readbacks.overviewMetrics;
+          const token = current.token + 1;
+          const filters = model.overviewFilters ?? DEFAULT_OVERVIEW_FILTERS;
+          return {
+            commands: [readReadback({ key: "overviewMetrics", query: overviewQuery(filters, windowMs), token })],
+            model: { ...model, overviewWindowMs: windowMs, readbacks: { ...model.readbacks, overviewMetrics: loadingReadback(token) } },
+          };
+        },
+        OverviewFilterChanged: ({ filter, value }: Extract<Message, { readonly _tag: "OverviewFilterChanged" }>): UpdateReturn<Model, Message> => {
+          const current = model.readbacks.overviewMetrics;
+          const token = current.token + 1;
+          const previous = model.overviewFilters ?? DEFAULT_OVERVIEW_FILTERS;
+          const filters: OverviewFilters = { ...previous, [filter]: value } as OverviewFilters;
+          return {
+            commands: [readReadback({ key: "overviewMetrics", query: overviewQuery(filters, model.overviewWindowMs ?? 86400000), token })],
+            model: { ...model, overviewFilters: filters, readbacks: { ...model.readbacks, overviewMetrics: loadingReadback(token) } },
+          };
+        },
+        RefreshResyncFailed: ({ message, routeId, token }: Extract<Message, { readonly _tag: "RefreshResyncFailed" }>): UpdateReturn<Model, Message> =>
+          token === model.refresh.resyncToken &&
+          model.route._tag === "Diagnostics" &&
+          model.route.id === routeId
+            ? {
+                model: {
+                  ...model,
+                  refresh: {
+                    ...model.refresh,
+                    message,
+                    status: "stale",
+                  },
                 },
-              },
+              }
+            : { model },
+        RuntimeRevisionReceived: ({ revision }: Extract<Message, { readonly _tag: "RuntimeRevisionReceived" }>): UpdateReturn<Model, Message> => {
+          const current = model.refresh;
+          if (revision <= current.lastAppliedRevision) {
+            // An older revision arriving after a newer one must not be applied.
+            return { model };
+          }
+          const gap = current.lastAppliedRevision > 0 && revision > current.lastAppliedRevision + 1;
+          if (!gap) {
+            if (model.route._tag === "Learning") {
+              const learningToken = model.readbacks.learning.token + 1;
+              const packsToken = model.readbacks.learningPacks.token + 1;
+              return {
+                commands: [readReadback({ key: "learning", token: learningToken }), readReadback({ key: "learningPacks", token: packsToken })],
+                model: {
+                  ...model,
+                  learningRanking: { nextToken: model.learningRanking?.nextToken, phases: {} },
+                  readbacks: { ...model.readbacks, learning: loadingReadback(learningToken), learningPacks: loadingReadback(packsToken) },
+                  refresh: {
+                    ...current,
+                    lastAppliedRevision: revision,
+                    message: current.status === "stale" ? current.message : undefined,
+                    status: current.status === "stale" ? "stale" : "live",
+                  },
+                },
+              };
             }
-          : { model },
-      RuntimeRevisionReceived: ({ revision }) => {
-        const current = model.refresh;
-        if (revision <= current.lastAppliedRevision) {
-          // An older revision arriving after a newer one must not be applied.
-          return { model };
-        }
-        const gap = current.lastAppliedRevision > 0 && revision > current.lastAppliedRevision + 1;
-        if (!gap) {
-          if (model.route._tag === "Learning") {
-            const learningToken = model.readbacks.learning.token + 1;
-            const packsToken = model.readbacks.learningPacks.token + 1;
+            const readbackKey = readbackKeyForRouteTag(model.route._tag);
+            if (readbackKey !== null) {
+              const token = model.readbacks[readbackKey].token + 1;
+              const nextReadback = readbackKey === "localPolicy"
+                ? { ...model.readbacks.localPolicy, message: undefined, status: "loading" as const, token }
+                : loadingReadback(token);
+              return {
+                commands: [readReadback({ id: model.route._tag === "RequestDetail" || model.route._tag === "RouterDecisionDetail" ? model.route.requestId : undefined, key: readbackKey, token })],
+                model: {
+                  ...model,
+                  readbacks: { ...model.readbacks, [readbackKey]: nextReadback },
+                  refresh: {
+                    ...current,
+                    lastAppliedRevision: revision,
+                    message: current.status === "stale" ? current.message : undefined,
+                    status: current.status === "stale" ? "stale" : "live",
+                  },
+                },
+              };
+            }
+            if (model.route._tag === "Observability") {
+              const token = model.observability.token + 1;
+              return {
+                commands: [readObservability({ token })],
+                model: {
+                  ...model,
+                  observability: loadingObservability(token),
+                  refresh: {
+                    ...current,
+                    lastAppliedRevision: revision,
+                    message: current.status === "stale" ? current.message : undefined,
+                    status: current.status === "stale" ? "stale" : "live",
+                  },
+                },
+              };
+            }
             return {
-              commands: [readReadback({ key: "learning", token: learningToken }), readReadback({ key: "learningPacks", token: packsToken })],
               model: {
                 ...model,
-                learningRanking: { nextToken: model.learningRanking?.nextToken, phases: {} },
-                readbacks: { ...model.readbacks, learning: loadingReadback(learningToken), learningPacks: loadingReadback(packsToken) },
                 refresh: {
                   ...current,
                   lastAppliedRevision: revision,
+                  // A failed resync is sticky: contiguous progress must not clear it.
                   message: current.status === "stale" ? current.message : undefined,
                   status: current.status === "stale" ? "stale" : "live",
                 },
@@ -923,19 +682,17 @@ const updateLocalPolicyDraft = (
           const readbackKey = readbackKeyForRouteTag(model.route._tag);
           if (readbackKey !== null) {
             const token = model.readbacks[readbackKey].token + 1;
-            const nextReadback = readbackKey === "localPolicy"
-              ? { ...model.readbacks.localPolicy, message: undefined, status: "loading" as const, token }
-              : loadingReadback(token);
             return {
               commands: [readReadback({ id: model.route._tag === "RequestDetail" || model.route._tag === "RouterDecisionDetail" ? model.route.requestId : undefined, key: readbackKey, token })],
               model: {
                 ...model,
-                readbacks: { ...model.readbacks, [readbackKey]: nextReadback },
+                readbacks: { ...model.readbacks, [readbackKey]: loadingReadback(token) },
                 refresh: {
                   ...current,
                   lastAppliedRevision: revision,
-                  message: current.status === "stale" ? current.message : undefined,
-                  status: current.status === "stale" ? "stale" : "live",
+                  message: "resyncing after a revision gap",
+                  resyncToken: current.resyncToken + 1,
+                  status: "stale",
                 },
               },
             };
@@ -950,542 +707,805 @@ const updateLocalPolicyDraft = (
                 refresh: {
                   ...current,
                   lastAppliedRevision: revision,
-                  message: current.status === "stale" ? current.message : undefined,
-                  status: current.status === "stale" ? "stale" : "live",
+                  message: "resyncing after a revision gap",
+                  resyncToken: current.resyncToken + 1,
+                  status: "stale",
                 },
               },
             };
           }
+          const token = current.resyncToken + 1;
           return {
+            commands: [
+              refreshSnapshot({
+                routeId: model.route._tag === "Diagnostics" ? model.route.id : "",
+                token,
+              }),
+            ],
             model: {
               ...model,
-              refresh: {
-                ...current,
-                lastAppliedRevision: revision,
-                // A failed resync is sticky: contiguous progress must not clear it.
-                message: current.status === "stale" ? current.message : undefined,
-                status: current.status === "stale" ? "stale" : "live",
-              },
-            },
-          };
-        }
-        const readbackKey = readbackKeyForRouteTag(model.route._tag);
-        if (readbackKey !== null) {
-          const token = model.readbacks[readbackKey].token + 1;
-          return {
-            commands: [readReadback({ id: model.route._tag === "RequestDetail" || model.route._tag === "RouterDecisionDetail" ? model.route.requestId : undefined, key: readbackKey, token })],
-            model: {
-              ...model,
-              readbacks: { ...model.readbacks, [readbackKey]: loadingReadback(token) },
               refresh: {
                 ...current,
                 lastAppliedRevision: revision,
                 message: "resyncing after a revision gap",
-                resyncToken: current.resyncToken + 1,
+                resyncToken: token,
                 status: "stale",
               },
             },
           };
-        }
-        if (model.route._tag === "Observability") {
-          const token = model.observability.token + 1;
+        },
+        RuntimeTelemetryReceived: (): UpdateReturn<Model, Message> => invalidateCurrentRoute(model),
+        // S290: a persisted pageshow restore is a real page-lifecycle fact, not telemetry or a revision:
+        // re-read the current route with the same query-preserving invalidator and leave the watermark.
+        RuntimePageRestored: (): UpdateReturn<Model, Message> => invalidateCurrentRoute(model),
+        ThemeApplied: (): UpdateReturn<Model, Message> => ({ model }),
+        ToggledTheme: (): UpdateReturn<Model, Message> => {
+          const theme = model.theme === "light" ? "dark" : "light";
           return {
-            commands: [readObservability({ token })],
+            commands: [applyThemeCommand({ theme })],
+            model: { ...model, theme },
+          };
+        },
+      };
+      const remainingHandlers = {
+        ControllerEndpointSelected: ({ endpointId }: Extract<Message, { readonly _tag: "ControllerEndpointSelected" }>): UpdateReturn<Model, Message> => {
+          const current = model.controls.controlController;
+          return { model: { ...model, controls: { ...model.controls, controlController: { ...current, selectedEndpointId: endpointId } } } };
+        },
+        ControllerSaveRequested: ({ endpointId }: Extract<Message, { readonly _tag: "ControllerSaveRequested" }>): UpdateReturn<Model, Message> => {
+          const current = model.controls.controlController;
+          if (current.actionStatus === "pending") return { model };
+          const token = current.token + 1;
+          return {
+            commands: [dispatchControl({ endpointId, key: "controlController", token })],
             model: {
               ...model,
-              observability: loadingObservability(token),
-              refresh: {
-                ...current,
-                lastAppliedRevision: revision,
-                message: "resyncing after a revision gap",
-                resyncToken: current.resyncToken + 1,
-                status: "stale",
+              controls: {
+                ...model.controls,
+                controlController: { ...current, actionMessage: undefined, actionStatus: "pending", notice: undefined, selectedEndpointId: endpointId, token },
               },
             },
           };
-        }
-        const token = current.resyncToken + 1;
-        return {
-          commands: [
-            refreshSnapshot({
-              routeId: model.route._tag === "Diagnostics" ? model.route.id : "",
-              token,
-            }),
-          ],
-          model: {
-            ...model,
-            refresh: {
-              ...current,
-              lastAppliedRevision: revision,
-              message: "resyncing after a revision gap",
-              resyncToken: token,
-              status: "stale",
-            },
-          },
-        };
-      },
-      RuntimeTelemetryReceived: () => invalidateCurrentRoute(model),
-      // S290: a persisted pageshow restore is a real page-lifecycle fact, not telemetry or a revision:
-      // re-read the current route with the same query-preserving invalidator and leave the watermark.
-      RuntimePageRestored: () => invalidateCurrentRoute(model),
-      DeviceAuthFieldChanged: ({ field, value }) => {
-        const state = model.deviceAuth ?? initialDeviceAuthState();
-        return {
-          model: {
-            ...model,
-            deviceAuth: { ...state, draft: { ...state.draft, [field]: value }, error: undefined },
-          },
-        };
-      },
-      DeviceAuthModelAdded: () => {
-        const state = model.deviceAuth ?? initialDeviceAuthState();
-        const modelId = state.draft.modelInput.trim();
-        if (modelId.length === 0) return { model };
-        return {
-          model: {
-            ...model,
-            deviceAuth: {
-              ...state,
-              draft: {
-                ...state.draft,
-                modelInput: "",
-                selectedModelIds: [...new Set([...state.draft.selectedModelIds, modelId])],
+        },
+        ControlActionCompleted: ({ key, message, serverEndpointId, token }: Extract<Message, { readonly _tag: "ControlActionCompleted" }>): UpdateReturn<Model, Message> => {
+          const current = model.controls[key];
+          if (token !== current.token) return { model };
+          return {
+            commands: key === "controlController" ? [readControl({ key, token })] : [],
+            model: {
+              ...model,
+              controls: {
+                ...model.controls,
+                [key]: {
+                  ...current,
+                  actionMessage: message,
+                  actionStatus: "ok",
+                  notice: key === "controlController" && serverEndpointId !== undefined ? "Server assigned " + serverEndpointId : current.notice,
+                  selectedEndpointId: key === "controlController" && serverEndpointId !== undefined ? serverEndpointId : current.selectedEndpointId,
+                },
               },
             },
-          },
-        };
-      },
-      DeviceAuthModelRemoved: ({ modelId }) => {
-        const state = model.deviceAuth ?? initialDeviceAuthState();
-        return {
-          model: {
-            ...model,
-            deviceAuth: {
-              ...state,
-              draft: {
-                ...state.draft,
-                selectedModelIds: state.draft.selectedModelIds.filter((id) => id !== modelId),
+          };
+        },
+        ControlActionFailed: ({ key, message, token }: Extract<Message, { readonly _tag: "ControlActionFailed" }>): UpdateReturn<Model, Message> => {
+          const current = model.controls[key];
+          if (token !== current.token) return { model };
+          return {
+            model: {
+              ...model,
+              controls: {
+                ...model.controls,
+                [key]: { ...current, actionMessage: message, actionStatus: "error" },
               },
             },
-          },
-        };
-      },
-      DeviceAuthStartRequested: () => {
-        const state = model.deviceAuth ?? initialDeviceAuthState();
-        // S399: a click while a poll is pending or a start is in flight must not issue
-        // another start/read; the token fence alone would only hide the second response.
-        if (state.inflight === true || state.status === "starting" || state.status === "pending") return { model };
-        const token = state.token + 1;
-        return {
-          commands: [deviceAuthCommands.read({ token })],
-          model: { ...model, deviceAuth: { ...state, error: undefined, session: undefined, status: "starting", token } },
-        };
-      },
-      DeviceAuthSessionsLoaded: ({ sessions, token }) => {
-        const state = model.deviceAuth ?? initialDeviceAuthState();
-        if (token !== state.token) return { model };
-        const plan = deviceAuthStartPlan(state, sessions);
-        if (plan.kind === "invalid") {
-          return { model: { ...model, deviceAuth: { ...state, error: plan.errors.join(" "), sessions, status: "error" } } };
-        }
-        const nextToken = state.token + 1;
-        if (plan.kind === "restore") {
-          const delayMs = deviceAuthPollDelayMs(plan.session);
-          return {
-            commands: [deviceAuthCommands.poll({ authRequestId: plan.session.authRequestId, delayMs, intervalMs: delayMs, token: nextToken })],
-            model: withDeviceAuthDialog(
-              { ...model, deviceAuth: { ...state, error: undefined, inflight: true, session: plan.session, sessions, status: "pending", token: nextToken } },
-              plan.session,
-            ),
           };
-        }
-        return {
-          commands: [deviceAuthCommands.start({ payload: JSON.stringify(plan.payload), token: nextToken })],
-          model: { ...model, deviceAuth: { ...state, error: undefined, sessions, status: "starting", token: nextToken } },
-        };
-      },
-      DeviceAuthStarted: ({ session, token }) => {
-        const state = model.deviceAuth ?? initialDeviceAuthState();
-        if (token !== state.token) return { model };
-        const nextToken = state.token + 1;
-        const delayMs = deviceAuthPollDelayMs(session);
-        return {
-          commands: [deviceAuthCommands.poll({ authRequestId: session.authRequestId, delayMs, intervalMs: delayMs, token: nextToken })],
-          model: withDeviceAuthDialog(
-            { ...model, deviceAuth: { ...state, error: undefined, inflight: true, session, status: "pending", token: nextToken } },
-            session,
-          ),
-        };
-      },
-      DeviceAuthPolled: ({ session, token }) => {
-        const state = model.deviceAuth ?? initialDeviceAuthState();
-        if (token !== state.token) return { model };
-        // S432: the real pending poll body has no userCode/verification URL; keep the restored
-        // challenge for the same authorization so the code/link survive the first poll.
-        const nextSession = mergeDeviceAuthPoll(state.session, session);
-        if (nextSession.status === "connected") {
-          const nextToken = state.token + 1;
-          const activations = activationPlanForConnectedSession({ draft: state.draft, session: nextSession });
+        },
+        ControlActionRequested: ({ key, targetId }: Extract<Message, { readonly _tag: "ControlActionRequested" }>): UpdateReturn<Model, Message> => {
+          const current = model.controls[key];
+          if (current.actionStatus === "pending") return { model };
+          const token = current.token + 1;
           return {
-            commands: activations.map((payload) => deviceAuthCommands.activate({ payload: JSON.stringify(payload), token: nextToken })),
-            model: { ...model, deviceAuth: { ...state, error: undefined, inflight: false, session: nextSession, status: "connected", token: nextToken } },
-          };
-        }
-        if (nextSession.status === "pending") {
-          const nextToken = state.token + 1;
-          const delayMs = deviceAuthPollDelayMs(nextSession);
-          return {
-            commands: [deviceAuthCommands.poll({ authRequestId: nextSession.authRequestId, delayMs, intervalMs: delayMs, token: nextToken })],
-            model: withDeviceAuthDialog(
-              { ...model, deviceAuth: { ...state, error: undefined, inflight: true, session: nextSession, status: "pending", token: nextToken } },
-              nextSession,
-            ),
-          };
-        }
-        // S425: "expired"/"failed" are terminal host statuses. Surface the host reason instead of a
-        // generic message; returning no poll command stops the loop, and inflight is cleared.
-        const reason =
-          nextSession.lastError ??
-          (nextSession.status === "expired"
-            ? "Device authorization expired."
-            : "Device authorization failed.");
-        return { model: { ...model, deviceAuth: { ...state, error: reason, inflight: false, session: nextSession, status: "error", token } } };
-      },
-      DeviceAuthFailed: ({ message, token }) => {
-        const state = model.deviceAuth ?? initialDeviceAuthState();
-        if (token !== state.token) return { model };
-        return { model: { ...model, deviceAuth: deviceAuthFailedState(state, message) } };
-      },
-      DeviceAuthRetryRequested: () => {
-        const state = model.deviceAuth ?? initialDeviceAuthState();
-        if (state.inflight === true) return { model };
-        const nextToken = state.token + 1;
-        if (state.session === undefined) {
-          return {
-            commands: [deviceAuthCommands.read({ token: nextToken })],
-            model: { ...model, deviceAuth: { ...state, error: undefined, inflight: false, status: "starting", token: nextToken } },
-          };
-        }
-        return {
-          commands: [
-            deviceAuthCommands.poll({
-              authRequestId: state.session.authRequestId,
-              delayMs: 0,
-              intervalMs: deviceAuthPollDelayMs(state.session),
-              token: nextToken,
-            }),
-          ],
-          model: { ...model, deviceAuth: { ...state, error: undefined, inflight: true, status: "pending", token: nextToken } },
-        };
-      },
-      GotDeviceAuthDialogMessage: ({ message }) => {
-        const result = updateDeviceAuthDialog(
-          model.deviceAuthDialog,
-          // SAFETY: this tag is only produced by the dialog submodel view/commands.
-          message as DialogMessage,
-        );
-        return {
-          commands: Command.mapMessages(result.commands, (childMessage) =>
-            Message.GotDeviceAuthDialogMessage({ message: childMessage }),
-          ),
-          model: { ...model, deviceAuthDialog: result.model },
-        };
-      },
-      DeviceAuthCancelled: () => {
-        const state = model.deviceAuth ?? initialDeviceAuthState();
-        // S425: clear the in-flight marker or DeviceAuthStartRequested refuses every later start.
-        // S459: interrupt the scheduled poll so cancel ends the sleep/request lifetime; the advanced
-        // token stays the fence for any result already in flight when the interrupt landed.
-        const authRequestId = state.session?.authRequestId;
-        return {
-          commands:
-            authRequestId === undefined
-              ? undefined
-              : [
-                  deviceAuthCommands.poll.Interrupt(
-                    { authRequestId },
-                    () => Message.DeviceAuthPollCancelCompleted({}),
-                  ),
-                ],
-          model: { ...model, deviceAuth: deviceAuthCancelledState(state) },
-        };
-      },
-      DeviceAuthPollCancelCompleted: () => ({ model }),
-      DeviceAuthActivated: ({ token }) => {
-        const state = model.deviceAuth ?? initialDeviceAuthState();
-        if (token !== state.token) return { model };
-        return { model: { ...model, deviceAuth: { ...state, error: undefined } } };
-      },
-      ProviderAccountFieldChanged: ({ field, value }) => {
-        const state = model.providerAccount ?? initialProviderAccountState();
-        return { model: { ...model, providerAccount: { ...state, draft: { ...state.draft, [field]: value }, error: undefined } } };
-      },
-      ProviderAccountModelAdded: () => {
-        const state = model.providerAccount ?? initialProviderAccountState();
-        const modelId = state.draft.modelInput.trim();
-        if (modelId.length === 0) return { model };
-        return { model: { ...model, providerAccount: { ...state, draft: { ...state.draft, modelInput: "", selectedModelIds: [...new Set([...state.draft.selectedModelIds, modelId])] } } } };
-      },
-      ProviderAccountModelRemoved: ({ modelId }) => {
-        const state = model.providerAccount ?? initialProviderAccountState();
-        return { model: { ...model, providerAccount: { ...state, draft: { ...state.draft, selectedModelIds: state.draft.selectedModelIds.filter((id) => id !== modelId) } } } };
-      },
-      ProviderAccountCreateRequested: () => {
-        const state = model.providerAccount ?? initialProviderAccountState();
-        if (providerAccountBusy(state)) return { model };
-        const token = state.token + 1;
-        return {
-          commands: [providerAccountCommands.create({ payload: JSON.stringify(createProviderAccountPayload(state)), token })],
-          model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: "create", status: "saving", token } },
-        };
-      },
-      ProviderAccountCreateSucceeded: ({ token }) => {
-        const state = model.providerAccount ?? initialProviderAccountState();
-        if (token !== state.token) return { model };
-        return { model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: undefined, status: "saved" } } };
-      },
-      ProviderAccountUpdateKeyRequested: () => {
-        const state = model.providerAccount ?? initialProviderAccountState();
-        if (providerAccountBusy(state)) return { model };
-        const token = state.token + 1;
-        return {
-          commands: [providerAccountCommands.updateKey({ payload: JSON.stringify(updateProviderKeyPayload(state.draft)), token })],
-          model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: "update-key", status: "saving", token } },
-        };
-      },
-      ProviderAccountKeyUpdated: ({ token }) => {
-        const state = model.providerAccount ?? initialProviderAccountState();
-        if (token !== state.token) return { model };
-        return { model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: undefined, status: "saved" } } };
-      },
-      ProviderAccountModelDeleteRequested: ({ modelId }) => {
-        const state = model.providerAccount ?? initialProviderAccountState();
-        if (providerAccountBusy(state)) return { model };
-        const token = state.token + 1;
-        return {
-          commands: [providerAccountCommands.deleteModel({ modelId, providerAccountId: state.draft.providerAccountId.trim(), token })],
-          model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: "delete-model", status: "saving", token } },
-        };
-      },
-      ProviderAccountModelDeleted: ({ modelId, token }) => {
-        const state = model.providerAccount ?? initialProviderAccountState();
-        if (token !== state.token) return { model };
-        return {
-          model: {
-            ...model,
-            providerAccount: {
-              ...state,
-              draft: { ...state.draft, selectedModelIds: state.draft.selectedModelIds.filter((id) => id !== modelId) },
-              error: undefined,
-              pendingAction: undefined,
-              status: "saved",
+            commands: [dispatchControl({ endpointId: targetId, key, token })],
+            model: {
+              ...model,
+              controls: {
+                ...model.controls,
+                [key]: { ...current, actionMessage: undefined, actionStatus: "pending", token },
+              },
             },
-          },
-        };
-      },
-      ProviderAccountFailed: ({ message, token }) => {
-        const state = model.providerAccount ?? initialProviderAccountState();
-        if (token !== state.token) return { model };
-        return { model: { ...model, providerAccount: { ...state, error: message, pendingAction: undefined, status: "error" } } };
-      },
-      GotRequestsRankingMetricListboxMessage: ({ message }) =>
-        // SAFETY: this tag is only produced by the Listbox submodel view/commands, so the carried value is its Message.
-        updateRequestsMetricListbox(model, message as Parameters<typeof requestsMetricListbox.update>[1]),
-      GotRequestsRankingTargetListboxMessage: ({ message }) =>
-        // SAFETY: this tag is only produced by the Listbox submodel view/commands, so the carried value is its Message.
-        updateRequestsTargetListbox(model, message as Parameters<typeof requestsMetricListbox.update>[1]),
-      RequestsRankingFieldChanged: ({ field, value }) =>
-        updateRequestsRankingField(model, field, value),
-      RequestsRankingSubmitRequested: () => {
-        const state = model.requestsRanking ?? initialRequestsRankingState();
-        if (state.status === "loading") return { model };
-        const metric = requestsRankingMetricOf(state.metric);
-        const rankingTarget = requestsRankingTargetOf(state.rankingTarget);
-        if (metric === undefined || rankingTarget === undefined) {
+          };
+        },
+        ControlFailed: ({ key, message, token }: Extract<Message, { readonly _tag: "ControlFailed" }>): UpdateReturn<Model, Message> => {
+          if (token !== model.controls[key].token) return { model };
+          return {
+            model: {
+              ...model,
+              controls: { ...model.controls, [key]: failedControl(message, token) },
+            },
+          };
+        },
+        ControlLoaded: ({ key, snapshot, token }: Extract<Message, { readonly _tag: "ControlLoaded" }>): UpdateReturn<Model, Message> => {
+          if (token !== model.controls[key].token) return { model };
+          const previous = model.controls[key];
+          return {
+            model: { ...model, controls: { ...model.controls, [key]: { ...snapshot, notice: previous.notice, selectedEndpointId: previous.selectedEndpointId ?? snapshot.selectedEndpointId, token } } },
+          };
+        },
+        DiagnosticsFailed: ({ id, message }: Extract<Message, { readonly _tag: "DiagnosticsFailed" }>): UpdateReturn<Model, Message> =>
+          model.route._tag === "Diagnostics" && model.route.id === id
+            ? { model: { ...model, diagnostics: failedDiagnostics(id, message) } }
+            : { model },
+        DiagnosticsLoaded: ({ id, snapshot }: Extract<Message, { readonly _tag: "DiagnosticsLoaded" }>): UpdateReturn<Model, Message> =>
+          model.route._tag === "Diagnostics" && model.route.id === id
+            ? { model: { ...model, diagnostics: snapshot } }
+            : { model },
+        DiagnosticsRefreshRequested: (): UpdateReturn<Model, Message> =>
+          model.route._tag === "Diagnostics"
+            ? {
+                commands: [readDiagnostics({ id: model.route.id })],
+                model: {
+                  ...model,
+                  diagnostics: loadingDiagnostics(model.route.id),
+                },
+              }
+            : { model },
+        ObservabilityFailed: ({ message, token }: Extract<Message, { readonly _tag: "ObservabilityFailed" }>): UpdateReturn<Model, Message> =>
+          model.route._tag === "Observability" && token === model.observability.token
+            ? { model: { ...model, observability: failedObservability(message, token) } }
+            : { model },
+        ObservabilityLoaded: ({ snapshot, token }: Extract<Message, { readonly _tag: "ObservabilityLoaded" }>): UpdateReturn<Model, Message> =>
+          model.route._tag === "Observability" && token === model.observability.token
+            ? {
+                model: {
+                  ...model,
+                  observability: { ...snapshot, token },
+                  refresh:
+                    snapshot.status === "error"
+                      ? model.refresh
+                      : { ...model.refresh, message: undefined, status: "live" },
+                },
+              }
+            : { model },
+        ReadbackFailed: ({ key, message, token }: Extract<Message, { readonly _tag: "ReadbackFailed" }>): UpdateReturn<Model, Message> => {
+          const routeKey = readbackKeyForRouteTag(model.route._tag);
+          if ((key !== "learningPacks" && routeKey !== key) || token !== model.readbacks[key].token) return { model };
+          const learningRanking = key === "learningPacks"
+            ? {
+                nextToken: model.learningRanking?.nextToken,
+                phases: Object.fromEntries(
+                  Object.entries(model.learningRanking?.phases ?? {}).filter(([, entry]) => entry.scopeId === undefined),
+                ),
+              }
+            : model.learningRanking;
+          const previous = model.readbacks.localPolicy;
+          const nextReadback = key === "localPolicy" && previous.rows.length > 0
+            ? { ...previous, message, status: "ok" as const, token }
+            : failedReadback(message, token);
+          return {
+            model: {
+              ...model,
+              learningRanking,
+              readbacks: { ...model.readbacks, [key]: nextReadback },
+            },
+          };
+        },
+        ReadbackLoaded: ({ key, snapshot, token }: Extract<Message, { readonly _tag: "ReadbackLoaded" }>): UpdateReturn<Model, Message> => {
+          if (token !== model.readbacks[key].token) return { model };
+          if (key === "learningPacks") {
+            if (snapshot.token !== model.readbacks[key].token) return { model };
+            const fresh = snapshot.status === "ok" || snapshot.status === "empty";
+            const nextScope = fresh ? snapshot.scopeId : undefined;
+            const currentScope = model.learningRanking?.scopeId;
+            const scopeChanged = fresh && nextScope !== currentScope;
+            const phases = !fresh
+              ? Object.fromEntries(Object.entries(model.learningRanking?.phases ?? {}).filter(([, entry]) => entry.scopeId === undefined))
+              : scopeChanged
+                ? Object.fromEntries(
+                    Object.entries(model.learningRanking?.phases ?? {}).filter(([, entry]) => entry.scopeId === nextScope),
+                  )
+                : (model.learningRanking?.phases ?? {});
+            const nextRanking = nextScope === undefined
+              ? { nextToken: model.learningRanking?.nextToken, phases }
+              : { nextToken: model.learningRanking?.nextToken, phases, scopeId: nextScope };
+            return {
+              model: {
+                ...model,
+                learningRanking: nextRanking,
+                readbacks: { ...model.readbacks, [key]: { ...snapshot, token } },
+                refresh:
+                  snapshot.status === "error"
+                    ? model.refresh
+                    : { ...model.refresh, message: undefined, status: "live" },
+              },
+            };
+          }
+          if (key === "runtimeConfig") {
+            let text = "{}"; let originalText = "{}";
+            try { const meta = snapshot.rows[0]?.meta; const parsed = meta === undefined ? undefined : JSON.parse(meta) as { config?: unknown }; if (parsed?.config !== undefined) { text = JSON.stringify(parsed.config, null, 2); originalText = text; } } catch {}
+            return { model: { ...model, readbacks: { ...model.readbacks, runtimeConfig: { ...snapshot, token } }, runtimeConfigEditor: { diff: [], originalText, status: "editing", text, token } } };
+          }
+          return {
+            model: {
+              ...model,
+              readbacks: { ...model.readbacks, [key]: { ...snapshot, token } },
+              refresh:
+                snapshot.status === "error"
+                  ? model.refresh
+                  : { ...model.refresh, message: undefined, status: "live" },
+            },
+          };
+        },
+        RuntimeConfigLoadRequested: (): UpdateReturn<Model, Message> => {
+          const token = model.readbacks.runtimeConfig.token + 1;
+          const previous = model.runtimeConfigEditor;
+          return { commands: [readReadback({ key: "runtimeConfig", token })], model: { ...model, ...(previous === undefined ? {} : { runtimeConfigEditor: { ...previous, status: "loading" } }), readbacks: { ...model.readbacks, runtimeConfig: loadingReadback(token) } } };
+        },
+        RuntimeConfigTextChanged: ({ text }: Extract<Message, { readonly _tag: "RuntimeConfigTextChanged" }>): UpdateReturn<Model, Message> => {
+          const snapshot = runtimeConfigSnapshot(model);
+          const current = model.runtimeConfigEditor ?? { diff: [], originalText: snapshot.text, status: "editing" as const, text: snapshot.text, token: 0 };
+          return { model: { ...model, runtimeConfigEditor: { ...current, diff: [], message: undefined, notice: undefined, status: "editing", text } } };
+        },
+        RuntimeConfigSaveRequested: (): UpdateReturn<Model, Message> => {
+          const snapshot = runtimeConfigSnapshot(model);
+          const current = model.runtimeConfigEditor ?? { diff: [], originalText: snapshot.text, status: "editing" as const, text: snapshot.text, token: 0 };
+          const parsed = parseRuntimeConfigText(current.text);
+          if ("error" in parsed) return { model: { ...model, runtimeConfigEditor: { ...current, message: parsed.error, status: "invalid" } } };
+          const diff = runtimeConfigDiff(snapshot.config, parsed.config);
+          if (diff.length === 0) return { model: { ...model, runtimeConfigEditor: { ...current, diff, message: "No top-level changes.", status: "editing" } } };
+          return { model: { ...model, runtimeConfigEditor: { ...current, diff, message: undefined, notice: undefined, status: "confirming" } } };
+        },
+        RuntimeConfigConfirmRequested: ({ token }: Extract<Message, { readonly _tag: "RuntimeConfigConfirmRequested" }>): UpdateReturn<Model, Message> => {
+          const current = model.runtimeConfigEditor;
+          if (current === undefined || current.status !== "confirming" || saveRuntimeConfig === undefined) return { model };
+          return { commands: [saveRuntimeConfig({ configText: current.text, originalText: current.originalText, token })], model: { ...model, runtimeConfigEditor: { ...current, message: undefined, status: "pending", token } } };
+        },
+        RuntimeConfigSaved: ({ recordJson, token }: Extract<Message, { readonly _tag: "RuntimeConfigSaved" }>): UpdateReturn<Model, Message> => {
+          const current = model.runtimeConfigEditor;
+          if (current === undefined || token !== current.token) return { model };
+          let parsedRecord: unknown; try { parsedRecord = JSON.parse(recordJson); } catch { parsedRecord = undefined; }
+          const record = parseRuntimeConfigRecord(parsedRecord);
+          if (record === undefined) return { model: { ...model, runtimeConfigEditor: { ...current, message: "Runtime config read failed: invalid response", status: "error" } } };
+          const text = runtimeConfigText(record);
+          return { model: { ...model, runtimeConfigEditor: { ...current, diff: [], notice: "Applied snapshot from server", originalText: text, status: "saved", text } } };
+        },
+        RuntimeConfigSaveFailed: ({ message, token }: Extract<Message, { readonly _tag: "RuntimeConfigSaveFailed" }>): UpdateReturn<Model, Message> => {
+          const current = model.runtimeConfigEditor;
+          if (current === undefined || token !== current.token) return { model };
+          return { model: { ...model, runtimeConfigEditor: { ...current, message, status: "error" } } };
+        },
+        StudioTabSelected: ({ tab }: Extract<Message, { readonly _tag: "StudioTabSelected" }>): UpdateReturn<Model, Message> => {
+          const current = model.studio ?? studioIdle();
+          return { model: { ...model, studio: studioIdle(tab) } };
+        },
+        StudioTabKey: ({ key }: Extract<Message, { readonly _tag: "StudioTabKey" }>): UpdateReturn<Model, Message> => {
+          const current = model.studio ?? studioIdle();
+          const tabs = ["chat", "images", "audio", "rerank", "advanced"] as const;
+          const index = tabs.indexOf(current.tab);
+          const next = key === "Home" ? 0 : key === "End" ? tabs.length - 1 : key === "ArrowRight" ? (index + 1) % tabs.length : key === "ArrowLeft" ? (index - 1 + tabs.length) % tabs.length : index;
+          return { model: { ...model, studio: studioIdle(tabs[next] ?? current.tab) } };
+        },
+        StudioFieldChanged: ({ field, value }: Extract<Message, { readonly _tag: "StudioFieldChanged" }>): UpdateReturn<Model, Message> => {
+          const current = model.studio ?? studioIdle();
+          return { model: { ...model, studio: { ...current, [field]: value } } };
+        },
+        StudioRunRequested: ({ token }: Extract<Message, { readonly _tag: "StudioRunRequested" }>): UpdateReturn<Model, Message> => {
+          const current = model.studio ?? studioIdle();
+          if (current.status === "loading") return { model };
+          // S207: send a model this host serves. The Studio default is a fixed id; when the catalogue does
+          // not contain it the request fails with no_eligible_target.
+          const catalogueState = model.readbacks.configuredModels;
+          const catalogue = catalogueState.status === "ok" ? catalogueState.rows.map((entry) => entry.id).filter((id) => id.length > 0) : [];
+          const modelForRequest = catalogue.length > 0 && !catalogue.includes(current.model) ? catalogue[0]! : current.model;
+          const next = { ...studioLoading(token), ...current, model: modelForRequest, message: undefined, responseText: "Waiting for the runtime…", status: "loading" as const, statusCode: 0, token };
+          return { commands: [dispatchStudio({ state: next, token })], model: { ...model, studio: next } };
+        },
+        StudioLoaded: ({ responseText, statusCode, tab, token }: Extract<Message, { readonly _tag: "StudioLoaded" }>): UpdateReturn<Model, Message> => {
+          const current = model.studio;
+          if (current === undefined || token !== current.token) return { model };
+          return {
+            model: {
+              ...model,
+              studio: statusCode >= 400
+                ? { ...current, message: "HTTP " + String(statusCode), responseText, status: "error", statusCode, tab }
+                : { ...current, message: undefined, responseText, status: "success", statusCode, tab },
+            },
+          };
+        },
+        StudioFailed: ({ message, responseText, statusCode, token }: Extract<Message, { readonly _tag: "StudioFailed" }>): UpdateReturn<Model, Message> => {
+          const current = model.studio;
+          if (current === undefined || token !== current.token) return { model };
+          return { model: { ...model, studio: { ...current, message, responseText, status: "error", statusCode } } };
+        },
+        RefreshResynced: ({ routeId, snapshot, token }: Extract<Message, { readonly _tag: "RefreshResynced" }>): UpdateReturn<Model, Message> => {
+              if (token !== model.refresh.resyncToken) {
+                // An older resync resolving last must not win.
+                return { model };
+              }
+              if (model.route._tag !== "Diagnostics" || model.route.id !== routeId) {
+                // Navigation invalidated this resync. Do not let an older route's payload touch the new
+                // route's fresh data or stale state.
+                return { model };
+              }
+              return {
+                model: {
+                  ...model,
+                  diagnostics: snapshot,
+                  refresh: {
+                    ...model.refresh,
+                    message: undefined,
+                    status: "live",
+                  },
+                },
+              };
+            },
+        ProviderAccountFieldChanged: ({ field, value }: Extract<Message, { readonly _tag: "ProviderAccountFieldChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.providerAccount ?? initialProviderAccountState();
+          return { model: { ...model, providerAccount: { ...state, draft: { ...state.draft, [field]: value }, error: undefined } } };
+        },
+        ProviderAccountModelAdded: (): UpdateReturn<Model, Message> => {
+          const state = model.providerAccount ?? initialProviderAccountState();
+          const modelId = state.draft.modelInput.trim();
+          if (modelId.length === 0) return { model };
+          return { model: { ...model, providerAccount: { ...state, draft: { ...state.draft, modelInput: "", selectedModelIds: [...new Set([...state.draft.selectedModelIds, modelId])] } } } };
+        },
+        ProviderAccountModelRemoved: ({ modelId }: Extract<Message, { readonly _tag: "ProviderAccountModelRemoved" }>): UpdateReturn<Model, Message> => {
+          const state = model.providerAccount ?? initialProviderAccountState();
+          return { model: { ...model, providerAccount: { ...state, draft: { ...state.draft, selectedModelIds: state.draft.selectedModelIds.filter((id) => id !== modelId) } } } };
+        },
+        ProviderAccountCreateRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.providerAccount ?? initialProviderAccountState();
+          if (providerAccountBusy(state)) return { model };
           const token = state.token + 1;
-          return { model: { ...model, requestsRanking: { ...state, message: "Select a supported metric and ranking target.", status: "error", token } } };
-        }
-        const token = state.token + 1;
-        const payload = buildRequestsRankingQuery({ metric, rankingTarget });
-        return {
-          commands: [requestsRankingCommands.query({ payload: JSON.stringify(payload), token })],
-          model: { ...model, requestsRanking: { ...state, message: undefined, status: "loading", token } },
-        };
-      },
-      RequestsRankingLoaded: ({ rows, token }) => {
-        const state = model.requestsRanking ?? initialRequestsRankingState();
-        const next = mergeRequestsRankingLoaded(state, rows, token);
-        return next === undefined ? { model } : { model: { ...model, requestsRanking: next } };
-      },
-      RequestsRankingFailed: ({ message, token }) => {
-        const state = model.requestsRanking ?? initialRequestsRankingState();
-        const next = mergeRequestsRankingFailed(state, message, token);
-        return next === undefined ? { model } : { model: { ...model, requestsRanking: next } };
-      },
-      LocalPolicyTtlChanged: ({ value }) => updateLocalPolicyDraft(model, { ttl: Math.max(0, Math.trunc(value)) }),
-      LocalPolicyMaxConcurrencyChanged: ({ value }) => updateLocalPolicyDraft(model, { maxConcurrency: Math.max(1, Math.trunc(value)) }),
-      LocalPolicyAutoUnloadToggled: () => {
-        const draft = localPolicyDraftFromReadback(model.readbacks.localPolicy);
-        return draft === undefined ? { model } : updateLocalPolicyDraft(model, { autoUnload: draft.autoUnload !== true });
-      },
-      LocalPolicyResetRequested: () => {
-        const state = model.readbacks.localPolicy;
-        const saved = localPolicyFromReadback(state);
-        return saved === undefined || state.status !== "ok" ? { model } : {
-          model: { ...model, readbacks: { ...model.readbacks, localPolicy: withLocalPolicyDraft({ ...state, message: undefined }, saved) } },
-        };
-      },
-      LocalPolicySaveRequested: () => {
-        const state = model.readbacks.localPolicy;
-        const draft = localPolicyDraftFromReadback(state);
-        if (draft === undefined || state.status !== "ok") return { model };
-        const token = state.token + 1;
-        return {
-          commands: [localPolicyCommands.save({ payload: JSON.stringify(draft), token })],
-          model: { ...model, readbacks: { ...model.readbacks, localPolicy: { ...state, message: undefined, status: "loading", token } } },
-        };
-      },
-      LocalPolicySaved: ({ policy, token }) => {
-        const state = model.readbacks.localPolicy;
-        if (token !== state.token || state.status !== "loading") return { model };
-        // SAFETY: the command serialized the PUT response body; the parser validates the record shape.
-        const merged = JSON.parse(policy) as LocalPolicyObject;
-        return {
-          model: {
-            ...model,
-            readbacks: { ...model.readbacks, localPolicy: localPolicyReadback(merged, token) },
-          },
-        };
-      },
-      LocalPolicySaveFailed: ({ message, token }) => {
-        const state = model.readbacks.localPolicy;
-        if (token !== state.token) return { model };
-        return { model: { ...model, readbacks: { ...model.readbacks, localPolicy: { ...state, message, status: state.rows.length > 0 ? "ok" : "error" } } } };
-      },
-      LearningLadderToggleRequested: ({ rolledBack, roleId, taskTypeId }) => {
-        const state = model.learningRanking ?? initialLearningRankingState();
-        const packs = model.readbacks.learningPacks;
-        const scopeId = packs.status === "ok" || packs.status === "empty" ? packs.scopeId?.trim() : undefined;
-        const plan = planLearningLadderToggle(state, { roleId, rolledBack, scopeId, taskTypeId });
-        if (plan.kind === "noop") return { model };
-        if (plan.kind !== "rollback") return { model: { ...model, learningRanking: plan.state } };
-        return {
-          commands: [learningRankingCommands.rollbackLadder({
-            payload: JSON.stringify(plan.payload),
-            roleId,
-            scopeId: plan.state.scopeId ?? "",
-            taskTypeId,
-            token: plan.token,
-          })],
-          model: { ...model, learningRanking: plan.state },
-        };
-      },
-      LearningLadderUpdated: ({ rolledBack, roleId, scopeId, taskTypeId, token }) => {
-        void rolledBack;
-        const state = model.learningRanking ?? initialLearningRankingState();
-        const packs = model.readbacks.learningPacks;
-        const freshScope = packs.status === "ok" || packs.status === "empty" ? packs.scopeId : undefined;
-        const next = mergeLearningLadderUpdated(state, { freshScope, roleId, scopeId, taskTypeId, token });
-        if (next === undefined) return { model };
-        const readbackToken = model.readbacks.learning.token + 1;
-        return {
-          commands: [readReadback({ key: "learning", token: readbackToken })],
-          model: {
-            ...model,
-            learningRanking: next,
-            readbacks: { ...model.readbacks, learning: loadingReadback(readbackToken) },
-          },
-        };
-      },
-      LearningLadderFailed: ({ message, roleId, scopeId, taskTypeId, token }) => {
-        const state = model.learningRanking ?? initialLearningRankingState();
-        const packs = model.readbacks.learningPacks;
-        const freshScope = packs.status === "ok" || packs.status === "empty" ? packs.scopeId : undefined;
-        const next = mergeLearningLadderFailed(state, { freshScope, message, roleId, scopeId, taskTypeId, token });
-        return next === undefined ? { model } : { model: { ...model, learningRanking: next } };
-      },
-      ChartPointShown: ({ label, seriesId, token }) => {
-        const state = chartInteractionForRoute(model.chartInteraction, model.route._tag);
-        return { model: { ...model, chartInteraction: showChartPoint(state, token, seriesId, label) } };
-      },
-      ChartTooltipDismissed: ({ token }) => {
-        const state = chartInteractionForRoute(model.chartInteraction, model.route._tag);
-        return { model: { ...model, chartInteraction: hideChartTooltip(state, token) } };
-      },
-      ChartSeriesToggled: ({ seriesId, token }) => {
-        const state = chartInteractionForRoute(model.chartInteraction, model.route._tag);
-        return { model: { ...model, chartInteraction: toggleChartSeries(state, token, seriesId) } };
-      },
-      EndpointAdmissionFieldChanged: ({ field, value }) => {
-        const state = model.endpointAdmission ?? initialEndpointAdmissionState();
-        const next = endpointAdmissionFieldChangedState(state, field, value);
-        return next === undefined ? { model } : { model: { ...model, endpointAdmission: next } };
-      },
-      EndpointAdmissionModelAdded: () => {
-        const state = model.endpointAdmission ?? initialEndpointAdmissionState();
-        const next = endpointAdmissionModelAddedState(state);
-        return next === undefined ? { model } : { model: { ...model, endpointAdmission: next } };
-      },
-      EndpointAdmissionModelRemoved: ({ modelId }) => {
-        const state = model.endpointAdmission ?? initialEndpointAdmissionState();
-        const next = endpointAdmissionModelRemovedState(state, modelId);
-        return next === undefined ? { model } : { model: { ...model, endpointAdmission: next } };
-      },
-      EndpointAdmissionSubmitRequested: () => {
-        const state = model.endpointAdmission ?? initialEndpointAdmissionState();
-        if (endpointAdmissionBusy(state)) return { model };
-        const errors = validateEndpointAdmissionDraft(state);
-        if (errors.length > 0) return { model: { ...model, endpointAdmission: { ...state, error: errors.join(" "), status: "error" } } };
-        if (endpointActivationNeedsReset(state.run)) return { model };
-        const batch = state.draft.batchMode === "true";
-        const planned = batch
-          ? [{ activationId: "batch:" + state.draft.activationBatchId.trim(), payload: endpointBatchPayload(state.draft) }]
-          : endpointActivationPayloads(state.draft).map((payload) => ({ activationId: "model:" + encodeURIComponent(payload.modelId), payload }));
-        const started = beginEndpointActivationRun(state.run, {
-          activationIds: planned.map((entry) => entry.activationId),
-          mode: batch ? "batch" : "single",
-        });
-        if (started.kind === "busy") return { model };
-        if (started.kind === "invalid") {
-          return { model: { ...model, endpointAdmission: { ...state, error: "Select at least one model.", status: "error" } } };
-        }
-        const commands = planned.map((entry) =>
-          batch
-            ? endpointAdmissionCommands.activateBatch({ activationId: entry.activationId, generation: started.generation, payload: JSON.stringify(entry.payload) })
-            : endpointAdmissionCommands.activate({ activationId: entry.activationId, generation: started.generation, payload: JSON.stringify(entry.payload) }),
-        );
-        return {
-          commands,
-          model: {
-            ...model,
-            endpointAdmission: { ...state, error: undefined, pendingAction: batch ? "batch" : "activate", run: started.run, status: "saving" },
-          },
-        };
-      },
-      EndpointAdmissionResetRequested: () => {
-        const state = model.endpointAdmission ?? initialEndpointAdmissionState();
-        const next = endpointAdmissionResetState(state);
-        return next === undefined ? { model } : { model: { ...model, endpointAdmission: next } };
-      },
-      EndpointAdmissionSucceeded: ({ activationId, generation }) => {
-        const state = model.endpointAdmission ?? initialEndpointAdmissionState();
-        const result = settleEndpointActivation(state.run, { activationId, generation, outcome: "succeeded" });
-        if (result.kind !== "updated") return { model };
-        return endpointAdmissionCompletion(model, state, result.run);
-      },
-      EndpointAdmissionFailed: ({ activationId, generation, message }) => {
-        const state = model.endpointAdmission ?? initialEndpointAdmissionState();
-        const result = settleEndpointActivation(state.run, { activationId, generation, outcome: "failed", message });
-        if (result.kind !== "updated") return { model };
-        return endpointAdmissionCompletion(model, state, result.run);
-      },
-      ThemeApplied: () => ({ model }),
-      ToggledTheme: () => {
-        const theme = model.theme === "light" ? "dark" : "light";
-        return {
-          commands: [applyThemeCommand({ theme })],
-          model: { ...model, theme },
-        };
-      },
-    });
+          return {
+            commands: [providerAccountCommands.create({ payload: JSON.stringify(createProviderAccountPayload(state)), token })],
+            model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: "create", status: "saving", token } },
+          };
+        },
+        ProviderAccountCreateSucceeded: ({ token }: Extract<Message, { readonly _tag: "ProviderAccountCreateSucceeded" }>): UpdateReturn<Model, Message> => {
+          const state = model.providerAccount ?? initialProviderAccountState();
+          if (token !== state.token) return { model };
+          return { model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: undefined, status: "saved" } } };
+        },
+        ProviderAccountUpdateKeyRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.providerAccount ?? initialProviderAccountState();
+          if (providerAccountBusy(state)) return { model };
+          const token = state.token + 1;
+          return {
+            commands: [providerAccountCommands.updateKey({ payload: JSON.stringify(updateProviderKeyPayload(state.draft)), token })],
+            model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: "update-key", status: "saving", token } },
+          };
+        },
+        ProviderAccountKeyUpdated: ({ token }: Extract<Message, { readonly _tag: "ProviderAccountKeyUpdated" }>): UpdateReturn<Model, Message> => {
+          const state = model.providerAccount ?? initialProviderAccountState();
+          if (token !== state.token) return { model };
+          return { model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: undefined, status: "saved" } } };
+        },
+        ProviderAccountModelDeleteRequested: ({ modelId }: Extract<Message, { readonly _tag: "ProviderAccountModelDeleteRequested" }>): UpdateReturn<Model, Message> => {
+          const state = model.providerAccount ?? initialProviderAccountState();
+          if (providerAccountBusy(state)) return { model };
+          const token = state.token + 1;
+          return {
+            commands: [providerAccountCommands.deleteModel({ modelId, providerAccountId: state.draft.providerAccountId.trim(), token })],
+            model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: "delete-model", status: "saving", token } },
+          };
+        },
+        ProviderAccountModelDeleted: ({ modelId, token }: Extract<Message, { readonly _tag: "ProviderAccountModelDeleted" }>): UpdateReturn<Model, Message> => {
+          const state = model.providerAccount ?? initialProviderAccountState();
+          if (token !== state.token) return { model };
+          return {
+            model: {
+              ...model,
+              providerAccount: {
+                ...state,
+                draft: { ...state.draft, selectedModelIds: state.draft.selectedModelIds.filter((id) => id !== modelId) },
+                error: undefined,
+                pendingAction: undefined,
+                status: "saved",
+              },
+            },
+          };
+        },
+        ProviderAccountFailed: ({ message, token }: Extract<Message, { readonly _tag: "ProviderAccountFailed" }>): UpdateReturn<Model, Message> => {
+          const state = model.providerAccount ?? initialProviderAccountState();
+          if (token !== state.token) return { model };
+          return { model: { ...model, providerAccount: { ...state, error: message, pendingAction: undefined, status: "error" } } };
+        },
+        LocalPolicyTtlChanged: ({ value }: Extract<Message, { readonly _tag: "LocalPolicyTtlChanged" }>): UpdateReturn<Model, Message> => updateLocalPolicyDraft(model, { ttl: Math.max(0, Math.trunc(value)) }),
+        LocalPolicyMaxConcurrencyChanged: ({ value }: Extract<Message, { readonly _tag: "LocalPolicyMaxConcurrencyChanged" }>): UpdateReturn<Model, Message> => updateLocalPolicyDraft(model, { maxConcurrency: Math.max(1, Math.trunc(value)) }),
+        LocalPolicyAutoUnloadToggled: (): UpdateReturn<Model, Message> => {
+          const draft = localPolicyDraftFromReadback(model.readbacks.localPolicy);
+          return draft === undefined ? { model } : updateLocalPolicyDraft(model, { autoUnload: draft.autoUnload !== true });
+        },
+        LocalPolicyResetRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.readbacks.localPolicy;
+          const saved = localPolicyFromReadback(state);
+          return saved === undefined || state.status !== "ok" ? { model } : {
+            model: { ...model, readbacks: { ...model.readbacks, localPolicy: withLocalPolicyDraft({ ...state, message: undefined }, saved) } },
+          };
+        },
+        LocalPolicySaveRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.readbacks.localPolicy;
+          const draft = localPolicyDraftFromReadback(state);
+          if (draft === undefined || state.status !== "ok") return { model };
+          const token = state.token + 1;
+          return {
+            commands: [localPolicyCommands.save({ payload: JSON.stringify(draft), token })],
+            model: { ...model, readbacks: { ...model.readbacks, localPolicy: { ...state, message: undefined, status: "loading", token } } },
+          };
+        },
+        LocalPolicySaved: ({ policy, token }: Extract<Message, { readonly _tag: "LocalPolicySaved" }>): UpdateReturn<Model, Message> => {
+          const state = model.readbacks.localPolicy;
+          if (token !== state.token || state.status !== "loading") return { model };
+          // SAFETY: the command serialized the PUT response body; the parser validates the record shape.
+          const merged = JSON.parse(policy) as LocalPolicyObject;
+          return {
+            model: {
+              ...model,
+              readbacks: { ...model.readbacks, localPolicy: localPolicyReadback(merged, token) },
+            },
+          };
+        },
+        LocalPolicySaveFailed: ({ message, token }: Extract<Message, { readonly _tag: "LocalPolicySaveFailed" }>): UpdateReturn<Model, Message> => {
+          const state = model.readbacks.localPolicy;
+          if (token !== state.token) return { model };
+          return { model: { ...model, readbacks: { ...model.readbacks, localPolicy: { ...state, message, status: state.rows.length > 0 ? "ok" : "error" } } } };
+        },
+        ChartPointShown: ({ label, seriesId, token }: Extract<Message, { readonly _tag: "ChartPointShown" }>): UpdateReturn<Model, Message> => {
+          const state = chartInteractionForRoute(model.chartInteraction, model.route._tag);
+          return { model: { ...model, chartInteraction: showChartPoint(state, token, seriesId, label) } };
+        },
+        ChartTooltipDismissed: ({ token }: Extract<Message, { readonly _tag: "ChartTooltipDismissed" }>): UpdateReturn<Model, Message> => {
+          const state = chartInteractionForRoute(model.chartInteraction, model.route._tag);
+          return { model: { ...model, chartInteraction: hideChartTooltip(state, token) } };
+        },
+        ChartSeriesToggled: ({ seriesId, token }: Extract<Message, { readonly _tag: "ChartSeriesToggled" }>): UpdateReturn<Model, Message> => {
+          const state = chartInteractionForRoute(model.chartInteraction, model.route._tag);
+          return { model: { ...model, chartInteraction: toggleChartSeries(state, token, seriesId) } };
+        },
+      };
+      const deviceAuthHandlers = {
+        DeviceAuthFieldChanged: ({ field, value }: Extract<Message, { readonly _tag: "DeviceAuthFieldChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.deviceAuth ?? initialDeviceAuthState();
+          return {
+            model: {
+              ...model,
+              deviceAuth: { ...state, draft: { ...state.draft, [field]: value }, error: undefined },
+            },
+          };
+        },
+        DeviceAuthModelAdded: (): UpdateReturn<Model, Message> => {
+          const state = model.deviceAuth ?? initialDeviceAuthState();
+          const modelId = state.draft.modelInput.trim();
+          if (modelId.length === 0) return { model };
+          return {
+            model: {
+              ...model,
+              deviceAuth: {
+                ...state,
+                draft: {
+                  ...state.draft,
+                  modelInput: "",
+                  selectedModelIds: [...new Set([...state.draft.selectedModelIds, modelId])],
+                },
+              },
+            },
+          };
+        },
+        DeviceAuthModelRemoved: ({ modelId }: Extract<Message, { readonly _tag: "DeviceAuthModelRemoved" }>): UpdateReturn<Model, Message> => {
+          const state = model.deviceAuth ?? initialDeviceAuthState();
+          return {
+            model: {
+              ...model,
+              deviceAuth: {
+                ...state,
+                draft: {
+                  ...state.draft,
+                  selectedModelIds: state.draft.selectedModelIds.filter((id) => id !== modelId),
+                },
+              },
+            },
+          };
+        },
+        DeviceAuthStartRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.deviceAuth ?? initialDeviceAuthState();
+          // S399: a click while a poll is pending or a start is in flight must not issue
+          // another start/read; the token fence alone would only hide the second response.
+          if (state.inflight === true || state.status === "starting" || state.status === "pending") return { model };
+          const token = state.token + 1;
+          return {
+            commands: [deviceAuthCommands.read({ token })],
+            model: { ...model, deviceAuth: { ...state, error: undefined, session: undefined, status: "starting", token } },
+          };
+        },
+        DeviceAuthSessionsLoaded: ({ sessions, token }: Extract<Message, { readonly _tag: "DeviceAuthSessionsLoaded" }>): UpdateReturn<Model, Message> => {
+          const state = model.deviceAuth ?? initialDeviceAuthState();
+          if (token !== state.token) return { model };
+          const plan = deviceAuthStartPlan(state, sessions);
+          if (plan.kind === "invalid") {
+            return { model: { ...model, deviceAuth: { ...state, error: plan.errors.join(" "), sessions, status: "error" } } };
+          }
+          const nextToken = state.token + 1;
+          if (plan.kind === "restore") {
+            const delayMs = deviceAuthPollDelayMs(plan.session);
+            return {
+              commands: [deviceAuthCommands.poll({ authRequestId: plan.session.authRequestId, delayMs, intervalMs: delayMs, token: nextToken })],
+              model: withDeviceAuthDialog(
+                { ...model, deviceAuth: { ...state, error: undefined, inflight: true, session: plan.session, sessions, status: "pending", token: nextToken } },
+                plan.session,
+              ),
+            };
+          }
+          return {
+            commands: [deviceAuthCommands.start({ payload: JSON.stringify(plan.payload), token: nextToken })],
+            model: { ...model, deviceAuth: { ...state, error: undefined, sessions, status: "starting", token: nextToken } },
+          };
+        },
+        DeviceAuthStarted: ({ session, token }: Extract<Message, { readonly _tag: "DeviceAuthStarted" }>): UpdateReturn<Model, Message> => {
+          const state = model.deviceAuth ?? initialDeviceAuthState();
+          if (token !== state.token) return { model };
+          const nextToken = state.token + 1;
+          const delayMs = deviceAuthPollDelayMs(session);
+          return {
+            commands: [deviceAuthCommands.poll({ authRequestId: session.authRequestId, delayMs, intervalMs: delayMs, token: nextToken })],
+            model: withDeviceAuthDialog(
+              { ...model, deviceAuth: { ...state, error: undefined, inflight: true, session, status: "pending", token: nextToken } },
+              session,
+            ),
+          };
+        },
+        DeviceAuthPolled: ({ session, token }: Extract<Message, { readonly _tag: "DeviceAuthPolled" }>): UpdateReturn<Model, Message> => {
+          const state = model.deviceAuth ?? initialDeviceAuthState();
+          if (token !== state.token) return { model };
+          // S432: the real pending poll body has no userCode/verification URL; keep the restored
+          // challenge for the same authorization so the code/link survive the first poll.
+          const nextSession = mergeDeviceAuthPoll(state.session, session);
+          if (nextSession.status === "connected") {
+            const nextToken = state.token + 1;
+            const activations = activationPlanForConnectedSession({ draft: state.draft, session: nextSession });
+            return {
+              commands: activations.map((payload) => deviceAuthCommands.activate({ payload: JSON.stringify(payload), token: nextToken })),
+              model: { ...model, deviceAuth: { ...state, error: undefined, inflight: false, session: nextSession, status: "connected", token: nextToken } },
+            };
+          }
+          if (nextSession.status === "pending") {
+            const nextToken = state.token + 1;
+            const delayMs = deviceAuthPollDelayMs(nextSession);
+            return {
+              commands: [deviceAuthCommands.poll({ authRequestId: nextSession.authRequestId, delayMs, intervalMs: delayMs, token: nextToken })],
+              model: withDeviceAuthDialog(
+                { ...model, deviceAuth: { ...state, error: undefined, inflight: true, session: nextSession, status: "pending", token: nextToken } },
+                nextSession,
+              ),
+            };
+          }
+          // S425: "expired"/"failed" are terminal host statuses. Surface the host reason instead of a
+          // generic message; returning no poll command stops the loop, and inflight is cleared.
+          const reason =
+            nextSession.lastError ??
+            (nextSession.status === "expired"
+              ? "Device authorization expired."
+              : "Device authorization failed.");
+          return { model: { ...model, deviceAuth: { ...state, error: reason, inflight: false, session: nextSession, status: "error", token } } };
+        },
+        DeviceAuthFailed: ({ message, token }: Extract<Message, { readonly _tag: "DeviceAuthFailed" }>): UpdateReturn<Model, Message> => {
+          const state = model.deviceAuth ?? initialDeviceAuthState();
+          if (token !== state.token) return { model };
+          return { model: { ...model, deviceAuth: deviceAuthFailedState(state, message) } };
+        },
+        DeviceAuthRetryRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.deviceAuth ?? initialDeviceAuthState();
+          if (state.inflight === true) return { model };
+          const nextToken = state.token + 1;
+          if (state.session === undefined) {
+            return {
+              commands: [deviceAuthCommands.read({ token: nextToken })],
+              model: { ...model, deviceAuth: { ...state, error: undefined, inflight: false, status: "starting", token: nextToken } },
+            };
+          }
+          return {
+            commands: [
+              deviceAuthCommands.poll({
+                authRequestId: state.session.authRequestId,
+                delayMs: 0,
+                intervalMs: deviceAuthPollDelayMs(state.session),
+                token: nextToken,
+              }),
+            ],
+            model: { ...model, deviceAuth: { ...state, error: undefined, inflight: true, status: "pending", token: nextToken } },
+          };
+        },
+        GotDeviceAuthDialogMessage: ({ message }: Extract<Message, { readonly _tag: "GotDeviceAuthDialogMessage" }>): UpdateReturn<Model, Message> => {
+          const result = updateDeviceAuthDialog(
+            model.deviceAuthDialog,
+            // SAFETY: this tag is only produced by the dialog submodel view/commands.
+            message as DialogMessage,
+          );
+          return {
+            commands: Command.mapMessages(result.commands, (childMessage) =>
+              Message.GotDeviceAuthDialogMessage({ message: childMessage }),
+            ),
+            model: { ...model, deviceAuthDialog: result.model },
+          };
+        },
+        DeviceAuthCancelled: (): UpdateReturn<Model, Message> => {
+          const state = model.deviceAuth ?? initialDeviceAuthState();
+          // S425: clear the in-flight marker or DeviceAuthStartRequested refuses every later start.
+          // S459: interrupt the scheduled poll so cancel ends the sleep/request lifetime; the advanced
+          // token stays the fence for any result already in flight when the interrupt landed.
+          const authRequestId = state.session?.authRequestId;
+          return {
+            commands:
+              authRequestId === undefined
+                ? undefined
+                : [
+                    deviceAuthCommands.poll.Interrupt(
+                      { authRequestId },
+                      () => Message.DeviceAuthPollCancelCompleted({}),
+                    ),
+                  ],
+            model: { ...model, deviceAuth: deviceAuthCancelledState(state) },
+          };
+        },
+        DeviceAuthPollCancelCompleted: (): UpdateReturn<Model, Message> => ({ model }),
+        DeviceAuthActivated: ({ token }: Extract<Message, { readonly _tag: "DeviceAuthActivated" }>): UpdateReturn<Model, Message> => {
+          const state = model.deviceAuth ?? initialDeviceAuthState();
+          if (token !== state.token) return { model };
+          return { model: { ...model, deviceAuth: { ...state, error: undefined } } };
+        },
+      };
+      const requestsRankingHandlers = {
+        GotRequestsRankingMetricListboxMessage: ({ message }: Extract<Message, { readonly _tag: "GotRequestsRankingMetricListboxMessage" }>): UpdateReturn<Model, Message> =>
+          // SAFETY: this tag is only produced by the Listbox submodel view/commands, so the carried value is its Message.
+          updateRequestsMetricListbox(model, message as Parameters<typeof requestsMetricListbox.update>[1]),
+        GotRequestsRankingTargetListboxMessage: ({ message }: Extract<Message, { readonly _tag: "GotRequestsRankingTargetListboxMessage" }>): UpdateReturn<Model, Message> =>
+          // SAFETY: this tag is only produced by the Listbox submodel view/commands, so the carried value is its Message.
+          updateRequestsTargetListbox(model, message as Parameters<typeof requestsMetricListbox.update>[1]),
+        RequestsRankingFieldChanged: ({ field, value }: Extract<Message, { readonly _tag: "RequestsRankingFieldChanged" }>): UpdateReturn<Model, Message> =>
+          updateRequestsRankingField(model, field, value),
+        RequestsRankingSubmitRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.requestsRanking ?? initialRequestsRankingState();
+          if (state.status === "loading") return { model };
+          const metric = requestsRankingMetricOf(state.metric);
+          const rankingTarget = requestsRankingTargetOf(state.rankingTarget);
+          if (metric === undefined || rankingTarget === undefined) {
+            const token = state.token + 1;
+            return { model: { ...model, requestsRanking: { ...state, message: "Select a supported metric and ranking target.", status: "error", token } } };
+          }
+          const token = state.token + 1;
+          const payload = buildRequestsRankingQuery({ metric, rankingTarget });
+          return {
+            commands: [requestsRankingCommands.query({ payload: JSON.stringify(payload), token })],
+            model: { ...model, requestsRanking: { ...state, message: undefined, status: "loading", token } },
+          };
+        },
+        RequestsRankingLoaded: ({ rows, token }: Extract<Message, { readonly _tag: "RequestsRankingLoaded" }>): UpdateReturn<Model, Message> => {
+          const state = model.requestsRanking ?? initialRequestsRankingState();
+          const next = mergeRequestsRankingLoaded(state, rows, token);
+          return next === undefined ? { model } : { model: { ...model, requestsRanking: next } };
+        },
+        RequestsRankingFailed: ({ message, token }: Extract<Message, { readonly _tag: "RequestsRankingFailed" }>): UpdateReturn<Model, Message> => {
+          const state = model.requestsRanking ?? initialRequestsRankingState();
+          const next = mergeRequestsRankingFailed(state, message, token);
+          return next === undefined ? { model } : { model: { ...model, requestsRanking: next } };
+        },
+      };
+      const learningRankingHandlers = {
+        LearningLadderToggleRequested: ({ rolledBack, roleId, taskTypeId }: Extract<Message, { readonly _tag: "LearningLadderToggleRequested" }>): UpdateReturn<Model, Message> => {
+          const state = model.learningRanking ?? initialLearningRankingState();
+          const packs = model.readbacks.learningPacks;
+          const scopeId = packs.status === "ok" || packs.status === "empty" ? packs.scopeId?.trim() : undefined;
+          const plan = planLearningLadderToggle(state, { roleId, rolledBack, scopeId, taskTypeId });
+          if (plan.kind === "noop") return { model };
+          if (plan.kind !== "rollback") return { model: { ...model, learningRanking: plan.state } };
+          return {
+            commands: [learningRankingCommands.rollbackLadder({
+              payload: JSON.stringify(plan.payload),
+              roleId,
+              scopeId: plan.state.scopeId ?? "",
+              taskTypeId,
+              token: plan.token,
+            })],
+            model: { ...model, learningRanking: plan.state },
+          };
+        },
+        LearningLadderUpdated: ({ rolledBack, roleId, scopeId, taskTypeId, token }: Extract<Message, { readonly _tag: "LearningLadderUpdated" }>): UpdateReturn<Model, Message> => {
+          void rolledBack;
+          const state = model.learningRanking ?? initialLearningRankingState();
+          const packs = model.readbacks.learningPacks;
+          const freshScope = packs.status === "ok" || packs.status === "empty" ? packs.scopeId : undefined;
+          const next = mergeLearningLadderUpdated(state, { freshScope, roleId, scopeId, taskTypeId, token });
+          if (next === undefined) return { model };
+          const readbackToken = model.readbacks.learning.token + 1;
+          return {
+            commands: [readReadback({ key: "learning", token: readbackToken })],
+            model: {
+              ...model,
+              learningRanking: next,
+              readbacks: { ...model.readbacks, learning: loadingReadback(readbackToken) },
+            },
+          };
+        },
+        LearningLadderFailed: ({ message, roleId, scopeId, taskTypeId, token }: Extract<Message, { readonly _tag: "LearningLadderFailed" }>): UpdateReturn<Model, Message> => {
+          const state = model.learningRanking ?? initialLearningRankingState();
+          const packs = model.readbacks.learningPacks;
+          const freshScope = packs.status === "ok" || packs.status === "empty" ? packs.scopeId : undefined;
+          const next = mergeLearningLadderFailed(state, { freshScope, message, roleId, scopeId, taskTypeId, token });
+          return next === undefined ? { model } : { model: { ...model, learningRanking: next } };
+        },
+      };
+      const endpointActivationHandlers = {
+        EndpointAdmissionFieldChanged: ({ field, value }: Extract<Message, { readonly _tag: "EndpointAdmissionFieldChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.endpointAdmission ?? initialEndpointAdmissionState();
+          const next = endpointAdmissionFieldChangedState(state, field, value);
+          return next === undefined ? { model } : { model: { ...model, endpointAdmission: next } };
+        },
+        EndpointAdmissionModelAdded: (): UpdateReturn<Model, Message> => {
+          const state = model.endpointAdmission ?? initialEndpointAdmissionState();
+          const next = endpointAdmissionModelAddedState(state);
+          return next === undefined ? { model } : { model: { ...model, endpointAdmission: next } };
+        },
+        EndpointAdmissionModelRemoved: ({ modelId }: Extract<Message, { readonly _tag: "EndpointAdmissionModelRemoved" }>): UpdateReturn<Model, Message> => {
+          const state = model.endpointAdmission ?? initialEndpointAdmissionState();
+          const next = endpointAdmissionModelRemovedState(state, modelId);
+          return next === undefined ? { model } : { model: { ...model, endpointAdmission: next } };
+        },
+        EndpointAdmissionSubmitRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.endpointAdmission ?? initialEndpointAdmissionState();
+          if (endpointAdmissionBusy(state)) return { model };
+          const errors = validateEndpointAdmissionDraft(state);
+          if (errors.length > 0) return { model: { ...model, endpointAdmission: { ...state, error: errors.join(" "), status: "error" } } };
+          if (endpointActivationNeedsReset(state.run)) return { model };
+          const batch = state.draft.batchMode === "true";
+          const planned = batch
+            ? [{ activationId: "batch:" + state.draft.activationBatchId.trim(), payload: endpointBatchPayload(state.draft) }]
+            : endpointActivationPayloads(state.draft).map((payload) => ({ activationId: "model:" + encodeURIComponent(payload.modelId), payload }));
+          const started = beginEndpointActivationRun(state.run, {
+            activationIds: planned.map((entry) => entry.activationId),
+            mode: batch ? "batch" : "single",
+          });
+          if (started.kind === "busy") return { model };
+          if (started.kind === "invalid") {
+            return { model: { ...model, endpointAdmission: { ...state, error: "Select at least one model.", status: "error" } } };
+          }
+          const commands = planned.map((entry) =>
+            batch
+              ? endpointAdmissionCommands.activateBatch({ activationId: entry.activationId, generation: started.generation, payload: JSON.stringify(entry.payload) })
+              : endpointAdmissionCommands.activate({ activationId: entry.activationId, generation: started.generation, payload: JSON.stringify(entry.payload) }),
+          );
+          return {
+            commands,
+            model: {
+              ...model,
+              endpointAdmission: { ...state, error: undefined, pendingAction: batch ? "batch" : "activate", run: started.run, status: "saving" },
+            },
+          };
+        },
+        EndpointAdmissionResetRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.endpointAdmission ?? initialEndpointAdmissionState();
+          const next = endpointAdmissionResetState(state);
+          return next === undefined ? { model } : { model: { ...model, endpointAdmission: next } };
+        },
+        EndpointAdmissionSucceeded: ({ activationId, generation }: Extract<Message, { readonly _tag: "EndpointAdmissionSucceeded" }>): UpdateReturn<Model, Message> => {
+          const state = model.endpointAdmission ?? initialEndpointAdmissionState();
+          const result = settleEndpointActivation(state.run, { activationId, generation, outcome: "succeeded" });
+          if (result.kind !== "updated") return { model };
+          return endpointAdmissionCompletion(model, state, result.run);
+        },
+        EndpointAdmissionFailed: ({ activationId, generation, message }: Extract<Message, { readonly _tag: "EndpointAdmissionFailed" }>): UpdateReturn<Model, Message> => {
+          const state = model.endpointAdmission ?? initialEndpointAdmissionState();
+          const result = settleEndpointActivation(state.run, { activationId, generation, outcome: "failed", message });
+          if (result.kind !== "updated") return { model };
+          return endpointAdmissionCompletion(model, state, result.run);
+        },
+      };
+      const handlers = {
+        ...shellHandlers,
+        ...remainingHandlers,
+        ...deviceAuthHandlers,
+        ...requestsRankingHandlers,
+        ...learningRankingHandlers,
+        ...endpointActivationHandlers,
+      };
+      return Message.match<UpdateReturn<Model, Message>>(message, handlers);
+    };
   };
