@@ -1,0 +1,104 @@
+S529 strict RED: observe structural test against pre-S529 view.ts (HEAD)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s529-observe-family.test.ts (6 tests | 6 failed) 864ms
+   × S529 observe family structural parity > requests renders the telemetry ledger and filter envelope 440ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Telemetry request ledger'
+   × S529 observe family structural parity > activity renders metrics, ledger and capture inspector 85ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Host activity and metrics'
+   × S529 observe family structural parity > logs renders structured rows and raw lines 64ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Host logs'
+   × S529 observe family structural parity > routing renders analytics filters 62ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Routing analytics'
+   × S529 observe family structural parity > observability snapshot renders explanation, registry and Refresh 121ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'What this runtime has measured: routi…'
+   × S529 observe family structural parity > store receipts renders dual-store ledger 78ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Store degradation receipts'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s529-observe-family.test.ts > S529 observe family structural parity > requests renders the telemetry ledger and filter envelope
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Telemetry request ledger'
+
+Expected: "Telemetry request ledger"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeRequestsToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRanked comparisonMetric and ranking target feed POST /telemetry/query over the last week. The request list below is a separate readback.Ranking metricAverage latencyRanking targetEndpoint variantsRun rankingRuntime readbackRequestsWaiting for the requests read.Refresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ test/s529-observe-family.test.ts:22:297
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  test/s529-observe-family.test.ts > S529 observe family structural parity > activity renders metrics, ledger and capture inspector
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Host activity and metrics'
+
+Expected: "Host activity and metrics"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeActivityToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime readbackObserve activityWaiting for the observe activity read.Refresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ test/s529-observe-family.test.ts:26:197
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  test/s529-observe-family.test.ts > S529 observe family structural parity > logs renders structured rows and raw lines
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Host logs'
+
+Expected: "Host logs"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeObserve logsToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime readbackObserve logsWaiting for the observe logs read.Refresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ test/s529-observe-family.test.ts:30:166
+     28|   it("logs renders structured rows and raw lines", async () => {
+     29|     const text = await render("ObserveLogs");
+     30|     for (const label of ["Host logs", "STRUCTURED ROWS", "SOURCES", "C…
+       |                                                                                                                                                                      ^
+     31|   });
+     32|   it("routing renders analytics filters", async () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  test/s529-observe-family.test.ts > S529 observe family structural parity > routing renders analytics filters
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Routing analytics'
+
+Expected: "Routing analytics"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeObserve routingToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime readbackObserve routingWaiting for the observe routing read.Refresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ test/s529-observe-family.test.ts:34:143
+     32|   it("routing renders analytics filters", async () => {
+     33|     const text = await render("ObserveRouting");
+     34|     for (const label of ["Routing analytics", "Time range", "Breakdown…
+       |                                                                                                                                               ^
+     35|   });
+     36|   it("observability snapshot renders explanation, registry and Refresh…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  test/s529-observe-family.test.ts > S529 observe family structural parity > observability snapshot renders explanation, registry and Refresh
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'What this runtime has measured: routi…'
+
+Expected: "What this runtime has measured: routing decisions served, captures admitted for replay, evaluation finalise refusals, and learner candidates examined."
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeObservabilityToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime readbackObservability snapshotWaiting for the observability read.Refresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ test/s529-observe-family.test.ts:38:264
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  test/s529-observe-family.test.ts > S529 observe family structural parity > store receipts renders dual-store ledger
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Store degradation receipts'
+
+Expected: "Store degradation receipts"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeStore receiptsToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime readbackStore receiptsWaiting for the store receipts read.Refresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ test/s529-observe-family.test.ts:42:245
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed (6)
+   Start at  21:32:49
+   Duration  16.87s (transform 7.68s, setup 0ms, collect 12.19s, tests 864ms, environment 1.92s, prepare 642ms)
+
+

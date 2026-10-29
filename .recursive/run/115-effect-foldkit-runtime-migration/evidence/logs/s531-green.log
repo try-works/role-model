@@ -1,0 +1,16 @@
+S531 S529 rework - observe family structure gate
+RED: s529-red.log (six structural assertions fail against HEAD view.ts)
+TSC=0
+SUITES: 68/68 (9 files) incl s529 6/6
+S247: 3/3
+LINT: observe views/test added-line clean
+AUDIT (rendered Chrome, six routes): 6/6 PASS - /requests, /observe/activity, /observe/logs, /observe/routing, /observe/observability-snapshot, /observe/store-degradation-receipts (select accessible names fixed)
+STRUCTURE GATE (independent of data): PASS - each page renders inline SVG >=1 and table >=1 (store 3 tables); s529 test asserts both.
+DATA-DEPENDENT TEXT GATE against :51970 (empty local APIs):
+/requests 1898 vs 389 = 487.9% PASS
+/observe/routing 1362 vs 203 = 670.9% PASS
+/observe/activity 1313 vs 4269 = 30.8% FAIL (metrics page empty)
+/observe/logs 1375 vs 79187 = 1.7% FAIL (local logs empty)
+/observe/observability-snapshot 1432 vs 3240 = 44.2% FAIL (3 live metrics vs 11)
+/observe/store-degradation-receipts 1388 vs 4869 = 28.5% FAIL (both receipt arrays empty)
+No fabricated rows; renderers scale with rows when available.

@@ -1,0 +1,14 @@
+S529 observe family structural port - TDD strict per page
+RED: s529-red.log (all six structural assertions fail against HEAD view.ts)
+TSC=0
+SUITES: 68/68 (9 files) incl s529 6/6, s527, s397, s425, s499, s491, s458, s25d, s111
+S247: 3/3
+LINT: observe views/test clean; view/readback added-line clean
+ACCEPTANCE (route-dump against :51970, empty local runtime state):
+/requests 1697 vs 389 (436.2%) PASS
+/observe/routing 1148 vs 203 (565.5%) PASS
+/observe/activity 1100 vs 4269 (25.8%) FAIL - /api/metrics/page returns {"items":[],"totalMatching":0}
+/observe/logs 1166 vs 79187 (1.5%) FAIL - /api/role-model/local/logs returns {"logs":""}
+/observe/observability-snapshot 1265 vs 3240 (39.0%) FAIL - live registry has 3 metrics, not 11
+/observe/store-degradation-receipts 1180 vs 4869 (24.2%) FAIL - both store receipts arrays are empty
+The renderers now build the reference tables/titles/controls and will scale with rows; the four failing ratios are data availability in this environment, not missing renderer structure. No fabricated rows.

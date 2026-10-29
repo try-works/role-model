@@ -427,9 +427,9 @@ const parseObserveActivity = (body: unknown, token: number): ReadbackState => {
     return [
       row(
         String(entry.id ?? entry.requestId ?? index),
-        String(entry.request_id ?? entry.id ?? entry.kind ?? "activity"),
-        String(entry.status ?? entry.model_id ?? entry.request_operation ?? ""),
-        String(entry.atMs ?? ""),
+        String(entry.model_id ?? entry.modelId ?? entry.request_id ?? "activity"),
+        String(entry.status ?? ""),
+        JSON.stringify(entry),
       ),
     ];
   });
@@ -442,19 +442,14 @@ const parseObserveLogs = (body: unknown, token: number): ReadbackState => {
     return failedReadback("Observe logs read failed: invalid response", token);
   }
   const logs = typeof record.logs === "string" ? record.logs.trim() : "";
-  return logs.length === 0
-    ? { rows: [], status: "empty", token }
-    : okRows(
-        [
-          row(
-            "logs",
-            "Observe logs",
-            String(logs.split("\n").length),
-            `${String(logs.length)} chars`,
-          ),
-        ],
-        token,
-      );
+  if (logs.length === 0) return { rows: [], status: "empty", token };
+  const rows = logs.split("\n").flatMap((line, index) => {
+    const trimmed = line.trim();
+    if (trimmed.length === 0) return [];
+    const match = trimmed.match(/^(\S+)\s+(\S+)\s+(.*)$/);
+    return [row("log:" + String(index), match?.[1] ?? "log:" + String(index), match?.[2] ?? "combined", trimmed)];
+  });
+  return okRows(rows, token);
 };
 
 const parseObserveRouting = (body: unknown, token: number): ReadbackState => {
