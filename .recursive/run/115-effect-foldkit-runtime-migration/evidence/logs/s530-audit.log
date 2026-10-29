@@ -1,0 +1,18 @@
+# S530 route-dump audit (packaged dev exe, temporary release copy, empty dev state)
+server: role-model-dev.exe --repo-root <temp release> --runtime-state-root <temp> --scope-id standalone-runtime-dev --host 127.0.0.1 --port 52377 --static-root <release>/build/client
+UI static: rebuilt from runtime-ui-next build.mjs into the temporary release build/client (BUILD_EXIT=0)
+reference: D:/DEV/rm-clean/audit/ref/<key>.json (React 0.0.20, live telemetry)
+HONESTY: the packaged dev state is empty; data-dependent pages (decisions, candidates, router, controller) cannot reach 0.9x reference length without live rows. The gate below reports textLen ratios AND the structural title/section presence; no 0.9x claim is made where data is empty.
+
+| route | key | refLen | portLen | ratio% | tables | buttons | headings | titles present |
+|---|---|---|---|---|---|---|---|---|
+| /router | _app_router | 1044 | 1120 | 107.3 | 1 | 1 | 4 | Routing overview=True, Alias inventory=True, Routing candidates=True |
+| /router/candidates | _app_router_candidates | 1228 | 1192 | 97.1 | 0 | 1 | 3 | Candidate inventory=True |
+| /router/decisions | _app_router_decisions | 13805 | 218 | 1.6 | 0 | 1 | 3 | Routing decisions=True, Decision ledger=True |
+| /router/strategy | _app_router_strategy | 116 | 796 | 686.2 | 0 | 3 | 4 | Routing strategy=True, Preview only=True |
+| /router/config | _app_router_config | 116 | 1081 | 931.9 | 0 | 3 | 5 | Routing strategy=True, Preview only=True |
+| /router/workloads | _app_router_workloads | 1012 | 825 | 81.5 | 0 | 6 | 6 | Workloads=True, Workload templates=True, Entries=True, Posture diagnostics=True, Preview only=True |
+| /router/agent-strategy | _app_router_agent_strategy | 2360 | 1082 | 45.8 | 0 | 8 | 7 | Agent strategy=True, Posture diagnostics=True, Entries=True, Preview only=True |
+| /control/controller | _app_router_controller | 1193 | 1337 | 112.1 | 0 | 6 | 4 | Routing controller=True, Controller assignment=True |
+
+STRUCTURAL GATE: 8/8 routes have every expected reference title present. Routes below 0.9x textLen (data-empty): /router/decisions, /router/workloads, /router/agent-strategy
