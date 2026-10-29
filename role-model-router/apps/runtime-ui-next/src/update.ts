@@ -11,6 +11,13 @@ import {
   deviceAuthFailedState,
   withDeviceAuthDialog,
 } from "./features/device-auth/update";
+import {
+  endpointAdmissionCompletionState,
+  endpointAdmissionFieldChangedState,
+  endpointAdmissionModelAddedState,
+  endpointAdmissionModelRemovedState,
+  endpointAdmissionResetState,
+} from "./features/endpoint-activation/update";
 
 import { DEFAULT_OVERVIEW_FILTERS, overviewQuery, type OverviewFilters } from "./overview-filters";
 import { parseRuntimeConfigRecord, parseRuntimeConfigText, runtimeConfigDiff, runtimeConfigText } from "./runtime-config";
@@ -69,9 +76,7 @@ import {
 } from "./endpoint-admission";
 import {
   beginEndpointActivationRun,
-  endpointActivationFailureText,
   endpointActivationNeedsReset,
-  resetEndpointActivationRun,
   settleEndpointActivation,
 } from "./endpoint-activation-tracker";
 import {
@@ -306,26 +311,8 @@ const endpointAdmissionCompletion = (
   state: EndpointAdmissionState,
   run: EndpointAdmissionState["run"],
 ): UpdateReturn<Model, Message> => {
-  const failureText = endpointActivationFailureText(run);
-  const status =
-    run.status === "pending"
-      ? "saving"
-      : run.status === "saved"
-        ? "saved"
-        : run.status === "partial"
-          ? "partial"
-          : "error";
   return {
-    model: {
-      ...model,
-      endpointAdmission: {
-        ...state,
-        error: status === "saving" ? undefined : failureText,
-        pendingAction: status === "saving" ? state.pendingAction : undefined,
-        run,
-        status,
-      },
-    },
+    model: { ...model, endpointAdmission: endpointAdmissionCompletionState(state, run) },
   };
 };
 
@@ -1431,20 +1418,18 @@ const updateLocalPolicyDraft = (
       },
       EndpointAdmissionFieldChanged: ({ field, value }) => {
         const state = model.endpointAdmission ?? initialEndpointAdmissionState();
-        if (endpointAdmissionBusy(state) || endpointActivationNeedsReset(state.run)) return { model };
-        return { model: { ...model, endpointAdmission: { ...state, draft: { ...state.draft, [field]: value }, error: undefined } } };
+        const next = endpointAdmissionFieldChangedState(state, field, value);
+        return next === undefined ? { model } : { model: { ...model, endpointAdmission: next } };
       },
       EndpointAdmissionModelAdded: () => {
         const state = model.endpointAdmission ?? initialEndpointAdmissionState();
-        if (endpointAdmissionBusy(state) || endpointActivationNeedsReset(state.run)) return { model };
-        const modelId = state.draft.modelInput.trim();
-        if (modelId.length === 0) return { model };
-        return { model: { ...model, endpointAdmission: { ...state, draft: { ...state.draft, modelInput: "", selectedModelIds: [...new Set([...state.draft.selectedModelIds, modelId])] } } } };
+        const next = endpointAdmissionModelAddedState(state);
+        return next === undefined ? { model } : { model: { ...model, endpointAdmission: next } };
       },
       EndpointAdmissionModelRemoved: ({ modelId }) => {
         const state = model.endpointAdmission ?? initialEndpointAdmissionState();
-        if (endpointAdmissionBusy(state) || endpointActivationNeedsReset(state.run)) return { model };
-        return { model: { ...model, endpointAdmission: { ...state, draft: { ...state.draft, selectedModelIds: state.draft.selectedModelIds.filter((id) => id !== modelId) } } } };
+        const next = endpointAdmissionModelRemovedState(state, modelId);
+        return next === undefined ? { model } : { model: { ...model, endpointAdmission: next } };
       },
       EndpointAdmissionSubmitRequested: () => {
         const state = model.endpointAdmission ?? initialEndpointAdmissionState();
@@ -1479,13 +1464,8 @@ const updateLocalPolicyDraft = (
       },
       EndpointAdmissionResetRequested: () => {
         const state = model.endpointAdmission ?? initialEndpointAdmissionState();
-        if (state.run.pending.length > 0) return { model };
-        return {
-          model: {
-            ...model,
-            endpointAdmission: { ...state, error: undefined, pendingAction: undefined, run: resetEndpointActivationRun(state.run), status: "draft" },
-          },
-        };
+        const next = endpointAdmissionResetState(state);
+        return next === undefined ? { model } : { model: { ...model, endpointAdmission: next } };
       },
       EndpointAdmissionSucceeded: ({ activationId, generation }) => {
         const state = model.endpointAdmission ?? initialEndpointAdmissionState();
