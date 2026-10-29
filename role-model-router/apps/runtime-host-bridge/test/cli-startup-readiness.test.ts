@@ -131,3 +131,87 @@ describe("cli startup readiness", () => {
     }
   });
 });
+describe("S478 packaged readiness transition", () => {
+  test("marks the shared readiness owner exactly once and clears bootstrap message", () => {
+    const state: Parameters<typeof cli.completeCliStartupReadiness>[0] = {
+      status: "pending",
+      message: "runtime_initializing",
+    };
+    let readyCalls = 0;
+    cli.completeCliStartupReadiness(state, { markReady: () => { readyCalls += 1; } });
+    expect(state.status).toBe("ready");
+    expect("message" in state).toBe(false);
+    expect(readyCalls).toBe(1);
+  });
+});
+describe("S478/S479 packaged branch readiness", () => {
+  test("a packaged branch run through runCliBackendBranch marks readiness exactly once", async () => {
+    const state: Parameters<typeof cli.completeCliStartupReadiness>[0] = {
+      status: "pending",
+      message: "runtime_initializing",
+    };
+    let readyCalls = 0;
+    let packagedRan = false;
+    let plainRan = false;
+    await cli.runCliBackendBranch({
+      bootstrapState: state,
+      hasPackagedDistribution: true,
+      readinessOwner: { markReady: () => { readyCalls += 1; } },
+      runPackaged: async () => { packagedRan = true; },
+      runPlain: async () => { plainRan = true; },
+    });
+    expect(packagedRan).toBe(true);
+    expect(plainRan).toBe(false);
+    expect(state.status).toBe("ready");
+    expect("message" in state).toBe(false);
+    expect(readyCalls).toBe(1);
+  });
+
+  test("a non-packaged branch run still marks readiness exactly once", async () => {
+    const state: Parameters<typeof cli.completeCliStartupReadiness>[0] = { status: "pending", message: "x" };
+    let readyCalls = 0;
+    await cli.runCliBackendBranch({
+      bootstrapState: state,
+      hasPackagedDistribution: false,
+      readinessOwner: { markReady: () => { readyCalls += 1; } },
+      runPackaged: async () => {},
+      runPlain: async () => {},
+    });
+    expect(state.status).toBe("ready");
+    expect(readyCalls).toBe(1);
+  });
+});
+describe("S479 branch selection", () => {
+  test("manifest present without a release id selects the packaged path", async () => {
+    const state: Parameters<typeof cli.completeCliStartupReadiness>[0] = { status: "pending", message: "x" };
+    let packagedRan = 0;
+    let plainRan = 0;
+    await cli.runCliBackendBranch({
+      bootstrapState: state,
+      hasPackagedDistribution: true,
+      packagedReleaseId: undefined,
+      readinessOwner: { markReady: () => {} },
+      runPackaged: async () => { packagedRan += 1; },
+      runPlain: async () => { plainRan += 1; },
+    });
+    expect(packagedRan).toBe(1);
+    expect(plainRan).toBe(0);
+    expect(state.status).toBe("ready");
+  });
+
+  test("a release id without a manifest falls back to the plain path without TypeError", async () => {
+    const state: Parameters<typeof cli.completeCliStartupReadiness>[0] = { status: "pending", message: "x" };
+    let plainRan = 0;
+    await expect(
+      cli.runCliBackendBranch({
+        bootstrapState: state,
+        hasPackagedDistribution: false,
+        packagedReleaseId: "run88:release-without-manifest",
+        readinessOwner: { markReady: () => {} },
+        runPlain: async () => { plainRan += 1; },
+      }),
+    ).resolves.toBeUndefined();
+    expect(plainRan).toBe(1);
+    expect(state.status).toBe("ready");
+  });
+});

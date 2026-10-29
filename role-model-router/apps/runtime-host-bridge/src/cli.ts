@@ -4321,6 +4321,34 @@ export function startCliExtensionRuntimeWatchdog(options: {
   };
 }
 
+export async function runCliBackendBranch(input: {
+  readonly hasPackagedDistribution: boolean;
+  readonly packagedReleaseId?: string;
+  readonly bootstrapState: { status: CliBootstrapState["status"]; message?: string };
+  readonly readinessOwner: { markReady(): void };
+  readonly runPackaged?: () => Promise<void>;
+  readonly runPlain: () => Promise<void>;
+}): Promise<void> {
+  if (input.hasPackagedDistribution) {
+    if (!input.runPackaged) {
+      throw new Error("packaged distribution is present but its backend branch is unavailable");
+    }
+    await input.runPackaged();
+  } else {
+    await input.runPlain();
+  }
+  completeCliStartupReadiness(input.bootstrapState, input.readinessOwner);
+}
+
+export function completeCliStartupReadiness(
+  bootstrapState: { status: CliBootstrapState["status"]; message?: string },
+  readinessOwner: { markReady(): void },
+): void {
+  bootstrapState.status = "ready";
+  delete bootstrapState.message;
+  readinessOwner.markReady();
+}
+
 export function createCliServerOptions(
   options: {
     host: string;
@@ -11812,7 +11840,10 @@ export async function main(): Promise<void> {
         .catch(() => {});
       return created;
     };
+    let hasPackagedDistribution = false;
+    let runPackagedBackend!: () => Promise<void>;
     if (trackBManifestText && trackBManifestPath) {
+      hasPackagedDistribution = true;
       const manifest = JSON.parse(trackBManifestText) as {
         readonly schemaVersion: string;
         readonly sidecar: { readonly modulePath: string; readonly artifactSha256: string };
@@ -11854,7 +11885,7 @@ export async function main(): Promise<void> {
         throw new Error("v2 Track B distribution is missing its public runtime adapter");
       }
       const distributionRoot = path.dirname(trackBManifestPath);
-      if (packagedReleaseId) {
+      runPackagedBackend = async (): Promise<void> => {
         validateRun88PrivateDistributionIdentity(
           {
             generation:
@@ -12208,7 +12239,8 @@ export async function main(): Promise<void> {
         expectedExtensionIds: TRACK_B_CANONICAL_EXTENSION_IDS,
         onFailure: failExtensionRuntime,
       });
-    } else {
+    };
+    const runPlainBackend = async (): Promise<void> => {
       /**
        * S129 (R27 second rewiring slice): the non-packaged backend is owned by an Effect scope, the
        * same shape the server took in S128. The shutdown chain is unchanged - releaseHostResources
@@ -12232,10 +12264,15 @@ export async function main(): Promise<void> {
       hostScope.register("backend", async () => {
         await Effect.runPromise(Scope.close(backendScope, Exit.void));
       });
-      bootstrapState.status = "ready";
-    readinessOwner.markReady();
-      delete bootstrapState.message;
-    }
+    };
+    await runCliBackendBranch({
+      bootstrapState,
+      hasPackagedDistribution,
+      packagedReleaseId,
+      readinessOwner,
+      runPackaged: runPackagedBackend,
+      runPlain: runPlainBackend,
+    });
   } catch (error) {
     await failExtensionRuntime(error);
     console.error("runtime backend initialization failed", error);
