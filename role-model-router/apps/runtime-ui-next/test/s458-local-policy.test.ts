@@ -1,9 +1,11 @@
 import { Effect, Option } from "effect";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Url } from "@role-model-router/foldkit";
 
-import { defineLocalPolicyCommands } from "../src/commands";
+import { defineLocalPolicyCommands, localPolicyCommands } from "../src/commands";
+import { OPERATOR_TOKEN_STORAGE_KEY } from "../src/operator-token";
+import { READBACK_PATHS } from "../src/runtime-endpoints";
 import { createInit } from "../src/init";
 import { Message } from "../src/message";
 import {
@@ -114,5 +116,34 @@ describe("S458 local policy behavior", () => {
     const replaced = shellUpdate(shellModel(), Message.ChangedUrl({ url: urlOf("/app/local/policy") }));
     expect((replaced.commands ?? []).map((command) => command.name)).toContain("ReplaceLegacyUrl");
     expect((replaced.commands ?? []).find((command) => command.name === "ReplaceLegacyUrl")?.args?.href).toBe("/local/llama-swap/policy");
+  });
+});
+describe("S488 shared runtime HTTP client (local policy)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  it("sends the local policy PUT through the shared client with exact path, auth, and an abort signal", async () => {
+    localStorage.setItem(OPERATOR_TOKEN_STORAGE_KEY, "shared-client-token");
+    const seen: Array<{ url: string; init: RequestInit }> = [];
+    vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
+      seen.push({ url: String(input), init: init ?? {} });
+      return new Response(JSON.stringify({ ttl: 120 }), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      });
+    });
+    const payload = { ttl: 120 };
+    const message = await Effect.runPromise(
+      localPolicyCommands.save({ payload: JSON.stringify(payload), token: 7 }).effect,
+    );
+    expect(message._tag).toBe("LocalPolicySaved");
+    expect(seen).toHaveLength(1);
+    expect(seen[0]?.url).toBe(READBACK_PATHS.localPolicy);
+    expect(seen[0]?.init.method).toBe("PUT");
+    expect(JSON.parse(String(seen[0]?.init.body))).toEqual(payload);
+    const headers = new Headers(seen[0]?.init.headers);
+    expect(headers.get("accept")).toBe("application/json");
+    expect(headers.get("authorization")).toBe("Bearer shared-client-token");
+    expect(headers.get("content-type")).toBe("application/json");
+    expect(seen[0]?.init.signal).toBeInstanceOf(AbortSignal);
+    localStorage.removeItem(OPERATOR_TOKEN_STORAGE_KEY);
   });
 });

@@ -23,6 +23,8 @@ import { Message } from "./message";
 import type { RuntimeConfigClient } from "./runtime-config";
 import { type StudioClient, StudioState, studioRequestFor } from "./studio";
 import { type ObservabilityReader, parseObservabilitySnapshot } from "./observability";
+import { type RuntimeHttpClient, createRuntimeHttpClient } from "./http/runtime-client";
+import { readStoredOperatorToken } from "./operator-token";
 import { ReadbackKeySchema } from "./readback";
 import {
   READBACK_SPECS,
@@ -522,8 +524,17 @@ export const defineLearningRankingCommands = (client: LearningRankingClient) => 
 });
 export type LearningRankingCommands = ReturnType<typeof defineLearningRankingCommands>;
 export interface LocalPolicyClient {
-  readonly save: (payload: LocalPolicyObject) => Promise<LocalPolicyObject>;
+  readonly save: (payload: LocalPolicyObject, signal?: AbortSignal) => Promise<LocalPolicyObject>;
 }
+export const createLocalPolicyClient = (http: RuntimeHttpClient): LocalPolicyClient => ({
+  save: (payload, signal) =>
+    http.request<LocalPolicyObject, LocalPolicyObject>({
+      method: "PUT",
+      path: READBACK_PATHS.localPolicy,
+      body: payload,
+      signal,
+    }),
+});
 export const defineLocalPolicyCommands = (client: LocalPolicyClient) => ({
   save: Command.define("SaveLocalPolicy", {
     args: { payload: Schema.String, token: Schema.Number },
@@ -534,7 +545,7 @@ export const defineLocalPolicyCommands = (client: LocalPolicyClient) => ({
         Effect.exit(
           Effect.tryPromise({
             catch: (cause) => new Error(describeCause(cause)),
-            try: () => client.save(draft),
+            try: (signal) => client.save(draft, signal),
           }),
         ),
         (exit) => Effect.succeed(
@@ -547,21 +558,13 @@ export const defineLocalPolicyCommands = (client: LocalPolicyClient) => ({
     messages: [Message.LocalPolicySaved, Message.LocalPolicySaveFailed],
   }),
 });
-export const localPolicyCommands = defineLocalPolicyCommands({
-  save: async (payload) => {
-    const response = await fetch(READBACK_PATHS.localPolicy, {
-      body: JSON.stringify(payload),
-      headers: { accept: "application/json", "content-type": "application/json" },
-      method: "PUT",
-    });
-    const body: LocalPolicyObject = await response.json();
-    if (!response.ok) {
-      const decoded = Schema.decodeUnknownOption(Schema.Struct({ error: Schema.optional(Schema.String) }))(body);
-      throw new Error(Option.isSome(decoded) && decoded.value.error !== undefined ? decoded.value.error : "local policy save failed");
-    }
-    return body;
-  },
-});
+export const localPolicyCommands = defineLocalPolicyCommands(
+  createLocalPolicyClient(
+    createRuntimeHttpClient({
+      tokenProvider: readStoredOperatorToken,
+    }),
+  ),
+);
 
 const noopLearningRankingClient: LearningRankingClient = { rollbackLadder: async () => undefined };
 export const noopLearningRankingCommands = defineLearningRankingCommands(noopLearningRankingClient);

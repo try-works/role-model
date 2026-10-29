@@ -1,0 +1,112 @@
+✖ S487 RED: the fail-closed checker rejects the legacy v1 pending ledger with concrete issues (145.1665ms)
+✖ S487: the v2 ledger passes the fail-closed checker (149.4859ms)
+✖ S487: the checker rejects a v2 operation missing a required R33 field group (3.0277ms)
+✖ S487: the checker rejects an operation without a disposition and a non-converted row without its missing contract (2.54ms)
+✖ S487: the checker rejects reintroduced pending/notYet groups (91.809ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 0
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 548.3943
+
+✖ failing tests:
+
+test at tests\track-b\run115-b10-ledger-schema-v2.test.mjs:11:1
+✖ S487 RED: the fail-closed checker rejects the legacy v1 pending ledger with concrete issues (145.1665ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b10-ledger-schema-v2.test.mjs:14:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run115-b10-ledger-schema-v2.test.mjs:18:1
+✖ S487: the v2 ledger passes the fail-closed checker (149.4859ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'sidecar-factory-evaluation: definition symbol not found on the cited body line: createPackagedEvaluationProcess',
+  +   'sidecar-factory-operator: definition symbol not found on the cited body line: createPackagedOperatorProcess',
+  +   'sidecar-factory-operator: conversion Layer identity does not contain PackagedOperatorHostScope',
+  +   'sidecar-factory-operator: conversion open identity does not contain openPackagedOperatorHostScope',
+  +   'sidecar-factory-replay: definition symbol not found on the cited body line: createRuntimeReplayComposition',
+  +   'sidecar-factory-replay: conversion Layer identity does not contain ReplayCompositionScope',
+  +   'sidecar-factory-replay: conversion open identity does not contain openReplayCompositionScope',
+  +   'sidecar-factory-retention: definition symbol not found on the cited body line: createRuntimeRetentionService',
+  +   'sidecar-factory-retention: conversion Layer identity does not contain RetentionServiceScope',
+  +   'sidecar-factory-retention: conversion open identity does not contain openRetentionServiceScope',
+  +   'storage-audit-runner: definition symbol not found on the cited body line: createStorageAuditRunner',
+  +   'evaluation-handoff: definition symbol not found on the cited body line: createQueuedEvaluationHandoff',
+  +   'evaluation-handoff: conversion Layer identity does not contain QueuedEvaluationHandoffScope',
+  +   'evaluation-handoff: conversion open identity does not contain openQueuedEvaluationHandoffScope',
+  +   'replay-runner: definition symbol not found on the cited body line: createRuntimeReplayRunner',
+  +   'replay-runner: conversion Layer identity does not contain ReplayRunnerScope',
+  +   'replay-runner: conversion open identity does not contain openReplayRunnerScope',
+  +   'operator-surface: definition symbol not found on the cited body line: createRuntimeOperatorSurface',
+  +   'eventlog-methods: operation symbol not found on pending caller line: append',
+  +   'eventlog-methods: operation symbol not found on pending caller line: close',
+  +   'artifactstore-methods: operation symbol not found on pending caller line: putTyped',
+  +   'artifactstore-methods: operation symbol not found on pending caller line: get',
+  +   'artifactstore-methods: operation symbol not found on pending caller line: health',
+  +   'artifactstore-methods: operation symbol not found on pending caller line: close',
+  +   'capture-queue-methods: operation symbol not found on pending caller line: enqueue',
+  +   'capture-queue-methods: operation symbol not found on pending caller line: flush',
+  +   'capture-queue-methods: operation symbol not found on pending caller line: health',
+  +   'capture-queue-methods: operation symbol not found on pending caller line: close',
+  +   'replay-internals: operation symbol not found on pending caller line: activeRun'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b10-ledger-schema-v2.test.mjs:20:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'sidecar-factory-evaluation: definition symbol not found on the cited body line: createPackagedEvaluationProcess', 'sidecar-factory-operator: definition symbol not found on the cited body line: createPackagedOperatorProcess', 'sidecar-factory-operator: conversion Layer identity does not contain PackagedOperatorHostScope', 'sidecar-factory-operator: conversion open identity does not contain openPackagedOperatorHostScope', 'sidecar-factory-replay: definition symbol not found on the cited body line: createRuntimeReplayComposition', 'sidecar-factory-replay: conversion Layer identity does not contain ReplayCompositionScope', 'sidecar-factory-replay: conversion open identity does not contain openReplayCompositionScope', 'sidecar-factory-retention: definition symbol not found on the cited body line: createRuntimeRetentionService', 'sidecar-factory-retention: conversion Layer identity does not contain RetentionServiceScope', 'sidecar-factory-retention: conversion open identity does not contain openRetentionServiceScope', 'storage-audit-runner: definition symbol not found on the cited body line: createStorageAuditRunner', 'evaluation-handoff: definition symbol not found on the cited body line: createQueuedEvaluationHandoff', 'evaluation-handoff: conversion Layer identity does not contain QueuedEvaluationHandoffScope', 'evaluation-handoff: conversion open identity does not contain openQueuedEvaluationHandoffScope', 'replay-runner: definition symbol not found on the cited body line: createRuntimeReplayRunner', 'replay-runner: conversion Layer identity does not contain ReplayRunnerScope', 'replay-runner: conversion open identity does not contain openReplayRunnerScope', 'operator-surface: definition symbol not found on the cited body line: createRuntimeOperatorSurface', 'eventlog-methods: operation symbol not found on pending caller line: append', 'eventlog-methods: operation symbol not found on pending caller line: close', 'artifactstore-methods: operation symbol not found on pending caller line: putTyped', 'artifactstore-methods: operation symbol not found on pending caller line: get', 'artifactstore-methods: operation symbol not found on pending caller line: health', 'artifactstore-methods: operation symbol not found on pending caller line: close', 'capture-queue-methods: operation symbol not found on pending caller line: enqueue', 'capture-queue-methods: operation symbol not found on pending caller line: flush', 'capture-queue-methods: operation symbol not found on pending caller line: health', 'capture-queue-methods: operation symbol not found on pending caller line: close', 'replay-internals: operation symbol not found on pending caller line: activeRun' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run115-b10-ledger-schema-v2.test.mjs:27:1
+✖ S487: the checker rejects a v2 operation missing a required R33 field group (3.0277ms)
+  TypeError: Cannot read properties of undefined (reading '0')
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b10-ledger-schema-v2.test.mjs:30:26)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7)
+
+test at tests\track-b\run115-b10-ledger-schema-v2.test.mjs:34:1
+✖ S487: the checker rejects an operation without a disposition and a non-converted row without its missing contract (2.54ms)
+  TypeError: Cannot read properties of undefined (reading '0')
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b10-ledger-schema-v2.test.mjs:37:34)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7)
+
+test at tests\track-b\run115-b10-ledger-schema-v2.test.mjs:46:1
+✖ S487: the checker rejects reintroduced pending/notYet groups (91.809ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b10-ledger-schema-v2.test.mjs:50:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,48 @@
+COMMAND: node vitest run s458 (S488 RED, localPolicy still direct fetch)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s458-local-policy.test.ts (9 tests | 1 failed) 79ms
+   ✓ S458 local policy port RED > parses /local/llama-swap/policy as the LocalPolicy route 14ms
+   ✓ S458 local policy port RED > registers a real localPolicy readback for GET /api/role-model/local/policy 1ms
+   ✓ S458 local policy port RED > replaces the original policy and matrix URLs with the canonical targets 8ms
+   ✓ S458 local policy behavior > edits control fields while preserving unknown persisted fields 8ms
+   ✓ S458 local policy behavior > save sends the whole exact draft including unknown fields and success re-reads policy 4ms
+   ✓ S458 local policy behavior > save failure keeps the draft and surfaces the bounded error 2ms
+   ✓ S458 local policy behavior > direct entry reads the policy and degraded payloads do not fabricate a policy 12ms
+   ✓ S458 local policy behavior > matrix redirect uses a fixed view=grid query and replace, dropping incoming search/hash 11ms
+   × S488 shared runtime HTTP client (local policy) > sends the local policy PUT through the shared client with exact path, auth, and an abort signal 16ms
+     → expected { accept: 'application/json', …(1) } to match object { accept: 'application/json', …(2) }
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s458-local-policy.test.ts > S488 shared runtime HTTP client (local policy) > sends the local policy PUT through the shared client with exact path, auth, and an abort signal
+AssertionError: expected { accept: 'application/json', …(1) } to match object { accept: 'application/json', …(2) }
+
+- Expected
++ Received
+
+  {
+    "accept": "application/json",
+-   "authorization": "Bearer shared-client-token",
+    "content-type": "application/json",
+  }
+
+ ❯ test/s458-local-policy.test.ts:142:35
+    140|     expect(seen[0]?.init.method).toBe("PUT");
+    141|     expect(JSON.parse(String(seen[0]?.init.body))).toEqual(payload);
+    142|     expect(seen[0]?.init.headers).toMatchObject({
+       |                                   ^
+    143|       accept: "application/json",
+    144|       authorization: "Bearer shared-client-token",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 8 passed (9)
+   Start at  14:29:59
+   Duration  7.98s (transform 3.84s, setup 0ms, collect 5.96s, tests 79ms, environment 794ms, prepare 438ms)
+
+
