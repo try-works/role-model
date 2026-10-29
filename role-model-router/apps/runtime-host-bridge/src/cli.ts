@@ -4321,6 +4321,24 @@ export function startCliExtensionRuntimeWatchdog(options: {
   };
 }
 
+export function validatePackagedRun88Identity(input: {
+  readonly packagedReleaseId: string | undefined;
+  readonly identity: {
+    readonly generation: "N" | "N-1" | string;
+    readonly manifestSha256: string;
+    readonly channel: string;
+  };
+  readonly expected: {
+    readonly channel: "stage";
+    readonly manifestSha256: string;
+    readonly previousManifestSha256?: string;
+    readonly publicGeneration: "N";
+  };
+}): void {
+  if (input.packagedReleaseId === undefined) return;
+  validateRun88PrivateDistributionIdentity(input.identity, input.expected);
+}
+
 export async function runCliBackendBranch(input: {
   readonly hasPackagedDistribution: boolean;
   readonly packagedReleaseId?: string;
@@ -11886,19 +11904,20 @@ export async function main(): Promise<void> {
       }
       const distributionRoot = path.dirname(trackBManifestPath);
       runPackagedBackend = async (): Promise<void> => {
-        validateRun88PrivateDistributionIdentity(
-          {
+        validatePackagedRun88Identity({
+          packagedReleaseId,
+          identity: {
             generation:
               manifest.schemaVersion === "role-model.track-b-runtime-distribution.v2" ? "N" : "N-1",
             manifestSha256: createHash("sha256").update(trackBManifestText).digest("hex"),
             channel: packagedProfile?.channel ?? "development",
           },
-          {
+          expected: {
             channel: "stage",
             manifestSha256: String(packagedManifestRecord?.private_distribution_sha256 ?? ""),
             publicGeneration: "N",
           },
-        );
+        });
       }
       // Run 99 R23: one definition of the Track B state root, shared with the policy resolver.
       const trackBStateRoot = resolveLearningPolicyStateRoot({

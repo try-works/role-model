@@ -1,0 +1,48 @@
+COMMAND: node vitest run cli-startup-readiness (S480 RED, unconditional Run88 validation)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:23892) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/cli-startup-readiness.test.ts (10 tests | 1 failed) 132ms
+   ✓ cli startup readiness > rejects every packaged runtime channel when its Track B manifest is absent 4ms
+   ✓ cli startup readiness > binds health and static UI before backend initialization completes 103ms
+   ✓ cli startup readiness > exposes lightweight latest-request-id reads from the non-QA cli startup wiring 10ms
+   ✓ S478 packaged readiness transition > marks the shared readiness owner exactly once and clears bootstrap message 0ms
+   ✓ S478/S479 packaged branch readiness > a packaged branch run through runCliBackendBranch marks readiness exactly once 1ms
+   ✓ S478/S479 packaged branch readiness > a non-packaged branch run still marks readiness exactly once 0ms
+   ✓ S479 branch selection > manifest present without a release id selects the packaged path 0ms
+   ✓ S479 branch selection > a release id without a manifest falls back to the plain path without TypeError 0ms
+   × S480 development Run88 gate > development distribution with no release id skips Run88 identity validation 9ms
+     → expected [Function] to not throw an error but 'Error: private distribution channel m…' was thrown
+   ✓ S480 development Run88 gate > stage release id still enforces the stage identity 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/cli-startup-readiness.test.ts > S480 development Run88 gate > development distribution with no release id skips Run88 identity validation
+AssertionError: expected [Function] to not throw an error but 'Error: private distribution channel m…' was thrown
+
+- Expected: 
+undefined
+
++ Received: 
+"Error: private distribution channel mismatch"
+
+ ❯ test/cli-startup-readiness.test.ts:227:11
+    225|         expected: { channel: "stage", manifestSha256: sha, publicGener…
+    226|       }),
+    227|     ).not.toThrow();
+       |           ^
+    228|   });
+    229| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  13:50:18
+   Duration  9.07s (transform 5.53s, setup 0ms, collect 8.38s, tests 132ms, environment 0ms, prepare 210ms)
+
+

@@ -215,3 +215,32 @@ describe("S479 branch selection", () => {
     expect(state.status).toBe("ready");
   });
 });
+describe("S480 development Run88 gate", () => {
+  const sha = "a".repeat(64);
+  test("development distribution with no release id skips Run88 identity validation", () => {
+    expect(() =>
+      cli.validatePackagedRun88Identity({
+        packagedReleaseId: undefined,
+        identity: { channel: "development", generation: "N", manifestSha256: sha },
+        expected: { channel: "stage", manifestSha256: sha, publicGeneration: "N" },
+      }),
+    ).not.toThrow();
+  });
+
+  test("stage release id still enforces the stage identity", () => {
+    expect(() =>
+      cli.validatePackagedRun88Identity({
+        packagedReleaseId: "run88:release",
+        identity: { channel: "development", generation: "N", manifestSha256: sha },
+        expected: { channel: "stage", manifestSha256: sha, publicGeneration: "N" },
+      }),
+    ).toThrow(/channel mismatch/);
+    expect(() =>
+      cli.validatePackagedRun88Identity({
+        packagedReleaseId: "run88:release",
+        identity: { channel: "stage", generation: "N", manifestSha256: sha },
+        expected: { channel: "stage", manifestSha256: sha, publicGeneration: "N" },
+      }),
+    ).not.toThrow();
+  });
+});
