@@ -22,6 +22,7 @@ const modelFields = {
   diagnostics: DiagnosticsSnapshot,
   requestsRanking: Schema.optional(RequestsRankingStateSchema),
   requestsRankingMetricListbox: Schema.optional(Schema.Any),
+  requestsRankingTargetListbox: Schema.optional(Schema.Any),
   learningRanking: Schema.optional(LearningRankingStateSchema),
   endpointAdmission: Schema.optional(EndpointAdmissionStateSchema),
   providerAccount: Schema.optional(ProviderAccountStateSchema),

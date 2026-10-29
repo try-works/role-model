@@ -943,6 +943,7 @@ const routeContent = (
   learningRanking: LearningRankingState | undefined,
   requestsRanking: RequestsRankingState | undefined,
   requestsRankingMetricListbox: Model["requestsRankingMetricListbox"],
+  requestsRankingTargetListbox: Model["requestsRankingTargetListbox"],
   h: HtmlBuilder<Message>,
 ) =>
   AppRoute.match(route, {
@@ -963,7 +964,7 @@ const routeContent = (
       renderReadbackPage(READBACK_SPECS.routerCandidates, readbacks.routerCandidates, h),
     Requests: () =>
       h.section([], [
-        renderRequestsRanking(requestsRanking, requestsRankingMetricListbox, REQUESTS_RANKING_METRIC_OPTIONS, REQUESTS_RANKING_TARGET_OPTIONS, h),
+        renderRequestsRanking(requestsRanking, requestsRankingMetricListbox, requestsRankingTargetListbox, REQUESTS_RANKING_METRIC_OPTIONS, REQUESTS_RANKING_TARGET_OPTIONS, h),
         renderReadbackPage(READBACK_SPECS.requests, readbacks.requests, h),
       ]),
     RequestDetail: () => renderReadbackPage(READBACK_SPECS.requestDetail, readbacks.requestDetail, h),
@@ -1299,6 +1300,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
     model.learningRanking,
     model.requestsRanking,
     model.requestsRankingMetricListbox,
+    model.requestsRankingTargetListbox,
                 h,
               ),
             ],

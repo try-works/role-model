@@ -79,6 +79,7 @@ export const Message: MessageUnion<{
     readonly token: typeof Schema.Number;
   };
   readonly GotRequestsRankingMetricListboxMessage: { readonly message: typeof Schema.Unknown };
+  readonly GotRequestsRankingTargetListboxMessage: { readonly message: typeof Schema.Unknown };
   readonly RequestsRankingFieldChanged: { readonly field: typeof RequestsRankingFieldSchema; readonly value: typeof Schema.String };
   readonly RequestsRankingSubmitRequested: EmptyFields;
   readonly RequestsRankingLoaded: { readonly rows: typeof RequestsRankingRowsSchema; readonly token: typeof Schema.Number };
@@ -195,6 +196,7 @@ export const Message: MessageUnion<{
   ObservabilityFailed: { message: Schema.String, token: Schema.Number },
   ObservabilityLoaded: { snapshot: ObservabilityState, token: Schema.Number },
   GotRequestsRankingMetricListboxMessage: { message: Schema.Unknown },
+GotRequestsRankingTargetListboxMessage: { message: Schema.Unknown },
 RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"]), value: Schema.String },
   RequestsRankingSubmitRequested: {},
   RequestsRankingLoaded: { rows: RequestsRankingRowsSchema, token: Schema.Number },

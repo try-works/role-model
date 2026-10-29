@@ -3,7 +3,7 @@ import { UrlRequest } from "@role-model-router/foldkit/navigation";
 import type { Return as UpdateReturn } from "@role-model-router/foldkit/update";
 import { type Url, toString as urlToString } from "@role-model-router/foldkit/url";
 import { Effect, Schema } from "effect";
-import { type RequestsMetricListboxModel, initRequestsMetricListbox, requestsMetricListbox } from "./ui/listbox";
+import { type RequestsMetricListboxModel, initRequestsMetricListbox, initRequestsTargetListbox, requestsMetricListbox } from "./ui/listbox";
 
 import { DEFAULT_OVERVIEW_FILTERS, overviewQuery, type OverviewFilters } from "./overview-filters";
 import { parseRuntimeConfigRecord, parseRuntimeConfigText, runtimeConfigDiff, runtimeConfigText } from "./runtime-config";
@@ -264,6 +264,30 @@ const updateRequestsMetricListbox = (
   return {
     commands: Command.mapMessages(child.commands ?? [], (childMessage) =>
       Message.GotRequestsRankingMetricListboxMessage({ message: childMessage }),
+    ),
+    model: nextModel,
+  };
+};
+
+const updateRequestsTargetListbox = (
+  model: Model,
+  message: Parameters<typeof requestsMetricListbox.update>[1],
+): UpdateReturn<Model, Message> => {
+  const child = requestsMetricListbox.update(
+    model.requestsRankingTargetListbox ?? initRequestsTargetListbox(),
+    message,
+  );
+  const nextModel: Model = {
+    ...model,
+    // SAFETY: the child model comes from this single-select Listbox's own update, whose Model schema is the bound child type.
+    requestsRankingTargetListbox: child.model as RequestsMetricListboxModel,
+  };
+  if (child.outMessage !== undefined) {
+    return updateRequestsRankingField(nextModel, "rankingTarget", child.outMessage.value);
+  }
+  return {
+    commands: Command.mapMessages(child.commands ?? [], (childMessage) =>
+      Message.GotRequestsRankingTargetListboxMessage({ message: childMessage }),
     ),
     model: nextModel,
   };
@@ -1253,6 +1277,9 @@ const updateLocalPolicyDraft = (
       GotRequestsRankingMetricListboxMessage: ({ message }) =>
         // SAFETY: this tag is only produced by the Listbox submodel view/commands, so the carried value is its Message.
         updateRequestsMetricListbox(model, message as Parameters<typeof requestsMetricListbox.update>[1]),
+      GotRequestsRankingTargetListboxMessage: ({ message }) =>
+        // SAFETY: this tag is only produced by the Listbox submodel view/commands, so the carried value is its Message.
+        updateRequestsTargetListbox(model, message as Parameters<typeof requestsMetricListbox.update>[1]),
       RequestsRankingFieldChanged: ({ field, value }) =>
         updateRequestsRankingField(model, field, value),
       RequestsRankingSubmitRequested: () => {
