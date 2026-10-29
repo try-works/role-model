@@ -7,6 +7,7 @@ import { renderControlPage } from "./control-view";
 import { chartInteractionForRoute, chartStateForReadback, type ChartInteractionState } from "./chart-interaction";
 import { type LearningRankingState } from "./learning-ranking";
 import { renderLearningRanking } from "./learning-ranking-view";
+import { controlControllerPage, routerAgentStrategyPage, routerCandidatesPage, routerConfigPage, routerDecisionsPage, routerOverviewPage, routerStrategyPage, routerWorkloadsPage } from "./router-family-view";
 import type { RequestsRankingState } from "./requests-ranking";
 import { initialDeviceAuthState, type DeviceAuthState } from "./device-auth";
 import { initialProviderAccountState, type ProviderAccountState } from "./provider-account";
@@ -38,6 +39,15 @@ import {
 import { studioRoute } from "./features/studio/routes";
 import { runtimeRoute } from "./features/runtime/routes";
 import { indexRoute } from "./features/overview/routes";
+import { candidateSpaceCard, overviewStats, telemetryChartCard } from "./features/overview/charts";
+import {
+  observeActivityRoute,
+  observeLogsRoute,
+  observeRoutingRoute,
+  observabilitySnapshotRoute,
+  storeDegradationReceiptsRoute,
+  telemetryRequestsRoute,
+} from "./features/observe/views";
 import { type StudioField, type StudioState, StudioTabSchema, studioIdle } from "./studio";
 import { AppRoute } from "./route";
 
@@ -660,102 +670,78 @@ const overviewPage = (
   chartInteraction: ChartInteractionState | undefined = undefined,
 ): Html => {
   const period = windowLabel(windowMs);
-  const filters = h.div(
-    [h.Class("mt-4 flex flex-wrap items-center gap-2"), h.DataAttribute("overview-filters", "")],
-    WINDOW_OPTIONS.map((option) =>
-      h.button(
-        [
-          h.Type("button"),
-          h.AriaPressed(String(option.windowMs === windowMs)),
-          h.DataAttribute("window", option.label),
-          h.Class(
-            `min-h-8 rounded-[var(--rm-radius-field)] border px-2.5 text-[12px] ${option.windowMs === windowMs ? "border-[var(--rm-border)] bg-[var(--rm-panel)] text-[var(--rm-fg)]" : "border-transparent text-[var(--rm-secondary)]"}`,
-          ),
-          h.OnClick(Message.SelectedOverviewWindow({ windowMs: option.windowMs })),
-        ],
-        [option.label],
-      ),
-    ),
-  );
-  const filterSelect = (label: string, filter: "source" | "status" | "difficulty" | "breakdown", value: string, options: readonly string[]) => h.label([h.Class("flex flex-col gap-1 text-[11px] text-[var(--rm-secondary)]")], [h.span([h.Class("uppercase tracking-[0.12em] text-[var(--rm-muted)]")], [label]), h.select([h.Class("min-h-8 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] px-2 text-[12px] text-[var(--rm-fg)]"), h.DataAttribute("overview-filter", filter), h.AriaLabel(label), h.OnChange((next) => Message.OverviewFilterChanged({ filter, value: next }))], options.map((option) => h.option([h.Value(option), ...(option === value ? [h.Selected(true)] : [])], [option === "all" ? "All" : option[0]?.toUpperCase() + option.slice(1)])))]);
-  const breakdownValues = appliedFilters.breakdown === "all" ? [] : candidates.rows.flatMap((entry) => { try { const meta = JSON.parse(entry.meta) as { endpointId?: unknown; modelId?: unknown; providerId?: unknown }; const raw = appliedFilters.breakdown === "endpoint" ? meta.endpointId : appliedFilters.breakdown === "provider" ? meta.providerId : meta.modelId; return typeof raw === "string" && raw.length > 0 ? [raw] : []; } catch { return []; } });
-  const filterRow = h.div([h.Class("flex flex-col gap-1")], [h.span([h.Class("text-[11px] uppercase tracking-[0.12em] text-[var(--rm-muted)]")], ["Time range"]), filters]);
-  const advancedFilters = h.div([h.Class("mt-2 flex flex-wrap items-end gap-2"), h.DataAttribute("overview-filter-row", "")], [
-    filterSelect("Breakdown", "breakdown", appliedFilters.breakdown, [...OVERVIEW_BREAKDOWNS]),
-    ...(appliedFilters.breakdown === "all" ? [] : [h.label([h.Class("flex flex-col gap-1 text-[11px] text-[var(--rm-secondary)]")], [h.span([h.Class("uppercase tracking-[0.12em] text-[var(--rm-muted)]")], [appliedFilters.breakdown]), h.select([h.Class("min-h-8 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] px-2 text-[12px] text-[var(--rm-fg)]"), h.DataAttribute("overview-filter-value", ""), h.AriaLabel("Breakdown value"), h.OnChange((next) => Message.OverviewFilterChanged({ filter: "breakdownValue", value: next }))], breakdownValues.map((option) => h.option([h.Value(option), ...(option === appliedFilters.breakdownValue ? [h.Selected(true)] : [])], [option])))]),]),
-    filterSelect("Source", "source", appliedFilters.source, [...OVERVIEW_SOURCES]),
-    filterSelect("Status", "status", appliedFilters.status, [...OVERVIEW_STATUSES]),
-    filterSelect("Difficulty", "difficulty", appliedFilters.difficulty, [...OVERVIEW_DIFFICULTIES]),
+  const filterSelect = (
+    label: string,
+    filter: "source" | "status" | "difficulty" | "breakdown",
+    value: string,
+    options: readonly string[],
+    labelFor: (option: string) => string,
+  ) => h.label([h.Class("flex flex-col gap-1 text-[11px] text-[var(--rm-secondary)]")], [h.span([h.Class("uppercase tracking-[0.12em] text-[var(--rm-muted)]")], [label]), h.select([h.Class("min-h-8 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] px-2 text-[12px] text-[var(--rm-fg)]"), h.DataAttribute("overview-filter", filter), h.AriaLabel(label), h.OnChange((next) => Message.OverviewFilterChanged({ filter, value: next }))], options.map((option) => h.option([h.Value(option), ...(option === value ? [h.Selected(true)] : [])], [labelFor(option)])))]);
+  const filters = h.div([h.Class("mt-4 flex flex-wrap items-center gap-2"), h.DataAttribute("overview-filters", "")], [
+    h.span([h.Class("text-[11px] uppercase tracking-[0.12em] text-[var(--rm-muted)]")], ["Time range"]),
+    ...WINDOW_OPTIONS.map((option) => h.button([
+      h.Type("button"), h.AriaPressed(String(option.windowMs === windowMs)), h.DataAttribute("window", option.label),
+      h.Class("min-h-8 rounded-[var(--rm-radius-field)] border px-2.5 text-[12px] " + (option.windowMs === windowMs ? "border-[var(--rm-border)] bg-[var(--rm-panel)] text-[var(--rm-fg)]" : "border-transparent text-[var(--rm-secondary)]")),
+      h.OnClick(Message.SelectedOverviewWindow({ windowMs: option.windowMs })),
+    ], [option.label])),
   ]);
-  const summary = h.p([h.Class("mt-2 text-[11px] text-[var(--rm-secondary)]"), h.DataAttribute("overview-summary", "")], [overviewSummary(appliedFilters)]);
+  const breakdownValues = appliedFilters.breakdown === "all" ? [] : candidates.rows.flatMap((entry) => { try { const meta = JSON.parse(entry.meta) as { endpointId?: unknown; modelId?: unknown; providerId?: unknown }; const raw = appliedFilters.breakdown === "endpoint" ? meta.endpointId : appliedFilters.breakdown === "provider" ? meta.providerId : meta.modelId; return typeof raw === "string" && raw.length > 0 ? [raw] : []; } catch { return []; } });
+  const advancedFilters = h.div([h.Class("mt-2 flex flex-wrap items-end gap-2"), h.DataAttribute("overview-filter-row", "")], [
+    filterSelect("Breakdown", "breakdown", appliedFilters.breakdown, [...OVERVIEW_BREAKDOWNS], (option) => option === "all" ? "Total" : option === "endpoint" ? "By endpoint variant" : option === "model" ? "By upstream model" : "By provider"),
+    ...(appliedFilters.breakdown === "all" ? [] : [h.label([h.Class("flex flex-col gap-1 text-[11px] text-[var(--rm-secondary)]")], [h.span([h.Class("uppercase tracking-[0.12em] text-[var(--rm-muted)]")], [appliedFilters.breakdown]), h.select([h.Class("min-h-8 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] px-2 text-[12px] text-[var(--rm-fg)]"), h.DataAttribute("overview-filter-value", ""), h.AriaLabel("Breakdown value"), h.OnChange((next) => Message.OverviewFilterChanged({ filter: "breakdownValue", value: next }))], breakdownValues.map((option) => h.option([h.Value(option), ...(option === appliedFilters.breakdownValue ? [h.Selected(true)] : [])], [option])))])]),
+    filterSelect("Source filter", "source", appliedFilters.source, [...OVERVIEW_SOURCES], (option) => option === "all" ? "All sources" : option === "local" ? "Local only" : "Remote only"),
+    filterSelect("Status", "status", appliedFilters.status, [...OVERVIEW_STATUSES], (option) => option === "all" ? "All statuses" : option === "success" ? "Success only" : option === "failure" ? "Failure only" : "Unknown only"),
+    filterSelect("Difficulty", "difficulty", appliedFilters.difficulty, [...OVERVIEW_DIFFICULTIES], (option) => option === "all" ? "All buckets" : option === "easy" ? "Easy only" : option === "medium" ? "Medium only" : "Hard only"),
+  ]);
   const header = h.div([], [
     h.p([h.Class("text-[12px] text-[var(--rm-secondary)]"), h.DataAttribute("overview-period", period)], ["Last " + period]),
-    filterRow,
+    filters,
     advancedFilters,
-    summary,
+    h.p([h.Class("mt-2 text-[11px] text-[var(--rm-secondary)]"), h.DataAttribute("overview-summary", "")], [overviewSummary(appliedFilters)]),
   ]);
-  if (state.status === "loading") {
-    return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard")], [header, h.p([h.AriaBusy(true), h.DataAttribute("overview-state", "loading"), h.DataAttribute("readback-state", "loading")], ["Loading telemetry…"])]);
-  }
-  if (state.status === "error") {
-    return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard")], [header, h.p([h.Role("alert"), h.DataAttribute("overview-state", "error"), h.DataAttribute("readback-state", "error")], [state.message ?? "Telemetry read failed"])]);
-  }
-  if (state.status === "empty") {
-    return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard")], [header, h.section([h.Class("rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", "empty")], [h.h2([h.Class("text-[15px] font-semibold")], ["No telemetry yet"]), h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]"), h.DataAttribute("overview-state", "empty"), h.DataAttribute("readback-state", "empty")], ["No telemetry requests in the last " + period.toLowerCase() + ". Run a request or widen the time range."])])]);
-  }
   const { buckets } = bucketsFor(state, windowMs);
   const itemCount = state.rows.reduce((sum, entry) => { try { const meta = JSON.parse(entry.meta) as { items?: unknown }; return sum + (Array.isArray(meta.items) ? meta.items.length : 0); } catch { return sum; } }, 0);
-  const card = (title: string, description: string, chart: Html) => h.section([h.Class("min-h-[300px] min-w-0 overflow-hidden rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", title), h.AriaLabel(title + ": " + description)], [chart]);
-  const modelRows = candidates.rows.flatMap((entry) => {
-    try {
-      const meta = JSON.parse(entry.meta) as { pricing?: { inputPer1M?: unknown } | null; endpointId?: unknown; providerId?: unknown };
-      const cost = Number(meta.pricing?.inputPer1M);
-      if (!Number.isFinite(cost)) return [];
-      return [{ cost, endpoint: String(meta.endpointId ?? ""), id: entry.id, label: entry.label }];
-    } catch { return []; }
-  });
-  const costs = modelRows.map((entry) => entry.cost);
-  const minCost = costs.length === 0 ? 0 : Math.min(...costs);
-  const maxCost = costs.length === 0 ? 0 : Math.max(...costs);
-  const scaleCost = (cost: number): number => 40 + ((cost - minCost) / (maxCost === minCost ? 1 : maxCost - minCost)) * 540;
-  const modelPool = h.section([h.Class("min-h-[300px] rounded-[8px] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"), h.DataAttribute("overview-card", "Model cost strip")], [
-    h.h2([h.Class("text-[15px] font-semibold")], ["Model cost strip"]),
-    h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]")], ["Input cost per 1M tokens. Quality and speed axes are omitted: the host candidate body has no quality or speed score."]),
-    modelRows.length === 0
-      ? h.p([h.DataAttribute("model-pool-state", candidates.status === "error" ? "error" : candidates.status === "loading" ? "loading" : "empty"), ...(candidates.status === "error" ? [h.Role("alert")] : [])], [candidates.status === "error" ? candidates.message ?? "Model pool read failed" : candidates.status === "loading" ? "Loading model pool…" : "No candidates with pricing."])
-      : h.div([], [
-          h.svg([h.Class("mt-2 w-full"), h.DataAttribute("model-pool", ""), h.AriaLabel("Model pool by input cost")], [
-            h.line([h.Attribute("x1", "40"), h.Attribute("y1", "70"), h.Attribute("x2", "580"), h.Attribute("y2", "70"), h.Attribute("stroke", "var(--rm-border)")]),
-            ...modelRows.map((entry, index) => h.circle([h.Attribute("cx", String(scaleCost(entry.cost))), h.Attribute("cy", String(70 + (index % 2 === 0 ? 0 : 24))), h.Attribute("r", "6"), h.Fill("var(--rm-accent)"), h.Tabindex(0), h.AriaLabel(`${entry.label}: ${String(entry.cost)} per 1M input tokens`), h.DataAttribute("model-point", entry.id)])),
-          ]),
-          h.div([h.Style({ position: "absolute", width: "1px", height: "1px", overflow: "hidden", clipPath: "inset(50%)" })], [h.table([h.Class("sr-only")], [h.caption([], ["Model cost strip data"]), h.thead([], [h.tr([], [h.th([], ["Model"]), h.th([], ["Input cost per 1M"]), h.th([], ["Endpoint"])])]), h.tbody([], modelRows.map((entry) => h.tr([], [h.td([], [entry.label]), h.td([], [String(entry.cost)]), h.td([], [entry.endpoint])])))])]),
-        ]),
+  const chartState: "empty" | "error" | "loading" | "ready" =
+    state.status === "loading" ? "loading" : state.status === "error" ? "error" : state.status === "ok" && buckets.some((bucket) => !bucket.empty) ? "ready" : "empty";
+  const hasData = chartState === "ready";
+  const labels = buckets.length === 0 ? ["No data"] : buckets.map((bucket) => bucket.label);
+  const emptyPoints = (): ReadonlyArray<{ readonly label: string; readonly value: null }> => labels.map((label) => ({ label, value: null }));
+  const charts = h.div([h.Class("mt-6 grid gap-4"), h.DataAttribute("overview-charts", ""), h.DataAttribute("overview-window", period), h.DataAttribute("overview-buckets", String(buckets.filter((bucket) => !bucket.empty).length)), h.DataAttribute("overview-items", String(itemCount)), h.DataAttribute("overview-labels", String(buckets.length))], [
+    candidateSpaceCard(candidates, h),
+    telemetryChartCard({ description: "Input, output, and total token flow across the selected telemetry window.", emptyMessage: "No token-bearing requests have been recorded yet.", hasData, h, kind: "area", series: [
+      { id: "inputTokens", label: "Input tokens", points: emptyPoints() },
+      { id: "outputTokens", label: "Output tokens", points: emptyPoints() },
+      { id: "totalTokens", label: "Total tokens", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.tokens })) },
+    ], state: chartState, title: "Token usage over time" }),
+    telemetryChartCard({ description: "Cache-hit token volume and cache-hit rate.", emptyMessage: "No cache activity has been recorded for this slice yet.", hasData, h, kind: "line", series: [
+      { id: "cacheHitTokens", label: "Cache hit tokens", points: emptyPoints() },
+      { id: "cacheHitTokenRate", label: "Cache hit token rate", points: emptyPoints() },
+    ], state: chartState, title: "Cache efficiency trend" }),
+    telemetryChartCard({ description: "Authoritative effective cost based on stored request-time pricing facts.", emptyMessage: "No request costs have been recorded for this slice yet.", hasData, h, kind: "line", series: [
+      { id: "actualCostUsd", label: "Actual cost", points: emptyPoints() },
+      { id: "estimatedCostUsd", label: "Estimated cost", points: emptyPoints() },
+      { id: "effectiveCostUsd", label: "Effective cost", points: emptyPoints() },
+    ], state: chartState, title: "Effective cost over time" }),
+    telemetryChartCard({ description: "Routing-avoided cost, cache-avoided cost, and total avoided spend.", emptyMessage: "No routing or cache savings have been recorded yet.", hasData, h, kind: "area", series: [
+      { id: "routingCostSavingsUsd", label: "Routing avoided cost", points: emptyPoints() },
+      { id: "cacheCostSavingsUsd", label: "Cache avoided cost", points: emptyPoints() },
+      { id: "totalAvoidedCostUsd", label: "Total avoided cost", points: emptyPoints() },
+    ], state: chartState, title: "Cost avoided over time" }),
+    telemetryChartCard({ description: "Average and p95 latency across the selected window.", emptyMessage: "Latency telemetry has not been recorded for this slice yet.", hasData, h, kind: "line", series: [
+      { id: "averageLatencyMs", label: "Average latency", points: buckets.length === 0 ? emptyPoints() : buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.avg })) },
+      { id: "p95LatencyMs", label: "p95 latency", points: buckets.length === 0 ? emptyPoints() : buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.p95 })) },
+    ], state: chartState, title: "Latency trend" }),
+    telemetryChartCard({ description: "Successful and failed request volume by time bucket.", emptyMessage: "No successful or failed requests have been recorded yet.", hasData, h, kind: "bar", series: [
+      { id: "successCount", label: "Success", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.success })) },
+      { id: "failureCount", label: "Failures", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.failure })) },
+    ], state: chartState, title: "Success vs failure volume" }),
   ]);
-    const tokenInteraction = chartInteractionForRoute(chartInteraction, "Index");
-  const tokenChart = chartView({ title: "Token usage over time", description: "Total tokens per bucket for the last " + period.toLowerCase() + ".",
-    interaction: {
-      hiddenSeriesIds: tokenInteraction.hiddenSeriesIds,
-      onHideTooltip: Message.ChartTooltipDismissed({ token: tokenInteraction.token }),
-      onPointKeyDown: (seriesId, label, key) => chartPointKeyAction(key) === "hide"
-        ? Message.ChartTooltipDismissed({ token: tokenInteraction.token })
-        : Message.ChartPointShown({ label, seriesId, token: tokenInteraction.token }),
-      onShowPoint: (seriesId, label) => Message.ChartPointShown({ label, seriesId, token: tokenInteraction.token }),
-      onToggleSeries: (seriesId) => Message.ChartSeriesToggled({ seriesId, token: tokenInteraction.token }),
-      tooltip: tokenInteraction.tooltip,
-    },
-    series: [{ id: "tokens", label: "Tokens", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.tokens })) }],
-    state: chartStateForReadback(state), yUnit: "tokens" }, h);
-  const tokenCard = card("Token usage over time", "Total tokens per bucket for the last " + period.toLowerCase() + ".", tokenChart);
-  const latencyCard = card("Latency (ms)", "Average and p95 per bucket for the last " + period.toLowerCase() + ".", chartView({ title: "Latency (ms)", description: "Average and p95 per bucket for the last " + period.toLowerCase() + ".", series: [
-    { id: "average", label: "Average", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.avg })) },
-    { id: "p95", label: "p95", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.p95 })) },
-  ], state: { status: "ready" }, yUnit: "ms" }, h));
-  const outcomeCard = card("Success vs failure", "Request outcomes per bucket for the last " + period.toLowerCase() + ".", chartView({ title: "Success vs failure", description: "Request outcomes per bucket for the last " + period.toLowerCase() + ".", series: [
-    { id: "success", label: "Success", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.success })) },
-    { id: "failure", label: "Failure", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.failure })) },
-  ], state: { status: "ready" }, yUnit: "requests" }, h));
-  const charts = h.div([h.Class("mt-6 grid gap-4"), h.DataAttribute("overview-charts", ""), h.DataAttribute("overview-window", period), h.DataAttribute("overview-buckets", String(buckets.filter((bucket) => !bucket.empty).length)), h.DataAttribute("overview-items", String(itemCount)), h.DataAttribute("overview-labels", String(buckets.length))], [modelPool, tokenCard, latencyCard, outcomeCard]);
-  return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard"), h.DataAttribute("overview-state", "success"), h.DataAttribute("readback-state", "ok"), h.DataAttribute("state", "success")], [header, charts]);
+  return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard"), h.DataAttribute("overview-state", chartState === "ready" ? "success" : chartState), h.DataAttribute("readback-state", state.status === "ok" ? "ok" : state.status)], [
+    header,
+    overviewStats({ cacheHitRate: "—", h, models: candidates.rows.length, requests: state.rows.length, routerEndpoint: "—" }),
+    state.status === "loading" ? h.p([h.AriaBusy(true), h.DataAttribute("overview-state", "loading")], ["Loading telemetry…"]) : state.status === "error" ? h.p([h.Role("alert"), h.DataAttribute("overview-state", "error")], [state.message ?? "Telemetry read failed"]) : null,
+    charts,
+  ]);
 };
 
 const studioField = (label: string, field: StudioField, value: string, h: HtmlBuilder<Message>, multiline = false) =>
@@ -801,22 +787,6 @@ const studioPage = (state: StudioState, h: HtmlBuilder<Message>, configuredModel
   ]);
 };
 
-const routerFamilyPage = (prefixes: readonly string[], label: string, routeName: string, readbacks: ReadbacksState, h: HtmlBuilder<Message>): Html => {
-  const readback = readbacks.routerConfig;
-  const status = readback.status === "idle" ? "loading" : readback.status;
-  const rows = readback.rows.filter((entry) => prefixes.some((prefix) => entry.id === prefix || entry.id.startsWith(prefix)));
-  const state = status === "ok" ? (rows.length === 0 ? "empty" : "ok") : status;
-  const message = state === "loading" ? "Loading " + label.toLowerCase() + "…" : state === "error" ? (readback.message ?? label + " read failed") : state === "empty" ? "No " + label.toLowerCase() + " readback available." : null;
-  return h.section(
-    [h.Class("rm3-next-route mt-4"), h.DataAttribute("route", routeName), h.DataAttribute("router-family-state", state)],
-    [
-      h.h2([h.Class("rm3-next-route-title")], [label]),
-      ...(message === null
-        ? [h.ul([h.Class("rm3-next-route-rows")], rows.map((entry) => h.li([], [entry.label + ": " + entry.value])))]
-        : [h.p([], [message])]),
-    ],
-  );
-};
 const modelsRolesPage = (readbacks: ReadbacksState, h: HtmlBuilder<Message>): Html => {
   const models = readbacks.configuredModels;
   const endpoints = readbacks.modelEndpoints;
@@ -993,18 +963,14 @@ const routeContent = (ctx: RouteViewContext): Html => {
         ],
       );
     },
-    Observability: () => observabilityPage(observability, h),
-    StoreReceipts: () =>
-      renderReadbackPage(READBACK_SPECS.storeReceipts, readbacks.storeReceipts, h),
+    Observability: () => observabilitySnapshotRoute(observability, h),
+    StoreReceipts: () => storeDegradationReceiptsRoute(readbacks.storeReceipts, h),
     Queues: () => renderReadbackPage(READBACK_SPECS.queues, readbacks.queues, h),
     LocalLogs: () => renderReadbackPage(READBACK_SPECS.localLogs, readbacks.localLogs, h),
-    RouterCandidates: () =>
-      renderReadbackPage(READBACK_SPECS.routerCandidates, readbacks.routerCandidates, h),
-    Requests: () =>
-      requestsRoute({ h, readbacks, requestsRanking, requestsRankingMetricListbox, requestsRankingTargetListbox }),
+    RouterCandidates: () => routerCandidatesPage(readbacks, h),
+    Requests: () => telemetryRequestsRoute(readbacks.requests, requestsRanking, requestsRankingMetricListbox, requestsRankingTargetListbox, h),
     RequestDetail: () => renderReadbackPage(READBACK_SPECS.requestDetail, readbacks.requestDetail, h),
-    RouterDecisions: () =>
-      renderReadbackPage(READBACK_SPECS.routerDecisions, readbacks.routerDecisions, h),
+    RouterDecisions: () => routerDecisionsPage(readbacks, h),
     RouterDecisionDetail: () =>
       renderReadbackPage(READBACK_SPECS.routerDecisionDetail, readbacks.routerDecisionDetail, h),
     LocalPeers: () => renderReadbackPage(READBACK_SPECS.localPeers, readbacks.localPeers, h),
@@ -1028,26 +994,23 @@ const routeContent = (ctx: RouteViewContext): Html => {
     LearningHistory: () => learningHistoryRoute({ h, learningFamilyPage, readbacks }),
     Models: () => modelsPage(readbacks, h),
     ModelsRoles: () => modelsRolesPage(readbacks, h),
-    RouterStrategy: () => routerFamilyPage(["strategy", "executionMode", "routing."], "Router strategy", "router-strategy", readbacks, h),
-    RouterWorkloads: () => routerFamilyPage(["workload."], "Workloads", "router-workloads", readbacks, h),
-    RouterConfig: () => routerFamilyPage(["strategy", "executionMode", "routing.", "diagnostics."], "Router config", "router-config", readbacks, h),
-    RouterAgentStrategy: () => routerFamilyPage(["agentStrategy."], "Agent strategy", "router-agent-strategy", readbacks, h),
+    RouterStrategy: () => routerStrategyPage("router-strategy", readbacks, h),
+    RouterWorkloads: () => routerWorkloadsPage(readbacks, h),
+    RouterConfig: () => routerConfigPage(readbacks, h),
+    RouterAgentStrategy: () => routerAgentStrategyPage(readbacks, h),
     LocalChoose: () => h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route","local-choose")], [h.h2([h.Class("rm3-next-route-title")], ["Local choose"]), h.p([], ["Choose peer-backed models or llama-swap models."])]),
     Runtime: () => runtimeRoute({ h, readbacks, runtimeConfigEditor, runtimeConfigPage }),
     SessionReadiness: () =>
       renderReadbackPage(READBACK_SPECS.sessionReadiness, readbacks.sessionReadiness, h),
     Dashboard: () => renderReadbackPage(READBACK_SPECS.dashboard, readbacks.dashboard, h),
     LocalSwap: () => renderReadbackPage(READBACK_SPECS.localSwap, readbacks.localSwap, h),
-    ObserveActivity: () =>
-      renderReadbackPage(READBACK_SPECS.observeActivity, readbacks.observeActivity, h),
-    ObserveLogs: () => renderReadbackPage(READBACK_SPECS.observeLogs, readbacks.observeLogs, h),
-    ObserveRouting: () =>
-      renderReadbackPage(READBACK_SPECS.observeRouting, readbacks.observeRouting, h),
-    Router: () => renderReadbackPage(READBACK_SPECS.router, readbacks.router, h),
+    ObserveActivity: () => observeActivityRoute(readbacks.observeActivity, h),
+    ObserveLogs: () => observeLogsRoute(readbacks.observeLogs, h),
+    ObserveRouting: () => observeRoutingRoute(readbacks.observeRouting, h),
+    Router: () => routerOverviewPage(readbacks, h),
     Providers: () => providersRoute({ controls, deviceAuth, deviceAuthDialog, h, providerAccount }),
     Endpoints: () => endpointsRoute({ controls, endpointAdmission, h }),
-    ControlController: () =>
-      renderControlPage(CONTROL_SPECS.controlController, controls.controlController, h, controls.endpoints.rows.map((row) => row.id)),
+    ControlController: () => controlControllerPage(controls, h),
     Index: () => indexRoute({ chartInteraction, h, overviewFilters, overviewPage, overviewWindowMs, readbacks }),
     NotFound: (route) => {
       const { path } = route;
