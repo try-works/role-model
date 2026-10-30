@@ -46,12 +46,12 @@ export const renderProviderAccountForm = (state: ProviderAccountState, h: HtmlBu
           h.Value(state.draft.modelInput),
         ]),
       ]),
-      h.button([h.Class("mt-2 rounded border px-3 py-1.5 text-[12px]"), h.OnClick(Message.ProviderAccountModelAdded({})), h.Type("button")], ["Add model"]),
+      h.button([h.AriaLabel("Add model"), h.Class("mt-2 rounded border px-3 py-1.5 text-[12px]"), h.OnClick(Message.ProviderAccountModelAdded({})), h.Type("button")], ["Add model"]),
       h.ul([h.Class("mt-2 text-[12px]")], state.draft.selectedModelIds.map((modelId) =>
-        h.li([], [modelId + " ", h.button([h.Class("underline"), h.OnClick(Message.ProviderAccountModelRemoved({ modelId })), h.Type("button")], ["Remove"])]),
+        h.li([], [modelId + " ", h.button([h.AriaLabel("Remove model " + modelId), h.Class("underline"), h.OnClick(Message.ProviderAccountModelRemoved({ modelId })), h.Type("button")], ["Remove"])]),
       )),
-      h.button([h.Class("mt-4 rounded border px-3 py-1.5 text-[12px]"), h.AriaDisabled(busy), h.DataAttribute("provider-account-save", ""), h.OnClick(Message.ProviderAccountCreateRequested({})), h.Type("button")], ["Save provider account"]),
-      h.button([h.Class("ml-2 mt-4 rounded border px-3 py-1.5 text-[12px]"), h.AriaDisabled(busy), h.DataAttribute("provider-account-update-key", ""), h.OnClick(Message.ProviderAccountUpdateKeyRequested({})), h.Type("button")], ["Update API key"]),
+      h.button([h.AriaLabel("Save provider account"), h.Class("mt-4 rounded border px-3 py-1.5 text-[12px]"), h.AriaDisabled(busy), h.DataAttribute("provider-account-save", ""), h.OnClick(Message.ProviderAccountCreateRequested({})), h.Type("button")], ["Save provider account"]),
+      h.button([h.AriaLabel("Update API key"), h.Class("ml-2 mt-4 rounded border px-3 py-1.5 text-[12px]"), h.AriaDisabled(busy), h.DataAttribute("provider-account-update-key", ""), h.OnClick(Message.ProviderAccountUpdateKeyRequested({})), h.Type("button")], ["Update API key"]),
       ...(state.error === undefined ? [] : [h.p([h.Role("alert"), h.DataAttribute("provider-account-error", "")], [state.error])]),
       ...(state.status === "saved" ? [h.p([h.DataAttribute("provider-account-saved", "")], ["Provider account saved."])] : []),
     ],
@@ -153,6 +153,7 @@ export const renderControlPage = (
         : [
             h.button(
               [
+                h.AriaLabel(spec.action.label),
                 h.Type("button"),
                 h.Class(
                   "mt-3 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3 py-1.5 text-[12px] font-medium text-[var(--rm-fg)] disabled:opacity-50",

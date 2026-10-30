@@ -127,17 +127,18 @@ export const renderDeviceAuthorizationForm = (
         ]),
       ]),
       h.button(
-        [h.Class("mt-2 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3 py-1.5 text-[12px]"), h.OnClick(Message.DeviceAuthModelAdded({})), h.Type("button")],
+        [h.AriaLabel("Add model"), h.Class("mt-2 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3 py-1.5 text-[12px]"), h.OnClick(Message.DeviceAuthModelAdded({})), h.Type("button")],
         ["Add model"],
       ),
       h.ul(
         [h.Class("mt-2 text-[12px]")],
         state.draft.selectedModelIds.map((modelId) =>
-          h.li([], [modelId + " ", h.button([h.Class("underline"), h.OnClick(Message.DeviceAuthModelRemoved({ modelId })), h.Type("button")], ["Remove"])]),
+          h.li([], [modelId + " ", h.button([h.AriaLabel("Remove model " + modelId), h.Class("underline"), h.OnClick(Message.DeviceAuthModelRemoved({ modelId })), h.Type("button")], ["Remove"])]),
         ),
       ),
       h.button(
         [
+          h.AriaLabel("Start device authorization"),
           h.Class("mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3 py-1.5 text-[12px]"),
           h.AriaDisabled(busy),
           h.DataAttribute("device-auth-start", ""),
@@ -150,6 +151,7 @@ export const renderDeviceAuthorizationForm = (
         ? [
             h.button(
               [
+                h.AriaLabel("Retry"),
                 h.Class("ml-2 mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] px-3 py-1.5 text-[12px]"),
                 h.DataAttribute("device-auth-retry", ""),
                 h.OnClick(Message.DeviceAuthRetryRequested({})),
