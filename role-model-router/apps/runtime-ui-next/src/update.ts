@@ -386,6 +386,35 @@ const endpointAdmissionCompletion = (
           },
         };
       }
+      if (route._tag === "Endpoints" || route._tag === "Providers") {
+        const keys: ReadonlyArray<ReadbackKey> = route._tag === "Endpoints"
+          ? ["modelEndpoints", "configuredModels", "integrationProviders"]
+          : ["integrationProviders", "configuredModels", "modelEndpoints"];
+        const readbacks = { ...emptyReadbacks() };
+        const commands = keys.map((key) => {
+          const token = model.readbacks[key].token + 1;
+          readbacks[key] = loadingReadback(token);
+          return readReadback({ key, token });
+        });
+        return {
+          commands: [...commands, scrollShellToTopCommand()],
+          model: {
+            ...model,
+            controls: emptyControls(),
+            diagnostics: idleDiagnostics(),
+            observability: idleObservability(),
+            readbacks,
+            refresh: {
+              ...model.refresh,
+              message: undefined,
+              resyncToken: model.refresh.resyncToken + 1,
+              status: "idle",
+            },
+            route,
+            chartInteraction,
+          },
+        };
+      }
       const controlKey = controlKeyForRouteTag(route._tag);
       if (controlKey !== null) {
         const token = model.controls[controlKey].token + 1;

@@ -109,6 +109,26 @@ const initRoute =
           model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), routerConfig: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
         };
       }
+      if (route._tag === "Endpoints" || route._tag === "Providers") {
+        const token = 1;
+        return {
+          commands: [
+            readReadback({ key: "configuredModels", token }),
+            readReadback({ key: "modelEndpoints", token }),
+            readReadback({ key: "integrationProviders", token }),
+          ],
+          model: {
+            clicks: 0,
+            controls: emptyControls(),
+            diagnostics: idleDiagnostics(),
+            observability: idleObservability(),
+            readbacks: { ...emptyReadbacks(), configuredModels: loadingReadback(token), modelEndpoints: loadingReadback(token), integrationProviders: loadingReadback(token) },
+            refresh: initialRuntimeRefreshState(),
+            route,
+            theme,
+          },
+        };
+      }
       if (route._tag === "Models" || route._tag === "ModelsRoles") {
         const token = 1;
         return {
