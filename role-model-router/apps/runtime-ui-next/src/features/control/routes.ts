@@ -10,6 +10,7 @@ import {
 import type { DeviceAuthState } from "../../device-auth";
 import type { EndpointAdmissionState } from "../../endpoint-admission";
 import type { ProviderAccountState } from "../../provider-account";
+import type { ReadbacksState } from "../../readback";
 import type { DeviceAuthDialogModel } from "../../ui/dialog";
 import type { Message } from "../../message";
 
@@ -19,6 +20,7 @@ export interface ProvidersRouteContext {
   readonly deviceAuthDialog: DeviceAuthDialogModel | undefined;
   readonly h: HtmlBuilder<Message>;
   readonly providerAccount: ProviderAccountState;
+  readonly readbacks: ReadbacksState;
 }
 
 export interface EndpointsRouteContext {

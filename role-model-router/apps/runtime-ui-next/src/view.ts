@@ -380,6 +380,10 @@ const shellSecondaryNav = (model: Model, h: HtmlBuilder<Message>): Html | null =
   const entries = shellSectionNav[section.label] ?? [];
   if (entries.length <= 1) return null;
   const active = model.route._tag === "Studio" ? (model.studio ?? studioIdle()).tab : model.route._tag;
+  // Reference AppShell only mounts the section nav when the current URL is one of the section items.
+  // Section hub pages (Local choose, System operator) show no tab bar.
+  const isSectionItem = entries.some((entry) => (entry.tab === undefined ? entry.tag === active : entry.tab === active));
+  if (!isSectionItem) return null;
   return h.nav(
     [
       h.AriaLabel(section.label + " secondary navigation"),
@@ -1314,7 +1318,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     ObserveLogs: () => observeLogsRoute(readbacks.observeLogs, h),
     ObserveRouting: () => observeRoutingRoute(readbacks.observeRouting, h),
     Router: () => routerOverviewPage(readbacks, h),
-    Providers: () => providersPage({ controls, deviceAuth, deviceAuthDialog, h, providerAccount }),
+    Providers: () => providersPage({ controls, deviceAuth, deviceAuthDialog, h, providerAccount, readbacks }),
     Endpoints: () => endpointsSupplement(endpointsRoute({ controls, endpointAdmission, h }), readbacks.modelEndpoints, h),
     ControlController: () => controlControllerPage(controls, h),
     Index: () => indexRoute({ chartInteraction, h, overviewFilters, overviewPage, overviewWindowMs, readbacks }),
