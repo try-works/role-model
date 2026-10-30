@@ -14,7 +14,7 @@ The owner rejected the ported UI against the 0.0.20 build on :3456 and directed 
 
 ## Gates
 - UI tsc --noEmit: 0
-- Full UI suite: 76 files / 810 tests pass
+- Full UI suite: 76 files / 811 tests pass (the restored s76a in-flight invariant adds one)
 - S565 reference story scene: 40/40 (sections in order, table columns, named controls from the :3456 capture)
 - S567 reference titles: 46/46
 - S566 update stories: 5/5
