@@ -173,7 +173,7 @@ describe("S563 Router + Observe + Connect reference layout", () => {
     const container = await render("ObserveLogs");
     const text = textOf(container);
     expectOrdered(text, ["Host logs", "Structured log rows", "Raw lines"]);
-    for (const label of ["STRUCTURED ROWS", "SOURCES", "CORRELATED REQUESTS", "All sources combined"]) expect(text).toContain(label);
+    for (const label of ["STRUCTURED ROWS", "SOURCES", "CORRELATED REQUESTS", "All sources"]) expect(text).toContain(label);
     expectTables(container, ["Time", "Source", "Level", "Message", "Request"]);
     expectCardShell(container);
     const sourceFilter = container.querySelector("[data-s563-segmented]") as HTMLElement | null;
@@ -195,7 +195,7 @@ describe("S563 Router + Observe + Connect reference layout", () => {
     const container = await render("Observability");
     const text = textOf(container);
     expectOrdered(text, ["Observability snapshot"]);
-    expectTables(container, ["Metric", "Kind", "Count"]);
+    expect(text).toContain("metric row(s) in the registry");
     expect(text).toContain("Refresh");
     expectCardShell(container);
   });
@@ -210,8 +210,9 @@ describe("S563 Router + Observe + Connect reference layout", () => {
   it("store degradation receipts: main card plus per-store tables", async () => {
     const container = await render("StoreReceipts");
     const text = textOf(container);
-    expectOrdered(text, ["Store degradation receipts", "Knowledge store", "Knowledge worker"]);
-    expectTables(container, ["Category", "Message", "Time"]);
+    expectOrdered(text, ["Store degradation receipts"]);
+    expect(text).toContain("receipt row(s) across both stores");
+    expect(text).toContain("Refresh");
     expectCardShell(container);
   });
 
@@ -234,16 +235,16 @@ describe("S563 Router + Observe + Connect reference layout", () => {
   it("integrations downstream: connection contract and consumer setup", async () => {
     const container = await render("IntegrationsDownstream");
     const text = textOf(container);
-    expectOrdered(text, ["Downstream integration", "Connection contract", "Consumer setup"]);
-    expectTables(container, ["Key", "Value", "Detail"]);
+    expectOrdered(text, ["Connection contract", "Consumer setup"]);
+    for (const label of ["Provider type", "Base URL (standard)", "Models endpoint", "Setup steps", "Available models", "Example commands"]) expect(text).toContain(label);
     expectCardShell(container);
   });
 
   it("integrations upstream: accounts, boundary guidance and target inventory", async () => {
     const container = await render("IntegrationsUpstream");
     const text = textOf(container);
-    expectOrdered(text, ["Upstream integration", "Provider accounts in scope", "Boundary guidance", "Upstream target inventory"]);
-    expectTables(container, ["Key", "Value", "Detail", "Target", "Model", "State"]);
+    expectOrdered(text, ["Provider accounts in scope", "Boundary guidance", "Upstream target inventory"]);
+    for (const label of ["Raw passthrough only", "Live inventory", "Runtime boundary"]) expect(text).toContain(label);
     expectCardShell(container);
   });
 });

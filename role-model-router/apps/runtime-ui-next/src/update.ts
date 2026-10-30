@@ -515,6 +515,8 @@ const updateLocalPolicyDraft = (
       if (model.route._tag === "ModelsRoles") return [{ key: "configuredModels" }, { key: "modelEndpoints" }];
       if (model.route._tag === "Providers") return [{ key: "integrationProviders" }, { key: "configuredModels" }, { key: "modelEndpoints" }];
       if (model.route._tag === "Endpoints") return [{ key: "modelEndpoints" }, { key: "configuredModels" }, { key: "integrationProviders" }];
+      if (model.route._tag === "IntegrationsDownstream") return [{ key: "downstreamOpenAI" }, { key: "configuredModels" }];
+      if (model.route._tag === "IntegrationsUpstream") return [{ key: "integrationProviders" }, { key: "configuredModels" }];
       if (model.route._tag === "SystemOperator") return [{ key: "operatorStatus" }, { key: "operatorTraceRoots" }];
       if (model.route._tag === "RuntimeConfig") return [{ key: "runtimeConfig" }];
       const readbackKey = readbackKeyForRouteTag(model.route._tag);

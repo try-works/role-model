@@ -24,6 +24,9 @@ export const integrationsDownstreamRoute = (readback: ReadbackState, models: Rea
       h.span([h.Class("break-all font-mono text-[12px] font-semibold leading-4 text-foreground")], [value]),
     ]);
   return page("integrations-downstream", "Downstream integration", [
+    ...(readback.status === "loading" ? [h.p([h.Class("font-sans text-[13px] leading-5 text-muted-foreground")], ["Loading downstream contract…"])] : []),
+    ...(readback.status === "error" ? [h.p([h.Role("alert"), h.Class("font-sans text-[13px] leading-5 text-[var(--rm-error)]")], [readback.message ?? "Downstream OpenAI configuration read failed."])] : []),
+    ...(readback.status === "empty" ? [h.p([h.Class("font-sans text-[13px] leading-5 text-muted-foreground")], ["No downstream OpenAI configuration available."])] : readback.status === "ok" && fact("displayName") !== "—" ? [h.p([h.Class("font-sans text-[13px] leading-5 text-muted-foreground")], ["Runtime: " + fact("displayName")])] : []),
     card("Connection contract", "OpenAI-compatible base URLs, endpoints, and auth header for clients calling this runtime.", [
       h.div([h.Class("grid gap-3 md:grid-cols-3")], [
         tile("Provider type", "OpenAI-compatible"),

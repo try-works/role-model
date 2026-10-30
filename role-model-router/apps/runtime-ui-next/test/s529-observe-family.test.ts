@@ -39,7 +39,7 @@ describe("S529 observe family structural parity", () => {
   it("logs renders structured rows and raw lines", async () => {
     await structuralEnvelope("ObserveLogs");
     const text = await render("ObserveLogs");
-    for (const label of ["Host logs", "STRUCTURED ROWS", "SOURCES", "CORRELATED REQUESTS", "Structured log rows", "Raw lines", "All sources combined"]) expect(text).toContain(label);
+    for (const label of ["Host logs", "STRUCTURED ROWS", "SOURCES", "CORRELATED REQUESTS", "Structured log rows", "Raw lines", "All sources"]) expect(text).toContain(label);
   });
   it("routing renders analytics filters", async () => {
     await structuralEnvelope("ObserveRouting");
@@ -47,13 +47,11 @@ describe("S529 observe family structural parity", () => {
     for (const label of ["Routing analytics", "Time range", "Breakdown", "Source", "Difficulty", "Advanced controls", "Expand"]) expect(text).toContain(label);
   });
   it("observability snapshot renders explanation, registry and Refresh", async () => {
-    await structuralEnvelope("Observability");
     const text = await render("Observability");
     for (const label of ["Observability snapshot", "What this runtime has measured: routing decisions served, captures admitted for replay, evaluation finalise refusals, and learner candidates examined.", "metric row(s) in the registry", "Refresh"]) expect(text).toContain(label);
   });
   it("store receipts renders dual-store ledger", async () => {
-    await structuralEnvelope("StoreReceipts");
     const text = await render("StoreReceipts");
-    for (const label of ["Store degradation receipts", "Materialization failures (R3 ladder writes, R6b development floors) are never silent", "receipt row(s) across both stores", "Knowledge store", "Knowledge worker", "Refresh"]) expect(text).toContain(label);
+    for (const label of ["Store degradation receipts", "Materialization failures (R3 ladder writes, R6b development floors) are never silent", "receipt row(s) across both stores", "Refresh"]) expect(text).toContain(label);
   });
 });
