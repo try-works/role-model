@@ -13,7 +13,6 @@ import type { ChartSeries } from "@role-model/ui/foldkit-chart";
 
 const page = (title: string, children: ReadonlyArray<Html>, h: HtmlBuilder<Message>): Html =>
   h.section([h.Class("rm3-next-route flex flex-col gap-4"), h.DataAttribute("route", "observe")], [
-    h.h2([h.Class("rm3-next-route-title text-sm font-medium leading-5 tracking-tight")], [title]),
     ...children,
   ]);
 
@@ -47,21 +46,58 @@ const observeChart = (
 
 const observeCharts = (card: Html, h: HtmlBuilder<Message>): Html => chartGrid([{ span: 12, body: card }], h);
 
-const filterGroups = (h: HtmlBuilder<Message>): Html =>
-  filterBar(
-    [
-      { label: "Time range", value: "Day", options: ["Day", "Week", "Month", "90 days"] },
-      { label: "Breakdown", value: "Total", options: ["Total", "By endpoint variant", "By upstream model", "By provider"] },
-      { label: "Source", value: "All sources", options: ["All sources", "Local only", "Remote only"] },
-      { label: "Difficulty", value: "All buckets", options: ["All buckets", "Easy only", "Medium only", "Hard only"] },
-    ],
-    h,
-  );
-
-const filterActions = (h: HtmlBuilder<Message>): Html =>
-  h.div([h.Class("flex flex-wrap gap-2")], ["Advanced controls", "Expand"].map((label) =>
-    h.button([h.Type("button"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 font-sans text-sm text-foreground")], [label]),
-  ));
+const observeFilterBar = (h: HtmlBuilder<Message>, extra: ReadonlyArray<string> = []): Html => {
+  const labelClass = "font-sans text-xs font-normal leading-4 text-muted-foreground";
+  const fieldClass = "flex shrink-0 flex-col gap-1.5";
+  const selectClass =
+    "flex h-[34px] min-w-[9rem] items-center justify-between gap-2 rounded-md border border-input bg-secondary px-2.5 text-left font-sans text-sm text-foreground";
+  const field = (label: string, value: string, options: ReadonlyArray<string>) =>
+    h.label([h.Class(fieldClass)], [
+      h.span([h.Class(labelClass)], [label]),
+      h.select(
+        [h.AriaLabel(label), h.Class(selectClass)],
+        options.map((option) => h.option([h.Value(option), ...(option === value ? [h.Selected(true)] : [])], [option])),
+      ),
+    ]);
+  return h.div([h.Class("flex flex-col gap-4")], [
+    h.div(
+      [h.Class("flex w-full flex-wrap items-end justify-between gap-4")],
+      [
+        h.div([h.Class(fieldClass)], [
+          h.span([h.Class(labelClass)], ["Time range"]),
+          h.div(
+            [h.Class("flex h-9 w-fit shrink-0 items-center gap-1 rounded-md border border-border bg-secondary p-1"), h.Attribute("role", "group"), h.AriaLabel("Time range")],
+            ["Day", "Week", "Month", "90 days"].map((option, index) =>
+              h.button(
+                [
+                  h.Type("button"),
+                  h.AriaPressed(String(index === 0)),
+                  h.Class(
+                    "flex h-7 shrink-0 items-center justify-center whitespace-nowrap rounded-[5px] px-2.5 font-sans text-sm leading-[18px] " +
+                      (index === 0 ? "bg-primary font-semibold text-primary-foreground" : "font-normal text-muted-foreground hover:text-foreground"),
+                  ),
+                ],
+                [option],
+              ),
+            ),
+          ),
+        ]),
+        h.div([h.Class("flex flex-wrap items-end gap-3")], [
+          field("Breakdown", "By endpoint variant", ["Total", "By endpoint variant", "By upstream model", "By provider"]),
+          field("Source", "All sources", ["All sources", "Local only", "Remote only"]),
+          ...(extra.includes("Difficulty") ? [field("Difficulty", "All buckets", ["All buckets", "Easy only", "Medium only", "Hard only"])] : []),
+        ]),
+      ],
+    ),
+    h.div(
+      [h.Class("flex w-full flex-wrap items-center justify-between gap-4 rounded-lg border border-border bg-card p-3"), h.DataAttribute("observe-advanced", "")],
+      [
+        h.span([h.Class("font-sans text-sm font-medium text-foreground")], ["Advanced controls"]),
+        h.button([h.Type("button"), h.AriaExpanded(false), h.Class("inline-flex h-[34px] items-center gap-1 rounded-md border border-border bg-background px-3 font-sans text-sm text-foreground")], ["Expand"]),
+      ],
+    ),
+  ]);
+};
 
 export const telemetryRequestsRoute = (
   readback: ReadbackState,
@@ -250,8 +286,7 @@ export const observeLogsRoute = (readback: ReadbackState, h: HtmlBuilder<Message
 };
 
 export const observeRoutingRoute = (readback: ReadbackState, h: HtmlBuilder<Message>): Html => page("Routing analytics", [
-  filterGroups(h),
-  filterActions(h),
+  observeFilterBar(h, ["Difficulty"]),
   section("Routing results", "Bounded routing analytics for the selected filters.", [
     table(["Model", "Endpoint", "Count"], readback.rows.map((row) => [row.label, row.meta, row.value]), "No routing rows recorded yet.", h),
   ], h),
