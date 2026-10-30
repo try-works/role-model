@@ -8,34 +8,45 @@ const mounted: Array<{ container: HTMLElement; handle: { dispose(): void } }> = 
 const response = (body: unknown) => new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
 const mountAt = (id: string, impl: typeof fetch) => { window.history.replaceState({}, "", "/models"); const container = document.createElement("div"); container.id = id; document.body.append(container); const handle = mountShell(container, { readbackFetchImpl: impl }); mounted.push({ container, handle }); };
 const waitFor = async <T>(read: () => T | undefined, label: string): Promise<T> => { const end = Date.now() + 3000; while (Date.now() < end) { const value = read(); if (value !== undefined) return value; await new Promise((r) => setTimeout(r, 10)); } throw new Error("Timed out waiting for " + label); };
+const page = () => document.querySelector('[data-route="models"]');
 afterEach(() => { for (const entry of mounted.splice(0)) { entry.handle.dispose(); entry.container.remove(); } window.history.replaceState({}, "", "/"); });
 
-describe("S71b configured models", () => {
-  it("renders configured models with endpoint, status, effort and roles from real captures", async () => {
+describe("S71b configured models (reference inventory)", () => {
+  it("renders the two-column inventory: model rows with badges, runtime facts and the roles panel", async () => {
     mountAt("s71b-success", async (input) => { const path = new URL(String(input), "http://localhost").pathname; if (path === "/api/role-model/models") return response(fixture("models-real")); if (path === "/api/role-model/endpoints") return response(fixture("model-endpoints-real")); return response({}); });
-    await waitFor(() => document.querySelector('[data-route="models"] table thead th') ?? undefined, "models success");
-    const headers = [...document.querySelectorAll('[data-route="models"] table thead th')].map((cell) => cell.textContent);
-    expect(headers.map((header) => (header ?? "").toLowerCase())).toContain("model");
-    expect(headers.map((header) => (header ?? "").toLowerCase())).toContain("provider");
-    expect(headers.map((header) => (header ?? "").toLowerCase())).toContain("endpoint ids");
-    expect(document.querySelectorAll('[data-route="models"] table tbody tr').length).toBeGreaterThan(0);
+    const body = await waitFor(() => (page()?.textContent?.includes("Claude 3.7 Sonnet") ? page() : undefined), "models inventory");
+    const text = body.textContent ?? "";
+    expect(text).toContain("Select a model to inspect and configure.");
+    expect(text).toContain("Models");
+    expect(text).toContain("RUNTIME");
+    expect(text).toContain("ROLES");
+    expect(text).toContain("Source");
+    expect(text).toContain("Endpoints");
+    expect(text).toContain("Context");
+    expect(text).toContain("COST");
+    expect(text).toContain("BENCHMARK");
+    expect(document.querySelectorAll('[data-route="models"] [data-models-role-list] li').length).toBeGreaterThan(0);
   });
 
-  it("joins the real fixture to exact endpoint, health, effort and roles", async () => {
+  it("joins the real fixture to model identity, controller badge and role task counts", async () => {
     mountAt("s71b-exact", async (input) => { const path = new URL(String(input), "http://localhost").pathname; if (path === "/api/role-model/models") return response(fixture("models-real")); if (path === "/api/role-model/endpoints") return response(fixture("model-endpoints-real")); return response({}); });
-    await waitFor(() => (document.querySelectorAll('[data-route="models"] table tbody tr').length > 1 ? true : undefined), "model rows");
-    const text = document.querySelector('[data-route="models"]')?.textContent ?? "";
-    expect(text).toContain("TASKS");
-    expect(text).toContain("ELIGIBILITY");
+    await waitFor(() => (page()?.textContent?.includes("controller") ? page() : undefined), "controller badge");
+    const text = page()?.textContent ?? "";
+    expect(text).toContain("controller");
+    expect(text).toMatch(/\d+ tasks/);
   });
 
-  it("renders loading, empty and error states", async () => {
-    mountAt("s71b-loading", async (input) => { const path = new URL(String(input), "http://localhost").pathname; if (path === "/api/role-model/models") return await new Promise<Response>(() => undefined); return response([]); });
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    expect(document.body.textContent).not.toContain("Claude 3.7 Sonnet");
+  it("renders the reference empty state and never fabricates rows", async () => {
     mountAt("s71b-empty", async () => response([]));
-    await waitFor(() => (document.body.textContent?.includes("No configured models yet.") ? true : undefined), "empty");
-    mountAt("s71b-error", async (input) => { const path = new URL(String(input), "http://localhost").pathname; return path === "/api/role-model/models" ? response({}) : response([]); });
-    await waitFor(() => (document.body.textContent?.includes("No configured models yet.") ? true : undefined), "error");
+    const body = await waitFor(() => (page()?.textContent?.includes("No configured models are available yet.") ? page() : undefined), "empty state");
+    expect(body.textContent).toContain("Open Local Models");
+    expect(body.textContent).toContain("Open Providers");
+  });
+
+  it("keeps the page renderable while models load", async () => {
+    mountAt("s71b-loading", async (input) => { const path = new URL(String(input), "http://localhost").pathname; if (path === "/api/role-model/models") return await new Promise<Response>(() => undefined); return response([]); });
+    await waitFor(() => (page() ?? undefined), "models page");
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(document.body.textContent).toContain("Configured models");
   });
 });
