@@ -280,23 +280,31 @@ const parseLog = (value: string): readonly [string, string, string, string, stri
 };
 
 export const observeLogsRoute = (readback: ReadbackState, h: HtmlBuilder<Message>): Html => {
-  const rows = readback.rows.map((row) => parseLog(row.value));
+  const parsed = readback.rows.map((row) => {
+    const time = row.label.replace(/^\[|\]$/g, "");
+    const level = row.meta.includes("error=") ? "error" : row.meta.includes("status=") ? "info" : "—";
+    const message = row.meta.replace(/^\[[^\]]*\]\s*\S+\s*/, "");
+    return [time.length > 0 ? time : "—", "combined", level, message, row.value] as const;
+  });
+  const correlated = new Set(readback.rows.map((row) => row.value).filter((value) => value.length > 0)).size;
   return page("Host logs", [
     metrics([
-      { label: "STRUCTURED ROWS", value: String(rows.length) },
+      { label: "STRUCTURED ROWS", value: String(parsed.length) },
       { label: "SOURCES", value: "1" },
-      { label: "CORRELATED REQUESTS", value: "—" },
+      { label: "CORRELATED REQUESTS", value: String(correlated) },
     ], h),
-    segmented("Log source filter", ["All sources combined"], "All sources combined", h),
+    h.div([h.Class("flex flex-col gap-2")], [
+      h.span([h.Class("font-sans text-[13px] font-medium leading-5 text-foreground")], ["Source filter"]),
+      segmented("Log source filter", ["All sources", "combined"], "All sources", h),
+    ]),
     section("Structured log rows", "Rows are parsed into Time, Source, Level, Message, and Request fields so they can be scanned without leaving the shell.", [
-      table(["Time", "Source", "Level", "Message", "Request"], rows, "No structured log rows recorded yet.", h),
+      table(["Time", "Source", "Level", "Message", "Request"], parsed, "No structured log rows recorded yet.", h),
     ], h),
     section("Raw lines", "The raw local log stream, unparsed.", [
       readback.rows.length === 0
         ? empty("No raw log lines recorded yet.", h)
         : h.pre([h.Class("max-h-[320px] overflow-auto rounded-md border border-border bg-secondary p-3 font-mono text-xs leading-5")], [readback.rows.map((row) => row.value).join("\n")]),
     ], h),
-    observeCharts(observeChart("Structured log volume", "Structured log rows per source for the selected window.", emptySeries("logs", "Log rows"), "No structured log volume recorded yet.", h), h),
   ], h);
 };
 
