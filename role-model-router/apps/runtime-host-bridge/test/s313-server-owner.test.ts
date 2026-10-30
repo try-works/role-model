@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { describe, expect, test } from "vitest";
 
 import { startBridgeServer } from "../src/index.js";
@@ -132,6 +134,13 @@ describe("S313 DAG Server owner", () => {
     const legacy = { id: "legacy-owner", options: composed.options } as never;
     await expect(startBridgeServer(composed.options, { backend: legacy, handlerFactory, transport: fake.transport }))
       .rejects.toThrow(/composition DAG/);
+  });
+
+  test("cli threads the composed BackendOwner into startBridgeServer (S554 regression guard)", () => {
+    const source = readFileSync(new URL("../src/cli.ts", import.meta.url), "utf8");
+    expect(source).toContain("let backendOwner:");
+    expect(source).toContain("backendOwner = owner;");
+    expect(source).toMatch(/startBridgeServer\(serverOptions,\s*backendOwner === undefined \? undefined : \{ backend: backendOwner/);
   });
 
   test("bare options are refused outside the explicit test seam (production-style path)", async () => {

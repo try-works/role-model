@@ -190,5 +190,10 @@
     "updateStorageRetentionPolicy",
     "updateTaskDefinitions",
     "upsertProviderAccount"
+  ],
+  "allFields": 181,
+  "restored": [
+    "getRoutableInventory",
+    "anonymousLearningReads"
   ]
 }

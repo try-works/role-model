@@ -1,0 +1,6 @@
+S554 B6/R27 HOLD closure verification
+Finding: basis 346d2a1c ALREADY contains the three requested repairs (composition-dag getRoutableInventory:1108 + conditional anonymousLearningReads:1065/1098; cli composed-owner wiring:5272/5324; 181-name field ledger). No product source was changed in this slice.
+Added regression guard: s313-server-owner now statically asserts cli captures backendOwner and passes { backend: backendOwner } into startBridgeServer, so dropping the wiring fails.
+Corrected ledger: evidence/other/s310b-field-ledger.json now carries allFields:181 and restored:[getRoutableInventory, anonymousLearningReads]; names include both; missing/extra empty.
+Mutation RED (full output in logs): A drop getRoutableInventory -> s310b 1 failed (expected undefined to be a function); B drop anonymousLearningReads -> s310b 1 failed (expected undefined to be 'on'); C drop cli composed-owner wiring -> s313 guard 1 failed. All restored byte-identically.
+GREEN: 25/25 across s310b/s313/s324/s327/s330; host tsc 0; s247 3/3; added-line lint clean.

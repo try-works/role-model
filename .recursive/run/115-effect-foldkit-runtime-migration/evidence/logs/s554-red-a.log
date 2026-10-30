@@ -1,0 +1,40 @@
+S554 mutation RED A: getRoutableInventory removed from composeBackendOwner
+VITEST_EXIT=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+
+(node:45156) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ role-model-router/apps/runtime-host-bridge/test/s310b-backend-owner.test.ts (5 tests | 1 failed) 518ms
+   ✓ S310b DAG Backend owner > the host uses the DAG-built Backend owner by identity (and a legacy construction is rejected) 17ms
+   ✓ S310b DAG Backend owner > executeChatCompletions/executeResponses run under the DAG permit bound and release on failure 289ms
+   ✓ S310b DAG Backend owner > raw backend consumers (pairwise judge path) are permit-bounded through the DAG wrapper 188ms
+   × S310b DAG Backend owner > restored getRoutableInventory/anonymousLearningReads keep the 181-name options ledger complete 15ms
+     → expected undefined to be type of 'function'
+   ✓ S310b DAG Backend owner > withBackendProviderPermits preserves live getters (effectiveRegistry follows execution-mode changes) 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  role-model-router/apps/runtime-host-bridge/test/s310b-backend-owner.test.ts > S310b DAG Backend owner > restored getRoutableInventory/anonymousLearningReads keep the 181-name options ledger complete
+AssertionError: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ role-model-router/apps/runtime-host-bridge/test/s310b-backend-owner.test.ts:112:42
+    110|       asNever(backend),
+    111|     );
+    112|     expect(options.getRoutableInventory).toBeTypeOf("function");
+       |                                          ^
+    113|     expect(options.getRoutableInventory?.()).toBeNull();
+    114|     expect(options.anonymousLearningReads).toBe("on");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  11:19:38
+   Duration  22.71s (transform 13.05s, setup 0ms, collect 19.55s, tests 518ms, environment 1ms, prepare 726ms)
+
+

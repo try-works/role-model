@@ -212,7 +212,7 @@
       "disposition": "adapter",
       "definition": {
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-        "line": 17058
+        "line": 17072
       },
       "callers": [
         {
@@ -232,7 +232,7 @@
       "disposition": "convert",
       "definition": {
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-        "line": 17447
+        "line": 17461
       },
       "callers": [
         {
@@ -248,7 +248,7 @@
       "disposition": "adapter",
       "definition": {
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-        "line": 20840
+        "line": 20874
       },
       "callers": [
         {
@@ -268,7 +268,7 @@
       "disposition": "convert",
       "definition": {
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-        "line": 30485
+        "line": 30543
       },
       "callers": [
         {
@@ -288,7 +288,7 @@
       "disposition": "convert",
       "definition": {
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-        "line": 4930
+        "line": 5004
       },
       "callers": [
         {
@@ -344,7 +344,7 @@
       "disposition": "existing-effect",
       "definition": {
         "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
-        "line": 490
+        "line": 750
       },
       "callers": [
         {
@@ -386,7 +386,7 @@
       "disposition": "pure",
       "definition": {
         "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
-        "line": 494
+        "line": 754
       },
       "callers": [
         {
@@ -428,7 +428,7 @@
       "disposition": "existing-effect",
       "definition": {
         "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
-        "line": 337
+        "line": 433
       },
       "callers": [
         {
@@ -470,7 +470,7 @@
       "disposition": "existing-effect",
       "definition": {
         "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
-        "line": 350
+        "line": 446
       },
       "callers": [
         {
@@ -512,7 +512,7 @@
       "disposition": "existing-effect",
       "definition": {
         "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
-        "line": 363
+        "line": 459
       },
       "callers": [
         {
@@ -539,7 +539,7 @@
       "disposition": "pure",
       "definition": {
         "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
-        "line": 425
+        "line": 532
       },
       "callers": [
         {
@@ -566,7 +566,7 @@
       "disposition": "pure",
       "definition": {
         "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
-        "line": 431
+        "line": 539
       },
       "callers": [
         {
@@ -593,7 +593,7 @@
       "disposition": "pure",
       "definition": {
         "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
-        "line": 437
+        "line": 546
       },
       "callers": [
         {
@@ -620,7 +620,7 @@
       "disposition": "existing-effect",
       "definition": {
         "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
-        "line": 451
+        "line": 561
       },
       "callers": [
         {
@@ -674,7 +674,7 @@
       "disposition": "pure",
       "definition": {
         "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
-        "line": 474
+        "line": 585
       },
       "callers": [
         {

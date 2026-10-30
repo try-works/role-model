@@ -1,0 +1,43 @@
+S554 mutation RED B: conditional anonymousLearningReads removed
+VITEST_EXIT=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+
+(node:66596) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ role-model-router/apps/runtime-host-bridge/test/s310b-backend-owner.test.ts (5 tests | 1 failed) 537ms
+   ✓ S310b DAG Backend owner > the host uses the DAG-built Backend owner by identity (and a legacy construction is rejected) 17ms
+   ✓ S310b DAG Backend owner > executeChatCompletions/executeResponses run under the DAG permit bound and release on failure 288ms
+   ✓ S310b DAG Backend owner > raw backend consumers (pairwise judge path) are permit-bounded through the DAG wrapper 194ms
+   × S310b DAG Backend owner > restored getRoutableInventory/anonymousLearningReads keep the 181-name options ledger complete 27ms
+     → expected undefined to be 'on' // Object.is equality
+   ✓ S310b DAG Backend owner > withBackendProviderPermits preserves live getters (effectiveRegistry follows execution-mode changes) 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  role-model-router/apps/runtime-host-bridge/test/s310b-backend-owner.test.ts > S310b DAG Backend owner > restored getRoutableInventory/anonymousLearningReads keep the 181-name options ledger complete
+AssertionError: expected undefined to be 'on' // Object.is equality
+
+- Expected: 
+"on"
+
++ Received: 
+undefined
+
+ ❯ role-model-router/apps/runtime-host-bridge/test/s310b-backend-owner.test.ts:114:44
+    112|     expect(options.getRoutableInventory).toBeTypeOf("function");
+    113|     expect(options.getRoutableInventory?.()).toBeNull();
+    114|     expect(options.anonymousLearningReads).toBe("on");
+       |                                            ^
+    115|     expect(Object.keys(options).length).toBe(181);
+    116|     const withoutAnonymous = createCliServerOptions({ host: "127.0.0.1…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  11:20:06
+   Duration  28.12s (transform 16.04s, setup 0ms, collect 25.08s, tests 537ms, environment 1ms, prepare 832ms)
+
+
