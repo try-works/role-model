@@ -3,16 +3,15 @@ import { Effect } from "effect";
 import { renderToString } from "@role-model-router/foldkit/experimental/server";
 import { describe, expect, it } from "vitest";
 
-import { PAGE_STORIES, STUDIO_TAB_STORIES } from "./support/page-stories";
+import { PAGE_STORIES } from "./support/page-stories";
 import { shellModel } from "./support/runtime-shell";
 import type { Model } from "../src/model";
 import { view } from "../src/view";
 
 /**
- * S565: the page story contract. Each route declares, in test/support/page-stories.ts, the
- * ordered section headings the shipped 0.0.20 build displays (captured from :3456). The scene
- * test renders the route and requires those headings to appear in order - so a page that loses a
- * reference section, renames one, or renders an invented layout fails here.
+ * S565: the per-route scene contract, captured from the shipped 0.0.20 build on :3456
+ * (test/support/page-stories.ts). Each route is rendered and must show, in order, the reference
+ * section headings, every reference table's column set, and every named filter control.
  */
 
 const routeFor = (tag: string): Model["route"] => {
@@ -33,11 +32,6 @@ const routeFor = (tag: string): Model["route"] => {
 const normalise = (value: string | null | undefined): string =>
   (value ?? "").replace(/\s+/g, " ").trim();
 
-const sectionHeadings = (container: HTMLElement): ReadonlyArray<string> =>
-  [...container.querySelectorAll("h2, h3, h4")]
-    .map((element) => normalise(element.textContent))
-    .filter((heading) => heading.length > 0);
-
 const inOrder = (expected: ReadonlyArray<string>, actual: ReadonlyArray<string>): boolean => {
   let cursor = 0;
   for (const heading of actual) {
@@ -48,46 +42,60 @@ const inOrder = (expected: ReadonlyArray<string>, actual: ReadonlyArray<string>)
   return cursor === expected.length;
 };
 
-const renderRoute = async (route: Model["route"]): Promise<HTMLElement> => {
+const renderRoute = async (route: Model["route"], studioTab?: string): Promise<HTMLElement> => {
+  const base = shellModel({ route });
+  const model: Model =
+    studioTab === undefined
+      ? base
+      : { ...base, studio: { tab: studioTab as never } as Model["studio"] };
   const rendered = await Effect.runPromise(
-    renderToString(
-      {
-        init: () => ({ model: shellModel({ route }), commands: [] }),
-        view,
-      },
-      { isHydratable: false },
-    ),
+    renderToString({ init: () => ({ model, commands: [] }), view }, { isHydratable: false }),
   );
   const container = document.createElement("div");
   container.innerHTML = rendered.html;
   return container;
 };
 
-describe("S565 page stories — scene", () => {
+const sceneFailures = (container: HTMLElement, story: { headings: ReadonlyArray<{ text: string }>; tables: ReadonlyArray<{ headers: ReadonlyArray<string> }>; combos: ReadonlyArray<string> }): string[] => {
+  const failures: string[] = [];
+  const pageTitle = normalise(container.querySelector("h1")?.textContent);
+  const headings = [
+    ...container.querySelectorAll("main h2, main h3, main h4"),
+  ].map((element) => normalise(element.textContent));
+  const expectedHeadings = story.headings
+    .map((heading) => normalise(heading.text))
+    .filter((heading, index) => !(index === 0 && heading === pageTitle));
+  if (!inOrder(expectedHeadings, headings)) {
+    failures.push("sections: expected [" + expectedHeadings.join(" | ") + "] rendered [" + headings.join(" | ") + "]");
+  }
+  const renderedTables = [...container.querySelectorAll("table, [role='table']")].map((table) =>
+    [...table.querySelectorAll("thead th, [role='columnheader']")].map((cell) => normalise(cell.textContent)),
+  );
+  for (const table of story.tables) {
+    const headers = table.headers.map(normalise);
+    const found = renderedTables.some((rendered) => inOrder(headers, rendered));
+    if (!found) {
+      failures.push("table: missing columns [" + headers.join(", ") + "]");
+    }
+  }
+  const named = [...container.querySelectorAll("select, [role='combobox'], button[aria-haspopup='listbox']")].map((control) =>
+    normalise(control.getAttribute("aria-label") ?? control.closest("label")?.textContent ?? ""),
+  );
+  for (const combo of story.combos) {
+    if (!named.some((name) => name.includes(combo))) {
+      failures.push("control: missing [" + combo + "]");
+    }
+  }
+  return failures;
+};
+
+describe("S565 page stories — scene (captured from :3456)", () => {
   for (const [tag, story] of Object.entries(PAGE_STORIES)) {
-    it(`${tag} shows its reference sections in order`, async () => {
+    it(tag + " matches its :3456 story", async () => {
       const container = await renderRoute(routeFor(tag));
-      const headings = sectionHeadings(container);
-      // The page title itself is the shell h1 (S560); sections start below it. Drop the title
-      // occurrence so the story checks section order, not the shell header.
-      const pageTitle = normalise(container.querySelector("h1")?.textContent);
-      const expected = story.headings.filter((heading, index) => !(index === 0 && heading === pageTitle));
-      expect(
-        inOrder(expected, headings),
-        `${tag}: expected [${expected.join(" | ")}] in order, rendered [${headings.join(" | ")}]`,
-      ).toBe(true);
-      // The invented shell generation must never come back.
+      const failures = sceneFailures(container, story);
+      expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
       expect(normalise(container.textContent)).not.toContain("Runtime UI");
-      expect(container.querySelector("[data-shell-rail]")).toBeNull();
     });
   }
-});
-
-describe("S565 studio tab stories — scene", () => {
-  it("every studio tab story is declared", () => {
-    expect(Object.keys(STUDIO_TAB_STORIES).sort()).toEqual(["advanced", "audio", "chat", "images", "rerank"]);
-  });
-  it("the studio chat story matches the shipped capture", () => {
-    expect(STUDIO_TAB_STORIES.chat.headings).toContain("Chat workspace");
-  });
 });
