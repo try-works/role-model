@@ -494,7 +494,7 @@ export const localLogsPage = (readback: ReadbackState, h: H): Html => h.div([h.C
     ...(readbackNotice(readback, "Local logs", h) === null ? [] : [readbackNotice(readback, "Local logs", h) as Html]),
     h.div([h.Class(mutedPanel + " mb-4 flex flex-wrap items-center gap-4 p-4")], [
       h.button([h.Type("button"), h.Class(secondaryButton)], ["Refresh"]),
-      h.label([h.Class("flex items-center gap-2 text-sm text-foreground")], [h.input([h.Id("autoRefresh"), h.Type("checkbox"), h.Class("size-4 rounded border border-input")]), h.span([], ["Auto-refresh (3s)"])]),
+      h.label([h.Class("flex items-center gap-2 text-sm text-foreground")], [h.input([h.Id("autoRefresh"), h.Type("checkbox"), h.Class("size-6 rounded border border-input")]), h.span([], ["Auto-refresh (3s)"])]),
       h.span([h.Class("ml-auto text-sm text-muted-foreground")], [readback.rows.length + " rows"]),
     ]),
     readback.rows.length === 0

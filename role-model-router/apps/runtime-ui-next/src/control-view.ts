@@ -14,6 +14,7 @@ export const renderProviderAccountForm = (state: ProviderAccountState, h: HtmlBu
     h.label([h.Class("mt-3 flex flex-col gap-1 text-[12px]")], [
       h.span([], [label]),
       h.input([
+        h.AriaLabel(label),
         h.Class("w-full max-w-[420px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1.5 text-[12px]"),
         h.OnInput((next) => Message.ProviderAccountFieldChanged({ field, value: next })),
         h.Type("text"),
@@ -38,6 +39,7 @@ export const renderProviderAccountForm = (state: ProviderAccountState, h: HtmlBu
       h.label([h.Class("mt-3 flex flex-col gap-1 text-[12px]")], [
         h.span([], ["Model"]),
         h.input([
+          h.AriaLabel("Model"),
           h.Class("w-full max-w-[420px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1.5 text-[12px]"),
           h.OnInput((next) => Message.ProviderAccountFieldChanged({ field: "modelInput", value: next })),
           h.Type("text"),

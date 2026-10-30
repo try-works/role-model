@@ -258,8 +258,8 @@ export const routerDecisionsPage = (readbacks: ReadbacksState, h: H): Html => {
                   field("DECIDED", "n/a"),
                 ]),
                 h.div([h.Class("mt-3 flex flex-wrap gap-3 text-[12px]")], [
-                  h.a([h.Href("/router/decisions/" + encodeURIComponent(entry.id)), h.Class("text-[var(--rm-accent)]")], ["Router · Open detail"]),
-                  h.a([h.Href("/observe/requests/" + encodeURIComponent(entry.id)), h.Class(bodyClass)], ["Observe · Open detail"]),
+                  h.a([h.Href("/router/decisions/" + encodeURIComponent(entry.id)), h.Class("inline-flex min-h-[24px] items-center text-[var(--rm-accent)]")], ["Router · Open detail"]),
+                  h.a([h.Href("/observe/requests/" + encodeURIComponent(entry.id)), h.Class("inline-flex min-h-[24px] items-center " + bodyClass)], ["Observe · Open detail"]),
                 ]),
               ]);
             })),
