@@ -316,16 +316,26 @@ export const observeRoutingRoute = (readback: ReadbackState, h: HtmlBuilder<Mess
   observeCharts(observeChart("Routing analytics volume", "Routing decisions per time bucket for the selected filters.", emptySeries("routing", "Routing rows"), "No routing analytics volume recorded yet.", h), h),
 ], h);
 
-export const observabilitySnapshotRoute = (state: ObservabilityState, h: HtmlBuilder<Message>): Html => page("Observability snapshot", [
-  section("Observability snapshot", "What this runtime has measured: routing decisions served, captures admitted for replay, evaluation finalise refusals, and learner candidates examined. The readback is the live metric registry of the running host, not a stored projection.", [
-    h.div([h.Class("flex flex-wrap items-center justify-between gap-3")], [
-      h.p([h.Class("text-sm leading-5 text-muted-foreground")], [String(state.rows.length) + " metric row(s) in the registry"]),
-      h.button([h.Type("button"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 font-sans text-sm text-foreground")], ["Refresh"]),
-    ]),
-    table(["Metric", "Kind", "Count"], state.rows.map((row) => [row.name, row.incremental ? "incremental counter" : "counter", String(row.count)]), "No metric rows in the registry.", h),
-  ], h),
-  observeCharts(observeChart("Metric registry counts", "Registered metric count by metric name.", emptySeries("metrics", "Metric rows"), "No metric registry counts recorded yet.", h), h),
-], h);
+export const observabilitySnapshotRoute = (state: ObservabilityState, h: HtmlBuilder<Message>): Html =>
+  h.section([h.Class("rm3-next-route flex flex-col gap-4"), h.DataAttribute("route", "observe")], [
+    section("Observability snapshot", "What this runtime has measured: routing decisions served, captures admitted for replay, evaluation finalise refusals, and learner candidates examined. The readback is the live metric registry of the running host, not a stored projection.", [
+      h.div([h.Class("flex flex-wrap items-center justify-between gap-3 pb-2")], [
+        h.p([h.Class("font-sans text-[13px] leading-5 text-muted-foreground")], [String(state.rows.length) + " metric row(s) in the registry"]),
+        h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground")], ["Refresh"]),
+      ]),
+      ...(state.rows.length === 0
+        ? [empty("No metric rows in the registry.", h)]
+        : state.rows.map((row) =>
+            h.div([h.Class("flex flex-col gap-2 rounded-md border border-border p-4")], [
+              h.div([h.Class("flex flex-wrap items-baseline gap-2")], [
+                h.span([h.Class("font-mono text-[13px] font-semibold tabular-nums text-foreground")], [String(row.count)]),
+                h.span([h.Class("font-mono text-[12px] uppercase tracking-[0.02em] text-foreground")], [row.name]),
+                h.span([h.Class("font-sans text-[12px] text-muted-foreground")], [row.incremental ? "incremental counter" : "counter"]),
+              ]),
+            ]),
+          )),
+    ], h),
+  ]);
 
 export const storeDegradationReceiptsRoute = (readback: ReadbackState, h: HtmlBuilder<Message>): Html => {
   const stores = readback.rows.filter((row) => row.id.startsWith("store:"));

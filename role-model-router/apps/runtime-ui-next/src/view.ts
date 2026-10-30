@@ -205,7 +205,7 @@ interface ShellSection {
  * not expand sub-pages, show a runtime rail, or group pages into invented sections.
  */
 const shellSections: ReadonlyArray<ShellSection> = [
-  { href: "/", label: "Overview", nav: "index", tags: ["Index", "Diagnostics", "Observability"] },
+  { href: "/", label: "Overview", nav: "index", tags: ["Index", "Diagnostics"] },
   { href: "/studio", label: "Studio", nav: "studio", tags: ["Studio"] },
   {
     href: "/local/choose",
@@ -225,7 +225,7 @@ const shellSections: ReadonlyArray<ShellSection> = [
     href: "/requests",
     label: "Observe",
     nav: "observe",
-    tags: ["Requests", "RequestDetail", "Queues", "QueuesConfiguration", "StoreReceipts", "ObserveActivity", "ObserveLogs", "ObserveRouting"],
+    tags: ["Requests", "RequestDetail", "Queues", "QueuesConfiguration", "StoreReceipts", "ObserveActivity", "ObserveLogs", "ObserveRouting", "Observability"],
   },
   { href: "/control/endpoints", label: "Connect", nav: "connect", tags: ["Endpoints", "IntegrationsDownstream", "IntegrationsUpstream"] },
   {
