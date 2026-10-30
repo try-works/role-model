@@ -111,15 +111,17 @@ const initRoute =
       }
       if (route._tag === "Endpoints" || route._tag === "Providers") {
         const token = 1;
+        const controlKey = route._tag === "Providers" ? "providers" : "endpoints";
         return {
           commands: [
+            readControl({ key: controlKey, token }),
             readReadback({ key: "configuredModels", token }),
             readReadback({ key: "modelEndpoints", token }),
             readReadback({ key: "integrationProviders", token }),
           ],
           model: {
             clicks: 0,
-            controls: emptyControls(),
+            controls: { ...emptyControls(), [controlKey]: loadingControl(token) },
             diagnostics: idleDiagnostics(),
             observability: idleObservability(),
             readbacks: { ...emptyReadbacks(), configuredModels: loadingReadback(token), modelEndpoints: loadingReadback(token), integrationProviders: loadingReadback(token) },

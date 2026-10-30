@@ -128,9 +128,14 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
               [h.Type("button"), h.AriaDisabled(ctx.providerAccount.status === "saving"), h.OnClick(Message.ProviderAccountCreateRequested({})), h.Class("inline-flex h-[34px] w-fit items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-foreground")],
               [ctx.providerAccount.status === "saving" ? "Saving configuration…" : "Save configuration"],
             ),
-            renderProviderAccountForm(ctx.providerAccount, h),
-            renderDeviceAuthorizationForm(ctx.deviceAuth, ctx.deviceAuthDialog, h),
-            renderControlPage(CONTROL_SPECS.providers, ctx.controls.providers, h),
+            h.details([h.Class("mt-6 border-t border-border pt-4")], [
+              h.summary([h.Class("cursor-pointer font-sans text-sm font-medium text-foreground")], ["Provider account setup"]),
+              h.div([h.Class("mt-4 flex flex-col gap-4")], [
+                renderProviderAccountForm(ctx.providerAccount, h),
+                renderDeviceAuthorizationForm(ctx.deviceAuth, ctx.deviceAuthDialog, h),
+                renderControlPage(CONTROL_SPECS.providers, ctx.controls.providers, h),
+              ]),
+            ]),
           ]),
         ], h),
         card("Configured provider connections", "Endpoints stay grouped by account. Expand a model's roles count to edit which routing roles it can serve.", [
