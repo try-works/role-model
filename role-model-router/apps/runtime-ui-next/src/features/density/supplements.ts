@@ -5,6 +5,7 @@ import type { Message } from "../../message";
 import type { ReadbackState } from "../../readback";
 import { telemetryChartCard } from "../overview/charts";
 import { card, table as referenceTable } from "../s563-layout";
+import { localLlamaModelsPage, localLogsPage, localPeersPage, localPolicyReferencePage, localSwapPage, systemSessionPage } from "../../families-view";
 
 type H = HtmlBuilder<Message>;
 
@@ -23,16 +24,7 @@ const chart = (title: string, description: string, empty: string, h: H): Html =>
 
 const wrap = (base: Html, sections: ReadonlyArray<Html>, h: H): Html => h.div([], [base, ...sections]);
 
-export const sessionSupplement = (base: Html, readback: ReadbackState, h: H): Html =>
-  wrap(base, [
-    section("Session bootstrap", [text("Persisted bootstrap ladder for the current host session. complete finished credentials, endpoints, peers, vendors, local reload, remote health, inventory were all persisted in the current session.", h), table(["LADDER", "STATE", "DETAIL"], readback.rows.map((row) => [row.label, row.value, row.meta]), "No session bootstrap rows recorded yet.", h)], h),
-    section("Canonical lifecycle", [text("Authority posture and blocking credential accounts. authoritative Canonical lifecycle data is authoritative and no credential blockers remain. No blocking account lifecycle rows.", h), table(["AUTHORITY", "BLOCKER", "STATE"], [], "No blocking account lifecycle rows.", h)], h),
-    section("Operator intent manifest", [text("Declared operator intent for this runtime session. applied operator-intent.json is readable and schema-valid.", h), table(["MANIFEST", "STATUS", "PATH"], [], "No operator intent manifest rows recorded yet.", h)], h),
-    section("Credential readiness", [text("Blocking credential counts by class. no blockers No credential blockers reported for the current session.", h)], h),
-    section("Routable inventory", [text("Endpoints and models available to routing. Endpoints 3 Models 2 Empty aliases 0", h)], h),
-    section("Alias drift warnings", [text("Hint models that no longer resolve live. No alias hint drift warnings.", h)], h),
-    chart("Session readiness", "Bootstrap and readiness posture over time.", "No session readiness chart data recorded yet.", h),
-  ], h);
+export const sessionSupplement = (_base: Html, readback: ReadbackState, h: H): Html => systemSessionPage(readback, h);
 
 export const runtimeSupplement = (base: Html, readback: ReadbackState, h: H): Html =>
   wrap(base, [
@@ -58,28 +50,9 @@ export const queuesSupplement = (base: Html, readback: ReadbackState, h: H): Htm
     chart("Queue depth", "Waiting and active jobs per queue.", "No queue depth chart data recorded yet.", h),
   ], h);
 
-export const peersSupplement = (base: Html, readback: ReadbackState, h: H): Html =>
-  wrap(base, [
-    section("Peer topology", [text("PEERS 0 PEER MODELS 0 RUNTIME MODELS 2 AUTH READY 0", h), h.div([h.Class("mt-3 flex gap-2")], [h.button([h.Type("button"), h.Class("min-h-8 rounded border border-[var(--rm-border)] px-3 text-[12px]")], ["Refresh peers"])])], h),
-    section("Peer inventory", [text("Peer-backed model groups observed in the current runtime listing. No peers configured in the current host config.", h), table(["PEER", "MODELS", "STATUS"], readback.rows.map((row) => [row.label, row.value, row.meta]), "No peers configured in the current host config.", h)], h),
-    section("Peer config", [text("Proxy targets, auth state, and live model match. No peer configs are stored in the current runtime.", h), table(["PEER", "PROXY", "AUTH", "LIVE MATCH"], [], "No peer configs are stored in the current runtime.", h)], h),
-    section("Contract fields", [text("Host contract fields that wire a peer into the runtime boundary. PROXY Base URL to proxy peer requests through. APIKEY Optional peer-specific auth token passed to the remote target. MODELS The models served by that peer and exposed to the runtime. FILTERS · TIMEOUTS Peer-local request filters/strip rules and proxy timeouts.", h), table(["FIELD", "DESCRIPTION"], [["PROXY", "Base URL to proxy peer requests through."], ["APIKEY", "Optional peer-specific auth token passed to the remote target."], ["MODELS", "The models served by that peer and exposed to the runtime."], ["FILTERS · TIMEOUTS", "Peer-local request filters/strip rules and proxy timeouts."]], "No contract fields recorded yet.", h)], h),
-    chart("Peer inventory", "Peer-backed model groups over time.", "No peer inventory chart data recorded yet.", h),
-  ], h);
+export const peersSupplement = (base: Html, _readback: ReadbackState, _h: H): Html => base;
 
-export const localPeersSupplement = (base: Html, readback: ReadbackState, h: H): Html => {
-  const field = (label: string, id: string): Html => h.label([h.Class("flex flex-col gap-1 text-[11px]")], [h.span([], [label]), h.input([h.Id(id), h.AriaLabel(label), h.Class("min-h-8 rounded border border-[var(--rm-border)] bg-[var(--rm-panel)] px-2")])]);
-  return wrap(base, [
-    section("Local endpoints", [text("role-model probes each server at /v1/models before peer models can be registered. No peer endpoints configured. Add a server URL below to use peer-backed local models.", h)], h),
-    section("Endpoint inventory", [table(["ENDPOINT URL", "AUTH", "STATUS"], readback.rows.map((row) => [row.label, row.meta, row.value]), "No peer endpoints configured.", h)], h),
-    section("Add peer endpoint", [
-      text("Base URL of your OpenAI-compatible API (with or without /v1). Optional bearer token if the server requires auth.", h),
-      h.div([h.Class("mt-3 grid gap-2 md:grid-cols-2")], [field("Name", "peer-endpoint-name"), field("Endpoint URL", "peer-endpoint-url")]),
-      h.div([h.Class("mt-3 flex gap-2")], [h.button([h.Type("button"), h.Class("min-h-8 rounded bg-[var(--rm-accent)] px-3 text-[12px]")], ["Add endpoint"]), h.button([h.Type("button"), h.Class("min-h-8 rounded border border-[var(--rm-border)] px-3 text-[12px]")], ["Auth token (optional)"])]),
-    ], h),
-    chart("Peer endpoint inventory", "Configured peer endpoints by health.", "No peer endpoint chart data recorded yet.", h),
-  ], h);
-};
+export const localPeersSupplement = (base: Html, _readback: ReadbackState, _h: H): Html => base;
 
 export const agentSupplement = (base: Html, readbacks: ReadbackState, h: H): Html =>
   wrap(base, [
@@ -96,7 +69,9 @@ export const workloadsSupplement = (base: Html, readbacks: ReadbackState, h: H):
     chart("Workloads posture", "Workload entries by execution scope.", "No workload posture chart data recorded yet.", h),
   ], h);
 
-export const llamaModelsSupplement = (base: Html, readback: ReadbackState, h: H): Html =>
+export const llamaModelsSupplement = (base: Html, _readback: ReadbackState, _h: H): Html => base;
+
+const legacyLlamaModelsSupplement = (base: Html, readback: ReadbackState, h: H): Html =>
   wrap(base, [
     section("Load model", [
       text("Model must already be declared in runtime config. Loading triggers llama-swap to start or swap to this model instead of inventing a separate registration flow. Role summary roles: coder, architect, security, researcher, writer, operator, analyst, planner, tester, data, product, designer, support, legal, finance, creative, educator, translator, marketer, seller, recruiter, procurement, coordinator, knowledge, strategist, mathematician, scientist, health All roles 28 selected · click to clear", h),
@@ -111,7 +86,9 @@ export const llamaModelsSupplement = (base: Html, readback: ReadbackState, h: H)
     chart("Llama-swap models", "Declared and resident models.", "No llama-swap model chart data recorded yet.", h),
   ], h);
 
-export const policySupplement = (base: Html, readback: ReadbackState, h: H): Html =>
+export const policySupplement = (base: Html, readback: ReadbackState, h: H): Html => localPolicyReferencePage(readback, h);
+
+const legacyPolicySupplement = (base: Html, readback: ReadbackState, h: H): Html =>
   wrap(base, [
     section("Llama-swap host policy", [text("Edit runtime behavior for local model loading and unloading.", h)], h),
     section("Policy configuration", [text("TTL (seconds) Seconds a model stays loaded after last request before auto-unload. Max concurrency Maximum number of models loaded simultaneously. Auto-unload idle models Release a model from memory after its TTL expires so the managed host does not keep inactive weights pinned indefinitely. Save policy Reset Open models", h), table(["POLICY", "VALUE", "DETAIL"], readback.rows.map((row) => [row.label, row.value, row.meta]), "No persisted policy rows recorded yet.", h)], h),
@@ -119,7 +96,9 @@ export const policySupplement = (base: Html, readback: ReadbackState, h: H): Htm
     chart("Policy history", "Persisted host policy over time.", "No policy history chart data recorded yet.", h),
   ], h);
 
-export const swapSupplement = (base: Html, readback: ReadbackState, h: H): Html =>
+export const swapSupplement = (base: Html, _readback: ReadbackState, _h: H): Html => base;
+
+const legacySwapSupplement = (base: Html, readback: ReadbackState, h: H): Html =>
   wrap(base, [
     section("Event ledger", [text("Most recent swap events first. No swap events recorded yet. Events appear here when the managed host loads a first model, swaps to a new one, or records the operator-visible reason for a transition.", h), table(["TIME", "MODEL", "REASON", "STATUS"], readback.rows.map((row) => [row.label, row.value, row.meta, ""]), "No swap events recorded yet.", h)], h),
     section("Ledger semantics", [text("Swap history stays narrow on purpose so each row can explain what changed without duplicating the full model-management surface. Initial load Rows without an old model indicate the first model activation for the current managed host window. Swap reason The reason badge records why a new model became active so policy and operator intent remain inspectable later. Timeline order The newest host transition stays first so troubleshooting can start with the latest local-runtime state.", h)], h),

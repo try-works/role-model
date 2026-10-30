@@ -32,7 +32,7 @@ export const card = (
       h.h2([h.Class(titleClass)], [title]),
       ...(description === undefined ? [] : [h.p([h.Class(descriptionClass)], [description])]),
     ]),
-    h.div([h.Class("min-w-0")], children),
+    h.div([h.Class("min-w-0 pt-4")], children),
   ]);
 
 export const table = (

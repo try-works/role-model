@@ -5,9 +5,9 @@ import type { Message } from "../../message";
 type H = HtmlBuilder<Message>;
 
 export const referenceCardClass = "relative min-w-0 rounded-lg border border-border bg-card p-4";
-export const referenceCardHeaderClass = "-mx-4 flex flex-col gap-1 border-b border-border px-4 pb-3";
+export const referenceCardHeaderClass = "-mx-4 flex flex-col gap-2 border-b border-border px-4 pb-2";
 export const referenceCardTitleClass = "text-sm font-medium leading-5 tracking-tight text-foreground";
-export const referenceCardDescriptionClass = "text-xs leading-4 text-muted-foreground";
+export const referenceCardDescriptionClass = "max-w-[60ch] text-xs leading-4 text-muted-foreground";
 export const referenceTableHeadCellClass = "px-3 py-2.5 font-mono text-[11px] font-normal uppercase leading-4 tracking-[0.08em] text-muted-foreground";
 export const referenceTableClass = "w-full min-w-[640px] border-collapse text-left text-sm";
 export const referenceTableCellClass = "px-3 py-3 align-top text-[13px] leading-5 text-foreground";
@@ -15,7 +15,7 @@ export const referenceTableRowClass = "border-b border-border last:border-b-0";
 
 export const referenceSection = (route: string, state: string, children: ReadonlyArray<Html>, h: H, stateAttribute?: string): Html =>
   h.section(
-    [h.Class("rm3-next-route space-y-6"), h.DataAttribute("route", route), h.DataAttribute("page-layout", "reference"), h.DataAttribute("page-state", state), ...(stateAttribute === undefined ? [] : [h.DataAttribute(stateAttribute, state)])],
+    [h.Class("rm3-next-route space-y-4"), h.DataAttribute("route", route), h.DataAttribute("page-layout", "reference"), h.DataAttribute("page-state", state), ...(stateAttribute === undefined ? [] : [h.DataAttribute(stateAttribute, state)])],
     children,
   );
 
@@ -23,9 +23,9 @@ export const referenceCard = (title: string, description: string | undefined, ch
   h.section([h.Class(referenceCardClass)], [
     h.div([h.Class(referenceCardHeaderClass)], [
       h.h3([h.Class(referenceCardTitleClass)], [title]),
-      ...(description === undefined ? [] : [h.p([h.Class(referenceCardDescriptionClass)], [description])]),
+      ...(description === undefined ? [] : [h.p([h.Class(referenceCardDescriptionClass), h.Attribute("style", "max-width: 60ch")], [description])]),
     ]),
-    h.div([h.Class("mt-4")], children),
+    h.div([h.Class("mt-5")], children),
   ]);
 
 export const referenceTable = (

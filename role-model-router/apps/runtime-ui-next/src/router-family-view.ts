@@ -136,25 +136,30 @@ export const routerOverviewPage = (readbacks: ReadbacksState, h: H): Html => {
   const activeAlias = configRows.find((entry) => entry.id === "strategy")?.value ?? "unresolved";
   const executionMode = configRows.find((entry) => entry.id === "executionMode")?.value ?? "—";
   const candidateRows = candidates.rows;
+  const health = readbacks.health.rows;
+  const countHealth = (needle: string): number => health.filter((entry) => entry.value.toLowerCase().includes(needle)).length;
+  const ready = countHealth("healthy");
+  const degraded = countHealth("degraded");
+  const unavailable = countHealth("unavailable");
+  const modes = configRows.filter((entry) => ["basic", "difficulty", "hybrid"].includes(entry.value.toLowerCase())).map((entry) => entry.value.toLowerCase());
+  const modeCount = (mode: string): number => modes.filter((value) => value === mode).length;
   return familyShell("router", readbacks.router.status === "idle" ? "loading" : candidates.status, [
-    h.h2([h.Class("rm3-next-route-title")], ["Routing overview"]),
     sectionCard(
       "Alias inventory",
       "Keep the current alias posture visible, then expand the registry only when you need every pool.",
       [
         statGrid(
           [
-            { label: "Current active alias", value: activeAlias },
-            { label: "Alias readiness", value: summary.length > 0 ? summary.length + " summary row(s)" : "No alias rows available." },
-            { label: "Alias modes", value: executionMode },
+            { label: "Current active alias", value: activeAlias + "." + executionMode },
+            { label: "Alias readiness", value: health.length === 0 ? "No readiness rows available." : String(ready) + " ready · " + String(degraded) + " degraded · " + String(unavailable) + " unavailable" },
+            { label: "Alias modes", value: modes.length === 0 ? "—" : "basic " + String(modeCount("basic")) + " · difficulty " + String(modeCount("difficulty")) + " · hybrid " + String(modeCount("hybrid")) },
           ],
           h,
         ),
-        table(
-          ["Alias", "Mode", "Effective models", "Candidate expansion", "Readiness"],
-          configRows.map((entry) => [entry.label, entry.value, "—", "—", entry.meta]),
-          h,
-        ),
+        h.div([h.Class("mt-4 flex items-center justify-between rounded-lg border border-border bg-card px-4 py-4")], [
+          h.p([h.Class("text-sm font-medium text-foreground")], ["Browse all alias pools (" + String(Math.max(configRows.length, readbacks.configuredModels.rows.length, 0)) + ")"]),
+          h.span([h.Class("inline-flex size-6 items-center justify-center rounded-full border border-border text-xs text-muted-foreground")], ["⌄"]),
+        ]),
       ],
       h,
     ),
@@ -164,13 +169,17 @@ export const routerOverviewPage = (readbacks: ReadbacksState, h: H): Html => {
       [
         table(
           ["Model", "Endpoint", "Source", "Health", "Routing"],
-          candidateRows.map((entry) => [
-            entry.label,
-            metaText(entry.meta),
-            "—",
-            "—",
-            entry.value,
-          ]),
+          candidateRows.map((entry) => {
+            let meta: { endpointId?: string; providerId?: string; healthStatus?: string } = {};
+            try { meta = JSON.parse(entry.meta) as typeof meta; } catch { meta = {}; }
+            return [
+              entry.label,
+              meta.endpointId ?? metaText(entry.meta),
+              meta.providerId ?? "—",
+              meta.healthStatus ?? "—",
+              entry.value === "" ? "candidate" : entry.value,
+            ];
+          }),
           h,
         ),
       ],
@@ -185,38 +194,32 @@ export const routerCandidatesPage = (readbacks: ReadbacksState, h: H): Html => {
   const state = readback.status === "idle" ? "loading" : readback.status;
   const rows = readback.rows;
   return familyShell("router-candidates", state, [
-    h.h2([h.Class("rm3-next-route-title")], ["Candidate inventory"]),
-    h.h3([h.Class("mt-1 text-[12px] font-semibold uppercase tracking-[0.08em] text-[var(--rm-muted)]")], ["Candidate inventory"]),
     sectionCard(
       "Candidate inventory",
       "CAP is benchmark capability; its evidence is labeled exact, borrowed, or prior so a provider-default arm never reads as a fixed arm's benchmark. Live p50, failure, and samples come only from the exact endpoint's operational telemetry profile.",
       [
         ...(rows.length === 0
-          ? [
-              h.p(
-                [h.Class(bodyClass)],
-                [state === "loading" ? "Loading routing candidates…" : state === "error" ? (readback.message ?? "Router candidates read failed") : "No routing candidates are available yet."],
-              ),
-            ]
-          : rows.map((entry) =>
-              h.div([h.Class(cardClass)], [
-                h.p([h.Class(strongClass)], [entry.label]),
-                statGrid(
-                  [
-                    { label: "ENDPOINT", value: metaText(entry.meta) },
-                    { label: "SOURCE", value: "—" },
-                    { label: "CAP", value: entry.value === "" ? "—" : entry.value },
-                    { label: "EFFORT", value: "—" },
-                    { label: "LIVE P50", value: "n/a" },
-                    { label: "LIVE FAIL", value: "n/a" },
-                    { label: "LIVE SAMPLES", value: "n/a" },
-                    { label: "ROLES", value: "—" },
-                    { label: "TOOLING", value: "—" },
-                  ],
-                  h,
-                ),
-              ]),
-            )),
+          ? [h.p([h.Class(bodyClass)], [state === "loading" ? "Loading routing candidates…" : state === "error" ? (readback.message ?? "Router candidates read failed") : "No routing candidates are available yet."])]
+          : [h.div([h.Class("grid gap-4 xl:grid-cols-2")], rows.map((entry) => {
+              let meta: { endpointId?: string; providerId?: string; healthStatus?: string; roleIds?: readonly string[] } = {};
+              try { meta = JSON.parse(entry.meta) as typeof meta; } catch { meta = {}; }
+              const roleIds = meta.roleIds ?? [];
+              const roles = roleIds.length > 4 ? roleIds.slice(0, 4).join(", ") + ", +" + String(roleIds.length - 4) + " more" : roleIds.join(", ") || "—";
+              return h.div([h.Class("rounded-lg border border-border bg-card p-4")], [
+                h.div([h.Class("flex items-start justify-between gap-3")], [
+                  h.p([h.Class("border-l-2 border-primary pl-2 text-[13px] font-semibold text-foreground")], [entry.label]),
+                  h.span([h.Class("rounded-md border border-border px-2 py-0.5 font-mono text-[10px] text-muted-foreground")], [meta.healthStatus ?? "—"]),
+                ]),
+                h.div([h.Class("mt-3 grid gap-3 sm:grid-cols-3")], [
+                  { label: "ENDPOINT", value: meta.endpointId ?? metaText(entry.meta) },
+                  { label: "SOURCE", value: meta.providerId === undefined ? "—" : meta.providerId + " · remote-service" },
+                  { label: "CAP", value: "n/a" }, { label: "EFFORT", value: "—" },
+                  { label: "LIVE P50", value: "n/a" }, { label: "LIVE FAIL", value: "n/a" },
+                  { label: "LIVE SAMPLES", value: "n/a" }, { label: "ROLES", value: roles },
+                  { label: "TOOLING", value: "none" },
+                ].map((item) => h.div([h.Class("flex flex-col gap-0.5")], [h.p([h.Class(eyebrowClass)], [item.label]), h.p([h.Class("break-words font-mono text-[12px] leading-4 text-foreground")], [item.value])]))),
+              ]);
+            }))]),
       ],
       h,
     ),
@@ -228,33 +231,33 @@ export const routerDecisionsPage = (readbacks: ReadbacksState, h: H): Html => {
   const state = readback.status === "idle" ? "loading" : readback.status;
   const rows = readback.rows;
   return familyShell("router-decisions", state, [
-    h.h2([h.Class("rm3-next-route-title")], ["Routing decisions"]),
     sectionCard(
       "Decision ledger",
-      "Showing " + String(rows.length) + " of " + String(rows.length) + " routing decisions in the selected window. The page is bounded for scanability; direct drill-in links use stable request IDs.",
+      "Showing " + String(Math.min(rows.length, 10)) + " of " + String(rows.length) + " routing decisions in the selected window. The page is bounded for scanability; direct drill-in links use stable request IDs.",
       [
         ...(rows.length === 0
           ? [h.p([h.Class(bodyClass)], [state === "loading" ? "Loading routing decisions…" : state === "error" ? (readback.message ?? "Router decisions read failed") : "No routing decisions have been recorded yet."])]
-          : rows.map((entry) =>
-              h.div([h.Class(cardClass)], [
-                h.p([h.Class(strongClass)], [entry.id]),
-                statGrid(
-                  [
-                    { label: "MODEL", value: entry.label },
-                    { label: "ENDPOINT", value: entry.meta === "" ? "—" : entry.meta },
-                    { label: "EFFORT", value: "No reasoning effort" },
-                    { label: "STRATEGY", value: "no strategy label" },
-                    { label: "SOURCE", value: "remote" },
-                    { label: "DECIDED", value: "n/a" },
-                  ],
-                  h,
-                ),
-                h.div([h.Class("mt-2 flex flex-wrap gap-3 text-[12px]")], [
+          : rows.slice(0, 10).map((entry) => {
+              const field = (label: string, value: string) => h.div([h.Class("flex flex-col gap-0.5")], [h.p([h.Class(eyebrowClass)], [label]), h.p([h.Class("break-words text-right font-mono text-[12px] leading-4 text-foreground")], [value])]);
+              return h.div([h.Class("mb-4 rounded-lg border border-border bg-card p-4 last:mb-0")], [
+                h.div([h.Class("flex items-start justify-between gap-3 border-b border-border pb-3")], [
+                  h.p([h.Class("border-l-2 border-primary pl-2 font-mono text-[12px] font-semibold text-foreground")], [entry.id]),
+                  h.span([h.Class("rounded-md border border-border px-2 py-0.5 font-mono text-[10px] text-muted-foreground")], ["remote"]),
+                ]),
+                h.div([h.Class("mt-3 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6")], [
+                  field("MODEL", entry.label),
+                  field("ENDPOINT", entry.meta === "" ? "—" : entry.meta),
+                  field("EFFORT", "No reasoning effort"),
+                  field("STRATEGY", "no strategy label"),
+                  field("SOURCE", "remote"),
+                  field("DECIDED", "n/a"),
+                ]),
+                h.div([h.Class("mt-3 flex flex-wrap gap-3 text-[12px]")], [
                   h.a([h.Href("/router/decisions/" + encodeURIComponent(entry.id)), h.Class("text-[var(--rm-accent)]")], ["Router · Open detail"]),
                   h.a([h.Href("/observe/requests/" + encodeURIComponent(entry.id)), h.Class(bodyClass)], ["Observe · Open detail"]),
                 ]),
-              ]),
-            )),
+              ]);
+            })),
       ],
       h,
     ),
@@ -266,8 +269,6 @@ export const routerStrategyPage = (routeName: string, readbacks: ReadbacksState,
   const strategy = rows.find((entry) => entry.id === "strategy")?.value;
   const executionMode = rows.find((entry) => entry.id === "executionMode")?.value;
   return familyShell(routeName, state, [
-    h.h2([h.Class("rm3-next-route-title")], ["Routing strategy"]),
-    previewDisclosure(h),
     sectionCard(
       "Routing strategy",
       "Edit the routing mode, scoring strategy and execution scope. Each preset materialises one alias per execution scope; the next decision uses the saved posture.",
@@ -314,8 +315,6 @@ const posturePage = (kind: "workload" | "role", routeName: string, readbacks: Re
   const { rows, state, message } = family(readbacks, [prefix]);
   const diagnostics = family(readbacks, ["diagnostics."]);
   return familyShell(routeName, state, [
-    h.h2([h.Class("rm3-next-route-title")], [title]),
-    previewDisclosure(h),
     ...(kind === "role"
       ? [filterBar([
           { label: "Scoring strategy", value: "Quality", options: ["Quality"] },
@@ -332,14 +331,17 @@ const posturePage = (kind: "workload" | "role", routeName: string, readbacks: Re
         ...(rows.length === 0
           ? [h.p([h.Class(bodyClass)], [message ?? "No " + title + " entries are configured yet."])]
           : [postureRows(rows, h)]),
-        h.div([h.Class("flex flex-wrap gap-2")], [
-          controlButton(kind === "role" ? "Save Agent strategy" : "Save Workloads", undefined, h),
-          controlButton("Add " + (kind === "role" ? "agent strategy" : "workload"), undefined, h),
-        ]),
+        ...(kind === "role"
+          ? [h.div([h.Class("flex flex-wrap gap-2")], [
+              controlButton("Save Agent strategy", undefined, h),
+              controlButton("Add agent strategy", undefined, h),
+            ])]
+          : []),
       ],
       h,
     ),
-    sectionCard(
+    diagnosticsPanel(diagnostics.rows, diagnostics.state, h),
+    ...(kind === "workload" ? [sectionCard(
       "Workload templates",
       "Start from a workload template, then edit the entry before saving.",
       [
@@ -350,18 +352,24 @@ const posturePage = (kind: "workload" | "role", routeName: string, readbacks: Re
         ]),
       ],
       h,
-    ),
+    )] : []),
     sectionCard(
       "Entries",
       kind === "role"
         ? "Entries materialise one role-bound alias per execution scope."
         : "Entries materialise one workload alias per execution scope.",
-      rows.length === 0
-        ? [h.p([h.Class(bodyClass)], ["No " + title + " entries are configured yet."])]
-        : [postureRows(rows, h)],
+      [
+        h.p([h.Class(bodyClass)], [String(rows.length) + " saved · 0 new rows. Add as many entries as you need: saving upserts only the rows below and never touches an entry you did not edit."]),
+        ...(rows.length === 0
+          ? [h.p([h.Class(bodyClass)], ["No " + title + " entries are configured yet."])]
+          : [postureRows(rows, h)]),
+        h.div([h.Class("mt-3 flex flex-wrap gap-2")], [
+          controlButton("Add " + (kind === "role" ? "entry" : "workload"), undefined, h),
+          controlButton("Save " + (kind === "role" ? "Agent strategy" : "Workloads"), undefined, h),
+        ]),
+      ],
       h,
     ),
-    diagnosticsPanel(diagnostics.rows, diagnostics.state, h),
     ...(kind === "role"
       ? [
           sectionCard(
@@ -393,7 +401,6 @@ export const routerConfigPage = (readbacks: ReadbacksState, h: H): Html => {
   const { state } = family(readbacks, ["strategy", "executionMode", "routing.", "diagnostics."]);
   return familyShell("router-config", state, [
     h.h2([h.Class("rm3-next-route-title")], ["Routing strategy"]),
-    previewDisclosure(h),
     h.p([h.Class(bodyClass)], ["The router config segment canonicalises to the routing strategy posture; there is no separate config surface."]),
     routerStrategyPage("router-config", readbacks, h),
   ], h);
@@ -405,38 +412,44 @@ export const controlControllerPage = (controls: ControlsState, h: H): Html => {
   const current = controller.rows[0]?.value ?? controller.selectedEndpointId ?? "—";
   const state = endpoints.status === "idle" ? "loading" : endpoints.status;
   return h.section([h.Class("rm3-next-route"), h.DataAttribute("route", "control-controller")], [
-    h.h2([h.Class("rm3-next-route-title")], ["Routing controller"]),
     sectionCard(
       "Controller assignment",
       "Assign the persisted routing controller. Candidate cards keep health, source type, role coverage, and tooling posture visible before promotion.",
       [
-        statGrid([{ label: "Current controller", value: current }], h),
         ...(endpoints.rows.length === 0
           ? [h.p([h.Class(bodyClass)], [state === "loading" ? "Loading controller surface…" : state === "error" ? (endpoints.error ?? "Endpoint read failed") : "No endpoints are available yet. Configure runtime config or activate a provider endpoint to continue."])]
-          : endpoints.rows.map((row) => {
+          : [h.div([h.Class("mt-4 grid gap-4 xl:grid-cols-2")], endpoints.rows.map((row) => {
               const isCurrent = row.value === current || row.id === current || controller.selectedEndpointId === row.id;
-              return h.div([h.Class(cardClass)], [
-                h.p([h.Class(strongClass)], [row.label]),
-                statGrid(
-                  [
-                    { label: "ENDPOINT", value: row.id },
-                    { label: "SOURCE", value: metaText(row.meta) },
-                    { label: "HEALTH", value: row.value === "" ? "unknown" : row.value },
-                    { label: "TOOLING", value: "—" },
-                    { label: "ROLES", value: "—" },
-                    { label: "ROLE COUNT", value: "—" },
-                    { label: "SERVING", value: "—" },
-                  ],
-                  h,
-                ),
-                isCurrent
-                  ? h.button([h.Type("button"), h.AriaDisabled(true), h.Class("mt-2 rounded border px-3 py-1.5 text-[12px] opacity-50")], ["Current controller"])
-                  : h.div([h.Class("mt-2 space-y-1")], [
-                      controlButton("Use as controller", Message.ControllerSaveRequested({ endpointId: row.id }), h),
-                      h.p([h.Class(bodyClass)], ["Promote this endpoint to the persisted routing controller."]),
-                    ]),
+              let meta: { endpointId?: string; providerId?: string; healthStatus?: string; roleIds?: readonly string[]; tooling?: string; serving?: string } = {};
+              try { meta = JSON.parse(row.meta) as typeof meta; } catch { meta = {}; }
+              const roleIds = meta.roleIds ?? [];
+              const roleText = roleIds.length > 4 ? roleIds.slice(0, 4).join(", ") + ", +" + String(roleIds.length - 4) + " more" : roleIds.join(", ") || "—";
+              const field = (label: string, value: string) => h.div([h.Class("flex items-start justify-between gap-4 border-b border-border py-1.5 last:border-b-0")], [
+                h.span([h.Class(eyebrowClass)], [label]),
+                h.span([h.Class("break-words text-right font-mono text-[12px] leading-4 text-foreground")], [value]),
               ]);
-            })),
+              return h.div([h.Class("rounded-lg border border-border bg-card p-4")], [
+                h.div([h.Class("flex items-start justify-between gap-3")], [
+                  h.p([h.Class("border-l-2 border-primary pl-2 text-[13px] font-semibold text-foreground")], [row.label]),
+                  h.span([h.Class("rounded-md border border-border px-2 py-0.5 font-mono text-[10px] text-muted-foreground")], [isCurrent ? "controller" : "active"]),
+                ]),
+                h.div([h.Class("mt-3")], [
+                  field("ENDPOINT", meta.endpointId ?? row.id),
+                  field("SOURCE", meta.providerId === undefined ? metaText(row.meta) : meta.providerId + " · remote-service"),
+                  field("HEALTH", meta.healthStatus ?? (row.value === "" ? "unknown" : row.value)),
+                  field("TOOLING", meta.tooling ?? "none"),
+                  field("ROLES", roleText),
+                  field("ROLE COUNT", roleIds.length === 0 ? "—" : String(roleIds.length) + " roles"),
+                  field("SERVING", meta.serving ?? (meta.providerId === undefined ? "—" : "remote-service")),
+                ]),
+                h.div([h.Class("mt-3")], [
+                  isCurrent
+                    ? h.button([h.Type("button"), h.AriaDisabled(true), h.Class("rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground opacity-60")], ["Current controller"])
+                    : controlButton("Use as controller", Message.ControllerSaveRequested({ endpointId: row.id }), h),
+                  ...(isCurrent ? [] : [h.p([h.Class("mt-2 text-xs text-muted-foreground")], ["Promote this endpoint to the persisted routing controller."])]),
+                ]),
+              ]);
+            }))]),
       ],
       h,
     ),
