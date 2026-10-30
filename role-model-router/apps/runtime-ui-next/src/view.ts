@@ -8,7 +8,7 @@ import { chartInteractionForRoute, chartStateForReadback, type ChartInteractionS
 import { type LearningRankingState } from "./learning-ranking";
 import { renderLearningRanking } from "./learning-ranking-view";
 import { controlControllerPage, routerAgentStrategyPage, routerCandidatesPage, routerConfigPage, routerDecisionsPage, routerOverviewPage, routerStrategyPage, routerWorkloadsPage } from "./router-family-view";
-import { familyPage, familySvg, localChoosePage, providersPage, studioWorkspaceLabels, studioWorkspaceTitle } from "./families-view";
+import { endpointsPage, familyPage, familySvg, localChoosePage, providersPage, studioWorkspaceLabels, studioWorkspaceTitle } from "./families-view";
 import type { RequestsRankingState } from "./requests-ranking";
 import { initialDeviceAuthState, type DeviceAuthState } from "./device-auth";
 import { initialProviderAccountState, type ProviderAccountState } from "./provider-account";
@@ -213,7 +213,7 @@ const shellSections: ReadonlyArray<ShellSection> = [
     nav: "local",
     tags: ["LocalChoose", "LocalPeers", "LocalPeerModels", "LocalLlamaSwapModels", "LocalPolicy", "LocalSwap", "LocalLogs"],
   },
-  { href: "/control/providers", label: "Remote", nav: "remote", tags: ["Providers", "Endpoints"] },
+  { href: "/control/providers", label: "Remote", nav: "remote", tags: ["Providers"] },
   { href: "/models", label: "Models", nav: "models", tags: ["Models", "ModelsRoles", "Benchmark"] },
   {
     href: "/router",
@@ -227,7 +227,7 @@ const shellSections: ReadonlyArray<ShellSection> = [
     nav: "observe",
     tags: ["Requests", "RequestDetail", "Queues", "QueuesConfiguration", "StoreReceipts", "ObserveActivity", "ObserveLogs", "ObserveRouting"],
   },
-  { href: "/integrations/downstream", label: "Connect", nav: "connect", tags: ["IntegrationsDownstream", "IntegrationsUpstream"] },
+  { href: "/control/endpoints", label: "Connect", nav: "connect", tags: ["Endpoints", "IntegrationsDownstream", "IntegrationsUpstream"] },
   {
     href: "/system/session-readiness",
     label: "System",
@@ -1319,7 +1319,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     ObserveRouting: () => observeRoutingRoute(readbacks.observeRouting, h),
     Router: () => routerOverviewPage(readbacks, h),
     Providers: () => providersPage({ controls, deviceAuth, deviceAuthDialog, h, providerAccount, readbacks }),
-    Endpoints: () => endpointsSupplement(endpointsRoute({ controls, endpointAdmission, h }), readbacks.modelEndpoints, h),
+    Endpoints: () => endpointsPage({ controls, endpointAdmission, h, readbacks }),
     ControlController: () => controlControllerPage(controls, h),
     Index: () => indexRoute({ chartInteraction, h, overviewFilters, overviewPage, overviewWindowMs, readbacks }),
     NotFound: (route) => {

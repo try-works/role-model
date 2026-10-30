@@ -1,6 +1,6 @@
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 
-import { type ProvidersRouteContext, providersRoute } from "./features/control/routes";
+import { type EndpointsRouteContext, type ProvidersRouteContext, providersRoute } from "./features/control/routes";
 import { card, filterBar, table } from "./features/s563-layout";
 import { Message } from "./message";
 import { READBACK_SPECS, type ReadbackRouteSpec, type ReadbackState, type ReadbacksState, renderReadbackPage } from "./readback";
@@ -151,6 +151,68 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
               })),
         ], h),
       ]),
+    ],
+  );
+};
+
+export const endpointsPage = (ctx: EndpointsRouteContext & { readonly readbacks: ReadbacksState }): Html => {
+  const { h } = ctx;
+  const meta = (row: ReadbackState["rows"][number]): { endpointId?: string; effort?: string; healthStatus?: string; modelId?: string; providerId?: string; source?: string } => {
+    try {
+      // SAFETY: modelEndpoints writes this JSON object; fields are read defensively.
+      return JSON.parse(row.meta) as ReturnType<typeof JSON.parse>;
+    } catch {
+      return {};
+    }
+  };
+  const modelNames = new Map(ctx.readbacks.configuredModels.rows.map((row) => [row.id, row.label]));
+  const rows = ctx.readbacks.modelEndpoints.rows.map((row) => {
+    const endpoint = meta(row);
+    const provider = endpoint.providerId ?? row.value;
+    return {
+      connection: provider,
+      account: endpoint.endpointId ?? row.id,
+      effort: endpoint.effort ?? "Provider default",
+      endpoint: endpoint.endpointId ?? row.id,
+      health: endpoint.healthStatus ?? "unknown",
+      model: modelNames.get(endpoint.modelId ?? "") ?? endpoint.modelId ?? "—",
+      readiness: "active",
+      source: provider.length === 0 ? "Local / peer" : "Direct provider / remote_api",
+    };
+  });
+  return h.section(
+    [h.Class("rm3-next-route"), h.DataAttribute("route", "endpoints"), h.DataAttribute("page-layout", "reference")],
+    [
+      card("Runtime connections", "Provider, model, and endpoint state merged into one registry view.", [
+        rows.length === 0
+          ? h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["No runtime connections recorded yet."])
+          : h.div([h.Class("overflow-hidden rounded-lg border border-border")], [
+              h.table(
+                [h.Class("w-full border-collapse text-left font-sans text-sm")],
+                [
+                  h.thead([h.Class("bg-secondary")], [
+                    h.tr([], ["Provider connection", "Model", "Endpoint", "Effort", "Source", "Health", "Readiness"].map((label) =>
+                      h.th([h.Class("px-3 py-2 font-mono text-[11px] font-normal uppercase tracking-[0.04em] text-muted-foreground")], [label]),
+                    )),
+                  ]),
+                  h.tbody([], rows.map((row) =>
+                    h.tr([h.Class("border-t border-border align-top")], [
+                      h.td([h.Class("px-3 py-2")], [
+                        h.span([h.Class("font-mono text-[13px] font-semibold text-foreground")], [row.connection]),
+                        h.span([h.Class("ml-2 break-all font-mono text-[11px] text-muted-foreground")], [row.account]),
+                      ]),
+                      h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [row.model]),
+                      h.td([h.Class("px-3 py-2 break-all font-mono text-[12px] text-muted-foreground")], [row.endpoint]),
+                      h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [row.effort]),
+                      h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [row.source]),
+                      h.td([h.Class("px-3 py-2 text-[13px] text-[var(--rm-success,#2f9e62)]")], [row.health]),
+                      h.td([h.Class("px-3 py-2 text-[13px] text-[var(--rm-success,#2f9e62)]")], [row.readiness]),
+                    ]),
+                  )),
+                ],
+              ),
+            ]),
+      ], h),
     ],
   );
 };

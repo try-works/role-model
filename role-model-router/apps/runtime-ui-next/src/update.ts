@@ -485,6 +485,7 @@ const updateLocalPolicyDraft = (
       if (model.route._tag === "Learning") return [{ key: "learning" }, { key: "learningPacks" }];
       if (model.route._tag === "ModelsRoles") return [{ key: "configuredModels" }, { key: "modelEndpoints" }];
       if (model.route._tag === "Providers") return [{ key: "integrationProviders" }, { key: "configuredModels" }, { key: "modelEndpoints" }];
+      if (model.route._tag === "Endpoints") return [{ key: "modelEndpoints" }, { key: "configuredModels" }, { key: "integrationProviders" }];
       if (model.route._tag === "SystemOperator") return [{ key: "operatorStatus" }, { key: "operatorTraceRoots" }];
       if (model.route._tag === "RuntimeConfig") return [{ key: "runtimeConfig" }];
       const readbackKey = readbackKeyForRouteTag(model.route._tag);

@@ -27,6 +27,7 @@ export interface EndpointsRouteContext {
   readonly controls: Pick<ControlsState, "endpoints">;
   readonly endpointAdmission: EndpointAdmissionState;
   readonly h: HtmlBuilder<Message>;
+  readonly readbacks: ReadbacksState;
 }
 
 export const providersRoute = (ctx: ProvidersRouteContext): Html =>
