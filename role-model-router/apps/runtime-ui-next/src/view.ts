@@ -305,6 +305,106 @@ const shellPageTitle = (model: Model): string =>
     NotFound: ({ path }) => "Not found: " + path,
   });
 
+interface ShellNavEntry {
+  readonly href: string;
+  readonly label: string;
+  readonly tab?: string;
+  readonly tag?: Model["route"]["_tag"];
+}
+
+/** Section sub-navigation: the reference renders a segmented control above the page content. */
+const shellSectionNav: Readonly<Record<string, ReadonlyArray<ShellNavEntry>>> = {
+  Studio: [
+    { href: "/studio?tab=chat", label: "Chat", tab: "chat" },
+    { href: "/studio?tab=images", label: "Images", tab: "images" },
+    { href: "/studio?tab=audio", label: "Audio", tab: "audio" },
+    { href: "/studio?tab=rerank", label: "Rerank", tab: "rerank" },
+    { href: "/studio?tab=advanced", label: "Advanced APIs", tab: "advanced" },
+  ],
+  Local: [
+    { href: "/local/peers", label: "Endpoints", tag: "LocalPeers" },
+    { href: "/local/peer-models", label: "Peer models", tag: "LocalPeerModels" },
+    { href: "/local/llama-swap/models", label: "Models", tag: "LocalLlamaSwapModels" },
+    { href: "/local/swap", label: "Swap history", tag: "LocalSwap" },
+    { href: "/local/llama-swap/policy", label: "Host policy", tag: "LocalPolicy" },
+    { href: "/local/logs", label: "Logs", tag: "LocalLogs" },
+  ],
+  Models: [
+    { href: "/models", label: "Models", tag: "Models" },
+    { href: "/models/roles", label: "Roles", tag: "ModelsRoles" },
+    { href: "/system/benchmark", label: "Benchmark", tag: "Benchmark" },
+  ],
+  Router: [
+    { href: "/router", label: "Overview", tag: "Router" },
+    { href: "/router/strategy", label: "Routing strategy", tag: "RouterStrategy" },
+    { href: "/router/agent-strategy", label: "Agent strategy", tag: "RouterAgentStrategy" },
+    { href: "/router/workloads", label: "Workloads", tag: "RouterWorkloads" },
+    { href: "/control/controller", label: "Controller", tag: "ControlController" },
+    { href: "/router/candidates", label: "Candidates", tag: "RouterCandidates" },
+    { href: "/router/decisions", label: "Decisions", tag: "RouterDecisions" },
+  ],
+  Observe: [
+    { href: "/requests", label: "Requests", tag: "Requests" },
+    { href: "/observe/routing", label: "Routing", tag: "ObserveRouting" },
+    { href: "/observe/queues", label: "Queues", tag: "Queues" },
+    { href: "/observe/store-degradation-receipts", label: "Degradation receipts", tag: "StoreReceipts" },
+    { href: "/observe/observability-snapshot", label: "Observability", tag: "Observability" },
+    { href: "/observe/activity", label: "Activity", tag: "ObserveActivity" },
+    { href: "/observe/logs", label: "Logs", tag: "ObserveLogs" },
+  ],
+  Connect: [
+    { href: "/control/endpoints", label: "Registry", tag: "Endpoints" },
+    { href: "/integrations/downstream", label: "Downstream", tag: "IntegrationsDownstream" },
+    { href: "/integrations/upstream", label: "Upstream", tag: "IntegrationsUpstream" },
+  ],
+  System: [
+    { href: "/session-readiness", label: "Readiness", tag: "SessionReadiness" },
+    { href: "/runtime", label: "Runtime", tag: "Runtime" },
+    { href: "/runtime/config", label: "Config", tag: "RuntimeConfig" },
+    { href: "/system/peers", label: "Peers", tag: "SystemPeers" },
+    { href: "/system/extensions", label: "Extensions", tag: "SystemExtensions" },
+    { href: "/system/storage-retention", label: "Storage", tag: "StorageRetention" },
+  ],
+  Learning: [
+    { href: "/learning", label: "Overview", tag: "Learning" },
+    { href: "/learning/configuration", label: "Configuration", tag: "LearningConfiguration" },
+    { href: "/learning/packs", label: "Packs", tag: "LearningPacks" },
+    { href: "/learning/decisions", label: "Decisions", tag: "LearningDecisions" },
+    { href: "/learning/evidence", label: "Evidence", tag: "LearningEvidence" },
+    { href: "/learning/history", label: "History", tag: "LearningHistory" },
+  ],
+};
+
+const shellSecondaryNav = (model: Model, h: HtmlBuilder<Message>): Html | null => {
+  const section = shellSectionFor(model.route);
+  const entries = shellSectionNav[section.label] ?? [];
+  if (entries.length <= 1) return null;
+  const active = model.route._tag === "Studio" ? (model.studio ?? studioIdle()).tab : model.route._tag;
+  return h.nav(
+    [
+      h.AriaLabel(section.label + " secondary navigation"),
+      h.DataAttribute("shell-secondary-nav", ""),
+      h.Class("flex h-9 w-fit shrink-0 items-center gap-1 rounded-md border border-border bg-secondary p-1"),
+    ],
+    entries.map((entry) => {
+      const isActive = entry.tab === undefined ? entry.tag === active : entry.tab === active;
+      return h.a(
+        [
+          h.Href(entry.href),
+          ...(isActive ? [h.AriaCurrent("page"), h.DataAttribute("active", "true")] : []),
+          h.Class(
+            "flex h-7 shrink-0 items-center justify-center whitespace-nowrap rounded-[5px] px-2.5 font-sans text-sm leading-[18px] " +
+              (isActive
+                ? "bg-primary font-semibold text-primary-foreground"
+                : "font-normal text-muted-foreground hover:text-foreground"),
+          ),
+        ],
+        [entry.label],
+      );
+    }),
+  );
+};
+
 const shellSectionFor = (route: Model["route"]): ShellSection =>
   shellSections.find((section) => section.tags.includes(route._tag)) ?? shellSections[0]!;
 
@@ -1371,6 +1471,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
               h.div(
                 [h.Class("mx-auto flex w-full flex-col gap-6 px-4 py-5 max-w-[1216px]"), h.DataAttribute("shell-content", "")],
                 [
+                  (shellSecondaryNav(model, h) ?? h.span([], [])),
                   ...(model.refresh.status === "stale"
                     ? [
                         h.p(
