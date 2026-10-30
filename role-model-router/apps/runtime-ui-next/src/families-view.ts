@@ -108,20 +108,20 @@ export const studioWorkspaceTitle = (tab: string): string =>
   tab === "chat"
     ? "Chat workspace"
     : tab === "images"
-      ? "Image request modes"
+      ? "Images workspace"
       : tab === "audio"
-        ? "Audio mode and request"
+        ? "Audio workspace"
         : tab === "rerank"
-          ? "Rerank request"
+          ? "Rerank workspace"
           : "Advanced workspace";
 
 export const studioWorkspaceLabels = (tab: string): readonly string[] =>
   tab === "chat"
     ? ["Request", "Result workspace"]
     : tab === "images"
-      ? ["Image request modes"]
+      ? ["Image request modes", "Image result stage"]
       : tab === "audio"
-        ? ["Audio mode and request"]
+        ? ["Audio mode and request", "Audio result stage"]
         : tab === "rerank"
           ? ["Rerank request", "Ranked results"]
-          : ["Advanced workspace"];
+          : ["Endpoint family", "Response workspace"];

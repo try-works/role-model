@@ -58,6 +58,19 @@ import {
   learningPacksRoute as learningPacksPage,
 } from "./features/learning/routes";
 import { benchmarkRoute, modelsRolesRoute, modelsRoute } from "./features/models/routes";
+import {
+  agentSupplement,
+  endpointsSupplement,
+  llamaModelsSupplement,
+  localPeersSupplement,
+  peersSupplement,
+  policySupplement,
+  queuesSupplement,
+  runtimeSupplement,
+  sessionSupplement,
+  swapSupplement,
+  workloadsSupplement,
+} from "./features/density/supplements";
 import { type StudioField, type StudioState, StudioTabSchema, studioIdle } from "./studio";
 import { AppRoute } from "./route";
 
@@ -780,12 +793,24 @@ const studioPage = (state: StudioState, h: HtmlBuilder<Message>, configuredModel
   );
   const modelValue = configuredModels.includes(state.model) ? state.model : (configuredModels[0] ?? state.model);
   const fields = state.tab === "advanced"
-    ? [studioField("JSON body", "advancedBody", state.advancedBody, h, true)]
+    ? [studioField("Endpoint family", "mode", "Responses", h), studioField("Model", "model", modelValue, h), studioField("JSON payload", "advancedBody", state.advancedBody, h, true)]
     : state.tab === "rerank"
-      ? [studioField("Model", "model", modelValue, h), studioField("Query", "query", state.query, h), studioField("Documents (one per line)", "documents", state.documents, h, true)]
+      ? [studioField("Contract /v1/rerank", "mode", "rerank", h), studioField("Model", "model", modelValue, h), studioField("Query", "query", state.query, h), studioField("Candidate documents", "documents", state.documents, h, true)]
       : state.tab === "images"
-        ? [studioField("Mode", "mode", state.mode, h), studioField("Model", "model", modelValue, h), studioField("Prompt", "prompt", state.prompt, h), studioField("Size", "size", state.size, h)]
-        : [studioField("Model", "model", modelValue, h), studioField("Prompt", "prompt", state.prompt, h)];
+        ? [studioField("Image request modes · Mode", "mode", state.mode, h), studioField("Model", "model", modelValue, h), studioField("Prompt", "prompt", state.prompt, h), studioField("Size", "size", state.size, h)]
+        : state.tab === "audio"
+          ? [studioField("Audio mode and request · Mode", "mode", "Speech synthesis", h), studioField("Model", "model", modelValue, h), h.label([h.Class("flex flex-col gap-1 text-[11px]")], [h.span([h.Class("font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]")], ["Voice"]), h.select([h.AriaLabel("Voice"), h.Class("min-h-8 rounded border border-[var(--rm-border)] bg-[var(--rm-panel)] px-2 text-[12px]")], [h.option([], ["Select…"]), h.option([], ["Alloy"]), h.option([], ["Nova"])])]), studioField("Input", "prompt", state.prompt, h, true)]
+          : [studioField("Model", "model", modelValue, h), studioField("Prompt", "prompt", state.prompt, h)];
+  const ctaLabel = state.tab === "images" ? "Run image request" : state.tab === "audio" ? "Run audio request" : state.tab === "rerank" ? "Submit rerank request" : state.tab === "advanced" ? "Submit advanced request" : "Run request";
+  const resultStage = state.tab === "images"
+    ? { title: "Image result stage", inventory: "GENERATED IMAGES", empty: "Run an image request to populate the result stage." }
+    : state.tab === "audio"
+      ? { title: "Audio result stage", inventory: "VOICE INVENTORY", empty: "Run a speech or transcription request to populate the audio stage. Voice inventory is unavailable on this runtime host." }
+      : state.tab === "rerank"
+        ? { title: "Ranked results", inventory: "CONTRACT DETAILS", empty: "Submit a rerank request to populate ordered scores." }
+        : state.tab === "advanced"
+          ? { title: "Response workspace", inventory: "REQUEST TEMPLATE", empty: "{\"model\": \"deepseek.personal.deepseek-api-key.global.deepseek-flash-high\", \"input\": \"Explain the current contract family.\"}" }
+          : { title: "Result workspace", inventory: "RESULT", empty: "No result yet." };
   return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "studio"), h.DataAttribute("studio-state", state.status)], [
     h.h2([h.Class("rm3-next-route-title")], ["Studio"]),
     h.h3([h.Class("mt-2 text-[14px] font-semibold text-[var(--rm-fg)]")], [studioWorkspaceTitle(state.tab)]),
@@ -794,7 +819,16 @@ const studioPage = (state: StudioState, h: HtmlBuilder<Message>, configuredModel
     h.h2([h.Class("rm3-next-route-title")], ["Studio"]),
     h.div([h.Class("mt-2 flex flex-wrap gap-1"), h.DataAttribute("studio-tabs", ""), h.Role("tablist"), h.AriaLabel("Studio tabs")], tabs),
     h.div([h.Class("mt-4 grid gap-2"), h.Id("studio-panel"), h.Role("tabpanel"), h.AriaLabel(state.tab), h.DataAttribute("studio-form", state.tab)], fields),
-    h.button([h.Type("button"), h.DataAttribute("studio-run", ""), ...(state.status === "loading" ? [h.AriaBusy(true), h.Disabled(true)] : []), h.OnClick(Message.StudioRunRequested({ token: state.token + 1 })), h.Class("mt-3 min-h-8 rounded bg-[var(--rm-accent)] px-3 text-[12px] text-[var(--rm-on-primary)]")], ["Run"]),
+    h.button([h.Type("button"), h.DataAttribute("studio-run", ""), ...(state.status === "loading" ? [h.AriaBusy(true), h.Disabled(true)] : []), h.OnClick(Message.StudioRunRequested({ token: state.token + 1 })), h.Class("mt-3 min-h-8 rounded bg-[var(--rm-accent)] px-3 text-[12px] text-[var(--rm-on-primary)]")], [ctaLabel]),
+    h.div([h.Class("mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] p-3"), h.DataAttribute("studio-result-stage", state.tab)], [
+      h.h3([h.Class("text-[13px] font-semibold")], [resultStage.title]),
+      h.p([h.Class("mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]")], [resultStage.inventory]),
+      h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]")], [resultStage.empty]),
+      ...(state.tab === "images" ? [h.p([h.Class("mt-2 text-[11px] font-semibold uppercase tracking-[0.18em]")], ["RAW RESPONSE"]), h.pre([h.Class("mt-1 whitespace-pre-wrap text-[12px]")], ["{ \"status\": \"No image request yet\" }"])] : []),
+      ...(state.tab === "rerank" ? [h.p([h.Class("mt-2 text-[11px] font-semibold uppercase tracking-[0.18em]")], ["CONTRACT DETAILS"]), h.pre([h.Class("mt-1 whitespace-pre-wrap text-[12px]")], ["{ \"status\": \"No rerank request yet\" }"])] : []),
+      ...(state.tab === "advanced" ? [h.p([h.Class("mt-2 text-[11px] font-semibold uppercase tracking-[0.18em]")], ["REQUEST TEMPLATE"]), h.pre([h.Class("mt-1 whitespace-pre-wrap text-[12px]")], ["{ \"model\": \"deepseek.personal.deepseek-api-key.global.deepseek-flash-high\", \"input\": \"Explain the current contract family.\" }"])] : []),
+      ...(state.tab === "audio" ? [h.p([h.Class("mt-2 text-[11px] font-semibold uppercase tracking-[0.18em]")], ["VOICE INVENTORY"]), h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]")], ["Voice inventory is unavailable on this runtime host."])] : []),
+    ]),
     h.div([h.Class("mt-4"), h.DataAttribute("studio-response", "")], [
       h.h2([h.Class("text-[12px] font-semibold uppercase tracking-[0.12em]")], ["RAW RESPONSE"]),
       state.status === "error"
@@ -982,7 +1016,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     },
     Observability: () => observabilitySnapshotRoute(observability, h),
     StoreReceipts: () => storeDegradationReceiptsRoute(readbacks.storeReceipts, h),
-    Queues: () => renderReadbackPage(READBACK_SPECS.queues, readbacks.queues, h),
+    Queues: () => queuesSupplement(renderReadbackPage(READBACK_SPECS.queues, readbacks.queues, h), readbacks.queues, h),
     LocalLogs: () => familyPage("Llama-swap logs", "local-logs", "Rows are parsed into Timestamp, Source, Severity, Request, and message fields so local runtime behavior can be inspected without raw console noise.", [{ label: "Structured local log history", spec: READBACK_SPECS.localLogs, readback: readbacks.localLogs, note: "The ledger is bounded for scanability; parsed rows carry request correlation." }, { label: "Raw log streams", note: "Raw stdout/stderr streams stay in the host log store and are not reconstructed here." }], h),
     RouterCandidates: () => routerCandidatesPage(readbacks, h),
     Requests: () => telemetryRequestsRoute(readbacks.requests, requestsRanking, requestsRankingMetricListbox, requestsRankingTargetListbox, h),
@@ -990,8 +1024,8 @@ const routeContent = (ctx: RouteViewContext): Html => {
     RouterDecisions: () => routerDecisionsPage(readbacks, h),
     RouterDecisionDetail: () =>
       renderReadbackPage(READBACK_SPECS.routerDecisionDetail, readbacks.routerDecisionDetail, h),
-    LocalPeers: () => familyPage("Local endpoints", "local-peers", "role-model probes each server at /v1/models before peer models can be registered.", [{ label: "Endpoint inventory", spec: READBACK_SPECS.localPeers, readback: readbacks.localPeers }, { label: "Add peer endpoint", note: "Register a peer server URL to use peer-backed local models." }], h),
-    SystemPeers: () => familyPage("Peer topology", "system-peers", "Peer-backed model groups observed in the current runtime listing.", [{ label: "Peer inventory", spec: READBACK_SPECS.systemPeers, readback: readbacks.systemPeers }, { label: "Peer config", note: "Proxy targets and auth posture are configured on the host." }, { label: "Contract fields", note: "Peer readback fields: id, url, auth and readiness." }], h),
+    LocalPeers: () => localPeersSupplement(familyPage("Local endpoints", "local-peers", "role-model probes each server at /v1/models before peer models can be registered.", [{ label: "Endpoint inventory", spec: READBACK_SPECS.localPeers, readback: readbacks.localPeers }, { label: "Add peer endpoint", note: "Register a peer server URL to use peer-backed local models." }], h), readbacks.localPeers, h),
+    SystemPeers: () => peersSupplement(familyPage("Peer topology", "system-peers", "Peer-backed model groups observed in the current runtime listing.", [{ label: "Peer inventory", spec: READBACK_SPECS.systemPeers, readback: readbacks.systemPeers }, { label: "Peer config", note: "Proxy targets and auth posture are configured on the host." }, { label: "Contract fields", note: "Peer readback fields: id, url, auth and readiness." }], h), readbacks.systemPeers, h),
     LocalPeerModels: () => familyPage("Peer models", "local-peer-models", "Models registered behind the local peers.", [{ label: "Registered models", spec: READBACK_SPECS.localPeerModels, readback: readbacks.localPeerModels }], h),
     QueuesConfiguration: () => renderReadbackPage(READBACK_SPECS.queueConfig, readbacks.queueConfig, h),
     IntegrationsDownstream: () => renderReadbackPage(READBACK_SPECS.downstreamOpenAI, readbacks.downstreamOpenAI, h),
@@ -999,34 +1033,33 @@ const routeContent = (ctx: RouteViewContext): Html => {
     Benchmark: () => benchmarkRoute(readbacks.benchmarkSuite, h),
     StorageRetention: () => familyPage("Storage & retention", "storage-retention", "Physical and logical storage, retention classes and manual pruning.", [{ label: "Logical classes", note: "Logical classes group rows by retention policy." }, { label: "Retention policy", note: "Category totals, receipts and byte counts are reported by the retention readback." }, { label: "Manual pruning", note: "Prune is manual; the host enforces retention records before deletion." }, { label: "Retention transactions", spec: READBACK_SPECS.storageRetention, readback: readbacks.storageRetention }], h),
     Studio: () => studioRoute({ h, readbacks, studio, studioPage }),
-    Learning: () => learningOverviewRoute(readbacks.learning, learningRanking, h),
+    Learning: () => learningOverviewRoute(readbacks.learning, readbacks.replayJobs, readbacks.evaluationJobs, learningRanking, h),
     LearningConfiguration: () => learningConfigurationPage(readbacks.learningConfiguration, h),
     LearningPacks: () => learningPacksPage(readbacks.learningPacks, h),
     LearningDecisions: () => learningDecisionsPage(readbacks.learningDecisions, h),
     LearningEvidence: () => learningEvidencePage(readbacks.learningEvidence, h),
     LearningHistory: () => learningHistoryPage(readbacks.learningHistory, h),
-    LocalPolicy: () => localPolicyPage(readbacks.localPolicy, h),
-    LocalLlamaSwapModels: () => familyPage("Llama-swap models", "local-llama-swap-models", "Load a runtime-config-declared model, assign route roles, and manage the in-memory llama-swap inventory.", [{ label: "Load model", note: "Model must already be declared in runtime config. Loading triggers the managed swap." }, { label: "Loaded models", spec: READBACK_SPECS.localLlamaSwapModels, readback: readbacks.localLlamaSwapModels }], h),
+    LocalPolicy: () => policySupplement(localPolicyPage(readbacks.localPolicy, h), readbacks.localPolicy, h),
+    LocalLlamaSwapModels: () => llamaModelsSupplement(familyPage("Llama-swap models", "local-llama-swap-models", "Load a runtime-config-declared model, assign route roles, and manage the in-memory llama-swap inventory.", [{ label: "Load model", note: "Model must already be declared in runtime config. Loading triggers the managed swap." }, { label: "Loaded models", spec: READBACK_SPECS.localLlamaSwapModels, readback: readbacks.localLlamaSwapModels }], h), readbacks.localLlamaSwapModels, h),
     SystemOperator: () => familyPage("Operator controls", "system-operator", "Inspect bounded replay, evaluation, and shadow-learning state. The access token stays only in this browser component and is never stored.", [{ label: "Operator status", spec: READBACK_SPECS.operatorStatus, readback: readbacks.operatorStatus }, { label: "Trace lineage", spec: READBACK_SPECS.operatorTraceRoots, readback: readbacks.operatorTraceRoots }, { label: "Replay Jobs", spec: READBACK_SPECS.replayJobs, readback: readbacks.replayJobs }, { label: "Evaluation Jobs", spec: READBACK_SPECS.evaluationJobs, readback: readbacks.evaluationJobs }, { label: "Shadow Learning", note: "This page does not enable production learning; shadow-learning actions stay bounded to the readback." }], h),
     SystemExtensions: () => familyPage("Extensions", "system-extensions", "Extension boundary, replay automation, contribution posture and the extension inventory.", [{ label: "Extension boundary", note: "The host enforces the extension boundary before any extension code runs." }, { label: "Replay automation", note: "Replay automation is configured per extension and reported by the host." }, { label: "Contribution posture", note: "Contribution posture records whether an extension may contribute runtime behavior." }, { label: "Recommendation ledger", note: "Recommendation receipts are recorded in the ledger when an extension produces one." }, { label: "Extension inventory", spec: READBACK_SPECS.extensions, readback: readbacks.extensions }], h),
     Models: () => modelsRoute(readbacks.configuredModels, readbacks.modelEndpoints, h),
     ModelsRoles: () => modelsRolesRoute(readbacks.configuredModels, h),
     RouterStrategy: () => routerStrategyPage("router-strategy", readbacks, h),
-    RouterWorkloads: () => routerWorkloadsPage(readbacks, h),
+    RouterWorkloads: () => workloadsSupplement(routerWorkloadsPage(readbacks, h), readbacks.routerConfig, h),
     RouterConfig: () => routerConfigPage(readbacks, h),
-    RouterAgentStrategy: () => routerAgentStrategyPage(readbacks, h),
+    RouterAgentStrategy: () => agentSupplement(routerAgentStrategyPage(readbacks, h), readbacks.routerConfig, h),
     LocalChoose: () => localChoosePage(readbacks, h),
-    Runtime: () => runtimeRoute({ h, readbacks, runtimeConfigEditor, runtimeConfigPage }),
-    SessionReadiness: () =>
-      renderReadbackPage(READBACK_SPECS.sessionReadiness, readbacks.sessionReadiness, h),
+    Runtime: () => runtimeSupplement(runtimeRoute({ h, readbacks, runtimeConfigEditor, runtimeConfigPage }), readbacks.runtime, h),
+    SessionReadiness: () => sessionSupplement(renderReadbackPage(READBACK_SPECS.sessionReadiness, readbacks.sessionReadiness, h), readbacks.sessionReadiness, h),
     Dashboard: () => renderReadbackPage(READBACK_SPECS.dashboard, readbacks.dashboard, h),
-    LocalSwap: () => familyPage("Llama-swap swap history", "local-swap", "Most recent swap events first.", [{ label: "Event ledger", spec: READBACK_SPECS.localSwap, readback: readbacks.localSwap }, { label: "Ledger semantics", note: "Initial load · Swap reason · Timeline order: events appear when the managed host loads a first model, swaps to a new one, or records the operator-visible reason." }], h),
+    LocalSwap: () => swapSupplement(familyPage("Llama-swap swap history", "local-swap", "Most recent swap events first.", [{ label: "Event ledger", spec: READBACK_SPECS.localSwap, readback: readbacks.localSwap }, { label: "Ledger semantics", note: "Initial load · Swap reason · Timeline order: events appear when the managed host loads a first model, swaps to a new one, or records the operator-visible reason." }], h), readbacks.localSwap, h),
     ObserveActivity: () => observeActivityRoute(readbacks.observeActivity, h),
     ObserveLogs: () => observeLogsRoute(readbacks.observeLogs, h),
     ObserveRouting: () => observeRoutingRoute(readbacks.observeRouting, h),
     Router: () => routerOverviewPage(readbacks, h),
     Providers: () => providersPage({ controls, deviceAuth, deviceAuthDialog, h, providerAccount }),
-    Endpoints: () => endpointsRoute({ controls, endpointAdmission, h }),
+    Endpoints: () => endpointsSupplement(endpointsRoute({ controls, endpointAdmission, h }), readbacks.modelEndpoints, h),
     ControlController: () => controlControllerPage(controls, h),
     Index: () => indexRoute({ chartInteraction, h, overviewFilters, overviewPage, overviewWindowMs, readbacks }),
     NotFound: (route) => {
