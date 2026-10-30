@@ -337,21 +337,26 @@ export const observabilitySnapshotRoute = (state: ObservabilityState, h: HtmlBui
     ], h),
   ]);
 
-export const storeDegradationReceiptsRoute = (readback: ReadbackState, h: HtmlBuilder<Message>): Html => {
-  const stores = readback.rows.filter((row) => row.id.startsWith("store:"));
-  const workers = readback.rows.filter((row) => row.id.startsWith("worker:"));
-  const receiptSection = (title: string, rows: ReadbackState["rows"]): Html =>
-    section(title, "Durable degradation receipts recorded for this store.", [
-      table(["Category", "Message", "Time"], rows.map((row) => [row.label, row.meta, row.value]), "No receipt rows in this store.", h),
-    ], h);
-  return page("Store degradation receipts", [
+export const storeDegradationReceiptsRoute = (readback: ReadbackState, h: HtmlBuilder<Message>): Html =>
+  h.section([h.Class("rm3-next-route flex flex-col gap-4"), h.DataAttribute("route", "observe")], [
     section("Store degradation receipts", "Materialization failures (R3 ladder writes, R6b development floors) are never silent: every failed write lands a durable, operator-visible receipt in the knowledge store and the knowledge worker store.", [
-      h.div([h.Class("flex flex-wrap items-center justify-between gap-3")], [
-        h.p([h.Class("text-sm leading-5 text-muted-foreground")], [String(readback.rows.length) + " receipt row(s) across both stores"]),
-        h.button([h.Type("button"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 font-sans text-sm text-foreground")], ["Refresh"]),
+      h.div([h.Class("flex flex-wrap items-center justify-between gap-3 pb-2")], [
+        h.p([h.Class("font-sans text-[13px] leading-5 text-muted-foreground")], [String(readback.rows.length) + " receipt row(s) across both stores"]),
+        h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground")], ["Refresh"]),
       ]),
+      ...(readback.rows.length === 0
+        ? [empty("No receipt rows recorded in this store.", h)]
+        : readback.rows.map((row) => {
+            const source = row.id.startsWith("worker:") ? "Knowledge worker" : "Knowledge store";
+            const scope = row.id.replace(/^(store|worker):/, "");
+            return h.div([h.Class("flex flex-col gap-2 rounded-md border border-border p-4")], [
+              h.div([h.Class("flex flex-wrap items-center gap-3 font-sans text-[12px] leading-4 text-muted-foreground")], [
+                h.span([], [source]),
+                h.span([h.Class("font-mono uppercase tracking-[0.02em]")], [row.label]),
+              ]),
+              h.p([h.Class("font-sans text-[13px] font-semibold leading-5 text-foreground")], [row.meta]),
+              h.p([h.Class("break-all font-mono text-[11px] leading-4 text-muted-foreground")], [row.value + (scope.length > 0 ? " · " + scope : "")]),
+            ]);
+          })),
     ], h),
-    receiptSection("Knowledge store", stores),
-    receiptSection("Knowledge worker", workers),
-  ], h);
-};
+  ]);
