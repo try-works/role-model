@@ -14,7 +14,7 @@ afterEach(() => { for (const entry of mounted.splice(0)) { entry.handle.dispose(
 describe("S71b configured models (reference inventory)", () => {
   it("renders the two-column inventory: model rows with badges, runtime facts and the roles panel", async () => {
     mountAt("s71b-success", async (input) => { const path = new URL(String(input), "http://localhost").pathname; if (path === "/api/role-model/models") return response(fixture("models-real")); if (path === "/api/role-model/endpoints") return response(fixture("model-endpoints-real")); return response({}); });
-    const body = await waitFor(() => (page()?.textContent?.includes("Claude 3.7 Sonnet") ? page() : undefined), "models inventory");
+    const body = (await waitFor(() => (page()?.textContent?.includes("Claude 3.7 Sonnet") ? page() : undefined), "models inventory")) as HTMLElement;
     const text = body.textContent ?? "";
     expect(text).toContain("Select a model to inspect and configure.");
     expect(text).toContain("Models");
@@ -38,7 +38,7 @@ describe("S71b configured models (reference inventory)", () => {
 
   it("renders the reference empty state and never fabricates rows", async () => {
     mountAt("s71b-empty", async () => response([]));
-    const body = await waitFor(() => (page()?.textContent?.includes("No configured models are available yet.") ? page() : undefined), "empty state");
+    const body = (await waitFor(() => (page()?.textContent?.includes("No configured models are available yet.") ? page() : undefined), "empty state")) as HTMLElement;
     expect(body.textContent).toContain("Open Local Models");
     expect(body.textContent).toContain("Open Providers");
   });
