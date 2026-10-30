@@ -109,7 +109,7 @@ describe("runtime routing in the Foldkit shell", () => {
       "the pushed Models URL",
     );
     await waitFor(
-      () => (document.querySelector("h1")?.textContent === "Models" ? true : undefined),
+      () => (document.querySelector("h1")?.textContent === "Configured models" ? true : undefined),
       "the Models view after the URL push",
     );
 

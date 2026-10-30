@@ -19,7 +19,7 @@ afterEach(() => {
 });
 
 describe("S71a one h1 per route", () => {
-  for (const [route, title] of [["/", "Runtime overview"], ["/models", "Models"], ["/studio", "Studio"], ["/does/not/exist", "Not found: /does/not/exist"]] as const) {
+  for (const [route, title] of [["/", "Runtime overview"], ["/models", "Configured models"], ["/studio", "Chat workspace"], ["/does/not/exist", "Not found: /does/not/exist"]] as const) {
     it(`settles the single title text on ${route}`, async () => {
       window.history.replaceState({}, "", route);
       const container = document.createElement("div"); container.id = "s71a-title-" + route.replaceAll(/[^a-zA-Z0-9]/g, "-"); document.body.append(container);
