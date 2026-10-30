@@ -1,12 +1,13 @@
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 
-import type { Message } from "../../message";
+import { Message } from "../../message";
 import type { Model } from "../../model";
 import type { ObservabilityState } from "../../observability";
 import type { ReadbackState } from "../../readback";
 import { REQUESTS_RANKING_METRIC_OPTIONS, REQUESTS_RANKING_TARGET_OPTIONS, type RequestsRankingState } from "../requests-ranking/model";
 import { renderRequestsRanking } from "../requests-ranking/view";
 import { telemetryChartCard } from "../overview/charts";
+import { initRequestsMetricListbox, initRequestsTargetListbox, requestsMetricListboxView, requestsTargetListboxView } from "../../ui/listbox";
 import { card, chartGrid, filterBar, metrics, segmented, table } from "../s563-layout";
 import type { ChartSeries } from "@role-model/ui/foldkit-chart";
 
@@ -70,30 +71,127 @@ export const telemetryRequestsRoute = (
   h: HtmlBuilder<Message>,
 ): Html => {
   const rows = readback.rows.map((row) => [row.id, row.label, row.meta, row.value]);
-  return page("Telemetry request ledger", [
-    renderRequestsRanking(ranking, metricListbox, targetListbox, REQUESTS_RANKING_METRIC_OPTIONS, REQUESTS_RANKING_TARGET_OPTIONS, h),
-    filterGroups(h),
-    filterBar([
-      { label: "Status", value: "All statuses", options: ["All statuses"] },
-      { label: "Ranking metric", value: "Average latency", options: ["Average latency", "Endpoint variants"] },
-      { label: "Ranking target", value: "Endpoint variants", options: ["Endpoint variants"] },
-    ], h),
-    h.div([h.Class("flex flex-wrap items-end gap-4")], [
-      h.label([h.Class("flex w-[150px] flex-col gap-1.5")], [
-        h.span([h.Class("font-sans text-xs font-normal leading-4 text-muted-foreground")], ["Ranking metric"]),
-        h.select([h.AriaLabel("Ranking metric"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-2.5 font-sans text-sm text-foreground")], REQUESTS_RANKING_METRIC_OPTIONS.map((option) => h.option(option.value === ranking?.metric ? [h.Value(option.value), h.Selected(true)] : [h.Value(option.value)], [option.label]))),
-      ]),
-      h.label([h.Class("flex w-[150px] flex-col gap-1.5")], [
-        h.span([h.Class("font-sans text-xs font-normal leading-4 text-muted-foreground")], ["Ranking target"]),
-        h.select([h.AriaLabel("Ranking target"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-2.5 font-sans text-sm text-foreground")], REQUESTS_RANKING_TARGET_OPTIONS.map((option) => h.option(option.value === ranking?.rankingTarget ? [h.Value(option.value), h.Selected(true)] : [h.Value(option.value)], [option.label]))),
-      ]),
-      filterActions(h),
-    ]),
-    section("Recent telemetry requests", "Explainable request ledger with endpoint, model, status, and direct Observe/Router drill-in.", [
-      table(["Request", "Model", "Endpoint", "Status"], rows, "Loading the canonical telemetry ledger…", h),
-    ], h),
-    observeCharts(observeChart("Request volume", "Explainable requests by time bucket for the selected window.", emptySeries("requests", "Requests"), "No request volume data recorded yet.", h), h),
-  ], h);
+  const current = ranking ?? { metric: "averageLatencyMs", rankingTarget: "endpointId", rows: [], status: "idle" as const, token: 0 };
+  const loading = current.status === "loading";
+  const labelClass = "font-sans text-xs font-normal leading-4 text-muted-foreground";
+  const fieldClass = "flex shrink-0 flex-col gap-1.5";
+  const selectClass =
+    "flex h-[34px] min-w-[9rem] items-center justify-between gap-2 rounded-md border border-input bg-secondary px-2.5 text-left font-sans text-sm text-foreground";
+  const fieldSelect = (label: string, value: string, options: ReadonlyArray<string>) =>
+    h.label([h.Class(fieldClass)], [
+      h.span([h.Class(labelClass)], [label]),
+      h.select(
+        [h.AriaLabel(label), h.DataAttribute("requests-filter", label.toLowerCase().replace(/ /g, "-")), h.Class(selectClass)],
+        options.map((option) => h.option([h.Value(option), ...(option === value ? [h.Selected(true)] : [])], [option])),
+      ),
+    ]);
+  const listboxField = (label: string, control: Html) =>
+    h.label([h.Class(fieldClass)], [h.span([h.Class(labelClass)], [label]), control]);
+  const runRanking = h.button(
+    [
+      h.Type("button"),
+      h.DataAttribute("ranking-submit", ""),
+      h.AriaDisabled(loading),
+      h.OnClick(Message.RequestsRankingSubmitRequested({})),
+      h.Class("inline-flex h-[34px] items-center rounded-md border border-input bg-background px-3 font-sans text-sm font-medium text-foreground disabled:opacity-50"),
+    ],
+    [loading ? "Querying…" : "Run ranking"],
+  );
+  const expand = h.button(
+    [h.Type("button"), h.AriaExpanded(false), h.Class("inline-flex h-[34px] items-center gap-1 rounded-md border border-border bg-background px-3 font-sans text-sm text-foreground")],
+    ["Expand"],
+  );
+  return h.section(
+    [h.Class("rm3-next-route flex flex-col gap-4"), h.DataAttribute("route", "observe"), h.DataAttribute("requests-page", "")],
+    [
+      h.div(
+        [h.Class("flex w-full flex-wrap items-end justify-between gap-4")],
+        [
+          h.div([h.Class(fieldClass)], [
+            h.span([h.Class(labelClass)], ["Time range"]),
+            h.div(
+              [
+                h.Class("flex h-9 w-fit shrink-0 items-center gap-1 rounded-md border border-border bg-secondary p-1"),
+                h.Attribute("role", "group"),
+                h.AriaLabel("Time range"),
+              ],
+              ["Day", "Week", "Month", "90 days"].map((option, index) =>
+                h.button(
+                  [
+                    h.Type("button"),
+                    h.AriaPressed(String(index === 0)),
+                    h.DataAttribute("requests-range", option),
+                    h.Class(
+                      "flex h-7 shrink-0 items-center justify-center whitespace-nowrap rounded-[5px] px-2.5 font-sans text-sm leading-[18px] " +
+                        (index === 0 ? "bg-primary font-semibold text-primary-foreground" : "font-normal text-muted-foreground hover:text-foreground"),
+                    ),
+                  ],
+                  [option],
+                ),
+              ),
+            ),
+          ]),
+          h.div(
+            [h.Class("flex flex-wrap items-end gap-3")],
+            [
+              fieldSelect("Breakdown", "Total", ["Total", "By endpoint variant", "By upstream model", "By provider"]),
+              fieldSelect("Source", "All sources", ["All sources", "Local only", "Remote only"]),
+              listboxField(
+                "Ranking metric",
+                requestsMetricListboxView(
+                  {
+                    model: metricListbox ?? initRequestsMetricListbox(),
+                    selected: current.metric,
+                    options: REQUESTS_RANKING_METRIC_OPTIONS,
+                    toParentMessage: (message: unknown) => Message.GotRequestsRankingMetricListboxMessage({ message }),
+                  },
+                  h,
+                ),
+              ),
+              listboxField(
+                "Ranking target",
+                requestsTargetListboxView(
+                  {
+                    model: targetListbox ?? initRequestsTargetListbox(),
+                    selected: current.rankingTarget,
+                    options: REQUESTS_RANKING_TARGET_OPTIONS,
+                    toParentMessage: (message: unknown) => Message.GotRequestsRankingTargetListboxMessage({ message }),
+                  },
+                  h,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      h.div(
+        [h.Class("flex w-full flex-wrap items-center justify-between gap-4 rounded-lg border border-border bg-card p-3"), h.DataAttribute("requests-advanced", "")],
+        [
+          h.span([h.Class("font-sans text-sm font-medium text-foreground")], ["Advanced controls"]),
+          h.div([h.Class("flex items-center gap-2")], [expand]),
+          h.div(
+            [h.Class("hidden"), h.DataAttribute("requests-advanced-fields", "")],
+            [
+              fieldSelect("Status family", "All statuses", ["All statuses", "Success only", "Failure only", "Unknown only"]),
+              runRanking,
+            ],
+          ),
+        ],
+      ),
+      ...(current.status === "error"
+        ? [h.p([h.Role("alert"), h.DataAttribute("ranking-state", "error"), h.Class("text-sm text-[var(--rm-error)]")], [current.message ?? "Ranking query failed."])]
+        : []),
+      ...(current.status === "ok"
+        ? [card("Ranked comparison", "Metric and ranking target over the last week.", [
+            table(["Key", "Label", "Value"], current.rows.map((row) => [row.key, row.label, row.value === null ? "not reported" : String(row.value)]), "No ranked rows for this metric and target.", h),
+          ], h)]
+        : []),
+      section("Recent telemetry requests", "Explainable request ledger with endpoint, model, status, and direct Observe/Router drill-in.", [
+        table(["Request", "Model", "Endpoint", "Status"], rows, "Loading the canonical telemetry ledger…", h),
+      ], h),
+      observeCharts(observeChart("Request volume", "Explainable requests by time bucket for the selected window.", emptySeries("requests", "Requests"), "No request volume data recorded yet.", h), h),
+    ],
+  );
 };
 
 export const observeActivityRoute = (readback: ReadbackState, h: HtmlBuilder<Message>): Html => {

@@ -52,7 +52,7 @@ const requestsListboxView = <ParentMessage>(
       ]),
       maybeSelectedValue: Option.some(config.selected),
       buttonAttributes: childAttributes([
-        h.Style({ minHeight: "24px", minWidth: "24px" }),
+        h.Class("flex h-[34px] min-w-[9rem] items-center justify-between gap-2 rounded-md border border-input bg-secondary px-2.5 text-left font-sans text-sm text-foreground"),
       ]),
       anchor: { placement: "bottom-start" },
     },
