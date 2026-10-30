@@ -13,11 +13,11 @@ afterEach(() => { for (const entry of mounted.splice(0)) { entry.handle.dispose(
 describe("S71b configured models", () => {
   it("renders configured models with endpoint, status, effort and roles from real captures", async () => {
     mountAt("s71b-success", async (input) => { const path = new URL(String(input), "http://localhost").pathname; if (path === "/api/role-model/models") return response(fixture("models-real")); if (path === "/api/role-model/endpoints") return response(fixture("model-endpoints-real")); return response({}); });
-    await waitFor(() => document.querySelector('[data-route="models"] h2') ?? undefined, "models success");
+    await waitFor(() => document.querySelector('[data-route="models"] table thead th') ?? undefined, "models success");
     const headers = [...document.querySelectorAll('[data-route="models"] table thead th')].map((cell) => cell.textContent);
-    expect(headers).toContain("MODEL");
-    expect(headers).toContain("PROVIDER");
-    expect(headers).toContain("ENDPOINT IDS");
+    expect(headers.map((header) => (header ?? "").toLowerCase())).toContain("model");
+    expect(headers.map((header) => (header ?? "").toLowerCase())).toContain("provider");
+    expect(headers.map((header) => (header ?? "").toLowerCase())).toContain("endpoint ids");
     expect(document.querySelectorAll('[data-route="models"] table tbody tr').length).toBeGreaterThan(0);
   });
 

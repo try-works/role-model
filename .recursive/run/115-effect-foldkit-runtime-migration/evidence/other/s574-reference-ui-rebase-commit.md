@@ -21,5 +21,6 @@ The owner rejected the ported UI against the 0.0.20 build on :3456 and directed 
 
 ## Honest limits
 - The reference story capture ran against the operator's :3456 instance at its current data state; data-dependent rows are asserted by column sets and controls, not row content.
-- Providers' custom provider/model picker is structurally rebuilt around the existing control forms, not a line-for-line port of the picker widget. Queue job detail remains an honest empty table (the queue readback exposes no job rows).
-- Independent review of this commit is pending.
+- Providers' custom provider/model picker is structurally rebuilt around the existing control forms, not a line-for-line port of the picker widget. Queue job detail remains an honest empty table (the queue readback exposes no job rows). Candidates/decisions use the reference card and table structure but keep the port's card statistics rather than the reference MetricStrip. Observe routing renders a single 12-span chart instead of the reference multi-chart breakdown.
+- Shell geometry is browser-measured: aside width 224 (w-56), header height 48, content track 1216, ten flat 32px nav rows. The unit scene asserts the class contract; it does not assert pixel geometry.
+- Independent review S575 (evidence/other/s575-reference-ui-review.md) returned HOLD on test-quality items; fixes are recorded in evidence/other/s576-review-fixes.md and the review was re-requested.

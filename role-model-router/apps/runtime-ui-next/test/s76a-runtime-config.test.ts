@@ -27,6 +27,13 @@ describe("S76a runtime config editor", () => {
     expect(calls.filter((call) => call.startsWith("GET")).length).toBeGreaterThanOrEqual(1);
   });
 
+  it("offers no editor or save while the automatic read is still in flight", async () => {
+    mount(async () => await new Promise<Response>(() => undefined));
+    await waitFor(() => document.querySelector("[data-runtime-config-load]") ? true : undefined, "load button while reading");
+    expect(document.querySelector("[data-runtime-config-editor]")).toBeNull();
+    expect(document.querySelector("[data-runtime-config-save]")).toBeNull();
+    expect(document.querySelector("[data-runtime-config-confirm-save]")).toBeNull();
+  });
   it("refuses to PUT when the server changed between Load and Confirm", async () => {
     let config = { a: 1, b: 2 };
     const puts: string[] = [];

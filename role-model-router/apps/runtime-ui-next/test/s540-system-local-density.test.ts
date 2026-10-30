@@ -9,7 +9,7 @@ import { view } from "../src/view";
 const check = async (
   tag: string,
   labels: ReadonlyArray<string>,
-  controls: { readonly buttons?: ReadonlyArray<string>; readonly inputs?: ReadonlyArray<string>; readonly tables?: number; readonly svgs?: number } = {},
+  controls: { readonly buttons?: ReadonlyArray<string>; readonly inputs?: ReadonlyArray<string>; readonly tables?: number; readonly svgs?: number; readonly tablesExactly?: number; readonly svgsExactly?: number; readonly skipStructure?: boolean; readonly cards?: number } = {},
 ): Promise<void> => {
   const rendered = await Effect.runPromise(renderToString({
     // SAFETY: each test passes one of the literal route tags exercised below.
@@ -20,8 +20,13 @@ const check = async (
   container.innerHTML = rendered.html;
   const text = container.textContent ?? "";
   for (const label of labels) expect(text).toContain(label);
-  expect(container.querySelectorAll("table").length).toBeGreaterThanOrEqual(controls.tables ?? 1);
-  expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEqual(controls.svgs ?? 1);
+  if (controls.cards !== undefined) expect(container.querySelectorAll("[data-route] > section").length).toBe(controls.cards);
+  if (controls.skipStructure !== true) {
+    if (controls.tablesExactly !== undefined) expect(container.querySelectorAll("table").length).toBe(controls.tablesExactly);
+    else expect(container.querySelectorAll("table").length).toBeGreaterThanOrEqual(controls.tables ?? 1);
+    if (controls.svgsExactly !== undefined) expect(container.querySelectorAll("svg").length).toBe(controls.svgsExactly);
+    else expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEqual(controls.svgs ?? 1);
+  }
   for (const name of controls.buttons ?? []) {
     const button = [...container.querySelectorAll("button")].find((candidate) => candidate.textContent?.trim() === name);
     expect(button, "missing button " + name).toBeDefined();
@@ -34,7 +39,7 @@ const check = async (
 describe("S540 system/local density", () => {
   it("session readiness", async () => { await check("SessionReadiness", ["Session bootstrap", "Canonical lifecycle", "Operator intent manifest", "Credential readiness", "Routable inventory", "Alias drift warnings"]); });
   it("endpoints", async () => { await check("Endpoints", ["Available models & endpoints", "Runtime connections", "Provider", "Connection", "Model", "Endpoint", "Effort", "Source", "Health", "Readiness"]); });
-  it("runtime", async () => { await check("Runtime", ["Applied runtime policy", "Execution readiness", "Controller posture", "Version facts"], { tables: 0, svgs: 0 }); });
+  it("runtime", async () => { await check("Runtime", ["Applied runtime policy", "Execution readiness", "Controller posture", "Version facts"], { cards: 4, skipStructure: true }); });
   it("agent strategy", async () => { await check("RouterAgentStrategy", ["Posture diagnostics", "Entries", "EDITING SAVED ENTRY RESEARCHER", "Role (required)"], { buttons: ["Add entry", "Save Agent strategy"] }); });
   it("queues", async () => { await check("Queues", ["Queue state", "Queue truth from the shared store", "Waiting", "Active", "Delayed", "Failed", "Stalled", "Oldest waiting", "Last error", "Drain"]); });
   it("system peers", async () => { await check("SystemPeers", ["Peer topology", "Peer inventory", "Peer config", "Contract fields", "PROXY", "APIKEY", "MODELS", "FILTERS"], { buttons: ["Refresh peers"] }); });

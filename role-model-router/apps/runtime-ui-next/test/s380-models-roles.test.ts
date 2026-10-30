@@ -115,15 +115,15 @@ describe("S381 Models/roles page state (read-only)", () => {
     mountRoles("s381-loading", () => new Promise<Response>(() => {}));
     const state = await waitForState("loading", "models-roles loading");
     expect(state).toBe("loading");
-    expect(document.body.textContent).toContain("Runtime roles");
-    expect(document.body.textContent).toContain("Loading model roles");
+    expect(document.querySelector('[data-route="models"]')?.textContent).toContain("Runtime roles");
+    expect(document.querySelector('[data-route="models"]')?.textContent).toContain("Loading model roles");
   });
 
   it("renders error with the readback message when either readback errors", async () => {
     mountRoles("s381-error", async () => new Response("{}", { headers: { "content-type": "application/json" }, status: 200 }));
     const state = await waitForState("error", "models-roles error");
     expect(state).toBe("error");
-    expect(document.body.textContent).toMatch(/read failed/i);
+    expect(document.querySelector('[data-route="models"]')?.textContent).toMatch(/read failed/i);
   });
 
   it("renders empty when both readbacks are empty", async () => {
@@ -134,6 +134,6 @@ describe("S381 Models/roles page state (read-only)", () => {
     });
     const state = await waitForState("empty", "models-roles empty");
     expect(state).toBe("empty");
-    expect(document.body.textContent).toContain("No configured models");
+    expect(document.querySelector('[data-route="models"]')?.textContent).toContain("No configured models");
   });
 });

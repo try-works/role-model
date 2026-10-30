@@ -402,12 +402,9 @@ const sidebarRouterAlias = (model: Model): string => {
 
 const sidebarRouterEndpoint = (model: Model): string => {
   const endpointRow = model.readbacks.health.rows.find((entry) => entry.label === "Endpoint")?.value;
-  if (typeof window === "undefined") {
-    return endpointRow ?? "—";
-  }
-  return endpointRow !== undefined && endpointRow.startsWith("http")
-    ? new URL(window.location.origin).origin + "/v1"
-    : new URL(window.location.origin).origin + "/v1";
+  const origin = typeof window === "undefined" ? undefined : window.location.origin;
+  const host = (endpointRow ?? origin ?? "—").replace(/^https?:\/\//, "").replace(/\/$/, "");
+  return host === "—" ? "—" : host + "/v1";
 };
 
 const sidebarFooter = (model: Model, h: HtmlBuilder<Message>): Html => {
