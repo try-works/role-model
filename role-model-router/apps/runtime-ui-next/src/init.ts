@@ -109,6 +109,23 @@ const initRoute =
           model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), routerConfig: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
         };
       }
+      if (route._tag === "IntegrationsDownstream" || route._tag === "IntegrationsUpstream") {
+        const token = 1;
+        const key: "downstreamOpenAI" | "integrationProviders" = route._tag === "IntegrationsDownstream" ? "downstreamOpenAI" : "integrationProviders";
+        return {
+          commands: [readReadback({ key, token }), readReadback({ key: "configuredModels", token })],
+          model: {
+            clicks: 0,
+            controls: emptyControls(),
+            diagnostics: idleDiagnostics(),
+            observability: idleObservability(),
+            readbacks: { ...emptyReadbacks(), [key]: loadingReadback(token), configuredModels: loadingReadback(token) },
+            refresh: initialRuntimeRefreshState(),
+            route,
+            theme,
+          },
+        };
+      }
       if (route._tag === "Endpoints" || route._tag === "Providers") {
         const token = 1;
         const controlKey = route._tag === "Providers" ? "providers" : "endpoints";
