@@ -403,8 +403,10 @@ const sidebarRouterAlias = (model: Model): string => {
 const sidebarRouterEndpoint = (model: Model): string => {
   const endpointRow = model.readbacks.health.rows.find((entry) => entry.label === "Endpoint")?.value;
   const origin = typeof window === "undefined" ? undefined : window.location.origin;
-  const host = (endpointRow ?? origin ?? "—").replace(/^https?:\/\//, "").replace(/\/$/, "");
-  return host === "—" ? "—" : host + "/v1";
+  const candidate = endpointRow !== undefined && /^https?:\/\//.test(endpointRow) ? endpointRow : origin;
+  if (candidate === undefined) return "—";
+  const host = candidate.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  return host.length === 0 ? "—" : host + "/v1";
 };
 
 const sidebarFooter = (model: Model, h: HtmlBuilder<Message>): Html => {
