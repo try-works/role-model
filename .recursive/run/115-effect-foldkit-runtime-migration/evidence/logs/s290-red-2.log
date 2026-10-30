@@ -1,0 +1,63 @@
+COMMAND: node ../../../node_modules/vitest/vitest.mjs run test/s290-refresh-page-lifetime.test.ts
+CWD: role-model-router/apps/runtime-ui-next ; S290 restore-emission/reducer behavioral RED (union case added, no emit/handler yet)
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s290-refresh-page-lifetime.test.ts (11 tests | 2 failed) 630ms
+   ✓ S290 refresh EventSource page lifetime > opens exactly one source per stream with both event listeners on it 46ms
+   ✓ S290 refresh EventSource page lifetime > pagehide closes the one source exactly once and late callbacks from it never offer 38ms
+   ✓ S290 refresh EventSource page lifetime > persisted pageshow reopens exactly one fresh source with listeners and no duplicate on repeated show 61ms
+   ✓ S290 refresh EventSource page lifetime > retired-generation callbacks stay silent even after the fresh source is active 62ms
+   ✓ S290 refresh EventSource page lifetime > an ordinary pageshow (not persisted) opens no second source 29ms
+   ✓ S290 refresh EventSource page lifetime > SPA navigation events do not create another source 32ms
+   ✓ S290 refresh EventSource page lifetime > the finalizer closes the current source, detaches page listeners and later pageshow cannot reopen 47ms
+   ✓ S290 refresh EventSource page lifetime > multiple hide/show cycles open one source per cycle and silence every retired generation 74ms
+   ✓ S290 refresh EventSource page lifetime > keeps revision and telemetry parsing unchanged (malformed payloads never emit) 61ms
+   × S290 refresh EventSource page lifetime > emits exactly one RuntimePageRestored after a successful persisted reopen only 81ms
+     → expected [] to have a length of 1 but got +0
+   × S290 refresh EventSource page lifetime > restore re-reads the current Index route with its selected window and filters, never the watermark 91ms
+     → handler is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s290-refresh-page-lifetime.test.ts > S290 refresh EventSource page lifetime > emits exactly one RuntimePageRestored after a successful persisted reopen only
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/s290-refresh-page-lifetime.test.ts:332:47
+    330|     lifecycle.emit("pageshow", true);
+    331|     await settle();
+    332|     expect(restoreMessages(running.messages)).toHaveLength(1);
+       |                                               ^
+    333|     lifecycle.emit("pageshow", true);
+    334|     await settle();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s290-refresh-page-lifetime.test.ts > S290 refresh EventSource page lifetime > restore re-reads the current Index route with its selected window and filters, never the watermark
+TypeError: handler is not a function
+ ❯ src/update.ts:319:13
+    317| 
+    318|     return (model: Model, message: Message): UpdateReturn<Model, Messa…
+    319|     Message.match<UpdateReturn<Model, Message>>(message, {
+       |             ^
+    320|       ChangedUrl: ({ url }) => {
+    321|         const resolved = resolveAppUrl(url);
+ ❯ test/s290-refresh-page-lifetime.test.ts:348:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 9 passed (11)
+   Start at  21:29:59
+   Duration  16.98s (transform 8.02s, setup 0ms, collect 12.72s, tests 630ms, environment 1.75s, prepare 518ms)
+
+

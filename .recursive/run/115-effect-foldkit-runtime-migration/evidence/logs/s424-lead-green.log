@@ -1,0 +1,29 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:20776) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s334-observation-storage.test.ts (9 tests) 15256ms
+   ✓ S334 observation storage > hung job: drain rejects with the typed 5s timeout and the pump does not stay permanently active  5054ms
+   ✓ S334 observation storage > drain watchdog abandons a hung active job and queued later jobs still run  5064ms
+   ✓ S334 observation storage > eventual settle after abandonment writes no cache entry and does not double-decrement pending  5039ms
+(node:33144) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s341-backend-storage.test.ts (6 tests) 5747ms
+   ✓ S341 backend storage factory > composeBackendStorage returns a per-backend lifecycle with initialization, graph store and observation storage  375ms
+   ✓ S341 backend storage factory > observed-profiles read family uses the bound backend storage instance (family identity)  5053ms
+(node:64196) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s421-diagnostics-isolation.test.ts (5 tests) 592ms
+(node:48056) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s424-observation-cache-correctness.test.ts (10 tests) 216ms
+(node:8608) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s337-observation-families.test.ts (4 tests) 24ms
+
+ Test Files  5 passed (5)
+      Tests  34 passed (34)
+   Start at  22:02:45
+   Duration  53.04s (transform 11.10s, setup 0ms, collect 26.31s, tests 21.84s, environment 4ms, prepare 1.96s)
+

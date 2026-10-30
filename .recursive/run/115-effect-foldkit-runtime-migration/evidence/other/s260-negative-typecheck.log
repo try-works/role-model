@@ -1,0 +1,3 @@
+test/support/__s260-negative-probe.ts(12,56): error TS2739: Type 'Promise<{ body: {}; status: number; }>' is missing the following properties from type 'Readonly<{ name: "ReadDiagnostics"; args: { readonly id: string; }; effect: Effect<{ readonly _tag: "DiagnosticsFailed"; readonly id: string; readonly message: string; } | { readonly _tag: "DiagnosticsLoaded"; readonly id: string; readonly snapshot: { ...; }; }, never, never>; }>': name, args, effect
+test/support/__s260-negative-probe.ts(15,52): error TS2322: Type 'string' is not assignable to type 'number'.
+test/support/__s260-negative-probe.ts(18,84): error TS2322: Type 'string' is not assignable to type 'number'.

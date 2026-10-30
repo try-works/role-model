@@ -1,0 +1,79 @@
+S272 anti-slop disclosure and equivalent manual scan
+
+anti_slop_lint tool: UNAVAILABLE in this harness. No binary, package script, or local tool was
+found; the real tool was NOT run and must be run by the Lead before acceptance.
+
+Equivalent scan basis (ripgrep-equivalent Select-String over the 8 owned files):
+  pattern: \bas\s+(?!const\b)[A-Za-z{]|\bany\b|@ts-|Record<string|\bunknown\b|typeof 
+  plus manual review of every match to separate S269/S272 code from pre-existing code.
+
+Files reviewed (8):
+  - role-model-router/apps/runtime-ui-next/src/model.ts
+  - role-model-router/apps/runtime-ui-next/src/route.ts
+  - role-model-router/apps/runtime-ui-next/src/legacy-redirects.ts
+  - role-model-router/apps/runtime-ui-next/src/init.ts
+  - role-model-router/apps/runtime-ui-next/src/update.ts
+  - role-model-router/apps/runtime-ui-next/src/studio.ts
+  - role-model-router/apps/runtime-ui-next/test/s269-canonical-url.test.ts
+  - role-model-router/apps/runtime-ui-next/test/s269-canonical-url.scene.test.ts
+
+Findings by file:
+  [role-model-router/apps/runtime-ui-next/src/model.ts]
+    16: overviewFilters: Schema.optional(Schema.Struct({ breakdown: Schema.Literals(["all", "endpoint", "model", "provider"]), breakdownValue: Schema.String, difficulty: Schema.Literals(["all", "easy", "medium", "hard"]), source: Schema.Literals(["all", "local", "remote"]), status: Schema.Literals(["all", "success", "failure", "unknown"]) })),
+    28: export const Model: Schema.Struct<typeof modelFields> = Schema.Struct(modelFields);
+    29: export type Model = typeof Model.Type;
+  [role-model-router/apps/runtime-ui-next/src/route.ts]
+    59: export const AppRoute: RouteUnion<typeof routeCases> = Route.defineRouteUnion(routeCases);
+    60: export type AppRoute = typeof AppRoute.Type;
+    184: * real typed route as the bare URL and one `redirectHref` to replace the address bar. Unrelated
+  [role-model-router/apps/runtime-ui-next/src/legacy-redirects.ts]
+    2: import { type Url, fromString as urlFromString } from "@role-model-router/foldkit/url";
+  [role-model-router/apps/runtime-ui-next/src/init.ts]
+    1: import type { Return as UpdateReturn } from "@role-model-router/foldkit/update";
+    146: commands: [readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : route._tag === "Index" || route._tag === "Dashboard" ? "86400000" : undefined, key: readbackKey as ReadbackKey, token })],
+  [role-model-router/apps/runtime-ui-next/src/update.ts]
+    3: import type { Return as UpdateReturn } from "@role-model-router/foldkit/update";
+    4: import { type Url, toString as urlToString } from "@role-model-router/foldkit/url";
+    116: const runtimeConfigSnapshot = (model: Model): { config: Readonly<Record<string, unknown>>; text: string } => {
+    118: if (meta !== undefined) { try { const parsed = JSON.parse(meta) as { config?: unknown }; const config = parsed.config; if (config !== null && typeof config === "object" && !Array.isArray(config)) return { config: config as Readonly<Record<string, unknown>>, text: JSON.stringify(config, null, 2) }; } catch {} }
+    441: try { const meta = snapshot.rows[0]?.meta; const parsed = meta === undefined ? undefined : JSON.parse(meta) as { config?: unknown }; if (parsed?.config !== undefined) { text = JSON.stringify(parsed.config, null, 2); originalText = text; } } catch {}
+    468: const filters: OverviewFilters = { ...previous, [filter]: value } as OverviewFilters;
+    501: let parsedRecord: unknown; try { parsedRecord = JSON.parse(recordJson); } catch { parsedRecord = undefined; }
+  [role-model-router/apps/runtime-ui-next/src/studio.ts]
+    5: export type StudioTab = typeof StudioTabSchema.Type;
+    18: export type StudioField = typeof StudioFieldSchema.Type;
+    35: export type StudioState = typeof StudioState.Type;
+    68: readonly body: Readonly<Record<string, unknown>>;
+    94: const parsed = JSON.parse(state.advancedBody) as unknown;
+    95: if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return { error: "Advanced body must be a JSON object." };
+    96: return { body: parsed as Record<string, unknown>, method: "POST", path: "/v1/responses", tab: state.tab };
+    102: export const createStudioClient = (options: { readonly baseUrl?: string; readonly fetchImpl?: typeof fetch } = {}): StudioClient =>
+  [role-model-router/apps/runtime-ui-next/test/s269-canonical-url.test.ts]
+    15: * to the same real typed route as the new bare URLs, and a Navigation.replaceUrl Command
+    68: const commandNames = (result: ReturnType<typeof shellUpdate>): readonly string[] =>
+    71: const replaceCommand = (result: ReturnType<typeof shellUpdate>) =>
+    74: const readCommands = (result: ReturnType<typeof shellUpdate>) =>
+    77: const diagnosticsReadCommands = (result: ReturnType<typeof shellUpdate>) =>
+    105: it("keeps existing bare URLs as the canonical compatible aliases", () => {
+    543: // Only one URL change can be distinguished as the echo; the first exact match is consumed.
+  [role-model-router/apps/runtime-ui-next/test/s269-canonical-url.scene.test.ts]
+    72: const fetchImpl: typeof fetch = async (input) => {
+    167: it("selects the original Studio tab from the URL and canonicalises it as a query alias", async () => {
+
+S272 dispositions:
+- legacy-redirects.ts: no `as` cast, no any/unknown/@ts-. The two dictionaries are now exact
+  object constants; lookups use Object.entries-built ReadonlyMap.get (no widened Record index).
+  searchAndHash has an explicit UrlSearchAndHash return type.
+- model.ts: only the optional Schema.String pendingRedirectHref field; no cast.
+- route.ts: no S272 change; ResolvedAppUrl/sameRoute already typed.
+- init.ts: pending href assignment only; the pre-existing `readbackKey as ReadbackKey` is untouched.
+- update.ts: new isPendingRedirectEcho/ChangedUrl logic is fully typed; no cast/any/unknown added.
+  Pre-existing JSON.parse casts (runtimeConfigSnapshot/config save) are untouched.
+- tests: the scene-test JSON body is the named JSON-compatible JsonValue union, not unknown;
+  `as const` literals are compile-time constants, not unsafe casts.
+
+Positive control: the same pattern matched the intentional probe `const probe = {} as never;`
+(recorded in E:/rm-tmp/s272-antislop-probe.ts during the scan), so the scan is not vacuous.
+
+Conclusion: no new anti-slop finding in the S272 diff. anti_slop_lint is NOT RUN; Lead owns the
+real-tool run. No vendor pin or dependency change was made.

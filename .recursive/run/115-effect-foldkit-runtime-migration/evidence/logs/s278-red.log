@@ -1,0 +1,97 @@
+COMMAND: node ../../../node_modules/vitest/vitest.mjs run test/s278-telemetry-refresh.test.ts
+CWD: role-model-router/apps/runtime-ui-next ; TMP=TEMP=E:\rm-tmp ; baseline public HEAD 1cf15b85
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s278-telemetry-refresh.test.ts (6 tests | 5 failed) 5086ms
+   × S278 telemetry refresh (R12) > re-reads exactly the current data route for one telemetry event and never advances the watermark 1029ms
+     → the refresh subscription must listen for telemetry.update
+   ✓ S278 telemetry refresh (R12) > preserves revision decoding, dedupe and gap semantics 11ms
+   × S278 telemetry refresh (R12) > ignores malformed telemetry instead of inventing a revision 1018ms
+     → the refresh subscription must listen for telemetry.update
+   × S278 telemetry refresh (R12) > fences a telemetry-triggered read that resolves after a route switch 1005ms
+     → the refresh subscription must listen for telemetry.update
+   × S278 telemetry refresh (R12) > preserves an existing stale gap watermark when telemetry arrives 1012ms
+     → the refresh subscription must listen for telemetry.update
+   × S278 telemetry refresh (R12) > disposes the one source exactly once and delivers nothing afterwards 1006ms
+     → the refresh subscription must register both listeners on one source
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s278-telemetry-refresh.test.ts > S278 telemetry refresh (R12) > re-reads exactly the current data route for one telemetry event and never advances the watermark
+Error: the refresh subscription must listen for telemetry.update
+ ❯ waitFor test/s278-telemetry-refresh.test.ts:92:9
+     90|     });
+     91|   }
+     92|   throw new Error(message);
+       |         ^
+     93| };
+     94| 
+ ❯ telemetryMessage test/s278-telemetry-refresh.test.ts:158:3
+ ❯ test/s278-telemetry-refresh.test.ts:177:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  test/s278-telemetry-refresh.test.ts > S278 telemetry refresh (R12) > ignores malformed telemetry instead of inventing a revision
+Error: the refresh subscription must listen for telemetry.update
+ ❯ waitFor test/s278-telemetry-refresh.test.ts:92:9
+     90|     });
+     91|   }
+     92|   throw new Error(message);
+       |         ^
+     93| };
+     94| 
+ ❯ test/s278-telemetry-refresh.test.ts:239:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  test/s278-telemetry-refresh.test.ts > S278 telemetry refresh (R12) > fences a telemetry-triggered read that resolves after a route switch
+Error: the refresh subscription must listen for telemetry.update
+ ❯ waitFor test/s278-telemetry-refresh.test.ts:92:9
+     90|     });
+     91|   }
+     92|   throw new Error(message);
+       |         ^
+     93| };
+     94| 
+ ❯ telemetryMessage test/s278-telemetry-refresh.test.ts:158:3
+ ❯ test/s278-telemetry-refresh.test.ts:278:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  test/s278-telemetry-refresh.test.ts > S278 telemetry refresh (R12) > preserves an existing stale gap watermark when telemetry arrives
+Error: the refresh subscription must listen for telemetry.update
+ ❯ waitFor test/s278-telemetry-refresh.test.ts:92:9
+     90|     });
+     91|   }
+     92|   throw new Error(message);
+       |         ^
+     93| };
+     94| 
+ ❯ telemetryMessage test/s278-telemetry-refresh.test.ts:158:3
+ ❯ test/s278-telemetry-refresh.test.ts:303:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  test/s278-telemetry-refresh.test.ts > S278 telemetry refresh (R12) > disposes the one source exactly once and delivers nothing afterwards
+Error: the refresh subscription must register both listeners on one source
+ ❯ waitFor test/s278-telemetry-refresh.test.ts:92:9
+     90|     });
+     91|   }
+     92|   throw new Error(message);
+       |         ^
+     93| };
+     94| 
+ ❯ test/s278-telemetry-refresh.test.ts:328:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 1 passed (6)
+   Start at  17:01:10
+   Duration  19.11s (transform 6.23s, setup 0ms, collect 9.73s, tests 5.09s, environment 2.19s, prepare 708ms)
+
+

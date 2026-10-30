@@ -1,0 +1,51 @@
+seeded chat: status 200
+studio wire diagnostics: {"openTelemetryStreams":41,"finalRequestExtraInfo":[{"requestId":"28856.1144","wireHeadersObserved":false}]}
+studio-evidence: enabledAtMs=407 phases=seed,sweep,final requests=1 dropped=0 catalogueTotal=41 catalogueDropped=21
+catalogue GET /api/role-model/models latest phase=final status=200 start=387111ms duration=17ms count=20
+studio POST /v1/chat/completions phase=final model=claude-3.7-sonnet stream=false messages=1 start=388102ms status=undefined duration=n/ams
+click: buttonDisabled=false rawAtClick=idle errorAtClick=none samePathname=false selectedModelDom=claude-3.7-sonnet clickedAt=2026-10-27T11:31:59.378Z
+note: modelStateInferred=false (selectedModelDom is the DOM field, not readback status)
+outcome: in-flight
+PASS / (1883 chars)
+PASS /runtime (448 chars)
+PASS /models (1201 chars)
+PASS /router (247 chars)
+PASS /router/candidates (784 chars)
+PASS /router/decisions (204 chars)
+PASS /control/providers (144 chars)
+PASS /control/endpoints (177 chars)
+PASS /control/controller (507 chars)
+PASS /observe/queues (344 chars)
+PASS /observe/observability-snapshot (308 chars)
+PASS /local/logs (173 chars)
+PASS /local/swap (152 chars)
+PASS /system/peers (151 chars)
+PASS /requests (219 chars)
+PASS /session-readiness (292 chars)
+PASS /dashboard (339 chars)
+PASS /studio (121 chars)
+PASS /learning (806 chars)
+PASS /diagnostics/42 (198 chars)
+PASS click sweep /: clicked 5
+PASS click sweep /runtime: clicked 2
+PASS click sweep /models: clicked 1
+PASS click sweep /router: clicked 1
+PASS click sweep /router/candidates: clicked 1
+PASS click sweep /router/decisions: clicked 1
+PASS click sweep /control/providers: clicked 2
+PASS click sweep /control/endpoints: clicked 1
+PASS click sweep /control/controller: clicked 3
+PASS click sweep /observe/queues: clicked 1
+PASS click sweep /observe/observability-snapshot: clicked 1
+PASS click sweep /local/logs: clicked 1
+PASS click sweep /local/swap: clicked 1
+PASS click sweep /system/peers: clicked 1
+PASS click sweep /requests: clicked 1
+PASS click sweep /session-readiness: clicked 1
+PASS click sweep /dashboard: clicked 0
+PASS click sweep /studio: clicked 7
+PASS click sweep /learning: clicked 1
+PASS click sweep /diagnostics/42: clicked 2
+PASS control action: message:Providers action failed: HTTP 400
+FAIL studio run: clicked -> raw:loading
+{"routes":20,"failures":1,"focus":true}

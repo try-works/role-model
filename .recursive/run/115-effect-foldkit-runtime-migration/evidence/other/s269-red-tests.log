@@ -1,0 +1,28 @@
+S269 strict RED (before production implementation)
+Worktree: D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration (HEAD 9ac82847)
+Command: pnpm --filter @role-model-router/runtime-ui-next exec vitest run test/s269-canonical-url.test.ts test/s269-canonical-url.scene.test.ts
+Exit code: 1
+
+--- actual failures ---
+→ Test timed out in 5000ms.
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+FAIL  test/s269-canonical-url.test.ts [ test/s269-canonical-url.test.ts ]
+Error: Failed to resolve import "../src/legacy-redirects" from "test/s269-canonical-url.test.ts". Does the file exist?
+FAIL  test/s269-canonical-url.scene.test.ts > S269 mounted legacy redirects > replaces a legacy request-list URL with /requests and reads it exactly once
+Error: Test timed out in 5000ms.
+FAIL  test/s269-canonical-url.scene.test.ts > S269 mounted legacy redirects > keeps a legacy detail ID and query through the canonical detail route
+FAIL  test/s269-canonical-url.scene.test.ts > S269 mounted legacy redirects > selects the original Studio tab from the URL and canonicalises it as a query alias
+FAIL  test/s269-canonical-url.scene.test.ts > S269 mounted legacy redirects > routes the legacy runtime surfaces to the implemented /runtime page
+FAIL  test/s269-canonical-url.scene.test.ts > S269 mounted legacy redirects > preserves browser back/forward across the replace without a NotFound flash
+FAIL  test/s269-canonical-url.scene.test.ts > S269 mounted legacy redirects > redirects an in-app URL change, not only the initial load
+Test Files  2 failed (2)
+Tests  6 failed | 2 passed (8)
+
+--- actual model state while the legacy URL was mounted (NotFound) ---
+route: { _tag: 'NotFound', path: '/app/observe/requests' },
+route: { _tag: 'NotFound', path: '/app/observe/requests/req-9' },
+route: { _tag: 'NotFound', path: '/app/studio/images' },
+route: { _tag: 'NotFound', path: '/app/system/runtime-config' },
+route: { _tag: 'NotFound', path: '/app/learning/configuration' },
+
+Note: the two guard tests that passed under RED are the ones that assert a missing target stays NotFound and a bare URL stays untouched; every supported legacy redirect test failed.

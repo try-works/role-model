@@ -1,0 +1,19 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node
+
+(node:56496) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:38076) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:74604) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s268-mixed-owner.test.ts (7 tests) 278ms
+ ✓ test/sqlite-service.test.ts (11 tests) 320ms
+ ✓ test/s18a-sql-truth.test.ts (10 tests) 1318ms
+   ✓ S18a blocking measurement > blocks the event loop for a whole synchronous statement whose work persists, relative to the idle timer baseline  629ms
+
+ Test Files  3 passed (3)
+      Tests  28 passed (28)
+   Start at  14:54:18
+   Duration  8.83s (transform 4.04s, setup 0ms, collect 16.60s, tests 1.92s, environment 2ms, prepare 1.83s)
+

@@ -1,0 +1,11 @@
+# S259 private F152 repair
+
+Worktree D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration. GPT Lead, explicit deepseek-official/deepseek-flash implementer. Do not delegate. Write scope ONLY scripts/track-b/runtime-shadow-pipeline.mjs; tests/track-b/run96-f152-packaged-shadow.test.mjs; tests/track-b/run115-f152-state-root.test.mjs (if necessary); .recursive/run/115-effect-foldkit-runtime-migration/evidence/other/s259-* . No public edits. No commit; Lead verifies. Read private AGENTS/workflow before implementation.
+
+Read public evidence/other/s255-f152-classification.md and s258-coverage-repair.md for prior diagnostic limits. Current private caller at runtime-shadow-pipeline.mjs:898 passes ...input and evaluationReferences but lacks contractStateRoot. Host-owned stateRoot exists earlier. Public decoder needs that root for externalized outputs. Use the existing taxonomy-data-root helper for this source-backed test setup, not hardcoded paths.
+
+Strict TDD: capture current exact failure with taxonomy root supplied, then fix caller by forwarding contractStateRoot: stateRoot AFTER ...input (caller cannot override host authority). Ensure regression checks a caller-supplied wrong root cannot replace host-owned root. Add targeted test only if existing real case does not pin it. No broad mocking, no production API changes beyond required root forwarding. No public decoder relaxations. Do not weaken finalization or trust assertions; preserve current storage/live semantics and E1/E2 deferrals.
+
+Env TMP=TEMP=E:/rm-tmp; NODE_OPTIONS=--conditions=runtime; ROLE_MODEL_PUBLIC_WORKTREE=D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration. Run node --test --test-timeout=900000 tests/track-b/run96-f152-packaged-shadow.test.mjs. Prior diagnostic 3pass/2fail without taxonomy;4pass/1fail with taxonomy; fresh rebuilt dist4pass/1fail. New helper must let same command work without manually setting taxonomy root. No rebuild unless needed; never touch operator ports3456/3457/3458.
+
+Use anti_slop_lint tool on changed code. Save RED/GREEN output and concise file:line explanation to private evidence s259-f152-repair.md. If next failure emerges, report it honestly instead of modifying contract expectations. Finish bounded patch and report tests, source diff, lint, all background job outputs. Do not commit.

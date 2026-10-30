@@ -1,0 +1,32 @@
+
+> @role-model-router/runtime-ui-next@0.0.0 test:invariants D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-ui-next
+> node --test test/*.test.mjs
+
+✔ S175: no accent-filled control uses text-white (8.0366ms)
+✔ S175: accent fills pair with the accent ink token (2.2133ms)
+✔ S177: the filter select carries an aria-label (5.7759ms)
+✔ S177: no select is added without a name in the port (1.5726ms)
+✔ S178: index.html selects a theme but never writes palette tokens inline (22.8614ms)
+✔ S179: the light theme maps muted text to the darker foreground token (9.3618ms)
+✔ S181: the shell offers a skip link to main content (5.2478ms)
+✔ S181: the skip link is a child of the shell, not one of its attributes (1.2486ms)
+✔ S182: the shell main column is a shrinking flex item, not w-full (7.2698ms)
+✔ S199: light muted text clears WCAG AA against the light background (5.7049ms)
+✔ S199: the accent fill and its ink clear WCAG AA (the S175 invisible-Run defect) (1.0698ms)
+✔ S199: the ring colour would NOT have cleared it (the old mapping was a real defect) (0.9553ms)
+✔ S205: every --rm token referenced by the port is defined (7.4007ms)
+✔ S205: the port does not rely on ring utilities, which do not compose on these elements (1.0083ms)
+✔ S207: the Studio route requests the configured model catalogue (3.9516ms)
+✔ S207: the Studio form prefers a catalogue model over the hardcoded default (1.0848ms)
+✔ S207: a Studio run sends a model the host serves (0.8665ms)
+✔ S247: no test may exceed its recorded synthetic-click budget (89.1659ms)
+✔ S247: every file with clicks is recorded in the budget (57.1647ms)
+✔ S247: the total click count does not grow (50.0536ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 649.9415

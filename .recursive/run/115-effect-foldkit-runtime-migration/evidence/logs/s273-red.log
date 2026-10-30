@@ -1,0 +1,307 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node
+
+(node:46412) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s273-cleanup.test.ts (11 tests | 10 failed) 121ms
+   × S273 suspended transaction cleanup > keeps the inspect primary identity after release and commit both fail, and attempts both 27ms
+     → Expected "actual" to be reference-equal to "expected":
++ actual - expected
+
++ [Error: release failed]
+- [Error: primary inspect failure]
+
+   × S273 suspended transaction cleanup > surfaces a release-only cleanup failure instead of swallowing it 7ms
+     → Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
+    'release',
+-   'commit'
+  ]
+
+   × S273 suspended transaction cleanup > surfaces a commit-only cleanup failure instead of swallowing it 3ms
+     → Expected values to be strictly equal:
+
+false !== true
+
+   × S273 suspended transaction cleanup > attempts release and commit when ready rejects, leaving no suspended transaction unjoined 5ms
+     → Expected values to be strictly deep-equal:
++ actual - expected
+
++ []
+- [
+-   'release',
+-   'commit'
+- ]
+
+   × S273 suspended transaction cleanup > preserves every falsey inspect primary even when a cleanup step fails 4ms
+     → primary undefined must survive cleanup
++ actual - expected
+
++ Error: release failed
++     at D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\sql-sqlite-node\test\s273-cleanup.test.ts:180:28
++     at file:///E:/role-model-run115/public-virtual-store/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11
++     at file:///E:/role-model-run115/public-virtual-store/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26
++     at file:///E:/role-model-run115/public-virtual-store/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20
++     at new Promise (<anonymous>)
++     at runWithTimeout (file:///E:/role-model-run115/public-virtual-store/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)
++     at runTest (file:///E:/role-model-run115/public-virtual-store/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)
++     at processTicksAndRejections (node:internal/process/task_queues:105:5)
++     at runSuite (file:///E:/role-model-run115/public-virtual-store/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)
++     at runSuite (file:///E:/role-model-run115/public-virtual-store/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)
+- undefined
+
+   ✓ S273 suspended transaction cleanup > surfaces every falsey cleanup-only failure instead of treating it as absent 2ms
+   × S273 temp database ownership cleanup > closes the acquired database before rethrowing a failed setup 28ms
+     → Expected values to be strictly equal:
+
+true !== false
+
+   × S273 temp database ownership cleanup > closes and removes the owned database on a passing teardown 32ms
+     → EPERM, Permission denied: \\?\E:\rm-tmp\s268-sql-owner-8ComB8 '\\?\E:\rm-tmp\s268-sql-owner-8ComB8'
+   × S273 temp database ownership cleanup > attempts every teardown step and reports each failure separately 2ms
+     → close failed
+   × S273 temp database ownership cleanup > does not mask an existing test failure but reports teardown errors separately 2ms
+     → Got unwanted exception.
+Actual message: "close failed"
+   × S273 temp database ownership cleanup > throws when teardown cleanup is the sole failure instead of suppressing it 2ms
+     → The validation function is expected to return "true". Received false
+
+Caught error:
+
+Error: close failed
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s273-cleanup.test.ts > S273 suspended transaction cleanup > keeps the inspect primary identity after release and commit both fail, and attempts both
+AssertionError: Expected "actual" to be reference-equal to "expected":
++ actual - expected
+
++ [Error: release failed]
+- [Error: primary inspect failure]
+
+
+- Expected
++ Received
+
+  Error {
+-   "message": "primary inspect failure",
++   "message": "release failed",
+  }
+
+ ❯ test/s273-cleanup.test.ts:81:12
+     79| 
+     80|     assert.equal(settled.rejected, true);
+     81|     assert.equal(settled.reason, primary);
+       |            ^
+     82|     assert.deepEqual(attempted, ["release", "commit"]);
+     83|     assert.deepEqual(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  test/s273-cleanup.test.ts > S273 suspended transaction cleanup > surfaces a release-only cleanup failure instead of swallowing it
+AssertionError: Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
+    'release',
+-   'commit'
+  ]
+
+
+- Expected
++ Received
+
+  [
+    "release",
+-   "commit",
+  ]
+
+ ❯ test/s273-cleanup.test.ts:114:12
+    112|     assert.equal(settled.rejected, true);
+    113|     assert.equal(settled.reason, releaseError);
+    114|     assert.deepEqual(attempted, ["release", "commit"]);
+       |            ^
+    115|     assert.deepEqual(
+    116|       reported.map((failure) => failure.step),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+ FAIL  test/s273-cleanup.test.ts > S273 suspended transaction cleanup > surfaces a commit-only cleanup failure instead of swallowing it
+AssertionError: Expected values to be strictly equal:
+
+false !== true
+
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/s273-cleanup.test.ts:137:12
+    135|     );
+    136| 
+    137|     assert.equal(settled.rejected, true);
+       |            ^
+    138|     assert.equal(settled.reason, commitError);
+    139|     assert.deepEqual(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+ FAIL  test/s273-cleanup.test.ts > S273 suspended transaction cleanup > attempts release and commit when ready rejects, leaving no suspended transaction unjoined
+AssertionError: Expected values to be strictly deep-equal:
++ actual - expected
+
++ []
+- [
+-   'release',
+-   'commit'
+- ]
+
+
+- Expected
++ Received
+
+- [
+-   "release",
+-   "commit",
+- ]
++ []
+
+ ❯ test/s273-cleanup.test.ts:173:12
+    171|     assert.equal(settled.reason, readyError);
+    172|     assert.equal(inspected, false);
+    173|     assert.deepEqual(attempted, ["release", "commit"]);
+       |            ^
+    174|   });
+    175| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+ FAIL  test/s273-cleanup.test.ts > S273 suspended transaction cleanup > preserves every falsey inspect primary even when a cleanup step fails
+AssertionError: primary undefined must survive cleanup
++ actual - expected
+
++ Error: release failed
++     at D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\sql-sqlite-node\test\s273-cleanup.test.ts:180:28
++     at file:///E:/role-model-run115/public-virtual-store/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11
++     at file:///E:/role-model-run115/public-virtual-store/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26
++     at file:///E:/role-model-run115/public-virtual-store/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20
++     at new Promise (<anonymous>)
++     at runWithTimeout (file:///E:/role-model-run115/public-virtual-store/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)
++     at runTest (file:///E:/role-model-run115/public-virtual-store/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)
++     at processTicksAndRejections (node:internal/process/task_queues:105:5)
++     at runSuite (file:///E:/role-model-run115/public-virtual-store/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)
++     at runSuite (file:///E:/role-model-run115/public-virtual-store/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)
+- undefined
+
+
+simple
+
+ ❯ test/s273-cleanup.test.ts:201:14
+    199| 
+    200|       assert.equal(settled.rejected, true, `primary ${String(primary)}…
+    201|       assert.equal(settled.reason, primary, `primary ${String(primary)…
+       |              ^
+    202|       assert.equal(commitAttempted, true, `primary ${String(primary)} …
+    203|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯
+
+ FAIL  test/s273-cleanup.test.ts > S273 temp database ownership cleanup > closes the acquired database before rethrowing a failed setup
+AssertionError: Expected values to be strictly equal:
+
+true !== false
+
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ test/s273-cleanup.test.ts:251:14
+    249|       const opened = acquired;
+    250|       assert.ok(opened !== undefined);
+    251|       assert.equal(opened.isOpen(), false);
+       |              ^
+    252|       assert.deepEqual(reported, []);
+    253|     } finally {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/10]⎯
+
+ FAIL  test/s273-cleanup.test.ts > S273 temp database ownership cleanup > closes and removes the owned database on a passing teardown
+Error: EPERM, Permission denied: \\?\E:\rm-tmp\s268-sql-owner-8ComB8 '\\?\E:\rm-tmp\s268-sql-owner-8ComB8'
+ ❯ Object.dispose test/support/s273-cleanup.ts:104:5
+    102|   const directory = mkdtempSync(join(tmpdir(), "s268-sql-owner-"));
+    103|   batch.add("remove-temp-directory", () => {
+    104|     rmSync(directory, { force: true, recursive: true });
+       |     ^
+    105|   });
+    106|   const service = makeSync({ databasePath: join(directory, "owner.sqli…
+ ❯ Object.disposeAll test/support/s273-cleanup.ts:72:19
+ ❯ test/s273-cleanup.test.ts:267:28
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/10]⎯
+
+ FAIL  test/s273-cleanup.test.ts > S273 temp database ownership cleanup > attempts every teardown step and reports each failure separately
+Error: close failed
+ ❯ test/s273-cleanup.test.ts:276:24
+    274|     const batch = makeCleanupBatch();
+    275|     const attempted: string[] = [];
+    276|     const closeError = new Error("close failed");
+       |                        ^
+    277|     const removeError = new Error("remove failed");
+    278| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/10]⎯
+
+ FAIL  test/s273-cleanup.test.ts > S273 temp database ownership cleanup > does not mask an existing test failure but reports teardown errors separately
+AssertionError: Got unwanted exception.
+Actual message: "close failed"
+
+simple
+
+ ❯ test/s273-cleanup.test.ts:307:12
+    305|     });
+    306| 
+    307|     assert.doesNotThrow(() => disposeAfterTest(batch, true, collect(re…
+       |            ^
+    308| 
+    309|     assert.equal(reported.length, 1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/10]⎯
+
+ FAIL  test/s273-cleanup.test.ts > S273 temp database ownership cleanup > throws when teardown cleanup is the sole failure instead of suppressing it
+AssertionError: The validation function is expected to return "true". Received false
+
+Caught error:
+
+Error: close failed
+
+- Expected: 
+[Function anonymous]
+
++ Received: 
+Error {
+  "message": "close failed",
+}
+
+ ❯ test/s273-cleanup.test.ts:322:12
+    320|     });
+    321| 
+    322|     assert.throws(
+       |            ^
+    323|       () => disposeAfterTest(batch, false, collect(reported)),
+    324|       (error) => error instanceof AggregateError && error.errors[0] ==…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/10]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  10 failed | 1 passed (11)
+   Start at  15:46:55
+   Duration  10.73s (transform 5.52s, setup 0ms, collect 8.42s, tests 121ms, environment 1ms, prepare 948ms)
+

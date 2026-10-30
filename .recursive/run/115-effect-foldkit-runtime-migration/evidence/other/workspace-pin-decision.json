@@ -13,5 +13,8 @@
     "runtimeConfigLeafSceneWire": "NOT_RUN",
     "packageParity": "NOT_RUN"
   },
-  "nextStep": "Isolated compile-only compatibility fixture; continue required stable feature/URL implementation meanwhile."
+  "nextStep": "Isolated compile-only compatibility fixture; continue required stable feature/URL implementation meanwhile.",
+  "manifestUrl": "https://foldkit-website-preview-ky42cyp8l-devin-jamesons-projects.vercel.app/preview-release.json",
+  "manifestContentSha256": "cad82a9aa78d488ab0cea2a005ebdfe36e96ab8fc00d22422b69b21be919981b",
+  "manifestHashScope": "Readable manifest JSON returned by browser_fetch (not original wire byte digest)"
 }

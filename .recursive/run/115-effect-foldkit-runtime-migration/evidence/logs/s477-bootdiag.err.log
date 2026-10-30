@@ -1,0 +1,29 @@
+(node:56960) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `role-model-dev --trace-warnings ...` to show where the warning was created)
+[bootdiag] cli:before-createPackagedProductionRuntime
+[bootdiag] trackB:before-start
+[track-b-sidecar] (node:25116) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[track-b-sidecar] (Use `node --trace-warnings ...` to show where the warning was created)
+[bootdiag] sidecar:ready-line-parsed:http://127.0.0.1:60300
+[bootdiag] trackB:after-start
+[bootdiag] trackB:before-createBackend
+[run101] replay queue plane:queue queue:replay.dispatch worker:running
+[run101] evaluation queue plane:queue worker:running
+[bootdiag] trackB:after-createBackend
+[bootdiag] cli:after-createPackagedProductionRuntime
+[bootdiag] cli:before-awaitCliExtensionRuntime
+[bootdiag] beforeReady:start
+[bootdiag] beforeReady:qa-loop-start
+[bootdiag] beforeReady:retryContributionAggregates-before
+[bootdiag] beforeReady:retryContributionAggregates-after
+[bootdiag] beforeReady:advisory-refresh-before
+[bootdiag] beforeReady:advisory-refresh-after
+[bootdiag] cli:after-awaitCliExtensionRuntime
+[run105] durable task advisory refresh: scope=standalone-runtime-dev pairs=0 stage=S4
+[track-b-auto-replay] tick start (interval 30000ms)
+[run105] ladder materialization skipped this tick (retried next tick, no row is lost): configured endpoint count must be 1..64
+[run101] replay job scope: derived runtime:b342f8ad48363a0503cbc126cab0a2b9
+[run101] recovery page payload shape: value,businessOutput,durableLocator,evidenceRef,readCapability,workerPid
+[run101] recovery page came back empty: scope=runtime:b342f8ad48363a0503cbc126cab0a2b9 channel=development cursor=start
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 182ms (outcome ok)

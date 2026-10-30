@@ -1,0 +1,13 @@
+seeded chat: status 200
+studio wire diagnostics: {"openTelemetryStreams":4,"finalRequestExtraInfo":[{"requestId":"58240.109","wireHeadersObserved":true}]}
+studio-evidence: enabledAtMs=337 phases=seed,sweep,final requests=1 dropped=0 catalogueTotal=4 catalogueDropped=0
+catalogue GET /api/role-model/models latest phase=final status=200 start=10574ms duration=47ms count=4
+studio POST /v1/chat/completions phase=final model=claude-3.7-sonnet stream=false messages=1 start=11418ms status=200 duration=337ms
+click: buttonDisabled=false rawAtClick=idle errorAtClick=none samePathname=false selectedModelDom=claude-3.7-sonnet clickedAt=2026-10-27T11:25:56.033Z
+note: modelStateInferred=false (selectedModelDom is the DOM field, not readback status)
+outcome: applied
+PASS /studio (121 chars)
+PASS click sweep /studio: clicked 7
+PASS control action: message:Providers action failed: HTTP 400
+PASS studio run: clicked -> raw:success
+{"routes":1,"failures":0,"focus":false}

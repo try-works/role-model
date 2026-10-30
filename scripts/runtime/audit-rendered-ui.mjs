@@ -21,6 +21,7 @@ import { spawn } from "node:child_process";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { classifyStudioOutcome, createStudioCollector, formatStudioEvidence } from "./studio-audit-evidence.mjs";
 
 const args = process.argv.slice(2);
 const value = (name) => { const at = args.indexOf(name); return at < 0 ? undefined : args[at + 1]; };
@@ -109,6 +110,9 @@ await new Promise((resolve, reject) => { socket.addEventListener("open", resolve
 let nextId = 1;
 const pending = new Map();
 const events = [];
+const studioEvidence = createStudioCollector();
+const openStreams = new Set();
+const requestSent = new Set();
 socket.addEventListener("message", (event) => {
   const message = JSON.parse(String(event.data));
   if (message.id && pending.has(message.id)) {
@@ -118,6 +122,10 @@ socket.addEventListener("message", (event) => {
     return;
   }
   events.push(message);
+  if (message.method === "Network.requestWillBeSent" && message.params?.request?.url?.includes("/api/role-model/telemetry/stream")) openStreams.add(message.params.requestId);
+  if (message.method === "Network.loadingFinished" || message.method === "Network.loadingFailed") openStreams.delete(message.params.requestId);
+  if (message.method === "Network.requestWillBeSentExtraInfo") requestSent.add(message.params.requestId);
+  if (message.method) studioEvidence.handle(message.method, message.params ?? {});
 });
 const send = (method, params = {}, sessionId) => new Promise((resolve, reject) => {
   const id = nextId++;
@@ -129,6 +137,9 @@ const { targetId } = await send("Target.createTarget", { url: "about:blank" });
 const { sessionId } = await send("Target.attachToTarget", { targetId, flatten: true });
 await send("Page.enable", {}, sessionId);
 await send("Runtime.enable", {}, sessionId);
+// S286: enable Network BEFORE the seed so the failing gate's own request is observed, not a fresh one.
+await send("Network.enable", {}, sessionId);
+studioEvidence.handle("Network.enable", {});
 await send("Emulation.setDeviceMetricsOverride", { width: viewportWidth, height: viewportHeight, deviceScaleFactor: 1, mobile: viewportWidth < 600 }, sessionId);
 
 const AUDIT = `(() => {
@@ -212,6 +223,7 @@ const AUDIT = `(() => {
 // S197: the Overview cards only render when telemetry rows exist, and every earlier capture of the
 // port was on a host with zero traffic (S196). --seed-chat makes exactly one OpenAI-compatible
 // request first, so the populated state is what gets audited.
+studioEvidence.phase("seed");
 if (has("--seed-chat")) {
   const model = value("--seed-model") ?? "openai/gpt-4.1-mini-fast";
   try {
@@ -231,6 +243,7 @@ if (has("--seed-chat")) {
 const expectedCards = value("--expect-overview-cards");
 const failures = [];
 const report = [];
+studioEvidence.phase("sweep");
 for (const route of routes) {
   events.length = 0;
   // S202: wait for the navigation to actually land on the requested route. Auditing 20 routes in
@@ -386,8 +399,12 @@ if (args.includes("--control-action")) {
 // S207: a rendered page is not a working page. Drive one real Studio request and require the
 // response element to report success - the defect this caught was a 400 on the very first click.
 if (args.includes("--studio-run")) {
+  studioEvidence.phase("final");
+  const studioPathBefore = String((await send("Runtime.evaluate", { expression: "location.pathname", returnByValue: true }, sessionId)).result?.value ?? "");
   await send("Page.navigate", { url: base + "/studio" }, sessionId);
   await new Promise((resolve) => setTimeout(resolve, 1500));
+  // S286: snapshot at the click so a disabled Run / preserved loading state is visible in the evidence.
+  const studioClick = JSON.parse(String((await send("Runtime.evaluate", { expression: '(() => { const b = document.querySelector("[data-studio-run]"); const raw = document.querySelector("[data-studio-raw]"); const err = document.querySelector("[data-studio-error]"); const m = document.querySelector("[data-studio-field=model]"); return JSON.stringify({ buttonDisabled: b ? b.disabled === true : null, clickedAt: new Date().toISOString(), errorAtClick: err ? String(err.innerText || "").slice(0, 200) : null, pathname: location.pathname, rawAtClick: raw ? raw.getAttribute("data-studio-raw") : null, selectedModelDom: m && "value" in m ? String(m.value).slice(0, 80) : null }); })()', returnByValue: true }, sessionId)).result?.value ?? "{}"));
   const click = await send("Runtime.evaluate", { expression: '(() => { const b = document.querySelector("[data-studio-run]"); if (!b) return "no-button"; b.click(); return "clicked"; })()', returnByValue: true }, sessionId);
   const clicked = String(click.result?.value ?? "");
   let studioOutcome = null;
@@ -401,6 +418,11 @@ if (args.includes("--studio-run")) {
   const studioLine = "studio run: " + clicked + " -> " + String(studioOutcome);
   report.push((studioOutcome === "raw:success" ? "PASS " : "FAIL ") + studioLine);
   if (studioOutcome !== "raw:success") failures.push(studioLine);
+  const finalRequests = studioEvidence.evidence().studioRequests.filter((entry) => entry.phase === "final");
+  console.log("studio wire diagnostics: " + JSON.stringify({openTelemetryStreams:openStreams.size,finalRequestExtraInfo:finalRequests.map(entry=>({requestId:entry.requestId,wireHeadersObserved:requestSent.has(entry.requestId)}))}));
+  studioClick.navigatedSameUrl = studioPathBefore === String(studioClick.pathname ?? "");
+  const studioOutcomeSafe = String(studioOutcome ?? "").startsWith("raw:") ? String(studioOutcome).slice(4) : String(studioOutcome ?? "");
+  for (const line of formatStudioEvidence({ click: studioClick, evidence: studioEvidence.evidence(), outcome: classifyStudioOutcome({ buttonDisabledAtClick: studioClick.buttonDisabled === true, entry: finalRequests[finalRequests.length - 1], rawStateAtEnd: studioOutcomeSafe }) })) console.log(line);
 }
 for (const line of report) console.log(line);
 console.log(JSON.stringify({ routes: routes.length, failures: failures.length, focus: args.includes("--focus") }));

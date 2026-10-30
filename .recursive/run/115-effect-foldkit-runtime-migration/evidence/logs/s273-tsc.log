@@ -1,0 +1,1 @@
+test/s268-mixed-owner.test.ts(33,22): error TS18048: 'context.task.result' is possibly 'undefined'.

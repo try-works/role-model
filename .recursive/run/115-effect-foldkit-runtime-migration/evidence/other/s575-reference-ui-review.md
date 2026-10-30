@@ -65,3 +65,28 @@ It omits two of the four limits named in the review request: **candidates/decisi
 
 No source/test/config file was modified; no commit.
 
+## FINAL re-review on e0439614 — PASS (bounded)
+
+Active model verified **deepseek-flash**. Current HEAD `e0439614 fix(ui): close S575 review findings and reference endpoint format`, immediately after `738a2d1e`. Read-only; no edits, no commit.
+
+### Findings closed
+
+- **s540 runtime:** `test/s540-system-local-density.test.ts:42` now uses `{ cards: 4, skipStructure: true }`. The helper counts `[data-route] > section` exactly four and only skips the generic table/SVG check explicitly; it no longer uses `{tables:0,svgs:0}` as an unasserted escape.
+- **s76a pre-load invariant:** restored as its own test at `test/s76a-runtime-config.test.ts:30-37`: while the automatic read is in flight, no editor, save, or confirm button exists. The auto-load test remains.
+- **s380 scope:** loading/error/empty assertions are now contained to `[data-route="models"]` (`s380-models-roles.test.ts:118-137`), not `document.body`; state attributes remain truthful.
+- **s71b:** waits for the models table and compares headers case-insensitively to the reference title case (`s71b-models.test.ts:16-20`).
+- **S574 honest limits:** `s574-reference-ui-rebase-commit.md:24` now records the candidates/decisions MetricStrip and observe-routing single-chart limits, plus the providers picker and queue empty table. Line 25 corrects geometry to browser-measured aside 224/header 48/track 1216 and states the unit scene asserts only the class contract (no unsupported 865 claim).
+
+### Provenance and route checks
+
+- **Page stories:** `test/support/page-stories.ts:1-5` names the :3456 story-dump capture. Sampled entries match `D:/DEV/rm-clean/audit/story/stories.json`: Providers title/headings/combos/textLen 1344, Queues title/heading/empty table/textLen 864, ObserveRouting title/combos/textLen 795; the capture viewport is 1806x963 with aside 224x963/header 48/main 1582x915. The stories are not invented.
+- **Runtime-config split:** `route.ts:56,132` defines `RuntimeConfig` at `/runtime/config`; `legacy-redirects.ts:135-136` maps both legacy paths; `update.ts:488` auto-loads `runtimeConfig`; s76a auto-load + in-flight tests and the 29-test targeted run pass.
+- **Gates reproduced:** targeted s540/s76a/s380/s71b **29/29**; UI `tsc --noEmit` **0**; full UI suite **811/811 in 76 files**. The S574 record says 810; the extra test is the restored s76a invariant, so update that line to 811 when convenient.
+- No pixel/visual acceptance is claimed here; the separate live route comparison remains the visual gate.
+
+### FINAL BOUNDED VERDICT: PASS
+
+The five S575 findings are fixed with concrete file:line evidence, the story capture provenance is real, runtime-config split behavior is covered, and tsc/full gates pass. This is a bounded structural/reference-layout acceptance, not pixel parity or owner visual-delta approval.
+
+No source/test/config file was modified; no commit.
+

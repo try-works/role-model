@@ -1,0 +1,209 @@
+COMMAND: node --test scripts/studio-audit-evidence.test.mjs
+CWD: public worktree root ; S286 strict RED (interim diagnostic collector) against the zeroed contract skeleton
+EXIT_CODE=1
+
+✖ S286 summarises only whitelisted body fields and never leaks prompt, messages, auth or tokens (6.9883ms)
+✖ S286 records a Studio POST start, phase, response status and finish with elapsed timings (1.8096ms)
+✖ S286 records the catalogue GET status and timing separately from the Studio POST (1.0225ms)
+✖ S286 bounds collected entries and counts dropped ones instead of growing without limit (0.8062ms)
+✖ S286 classifies no POST, in-flight, http error, responded-unapplied and applied (0.6517ms)
+✖ S286 tags each request with the phase current when it started (seed vs final) (0.7779ms)
+✖ S286 formats bounded evidence lines without body content or secrets (1.1938ms)
+✖ S286 notes a same-URL navigation that preserves loading and disables Run, so no POST is expected (0.7058ms)
+✖ S286 never presents the DOM field value as the actual model state (0.7221ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 0
+ℹ fail 9
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 245.472
+
+✖ failing tests:
+
+test at scripts\studio-audit-evidence.test.mjs:44:1
+✖ S286 summarises only whitelisted body fields and never leaks prompt, messages, auth or tokens (6.9883ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - 'moonshot/kimi-k2.5'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/studio-audit-evidence.test.mjs:51:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'moonshot/kimi-k2.5',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\studio-audit-evidence.test.mjs:74:1
+✖ S286 records a Studio POST start, phase, response status and finish with elapsed timings (1.8096ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - 'seed'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/studio-audit-evidence.test.mjs:85:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'seed',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\studio-audit-evidence.test.mjs:98:1
+✖ S286 records the catalogue GET status and timing separately from the Studio POST (1.0225ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  undefined !== 200
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/studio-audit-evidence.test.mjs:110:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 200,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\studio-audit-evidence.test.mjs:116:1
+✖ S286 bounds collected entries and counts dropped ones instead of growing without limit (0.8062ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/studio-audit-evidence.test.mjs:122:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\studio-audit-evidence.test.mjs:125:1
+✖ S286 classifies no POST, in-flight, http error, responded-unapplied and applied (0.6517ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'unknown'
+  - 'no-post-disabled'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/studio-audit-evidence.test.mjs:126:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'unknown',
+    expected: 'no-post-disabled',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\studio-audit-evidence.test.mjs:146:1
+✖ S286 tags each request with the phase current when it started (seed vs final) (0.7779ms)
+  TypeError: Cannot read properties of undefined (reading 'phase')
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/studio-audit-evidence.test.mjs:159:34)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7)
+
+test at scripts\studio-audit-evidence.test.mjs:163:1
+✖ S286 formats bounded evidence lines without body content or secrets (1.1938ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /studio POST/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/studio-audit-evidence.test.mjs:181:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /studio POST/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at scripts\studio-audit-evidence.test.mjs:190:1
+✖ S286 notes a same-URL navigation that preserves loading and disables Run, so no POST is expected (0.7058ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'unknown'
+  - 'no-post-disabled'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/studio-audit-evidence.test.mjs:197:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'unknown',
+    expected: 'no-post-disabled',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\studio-audit-evidence.test.mjs:215:1
+✖ S286 never presents the DOM field value as the actual model state (0.7221ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /selectedModelDom=moonshot\/kimi-k2\.5/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/studio-audit-evidence.test.mjs:222:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /selectedModelDom=moonshot\/kimi-k2\.5/,
+    operator: 'match',
+    diff: 'simple'
+  }
+

@@ -1,0 +1,14 @@
+[
+  {
+    "name": "s270-sql-owner-review",
+    "sessionId": "session-a221775b-0fe9-46d8-adfb-0429b1f94624",
+    "provider": "deepseek-official",
+    "model": "deepseek-flash"
+  },
+  {
+    "name": "s271-url-review",
+    "sessionId": "session-cc7e1b80-9dfe-4b12-b4f6-8365c97b990b",
+    "provider": "deepseek-official",
+    "model": "deepseek-flash"
+  }
+]

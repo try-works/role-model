@@ -1,0 +1,66 @@
+COMMAND: node ../../../node_modules/vitest/vitest.mjs run test/s278-telemetry-refresh.test.ts
+CWD: role-model-router/apps/runtime-ui-next ; S280A strict RED for the Index/Dashboard telemetry query/id repair
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s278-telemetry-refresh.test.ts (8 tests | 2 failed) 286ms
+   ✓ S278 telemetry refresh (R12) > re-reads exactly the current data route for one telemetry event and never advances the watermark 67ms
+   ✓ S278 telemetry refresh (R12) > preserves revision decoding, dedupe and gap semantics 7ms
+   ✓ S278 telemetry refresh (R12) > ignores malformed telemetry instead of inventing a revision 55ms
+   ✓ S278 telemetry refresh (R12) > fences a late telemetry read by the per-key token and never touches the active route 44ms
+   ✓ S278 telemetry refresh (R12) > preserves an existing stale gap watermark when telemetry arrives 19ms
+   × S278 telemetry refresh (R12) > re-reads the Index overview with the selected window and filters, never an empty windowMs 28ms
+     → expected undefined to be '?windowMs=3600000&sourceTypes=local&s…' // Object.is equality
+   × S278 telemetry refresh (R12) > re-reads the Dashboard window through the id, never an empty window 18ms
+     → expected undefined to be '7200000' // Object.is equality
+   ✓ S278 telemetry refresh (R12) > disposes the one source exactly once and delivers nothing afterwards 43ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s278-telemetry-refresh.test.ts > S278 telemetry refresh (R12) > re-reads the Index overview with the selected window and filters, never an empty windowMs
+AssertionError: expected undefined to be '?windowMs=3600000&sourceTypes=local&s…' // Object.is equality
+
+- Expected: 
+"?windowMs=3600000&sourceTypes=local&statusFamilies=failure&difficultyBuckets=hard&endpointIds=endpoint-s278"
+
++ Received: 
+undefined
+
+ ❯ test/s278-telemetry-refresh.test.ts:378:35
+    376|       // (update.ts:493/503): the selected window and filters, not an …
+    377|       expect(command.args?.key).toBe("overviewMetrics");
+    378|       expect(command.args?.query).toBe(overviewQuery(filters, 3_600_00…
+       |                                   ^
+    379|       expect(result.model.refresh.lastAppliedRevision).toBe(0);
+    380|       expect(result.model.refresh.resyncToken).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s278-telemetry-refresh.test.ts > S278 telemetry refresh (R12) > re-reads the Dashboard window through the id, never an empty window
+AssertionError: expected undefined to be '7200000' // Object.is equality
+
+- Expected: 
+"7200000"
+
++ Received: 
+undefined
+
+ ❯ test/s278-telemetry-refresh.test.ts:434:32
+    432|       expect(command.args?.key).toBe("dashboard");
+    433|       // The Dashboard reader takes its window as the id argument (rea…
+    434|       expect(command.args?.id).toBe("7200000");
+       |                                ^
+    435|       expect(result.model.refresh.lastAppliedRevision).toBe(0);
+    436|       expect(result.model.refresh.resyncToken).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 6 passed (8)
+   Start at  17:38:36
+   Duration  19.72s (transform 8.94s, setup 0ms, collect 13.81s, tests 286ms, environment 2.89s, prepare 667ms)
+
+

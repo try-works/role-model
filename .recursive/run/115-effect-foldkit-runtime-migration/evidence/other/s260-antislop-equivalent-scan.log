@@ -1,0 +1,13 @@
+S260 anti-slop-equivalent scan (NOT the anti_slop_lint tool, which is unavailable in this harness)
+Scanned files: 8
+test/s245-scene-smoke.test.ts -> 0 matches
+test/s250-control-rendering-scene.test.ts -> 0 matches
+test/s251-control-dispatch-once.test.ts -> 0 matches
+test/s253-studio-dispatch-guard.test.ts -> 0 matches
+test/s255-studio-rendering-scene.test.ts -> 0 matches
+test/s256-runtime-config-rendering-scene.test.ts -> 0 matches
+test/s257-runtime-config-invalid-save.test.ts -> 0 matches
+test/support/runtime-shell.ts -> 0 matches
+TOTAL MATCHES: 0
+FILES SCANNED > 0: True
+POSITIVE CONTROL (temporary probe E:/rm-tmp/s260-antislop-probe.ts): 1 match -> const x = {} as never;

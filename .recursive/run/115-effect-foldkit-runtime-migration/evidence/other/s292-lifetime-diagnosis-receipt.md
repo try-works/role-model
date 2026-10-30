@@ -1,0 +1,11 @@
+# S292 page-lifetime diagnosis (not candidate acceptance)
+
+Pinned SEA0.0.20-266-ga01230f0/publica01230f0/private0c5216b6; SHA589ecc0c..., immutableE:snapshot package unchanged. Three fullgate failures include diagnostic validclaude3.7sonnetPOST idle/enabled noresponse; secondwirefailure has browser requestWillBeSentExtraInfo absent. Defaultmodel and disabledclick explanations refuted FOR THESE RUNS, not universal rule. Fullbackend independent HTTPPOST200481/415ms. Short isolated controller/provider/Studio/allflags1route controls allPASS337-863ms. Exactsource logs retained.
+
+Controlledtemp-copy audit adds ONLY beforeload EventSource proxy/pagehideclose bootstrap (importpath adjusted), same20routes/sweep/control/light/focus/seed/clicks/15s outcome. FullPASS allroutes Studio203ms requestheadersobservedtrue. Rootcausal seam page-owned EventSource lifetime is implicated, not claimed exact6socketpool.41/42openCDPIDs are NOTactualsockets; GETscouldstillcomplete. Intervention mightalsochangeBFCacheeligibility, noCandidatePASS orpageshowrestoreprooffrombootstrap. S289nativecausalreviewrecordedlimits.
+
+ProductS290repair needs BFCachepageshowreopen and real typedRuntimePageRestored invalidation (not fabricatedrevision/request), own retiredgeneration silence, failureacquire rollback and runtimefinalizer cleanup. NativeS291HOLD partialacquire leaks identified before acceptance; authorrepair underway. Fresh actualUIbrowserfullgatewithoutbootstrap and compatiblepackageclosure needed. Do notmakeauditpassvia timeout/predicatechanges.
+
+NativeAgentTeams s5author and s9independentread-only reviewer, live modeldeepseek-flash verified. Diagnostic collectorS286/S288 strictlywhitelistedbodymodel/stream/count no prompt/auth/response,13GREEN after4meaningfulREDS; helper only, no standaloneCLI survived. AuditNetworkhooks additive, existingsequence/predicatesunchanged. Leadowns auditafterexplicit handoff/FS_STALE reread, no concurrentwriters. NativeS288flags repaired catalogue-ring/latestcounts/tailreservation/removalcausalpathnameclaim. Helper4typeofboundarylintfindings explicitnotclean; testclean.
+
+Privatefixedsnapshot/currentoperatorstates preserved. Owneddiagnostic24148port6287job killed/collected afterevidence; operator3456PID44804unchanged. Source repair remainsunaccepteduntilreviewed; goalactive.

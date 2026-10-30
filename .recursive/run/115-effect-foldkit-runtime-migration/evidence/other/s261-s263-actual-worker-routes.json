@@ -1,0 +1,20 @@
+[
+  {
+    "name": "s261-backend-assessment",
+    "sessionId": "session-a8419c88-9ddb-41cf-b096-e81672e44630",
+    "provider": "deepseek-official",
+    "model": "deepseek-flash"
+  },
+  {
+    "name": "s262-ui-assessment",
+    "sessionId": "session-aeb436e0-8880-4cf8-9f56-bfd36a2cfa95",
+    "provider": "deepseek-official",
+    "model": "deepseek-flash"
+  },
+  {
+    "name": "s263-release-assessment",
+    "sessionId": "session-ebcbdab6-70fb-4f07-9bce-9f55f5c3edc3",
+    "provider": "deepseek-official",
+    "model": "deepseek-flash"
+  }
+]

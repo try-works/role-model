@@ -1,0 +1,26 @@
+COMMAND: node --test scripts/studio-audit-evidence.test.mjs
+CWD: public worktree root ; S288 GREEN: 4 bounded findings repaired in the collector helper
+EXIT_CODE=0
+
+✔ S286 summarises only whitelisted body fields and never leaks prompt, messages, auth or tokens (3.0447ms)
+✔ S286 records a Studio POST start, phase, response status and finish with elapsed timings (1.9203ms)
+✔ S286 records the catalogue GET status and timing separately from the Studio POST (0.7802ms)
+✔ S286 tracks the LATEST catalogue GET (phase-labelled), so a final-click readiness is readable (2.1031ms)
+✔ S286 bounds collected entries and counts dropped ones instead of growing without limit (0.9923ms)
+✔ S286 classifies no POST, in-flight, http error, responded-unapplied and applied (0.8786ms)
+✔ S286 tags each request with the phase current when it started (seed vs final) (0.9118ms)
+✔ S286 formats bounded evidence lines without body content or secrets (1.3401ms)
+✔ S288/S286 reports samePathname as raw evidence but makes no no-POST causal claim (0.7241ms)
+✔ S288 catalogue ring always keeps the latest GET with total/dropped counters past the cap (1.1143ms)
+✔ S288 reserves click and outcome report lines even when more than 30 requests were collected (3.262ms)
+✔ S288 prints model=unavailable when postData is missing, instead of null or an inferred model (0.4893ms)
+✔ S286 never presents the DOM field value as the actual model state (0.4101ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 263.2287
+
