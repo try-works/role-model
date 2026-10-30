@@ -231,31 +231,46 @@ export const telemetryRequestsRoute = (
 };
 
 export const observeActivityRoute = (readback: ReadbackState, h: HtmlBuilder<Message>): Html => {
-  const errors = readback.rows.filter((row) => row.value.includes("500") || row.value.includes("error")).length;
+  const records = readback.rows.flatMap((row) => {
+    try {
+      // SAFETY: activity rows carry the runtime's raw JSON record in meta; every field is read defensively.
+      const raw = JSON.parse(row.meta) as { readonly atMs?: number; readonly captureId?: unknown; readonly duration_ms?: number; readonly model_id?: string; readonly request_operation?: string; readonly status?: string | number };
+      return [{ capture: raw.captureId === undefined ? "No capture" : String(raw.captureId), duration: raw.duration_ms === undefined ? "" : String(raw.duration_ms) + " ms", model: raw.model_id ?? row.label, operation: raw.request_operation ?? "", status: raw.status === undefined ? row.value : String(raw.status), time: raw.atMs === undefined ? "" : new Date(raw.atMs).toLocaleString("en-US", { day: "2-digit", hour: "numeric", minute: "2-digit", month: "2-digit", second: "2-digit", year: "numeric" }) }];
+    } catch {
+      return [{ capture: "No capture", duration: "", model: row.label, operation: "", status: row.value, time: "" }];
+    }
+  });
+  const errors = records.filter((record) => record.status.includes("500") || record.status.toLowerCase().includes("error")).length;
   const tiles = [
-    { label: "ENTRIES", value: String(readback.rows.length) },
+    { label: "ENTRIES", value: String(records.length) },
     { label: "ERRORS", value: String(errors) },
-    { label: "PROMPT TOKENS", value: "—" },
-    { label: "COMPLETION TOKENS", value: "—" },
+    { label: "PROMPT TOKENS", value: "0" },
+    { label: "COMPLETION TOKENS", value: "0" },
   ];
   return page("Host activity and metrics", [
     metrics(tiles, h),
-    section("Recent host activity", "Showing " + String(readback.rows.length) + " of " + String(readback.rows.length) + " requests in the last 24 hours", [
-      table(["Model", "Decided", "Path", "Status", "Duration", "Capture"], readback.rows.map((row) => {
-        try {
-          // SAFETY: activity rows carry the runtime's raw JSON record in meta; every field is read
-          // defensively with optional access and String fallback.
-          const raw = JSON.parse(row.meta) as { readonly atMs?: unknown; readonly captureId?: unknown; readonly duration_ms?: unknown; readonly model_id?: unknown; readonly request_operation?: unknown; readonly status?: unknown };
-          return [String(raw.model_id ?? row.label), String(raw.atMs ?? ""), String(raw.request_operation ?? ""), String(raw.status ?? ""), raw.duration_ms === undefined ? "" : String(raw.duration_ms) + " ms", raw.captureId === undefined ? "No capture" : String(raw.captureId)];
-        } catch {
-          return [row.label, "", "", row.value, "", "No capture"];
-        }
-      }), "No host activity recorded yet.", h),
-    ], h),
-    section("Capture inspector", "Inspect the exact request and response capture admitted for replay.", [
-      empty("No capture selected.", h),
-    ], h),
-    observeCharts(observeChart("Host activity volume", "Host requests per time bucket for the last 24 hours.", emptySeries("activity", "Activity"), "No host activity volume recorded yet.", h), h),
+    h.div([h.Class("grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)] xl:items-start")], [
+      section("Recent host activity", "Showing " + String(records.length) + " of " + String(records.length) + " requests in the last 24 hours", [
+        records.length === 0
+          ? empty("No host activity recorded yet.", h)
+          : h.div([h.Class("flex flex-col")], records.map((record) =>
+              h.div([h.Class("flex flex-col gap-1 border-b border-border py-3 last:border-b-0")], [
+                h.div([h.Class("flex items-baseline justify-between gap-3")], [
+                  h.span([h.Class("min-w-0 truncate font-sans text-[13px] font-semibold text-foreground")], [record.model]),
+                  h.span([h.Class("shrink-0 font-mono text-[11px] text-muted-foreground")], [record.time]),
+                ]),
+                h.span([h.Class("truncate font-mono text-[12px] text-muted-foreground")], [record.operation]),
+                h.div([h.Class("flex items-center justify-between gap-3 font-mono text-[12px] text-muted-foreground")], [
+                  h.span([], [record.status + (record.duration.length > 0 ? "  " + record.duration : "")]),
+                  h.span([], [record.capture]),
+                ]),
+              ]),
+            )),
+      ], h),
+      section("Capture inspector", "Inspect the exact request and response capture admitted for replay.", [
+        empty("Choose a ledger row with a capture to inspect.", h),
+      ], h),
+    ]),
   ], h);
 };
 
