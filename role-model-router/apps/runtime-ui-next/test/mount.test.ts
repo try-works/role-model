@@ -69,18 +69,19 @@ describe("Foldkit app shell on the wrapper stack", () => {
     expect(document.body.textContent).not.toContain("Clicked");
     expect(document.body.textContent).not.toContain("Clicks:");
     await waitFor(
-      () => (document.body.textContent?.includes("Dark shell") ? true : undefined),
-      "the dark shell label",
+      () => (document.querySelector('button[data-slot="role-model-theme-toggle"]') ? true : undefined),
+      "the reference theme toggle to render",
     );
 
     const themeToggle = await waitFor(
-      () => buttonByClass(document.body, "rm3-theme-toggle"),
-      "the foldkit-ui theme toggle to render",
+      () => document.querySelector<HTMLButtonElement>('button[data-slot="role-model-theme-toggle"]') ?? undefined,
+      "the reference theme toggle to render",
     );
+    expect(themeToggle.getAttribute("aria-label")).toBe("Switch to light mode");
     themeToggle.click();
 
     await waitFor(
-      () => (document.body.textContent?.includes("Light shell") ? true : undefined),
+      () => (themeToggle.getAttribute("aria-label") === "Switch to dark mode" ? true : undefined),
       "the theme message to reach update",
     );
 

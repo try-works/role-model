@@ -29,6 +29,7 @@ import { chartPointKeyAction, view as chartView } from "@role-model/ui/foldkit-c
 import { READBACK_SPECS, type ReadbacksState, localPolicyControls, localPolicyDraftFromReadback, localPolicyFromReadback, renderReadbackPage } from "./readback";
 import { endpointsRoute, providersRoute } from "./features/control/routes";
 import { requestsRoute } from "./features/requests-ranking/routes";
+import { integrationsDownstreamRoute, integrationsUpstreamRoute, observeQueuesRoute } from "./features/s563-pages";
 import {
   learningConfigurationRoute,
   learningDecisionsRoute,
@@ -72,6 +73,7 @@ import {
   workloadsSupplement,
 } from "./features/density/supplements";
 import { type StudioField, type StudioState, StudioTabSchema, studioIdle } from "./studio";
+import { card as layoutCard } from "./features/s563-layout";
 import { AppRoute } from "./route";
 
 const focusRingClass =
@@ -96,11 +98,13 @@ const localPolicyPage = (readback: ReadbacksState["localPolicy"], h: HtmlBuilder
       ]),
     ]);
   return h.section(
-    [h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "local-policy"), h.DataAttribute("local-policy-state", readback.status)],
+    [h.Class("rm3-next-route"), h.DataAttribute("route", "local-policy"), h.DataAttribute("local-policy-state", readback.status)],
     [
       h.h2([h.Class("rm3-next-route-title")], ["Llama-swap host policy"]),
       familySvg(h),
-      h.h3([h.Class("mt-2 text-[14px] font-semibold text-[var(--rm-fg)]")], ["Policy configuration"]),
+      h.h3([h.Class("mt-2 text-sm font-medium leading-5 text-foreground")], ["Policy configuration"]),
+      h.h3([h.Class("mt-4 text-sm font-medium leading-5 text-foreground")], ["Raw policy"]),
+      h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["TTL (seconds) · Max concurrency · Auto-unload idle models"]),
       h.p([h.Class("text-[12px] text-[var(--rm-secondary)]")], ["Edit runtime behavior for local model loading and unloading."]),
       ...(error === undefined ? [] : [h.p([h.Role("alert"), h.DataAttribute("local-policy-error", "")], [error])]),
       ...(loading
@@ -187,188 +191,277 @@ const routeTitle = (route: Model["route"]): string =>
     NotFound: ({ path }) => `Not found: ${path} | RM3 Foldkit shell`,
   });
 
-interface ShellNavItem {
+interface ShellSection {
   readonly label: string;
-  readonly href: string | null;
-  readonly active: boolean;
-  readonly dataNav?: string;
+  readonly href: string;
+  readonly nav: string;
+  readonly tags: ReadonlyArray<Model["route"]["_tag"]>;
 }
 
-const shellNavItems = (route: Model["route"]): ReadonlyArray<ShellNavItem> => [
-  { active: route._tag === "Index", dataNav: "index", href: "/", label: "Overview" },
+/**
+ * S560: the reference shell navigation. The shipped React shell renders ONE flat link per
+ * navigation section (app-shell.tsx maps runtimeNavigationSections to Sidebar navItems); it does
+ * not expand sub-pages, show a runtime rail, or group pages into invented sections.
+ */
+const shellSections: ReadonlyArray<ShellSection> = [
+  { href: "/", label: "Overview", nav: "index", tags: ["Index", "Diagnostics", "Observability"] },
+  { href: "/studio", label: "Studio", nav: "studio", tags: ["Studio"] },
   {
-    active: route._tag === "Diagnostics",
-    dataNav: "diagnostics",
-    href: "/diagnostics/42",
-    label: "Diagnostics",
+    href: "/local/choose",
+    label: "Local",
+    nav: "local",
+    tags: ["LocalChoose", "LocalPeers", "LocalPeerModels", "LocalLlamaSwapModels", "LocalPolicy", "LocalSwap", "LocalLogs"],
+  },
+  { href: "/control/providers", label: "Remote", nav: "remote", tags: ["Providers", "Endpoints"] },
+  { href: "/models", label: "Models", nav: "models", tags: ["Models", "ModelsRoles", "Benchmark"] },
+  {
+    href: "/router",
+    label: "Router",
+    nav: "router",
+    tags: ["Router", "RouterCandidates", "RouterDecisions", "RouterDecisionDetail", "RouterStrategy", "RouterWorkloads", "RouterConfig", "RouterAgentStrategy", "ControlController"],
   },
   {
-    active: route._tag === "Observability",
-    dataNav: "observability",
-    href: "/observe/observability-snapshot",
-    label: "Observability",
+    href: "/requests",
+    label: "Observe",
+    nav: "observe",
+    tags: ["Requests", "RequestDetail", "Queues", "QueuesConfiguration", "StoreReceipts", "ObserveActivity", "ObserveLogs", "ObserveRouting"],
+  },
+  { href: "/integrations/downstream", label: "Connect", nav: "connect", tags: ["IntegrationsDownstream", "IntegrationsUpstream"] },
+  {
+    href: "/system/session-readiness",
+    label: "System",
+    nav: "system",
+    tags: ["SystemPeers", "Runtime", "SessionReadiness", "Dashboard", "SystemOperator", "SystemExtensions", "StorageRetention"],
   },
   {
-    active: route._tag === "StoreReceipts",
-    dataNav: "store-receipts",
-    href: "/observe/store-degradation-receipts",
-    label: "Receipts",
-  },
-  { active: route._tag === "Queues", dataNav: "queues", href: "/observe/queues", label: "Queues" },
-  {
-    active: route._tag === "LocalLogs",
-    dataNav: "local-logs",
-    href: "/local/logs",
-    label: "Local logs",
-  },
-  {
-    active: route._tag === "RouterCandidates",
-    dataNav: "router-candidates",
-    href: "/router/candidates",
-    label: "Candidates",
-  },
-  { active: route._tag === "Requests", dataNav: "requests", href: "/requests", label: "Requests" },
-  {
-    active: route._tag === "RouterDecisions",
-    dataNav: "router-decisions",
-    href: "/router/decisions",
-    label: "Decisions",
-  },
-  {
-    active: route._tag === "SystemPeers",
-    dataNav: "system-peers",
-    href: "/system/peers",
-    label: "System peers",
-  },
-  {
-    active: route._tag === "LocalPeers",
-    dataNav: "local-peers",
-    href: "/local/peers",
-    label: "Local peers",
-  },
-  { active: route._tag === "Runtime", dataNav: "runtime", href: "/runtime", label: "Runtime" },
-  {
-    active: route._tag === "Providers",
-    dataNav: "providers",
-    href: "/control/providers",
-    label: "Providers",
-  },
-  {
-    active: route._tag === "Endpoints",
-    dataNav: "endpoints",
-    href: "/control/endpoints",
-    label: "Endpoints",
-  },
-  {
-    active: route._tag === "ControlController",
-    dataNav: "control-controller",
-    href: "/control/controller",
-    label: "Controller",
-  },
-  {
-    active: route._tag === "SessionReadiness",
-    dataNav: "session-readiness",
-    href: "/session-readiness",
-    label: "Readiness",
-  },
-  {
-    active: route._tag === "Dashboard",
-    dataNav: "dashboard",
-    href: "/dashboard",
-    label: "Dashboard",
-  },
-  { active: route._tag === "LocalSwap", dataNav: "local-swap", href: "/local/swap", label: "Swap" },
-  {
-    active: route._tag === "ObserveActivity",
-    dataNav: "observe-activity",
-    href: "/observe/activity",
-    label: "Activity",
-  },
-  {
-    active: route._tag === "ObserveLogs",
-    dataNav: "observe-logs",
-    href: "/observe/logs",
-    label: "Observe logs",
-  },
-  {
-    active: route._tag === "ObserveRouting",
-    dataNav: "observe-routing",
-    href: "/observe/routing",
-    label: "Observe routing",
-  },
-  { active: route._tag === "Router", dataNav: "router", href: "/router", label: "Router" },
-  { active: route._tag === "RouterStrategy", dataNav: "router-strategy", href: "/router/strategy", label: "Router strategy" },
-  { active: route._tag === "RouterWorkloads", dataNav: "router-workloads", href: "/router/workloads", label: "Workloads" },
-  { active: route._tag === "RouterConfig", dataNav: "router-config", href: "/router/config", label: "Router config" },
-  { active: route._tag === "RouterAgentStrategy", dataNav: "router-agent-strategy", href: "/router/agent-strategy", label: "Agent strategy" },
-  { active: route._tag === "Studio", dataNav: "studio", href: "/studio", label: "Studio" },
-  { active: route._tag === "Learning", dataNav: "learning", href: "/learning", label: "Learning" },
-  { active: route._tag === "LearningConfiguration", dataNav: "learning-configuration", href: "/learning/configuration", label: "Learning configuration" },
-  { active: route._tag === "LearningPacks", dataNav: "learning-packs", href: "/learning/packs", label: "Learning packs" },
-  { active: route._tag === "LearningDecisions", dataNav: "learning-decisions", href: "/learning/decisions", label: "Learning decisions" },
-  { active: route._tag === "LearningEvidence", dataNav: "learning-evidence", href: "/learning/evidence", label: "Learning evidence" },
-  { active: route._tag === "LearningHistory", dataNav: "learning-history", href: "/learning/history", label: "Learning history" },
-  { active: route._tag === "LocalLlamaSwapModels", dataNav: "local-llama-swap-models", href: "/local/llama-swap/models", label: "llama-swap models" },
-  { active: route._tag === "SystemOperator", dataNav: "system-operator", href: "/system/operator", label: "Operator" },
-  { active: route._tag === "SystemExtensions", dataNav: "system-extensions", href: "/system/extensions", label: "Extensions" },
-  { active: route._tag === "Models", dataNav: "models", href: "/models", label: "Models" },
-  {
-    active: route._tag === "ModelsRoles",
-    dataNav: "models-roles",
-    href: "/models/roles",
-    label: "Model roles",
+    href: "/learning",
+    label: "Learning",
+    nav: "learning",
+    tags: ["Learning", "LearningConfiguration", "LearningPacks", "LearningDecisions", "LearningEvidence", "LearningHistory"],
   },
 ];
 
-const navGroup = (item: ShellNavItem): string => {
-  const nav = item.dataNav ?? "";
-  if (["index", "diagnostics", "observability"].includes(nav)) return "Overview";
-  if (["requests", "store-receipts", "queues", "observe-activity", "observe-logs", "observe-routing", "local-logs"].includes(nav)) return "Observe";
-  if (["router", "router-candidates", "router-decisions", "providers", "endpoints", "control-controller"].includes(nav)) return "Router";
-  if (["local-peers", "local-swap", "system-peers", "runtime", "session-readiness", "dashboard"].includes(nav)) return "System";
-  if (["studio"].includes(nav)) return "Studio";
-  if (["learning"].includes(nav)) return "Learning";
-  if (["models"].includes(nav)) return "Models";
-  return "Other";
-};
+/** Reference page titles (design-system.ts createRoute title fields). */
+const shellPageTitle = (route: Model["route"]): string =>
+  AppRoute.match(route, {
+    Diagnostics: () => "Diagnostics",
+    Index: () => "Runtime overview",
+    Observability: () => "Observability snapshot",
+    StoreReceipts: () => "Store degradation receipts",
+    Queues: () => "Queues",
+    LocalLogs: () => "llama-swap logs",
+    RouterCandidates: () => "Router candidates",
+    Requests: () => "Requests",
+    RequestDetail: () => "Request detail",
+    RouterDecisions: () => "Router decisions",
+    RouterDecisionDetail: () => "Decision receipt",
+    LocalPeers: () => "Local peers",
+    SystemPeers: () => "System peers",
+    LocalPeerModels: () => "Peer models",
+    QueuesConfiguration: () => "Queue configuration",
+    IntegrationsDownstream: () => "Downstream integration",
+    IntegrationsUpstream: () => "Upstream integration",
+    LocalChoose: () => "Choose local backend",
+    Studio: () => "Studio",
+    Learning: () => "Learning overview",
+    LearningConfiguration: () => "Learning configuration",
+    LearningPacks: () => "Learned packs",
+    LearningDecisions: () => "Decision receipts",
+    LearningEvidence: () => "Cohort evidence",
+    LearningHistory: () => "Learning history",
+    LocalLlamaSwapModels: () => "llama-swap models",
+    LocalPolicy: () => "Local policy",
+    SystemOperator: () => "Operator",
+    SystemExtensions: () => "Extensions",
+    Models: () => "Models",
+    ModelsRoles: () => "Model roles",
+    Benchmark: () => "Benchmark",
+    StorageRetention: () => "Storage & retention",
+    Runtime: () => "Runtime",
+    SessionReadiness: () => "Session readiness",
+    Dashboard: () => "Dashboard",
+    LocalSwap: () => "Swap",
+    RouterStrategy: () => "Routing strategy",
+    RouterWorkloads: () => "Workloads",
+    RouterConfig: () => "Runtime config",
+    RouterAgentStrategy: () => "Agent strategy",
+    ObserveActivity: () => "Activity",
+    ObserveLogs: () => "Logs",
+    ObserveRouting: () => "Observing",
+    Router: () => "Routing overview",
+    Providers: () => "Providers",
+    Endpoints: () => "Endpoints",
+    ControlController: () => "Controller",
+    NotFound: ({ path }) => "Not found: " + path,
+  });
+
+const shellSectionFor = (route: Model["route"]): ShellSection =>
+  shellSections.find((section) => section.tags.includes(route._tag)) ?? shellSections[0]!;
+
+const shellNavLinkClass = (active: boolean): string =>
+  active
+    ? "flex items-center rounded-md bg-sidebar-active px-2.5 py-1.5 text-left font-sans text-sm leading-5 font-medium text-foreground"
+    : "flex items-center rounded-md px-2.5 py-1.5 text-left font-sans text-sm leading-5 font-normal text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground";
+
 const shellNav = (route: Model["route"], label: string, h: HtmlBuilder<Message>): Html => {
-  const groups = new Map<string, ShellNavItem[]>();
-  for (const item of shellNavItems(route)) {
-    const group = navGroup(item);
-    groups.set(group, [...(groups.get(group) ?? []), item]);
-  }
+  const active = shellSectionFor(route).nav;
   return h.nav(
-    [h.AriaLabel(label), h.DataAttribute("shell-nav", "")],
-    [...groups.entries()].map(([group, items]) =>
-      h.section([h.DataAttribute("nav-group", group), h.Class("pb-2")], [
-        h.p([h.Class("px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--rm-muted)]")], [group]),
-        h.ul(
-          [h.Class("flex flex-col gap-0.5")],
-          items.map((item) =>
-            h.li([], [
-              h.a(
-                [
-                  h.Href(item.href ?? "/"),
-                  ...(item.dataNav === undefined ? [] : [h.DataAttribute("nav", item.dataNav)]),
-                  ...(item.active ? [h.AriaCurrent("page")] : []),
-                  h.DataAttribute("nav-state", item.active ? "active" : "available"),
-                  h.Class(
-                    `flex min-h-8 items-center rounded-[8px] px-2.5 text-[13px] ${focusRingClass} ${
-                      item.active
-                        ? "bg-[var(--rm-panel)] font-medium text-[var(--rm-fg)]"
-                        : "text-[var(--rm-secondary)] hover:text-[var(--rm-fg)]"
-                    }`,
-                  ),
-                ],
-                [item.label],
-              ),
-            ]),
-          ),
-        ),
-      ]),
+    [
+      h.AriaLabel(label),
+      h.DataAttribute("shell-nav", ""),
+      h.Class("flex min-h-0 flex-1 flex-col gap-px overflow-hidden p-2"),
+    ],
+    shellSections.map((section) =>
+      h.a(
+        [
+          h.Href(section.href),
+          h.DataAttribute("nav", section.nav),
+          ...(section.nav === active
+            ? [h.DataAttribute("active", "true"), h.AriaCurrent("page")]
+            : []),
+          h.Class(shellNavLinkClass(section.nav === active)),
+        ],
+        [section.label],
+      ),
     ),
   );
 };
+
+const eyebrowClass =
+  "font-mono text-[11px] leading-4 tracking-[0.08em] text-muted-foreground uppercase";
+
+/** Sidebar inventory rows: configured models (label + live request count from telemetry). */
+const sidebarInventoryRows = (
+  model: Model,
+): ReadonlyArray<{ readonly label: string; readonly count: number }> => {
+  const counts = new Map<string, number>();
+  const metricsRow = model.readbacks.overviewMetrics.rows[0];
+  if (metricsRow !== undefined) {
+    try {
+      const parsed = JSON.parse(metricsRow.meta) as {
+        items?: ReadonlyArray<{ modelId?: unknown }>;
+      };
+      for (const item of parsed.items ?? []) {
+        const id = typeof item.modelId === "string" ? item.modelId : undefined;
+        if (id !== undefined) {
+          counts.set(id, (counts.get(id) ?? 0) + 1);
+        }
+      }
+    } catch {
+      // A malformed telemetry payload leaves every row at zero requests.
+    }
+  }
+  return model.readbacks.models.rows.slice(0, 8).map((entry) => {
+    let id = entry.id;
+    try {
+      const meta = JSON.parse(entry.meta) as { id?: unknown };
+      if (typeof meta.id === "string") {
+        id = meta.id;
+      }
+    } catch {
+      // Non-JSON meta keeps the readback row id.
+    }
+    return { label: entry.label, count: counts.get(id) ?? counts.get(entry.id) ?? 0 };
+  });
+};
+
+const sidebarCacheState = (
+  model: Model,
+): { readonly label: string; readonly percent: number | null } => {
+  const requests = Number(railValue(model.readbacks.dashboard, "Requests"));
+  const cached = Number(railValue(model.readbacks.dashboard, "Cached requests"));
+  const sampled =
+    model.readbacks.dashboard.status === "ok" &&
+    Number.isFinite(requests) &&
+    requests > 0 &&
+    Number.isFinite(cached);
+  return sampled
+    ? {
+        label: String(Math.round((cached / requests) * 100)) + "%",
+        percent: Math.round((cached / requests) * 100),
+      }
+    : { label: "no live samples", percent: null };
+};
+
+const sidebarRouterAlias = (model: Model): string => {
+  const row =
+    model.readbacks.router.rows.find((entry) => entry.label === "alias") ??
+    model.readbacks.router.rows.find((entry) => entry.label === "activeAlias");
+  return row?.value ?? "—";
+};
+
+const sidebarRouterEndpoint = (model: Model): string => {
+  const endpointRow = model.readbacks.health.rows.find((entry) => entry.label === "Endpoint")?.value;
+  if (typeof window === "undefined") {
+    return endpointRow ?? "—";
+  }
+  return endpointRow !== undefined && endpointRow.startsWith("http")
+    ? new URL(window.location.origin).origin + "/v1"
+    : new URL(window.location.origin).origin + "/v1";
+};
+
+const sidebarFooter = (model: Model, h: HtmlBuilder<Message>): Html => {
+  const rows = sidebarInventoryRows(model);
+  const cache = sidebarCacheState(model);
+  return h.div(
+    [h.DataAttribute("slot", "role-model-sidebar-footer"), h.Class("flex shrink-0 flex-col")],
+    [
+      h.div(
+        [h.DataAttribute("slot", "role-model-model-inventory"), h.Class("flex shrink-0 flex-col gap-1 border-t border-sidebar-border p-2")],
+        [
+          h.div(
+            [h.Class("flex h-6 w-full shrink-0 items-center justify-between px-2.5")],
+            [h.span([h.Class(eyebrowClass)], ["Models"]), h.span([h.Class(eyebrowClass + " text-right")], ["Requests"])],
+          ),
+          ...rows.map((row) =>
+            h.div(
+              [h.Class("flex h-8 shrink-0 items-center gap-2 rounded-md px-2.5")],
+              [
+                h.span([h.Attribute("aria-hidden", "true"), h.Class("size-2 shrink-0 rounded-full bg-chart-cache")], []),
+                h.span([h.Class("min-w-0 flex-1 truncate font-mono text-xs leading-4 text-foreground")], [row.label]),
+                h.span([h.Class("shrink-0 text-right font-mono text-[11px] leading-4 text-muted-foreground tabular-nums")], [String(row.count)]),
+              ],
+            ),
+          ),
+        ],
+      ),
+      h.div(
+        [h.DataAttribute("slot", "role-model-cache"), h.Class("flex shrink-0 flex-col gap-1.5 border-t border-sidebar-border p-2")],
+        [
+          h.div(
+            [h.Class("flex h-6 shrink-0 items-center justify-between gap-2 px-2.5")],
+            [h.span([h.Class(eyebrowClass)], ["Cache"]), h.span([h.Class("shrink-0 text-right font-mono text-[11px] leading-4 text-foreground tabular-nums")], [cache.label])],
+          ),
+          h.div(
+            [h.Class("mx-2.5 mb-1 flex h-1.5 shrink-0 items-center overflow-hidden rounded-full bg-border")],
+            cache.percent === null
+              ? []
+              : [h.div([h.Class("h-full shrink-0 rounded-full bg-chart-cache"), h.Attribute("style", "width: " + String(cache.percent) + "%")], [])],
+          ),
+        ],
+      ),
+      h.div(
+        [h.DataAttribute("slot", "role-model-router-endpoint"), h.Class("flex shrink-0 flex-col gap-1 border-t border-sidebar-border p-2")],
+        [
+          h.div([h.Class("flex h-6 shrink-0 items-center px-2.5")], [h.span([h.Class(eyebrowClass)], ["Router endpoint"])]),
+          h.div([h.Class("flex min-h-5 items-center overflow-hidden px-2.5")], [h.span([h.Class("truncate font-mono text-xs leading-4 text-foreground")], [sidebarRouterEndpoint(model)])]),
+          h.div([h.Class("flex min-h-5 items-center overflow-hidden px-2.5 pb-1")], [h.span([h.Class("truncate font-mono text-xs leading-4 text-muted-foreground")], [sidebarRouterAlias(model)])]),
+        ],
+      ),
+    ],
+  );
+};
+
+const sunIcon = (h: HtmlBuilder<Message>): Html =>
+  h.svg([h.Attribute("viewBox", "0 0 24 24"), h.Attribute("fill", "none"), h.Attribute("width", "16"), h.Attribute("height", "16"), h.Attribute("aria-hidden", "true")], [
+    h.circle([h.Attribute("cx", "12"), h.Attribute("cy", "12"), h.Attribute("r", "4"), h.Attribute("stroke", "currentColor"), h.Attribute("stroke-width", "1.5")], []),
+    h.path([h.Attribute("d", "M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"), h.Attribute("stroke", "currentColor"), h.Attribute("stroke-width", "1.5"), h.Attribute("stroke-linecap", "round")], []),
+  ]);
+
+const moonIcon = (h: HtmlBuilder<Message>): Html =>
+  h.svg([h.Attribute("viewBox", "0 0 24 24"), h.Attribute("fill", "none"), h.Attribute("width", "16"), h.Attribute("height", "16"), h.Attribute("aria-hidden", "true")], [
+    h.path([h.Attribute("d", "M21 14.3A9 9 0 1 1 9.7 3 7 7 0 0 0 21 14.3z"), h.Attribute("stroke", "currentColor"), h.Attribute("stroke-width", "1.5"), h.Attribute("stroke-linecap", "round"), h.Attribute("stroke-linejoin", "round")], []),
+  ]);
 
 const diagnosticsToneClass = (snapshot: DiagnosticsSnapshot): string => {
   switch (snapshot.status) {
@@ -589,7 +682,7 @@ const observabilityPage = (state: ObservabilityState, h: HtmlBuilder<Message>): 
   })();
   return h.section(
     [
-      h.Class("rm3-next-route mt-4"),
+      h.Class("rm3-next-route"),
       h.DataAttribute("route", "observability"),
       h.DataAttribute("observability-state", state.status),
       h.DataAttribute("state", state.status),
@@ -696,35 +789,69 @@ const overviewPage = (
   chartInteraction: ChartInteractionState | undefined = undefined,
 ): Html => {
   const period = windowLabel(windowMs);
+  const filterFieldClass = "flex shrink-0 flex-col gap-1.5";
+  const filterLabelClass = "font-sans text-xs font-normal leading-4 text-muted-foreground";
+  const filterControlClass =
+    "flex h-[34px] items-center justify-between gap-2 rounded-md border border-input bg-secondary px-2.5 text-left font-sans text-sm text-foreground";
   const filterSelect = (
     label: string,
     filter: "source" | "status" | "difficulty" | "breakdown",
     value: string,
     options: readonly string[],
     labelFor: (option: string) => string,
-  ) => h.label([h.Class("flex flex-col gap-1 text-[11px] text-[var(--rm-secondary)]")], [h.span([h.Class("uppercase tracking-[0.12em] text-[var(--rm-muted)]")], [label]), h.select([h.Class("min-h-8 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] px-2 text-[12px] text-[var(--rm-fg)]"), h.DataAttribute("overview-filter", filter), h.AriaLabel(label), h.OnChange((next) => Message.OverviewFilterChanged({ filter, value: next }))], options.map((option) => h.option([h.Value(option), ...(option === value ? [h.Selected(true)] : [])], [labelFor(option)])))]);
-  const filters = h.div([h.Class("mt-4 flex flex-wrap items-center gap-2"), h.DataAttribute("overview-filters", "")], [
-    h.span([h.Class("text-[11px] uppercase tracking-[0.12em] text-[var(--rm-muted)]")], ["Time range"]),
-    ...WINDOW_OPTIONS.map((option) => h.button([
-      h.Type("button"), h.AriaPressed(String(option.windowMs === windowMs)), h.DataAttribute("window", option.label),
-      h.Class("min-h-8 rounded-[var(--rm-radius-field)] border px-2.5 text-[12px] " + (option.windowMs === windowMs ? "border-[var(--rm-border)] bg-[var(--rm-panel)] text-[var(--rm-fg)]" : "border-transparent text-[var(--rm-secondary)]")),
-      h.OnClick(Message.SelectedOverviewWindow({ windowMs: option.windowMs })),
-    ], [option.label])),
-  ]);
+  ) =>
+    h.label([h.Class(filterFieldClass)], [
+      h.span([h.Class(filterLabelClass)], [label]),
+      h.select(
+        [
+          h.Class(filterControlClass),
+          h.DataAttribute("overview-filter", filter),
+          h.AriaLabel(label),
+          h.OnChange((next) => Message.OverviewFilterChanged({ filter, value: next })),
+        ],
+        options.map((option) => h.option([h.Value(option), ...(option === value ? [h.Selected(true)] : [])], [labelFor(option)])),
+      ),
+    ]);
   const breakdownValues = appliedFilters.breakdown === "all" ? [] : candidates.rows.flatMap((entry) => { try { const meta = JSON.parse(entry.meta) as { endpointId?: unknown; modelId?: unknown; providerId?: unknown }; const raw = appliedFilters.breakdown === "endpoint" ? meta.endpointId : appliedFilters.breakdown === "provider" ? meta.providerId : meta.modelId; return typeof raw === "string" && raw.length > 0 ? [raw] : []; } catch { return []; } });
-  const advancedFilters = h.div([h.Class("mt-2 flex flex-wrap items-end gap-2"), h.DataAttribute("overview-filter-row", "")], [
-    filterSelect("Breakdown", "breakdown", appliedFilters.breakdown, [...OVERVIEW_BREAKDOWNS], (option) => option === "all" ? "Total" : option === "endpoint" ? "By endpoint variant" : option === "model" ? "By upstream model" : "By provider"),
-    ...(appliedFilters.breakdown === "all" ? [] : [h.label([h.Class("flex flex-col gap-1 text-[11px] text-[var(--rm-secondary)]")], [h.span([h.Class("uppercase tracking-[0.12em] text-[var(--rm-muted)]")], [appliedFilters.breakdown]), h.select([h.Class("min-h-8 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] px-2 text-[12px] text-[var(--rm-fg)]"), h.DataAttribute("overview-filter-value", ""), h.AriaLabel("Breakdown value"), h.OnChange((next) => Message.OverviewFilterChanged({ filter: "breakdownValue", value: next }))], breakdownValues.map((option) => h.option([h.Value(option), ...(option === appliedFilters.breakdownValue ? [h.Selected(true)] : [])], [option])))])]),
-    filterSelect("Source filter", "source", appliedFilters.source, [...OVERVIEW_SOURCES], (option) => option === "all" ? "All sources" : option === "local" ? "Local only" : "Remote only"),
-    filterSelect("Status", "status", appliedFilters.status, [...OVERVIEW_STATUSES], (option) => option === "all" ? "All statuses" : option === "success" ? "Success only" : option === "failure" ? "Failure only" : "Unknown only"),
-    filterSelect("Difficulty", "difficulty", appliedFilters.difficulty, [...OVERVIEW_DIFFICULTIES], (option) => option === "all" ? "All buckets" : option === "easy" ? "Easy only" : option === "medium" ? "Medium only" : "Hard only"),
-  ]);
-  const header = h.div([], [
-    h.p([h.Class("text-[12px] text-[var(--rm-secondary)]"), h.DataAttribute("overview-period", period)], ["Last " + period]),
-    filters,
-    advancedFilters,
-    h.p([h.Class("mt-2 text-[11px] text-[var(--rm-secondary)]"), h.DataAttribute("overview-summary", "")], [overviewSummary(appliedFilters)]),
-  ]);
+  const filterButtonClass = (active: boolean): string =>
+    "flex h-7 shrink-0 items-center justify-center whitespace-nowrap rounded-[5px] px-2.5 font-sans text-sm leading-[18px] " +
+    (active ? "bg-primary font-semibold text-primary-foreground" : "font-normal text-muted-foreground hover:text-foreground");
+  const header = h.div(
+    [h.Class("flex w-full flex-wrap items-end justify-between gap-4"), h.DataAttribute("overview-filters", "")],
+    [
+      h.div([h.Class(filterFieldClass)], [
+        h.div([h.Class(filterLabelClass)], ["Time range"]),
+        h.div(
+          [
+            h.Class("flex h-9 w-fit shrink-0 items-center gap-1 rounded-md border border-border bg-secondary p-1"),
+            h.Attribute("role", "group"),
+            h.AriaLabel("Time range"),
+          ],
+          WINDOW_OPTIONS.map((option) =>
+            h.button(
+              [
+                h.Type("button"),
+                h.AriaPressed(String(option.windowMs === windowMs)),
+                h.DataAttribute("window", option.label),
+                h.Class(filterButtonClass(option.windowMs === windowMs)),
+                h.OnClick(Message.SelectedOverviewWindow({ windowMs: option.windowMs })),
+              ],
+              [option.label],
+            ),
+          ),
+        ),
+      ]),
+      h.div([h.Class("flex flex-wrap items-end gap-3"), h.DataAttribute("overview-filter-row", "")], [
+        filterSelect("Breakdown", "breakdown", appliedFilters.breakdown, [...OVERVIEW_BREAKDOWNS], (option) => option === "all" ? "Total" : option === "endpoint" ? "By endpoint variant" : option === "model" ? "By upstream model" : "By provider"),
+        ...(appliedFilters.breakdown === "all" ? [] : [h.label([h.Class(filterFieldClass)], [h.span([h.Class(filterLabelClass)], ["Breakdown value"]), h.select([h.Class(filterControlClass), h.DataAttribute("overview-filter-value", ""), h.AriaLabel("Breakdown value"), h.OnChange((next) => Message.OverviewFilterChanged({ filter: "breakdownValue", value: next }))], breakdownValues.map((option) => h.option([h.Value(option), ...(option === appliedFilters.breakdownValue ? [h.Selected(true)] : [])], [option])))])]),
+        filterSelect("Source filter", "source", appliedFilters.source, [...OVERVIEW_SOURCES], (option) => option === "all" ? "All sources" : option === "local" ? "Local only" : "Remote only"),
+        filterSelect("Status", "status", appliedFilters.status, [...OVERVIEW_STATUSES], (option) => option === "all" ? "All statuses" : option === "success" ? "Success only" : option === "failure" ? "Failure only" : "Unknown only"),
+        filterSelect("Difficulty", "difficulty", appliedFilters.difficulty, [...OVERVIEW_DIFFICULTIES], (option) => option === "all" ? "All buckets" : option === "easy" ? "Easy only" : option === "medium" ? "Medium only" : "Hard only"),
+        h.p([h.Class("sr-only"), h.DataAttribute("overview-summary", "")], [overviewSummary(appliedFilters)]),
+        h.p([h.Class("sr-only"), h.DataAttribute("overview-period", period)], ["Last " + period]),
+      ]),
+    ],
+  );
   const { buckets } = bucketsFor(state, windowMs);
   const itemCount = state.rows.reduce((sum, entry) => { try { const meta = JSON.parse(entry.meta) as { items?: unknown }; return sum + (Array.isArray(meta.items) ? meta.items.length : 0); } catch { return sum; } }, 0);
   const chartState: "empty" | "error" | "loading" | "ready" =
@@ -732,39 +859,38 @@ const overviewPage = (
   const hasData = chartState === "ready";
   const labels = buckets.length === 0 ? ["No data"] : buckets.map((bucket) => bucket.label);
   const emptyPoints = (): ReadonlyArray<{ readonly label: string; readonly value: null }> => labels.map((label) => ({ label, value: null }));
-  const charts = h.div([h.Class("mt-6 grid gap-4"), h.DataAttribute("overview-charts", ""), h.DataAttribute("overview-window", period), h.DataAttribute("overview-buckets", String(buckets.filter((bucket) => !bucket.empty).length)), h.DataAttribute("overview-items", String(itemCount)), h.DataAttribute("overview-labels", String(buckets.length))], [
-    candidateSpaceCard(candidates, h),
-    telemetryChartCard({ description: "Input, output, and total token flow across the selected telemetry window.", emptyMessage: "No token-bearing requests have been recorded yet.", hasData, h, kind: "area", series: [
+  const charts = h.div([h.Class("grid w-full grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border md:grid-cols-2"), h.DataAttribute("overview-charts", ""), h.DataAttribute("overview-window", period), h.DataAttribute("overview-buckets", String(buckets.filter((bucket) => !bucket.empty).length)), h.DataAttribute("overview-items", String(itemCount)), h.DataAttribute("overview-labels", String(buckets.length))], [
+    h.div([h.Class("min-w-0 bg-card col-span-1 md:col-span-2")], [candidateSpaceCard(candidates, h)]),
+    h.div([h.Class("min-w-0 bg-card col-span-1 md:col-span-2")], [telemetryChartCard({ description: "Input, output, and total token flow across the selected telemetry window.", emptyMessage: "No token-bearing requests have been recorded yet.", hasData, h, kind: "area", series: [
       { id: "inputTokens", label: "Input tokens", points: emptyPoints() },
       { id: "outputTokens", label: "Output tokens", points: emptyPoints() },
       { id: "totalTokens", label: "Total tokens", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.tokens })) },
-    ], state: chartState, title: "Token usage over time" }),
-    telemetryChartCard({ description: "Cache-hit token volume and cache-hit rate.", emptyMessage: "No cache activity has been recorded for this slice yet.", hasData, h, kind: "line", series: [
+    ], state: chartState, title: "Token usage over time" })]),
+    h.div([h.Class("min-w-0 bg-card col-span-1 md:col-span-2")], [telemetryChartCard({ description: "Cache-hit token volume and cache-hit rate.", emptyMessage: "No cache activity has been recorded for this slice yet.", hasData, h, kind: "line", series: [
       { id: "cacheHitTokens", label: "Cache hit tokens", points: emptyPoints() },
       { id: "cacheHitTokenRate", label: "Cache hit token rate", points: emptyPoints() },
-    ], state: chartState, title: "Cache efficiency trend" }),
-    telemetryChartCard({ description: "Authoritative effective cost based on stored request-time pricing facts.", emptyMessage: "No request costs have been recorded for this slice yet.", hasData, h, kind: "line", series: [
+    ], state: chartState, title: "Cache efficiency trend" })]),
+    h.div([h.Class("min-w-0 bg-card col-span-1")], [telemetryChartCard({ description: "Authoritative effective cost based on stored request-time pricing facts.", emptyMessage: "No request costs have been recorded for this slice yet.", hasData, h, kind: "line", series: [
       { id: "actualCostUsd", label: "Actual cost", points: emptyPoints() },
       { id: "estimatedCostUsd", label: "Estimated cost", points: emptyPoints() },
       { id: "effectiveCostUsd", label: "Effective cost", points: emptyPoints() },
-    ], state: chartState, title: "Effective cost over time" }),
-    telemetryChartCard({ description: "Routing-avoided cost, cache-avoided cost, and total avoided spend.", emptyMessage: "No routing or cache savings have been recorded yet.", hasData, h, kind: "area", series: [
+    ], state: chartState, title: "Effective cost over time" })]),
+    h.div([h.Class("min-w-0 bg-card col-span-1")], [telemetryChartCard({ description: "Routing-avoided cost, cache-avoided cost, and total avoided spend.", emptyMessage: "No routing or cache savings have been recorded yet.", hasData, h, kind: "area", series: [
       { id: "routingCostSavingsUsd", label: "Routing avoided cost", points: emptyPoints() },
       { id: "cacheCostSavingsUsd", label: "Cache avoided cost", points: emptyPoints() },
       { id: "totalAvoidedCostUsd", label: "Total avoided cost", points: emptyPoints() },
-    ], state: chartState, title: "Cost avoided over time" }),
-    telemetryChartCard({ description: "Average and p95 latency across the selected window.", emptyMessage: "Latency telemetry has not been recorded for this slice yet.", hasData, h, kind: "line", series: [
+    ], state: chartState, title: "Cost avoided over time" })]),
+    h.div([h.Class("min-w-0 bg-card col-span-1")], [telemetryChartCard({ description: "Average and p95 latency across the selected window.", emptyMessage: "Latency telemetry has not been recorded for this slice yet.", hasData, h, kind: "line", series: [
       { id: "averageLatencyMs", label: "Average latency", points: buckets.length === 0 ? emptyPoints() : buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.avg })) },
       { id: "p95LatencyMs", label: "p95 latency", points: buckets.length === 0 ? emptyPoints() : buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.p95 })) },
-    ], state: chartState, title: "Latency trend" }),
-    telemetryChartCard({ description: "Successful and failed request volume by time bucket.", emptyMessage: "No successful or failed requests have been recorded yet.", hasData, h, kind: "bar", series: [
+    ], state: chartState, title: "Latency trend" })]),
+    h.div([h.Class("min-w-0 bg-card col-span-1")], [telemetryChartCard({ description: "Successful and failed request volume by time bucket.", emptyMessage: "No successful or failed requests have been recorded yet.", hasData, h, kind: "bar", series: [
       { id: "successCount", label: "Success", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.success })) },
       { id: "failureCount", label: "Failures", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.failure })) },
-    ], state: chartState, title: "Success vs failure volume" }),
+    ], state: chartState, title: "Success vs failure volume" })]),
   ]);
-  return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard"), h.DataAttribute("overview-state", chartState === "ready" ? "success" : chartState), h.DataAttribute("readback-state", state.status === "ok" ? "ok" : state.status)], [
+  return h.section([h.Class("rm3-next-route"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard"), h.DataAttribute("overview-state", chartState === "ready" ? "success" : chartState), h.DataAttribute("readback-state", state.status === "ok" ? "ok" : state.status)], [
     header,
-    overviewStats({ cacheHitRate: "—", h, models: candidates.rows.length, requests: state.rows.length, routerEndpoint: "—" }),
     state.status === "loading" ? h.p([h.AriaBusy(true), h.DataAttribute("overview-state", "loading")], ["Loading telemetry…"]) : state.status === "error" ? h.p([h.Role("alert"), h.DataAttribute("overview-state", "error")], [state.message ?? "Telemetry read failed"]) : null,
     charts,
   ]);
@@ -811,30 +937,36 @@ const studioPage = (state: StudioState, h: HtmlBuilder<Message>, configuredModel
         : state.tab === "advanced"
           ? { title: "Response workspace", inventory: "REQUEST TEMPLATE", empty: "{\"model\": \"deepseek.personal.deepseek-api-key.global.deepseek-flash-high\", \"input\": \"Explain the current contract family.\"}" }
           : { title: "Result workspace", inventory: "RESULT", empty: "No result yet." };
-  return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "studio"), h.DataAttribute("studio-state", state.status)], [
-    h.h2([h.Class("rm3-next-route-title")], ["Studio"]),
-    h.h3([h.Class("mt-2 text-[14px] font-semibold text-[var(--rm-fg)]")], [studioWorkspaceTitle(state.tab)]),
-    familySvg(h),
-    ...studioWorkspaceLabels(state.tab).map((label) => h.p([h.Class("text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]")], [label])),
-    h.h2([h.Class("rm3-next-route-title")], ["Studio"]),
-    h.div([h.Class("mt-2 flex flex-wrap gap-1"), h.DataAttribute("studio-tabs", ""), h.Role("tablist"), h.AriaLabel("Studio tabs")], tabs),
-    h.div([h.Class("mt-4 grid gap-2"), h.Id("studio-panel"), h.Role("tabpanel"), h.AriaLabel(state.tab), h.DataAttribute("studio-form", state.tab)], fields),
-    h.button([h.Type("button"), h.DataAttribute("studio-run", ""), ...(state.status === "loading" ? [h.AriaBusy(true), h.Disabled(true)] : []), h.OnClick(Message.StudioRunRequested({ token: state.token + 1 })), h.Class("mt-3 min-h-8 rounded bg-[var(--rm-accent)] px-3 text-[12px] text-[var(--rm-on-primary)]")], [ctaLabel]),
-    h.div([h.Class("mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] p-3"), h.DataAttribute("studio-result-stage", state.tab)], [
-      h.h3([h.Class("text-[13px] font-semibold")], [resultStage.title]),
-      h.p([h.Class("mt-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]")], [resultStage.inventory]),
-      h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]")], [resultStage.empty]),
-      ...(state.tab === "images" ? [h.p([h.Class("mt-2 text-[11px] font-semibold uppercase tracking-[0.18em]")], ["RAW RESPONSE"]), h.pre([h.Class("mt-1 whitespace-pre-wrap text-[12px]")], ["{ \"status\": \"No image request yet\" }"])] : []),
-      ...(state.tab === "rerank" ? [h.p([h.Class("mt-2 text-[11px] font-semibold uppercase tracking-[0.18em]")], ["CONTRACT DETAILS"]), h.pre([h.Class("mt-1 whitespace-pre-wrap text-[12px]")], ["{ \"status\": \"No rerank request yet\" }"])] : []),
-      ...(state.tab === "advanced" ? [h.p([h.Class("mt-2 text-[11px] font-semibold uppercase tracking-[0.18em]")], ["REQUEST TEMPLATE"]), h.pre([h.Class("mt-1 whitespace-pre-wrap text-[12px]")], ["{ \"model\": \"deepseek.personal.deepseek-api-key.global.deepseek-flash-high\", \"input\": \"Explain the current contract family.\" }"])] : []),
-      ...(state.tab === "audio" ? [h.p([h.Class("mt-2 text-[11px] font-semibold uppercase tracking-[0.18em]")], ["VOICE INVENTORY"]), h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]")], ["Voice inventory is unavailable on this runtime host."])] : []),
+  const workspaceTitle = studioWorkspaceTitle(state.tab);
+  const labels = studioWorkspaceLabels(state.tab);
+  const requestTitle = labels[0] ?? workspaceTitle;
+  const resultTitle = labels[1] ?? "Result workspace";
+  const rawResponse = h.div([h.DataAttribute("studio-response", "")], [
+    h.h2([h.Class("text-[12px] font-semibold uppercase tracking-[0.12em]")], ["RAW RESPONSE"]),
+    state.status === "error"
+      ? h.pre([h.Role("alert"), h.DataAttribute("studio-error", ""), h.Class("mt-2 whitespace-pre-wrap text-[12px] text-[var(--rm-error)]")], [state.message ?? "Request failed", "\n", state.responseText])
+      : h.pre([h.DataAttribute("studio-raw", state.status), h.Class("mt-2 whitespace-pre-wrap text-[12px]")], [state.responseText]),
+  ]);
+  return h.section([h.Class("rm3-next-route mt-4 space-y-6"), h.DataAttribute("route", "studio"), h.DataAttribute("studio-state", state.status), h.DataAttribute("page-layout", "reference")], [
+    h.h3([h.Class("sr-only")], [workspaceTitle]),
+    h.div([h.Class("grid items-start gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]")], [
+      layoutCard(requestTitle, undefined, [
+        h.div([h.Class("mb-4 flex flex-wrap gap-1 rounded-md border border-border bg-secondary p-1"), h.DataAttribute("studio-tabs", ""), h.Role("tablist"), h.AriaLabel("Studio tabs")], tabs),
+        h.div([h.Class("grid gap-2"), h.Id("studio-panel"), h.Role("tabpanel"), h.AriaLabel(state.tab), h.DataAttribute("studio-form", state.tab)], fields),
+        h.button([h.Type("button"), h.DataAttribute("studio-run", ""), ...(state.status === "loading" ? [h.AriaBusy(true), h.Disabled(true)] : []), h.OnClick(Message.StudioRunRequested({ token: state.token + 1 })), h.Class("mt-3 inline-flex h-[34px] items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], [ctaLabel]),
+      ], h),
+      layoutCard(resultTitle, undefined, [
+        h.div([h.DataAttribute("studio-result-stage", state.tab)], [
+          h.p([h.Class("text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground")], [resultStage.inventory]),
+          h.p([h.Class("mt-2 text-sm leading-5 text-muted-foreground")], [resultStage.empty]),
+          ...(state.tab === "images" ? [h.p([h.Class("mt-3 text-[11px] font-semibold uppercase tracking-[0.18em]")], ["RAW RESPONSE"]), h.pre([h.Class("mt-1 whitespace-pre-wrap text-xs")], ["{ \"status\": \"No image request yet\" }"])] : []),
+          ...(state.tab === "rerank" ? [h.p([h.Class("mt-3 text-[11px] font-semibold uppercase tracking-[0.18em]")], ["CONTRACT DETAILS"]), h.pre([h.Class("mt-1 whitespace-pre-wrap text-xs")], ["{ \"status\": \"No rerank request yet\" }"])] : []),
+          ...(state.tab === "advanced" ? [h.p([h.Class("mt-3 text-[11px] font-semibold uppercase tracking-[0.18em]")], ["REQUEST TEMPLATE"]), h.pre([h.Class("mt-1 whitespace-pre-wrap text-xs")], ["{ \"model\": \"deepseek.personal.deepseek-api-key.global.deepseek-flash-high\", \"input\": \"Explain the current contract family.\" }"])] : []),
+          ...(state.tab === "audio" ? [h.p([h.Class("mt-3 text-[11px] font-semibold uppercase tracking-[0.18em]")], ["VOICE INVENTORY"]), h.p([h.Class("mt-1 text-sm leading-5 text-muted-foreground")], ["Voice inventory is unavailable on this runtime host."])] : []),
+        ]),
+      ], h),
     ]),
-    h.div([h.Class("mt-4"), h.DataAttribute("studio-response", "")], [
-      h.h2([h.Class("text-[12px] font-semibold uppercase tracking-[0.12em]")], ["RAW RESPONSE"]),
-      state.status === "error"
-        ? h.pre([h.Role("alert"), h.DataAttribute("studio-error", ""), h.Class("mt-2 whitespace-pre-wrap text-[12px] text-[var(--rm-error)]")], [state.message ?? "Request failed", "\n", state.responseText])
-        : h.pre([h.DataAttribute("studio-raw", state.status), h.Class("mt-2 whitespace-pre-wrap text-[12px]")], [state.responseText]),
-    ]),
+    layoutCard("Raw response", "The request result as returned by the runtime.", [rawResponse], h),
   ]);
 };
 
@@ -853,7 +985,7 @@ const modelsRolesPage = (readbacks: ReadbacksState, h: HtmlBuilder<Message>): Ht
         ? (models.message ?? endpoints.message ?? "Model roles read failed")
         : "No configured models.";
     return h.section(
-      [h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "models-roles"), h.DataAttribute("models-roles-state", state)],
+      [h.Class("rm3-next-route"), h.DataAttribute("route", "models-roles"), h.DataAttribute("models-roles-state", state)],
       [
         h.h2([h.Class("rm3-next-route-title")], ["Model roles"]),
         h.p([], [message]),
@@ -873,7 +1005,7 @@ const modelsRolesPage = (readbacks: ReadbacksState, h: HtmlBuilder<Message>): Ht
     return { id: entry.id, roles };
   });
   return h.section(
-    [h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "models-roles"), h.DataAttribute("models-roles-state", "ok")],
+    [h.Class("rm3-next-route"), h.DataAttribute("route", "models-roles"), h.DataAttribute("models-roles-state", "ok")],
     [
       h.h2([h.Class("rm3-next-route-title")], ["Model roles"]),
       h.p([], ["Read-only role eligibility projection from configured models and endpoint role metadata."]),
@@ -887,9 +1019,9 @@ const modelsRolesPage = (readbacks: ReadbacksState, h: HtmlBuilder<Message>): Ht
 const modelsPage = (readbacks: ReadbacksState, h: HtmlBuilder<Message>): Html => {
   const models = readbacks.configuredModels;
   const endpoints = readbacks.modelEndpoints;
-  if (models.status === "loading" || endpoints.status === "loading") return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "models"), h.DataAttribute("models-state", "loading")], [h.h2([h.Class("rm3-next-route-title text-[16px] font-semibold")], ["Configured models"]), h.p([h.AriaBusy(true)], ["Loading configured models…"])]);
-  if (models.status === "error" || endpoints.status === "error") return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "models"), h.DataAttribute("models-state", "error")], [h.h2([h.Class("rm3-next-route-title text-[16px] font-semibold")], ["Configured models"]), h.p([h.Role("alert")], [models.message ?? endpoints.message ?? "Configured models read failed"])]);
-  if (models.status === "empty" || models.rows.length === 0) return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "models"), h.DataAttribute("models-state", "empty")], [h.h2([h.Class("rm3-next-route-title text-[16px] font-semibold")], ["Configured models"]), h.p([], ["No configured models."])]);
+  if (models.status === "loading" || endpoints.status === "loading") return h.section([h.Class("rm3-next-route"), h.DataAttribute("route", "models"), h.DataAttribute("models-state", "loading")], [h.h2([h.Class("rm3-next-route-title text-[16px] font-semibold")], ["Configured models"]), h.p([h.AriaBusy(true)], ["Loading configured models…"])]);
+  if (models.status === "error" || endpoints.status === "error") return h.section([h.Class("rm3-next-route"), h.DataAttribute("route", "models"), h.DataAttribute("models-state", "error")], [h.h2([h.Class("rm3-next-route-title text-[16px] font-semibold")], ["Configured models"]), h.p([h.Role("alert")], [models.message ?? endpoints.message ?? "Configured models read failed"])]);
+  if (models.status === "empty" || models.rows.length === 0) return h.section([h.Class("rm3-next-route"), h.DataAttribute("route", "models"), h.DataAttribute("models-state", "empty")], [h.h2([h.Class("rm3-next-route-title text-[16px] font-semibold")], ["Configured models"]), h.p([], ["No configured models."])]);
   const endpointRows = endpoints.rows.flatMap((entry) => { try { return [JSON.parse(entry.meta) as { endpointId?: string; healthStatus?: string; modelId?: string; providerAccountId?: string; reasoningEffort?: string | null; reasoningEffortLevels?: string[]; roleIds?: string[]; status?: string }]; } catch { return []; } });
   const rows = models.rows.flatMap((entry) => {
     let meta: { endpointIds?: string[]; contextWindow?: number | null; id?: string; providerId?: string } = {};
@@ -908,14 +1040,14 @@ const modelsPage = (readbacks: ReadbacksState, h: HtmlBuilder<Message>): Html =>
       h.p([h.Class("text-[var(--rm-secondary)]")], ["Roles: " + (roles.length > 0 ? roles.join(", ") : "—")]),
     ])];
   });
-  return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "models"), h.DataAttribute("models-state", "success")], [h.h2([h.Class("rm3-next-route-title text-[16px] font-semibold")], ["Configured models"]), h.ul([h.Class("mt-3 grid gap-2")], rows)]);
+  return h.section([h.Class("rm3-next-route"), h.DataAttribute("route", "models"), h.DataAttribute("models-state", "success")], [h.h2([h.Class("rm3-next-route-title text-[16px] font-semibold")], ["Configured models"]), h.ul([h.Class("mt-3 grid gap-2")], rows)]);
 };
 
 const finalFamilyPage = (label: string, routeName: string, sections: ReadonlyArray<{ label: string; spec: Parameters<typeof renderReadbackPage>[0]; readback: ReadbacksState[keyof ReadbacksState] }>, h: HtmlBuilder<Message>): Html => {
   const first = sections[0];
   const status = first.readback.status === "idle" ? "loading" : first.readback.status;
   return h.section(
-    [h.Class("rm3-next-route mt-4"), h.DataAttribute("route", routeName), h.DataAttribute("final-family-state", status)],
+    [h.Class("rm3-next-route"), h.DataAttribute("route", routeName), h.DataAttribute("final-family-state", status)],
     [
       h.h2([h.Class("rm3-next-route-title")], [label]),
       ...sections.flatMap((section) => [h.h3([], [section.label]), renderReadbackPage(section.spec, section.readback, h)]),
@@ -925,12 +1057,12 @@ const finalFamilyPage = (label: string, routeName: string, sections: ReadonlyArr
 const learningFamilyPage = (label: string, routeName: string, spec: Parameters<typeof renderReadbackPage>[0], readback: ReadbacksState[keyof ReadbacksState], h: HtmlBuilder<Message>): Html => {
   const status = readback.status === "idle" ? "loading" : readback.status;
   return h.section(
-    [h.Class("rm3-next-route mt-4"), h.DataAttribute("route", routeName), h.DataAttribute("learning-family-state", status)],
+    [h.Class("rm3-next-route"), h.DataAttribute("route", routeName), h.DataAttribute("learning-family-state", status)],
     [h.h2([h.Class("rm3-next-route-title")], [label]), renderReadbackPage(spec, readback, h)],
   );
 };
 const learningPage = (readbacks: ReadbacksState, learningRanking: LearningRankingState | undefined, h: HtmlBuilder<Message>): Html =>
-  h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "learning")], [
+  h.section([h.Class("rm3-next-route"), h.DataAttribute("route", "learning")], [
     h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]")], ["Knowledge worker, replay jobs and evaluation jobs. Empty means the capability is available but no work exists."]),
     renderReadbackPage(READBACK_SPECS.learning, readbacks.learning, h),
     h.h3([h.Class("mt-6 text-[14px] font-semibold")], ["Endpoint ladder ranking"]),
@@ -945,7 +1077,7 @@ const runtimeConfigPage = (state: Model["runtimeConfigEditor"], configReadback: 
   if (meta !== undefined) { try { const parsed = JSON.parse(meta) as { config?: unknown }; if (parsed.config !== null && typeof parsed.config === "object") snapshotText = JSON.stringify(parsed.config, null, 2); } catch { snapshotText = "{}"; } }
   const editor = state ?? { diff: [], originalText: snapshotText, status: "not-loaded" as const, text: snapshotText, token: 0 };
   const loaded = editor.status !== "not-loaded" && editor.status !== "loading";
-  return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "runtime-config")], [
+  return h.section([h.Class("rm3-next-route"), h.DataAttribute("route", "runtime-config")], [
     renderReadbackPage(READBACK_SPECS.runtime, runtimeReadback, h),
     h.h2([h.Class("mt-6 text-[16px] font-semibold")], ["Runtime config"]),
     h.p([h.Class("mt-1 text-[12px] text-[var(--rm-secondary)]")], ["Edit the JSON config, review the changed top-level keys, then confirm. Save sends PUT and re-reads the applied snapshot."]),
@@ -1016,20 +1148,31 @@ const routeContent = (ctx: RouteViewContext): Html => {
     },
     Observability: () => observabilitySnapshotRoute(observability, h),
     StoreReceipts: () => storeDegradationReceiptsRoute(readbacks.storeReceipts, h),
-    Queues: () => queuesSupplement(renderReadbackPage(READBACK_SPECS.queues, readbacks.queues, h), readbacks.queues, h),
-    LocalLogs: () => familyPage("Llama-swap logs", "local-logs", "Rows are parsed into Timestamp, Source, Severity, Request, and message fields so local runtime behavior can be inspected without raw console noise.", [{ label: "Structured local log history", spec: READBACK_SPECS.localLogs, readback: readbacks.localLogs, note: "The ledger is bounded for scanability; parsed rows carry request correlation." }, { label: "Raw log streams", note: "Raw stdout/stderr streams stay in the host log store and are not reconstructed here." }], h),
+    Queues: () => h.div([h.DataAttribute("page-layout", "reference")], [h.h3([h.Class("text-sm font-medium leading-5 text-foreground")], ["Queue state"]), observeQueuesRoute(readbacks.queues, h)]),
+    LocalLogs: () => familyPage("Llama-swap logs", "local-logs", "Rows are parsed into Timestamp, Source, Severity, Request, and message fields so local runtime behavior can be inspected without raw console noise.", [{ label: "Structured local log history", spec: READBACK_SPECS.localLogs, readback: readbacks.localLogs, note: "The ledger is bounded for scanability; parsed rows carry request correlation.", columns: ["Timestamp", "Source", "Severity", "Request", "Message"], rows: (row) => [row.label, row.value, row.meta, "—", "—"] }, { label: "Raw log streams", note: "Raw stdout/stderr streams stay in the host log store and are not reconstructed here." }], h),
     RouterCandidates: () => routerCandidatesPage(readbacks, h),
     Requests: () => telemetryRequestsRoute(readbacks.requests, requestsRanking, requestsRankingMetricListbox, requestsRankingTargetListbox, h),
     RequestDetail: () => renderReadbackPage(READBACK_SPECS.requestDetail, readbacks.requestDetail, h),
     RouterDecisions: () => routerDecisionsPage(readbacks, h),
     RouterDecisionDetail: () =>
       renderReadbackPage(READBACK_SPECS.routerDecisionDetail, readbacks.routerDecisionDetail, h),
-    LocalPeers: () => localPeersSupplement(familyPage("Local endpoints", "local-peers", "role-model probes each server at /v1/models before peer models can be registered.", [{ label: "Endpoint inventory", spec: READBACK_SPECS.localPeers, readback: readbacks.localPeers }, { label: "Add peer endpoint", note: "Register a peer server URL to use peer-backed local models." }], h), readbacks.localPeers, h),
+    LocalPeers: () => familyPage("Local endpoints", "local-peers", "role-model probes each server at /v1/models before peer models can be registered.", [
+      { label: "Local endpoints", note: "role-model probes each server at /v1/models before peer models can be registered. No peer endpoints configured." },
+      { label: "Endpoint inventory", spec: READBACK_SPECS.localPeers, readback: readbacks.localPeers, columns: ["Endpoint", "Status", "Type", "Actions"], rows: (row) => [row.label, row.value, "OpenAI-compatible peer", "—"] },
+      { label: "Add peer endpoint", note: "Base URL of your OpenAI-compatible API (with or without /v1). Optional bearer token if the server requires auth.", children: [
+        h.div([h.Class("grid gap-4 md:grid-cols-[minmax(0,1fr)_320px]")], [
+          h.label([h.Class("flex flex-col gap-1 font-sans text-xs text-muted-foreground")], [h.span([], ["Name"]), h.input([h.Id("peer-endpoint-name"), h.AriaLabel("Name"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm")])]),
+          h.label([h.Class("flex flex-col gap-1 font-sans text-xs text-muted-foreground")], [h.span([], ["Endpoint URL"]), h.input([h.Id("peer-endpoint-url"), h.AriaLabel("Endpoint URL"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm")])]),
+          h.label([h.Class("flex flex-col gap-1 font-sans text-xs text-muted-foreground")], [h.span([], ["Auth token (optional)"]), h.input([h.Id("peer-endpoint-token"), h.Type("password"), h.AriaLabel("Auth token (optional)"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm")])]),
+        ]),
+        h.button([h.Type("button"), h.Class("mt-4 inline-flex h-[34px] items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Add endpoint"]),
+      ] },
+    ], h),
     SystemPeers: () => peersSupplement(familyPage("Peer topology", "system-peers", "Peer-backed model groups observed in the current runtime listing.", [{ label: "Peer inventory", spec: READBACK_SPECS.systemPeers, readback: readbacks.systemPeers }, { label: "Peer config", note: "Proxy targets and auth posture are configured on the host." }, { label: "Contract fields", note: "Peer readback fields: id, url, auth and readiness." }], h), readbacks.systemPeers, h),
-    LocalPeerModels: () => familyPage("Peer models", "local-peer-models", "Models registered behind the local peers.", [{ label: "Registered models", spec: READBACK_SPECS.localPeerModels, readback: readbacks.localPeerModels }], h),
+    LocalPeerModels: () => familyPage("Peer models", "local-peer-models", "Models registered behind the local peers.", [{ label: "Register model", note: "Register a model from a peer endpoint and assign runtime roles." , children: [h.div([h.Class("grid gap-4 md:grid-cols-2")], [h.label([h.Class("flex flex-col gap-1 font-sans text-xs text-muted-foreground")], [h.span([], ["Model ID"]), h.input([h.Id("peer-model-id"), h.AriaLabel("Model ID"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm")])]), h.label([h.Class("flex flex-col gap-1 font-sans text-xs text-muted-foreground")], [h.span([], ["Endpoint"]), h.input([h.Id("peer-model-endpoint"), h.AriaLabel("Endpoint"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm")])])]), h.button([h.Type("button"), h.Class("mt-4 inline-flex h-[34px] items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Register model"])] }, { label: "Registered models", spec: READBACK_SPECS.localPeerModels, readback: readbacks.localPeerModels, columns: ["Model", "Endpoint", "Roles", "Actions"], rows: (row) => [row.label, row.value, row.meta, "—"] }], h),
     QueuesConfiguration: () => renderReadbackPage(READBACK_SPECS.queueConfig, readbacks.queueConfig, h),
-    IntegrationsDownstream: () => renderReadbackPage(READBACK_SPECS.downstreamOpenAI, readbacks.downstreamOpenAI, h),
-    IntegrationsUpstream: () => renderReadbackPage(READBACK_SPECS.integrationProviders, readbacks.integrationProviders, h),
+    IntegrationsDownstream: () => integrationsDownstreamRoute(readbacks.downstreamOpenAI, h),
+    IntegrationsUpstream: () => integrationsUpstreamRoute(readbacks.integrationProviders, h),
     Benchmark: () => benchmarkRoute(readbacks.benchmarkSuite, h),
     StorageRetention: () => familyPage("Storage & retention", "storage-retention", "Physical and logical storage, retention classes and manual pruning.", [{ label: "Logical classes", note: "Logical classes group rows by retention policy." }, { label: "Retention policy", note: "Category totals, receipts and byte counts are reported by the retention readback." }, { label: "Manual pruning", note: "Prune is manual; the host enforces retention records before deletion." }, { label: "Retention transactions", spec: READBACK_SPECS.storageRetention, readback: readbacks.storageRetention }], h),
     Studio: () => studioRoute({ h, readbacks, studio, studioPage }),
@@ -1039,8 +1182,11 @@ const routeContent = (ctx: RouteViewContext): Html => {
     LearningDecisions: () => learningDecisionsPage(readbacks.learningDecisions, h),
     LearningEvidence: () => learningEvidencePage(readbacks.learningEvidence, h),
     LearningHistory: () => learningHistoryPage(readbacks.learningHistory, h),
-    LocalPolicy: () => policySupplement(localPolicyPage(readbacks.localPolicy, h), readbacks.localPolicy, h),
-    LocalLlamaSwapModels: () => llamaModelsSupplement(familyPage("Llama-swap models", "local-llama-swap-models", "Load a runtime-config-declared model, assign route roles, and manage the in-memory llama-swap inventory.", [{ label: "Load model", note: "Model must already be declared in runtime config. Loading triggers the managed swap." }, { label: "Loaded models", spec: READBACK_SPECS.localLlamaSwapModels, readback: readbacks.localLlamaSwapModels }], h), readbacks.localLlamaSwapModels, h),
+    LocalPolicy: () => localPolicyPage(readbacks.localPolicy, h),
+    LocalLlamaSwapModels: () => familyPage("Llama-swap models", "local-llama-swap-models", "Load a runtime-config-declared model, assign route roles, and manage the in-memory llama-swap inventory. Role summary: loaded models and assigned roles.", [
+      { label: "Load model", note: "Model must already be declared in runtime config. Loading triggers the managed swap.", children: [h.div([h.Class("flex flex-wrap items-end gap-3")], [h.label([h.Class("flex flex-col gap-1 font-sans text-xs text-muted-foreground")], [h.span([], ["Model ID"]), h.input([h.Id("llama-model-id"), h.AriaLabel("Model ID"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm")])]), h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Load model"])])] },
+      { label: "Loaded models", spec: READBACK_SPECS.localLlamaSwapModels, readback: readbacks.localLlamaSwapModels, columns: ["Model", "Status", "Roles", "Actions"], rows: (row) => [row.label, row.value, row.meta, "—"] },
+    ], h),
     SystemOperator: () => familyPage("Operator controls", "system-operator", "Inspect bounded replay, evaluation, and shadow-learning state. The access token stays only in this browser component and is never stored.", [{ label: "Operator status", spec: READBACK_SPECS.operatorStatus, readback: readbacks.operatorStatus }, { label: "Trace lineage", spec: READBACK_SPECS.operatorTraceRoots, readback: readbacks.operatorTraceRoots }, { label: "Replay Jobs", spec: READBACK_SPECS.replayJobs, readback: readbacks.replayJobs }, { label: "Evaluation Jobs", spec: READBACK_SPECS.evaluationJobs, readback: readbacks.evaluationJobs }, { label: "Shadow Learning", note: "This page does not enable production learning; shadow-learning actions stay bounded to the readback." }], h),
     SystemExtensions: () => familyPage("Extensions", "system-extensions", "Extension boundary, replay automation, contribution posture and the extension inventory.", [{ label: "Extension boundary", note: "The host enforces the extension boundary before any extension code runs." }, { label: "Replay automation", note: "Replay automation is configured per extension and reported by the host." }, { label: "Contribution posture", note: "Contribution posture records whether an extension may contribute runtime behavior." }, { label: "Recommendation ledger", note: "Recommendation receipts are recorded in the ledger when an extension produces one." }, { label: "Extension inventory", spec: READBACK_SPECS.extensions, readback: readbacks.extensions }], h),
     Models: () => modelsRoute(readbacks.configuredModels, readbacks.modelEndpoints, h),
@@ -1053,7 +1199,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     Runtime: () => runtimeSupplement(runtimeRoute({ h, readbacks, runtimeConfigEditor, runtimeConfigPage }), readbacks.runtime, h),
     SessionReadiness: () => sessionSupplement(renderReadbackPage(READBACK_SPECS.sessionReadiness, readbacks.sessionReadiness, h), readbacks.sessionReadiness, h),
     Dashboard: () => renderReadbackPage(READBACK_SPECS.dashboard, readbacks.dashboard, h),
-    LocalSwap: () => swapSupplement(familyPage("Llama-swap swap history", "local-swap", "Most recent swap events first.", [{ label: "Event ledger", spec: READBACK_SPECS.localSwap, readback: readbacks.localSwap }, { label: "Ledger semantics", note: "Initial load · Swap reason · Timeline order: events appear when the managed host loads a first model, swaps to a new one, or records the operator-visible reason." }], h), readbacks.localSwap, h),
+    LocalSwap: () => familyPage("Llama-swap swap history", "local-swap", "Most recent swap events first.", [{ label: "Event ledger", spec: READBACK_SPECS.localSwap, readback: readbacks.localSwap, columns: ["Time", "Event", "Model", "Reason"], rows: (row) => [row.label, row.value, row.meta, "—"] }, { label: "Ledger semantics", note: "Initial load · Swap reason · Timeline order: events appear when the managed host loads a first model, swaps to a new one, or records the operator-visible reason." }], h),
     ObserveActivity: () => observeActivityRoute(readbacks.observeActivity, h),
     ObserveLogs: () => observeLogsRoute(readbacks.observeLogs, h),
     ObserveRouting: () => observeRoutingRoute(readbacks.observeRouting, h),
@@ -1066,7 +1212,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
       const { path } = route;
       return h.section(
         [
-          h.Class("rm3-next-route mt-4"),
+          h.Class("rm3-next-route"),
           h.DataAttribute("route", "not-found"),
           h.DataAttribute("state", "error"),
           h.Role("alert"),
@@ -1118,63 +1264,11 @@ const railRow = (label: string, value: string | null, reason: string, h: HtmlBui
   );
 const railValue = (state: Model["readbacks"]["dashboard"], label: string): string | null =>
   state.rows.find((entry) => entry.label === label)?.value ?? null;
-const shellRail = (model: Model, h: HtmlBuilder<Message>): Html => {
-  const models = model.readbacks.models;
-  const dashboard = model.readbacks.dashboard;
-  const health = model.readbacks.health;
-  const router = model.readbacks.router;
-  const modelsValue = models.status === "ok" ? String(models.rows.length) : models.status === "empty" ? "0" : null;
-  const requestsValue = dashboard.status === "empty" ? "0" : railValue(dashboard, "Requests");
-  const cached = railValue(dashboard, "Cached requests");
-  const cacheValue =
-    requestsValue !== null && cached !== null && Number(requestsValue) > 0
-      ? `${String(Math.round((Number(cached) / Number(requestsValue)) * 100))}%`
-      : null;
-  const endpointRow = health.rows.find((entry) => entry.label === "Endpoint")?.value;
-  const endpointValue =
-    typeof window === "undefined"
-      ? endpointRow ?? null
-      : endpointRow !== undefined && endpointRow.startsWith("http")
-        ? `${new URL(window.location.origin).origin}/v1`
-        : null;
-  const modeValue =
-    health.rows.find((entry) => entry.label === "Execution mode")?.value ??
-    router.rows.find((entry) => entry.label === "executionMode")?.value ??
-    null;
-  let perModel: ReadonlyArray<[string, number]> = [];
-  const metricsRow = model.readbacks.overviewMetrics.rows[0];
-  if (metricsRow !== undefined) {
-    try {
-      const parsed = JSON.parse(metricsRow.meta) as { items?: ReadonlyArray<{ modelId?: unknown }> };
-      const counts = new Map<string, number>();
-      for (const item of parsed.items ?? []) {
-        const id = typeof item.modelId === "string" && item.modelId.length > 0 ? item.modelId : "unknown";
-        counts.set(id, (counts.get(id) ?? 0) + 1);
-      }
-      perModel = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
-    } catch { perModel = []; }
-  }
-  return h.div(
-    [h.Class("mt-3 border-t border-[var(--rm-border)] px-2.5 pt-3"), h.DataAttribute("shell-rail", "")],
-    [
-      h.p([h.Class("pb-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]")], ["Runtime"]),
-      railRow("Models", modelsValue, "Model count unavailable: models read is loading or failed", h),
-      railRow("Requests", requestsValue, "Request count unavailable: telemetry summary is loading or failed", h),
-      railRow("Cache", cacheValue, "Cache percentage unavailable: no requests in the window or telemetry is loading", h),
-      railRow("Router", endpointValue, "Router endpoint unavailable: health read is loading or failed", h),
-      railRow("Mode", modeValue, "Execution mode unavailable: health/router read is loading or failed", h),
-      ...perModel.map(([id, count]) =>
-        h.div([h.DataAttribute("rail-model", id), h.Class("flex justify-between gap-2 py-0.5 text-[10px] text-[var(--rm-secondary)]")], [h.span([], [id]), h.span([h.DataAttribute("rail-model-count", String(count))], [String(count)])]),
-      ),
-    ],
-  );
-};
-
 export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
   title: routeTitle(model.route),
   body: h.div(
     [
-      h.Class("flex min-h-screen w-full bg-[var(--rm-bg)] text-[var(--rm-fg)]"),
+      h.Class("flex h-screen w-full overflow-hidden bg-background text-foreground"),
       h.DataAttribute("shell-state", "success"),
       h.DataAttribute("theme", model.theme),
       h.DataAttribute("refresh-revision", String(model.refresh.lastAppliedRevision)),
@@ -1182,170 +1276,131 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
     ],
     [
       // S181: bypass block. The sidebar repeats on every route, so a keyboard user must be able to
-      // jump past it (WCAG 2.4.1). Visually hidden until focused. It is a CHILD, not an attribute:
-      // placing it in the attribute array made Foldkit treat it as an attribute builder and the app
-      // crashed with "handler is not a function" (caught by loading the page, not by the build).
+      // jump past it (WCAG 2.4.1). Visually hidden until focused.
       h.a([h.Href("#main-content"), h.Class("sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-[var(--rm-accent)] focus:px-3 focus:py-2 focus:text-[12px] focus:text-[var(--rm-on-primary)]")], ["Skip to content"]),
       h.aside(
         [
-          h.Class(
-            "hidden w-60 shrink-0 flex-col border-r border-[var(--rm-border)] bg-[var(--rm-surface)] p-3 md:flex",
-          ),
+          h.Class("hidden h-full w-56 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-xs leading-4 md:flex"),
           h.DataAttribute("shell-sidebar", ""),
         ],
         [
-          h.p(
-            [
-              h.Class(
-                "whitespace-nowrap px-2.5 pb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]",
-              ),
-            ],
-            ["Runtime UI"],
-          ),
-          shellRail(model, h),
-          shellNav(model.route, "Primary navigation", h),
           h.div(
-            [
-              h.Class(
-                "mt-auto border-t border-[var(--rm-border)] px-2.5 pt-3 text-[12px] leading-4 text-[var(--rm-secondary)]",
-              ),
-            ],
-            [
-              h.p([], [model.theme === "dark" ? "Dark shell" : "Light shell"]),
-            ],
+            [h.Class("flex h-12 shrink-0 items-center border-b border-sidebar-border px-4")],
+            [h.span([h.Class("font-sans text-sm leading-[18px] font-semibold tracking-[-0.02em] text-foreground")], ["role-model"])],
           ),
+          shellNav(model.route, "Primary navigation", h),
+          sidebarFooter(model, h),
         ],
       ),
       h.div(
-        [h.Class("flex min-w-0 flex-1 flex-col")],
+        [h.Class("flex min-h-0 min-w-0 flex-1 flex-col bg-background")],
         [
-          h.header(
-            [
-              h.Class(
-                "flex min-h-14 items-center justify-between gap-3 border-b border-[var(--rm-border)] bg-[var(--rm-surface)] px-3 py-2",
-              ),
-            ],
-            [
-              h.div(
-                [h.Class("min-w-0")],
-                [
-                  h.p([h.Class("text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]")], ["Runtime"]),
-                  h.h1(
-                    [h.Class("truncate text-[15px] font-medium text-[var(--rm-fg)]"), h.DataAttribute("shell-route", model.route._tag)],
-                    [model.route._tag === "Index" ? "Runtime overview" : routeTitle(model.route).split(" | ")[0] ?? ""],
-                  ),
-                ],
-              ),
-              uiButtonView(
-                {
-                  onClick: Message.ToggledTheme(),
-                  toView: ({ button }) =>
-                    h.button([h.Class("rm3-theme-toggle shrink-0"), ...button], ["Toggle theme"]),
-                  type: "button",
-                },
-                h,
-              ),
-            ],
-          ),
           h.nav(
             [
-              h.Class(
-                "border-b border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1 md:hidden",
-              ),
+              h.Class("flex min-h-11 shrink-0 gap-1 overflow-x-auto border-b border-border bg-background px-2 py-1 md:hidden"),
               h.AriaLabel("Primary navigation mobile"),
-              h.DataAttribute("shell-nav", ""),
+              h.DataAttribute("shell-nav-mobile", ""),
+            ],
+            shellSections.map((section) =>
+              h.a(
+                [
+                  h.Href(section.href),
+                  h.DataAttribute("nav", section.nav),
+                  ...(shellSectionFor(model.route).nav === section.nav ? [h.AriaCurrent("page")] : []),
+                  h.Class(
+                    "flex min-h-11 shrink-0 items-center rounded-md px-3 text-sm " +
+                      (shellSectionFor(model.route).nav === section.nav
+                        ? "bg-muted font-medium text-foreground"
+                        : "text-muted-foreground"),
+                  ),
+                ],
+                [section.label],
+              ),
+            ),
+          ),
+          h.header(
+            [
+              h.Class("flex h-12 shrink-0 items-center justify-between gap-3 border-b border-border bg-background px-4"),
+              h.DataAttribute("slot", "role-model-sub-page-header"),
             ],
             [
-              h.ul(
-                [h.Class("flex flex-wrap gap-1")],
-                shellNavItems(model.route).map((item) =>
-                  h.li(
-                    [],
+              h.h1(
+                [
+                  h.Class("min-w-0 truncate font-sans text-sm leading-[18px] font-medium tracking-tight text-foreground"),
+                  h.DataAttribute("shell-route", model.route._tag),
+                ],
+                [shellPageTitle(model.route)],
+              ),
+              h.div(
+                [h.Class("flex shrink-0 items-center gap-2")],
+                [
+                  h.button(
                     [
-                      item.href === null
-                        ? h.span(
-                            [
-                              h.AriaDisabled(true),
-                              h.DataAttribute("nav-state", "pending"),
-                              h.Class(
-                                "flex min-h-9 items-center px-2 text-[12px] text-[var(--rm-muted)]",
-                              ),
-                            ],
-                            [item.label],
-                          )
-                        : h.a(
-                            [
-                              h.Href(item.href),
-                              ...(item.dataNav === undefined
-                                ? []
-                                : [h.DataAttribute("nav", item.dataNav)]),
-                              ...(item.active ? [h.AriaCurrent("page")] : []),
-                              h.DataAttribute("nav-state", item.active ? "active" : "available"),
-                              h.Class(
-                                `flex min-h-9 items-center rounded-[var(--rm-radius-field)] px-2.5 text-[12px] ${focusRingClass} ${
-                                  item.active
-                                    ? "bg-[var(--rm-panel)] font-medium text-[var(--rm-fg)]"
-                                    : "text-[var(--rm-secondary)]"
-                                }`,
-                              ),
-                            ],
-                            [item.label],
-                          ),
+                      h.Type("button"),
+                      h.DataAttribute("slot", "role-model-theme-toggle"),
+                      h.AriaLabel(model.theme === "dark" ? "Switch to light mode" : "Switch to dark mode"),
+                      h.Class("inline-flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground outline-none hover:bg-accent focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"),
+                      h.OnClick(Message.ToggledTheme()),
                     ],
+                    [model.theme === "dark" ? sunIcon(h) : moonIcon(h)],
                   ),
-                ),
+                ],
               ),
             ],
           ),
           h.main(
             [
-              h.Class("rm3-next-shell ml-3 min-w-0 flex-1 max-w-[1138px] py-4"),
+              h.Class("flex min-h-0 flex-1 flex-col overflow-auto"),
+              h.DataAttribute("slot", "role-model-page-content"),
               h.DataAttribute("shell-main", ""),
               h.Id("main-content"),
               h.DataAttribute("refresh-revision", String(model.refresh.lastAppliedRevision)),
               h.DataAttribute("refresh-state", model.refresh.status),
             ],
             [
-              ...(model.refresh.status === "stale"
-                ? [
-                    h.p(
-                      [
-                        h.Role("status"),
-                        h.AriaLive("polite"),
-                        h.DataAttribute("refresh-state", "stale"),
-                        h.Class(
-                          "rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] px-3 py-2 text-[12px] leading-4 text-[var(--rm-fg)]",
+              h.div(
+                [h.Class("mx-auto flex w-full flex-col gap-6 px-4 py-5 max-w-[1216px]"), h.DataAttribute("shell-content", "")],
+                [
+                  ...(model.refresh.status === "stale"
+                    ? [
+                        h.p(
+                          [
+                            h.Role("status"),
+                            h.AriaLive("polite"),
+                            h.DataAttribute("refresh-state", "stale"),
+                            h.Class("rounded-md border border-border bg-muted px-3 py-2 text-sm leading-5 text-foreground"),
+                          ],
+                          [
+                            model.refresh.message === undefined
+                              ? "Stale: waiting for a runtime snapshot resync."
+                              : "Stale: " + model.refresh.message + ".",
+                          ],
                         ),
-                      ],
-                      [
-                        model.refresh.message === undefined
-                          ? "Stale: waiting for a runtime snapshot resync."
-                          : `Stale: ${model.refresh.message}.`,
-                      ],
-                    ),
-                  ]
-                : []),
-              routeContent({
-                route: model.route,
-                diagnostics: model.diagnostics,
-                observability: model.observability,
-                readbacks: model.readbacks,
-                controls: model.controls,
-                overviewWindowMs: model.overviewWindowMs ?? 86400000,
-                studio: model.studio ?? studioIdle(),
-                overviewFilters: model.overviewFilters ?? DEFAULT_OVERVIEW_FILTERS,
-                runtimeConfigEditor: model.runtimeConfigEditor,
-                deviceAuth: model.deviceAuth ?? initialDeviceAuthState(),
-                deviceAuthDialog: model.deviceAuthDialog,
-                providerAccount: model.providerAccount ?? initialProviderAccountState(),
-                endpointAdmission: model.endpointAdmission ?? initialEndpointAdmissionState(),
-                chartInteraction: model.chartInteraction,
-                learningRanking: model.learningRanking,
-                requestsRanking: model.requestsRanking,
-                requestsRankingMetricListbox: model.requestsRankingMetricListbox,
-                requestsRankingTargetListbox: model.requestsRankingTargetListbox,
-                h,
-              }),
+                      ]
+                    : []),
+                  routeContent({
+                    route: model.route,
+                    diagnostics: model.diagnostics,
+                    observability: model.observability,
+                    readbacks: model.readbacks,
+                    controls: model.controls,
+                    overviewWindowMs: model.overviewWindowMs ?? 86400000,
+                    studio: model.studio ?? studioIdle(),
+                    overviewFilters: model.overviewFilters ?? DEFAULT_OVERVIEW_FILTERS,
+                    runtimeConfigEditor: model.runtimeConfigEditor,
+                    deviceAuth: model.deviceAuth ?? initialDeviceAuthState(),
+                    deviceAuthDialog: model.deviceAuthDialog,
+                    providerAccount: model.providerAccount ?? initialProviderAccountState(),
+                    endpointAdmission: model.endpointAdmission ?? initialEndpointAdmissionState(),
+                    chartInteraction: model.chartInteraction,
+                    learningRanking: model.learningRanking,
+                    requestsRanking: model.requestsRanking,
+                    requestsRankingMetricListbox: model.requestsRankingMetricListbox,
+                    requestsRankingTargetListbox: model.requestsRankingTargetListbox,
+                    h,
+                  }),
+                ],
+              ),
             ],
           ),
         ],

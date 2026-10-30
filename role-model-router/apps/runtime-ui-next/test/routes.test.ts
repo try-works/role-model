@@ -98,22 +98,22 @@ describe("runtime routing in the Foldkit shell", () => {
     await waitFor(() => (bodyText().includes("Runtime overview") ? true : undefined), "the index route");
 
     const link = await waitFor(
-      () => document.querySelector<HTMLAnchorElement>('a[data-nav="diagnostics"]') ?? undefined,
-      "the diagnostics navigation control",
+      () => document.querySelector<HTMLAnchorElement>('nav[data-shell-nav] a[data-nav="models"]') ?? undefined,
+      "the Models section navigation control",
     );
 
     link.click();
 
     await waitFor(
-      () => (window.location.pathname === "/diagnostics/42" ? true : undefined),
-      "the pushed diagnostics URL",
+      () => (window.location.pathname === "/models" ? true : undefined),
+      "the pushed Models URL",
     );
     await waitFor(
-      () => (bodyText().includes("Diagnostics: 42") ? true : undefined),
-      "the diagnostics view after the URL push",
+      () => (document.querySelector("h1")?.textContent === "Models" ? true : undefined),
+      "the Models view after the URL push",
     );
 
-    expect(document.querySelector("[data-shell-route]")?.getAttribute("data-shell-route")).toBe("Diagnostics");
+    expect(document.querySelector("[data-shell-route]")?.getAttribute("data-shell-route")).toBe("Models");
     expect(bodyText()).not.toContain("Runtime overview");
   });
 
