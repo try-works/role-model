@@ -97,7 +97,7 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
     const roles = [...new Set(endpoints.flatMap((endpoint) => endpoint.roleIds ?? []))];
     return { health, label: row.label, providerId: meta.providerId ?? row.value, roleCount: roles.length };
   });
-  const providerGroups = [...new Set(modelRows.map((row) => row.providerId).concat(accountRows.map((row) => row.id)))];
+  const providerGroups = [...new Set(modelRows.map((row) => row.providerId))].filter((provider) => provider.length > 0 && modelRows.some((row) => row.providerId === provider));
   const labelClass = "font-sans text-xs font-normal leading-4 text-muted-foreground";
   const fieldClass = "flex flex-col gap-1.5";
   const selectClass =
@@ -136,7 +136,6 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
                 return h.div([h.Class("flex flex-col gap-1")], [
                   h.div([h.Class("flex flex-wrap items-baseline gap-2 px-1")], [
                     h.span([h.Class("truncate font-mono text-[13px] font-semibold text-foreground")], [provider]),
-                    h.span([h.Class("font-sans text-xs text-muted-foreground")], [provider]),
                     h.span([h.Class("ml-auto font-sans text-xs text-muted-foreground")], [String(models.length) + " endpoint" + (models.length === 1 ? "" : "s")]),
                   ]),
                   h.div([h.Class("flex flex-col")], models.map((row) =>
