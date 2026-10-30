@@ -164,7 +164,7 @@ try {
   await evaluate(`(() => {
     const scope = document.querySelector('section[data-route="device-authorization"]');
     const fill = (labelText, value) => {
-      const label = [...scope.querySelectorAll("label")].find((entry) => entry.innerText.trim() === labelText);
+      const label = [...scope.querySelectorAll("label")].find((entry) => (entry.textContent || "").trim() === labelText);
       const input = label?.querySelector("input");
       if (!input) throw new Error("missing input " + labelText);
       const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
@@ -174,7 +174,7 @@ try {
     fill("Provider", "openai");
     fill("Variant", "openai-codex-subscription");
     fill("Model", "chatgpt/gpt-5.3-codex");
-    const add = [...scope.querySelectorAll("button")].find((button) => button.innerText.trim() === "Add model");
+    const add = [...scope.querySelectorAll("button")].find((button) => (button.textContent || "").trim() === "Add model");
     add?.click();
     return "filled";
   })()`);

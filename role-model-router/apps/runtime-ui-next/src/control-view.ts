@@ -62,7 +62,7 @@ export const renderProviderAccountForm = (state: ProviderAccountState, h: HtmlBu
  * safe verification link before authorization (S420 F11), and a terminal host status must never read
  * as "Connected" (S420 F8).
  */
-export { renderDeviceAuthorizationForm } from "./features/device-auth/view";
+export { renderDeviceAuthorizationDialog, renderDeviceAuthorizationForm } from "./features/device-auth/view";
 
 export const renderControlPage = (
   spec: ControlSpec,

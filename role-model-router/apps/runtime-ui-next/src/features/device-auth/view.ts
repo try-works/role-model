@@ -87,10 +87,40 @@ const renderDeviceAuthSession = (session: DeviceAuthSession, h: HtmlBuilder<Mess
   );
 };
 
+export const renderDeviceAuthorizationDialog = (
+  state: DeviceAuthState,
+  dialogModel: DeviceAuthDialogModel | undefined,
+  h: HtmlBuilder<Message>,
+  includeDialog = true,
+): Html => {
+  const session = state.session;
+  if (session === undefined) return h.div([], []);
+  const busy = state.status === "starting" || state.status === "pending";
+  return deviceAuthDialogView(
+    {
+      model: dialogModel,
+      content: h.div([], [
+        renderDeviceAuthSession(session, h),
+        ...(busy
+          ? [
+              h.button(
+                [h.Class("ml-2 mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] px-3 py-1.5 text-[12px]"), h.OnClick(Message.DeviceAuthCancelled({})), h.Type("button")],
+                ["Cancel"],
+              ),
+            ]
+          : []),
+      ]),
+      toParentMessage: (message) => Message.GotDeviceAuthDialogMessage({ message }),
+    },
+    h,
+  );
+};
+
 export const renderDeviceAuthorizationForm = (
   state: DeviceAuthState,
   dialogModel: DeviceAuthDialogModel | undefined,
   h: HtmlBuilder<Message>,
+  includeDialog = true,
 ): Html => {
   const textField = (label: string, field: DeviceAuthField, value: string) =>
     h.label(
@@ -166,30 +196,8 @@ export const renderDeviceAuthorizationForm = (
         : [h.p([h.Role("alert"), h.DataAttribute("device-auth-error", "")], [state.error])]),
     ],
   );
-  const session = state.session;
   return h.div([], [
     form,
-    ...(session === undefined
-      ? []
-      : [
-          deviceAuthDialogView(
-            {
-              model: dialogModel,
-              content: h.div([], [
-                renderDeviceAuthSession(session, h),
-                ...(busy
-                  ? [
-                      h.button(
-                        [h.Class("ml-2 mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] px-3 py-1.5 text-[12px]"), h.OnClick(Message.DeviceAuthCancelled({})), h.Type("button")],
-                        ["Cancel"],
-                      ),
-                    ]
-                  : []),
-              ]),
-              toParentMessage: (message) => Message.GotDeviceAuthDialogMessage({ message }),
-            },
-            h,
-          ),
-        ]),
+    ...(includeDialog ? [renderDeviceAuthorizationDialog(state, dialogModel, h)] : []),
   ]);
 };

@@ -1,7 +1,7 @@
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 
 import { CONTROL_SPECS } from "./control";
-import { renderControlPage, renderDeviceAuthorizationForm, renderEndpointAdmissionForm, renderProviderAccountForm } from "./control-view";
+import { renderControlPage, renderDeviceAuthorizationDialog, renderDeviceAuthorizationForm, renderEndpointAdmissionForm, renderProviderAccountForm } from "./control-view";
 import { type EndpointsRouteContext, type ProvidersRouteContext, providersRoute } from "./features/control/routes";
 import { card, filterBar, table } from "./features/s563-layout";
 import { Message } from "./message";
@@ -132,7 +132,6 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
               h.summary([h.Class("cursor-pointer font-sans text-sm font-medium text-foreground")], ["Provider account setup"]),
               h.div([h.Class("mt-4 flex flex-col gap-4")], [
                 renderProviderAccountForm(ctx.providerAccount, h),
-                renderDeviceAuthorizationForm(ctx.deviceAuth, ctx.deviceAuthDialog, h),
                 renderControlPage(CONTROL_SPECS.providers, ctx.controls.providers, h),
               ]),
             ]),
@@ -160,6 +159,8 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
               })),
         ], h),
       ]),
+      renderDeviceAuthorizationForm(ctx.deviceAuth, ctx.deviceAuthDialog, h, false),
+      renderDeviceAuthorizationDialog(ctx.deviceAuth, ctx.deviceAuthDialog, h),
     ],
   );
 };
