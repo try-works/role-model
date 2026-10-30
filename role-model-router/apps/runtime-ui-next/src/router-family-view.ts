@@ -156,6 +156,11 @@ export const routerOverviewPage = (readbacks: ReadbacksState, h: H): Html => {
           ],
           h,
         ),
+        table(
+          ["Alias", "Mode", "Effective models", "Candidate expansion", "Readiness"],
+          configRows.map((entry) => [entry.label, entry.value, "—", "—", entry.meta]),
+          h,
+        ),
         h.div([h.Class("mt-4 flex items-center justify-between rounded-lg border border-border bg-card px-4 py-4")], [
           h.p([h.Class("text-sm font-medium text-foreground")], ["Browse all alias pools (" + String(Math.max(configRows.length, readbacks.configuredModels.rows.length, 0)) + ")"]),
           h.span([h.Class("inline-flex size-6 items-center justify-center rounded-full border border-border text-xs text-muted-foreground")], ["⌄"]),

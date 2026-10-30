@@ -21,6 +21,19 @@ const mountStudio = (id: string, fetchImpl: typeof fetch) => {
   const handle = mountShell(container, { studioFetchImpl: fetchImpl });
   mounted.push({ container, handle });
 };
+const workspaceSelector = (tab: string): string =>
+  tab === "images" ? "[data-studio-field='size']"
+    : tab === "audio" ? "[data-studio-field='mode']"
+      : tab === "rerank" ? "[data-studio-field='query']"
+        : tab === "advanced" ? "[data-studio-field='advancedBody']"
+          : "[data-studio-field='prompt']";
+const selectWorkspace = async (tab: string, runLabel: string) => {
+  window.history.replaceState({}, "", "/studio?tab=" + tab);
+  window.dispatchEvent(new CustomEvent("foldkit:urlchange"));
+  await waitFor(() => document.querySelector(workspaceSelector(tab)) ?? undefined, tab + " workspace");
+  await waitFor(() => document.querySelector("[data-studio-run]")?.textContent?.includes(runLabel) ? true : undefined, tab + " run label");
+  await waitFor(() => document.querySelector("[role='alert']") === null ? true : undefined, tab + " clear alert");
+};
 afterEach(() => {
   for (const entry of mounted.splice(0)) { entry.handle.dispose(); entry.container.remove(); }
   window.history.replaceState({}, "", "/");
@@ -29,32 +42,33 @@ afterEach(() => {
 /**
  * S46a: the Studio wiring that needs a real client.
  *
- * The tab/form/idle-response rendering that used to live here (and the four tab clicks plus the ArrowRight
- * keydown that drove it) moved to test/s255-studio-rendering-scene.test.ts: it is a rendering assertion over the
- * Studio state, so a scene covers it without a DOM click (S249). What stays here is the part that needs a real
- * fetch: typed field values reach the client, a 404 paints the raw body, and a chat response paints.
+ * The reference page renders one workspace selected by ?tab=; there is no in-page tab strip.
+ * These assertions mount each workspace URL, keep the exact request-shape checks, and use the
+ * page's own fields and run control. The rendering assertions live in s255.
  */
+const workspaces = [
+  { tab: "chat", title: "Request", fields: ["Model", "Prompt"], run: "Run request" },
+  { tab: "images", title: "Image request modes", fields: ["Mode", "Model", "Prompt", "Size"], run: "Run image request" },
+  { tab: "audio", title: "Audio mode and request", fields: ["Mode", "Model", "Voice", "Input"], run: "Run audio request" },
+  { tab: "rerank", title: "Rerank request", fields: ["Contract", "Model", "Query", "Candidate documents"], run: "Submit rerank request" },
+  { tab: "advanced", title: "Endpoint family", fields: ["Family", "Model", "JSON payload"], run: "Submit advanced request" },
+] as const;
+
 describe("S46a Studio", () => {
-  it("renders five tabs with per-tab idle raw text and fields", async () => {
-    mountStudio("s46a-tabs", async () => new Response("{}", { status: 200 }));
+  it("renders each workspace's reference controls and run action", async () => {
+    mountStudio("s46a-workspaces", async () => new Response("{}", { status: 200 }));
     await waitFor(() => document.querySelector("[data-route='studio']") ?? undefined, "studio");
-    expect(document.querySelectorAll("[data-studio-tab]")).toHaveLength(5);
-    expect(document.querySelector("[role='tablist']")).not.toBeNull();
-    expect(document.querySelector("[role='tab'][aria-selected='true']")?.getAttribute("data-studio-tab")).toBe("chat");
-    const selected = document.querySelector("[role='tab'][aria-selected='true']") as HTMLButtonElement;
-    selected.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "ArrowRight" }));
-    await waitFor(() => document.querySelector("[role='tab'][aria-selected='true']")?.getAttribute("data-studio-tab") === "images" ? true : undefined, "arrow tab");
-    expect(document.body.textContent).toContain("RAW RESPONSE");
-    expect(document.body.textContent).toContain("Run a Studio request to see the raw response.");
-    for (const tab of ["images", "audio", "rerank", "advanced"]) {
-      (document.querySelector("[data-studio-tab='" + tab + "']") as HTMLButtonElement).click();
-      await waitFor(() => document.querySelector("[data-studio-form='" + tab + "']") ?? undefined, tab + " form");
+    for (const workspace of workspaces) {
+      await selectWorkspace(workspace.tab, workspace.run);
+      for (const field of workspace.fields) {
+        expect(document.body.textContent).toContain(field);
+      }
+      expect(document.body.textContent).toContain(workspace.title);
+      expect(document.querySelector("[data-studio-run]")?.textContent).toContain(workspace.run);
     }
   });
 
-
-  // Keep integration coverage: pure builder/client checks cannot detect a disconnected tab handler.
-  it("dispatches each tab with the exact method, path and body", async () => {
+  it("dispatches each workspace with the exact method, path and body", async () => {
     const calls: Array<{ readonly path: string; readonly init: RequestInit | undefined }> = [];
     const expected = [
       { tab: "chat", path: "/v1/chat/completions", body: { messages: [{ content: "A quiet harbour at dawn", role: "user" }], model: "moonshot/kimi-k2.5", stream: false } },
@@ -62,7 +76,7 @@ describe("S46a Studio", () => {
       { tab: "audio", path: "/v1/audio/speech", body: { input: "A quiet harbour at dawn", model: "moonshot/kimi-k2.5", response_format: "mp3", voice: "alloy" } },
       { tab: "rerank", path: "/v1/rerank", body: { documents: ["first document", "second document"], model: "moonshot/kimi-k2.5", query: "Which document is first?", top_n: 5 } },
       { tab: "advanced", path: "/v1/responses", body: { model: "moonshot/kimi-k2.5", max_tokens: 64, messages: [{ role: "user", content: "Hello" }] } },
-    ];
+    ] as const;
     mountStudio("s258-dispatch", async (input, init) => {
       const pathname = new URL(String(input), "http://localhost").pathname;
       if (pathname.startsWith("/v1/")) calls.push({ path: pathname, init });
@@ -70,10 +84,9 @@ describe("S46a Studio", () => {
     });
     await waitFor(() => document.querySelector("[data-route='studio']") ?? undefined, "studio");
     for (const [index, entry] of expected.entries()) {
-      const tab = document.querySelector('[data-studio-tab="' + entry.tab + '"]');
-      assert.ok(tab instanceof HTMLButtonElement);
-      tab.click();
-      await waitFor(() => document.querySelector('[data-studio-form="' + entry.tab + '"]') ?? undefined, entry.tab + " form");
+      const runLabel = entry.tab === "chat" ? "Run request" : entry.tab === "images" ? "Run image request" : entry.tab === "audio" ? "Run audio request" : entry.tab === "rerank" ? "Submit rerank request" : "Submit advanced request";
+      await selectWorkspace(entry.tab, runLabel);
+      await waitFor(() => document.querySelector("[data-studio-run]") ?? undefined, entry.tab + " run");
       const run = document.querySelector("[data-studio-run]");
       assert.ok(run instanceof HTMLButtonElement);
       run.click();
@@ -83,7 +96,6 @@ describe("S46a Studio", () => {
       assert.ok(call);
       expect(call.path).toBe(entry.path);
       expect(call.init?.method).toBe("POST");
-      // JSON formatting/property order is not part of the server contract.
       expect(JSON.parse(String(call.init?.body))).toEqual(entry.body);
     }
   });
@@ -111,7 +123,7 @@ describe("S46a Studio", () => {
 
   it("shows 404 raw body with role=alert and no fabricated success", async () => {
     mountStudio("s46a-404", async () => new Response('{"error":"not found"}', { status: 404, headers: { "content-type": "application/json" } }));
-    await waitFor(() => document.querySelector("[data-route='studio']") ?? undefined, "studio");
+    await waitFor(() => document.querySelector("[data-studio-run]") ?? undefined, "run");
     (document.querySelector("[data-studio-run]") as HTMLButtonElement).click();
     const alert = await waitFor(() => document.querySelector("[role='alert']") ?? undefined, "alert");
     expect(alert.textContent).toContain("HTTP 404");
@@ -121,10 +133,9 @@ describe("S46a Studio", () => {
 
   it("renders a real chat response", async () => {
     mountStudio("s46a-chat", async () => new Response('{"choices":[{"message":{"content":"hello"}}]}', { status: 200, headers: { "content-type": "application/json" } }));
-    await waitFor(() => document.querySelector("[data-route='studio']") ?? undefined, "studio");
+    await waitFor(() => document.querySelector("[data-studio-run]") ?? undefined, "run");
     (document.querySelector("[data-studio-run]") as HTMLButtonElement).click();
     await waitFor(() => document.querySelector("[data-studio-raw='success']") ?? undefined, "chat success");
     expect(document.body.textContent).toContain("hello");
   });
-
 });

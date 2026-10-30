@@ -125,7 +125,7 @@
       ],
       "requiresHostEndpoint": false,
       "proofTest": "role-model-router/apps/runtime-ui-next/test/s71b-models.test.ts",
-      "proofTestName": "renders configured models with endpoint, status, effort and roles from real captures"
+      "proofTestName": "renders the two-column inventory: model rows with badges, runtime facts and the roles panel"
     },
     {
       "category": "control",
@@ -823,7 +823,7 @@
       ],
       "requiresHostEndpoint": true,
       "proofTest": "role-model-router/apps/runtime-ui-next/test/s46a-studio.test.ts",
-      "proofTestName": "dispatches each tab with the exact method, path and body",
+      "proofTestName": "dispatches each workspace with the exact method, path and body",
       "note": "Verified only at mounted-shell fixture level: exact generation request and honest 404 presentation. Live image-generation capability and configured-model execution are not verified by this test."
     },
     {

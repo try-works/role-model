@@ -18,8 +18,8 @@ describe("S71b configured models (reference inventory)", () => {
     const text = body.textContent ?? "";
     expect(text).toContain("Select a model to inspect and configure.");
     expect(text).toContain("Models");
-    expect(text).toContain("RUNTIME");
-    expect(text).toContain("ROLES");
+    expect(text).toContain("Runtime ·");
+    expect(text).toContain("Roles");
     expect(text).toContain("Source");
     expect(text).toContain("Endpoints");
     expect(text).toContain("Context");

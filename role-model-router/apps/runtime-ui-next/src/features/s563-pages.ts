@@ -46,23 +46,24 @@ export const integrationsUpstreamRoute = (readback: ReadbackState, h: H): Html =
     ], h),
   ], h);
 
-/** S563: queues page keeps the canonical queue readback hooks and adds the reference queue/job tables. */
+/** S563: queues page keeps the canonical queue readback hooks and the reference queue table. */
 export const observeQueuesRoute = (readback: ReadbackState, h: H): Html =>
-  page("queues", "Queues", [
-    renderReadbackPage(READBACK_SPECS.queues, readback, h),
-    filterBar([
-      { label: "State", value: "All states", options: ["All states", "Waiting", "Active", "Failed"] },
-      { label: "Queue", value: "All queues", options: ["All queues", ...readback.rows.map((row) => row.label)] },
-    ], h),
-    card("Queue depth", "Queue truth from the shared store: depth, activity, retries and stalls per queue.", [
+  h.section(
+    [h.Class("rm3-next-route flex flex-col gap-6"), h.DataAttribute("route", "queues")],
+    [
+      h.div([h.Class("flex flex-col gap-2")], [
+        h.h2([h.Class("font-sans text-[20px] font-semibold leading-7 text-foreground")], ["Queues"]),
+        h.p([h.Class("font-sans text-[13px] leading-5 text-muted-foreground")], ["Queue truth from the shared store: depth, activity, retries and stalls per queue, with job drill-in."]),
+      ]),
       table(
         ["Queue", "Mode", "Waiting", "Active", "Delayed", "Failed", "Stalled", "Oldest waiting", "p50", "p95", "Last error", "Drain"],
         readback.rows.map((row) => [row.label, row.meta || "—", "—", row.value || "—", "—", "—", "—", "—", "—", "—", "—", "—"]),
         "No queues configured yet.",
         h,
       ),
-    ], h),
-    card("Job detail", "Jobs recorded for the selected queue.", [
-      table(["Job", "State", "Attempts", "Lock owner", "Updated", "Actions"], [], "No queue jobs recorded yet.", h),
-    ], h),
-  ], h);
+      ...(readback.status === "error"
+        ? [h.p([h.Role("alert"), h.DataAttribute("readback-state", "error"), h.Class("font-sans text-[13px] leading-5 text-[var(--rm-error)]")], [readback.message ?? "Queue store read failed."])]
+        : []),
+    ],
+  );
+

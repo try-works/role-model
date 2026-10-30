@@ -35,7 +35,7 @@ const waitForRouteState = async (routeName: string, expected: string, label: str
   const end = Date.now() + 3000;
   let last: string | null = null;
   while (Date.now() < end) {
-    last = document.querySelector("[data-route='" + routeName + "'][data-learning-family-state='" + expected + "']")?.getAttribute("data-learning-family-state") ?? null;
+    last = document.querySelector("[data-route='" + routeName + "'][data-page-state='" + expected + "']")?.getAttribute("data-page-state") ?? null;
     if (last === expected) return last;
     await new Promise((resolve) => setTimeout(resolve, 10));
   }

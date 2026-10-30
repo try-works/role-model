@@ -1,5 +1,7 @@
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 
+import { CONTROL_SPECS } from "./control";
+import { renderControlPage, renderDeviceAuthorizationForm, renderEndpointAdmissionForm, renderProviderAccountForm } from "./control-view";
 import { type EndpointsRouteContext, type ProvidersRouteContext, providersRoute } from "./features/control/routes";
 import { card, filterBar, table } from "./features/s563-layout";
 import { Message } from "./message";
@@ -126,6 +128,9 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
               [h.Type("button"), h.AriaDisabled(ctx.providerAccount.status === "saving"), h.OnClick(Message.ProviderAccountCreateRequested({})), h.Class("inline-flex h-[34px] w-fit items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-foreground")],
               [ctx.providerAccount.status === "saving" ? "Saving configuration…" : "Save configuration"],
             ),
+            renderProviderAccountForm(ctx.providerAccount, h),
+            renderDeviceAuthorizationForm(ctx.deviceAuth, ctx.deviceAuthDialog, h),
+            renderControlPage(CONTROL_SPECS.providers, ctx.controls.providers, h),
           ]),
         ], h),
         card("Configured provider connections", "Endpoints stay grouped by account. Expand a model's roles count to edit which routing roles it can serve.", [
@@ -183,34 +188,35 @@ export const endpointsPage = (ctx: EndpointsRouteContext & { readonly readbacks:
     [h.Class("rm3-next-route"), h.DataAttribute("route", "endpoints"), h.DataAttribute("page-layout", "reference")],
     [
       card("Runtime connections", "Provider, model, and endpoint state merged into one registry view.", [
-        rows.length === 0
-          ? h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["No runtime connections recorded yet."])
-          : h.div([h.Class("overflow-hidden rounded-lg border border-border")], [
+        h.div([h.Class("overflow-hidden rounded-lg border border-border")], [
               h.table(
                 [h.Class("w-full border-collapse text-left font-sans text-sm")],
                 [
                   h.thead([h.Class("bg-secondary")], [
-                    h.tr([], ["Provider connection", "Model", "Endpoint", "Effort", "Source", "Health", "Readiness"].map((label) =>
+                    h.tr([], ["Provider", "Connection", "Model", "Endpoint", "Effort", "Source", "Health", "Readiness"].map((label) =>
                       h.th([h.Class("px-3 py-2 font-mono text-[11px] font-normal uppercase tracking-[0.04em] text-muted-foreground")], [label]),
                     )),
                   ]),
-                  h.tbody([], rows.map((row) =>
-                    h.tr([h.Class("border-t border-border align-top")], [
-                      h.td([h.Class("px-3 py-2")], [
-                        h.span([h.Class("font-mono text-[13px] font-semibold text-foreground")], [row.connection]),
-                        h.span([h.Class("ml-2 break-all font-mono text-[11px] text-muted-foreground")], [row.account]),
+                  h.tbody([], [
+                    ...rows.map((row) =>
+                      h.tr([h.Class("border-t border-border align-top")], [
+                        h.td([h.Class("px-3 py-2 font-mono text-[13px] font-semibold text-foreground")], [row.connection]),
+                        h.td([h.Class("px-3 py-2 break-all font-mono text-[11px] text-muted-foreground")], [row.account]),
+                        h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [row.model]),
+                        h.td([h.Class("px-3 py-2 break-all font-mono text-[12px] text-muted-foreground")], [row.endpoint]),
+                        h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [row.effort]),
+                        h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [row.source]),
+                        h.td([h.Class("px-3 py-2 text-[13px] text-[var(--rm-success,#2f9e62)]")], [row.health]),
+                        h.td([h.Class("px-3 py-2 text-[13px] text-[var(--rm-success,#2f9e62)]")], [row.readiness]),
                       ]),
-                      h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [row.model]),
-                      h.td([h.Class("px-3 py-2 break-all font-mono text-[12px] text-muted-foreground")], [row.endpoint]),
-                      h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [row.effort]),
-                      h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [row.source]),
-                      h.td([h.Class("px-3 py-2 text-[13px] text-[var(--rm-success,#2f9e62)]")], [row.health]),
-                      h.td([h.Class("px-3 py-2 text-[13px] text-[var(--rm-success,#2f9e62)]")], [row.readiness]),
-                    ]),
-                  )),
+                    ),
+                    ...(rows.length === 0 ? [h.tr([], [h.td([h.Colspan(8), h.Class("px-3 py-3 text-sm text-muted-foreground")], ["No runtime connections recorded yet."])])] : []),
+                  ]),
                 ],
               ),
-            ]),
+          ]),
+        renderEndpointAdmissionForm(ctx.endpointAdmission, h),
+        renderControlPage(CONTROL_SPECS.endpoints, ctx.controls.endpoints, h),
       ], h),
     ],
   );
@@ -267,8 +273,9 @@ export const localPeersPage = (readback: ReadbackState, h: H): Html => {
   ]);
 };
 
-export const localPeerModelsPage = (readback: ReadbackState, h: H): Html => h.div([h.Class("space-y-5"), h.DataAttribute("route", "local-peer-models"), h.DataAttribute("page-layout", "reference")], [
+export const localPeerModelsPage = (readback: ReadbackState, h: H): Html => h.div([h.Class("space-y-5"), h.DataAttribute("route", "local-peer-models"), h.DataAttribute("page-layout", "reference"), h.DataAttribute("final-family-state", readbackStateOf(readback)), h.DataAttribute("readback-route", "localPeerModels"), h.DataAttribute("readback-state", readbackStateOf(readback))], [
   card("Register model", "Model ID must appear in the peer server catalog. Registration creates a router-visible endpoint without pretending the runtime owns the model process itself.", [
+    ...(readbackNotice(readback, "Peer models", h) === null ? [] : [readbackNotice(readback, "Peer models", h) as Html]),
     h.div([h.Class("grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_auto] xl:items-end")], [
       h.div([h.Class("space-y-2")], [h.label([h.Class(fieldLabel), h.Attribute("for", "peer-model-id")], ["Model ID"]), h.input([h.Id("peer-model-id"), h.Type("text"), h.Placeholder("openai/gpt-4.1"), h.Class(fieldClass)])]),
       h.div([h.Class("space-y-2")], [h.p([h.Class(fieldLabel)], ["Roles"]), h.div([h.Class("flex flex-wrap gap-2 py-2")], [h.button([h.Type("button"), h.Disabled(true), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["+ Add role"]), h.button([h.Type("button"), h.Disabled(true), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["Select all roles"])])]),
@@ -280,12 +287,21 @@ export const localPeerModelsPage = (readback: ReadbackState, h: H): Html => h.di
     ]),
   ], h),
   card("Registered models", "Models currently registered with the router from peer endpoints.", [
-    h.div([h.Class(mutedPanel)], [
-      h.p([h.Class("text-[16px] font-semibold leading-[22px] text-foreground")], ["No peer models registered yet."]),
-      h.p([h.Class("mt-1 text-sm leading-5 text-muted-foreground")], ["Add an endpoint above first, then register a model id from that peer catalog."]),
-    ]),
+    readback.rows.length > 0
+      ? table(["Model", "State", "Detail"], readback.rows.map((row) => [row.label, row.value, row.meta]), "No peer models registered yet.", h)
+      : h.div([h.Class(mutedPanel)], [
+          h.p([h.Class("text-[16px] font-semibold leading-[22px] text-foreground")], ["No peer models registered yet."]),
+          h.p([h.Class("mt-1 text-sm leading-5 text-muted-foreground")], ["Add an endpoint above first, then register a model id from that peer catalog."]),
+        ]),
   ], h),
 ]);
+const readbackStateOf = (readback: ReadbackState): string => readback.status === "idle" ? "loading" : readback.status;
+const readbackNotice = (readback: ReadbackState, label: string, h: H): Html | null => {
+  const state = readbackStateOf(readback);
+  if (state === "loading") return h.p([h.Role("status"), h.AriaBusy(true), h.Class("text-sm leading-5 text-muted-foreground")], ["Loading " + label.toLowerCase() + "…"]);
+  if (state === "error") return h.p([h.Role("alert"), h.Class("text-sm leading-5 text-muted-foreground")], [(readback.message ?? (label + " read failed"))]);
+  return null;
+};
 const statStrip = (items: ReadonlyArray<{ readonly label: string; readonly value: string }>, h: H): Html =>
   h.div([h.Class("flex h-[54px] w-full overflow-hidden rounded-md border border-border bg-card")], items.flatMap((item, index) => [
     ...(index === 0 ? [] : [h.div([h.Class("w-px shrink-0 self-stretch bg-border")], [])]),
@@ -315,7 +331,17 @@ export const systemPeersPage = (readback: ReadbackState, h: H): Html => {
   ]);
 };
 
-export const systemOperatorPage = (sections: readonly FamilySection[], h: H): Html => h.div([h.Class("space-y-5"), h.DataAttribute("route", "system-operator"), h.DataAttribute("page-layout", "reference")], [
+export const systemOperatorPage = (sections: readonly FamilySection[], h: H): Html => {
+  const statusSection = sections.find((section) => section.readback !== undefined);
+  const statusReadback = statusSection?.readback;
+  const state = statusReadback === undefined ? "empty" : readbackStateOf(statusReadback);
+  return h.div([h.Class("space-y-5"), h.DataAttribute("route", "system-operator"), h.DataAttribute("page-layout", "reference"), h.DataAttribute("final-family-state", state), h.DataAttribute("readback-route", "operatorStatus"), h.DataAttribute("readback-state", state)], [
+  ...(statusReadback === undefined ? [] : [readbackNotice(statusReadback, "Operator status", h) as Html].filter((value): value is Html => value !== null)),
+  card("Operator status", "Bounded operator status readback for the current session.", [
+    ...(statusReadback !== undefined && statusReadback.rows.length > 0
+      ? [table(["Name", "Value", "Detail"], statusReadback.rows.map((row) => [row.label, row.value, row.meta]), "No operator status rows recorded yet.", h)]
+      : [h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["No operator status rows recorded yet."])]),
+  ], h),
   card("Operator Controls", "Inspect bounded replay, evaluation, and shadow-learning state. The access token stays only in this browser component and is never stored.", [
     h.label([h.Class(fieldLabel), h.Attribute("for", "operator-token")], ["Operator access token"]),
     h.div([h.Class("flex flex-col gap-3 md:flex-row")], [h.input([h.Id("operator-token"), h.Type("password"), h.Placeholder("Paste a local operator token…"), h.Class(fieldClass + " flex-1")]), h.button([h.Type("button"), h.Class(primaryButton)], ["Load Operator State"])]),
@@ -344,9 +370,11 @@ export const systemOperatorPage = (sections: readonly FamilySection[], h: H): Ht
       h.div([h.Class("flex flex-wrap gap-2")], [h.button([h.Type("button"), h.Class(secondaryButton)], ["Update Mode"]), h.button([h.Type("button"), h.Class(secondaryButton)], ["Roll Back Shadow State"])]),
     ]),
   ], h),
-]);
+  ]);
+};
 
-export const systemExtensionsPage = (readback: ReadbackState, h: H): Html => h.div([h.Class("space-y-6"), h.DataAttribute("route", "system-extensions"), h.DataAttribute("page-layout", "reference")], [
+export const systemExtensionsPage = (readback: ReadbackState, h: H): Html => h.div([h.Class("space-y-6"), h.DataAttribute("route", "system-extensions"), h.DataAttribute("page-layout", "reference"), h.DataAttribute("final-family-state", readbackStateOf(readback)), h.DataAttribute("readback-route", "extensions"), h.DataAttribute("readback-state", readbackStateOf(readback))], [
+  ...(readbackStateOf(readback) === "error" ? [h.p([h.Role("alert"), h.Class("text-sm leading-5 text-muted-foreground")], ["Extensions read failed: " + (readback.message ?? "unknown error")])] : readbackStateOf(readback) === "loading" ? [h.p([h.Role("status"), h.AriaBusy(true), h.Class("text-sm leading-5 text-muted-foreground")], ["Loading extensions…"])] : []),
   statStrip([{ label: "Installed", value: String(readback.rows.length) }, { label: "Ready", value: "0" }, { label: "Degraded", value: "0" }, { label: "Open recs", value: "0" }], h),
   card("Replay automation", "Replay automation is configured per extension and reported by the host.", [
     h.div([h.Class("flex flex-wrap items-start justify-between gap-3")], [
@@ -364,11 +392,16 @@ export const systemExtensionsPage = (readback: ReadbackState, h: H): Html => h.d
 export const systemSessionPage = (readback: ReadbackState, h: H): Html => {
   const count = readback.rows.length;
   const sessionCard = (title: string, description: string, body: readonly Html[]) => card(title, description, body, h);
-  return h.div([h.Class("space-y-6"), h.DataAttribute("route", "session-readiness"), h.DataAttribute("page-layout", "reference")], [
+  return h.div([h.Class("space-y-6"), h.DataAttribute("route", "session-readiness"), h.DataAttribute("page-layout", "reference"), h.DataAttribute("readback-route", "sessionReadiness"), h.DataAttribute("readback-state", readbackStateOf(readback))], [
+    ...(readbackNotice(readback, "Session readiness", h) === null ? [] : [readbackNotice(readback, "Session readiness", h) as Html]),
     statStrip([{ label: "Bootstrap", value: count > 0 ? "complete" : "unavailable" }, { label: "Host health", value: "ok" }, { label: "Authority", value: "authoritative" }, { label: "Routable", value: String(count) }], h),
     h.div([h.Class("grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]")], [
       h.div([h.Class("space-y-4")], [
-        sessionCard("Session bootstrap", "Persisted bootstrap ladder for the current host session.", [h.div([h.Class("mb-4 flex flex-wrap items-center gap-3")], [h.span([h.Class("rounded-full border border-border bg-secondary px-2 py-0.5 text-xs text-foreground")], ["complete"])]), h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["identity, endpoints, peers, vendors, local reload, remote health, inventory were all persisted in the current session."])]),
+        sessionCard("Session bootstrap", "Persisted bootstrap ladder for the current host session.", [
+          h.div([h.Class("mb-4 flex flex-wrap items-center gap-3")], [h.span([h.Class("rounded-full border border-border bg-secondary px-2 py-0.5 text-xs text-foreground")], ["complete"])]),
+          h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["identity, endpoints, peers, vendors, local reload, remote health, inventory were all persisted in the current session."]),
+          ...(readback.rows.length > 0 ? [table(["Name", "Value", "Detail"], readback.rows.map((row) => [row.label, row.value, row.meta]), "No session readiness rows recorded yet.", h)] : []),
+        ]),
         sessionCard("Canonical lifecycle", "Authority posture and blocking credential accounts.", [h.span([h.Class("rounded-full border border-border bg-secondary px-2 py-0.5 text-xs text-foreground")], ["authoritative"]), h.p([h.Class("mt-3 text-sm leading-5 text-muted-foreground")], ["Canonical lifecycle data is authoritative and no credential blockers remain."])]),
         sessionCard("Operator intent manifest", "Declared operator intent for this runtime session.", [h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["applied operator-intent.json is readable and schema-valid."]), h.p([h.Class("break-all font-mono text-xs leading-4 text-foreground")], ["operator-intent.json"])]),
       ]),
@@ -414,8 +447,9 @@ export const systemStoragePage = (_readback: ReadbackState, h: H): Html => h.div
 
 const roleSummary = "coder, architect, security, researcher, writer, operator, analyst, planner, tester, data, product, designer, support, legal, finance, creative, educator, translator, marketer, seller, recruiter, procurement, coordinator, knowledge, strategist, mathematician, scientist, health";
 
-export const localLlamaModelsPage = (readback: ReadbackState, h: H): Html => h.div([h.Class("space-y-5"), h.DataAttribute("route", "local-llama-swap-models"), h.DataAttribute("page-layout", "reference")], [
+export const localLlamaModelsPage = (readback: ReadbackState, h: H): Html => h.div([h.Class("space-y-5"), h.DataAttribute("route", "local-llama-swap-models"), h.DataAttribute("page-layout", "reference"), h.DataAttribute("final-family-state", readbackStateOf(readback)), h.DataAttribute("readback-route", "localLlamaSwapModels"), h.DataAttribute("readback-state", readbackStateOf(readback))], [
   h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["Load a runtime-config-declared model, assign route roles, and manage the in-memory llama-swap inventory from this page."]),
+  ...(readbackNotice(readback, "Llama-swap models", h) === null ? [] : [readbackNotice(readback, "Llama-swap models", h) as Html]),
   card("Load model", "Model must already be declared in runtime config. Loading triggers llama-swap to start or swap to this model instead of inventing a separate registration flow.", [
     h.div([h.Class("flex flex-wrap items-start gap-3")], [
       h.div([h.Class("min-w-0 flex-1 space-y-2")], [h.label([h.Class(fieldLabel), h.Attribute("for", "llama-swap-model-id")], ["Model ID"]), h.input([h.Id("llama-swap-model-id"), h.Type("text"), h.Placeholder("lfm2.5-8b-a1b"), h.Class(fieldClass)])]),
@@ -426,7 +460,9 @@ export const localLlamaModelsPage = (readback: ReadbackState, h: H): Html => h.d
     h.div([h.Class("flex flex-wrap gap-2")], [h.a([h.Href("/runtime/config"), h.Role("button"), h.Class(secondaryButton)], ["Open runtime config"])]),
   ], h),
   card("Loaded models", "Models currently resident in memory via llama-swap.", [
-    h.div([h.Class(mutedPanel)], [h.p([h.Class("text-[16px] font-semibold leading-[22px] text-foreground")], ["No llama-swap models loaded yet."]), h.p([h.Class("mt-1 text-sm leading-5 text-muted-foreground")], ["Load a configured model above to start or swap the in-memory runtime inventory."])]),
+    readback.rows.length > 0
+      ? table(["Model", "State", "Detail"], readback.rows.map((row) => [row.label, row.value, row.meta]), "No llama-swap models loaded yet.", h)
+      : h.div([h.Class(mutedPanel)], [h.p([h.Class("text-[16px] font-semibold leading-[22px] text-foreground")], ["No llama-swap models loaded yet."]), h.p([h.Class("mt-1 text-sm leading-5 text-muted-foreground")], ["Load a configured model above to start or swap the in-memory runtime inventory."])]),
   ], h),
 ]);
 
@@ -448,8 +484,9 @@ export const localSwapPage = (readback: ReadbackState, h: H): Html => h.div([h.C
   ], h),
 ]);
 
-export const localLogsPage = (readback: ReadbackState, h: H): Html => h.div([h.Class("space-y-8"), h.DataAttribute("route", "local-logs"), h.DataAttribute("page-layout", "reference")], [
+export const localLogsPage = (readback: ReadbackState, h: H): Html => h.div([h.Class("space-y-8"), h.DataAttribute("route", "local-logs"), h.DataAttribute("page-layout", "reference"), h.DataAttribute("readback-route", "localLogs"), h.DataAttribute("readback-state", readbackStateOf(readback))], [
   card("Structured local log history", "Rows are parsed into Timestamp, Source, Severity, Request, and message fields so local runtime behavior can be inspected without raw console noise.", [
+    ...(readbackNotice(readback, "Local logs", h) === null ? [] : [readbackNotice(readback, "Local logs", h) as Html]),
     h.div([h.Class(mutedPanel + " mb-4 flex flex-wrap items-center gap-4 p-4")], [
       h.button([h.Type("button"), h.Class(secondaryButton)], ["Refresh"]),
       h.label([h.Class("flex items-center gap-2 text-sm text-foreground")], [h.input([h.Id("autoRefresh"), h.Type("checkbox"), h.Class("size-4 rounded border border-input")]), h.span([], ["Auto-refresh (3s)"])]),

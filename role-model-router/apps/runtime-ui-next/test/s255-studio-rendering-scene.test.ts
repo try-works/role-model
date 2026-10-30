@@ -1,6 +1,6 @@
 import { describe, test } from "vitest";
 
-import { expect, given, keydown, label, role, scene, text } from "@role-model-router/foldkit/scene";
+import { expect, given, label, scene, text } from "@role-model-router/foldkit/scene";
 
 import { studioIdle, type StudioTab } from "../src/studio";
 import { view } from "../src/view";
@@ -9,13 +9,10 @@ import { shellModel, shellUpdate } from "./support/runtime-shell";
 /**
  * S255: the rendering half of the s46a Studio test, driven through the real view.
  *
- * s46a used five tab clicks and one Run click per tab to prove which fields and which idle response text
- * each tab paints. The rendering is a function of the Studio state, so it is asserted here with no DOM click
- * and no client (S249: scene may replace rendering assertions). s46a keeps the wiring assertions that need a
- * real client. The S254 request-shape test owns the click-to-request mapping.
- *
- * S260: `update`, `view`, and the `StudioTab`-keyed model are inferred from src types. The ArrowRight
- * step also runs the real `StudioTabKey` reducer instead of a stubbed update.
+ * The reference Studio page renders one workspace at a time (the tab is selected by the route
+ * query), so each assertion gives the model a tab and checks the workspace cards, fields and
+ * result-stage heading that page now paints. No client and no DOM click are needed here; s46a
+ * owns the real fetch and request-shape assertions.
  */
 const model = (tab: StudioTab) =>
   shellModel({
@@ -23,51 +20,39 @@ const model = (tab: StudioTab) =>
     studio: studioIdle(tab),
   });
 
-const tabPanels: ReadonlyArray<{ readonly field: string; readonly name: string; readonly tab: StudioTab }> = [
-  { field: "Prompt", name: "Chat", tab: "chat" },
-  { field: "Size", name: "Images", tab: "images" },
-  { field: "Input", name: "Audio", tab: "audio" },
-  { field: "Query", name: "Rerank", tab: "rerank" },
-  { field: "JSON payload", name: "Advanced APIs", tab: "advanced" },
+const workspaces: ReadonlyArray<{
+  readonly tab: StudioTab;
+  readonly requestTitle: string;
+  readonly resultTitle: string;
+  readonly fields: readonly string[];
+  readonly run: string;
+}> = [
+  { tab: "chat", requestTitle: "Request", resultTitle: "Result workspace", fields: ["Model", "Prompt"], run: "Run request" },
+  { tab: "images", requestTitle: "Image request modes", resultTitle: "Image result stage", fields: ["Mode", "Model", "Prompt", "Size"], run: "Run image request" },
+  { tab: "audio", requestTitle: "Audio mode and request", resultTitle: "Audio result stage", fields: ["Mode", "Model", "Voice", "Input"], run: "Run audio request" },
+  { tab: "rerank", requestTitle: "Rerank request", resultTitle: "Ranked results", fields: ["Contract", "Model", "Query", "Candidate documents"], run: "Submit rerank request" },
+  { tab: "advanced", requestTitle: "Endpoint family", resultTitle: "Response workspace", fields: ["Family", "Model", "JSON payload"], run: "Submit advanced request" },
 ];
 
-describe("S255 studio tab rendering", () => {
-  test("renders five tabs with the chat tab selected and the idle raw response", () => {
-    scene(
-      { update: shellUpdate, view },
-      given(model("chat")),
-      expect(role("tab", { name: "Chat", selected: true })).toExist(),
-      expect(role("tab", { name: "Images" })).toExist(),
-      expect(role("tab", { name: "Audio" })).toExist(),
-      expect(role("tab", { name: "Rerank" })).toExist(),
-      expect(role("tab", { name: "Advanced APIs" })).toExist(),
-      expect(role("tablist", { name: "Studio tabs" })).toExist(),
-      expect(role("tabpanel", { name: "chat" })).toExist(),
-      expect(text("RAW RESPONSE")).toExist(),
-      expect(text("Run a Studio request to see the raw response.")).toExist(),
-    );
-  });
-
-  for (const { field, name, tab } of tabPanels) {
-    test(`renders the ${tab} field set and panel`, () => {
+describe("S255 studio workspace rendering", () => {
+  for (const { tab, requestTitle, resultTitle, fields, run } of workspaces) {
+    test(`renders the ${tab} workspace cards, fields and result stage`, () => {
       scene(
         { update: shellUpdate, view },
         given(model(tab)),
-        expect(role("tab", { name, selected: true })).toExist(),
-        expect(role("tabpanel", { name: tab })).toExist(),
-        expect(label(field)).toExist(),
+        expect(text(requestTitle)).toExist(),
+        expect(text(resultTitle)).toExist(),
+        expect(text(run)).toExist(),
+        ...fields.map((field) => expect(label(field)).toExist()),
       );
     });
   }
 
-  test("ArrowRight moves the selection to the next tab and paints its fields", () => {
+  test("chat idle state shows the honest no-result text", () => {
     scene(
       { update: shellUpdate, view },
       given(model("chat")),
-      keydown(role("tab", { name: "Chat" }), "ArrowRight"),
-      expect(role("tab", { name: "Images", selected: true })).toExist(),
-      expect(role("tabpanel", { name: "images" })).toExist(),
-      expect(label("Size")).toExist(),
+      expect(text("No result yet.")).toExist(),
     );
   });
 });

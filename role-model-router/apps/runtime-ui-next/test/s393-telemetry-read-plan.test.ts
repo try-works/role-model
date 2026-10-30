@@ -109,23 +109,38 @@ describe("S392a telemetry read plan (R12 exact multiplicity)", () => {
     }
   });
 
-  for (const [tag, key] of [
-    ["Providers", "providers"],
-    ["Endpoints", "endpoints"],
-    ["ControlController", "controlController"],
+  for (const [tag, keys] of [
+    ["Providers", ["integrationProviders", "configuredModels", "modelEndpoints"]],
+    ["Endpoints", ["modelEndpoints", "configuredModels", "integrationProviders"]],
   ] as const) {
-    it(`invalidates the control surface ${tag} with ONE ReadControl`, () => {
+    it(`invalidates every readback source of the reference page ${tag} with no control read`, () => {
       const model = shellModel({ route: { _tag: tag } });
       const result = shellUpdate(model, telemetry());
-      expect(readsOf(result, "ReadReadback")).toHaveLength(0);
-      const reads = readsOf(result, "ReadControl");
-      expect(reads).toHaveLength(1);
-      expect(reads[0]?.args?.key).toBe(key);
-      expect(reads[0]?.args?.token).toBe(model.controls[key].token + 1);
-      expect(result.model.controls[key].status).toBe("loading");
+      const reads = readsOf(result, "ReadReadback");
+      expect(reads.map((command) => String(command.args?.key)).sort()).toEqual([...keys].sort());
+      for (const command of reads) {
+        const key = String(command.args?.key);
+        // SAFETY: the three plan keys were asserted above; indexing only those readback keys.
+        const readbackKey = key as (typeof keys)[number];
+        expect(Number(command.args?.token)).toBe(model.readbacks[readbackKey].token + 1);
+        expect(result.model.readbacks[readbackKey].status).toBe("loading");
+      }
+      expect(readsOf(result, "ReadControl")).toHaveLength(0);
       expect(result.model.refresh).toEqual(model.refresh);
     });
   }
+
+  it("invalidates the control surface ControlController with ONE ReadControl", () => {
+    const model = shellModel({ route: { _tag: "ControlController" } });
+    const result = shellUpdate(model, telemetry());
+    expect(readsOf(result, "ReadReadback")).toHaveLength(0);
+    const reads = readsOf(result, "ReadControl");
+    expect(reads).toHaveLength(1);
+    expect(reads[0]?.args?.key).toBe("controlController");
+    expect(reads[0]?.args?.token).toBe(model.controls.controlController.token + 1);
+    expect(result.model.controls.controlController.status).toBe("loading");
+    expect(result.model.refresh).toEqual(model.refresh);
+  });
 
   it("emits ZERO commands for a route without a readback or control source", () => {
     const model = shellModel({ route: { _tag: "Studio" } });

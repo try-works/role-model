@@ -350,7 +350,7 @@ describe("S279 mounted shell aliases", () => {
       expect(modelsCall?.accept).toBe("application/json");
       releaseAll();
       await waitFor(
-        () => (document.querySelector('[data-route="models"] h2')?.textContent === "Model inventory" ? true : undefined),
+        () => (document.querySelector('[data-route="models"] h3')?.textContent === "Model inventory" ? true : undefined),
         "the configured models projection",
       );
       releaseAll();

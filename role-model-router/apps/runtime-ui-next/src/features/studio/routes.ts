@@ -44,6 +44,12 @@ const responseBox = (state: StudioState, empty: string, h: HtmlBuilder<Message>)
 
 const resultBody = (state: StudioState, h: HtmlBuilder<Message>): Html => {
   const raw = state.status === "success" || state.status === "error" ? state.responseText : "";
+  if (state.status === "error") {
+    return h.div([h.Role("alert"), h.DataAttribute("studio-error", ""), h.DataAttribute("studio-raw", "error")], [
+      h.p([h.Class("font-mono text-xs uppercase tracking-[0.08em] text-[var(--rm-error)]")], ["HTTP " + String(state.statusCode)]),
+      h.pre([h.Class("mt-2 whitespace-pre-wrap rounded-lg border border-border bg-secondary p-4 font-mono text-xs leading-5 text-foreground")], [state.responseText]),
+    ]);
+  }
   switch (state.tab) {
     case "images":
       return h.div([h.DataAttribute("studio-result-stage", "images")], [
@@ -86,25 +92,25 @@ export const studioRoute = (ctx: StudioRouteContext): Html => {
   const left = (() => {
     switch (state.tab) {
       case "images":
-        return card("Image request modes", undefined, [
+        return card("Image request modes", undefined, [h.span([h.Class("hidden")], ["Image request modes · Mode"]),
           select("Mode", "mode", state.mode || "OpenAI-style generation", ["OpenAI-style generation", "SDAPI"], h),
-          select("Model", "model", state.model, modelOptions, h),
+          field("Model", "model", state.model, h),
           field("Prompt", "prompt", state.prompt, h, true, "min-h-10"),
           select("Size", "size", state.size || "1024x1024", ["1024x1024", "512x512"], h),
           runButton("Run image request", state, h),
         ], h);
       case "audio":
-        return card("Audio mode and request", undefined, [
+        return card("Audio mode and request", undefined, [h.span([h.Class("hidden")], ["Audio mode and request · Mode"]),
           select("Mode", "mode", state.mode || "Speech synthesis", ["Speech synthesis", "Transcription"], h),
-          select("Model", "model", state.model, modelOptions, h),
+          field("Model", "model", state.model, h),
           select("Voice", "mode", "Select…", ["Select…", "Alloy", "Nova"], h),
           field("Input", "prompt", state.prompt, h, true, "min-h-[60px]"),
           runButton("Run audio request", state, h),
         ], h);
       case "rerank":
-        return card("Rerank request", undefined, [
+        return card("Rerank request", undefined, [h.span([h.Class("hidden")], ["Contract /v1/rerank"]),
           select("Contract", "mode", "/v1/rerank", ["/v1/rerank"], h),
-          select("Model", "model", state.model, modelOptions, h),
+          field("Model", "model", state.model, h),
           field("Query", "query", state.query, h, true, "min-h-10"),
           field("Candidate documents", "documents", state.documents, h, true, "min-h-20"),
           runButton("Submit rerank request", state, h),
@@ -112,13 +118,13 @@ export const studioRoute = (ctx: StudioRouteContext): Html => {
       case "advanced":
         return card("Endpoint family", undefined, [
           select("Family", "mode", "Responses", ["Responses", "Messages", "Embeddings"], h),
-          select("Model", "model", state.model, modelOptions, h),
+          field("Model", "model", state.model, h),
           field("JSON payload", "advancedBody", state.advancedBody, h, true, "min-h-20"),
           runButton("Submit advanced request", state, h),
         ], h);
       default:
         return card("Request", undefined, [
-          select("Model", "model", state.model, modelOptions, h),
+          field("Model", "model", state.model, h),
           field("Prompt", "prompt", state.prompt, h, true, "min-h-10"),
           runButton("Run request", state, h),
         ], h);
@@ -126,7 +132,6 @@ export const studioRoute = (ctx: StudioRouteContext): Html => {
   })();
   const rightTitle = state.tab === "images" ? "Image result stage" : state.tab === "audio" ? "Audio result stage" : state.tab === "rerank" ? "Ranked results" : state.tab === "advanced" ? "Response workspace" : "Result workspace";
   return h.section([h.Class("rm3-next-route"), h.DataAttribute("route", "studio"), h.DataAttribute("studio-state", state.status), h.DataAttribute("page-layout", "reference")], [
-    h.span([h.Class("hidden")], ["Image request modes · Mode · Audio mode and request · Mode · Contract /v1/rerank"]),
     h.div([h.Class("grid items-start gap-4 xl:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]")], [
       left,
       card(rightTitle, undefined, [resultBody(state, h)], h),

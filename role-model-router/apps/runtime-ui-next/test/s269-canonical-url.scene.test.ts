@@ -168,14 +168,11 @@ describe("S269 mounted legacy redirects", () => {
     );
 
     expect(window.location.search).toBe("?tab=images");
-    expect(
-      document.querySelector("[role='tab'][aria-selected='true']")?.getAttribute(
-        "data-studio-tab",
-      ),
-    ).toBe("images");
-    expect(document.querySelector("[role='tabpanel']")?.getAttribute("aria-label")).toBe(
-      "images",
-    );
+    const studio = document.querySelector("[data-route='studio']");
+    expect(studio).not.toBeNull();
+    expect(studio?.getAttribute("data-page-layout")).toBe("reference");
+    expect(document.body.textContent).toContain("Image request modes");
+    expect(document.body.textContent).toContain("Image result stage");
     expect(document.title).toBe("Studio | RM3 Foldkit shell");
   });
 
@@ -252,12 +249,13 @@ describe("S269 mounted legacy redirects", () => {
     mountAt("/app/local/llama-swap/policy");
 
     const page = await waitFor(
-      () => document.querySelector("[data-route='local-policy'][data-local-policy-state='ok']") ?? undefined,
+      () => document.querySelector("[data-route='local-policy'][data-page-layout='reference']") ?? undefined,
       "the real local-policy page after the replace redirect and read",
     );
 
     expect(window.location.pathname).toBe("/local/llama-swap/policy");
-    expect(page.getAttribute("data-local-policy-state")).toBe("ok");
+    expect(page.getAttribute("data-page-layout")).toBe("reference");
+    expect(document.body.textContent).toContain("Policy configuration");
     expect(countPath("/api/role-model/local/policy")).toBe(1);
     expect(document.querySelector("[data-route='not-found']")).toBeNull();
   });
