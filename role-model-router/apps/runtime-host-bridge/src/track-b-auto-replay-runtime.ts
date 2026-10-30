@@ -805,6 +805,28 @@ export function startAutoReplayLoop(input: {
   const inFlightStartedAtMs = new Map<number, number>();
   let nextEntryToken = 1;
   /**
+   * S550 (R26): one cooperative signal for every production sweep body. stop() aborts it,
+   * and each sweep receives it so a shutting-down runtime can stop waiting on a hung
+   * capability call instead of holding the loop open until the cap expires.
+   */
+  const sweepAbort = new AbortController();
+  const sweepSignal = (): AbortSignal => sweepAbort.signal;
+  /**
+   * Stop waiting on a sweep body as soon as the loop is stopped. The body also receives the
+   * signal; this race is the guaranteed backstop for a capability call that does not settle.
+   */
+  const withSweepAbort = async <T>(work: Promise<T>): Promise<T> => {
+    if (sweepAbort.signal.aborted) throw new Error("sweep aborted");
+    return await new Promise<T>((resolve, reject) => {
+      const onAbort = () => reject(new Error("sweep aborted"));
+      sweepAbort.signal.addEventListener("abort", onAbort, { once: true });
+      work.then(
+        (value) => { sweepAbort.signal.removeEventListener("abort", onAbort); resolve(value); },
+        (error) => { sweepAbort.signal.removeEventListener("abort", onAbort); reject(error); },
+      );
+    });
+  };
+  /**
    * D7b: WHEN the in-flight tick started, so a tick that never returns cannot disable the walk.
    *
    * Measured live on stage-rc-06a09d37eabc (:3457, 2026-10-10) and reproduced on two processes: one tick
@@ -1123,11 +1145,13 @@ export function startAutoReplayLoop(input: {
       const evaluationQueueAuthoritative = input.planeModes?.evaluation === "queue";
       if (typeof input.operations.resumePendingEvaluations === "function") {
         try {
-          const sweep = (await input.operations.resumePendingEvaluations({
+          // SAFETY: the sweep table's declared return shape is validated field-by-field below.
+          const sweep = (await withSweepAbort(input.operations.resumePendingEvaluations({
             window,
             policySetDigest: input.policySet.policySetDigest,
+            signal: sweepSignal(),
             ...(evaluationQueueAuthoritative ? { resolvedOnly: true } : {}),
-          })) as { readonly resumed?: unknown } | null;
+          }))) as { readonly resumed?: unknown } | null;
           if (sweep && Number.isSafeInteger(sweep.resumed) && Number(sweep.resumed) >= 0) {
             resumed = Number(sweep.resumed);
           }
@@ -1206,10 +1230,12 @@ export function startAutoReplayLoop(input: {
        */
       if (typeof input.operations.sweepFinalizationSignals === "function") {
         try {
-          const sweep = (await input.operations.sweepFinalizationSignals({
+          // SAFETY: the sweep table's declared return shape is validated field-by-field below.
+          const sweep = (await withSweepAbort(input.operations.sweepFinalizationSignals({
             window,
             policySetDigest: input.policySet.policySetDigest,
-          })) as { readonly analyzed?: unknown; readonly deferred?: unknown } | null;
+            signal: sweepSignal(),
+          }))) as { readonly analyzed?: unknown; readonly deferred?: unknown } | null;
           if (sweep) {
             finalizationSignals = countOf(sweep.analyzed);
             finalizationSignalsDeferred = countOf(sweep.deferred);
@@ -1267,10 +1293,12 @@ export function startAutoReplayLoop(input: {
         typeof input.operations.learnFromUnconsumedCandidates === "function"
       ) {
         try {
-          const sweep = (await input.operations.learnFromUnconsumedCandidates({
+          // SAFETY: the sweep table's declared return shape is validated field-by-field below.
+          const sweep = (await withSweepAbort(input.operations.learnFromUnconsumedCandidates({
             window,
             policySetDigest: input.policySet.policySetDigest,
-          })) as { readonly consumed?: unknown; readonly remaining?: unknown } | null;
+            signal: sweepSignal(),
+          }))) as { readonly consumed?: unknown; readonly remaining?: unknown } | null;
           if (sweep) {
             learned = countOf(sweep.consumed);
             learnersPending = countOf(sweep.remaining);
@@ -1292,10 +1320,12 @@ export function startAutoReplayLoop(input: {
         typeof input.operations.deriveLearnerCandidates === "function"
       ) {
         try {
-          const sweep = (await input.operations.deriveLearnerCandidates({
+          // SAFETY: the sweep table's declared return shape is validated field-by-field below.
+          const sweep = (await withSweepAbort(input.operations.deriveLearnerCandidates({
             window,
             policySetDigest: input.policySet.policySetDigest,
-          })) as { readonly derived?: unknown; readonly pending?: unknown } | null;
+            signal: sweepSignal(),
+          }))) as { readonly derived?: unknown; readonly pending?: unknown } | null;
           if (sweep) {
             derivedCandidates = countOf(sweep.derived);
             derivationBacklog = countOf(sweep.pending);
@@ -1364,10 +1394,12 @@ export function startAutoReplayLoop(input: {
       // the evaluation sweep above completes.
       if (typeof input.operations.recoverHandedOffEvaluations === "function") {
         try {
-          const sweep = (await input.operations.recoverHandedOffEvaluations({
+          // SAFETY: the sweep table's declared return shape is validated field-by-field below.
+          const sweep = (await withSweepAbort(input.operations.recoverHandedOffEvaluations({
             window,
             policySetDigest: input.policySet.policySetDigest,
-          })) as { readonly recovered?: unknown } | null;
+            signal: sweepSignal(),
+          }))) as { readonly recovered?: unknown } | null;
           if (sweep && Number.isSafeInteger(sweep.recovered) && Number(sweep.recovered) >= 0) {
             recovered = Number(sweep.recovered);
           }
@@ -1425,6 +1457,7 @@ export function startAutoReplayLoop(input: {
     readonly onlyCaptureRefs?: readonly string[];
     readonly dispatchRoundId?: string;
   }): Promise<AutoReplayTickResult & { readonly skipped?: boolean }> => {
+    if (sweepAbort.signal.aborted) return { ...emptyResult(), skipped: true };
     /**
      * D7b: a tick that exceeded its deadline is RECLAIMED rather than allowed to block the loop forever.
      *
@@ -2877,8 +2910,10 @@ export function startAutoReplayLoop(input: {
       if (sweepError) console.error(`[track-b-auto-replay] sweep degraded: ${sweepError}`);
       lastProcessedAtMs = now();
       lastDispositions = result.dispositions.length;
+      if (sweepAbort.signal.aborted) return { ...emptyResult(), skipped: true };
       return result;
     } catch (error) {
+      if (sweepAbort.signal.aborted) return { ...emptyResult(), skipped: true };
       lastOutcome = "degraded";
       lastError = error instanceof Error ? error.message.slice(0, 300) : "auto replay tick failed";
       /**
@@ -2977,6 +3012,7 @@ export function startAutoReplayLoop(input: {
       return result;
     },
     stop() {
+      sweepAbort.abort();
       if (timer) {
         const clearIntervalFn =
           input.clearIntervalFn ?? ((handle: unknown) => clearInterval(handle as NodeJS.Timeout));

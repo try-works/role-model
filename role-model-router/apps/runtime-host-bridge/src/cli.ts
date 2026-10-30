@@ -5961,7 +5961,8 @@ export async function main(): Promise<void> {
          * Run 99 R33: one bounded evaluation-resume sweep per auto-replay tick, delegated to the
          * implementation that lives with the replay command handler.
          */
-        async resumePendingEvaluations() {
+        async resumePendingEvaluations(input: { readonly signal?: AbortSignal; readonly candidateId?: string; readonly window?: unknown; readonly policySetDigest?: string; readonly limit?: number; readonly onlyGroupIds?: readonly string[]; readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void } = {}): Promise<{ resumed: number; completed: number; failed: number; outsideRetentionWindow: number; renewedFromDrain: number; remaining: number }> {
+          if (input.signal instanceof AbortSignal && input.signal.aborted) throw new Error("sweep aborted");
           if (!resumeEvaluationsRef.current) {
             return {
               resumed: 0,
@@ -6020,7 +6021,8 @@ export async function main(): Promise<void> {
          *   `knowledge:promote-candidate` when the receipt says `validate` -> `knowledge:record-learning` (pack).
          * It never dispatches a provider call and never mutates a route.
          */
-        async learnFromUnconsumedCandidates(input: Record<string, unknown> = {}) {
+        async learnFromUnconsumedCandidates(input: { readonly signal?: AbortSignal; readonly candidateId?: string; readonly window?: unknown; readonly policySetDigest?: string; readonly limit?: number; readonly onlyGroupIds?: readonly string[]; readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void } = {}): Promise<{ scanned: number; consumed: number; remaining: number; activated?: number }> {
+          if (input.signal instanceof AbortSignal && input.signal.aborted) throw new Error("sweep aborted");
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { scanned: 0, consumed: 0, remaining: 0 };
           const authority = await (async () => {
@@ -6984,7 +6986,8 @@ export async function main(): Promise<void> {
          * estimate over the comparison's own rows, and the two receipts minted with the durable authority. Bounded to
          * two groups per tick, idempotent, and it never dispatches a provider call or invents a trajectory.
          */
-        async deriveLearnerCandidates(input: Record<string, unknown> = {}) {
+        async deriveLearnerCandidates(input: { readonly signal?: AbortSignal; readonly candidateId?: string; readonly window?: unknown; readonly policySetDigest?: string; readonly limit?: number; readonly onlyGroupIds?: readonly string[]; readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void } = {}): Promise<{ examined: number; derived: number; pending: number }> {
+          if (input.signal instanceof AbortSignal && input.signal.aborted) throw new Error("sweep aborted");
           /**
            * Run 105 Phase 3.5 follow-up: the ladder materialization must NOT ride the legacy
            * consumer-secret derivation path - a runtime whose durable-evaluation authority secret
@@ -7216,7 +7219,8 @@ export async function main(): Promise<void> {
          * its captures are still in the retention ring. Bounded page, bounded computes, wall-clock budget, and
          * idempotent: a group whose own report already exists is settled and never re-analyzed.
          */
-        async sweepFinalizationSignals() {
+        async sweepFinalizationSignals(input: { readonly signal?: AbortSignal; readonly candidateId?: string; readonly window?: unknown; readonly policySetDigest?: string; readonly limit?: number; readonly onlyGroupIds?: readonly string[]; readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void } = {}): Promise<{ examined: number; analyzed: number; skipped: number; refused: number; deferred: number }> {
+          if (input.signal instanceof AbortSignal && input.signal.aborted) throw new Error("sweep aborted");
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { examined: 0, analyzed: 0, skipped: 0, refused: 0, deferred: 0 };
           const authority = await (async () => {
@@ -7389,7 +7393,8 @@ export async function main(): Promise<void> {
          * resume entry the existing sweep already knows how to complete (the entry's criteria, capture and
          * branch captures are all re-derived from durable state by that completion).
          */
-        async recoverHandedOffEvaluations() {
+        async recoverHandedOffEvaluations(input: { readonly signal?: AbortSignal; readonly candidateId?: string; readonly window?: unknown; readonly policySetDigest?: string; readonly limit?: number; readonly onlyGroupIds?: readonly string[]; readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void } = {}): Promise<{ scanned: number; recovered: number; skipped: number }> {
+          if (input.signal instanceof AbortSignal && input.signal.aborted) throw new Error("sweep aborted");
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { scanned: 0, recovered: 0, skipped: 0 };
           // Cadence guard (measured need): the listing used to clone every durable job of the scope on every

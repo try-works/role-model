@@ -1,0 +1,68 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+
+ ✓ role-model-router/apps/runtime-host-bridge/test/run104-learner-sweep-evidence.test.ts (3 tests) 26ms
+(node:25136) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51904) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62256) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:20408) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:23884) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ role-model-router/apps/runtime-host-bridge/test/run100l-handoff-recovery.test.ts (7 tests) 15ms
+(node:53760) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | role-model-router/apps/runtime-host-bridge/test/run101-r7-sweeps-retired.test.ts > @recursive:101-effect-mq-queue-rebuild @sp7 R7 sweeps retired > keeps every sweep running while the planes are legacy
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=n/a captureCount=n/a
+
+stderr | role-model-router/apps/runtime-host-bridge/test/run100l-handoff-recovery-sweep.test.ts > run100l the liveness sweep recovers handed-off replays and reports the count
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=n/a
+
+stderr | role-model-router/apps/runtime-host-bridge/test/run115-s550-sweep-cancellation.test.ts > run115 s550 every production sweep body receives the loop abort signal
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=n/a
+
+stderr | role-model-router/apps/runtime-host-bridge/test/run101-r7-sweeps-retired.test.ts > @recursive:101-effect-mq-queue-rebuild @sp7 R7 sweeps retired > keeps the sweeps authoritative in shadow mode
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=n/a captureCount=n/a
+
+stderr | role-model-router/apps/runtime-host-bridge/test/run99-r33-evaluation-resume-sweep.test.ts > run99 R33 the auto-replay tick sweeps interrupted evaluations even with no pending captures
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=n/a
+
+stderr | role-model-router/apps/runtime-host-bridge/test/run100l-handoff-recovery-sweep.test.ts > run100l a failing recovery pass degrades the tick instead of stopping the loop
+[run104-pending] captures=1 scoped=1 first=req-1 only=none pendingCount=1 captureCount=n/a
+
+ ✓ role-model-router/apps/runtime-host-bridge/test/run101-addendum45-skip-path-sweep-pacing.test.ts (1 test) 40ms
+stderr | role-model-router/apps/runtime-host-bridge/test/run101-r7-sweeps-retired.test.ts > @recursive:101-effect-mq-queue-rebuild @sp7 R7 sweeps retired > retires broad evaluation sweeps but keeps resolved handoff finalization when the evaluation queue is authoritative
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=n/a captureCount=n/a
+
+stderr | role-model-router/apps/runtime-host-bridge/test/run101-r7-sweeps-retired.test.ts > @recursive:101-effect-mq-queue-rebuild @sp7 R7 sweeps retired > retires the learner sweeps once the learner queue is authoritative
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=n/a captureCount=n/a
+
+ ✓ role-model-router/apps/runtime-host-bridge/test/run101-r7-sweeps-retired.test.ts (4 tests) 56ms
+stderr | role-model-router/apps/runtime-host-bridge/test/run99-r33-evaluation-resume-sweep.test.ts > run99 R33 a failing evaluation sweep degrades the tick without discarding dispositions
+[run104-pending] captures=1 scoped=1 first=req-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | role-model-router/apps/runtime-host-bridge/test/run115-s550-sweep-cancellation.test.ts > run115 s550 a wedged sweep is aborted by stop instead of holding the tick open
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=n/a
+
+stderr | role-model-router/apps/runtime-host-bridge/test/run115-s550-sweep-cancellation.test.ts > run115 s550 a wedged sweep is aborted by stop instead of holding the tick open
+[track-b-auto-replay] sweep degraded: handed-off replay recovery failed: sweep aborted
+
+ ✓ role-model-router/apps/runtime-host-bridge/test/run115-s550-sweep-cancellation.test.ts (2 tests) 84ms
+stderr | role-model-router/apps/runtime-host-bridge/test/run100l-handoff-recovery-sweep.test.ts > run100l a failing recovery pass degrades the tick instead of stopping the loop
+[track-b-auto-replay] sweep degraded: handed-off replay recovery failed: replay job listing failed
+
+ ✓ role-model-router/apps/runtime-host-bridge/test/run100l-handoff-recovery-sweep.test.ts (2 tests) 138ms
+stderr | role-model-router/apps/runtime-host-bridge/test/run99-r33-evaluation-resume-sweep.test.ts > run99 R33 a failing evaluation sweep degrades the tick without discarding dispositions
+[track-b-auto-replay] sweep degraded: evaluation resume sweep failed: durable replay evaluation is missing branch capture for endpoint:endpoint-a
+
+ ✓ role-model-router/apps/runtime-host-bridge/test/run99-r33-evaluation-resume-sweep.test.ts (2 tests) 146ms
+ ✓ role-model-router/apps/runtime-host-bridge/test/s17b-sse-cleanup.test.ts (7 tests) 164ms
+
+ Test Files  8 passed (8)
+      Tests  28 passed (28)
+   Start at  08:59:50
+   Duration  12.93s (transform 10.49s, setup 0ms, collect 56.51s, tests 670ms, environment 5ms, prepare 4.07s)
+

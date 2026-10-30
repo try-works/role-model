@@ -1,0 +1,4 @@
+S550 B5/R26 sweep cooperative cancellation (s551 HOLD fixes)
+RED: s550-red.log — final s550 test against pre-S550 HEAD loop; 2/2 failed incl. skipped:true assertion; full output.
+GREEN: s550 2/2 (wedged tick settles with skipped:true after stop); 8 sweep/s17b files 28/28; host tsc 0; UI tsc 0; s247 3/3; anti_slop_lint test 0 findings; loop/cli added-line clean.
+Implementation: loop AbortController; stop() aborts; every sweep gets signal and is raced; abort path returns { ...emptyResult(), skipped: true }; cli bodies reject early when aborted; no behaviour change without stop.
