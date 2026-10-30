@@ -28,15 +28,18 @@ describe("S67a learning surfaces", () => {
     mountAt("s67a-empty", async (input) => { const path = new URL(String(input), "http://localhost").pathname; return response(baseBodies[path] ?? {}); });
     const page = await waitFor(() => document.querySelector("[data-route='learning']") ?? undefined, "learning route");
     expect(document.querySelectorAll("h1")).toHaveLength(1);
-    expect(document.querySelector("h1")?.textContent).toBe("Learning");
-    expect([...page.querySelectorAll("h2")].map((node) => node.textContent)).toEqual(["Knowledge worker", "Replay jobs", "Evaluation jobs"]);
+    expect(document.querySelector("h1")?.textContent).toBe("Learning overview");
+    const headings = [...page.querySelectorAll("h2")].map((node) => node.textContent);
+    expect(headings).toContain("Knowledge worker");
+    expect(headings).toContain("Replay jobs");
+    expect(headings).toContain("Evaluation jobs");
     await waitFor(() => document.querySelector("[data-readback-route='learning'][data-readback-state='ok']") ?? undefined, "knowledge ok");
     expect(page.textContent).toContain("sqlite_fts5_bm25");
     expect(page.textContent).toContain("disabled");
     expect(page.textContent).toContain("No replay jobs.");
     expect(page.textContent).toContain("No evaluation jobs.");
     expect(document.querySelector("a[data-nav='learning']")?.getAttribute("aria-current")).toBe("page");
-    expect(document.querySelector("[data-nav-group='Learning']")).not.toBeNull();
+    expect(document.querySelectorAll("aside[data-shell-sidebar] a[data-nav]")).toHaveLength(10);
   });
 
   it("shows loading, empty, error and ok for each of the three surfaces", async () => {

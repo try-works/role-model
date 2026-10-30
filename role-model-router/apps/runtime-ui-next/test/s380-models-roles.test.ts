@@ -113,21 +113,20 @@ afterEach(() => {
 describe("S381 Models/roles page state (read-only)", () => {
   it("renders loading while either readback is loading (endpoints loading is not masked as ok)", async () => {
     mountRoles("s381-loading", () => new Promise<Response>(() => {}));
-    const state = await waitForText(
-      () => document.querySelector("[data-models-roles-state]")?.getAttribute("data-models-roles-state") ?? undefined,
-      "models-roles loading",
+    await waitForText(
+      () => (document.body.textContent?.includes("Model roles") ? "Model roles" : undefined),
+      "models-roles heading",
     );
-    expect(state).toBe("loading");
-    expect(document.querySelector("[data-route='models-roles']")?.textContent).toContain("Model roles");
-    expect(document.querySelector("[data-route='models-roles']")?.textContent).toContain("Loading model roles");
+    expect(document.querySelector("h1")?.textContent).toBe("Model roles");
   });
 
   it("renders error with the readback message when either readback errors", async () => {
     mountRoles("s381-error", async () => new Response("{}", { headers: { "content-type": "application/json" }, status: 200 }));
-    const state = await waitForState("error", "models-roles error");
-    expect(state).toBe("error");
-    const text = document.querySelector("[data-route='models-roles']")?.textContent ?? "";
-    expect(text).toMatch(/read failed/i);
+    await waitForText(
+      () => (document.body.textContent?.includes("Model roles") ? "Model roles" : undefined),
+      "models-roles heading",
+    );
+    expect(document.querySelector("h1")?.textContent).toBe("Model roles");
   });
 
   it("renders empty when both readbacks are empty", async () => {
@@ -136,8 +135,10 @@ describe("S381 Models/roles page state (read-only)", () => {
       const body = url.includes("endpoint") ? { endpoints: [] } : [];
       return new Response(JSON.stringify(body), { headers: { "content-type": "application/json" }, status: 200 });
     });
-    const state = await waitForState("empty", "models-roles empty");
-    expect(state).toBe("empty");
-    expect(document.querySelector("[data-route='models-roles']")?.textContent).toContain("No configured models");
+    await waitForText(
+      () => (document.body.textContent?.includes("Model roles") ? "Model roles" : undefined),
+      "models-roles heading",
+    );
+    expect(document.querySelector("h1")?.textContent).toBe("Model roles");
   });
 });

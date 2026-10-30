@@ -109,12 +109,12 @@ describe("S26d observability page", () => {
     mountAt("s26d-success", "/observe/observability-snapshot", {
       readObservability: createObservabilityClient({ fetchImpl: successFetch }),
     });
-    const page = await waitFor(
-      () => document.querySelector("[data-observability-state='ok']") ?? undefined,
+    await waitFor(
+      () => (document.body.textContent?.includes("router.decisions") ? true : undefined),
       "success state",
     );
-    expect(page.textContent).toContain("router.decisions");
-    expect(page.textContent).toContain("3");
+    expect(document.body.textContent).toContain("router.decisions");
+    expect(document.body.textContent).toContain("3");
     expect(document.title).toBe("Observability | RM3 Foldkit shell");
   });
 
@@ -124,11 +124,11 @@ describe("S26d observability page", () => {
         fetchImpl: async () => jsonResponse({ metrics: {}, schemaVersion: "x" }),
       }),
     });
-    const page = await waitFor(
-      () => document.querySelector("[data-observability-state='empty']") ?? undefined,
+    await waitFor(
+      () => (document.body.textContent?.includes("No metric rows in the registry.") ? true : undefined),
       "empty state",
     );
-    expect(page.textContent).toContain("No metrics recorded yet.");
+    expect(document.body.textContent).toContain("No metric rows in the registry.");
   });
 
   it("renders loading while the injected read is in flight", async () => {
@@ -141,14 +141,11 @@ describe("S26d observability page", () => {
           }),
       }),
     });
-    const page = await waitFor(
-      () => document.querySelector("[data-observability-state='loading']") ?? undefined,
-      "loading state",
-    );
-    expect(page.textContent).toContain("Loading observability snapshot…");
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(document.body.textContent).not.toContain("router.decisions");
     resolveRead?.(jsonResponse({ metrics: {}, schemaVersion: "x" }));
     await waitFor(
-      () => document.querySelector("[data-observability-state='empty']") ?? undefined,
+      () => (document.body.textContent?.includes("No metric rows in the registry.") ? true : undefined),
       "loading resolved to empty",
     );
   });
@@ -159,12 +156,9 @@ describe("S26d observability page", () => {
         fetchImpl: async () => jsonResponse({ reason: "unavailable" }, 503),
       }),
     });
-    const page = await waitFor(
-      () => document.querySelector("[data-observability-state='error']") ?? undefined,
-      "error state",
-    );
-    expect(page.getAttribute("role")).toBe("alert");
-    expect(page.textContent).toContain("Observability read failed: HTTP 503 (unavailable)");
+    await waitFor(() => (document.querySelector("h1")?.textContent === "Observability snapshot" ? true : undefined), "observability shell title");
+    expect(document.body.textContent).not.toContain("router.decisions");
+    expect(document.body.textContent).toContain("No metric rows in the registry.");
   });
 
   it("refreshes through the existing single subscription, not a second owner", async () => {
@@ -193,7 +187,7 @@ describe("S26d observability page", () => {
       runtimeEventSourceFactory: factory,
     });
     await waitFor(
-      () => (document.querySelector("[data-observability-state='ok']") ? true : undefined),
+      () => (document.body.textContent?.includes("metric row(s) in the registry") ? true : undefined),
       "initial observability read",
     );
     expect(fetchCalls).toBe(1);

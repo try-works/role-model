@@ -55,10 +55,10 @@ describe("S75a overview filters", () => {
     select.value = "local"; select.dispatchEvent(new Event("change", { bubbles: true }));
     await waitFor(() => urls.length >= 2 ? true : undefined, "second fetch");
     releaseNew?.(json({ items: [item(1, "local", 200)], window: { startAtMs: Date.now() - DAY, endAtMs: Date.now() } }));
-    await waitFor(() => document.querySelector("[data-overview-state='success']") ?? undefined, "new response");
+    await waitFor(() => document.querySelector("[data-overview-items=\"1\"]") ?? undefined, "new response");
     releaseOld?.(json({ items: [], window: { startAtMs: Date.now() - DAY, endAtMs: Date.now() } }));
     await new Promise((resolve) => setTimeout(resolve, 80));
-    expect(document.querySelector("[data-overview-state='success']")).not.toBeNull();
+    expect(document.querySelector("[data-overview-items='1']")).not.toBeNull();
     expect(document.querySelector("[data-overview-summary]")?.textContent).toContain("Source: local");
     expect(urls[1]).toContain("sourceTypes=local");
   });

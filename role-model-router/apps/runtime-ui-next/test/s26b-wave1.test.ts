@@ -61,26 +61,29 @@ describe("S26b wave 1 shell entries", () => {
     expect(document.querySelector("a[data-nav='index']")?.getAttribute("aria-current")).toBe(
       "page",
     );
-    expect(document.querySelectorAll("[data-nav-group]").length).toBeGreaterThanOrEqual(5);
-    expect(document.querySelectorAll("nav[data-shell-nav] a[data-nav]").length).toBeGreaterThanOrEqual(20);
+    const sections = [...document.querySelectorAll("aside[data-shell-sidebar] a[data-nav]")];
+    expect(sections.map((link) => link.textContent)).toEqual([
+      "Overview", "Studio", "Local", "Remote", "Models", "Router", "Observe", "Connect", "System", "Learning",
+    ]);
 
-    const diagnostics = document.querySelector<HTMLAnchorElement>("a[data-nav='diagnostics']");
-    expect(diagnostics).toBeDefined();
-    diagnostics?.focus();
-    diagnostics?.click();
+    const models = document.querySelector<HTMLAnchorElement>("a[data-nav='models']");
+    expect(models).toBeDefined();
+    models?.focus();
+    models?.click();
 
     await waitFor(
-      () => (document.querySelector("[data-shell-route='Diagnostics']") ? true : undefined),
-      "the diagnostics route",
+      () => (document.querySelector("[data-shell-route='Models']") ? true : undefined),
+      "the models route",
     );
+    expect(document.querySelector("[data-shell-route='Models']")?.textContent).toBe("Models");
     expect(document.querySelectorAll("aside[data-shell-sidebar]")).toHaveLength(1);
-    expect(document.querySelector("a[data-nav='diagnostics']")?.getAttribute("aria-current")).toBe(
+    expect(document.querySelector("a[data-nav='models']")?.getAttribute("aria-current")).toBe(
       "page",
     );
     expect(document.querySelector("a[data-nav='index']")?.getAttribute("aria-current")).toBeNull();
     // No forced focus restoration: the activated navigation link keeps focus.
-    expect(document.activeElement).toBe(diagnostics);
-    expect(document.title).toBe("Diagnostics 42 | RM3 Foldkit shell");
+    expect(document.activeElement).toBe(models);
+    expect(document.title).toBe("Models | RM3 Foldkit shell");
   });
 
   it("index is a real success landing with working onward navigation", async () => {
@@ -92,20 +95,19 @@ describe("S26b wave 1 shell entries", () => {
       return new Response("{}", { status: 200 });
     });
     const page = await waitFor(
-      () => document.querySelector("[data-route='index'][data-state='success']") ?? undefined,
+      () => document.querySelector("[data-route='index'][data-overview-state='success']") ?? undefined,
       "index route",
     );
-    expect(page.getAttribute("data-state")).toBe("success");
+    expect(page.getAttribute("data-overview-state")).toBe("success");
     expect(document.querySelector("h1")?.textContent).toBe("Runtime overview");
     expect(document.body.textContent).toContain("Runtime overview");
-    expect(page.textContent).toContain("Latency (ms)");
-    expect(page.textContent).toContain("Success vs failure");
+    expect(page.textContent).toContain("Latency trend");
+    expect(page.textContent).toContain("Success vs failure volume");
     await waitFor(() => document.querySelector("[data-window]") ?? undefined, "filter chips");
     expect(document.querySelectorAll("[data-window]")).toHaveLength(4);
     expect(document.title).toBe("Overview | RM3 Foldkit shell");
-    // Static route: no data source exists, so no empty/loading/error state is rendered.
-    expect(page.querySelector("[data-state='empty']")).toBeNull();
-    expect(page.querySelector("[data-state='loading']")).toBeNull();
+    expect(page.querySelector("[data-overview-state='empty']")).toBeNull();
+    expect(page.querySelector("[data-overview-state='loading']")).toBeNull();
   });
 
   it("not-found is a terminal error state with recovery navigation", async () => {
@@ -138,7 +140,7 @@ describe("S26b wave 1 shell entries", () => {
       expect(document.documentElement.classList.contains("dark")).toBe(true);
 
       const toggle = await waitFor(
-        () => document.querySelector<HTMLButtonElement>("button.rm3-theme-toggle") ?? undefined,
+        () => document.querySelector<HTMLButtonElement>("[data-slot='role-model-theme-toggle']") ?? undefined,
         "theme toggle",
       );
       toggle.click();
@@ -148,13 +150,13 @@ describe("S26b wave 1 shell entries", () => {
       );
       expect(localStorage.getItem("role-model-runtime-theme")).toBe("light");
       expect(document.documentElement.classList.contains("light")).toBe(true);
-      expect(document.body.textContent).toContain("Light shell");
+      expect(toggle.getAttribute("aria-label")).toBe("Switch to dark mode");
 
-      const diagnostics = document.querySelector<HTMLAnchorElement>("a[data-nav='diagnostics']");
-      diagnostics?.focus();
-      diagnostics?.click();
+      const models = document.querySelector<HTMLAnchorElement>("a[data-nav='models']");
+      models?.focus();
+      models?.click();
       await waitFor(
-        () => (document.title.includes("Diagnostics 42") ? true : undefined),
+        () => (document.title.includes("Models") ? true : undefined),
         "title after navigation",
       );
       await waitFor(
@@ -162,7 +164,7 @@ describe("S26b wave 1 shell entries", () => {
         "scroll-to-top command",
       );
       expect(scrollTo).toHaveBeenCalledWith({ behavior: "auto", top: 0 });
-      expect(document.activeElement).toBe(diagnostics);
+      expect(document.activeElement).toBe(models);
       expect(document.documentElement.dataset.theme).toBe("light");
     } finally {
       scrollTo.mockRestore();

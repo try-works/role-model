@@ -117,15 +117,15 @@ describe("S25b shell refresh owner and gap resync", () => {
     expect(fakeSources[1]?.closed()).toBe(0);
 
     // Navigation must not add a route-owned subscription: recheck after the route changes.
-    document.querySelector<HTMLAnchorElement>('a[data-nav="diagnostics"]')?.click();
+    document.querySelector<HTMLAnchorElement>('a[data-nav="models"]')?.click();
     await waitFor(
-      () => (window.location.pathname.startsWith("/diagnostics/") ? true : undefined),
-      "the diagnostics route",
+      () => (window.location.pathname === "/models" ? true : undefined),
+      "the models route",
     );
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(fakeSources).toHaveLength(2);
     expect(activeSources).toBe(1);
-  });
+  }, 15000);
 
   it("a revision gap 1 -> 3 with NO later event resyncs immediately, shows stale, and ignores the old revision", async () => {
     window.history.replaceState({}, "", "/diagnostics/abc");
@@ -142,7 +142,7 @@ describe("S25b shell refresh owner and gap resync", () => {
     });
 
     await waitFor(() => (fakeSources.length === 1 ? true : undefined), "the source");
-    const shell = () => document.querySelector<HTMLElement>(".rm3-next-shell");
+    const shell = () => document.querySelector<HTMLElement>("[data-shell-state]");
     await waitFor(
       () => (document.querySelector('[data-diagnostics-state="disabled"]') ? true : undefined),
       "the initial diagnostics read",
@@ -203,7 +203,7 @@ describe("S25b shell refresh owner and gap resync", () => {
     });
     await waitFor(() => (fakeSources.length === 1 ? true : undefined), "the source");
     fakeSources[0]?.emitRevision(1);
-    const shell = () => document.querySelector<HTMLElement>(".rm3-next-shell");
+    const shell = () => document.querySelector<HTMLElement>("[data-shell-state]");
     await waitFor(
       () => (shell()?.getAttribute("data-refresh-revision") === "1" ? true : undefined),
       "revision 1 applied",
@@ -253,7 +253,7 @@ describe("S25b shell refresh owner and gap resync", () => {
         }),
     });
     await waitFor(() => (fakeSources.length === 1 ? true : undefined), "the source");
-    const shell = () => document.querySelector<HTMLElement>(".rm3-next-shell");
+    const shell = () => document.querySelector<HTMLElement>("[data-shell-state]");
     await waitFor(
       () => (document.body.textContent?.includes("build: build-a-1") ? true : undefined),
       "initial build-a",
@@ -301,7 +301,7 @@ describe("S25b shell refresh owner and gap resync", () => {
         }),
     });
     await waitFor(() => (fakeSources.length === 1 ? true : undefined), "the source");
-    const shell = () => document.querySelector<HTMLElement>(".rm3-next-shell");
+    const shell = () => document.querySelector<HTMLElement>("[data-shell-state]");
     await waitFor(
       () => (document.body.textContent?.includes("build: build-a") ? true : undefined),
       "route a",
@@ -337,7 +337,7 @@ describe("S25b shell refresh owner and gap resync", () => {
       readRefreshSnapshot: async () => await new Promise<DiagnosticsResult>(() => undefined),
     });
     await waitFor(() => (fakeSources.length === 1 ? true : undefined), "the source");
-    const shell = () => document.querySelector<HTMLElement>(".rm3-next-shell");
+    const shell = () => document.querySelector<HTMLElement>("[data-shell-state]");
     await waitFor(
       () => (document.body.textContent?.includes("build: build-a") ? true : undefined),
       "route a",
@@ -395,7 +395,7 @@ describe("S25b shell refresh owner and gap resync", () => {
         }),
     });
     await waitFor(() => (fakeSources.length === 1 ? true : undefined), "the source");
-    const shell = () => document.querySelector<HTMLElement>(".rm3-next-shell");
+    const shell = () => document.querySelector<HTMLElement>("[data-shell-state]");
     await waitFor(
       () => (document.querySelector('[data-diagnostics-state="disabled"]') ? true : undefined),
       "the initial diagnostics read",
@@ -441,7 +441,7 @@ describe("S25b shell refresh owner and gap resync", () => {
         }),
     });
     await waitFor(() => (fakeSources.length === 1 ? true : undefined), "the source");
-    const shell = () => document.querySelector<HTMLElement>(".rm3-next-shell");
+    const shell = () => document.querySelector<HTMLElement>("[data-shell-state]");
     await waitFor(
       () => (document.querySelector('[data-diagnostics-state="disabled"]') ? true : undefined),
       "the initial diagnostics read",

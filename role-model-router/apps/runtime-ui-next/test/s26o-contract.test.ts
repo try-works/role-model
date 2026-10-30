@@ -58,7 +58,7 @@ describe("S26o captured-host parser contracts", () => {
         downstreamOpenAI: ["contractVersion", "role-model.downstream.openai.v1"],
         health: ["Status", "—"],
         runtimeSummary: ["Endpoint", "http://127.0.0.1:3458"],
-        observeActivity: ["req-20961d29-1dc6-40e3-b8e1-902493528b90", ""],
+        observeActivity: ["moonshot/kimi-k2.5", ""],
         queueConfig: ["schemaVersion", "role-model.queue-policy.v1"],
         runtime: ["applied", "false"],
         sessionReadiness: ["Overall", "unobserved"],

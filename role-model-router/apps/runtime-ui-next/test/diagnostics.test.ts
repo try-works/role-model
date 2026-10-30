@@ -400,12 +400,12 @@ describe("diagnostics page states", () => {
     expect(refresh?.className).toContain("w-full");
     expect(refresh?.disabled).toBe(false);
 
-    const links = Array.from(document.querySelectorAll("nav a"));
-    expect(links.length).toBeGreaterThanOrEqual(2);
+    const links = Array.from(document.querySelectorAll("aside[data-shell-sidebar] a[data-nav]"));
+    expect(links).toHaveLength(10);
     for (const link of links) {
       expect(link.getAttribute("href")).toBeTruthy();
-      expect((link as HTMLElement).className).toContain("focus-visible:outline-2");
     }
+    expect(links.filter((link) => link.getAttribute("aria-current") === "page")).toHaveLength(1);
   });
 
   it("does not apply a resolved read for a previous route id after navigating away", async () => {

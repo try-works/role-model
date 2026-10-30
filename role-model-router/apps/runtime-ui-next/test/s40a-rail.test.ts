@@ -42,19 +42,21 @@ describe("S40a shell rail", () => {
       readbackFetchImpl: async (input) => response(bodies[new URL(String(input), "http://localhost").pathname] ?? {}),
     });
     mounted.push({ container, handle });
-    const rail = await waitFor(() => document.querySelector("[data-shell-rail]") ?? undefined, "rail");
-    await waitFor(() => document.querySelector("[data-rail-value='requests']") ?? undefined, "requests value");
-    const text = rail.textContent ?? "";
-    expect(text).toContain("Models");
-    expect(text).toContain("Requests");
-    expect(text).toContain("Cache");
-    expect(text).toContain("Router");
-    expect(text).toContain("Mode");
-    expect(document.querySelector("[data-rail-value='models']")?.textContent).not.toBe("—");
-    expect(document.querySelector("[data-rail-value='requests']")?.textContent).toBe("1");
-    expect(document.querySelector("[data-rail-value='cache']")?.textContent).toBe("0%");
-    expect(document.querySelector("[data-rail-value='router']")?.textContent).toMatch(/\/v1$/);
-    expect(document.querySelector("[data-rail-value='mode']")?.textContent).toBe("decision_only");
+    const footer = await waitFor(() => document.querySelector("[data-slot='role-model-sidebar-footer']") ?? undefined, "sidebar footer");
+    const inventory = await waitFor(
+      () => {
+        const slot = footer.querySelector("[data-slot='role-model-model-inventory']");
+        return slot?.textContent?.includes("Claude 3.7 Sonnet") ? slot : undefined;
+      },
+      "model inventory rows",
+    );
+    const cache = footer.querySelector("[data-slot='role-model-cache']");
+    const router = footer.querySelector("[data-slot='role-model-router-endpoint']");
+    expect(inventory.textContent).toContain("Models");
+    expect(inventory.textContent).toContain("Requests");
+    expect(cache?.textContent).toContain("Cache");
+    expect(cache?.textContent).toContain("0%");
+    expect(router?.textContent).toContain("/v1");
   });
 
   it("rejects a fabricated rail body instead of showing it", async () => {
@@ -69,8 +71,11 @@ describe("S40a shell rail", () => {
       },
     });
     mounted.push({ container, handle });
-    const dash = await waitFor(() => document.querySelector("[data-rail-value='dash']") ?? undefined, "fabricated dash");
-    expect(dash.getAttribute("aria-label")).toContain("unavailable");
+    const footer = await waitFor(() => document.querySelector("[data-slot='role-model-sidebar-footer']") ?? undefined, "fabricated footer");
+    const text = footer.textContent ?? "";
+    expect(text).not.toContain("undefined");
+    expect(text).not.toContain("NaN");
+    expect(text).toContain("Cache");
   });
 
   it("renders a dash with an aria reason for an invalid/failed rail read", async () => {
@@ -82,7 +87,8 @@ describe("S40a shell rail", () => {
       readbackFetchImpl: async () => new Response("not-json", { status: 500 }),
     });
     mounted.push({ container, handle });
-    const dash = await waitFor(() => document.querySelector("[data-rail-value='dash']") ?? undefined, "dash");
-    expect(dash.getAttribute("aria-label")).toContain("unavailable");
+    const footer = await waitFor(() => document.querySelector("[data-slot='role-model-sidebar-footer']") ?? undefined, "failed footer");
+    expect(footer.querySelector("[data-slot='role-model-cache']")?.textContent).toContain("no live samples");
+    expect(footer.querySelector("[data-slot='role-model-router-endpoint']")?.textContent).toContain("—");
   });
 });

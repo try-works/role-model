@@ -26,9 +26,9 @@ const model = (tab: StudioTab) =>
 const tabPanels: ReadonlyArray<{ readonly field: string; readonly name: string; readonly tab: StudioTab }> = [
   { field: "Prompt", name: "Chat", tab: "chat" },
   { field: "Size", name: "Images", tab: "images" },
-  { field: "Prompt", name: "Audio", tab: "audio" },
+  { field: "Input", name: "Audio", tab: "audio" },
   { field: "Query", name: "Rerank", tab: "rerank" },
-  { field: "JSON body", name: "Advanced APIs", tab: "advanced" },
+  { field: "JSON payload", name: "Advanced APIs", tab: "advanced" },
 ];
 
 describe("S255 studio tab rendering", () => {

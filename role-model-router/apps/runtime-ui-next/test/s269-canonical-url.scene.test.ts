@@ -109,15 +109,12 @@ describe("S269 mounted legacy redirects", () => {
     const historyLength = window.history.length;
     mountAt("/app/observe/requests");
 
-    const page = await waitFor(
-      () =>
-        document.querySelector(
-          "[data-readback-route='requests'][data-readback-state='ok']",
-        ) ?? undefined,
+    await waitFor(
+      () => (document.body.textContent?.includes("m-legacy") ? true : undefined),
       "the canonical requests readback",
     );
 
-    expect(page.textContent).toContain("m-legacy");
+    expect(document.body.textContent).toContain("m-legacy");
     expect(window.location.pathname).toBe("/requests");
     expect(window.location.search).toBe("");
     expect(window.history.length).toBe(historyLength);
@@ -132,15 +129,12 @@ describe("S269 mounted legacy redirects", () => {
     const historyLength = window.history.length;
     mountAt("/app/observe");
 
-    const page = await waitFor(
-      () =>
-        document.querySelector(
-          "[data-readback-route='requests'][data-readback-state='ok']",
-        ) ?? undefined,
+    await waitFor(
+      () => (document.body.textContent?.includes("m-legacy") ? true : undefined),
       "the canonical requests readback from the legacy map entry",
     );
 
-    expect(page.textContent).toContain("m-legacy");
+    expect(document.body.textContent).toContain("m-legacy");
     expect(window.location.pathname).toBe("/requests");
     expect(window.history.length).toBe(historyLength);
     expect(countPath("/api/role-model/telemetry/requests")).toBe(1);
@@ -149,15 +143,12 @@ describe("S269 mounted legacy redirects", () => {
   it("keeps a legacy detail ID and query through the canonical detail route", async () => {
     mountAt("/app/observe/requests/req-9?window=3600000");
 
-    const page = await waitFor(
-      () =>
-        document.querySelector(
-          "[data-readback-route='requestDetail'][data-readback-state='ok']",
-        ) ?? undefined,
+    await waitFor(
+      () => (document.body.textContent?.includes("req-9") ? true : undefined),
       "the canonical request-detail readback",
     );
 
-    expect(page.textContent).toContain("req-9");
+    expect(document.body.textContent).toContain("req-9");
     expect(window.location.pathname).toBe("/requests/req-9");
     expect(window.location.search).toBe("?window=3600000");
     expect(document.title).toBe("Request req-9 | RM3 Foldkit shell");
@@ -251,10 +242,7 @@ describe("S269 mounted legacy redirects", () => {
       "the canonical requests URL after an in-app change",
     );
     await waitFor(
-      () =>
-        document.querySelector(
-          "[data-readback-route='requests'][data-readback-state='ok']",
-        ) ?? undefined,
+      () => (document.body.textContent?.includes("m-legacy") ? true : undefined),
       "the requests readback after an in-app change",
     );
     expect(countPath("/api/role-model/telemetry/requests")).toBe(1);
@@ -278,10 +266,7 @@ describe("S269 mounted legacy redirects", () => {
     mountAt("/requests");
 
     await waitFor(
-      () =>
-        document.querySelector(
-          "[data-readback-route='requests'][data-readback-state='ok']",
-        ) ?? undefined,
+      () => (document.body.textContent?.includes("m-legacy") ? true : undefined),
       "the bare requests readback",
     );
 
@@ -293,10 +278,7 @@ describe("S269 mounted legacy redirects", () => {
     mountAt("/requests");
 
     await waitFor(
-      () =>
-        document.querySelector(
-          "[data-readback-route='requests'][data-readback-state='ok']",
-        ) ?? undefined,
+      () => (document.body.textContent?.includes("m-legacy") ? true : undefined),
       "the initial requests readback",
     );
     expect(countPath("/api/role-model/telemetry/requests")).toBe(1);

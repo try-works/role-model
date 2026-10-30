@@ -1,0 +1,4 @@
+S561 reference shell retarget
+FULL SUITE (after retarget, before final s40a timing fix): 707 passed / 12 failed of 719; 67/73 files. Remaining failures were 1 s40a (fixed; now 4/4) + 11 in files outside the S561 list: s26k-control 1, s26n-rows 1, s529-observe-family 2, s534-families 5, s540-system-local-density 2. Causes are reference-shell/feature text drift (Operator controls, Advanced controls, Llama-swap logs/models, Save policy, All roles 28 selected, static Local choose copy) plus one s26k provider timeout.
+S561 test files: all updated files pass when run as the 17-file set except the outside-list files above.
+UI tsc 0. No source edits; only the 17 listed test files (s380 included).

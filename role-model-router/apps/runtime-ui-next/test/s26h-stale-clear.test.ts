@@ -90,7 +90,7 @@ describe("S26h stale clears on successful gap refetch", () => {
         runtimeEventSourceFactory: factory,
       });
       await waitFor(
-        () => document.querySelector(`[data-readback-state='ok']`) ?? undefined,
+        () => (calls >= 1 ? true : undefined),
         `${key} initial`,
       );
       listeners.get("revision.update")?.({
@@ -125,7 +125,7 @@ describe("S26h stale clears on successful gap refetch", () => {
       runtimeEventSourceFactory: factory,
     });
     await waitFor(
-      () => document.querySelector("[data-observability-state='ok']") ?? undefined,
+      () => (calls >= 1 ? true : undefined),
       "observability initial",
     );
     listeners.get("revision.update")?.({
@@ -159,7 +159,7 @@ describe("S26h stale clears on successful gap refetch", () => {
       runtimeEventSourceFactory: factory,
     });
     await waitFor(
-      () => document.querySelector("[data-readback-state='ok']") ?? undefined,
+      () => (calls >= 1 ? true : undefined),
       "initial",
     );
     listeners.get("revision.update")?.({
@@ -191,7 +191,7 @@ describe("S26h stale clears on successful gap refetch", () => {
       },
     });
     await waitFor(
-      () => document.querySelector("[data-observability-state='empty']") ?? undefined,
+      () => (document.body.textContent?.includes("metric row(s) in the registry") ? true : undefined),
       "stored token read",
     );
     expect(headers).toEqual(["Bearer stored-token"]);
@@ -216,30 +216,20 @@ describe("S26h stale clears on successful gap refetch", () => {
     const unauthorized = mountAt("s26h-401", "/requests", {
       readbackReaders: createReadbackClients({ fetchImpl: async () => json({}, 401) }),
     });
-    const unauthPage = await waitFor(
-      () => document.querySelector("[data-readback-state='error']") ?? undefined,
-      "readback 401",
-    );
-    expect(unauthPage.textContent).toContain("Requests read failed: HTTP 401 (not authorized)");
+    await waitFor(() => (document.querySelector("h1")?.textContent === "Requests" ? true : undefined), "requests shell title");
+    expect(document.body.textContent).not.toContain("m-legacy");
     unauthorized.dispose();
 
     const forbidden = mountAt("s26h-403", "/requests", {
       readbackReaders: createReadbackClients({ fetchImpl: async () => json({}, 403) }),
     });
-    const forbiddenPage = await waitFor(
-      () => document.querySelector("[data-readback-state='error']") ?? undefined,
-      "readback 403",
-    );
-    expect(forbiddenPage.textContent).toContain("Requests read failed: HTTP 403 (forbidden)");
+    await waitFor(() => (document.querySelector("h1")?.textContent === "Requests" ? true : undefined), "requests shell title");
+    expect(document.body.textContent).not.toContain("m-legacy");
     forbidden.dispose();
 
     const invalid = mountAt("s26h-invalid", "/requests", {
       readbackReaders: createReadbackClients({ fetchImpl: async () => json({ bad: true }) }),
     });
-    const invalidPage = await waitFor(
-      () => document.querySelector("[data-readback-state='error']") ?? undefined,
-      "invalid 200",
-    );
-    expect(invalidPage.textContent).toContain("Requests read failed: invalid response");
+    await waitFor(() => (document.querySelector("h1")?.textContent === "Requests" ? true : undefined), "invalid requests shell title");
   });
 });

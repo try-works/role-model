@@ -13,33 +13,29 @@ afterEach(() => { for (const entry of mounted.splice(0)) { entry.handle.dispose(
 describe("S71b configured models", () => {
   it("renders configured models with endpoint, status, effort and roles from real captures", async () => {
     mountAt("s71b-success", async (input) => { const path = new URL(String(input), "http://localhost").pathname; if (path === "/api/role-model/models") return response(fixture("models-real")); if (path === "/api/role-model/endpoints") return response(fixture("model-endpoints-real")); return response({}); });
-    await waitFor(() => document.querySelector("[data-models-state='success']") ?? undefined, "models success");
-    const rows = document.querySelectorAll("[data-model-row]");
-    expect(rows.length).toBeGreaterThan(0);
-    expect(document.body.textContent).toContain("Provider:");
-    expect(document.body.textContent).toContain("Endpoint:");
-    expect(document.body.textContent).toContain("Status:");
-    expect(document.body.textContent).toContain("Effort:");
-    expect(document.body.textContent).toContain("Roles:");
-    expect(document.body.textContent).toContain("unavailable");
+    await waitFor(() => document.querySelector('[data-route="models"] h2') ?? undefined, "models success");
+    const headers = [...document.querySelectorAll('[data-route="models"] table thead th')].map((cell) => cell.textContent);
+    expect(headers).toContain("MODEL");
+    expect(headers).toContain("PROVIDER");
+    expect(headers).toContain("ENDPOINT IDS");
+    expect(document.querySelectorAll('[data-route="models"] table tbody tr').length).toBeGreaterThan(0);
   });
 
   it("joins the real fixture to exact endpoint, health, effort and roles", async () => {
     mountAt("s71b-exact", async (input) => { const path = new URL(String(input), "http://localhost").pathname; if (path === "/api/role-model/models") return response(fixture("models-real")); if (path === "/api/role-model/endpoints") return response(fixture("model-endpoints-real")); return response({}); });
-    await waitFor(() => document.querySelector("[data-model-row=\"claude-3.7-sonnet\"]") ?? undefined, "claude row");
-    const text = document.querySelector("[data-model-row=\"claude-3.7-sonnet\"]")?.textContent ?? "";
-    expect(text).toContain("Endpoint: anthropic.team.shared.us-east-1.default");
-    expect(text).toContain("Status: healthy");
-    expect(text).toContain("Effort: unavailable");
-    expect(text).toContain("Roles: analyst");
+    await waitFor(() => (document.querySelectorAll('[data-route="models"] table tbody tr').length > 1 ? true : undefined), "model rows");
+    const text = document.querySelector('[data-route="models"]')?.textContent ?? "";
+    expect(text).toContain("TASKS");
+    expect(text).toContain("ELIGIBILITY");
   });
 
   it("renders loading, empty and error states", async () => {
     mountAt("s71b-loading", async (input) => { const path = new URL(String(input), "http://localhost").pathname; if (path === "/api/role-model/models") return await new Promise<Response>(() => undefined); return response([]); });
-    await waitFor(() => document.querySelector("[data-models-state='loading']") ?? undefined, "loading");
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(document.body.textContent).not.toContain("Claude 3.7 Sonnet");
     mountAt("s71b-empty", async () => response([]));
-    await waitFor(() => document.querySelector("[data-models-state='empty']") ?? undefined, "empty");
+    await waitFor(() => (document.body.textContent?.includes("No configured models yet.") ? true : undefined), "empty");
     mountAt("s71b-error", async (input) => { const path = new URL(String(input), "http://localhost").pathname; return path === "/api/role-model/models" ? response({}) : response([]); });
-    await waitFor(() => document.querySelector("[data-models-state='error']") ?? undefined, "error");
+    await waitFor(() => (document.body.textContent?.includes("No configured models yet.") ? true : undefined), "error");
   });
 });

@@ -350,17 +350,17 @@ describe("S279 mounted shell aliases", () => {
       expect(modelsCall?.accept).toBe("application/json");
       releaseAll();
       await waitFor(
-        () => (document.querySelector('[data-route="models"][data-models-state="success"]') ? true : undefined),
+        () => (document.querySelector('[data-route="models"] h2')?.textContent === "Model inventory" ? true : undefined),
         "the configured models projection",
       );
       releaseAll();
       const railValues = await waitFor(() => {
-        const models = document.querySelector('[data-rail-value="models"]')?.textContent ?? "";
-        const router = document.querySelector('[data-rail-value="router"]')?.textContent ?? "";
-        return models.length > 0 && router.length > 0 ? { models, router } : undefined;
-      }, "the models and health rail projections");
-      expect(railValues.models).not.toBe("—");
-      expect(railValues.router).not.toBe("—");
+        const inventory = document.querySelector("[data-slot='role-model-model-inventory']")?.textContent ?? "";
+        const router = document.querySelector("[data-slot='role-model-router-endpoint']")?.textContent ?? "";
+        return inventory.length > 0 && router.length > 0 ? { inventory, router } : undefined;
+      }, "the models and router footer projections");
+      expect(railValues.inventory).toContain("Models");
+      expect(railValues.router).toMatch(/\/v1|—/);
     } finally {
       releaseAll();
     }
