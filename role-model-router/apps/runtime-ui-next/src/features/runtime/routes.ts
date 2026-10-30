@@ -32,12 +32,26 @@ export const runtimeRoute = (ctx: RuntimeRouteContext): Html => {
   const runtimeFacts = readbacks.runtime.rows.map((row) => [row.label, row.value] as const);
   const healthFacts = readbacks.health.rows.map((row) => [row.label, row.value] as const);
   const routerFacts = readbacks.router.rows.map((row) => [row.label, row.value] as const);
+  const factFromHealth = (labels: ReadonlyArray<string>): string | undefined => {
+    for (const label of labels) {
+      const row = readbacks.health.rows.find((entry) => entry.label.toLowerCase() === label);
+      if (row !== undefined && row.value.length > 0 && row.value !== "—") return row.value;
+    }
+    return undefined;
+  };
+  const runtimeFact = (labels: ReadonlyArray<string>): string | undefined => {
+    for (const label of labels) {
+      const row = readbacks.runtime.rows.find((entry) => entry.label.toLowerCase() === label);
+      if (row !== undefined && row.value.length > 0 && row.value !== "—") return row.value;
+    }
+    return undefined;
+  };
   const versionFacts: ReadonlyArray<readonly [string, string]> = [
-    ["Version", summaryValue("version") ?? "—"],
-    ["Release", summaryValue("release_version") ?? summaryValue("releaseVersion") ?? "—"],
-    ["Commit", summaryValue("commit") ?? "—"],
-    ["Build date", summaryValue("build_date") ?? summaryValue("buildDate") ?? "—"],
-    ["State root", summaryValue("runtime_state_root") ?? summaryValue("runtimeStateRoot") ?? "—"],
+    ["Version", factFromHealth(["version"]) ?? runtimeFact(["version"]) ?? summaryValue("version") ?? "—"],
+    ["Release", factFromHealth(["release", "release_version"]) ?? summaryValue("release_version") ?? summaryValue("releaseVersion") ?? "—"],
+    ["Commit", factFromHealth(["commit"]) ?? summaryValue("commit") ?? "—"],
+    ["Build date", factFromHealth(["build date", "build_date"]) ?? summaryValue("build_date") ?? "—"],
+    ["State root", summaryValue("runtime_state_root") ?? summaryValue("runtimeStateRoot") ?? runtimeFact(["state root"]) ?? "—"],
     ["Summary API", "/api/role-model/runtime/summary"],
   ];
   const summaryLabel = (candidates: ReadonlyArray<string>): string | undefined => {
