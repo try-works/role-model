@@ -240,4 +240,17 @@ describe("S26k control surface", () => {
     }
     expect(CONTROL_SPECS.endpoints.action).toBeUndefined();
   });
+  it("navigating into Providers and Endpoints starts their control reads", async () => {
+    const pending = client({ read: () => new Promise(() => undefined) });
+    mountAt("/", pending);
+    for (const [path, key] of [["/control/providers", "providers"], ["/control/endpoints", "endpoints"]] as const) {
+      window.history.pushState({}, "", path);
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      const node = await waitFor(
+        () => document.querySelector(`[data-control-route='${key}'][data-control-state='loading']`) ?? undefined,
+        `${key} control loading after navigation`,
+      );
+      expect(node).not.toBeNull();
+    }
+  });
 });

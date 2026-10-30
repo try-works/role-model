@@ -391,16 +391,18 @@ const endpointAdmissionCompletion = (
           ? ["modelEndpoints", "configuredModels", "integrationProviders"]
           : ["integrationProviders", "configuredModels", "modelEndpoints"];
         const readbacks = { ...emptyReadbacks() };
+        const controlKey = route._tag === "Endpoints" ? "endpoints" : "providers";
+        const controlToken = model.controls[controlKey].token + 1;
         const commands = keys.map((key) => {
           const token = model.readbacks[key].token + 1;
           readbacks[key] = loadingReadback(token);
           return readReadback({ key, token });
         });
         return {
-          commands: [...commands, scrollShellToTopCommand()],
+          commands: [...commands, readControl({ key: controlKey, token: controlToken }), scrollShellToTopCommand()],
           model: {
             ...model,
-            controls: emptyControls(),
+            controls: { ...emptyControls(), [controlKey]: loadingControl(controlToken) },
             diagnostics: idleDiagnostics(),
             observability: idleObservability(),
             readbacks,
