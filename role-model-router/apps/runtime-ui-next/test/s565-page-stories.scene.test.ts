@@ -47,7 +47,7 @@ const renderRoute = async (route: Model["route"], studioTab?: string): Promise<H
   const model: Model =
     studioTab === undefined
       ? base
-      : { ...base, studio: { tab: studioTab as never } as Model["studio"] };
+      : { ...base, studio: { tab: studioTab } as unknown as Model["studio"] };
   const rendered = await Effect.runPromise(
     renderToString({ init: () => ({ model, commands: [] }), view }, { isHydratable: false }),
   );
@@ -56,7 +56,7 @@ const renderRoute = async (route: Model["route"], studioTab?: string): Promise<H
   return container;
 };
 
-const sceneFailures = (container: HTMLElement, story: { headings: ReadonlyArray<{ text: string }>; tables: ReadonlyArray<{ headers: ReadonlyArray<string> }>; combos: ReadonlyArray<string> }): string[] => {
+const sceneFailures = (container: HTMLElement, story: { headings: ReadonlyArray<{ text: string }>; tables: ReadonlyArray<{ headers: ReadonlyArray<string> }>; combos: ReadonlyArray<{ readonly label: string; readonly text: string }> }): string[] => {
   const failures: string[] = [];
   const pageTitle = normalise(container.querySelector("h1")?.textContent);
   const headings = [
@@ -78,12 +78,13 @@ const sceneFailures = (container: HTMLElement, story: { headings: ReadonlyArray<
       failures.push("table: missing columns [" + headers.join(", ") + "]");
     }
   }
-  const named = [...container.querySelectorAll("select, [role='combobox'], button[aria-haspopup='listbox']")].map((control) =>
+  const named = [...container.querySelectorAll("main select, main [role='combobox'], main button[aria-haspopup='listbox']")].map((control) =>
     normalise(control.getAttribute("aria-label") ?? control.closest("label")?.textContent ?? ""),
   );
   for (const combo of story.combos) {
-    if (!named.some((name) => name.includes(combo))) {
-      failures.push("control: missing [" + combo + "]");
+    const matched = named.some((name) => (combo.label.length > 0 && name.includes(combo.label)) || (combo.text.length > 0 && name.includes(combo.text)));
+    if (!matched) {
+      failures.push("control: missing [" + (combo.label || combo.text) + "]");
     }
   }
   return failures;

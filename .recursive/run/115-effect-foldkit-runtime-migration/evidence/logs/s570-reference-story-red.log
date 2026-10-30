@@ -1,0 +1,146 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s565-page-stories.scene.test.ts (40 tests | 3 failed) 4323ms
+   ✓ S565 page stories — scene (captured from :3456) > Benchmark matches its :3456 story  744ms
+   ✓ S565 page stories — scene (captured from :3456) > ControlController matches its :3456 story 109ms
+   ✓ S565 page stories — scene (captured from :3456) > Endpoints matches its :3456 story 169ms
+   × S565 page stories — scene (captured from :3456) > Index matches its :3456 story 394ms
+     → Index
+control: missing [BreakdownBy endpoint variant]
+control: missing [BreakdownBy endpoint variant]
+control: missing [BreakdownBy endpoint variant]
+control: missing [BreakdownBy endpoint variant]: expected [ …(4) ] to deeply equal []
+   ✓ S565 page stories — scene (captured from :3456) > Learning matches its :3456 story 152ms
+   ✓ S565 page stories — scene (captured from :3456) > LearningConfiguration matches its :3456 story 94ms
+   ✓ S565 page stories — scene (captured from :3456) > LearningDecisions matches its :3456 story 91ms
+   ✓ S565 page stories — scene (captured from :3456) > LearningEvidence matches its :3456 story 73ms
+   ✓ S565 page stories — scene (captured from :3456) > LearningHistory matches its :3456 story 81ms
+   ✓ S565 page stories — scene (captured from :3456) > LearningPacks matches its :3456 story 60ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalChoose matches its :3456 story 47ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalLlamaSwapModels matches its :3456 story 79ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalLogs matches its :3456 story 51ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalPeerModels matches its :3456 story 49ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalPeers matches its :3456 story 38ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalPolicy matches its :3456 story 61ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalSwap matches its :3456 story 57ms
+   ✓ S565 page stories — scene (captured from :3456) > Models matches its :3456 story 102ms
+   × S565 page stories — scene (captured from :3456) > ModelsRoles matches its :3456 story 46ms
+     → ModelsRoles
+sections: expected [Create role | Role catalog | Role task allowlists | Edit selected role] rendered []
+control: missing [Kindassistant]
+control: missing [Kindassistant]
+control: missing [tool policy allowed · supported tasks co]
+control: missing [tool policy allowed · supported tasks co]: expected [ …(5) ] to deeply equal []
+   ✓ S565 page stories — scene (captured from :3456) > Observability matches its :3456 story 68ms
+   ✓ S565 page stories — scene (captured from :3456) > ObserveActivity matches its :3456 story 84ms
+   ✓ S565 page stories — scene (captured from :3456) > ObserveLogs matches its :3456 story 65ms
+   ✓ S565 page stories — scene (captured from :3456) > ObserveRouting matches its :3456 story 111ms
+   ✓ S565 page stories — scene (captured from :3456) > Providers matches its :3456 story 77ms
+   ✓ S565 page stories — scene (captured from :3456) > Queues matches its :3456 story 61ms
+   ✓ S565 page stories — scene (captured from :3456) > Requests matches its :3456 story  319ms
+   ✓ S565 page stories — scene (captured from :3456) > Router matches its :3456 story 62ms
+   ✓ S565 page stories — scene (captured from :3456) > RouterAgentStrategy matches its :3456 story 116ms
+   ✓ S565 page stories — scene (captured from :3456) > RouterCandidates matches its :3456 story 40ms
+   ✓ S565 page stories — scene (captured from :3456) > RouterConfig matches its :3456 story 62ms
+   ✓ S565 page stories — scene (captured from :3456) > RouterDecisions matches its :3456 story 41ms
+   ✓ S565 page stories — scene (captured from :3456) > RouterStrategy matches its :3456 story 92ms
+   ✓ S565 page stories — scene (captured from :3456) > RouterWorkloads matches its :3456 story 86ms
+   × S565 page stories — scene (captured from :3456) > Runtime matches its :3456 story 116ms
+     → Runtime
+sections: expected [Config editor | Applied snapshot | Page actions] rendered [Runtime | Runtime config | Runtime topology | Applied runtime policy | Execution readiness | Controller posture | Version facts | Runtime topology]: expected [ Array(1) ] to deeply equal []
+   ✓ S565 page stories — scene (captured from :3456) > SessionReadiness matches its :3456 story 62ms
+   ✓ S565 page stories — scene (captured from :3456) > StorageRetention matches its :3456 story 38ms
+   ✓ S565 page stories — scene (captured from :3456) > StoreReceipts matches its :3456 story 60ms
+   ✓ S565 page stories — scene (captured from :3456) > SystemExtensions matches its :3456 story 65ms
+   ✓ S565 page stories — scene (captured from :3456) > SystemOperator matches its :3456 story 78ms
+   ✓ S565 page stories — scene (captured from :3456) > SystemPeers matches its :3456 story 96ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > Index matches its :3456 story
+AssertionError: Index
+control: missing [BreakdownBy endpoint variant]
+control: missing [BreakdownBy endpoint variant]
+control: missing [BreakdownBy endpoint variant]
+control: missing [BreakdownBy endpoint variant]: expected [ …(4) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "control: missing [BreakdownBy endpoint variant]",
++   "control: missing [BreakdownBy endpoint variant]",
++   "control: missing [BreakdownBy endpoint variant]",
++   "control: missing [BreakdownBy endpoint variant]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:98:58
+     96|       const container = await renderRoute(routeFor(tag));
+     97|       const failures = sceneFailures(container, story);
+     98|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     99|       expect(normalise(container.textContent)).not.toContain("Runtime …
+    100|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > ModelsRoles matches its :3456 story
+AssertionError: ModelsRoles
+sections: expected [Create role | Role catalog | Role task allowlists | Edit selected role] rendered []
+control: missing [Kindassistant]
+control: missing [Kindassistant]
+control: missing [tool policy allowed · supported tasks co]
+control: missing [tool policy allowed · supported tasks co]: expected [ …(5) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "sections: expected [Create role | Role catalog | Role task allowlists | Edit selected role] rendered []",
++   "control: missing [Kindassistant]",
++   "control: missing [Kindassistant]",
++   "control: missing [tool policy allowed · supported tasks co]",
++   "control: missing [tool policy allowed · supported tasks co]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:98:58
+     96|       const container = await renderRoute(routeFor(tag));
+     97|       const failures = sceneFailures(container, story);
+     98|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     99|       expect(normalise(container.textContent)).not.toContain("Runtime …
+    100|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > Runtime matches its :3456 story
+AssertionError: Runtime
+sections: expected [Config editor | Applied snapshot | Page actions] rendered [Runtime | Runtime config | Runtime topology | Applied runtime policy | Execution readiness | Controller posture | Version facts | Runtime topology]: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "sections: expected [Config editor | Applied snapshot | Page actions] rendered [Runtime | Runtime config | Runtime topology | Applied runtime policy | Execution readiness | Controller posture | Version facts | Runtime topology]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:98:58
+     96|       const container = await renderRoute(routeFor(tag));
+     97|       const failures = sceneFailures(container, story);
+     98|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     99|       expect(normalise(container.textContent)).not.toContain("Runtime …
+    100|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 37 passed (40)
+   Start at  15:33:17
+   Duration  33.50s (transform 15.58s, setup 0ms, collect 24.50s, tests 4.32s, environment 1.99s, prepare 837ms)
+
