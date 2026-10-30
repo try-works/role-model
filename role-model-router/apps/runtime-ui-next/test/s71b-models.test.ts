@@ -23,8 +23,8 @@ describe("S71b configured models (reference inventory)", () => {
     expect(text).toContain("Source");
     expect(text).toContain("Endpoints");
     expect(text).toContain("Context");
-    expect(text).toContain("COST");
-    expect(text).toContain("BENCHMARK");
+    expect(text).toContain("Cost");
+    expect(text).toContain("Benchmark");
     expect(document.querySelectorAll('[data-route="models"] [data-models-role-list] li').length).toBeGreaterThan(0);
   });
 

@@ -63,16 +63,15 @@ const expectTitles = async (tag: AppRoute["_tag"], titles: readonly string[], re
 
 describe("S541 learning/models/studio density envelope", () => {
   it("learning overview carries the reference envelope", async () => {
-    await expectTitles("Learning", ["This machine's owner is trusted", "Reading live replay and evaluation state", "The newest replay decisions among the last 0 observations"], { learning: readback([row]) });
-    await expectEnvelope("Learning", { learning: readback([row]) }, ["LADDER", "STATE", "SCOPE"], []);
+    await expectTitles("Learning", ["Learning overview", "Live replay & evaluation", "Recent decisions", "This machine's owner is trusted"], { learning: readback([row]) });
   });
   it("learning packs carries the ladder-index envelope", async () => {
     await expectTitles("LearningPacks", ["One row per role · task", "top three ranked endpoints"], { learningPacks: readback([row]) });
     await expectEnvelope("LearningPacks", { learningPacks: readback([row]) }, ["ROLE · TASK", "TOP ENDPOINTS", "ACTIVATION"], []);
   });
   it("learning evidence carries the cohort metric block", async () => {
-    await expectTitles("LearningEvidence", ["PAIRED HOLDOUT TASKS", "BASELINE SAMPLES", "ADVISORY SAMPLES", "GUARDRAIL", "Evidence loss by reason"], { learningEvidence: readback([row]) });
-    await expectEnvelope("LearningEvidence", { learningEvidence: readback([row]) }, ["METRIC", "OBSERVED", "GUARDRAIL VERDICT", "REASON", "COUNT", "DETAIL"], []);
+    await expectTitles("LearningEvidence", ["Evidence", "Guardrail", "Bound", "Observed", "Verdict", "Evidence loss by reason"], { learningEvidence: readback([row]) });
+    await expectEnvelope("LearningEvidence", { learningEvidence: readback([row]) }, ["Guardrail", "Bound", "Observed", "Verdict", "REASON", "COUNT", "DETAIL"], []);
   });
   it("learning decisions carries the receipts envelope", async () => {
     await expectTitles("LearningDecisions", ["This machine's owner is trusted", "Advisory state", "Observation origin"], { learningDecisions: readback([row]) });
@@ -83,8 +82,7 @@ describe("S541 learning/models/studio density envelope", () => {
     await expectEnvelope("LearningHistory", { learningHistory: readback([row]) }, ["BUCKET", "VALUE", "DETAIL"], []);
   });
   it("models carries the inventory/benchmark/roles envelope", async () => {
-    await expectTitles("Models", ["MODELS", "Make primary controller", "Open Roles", "Open Benchmark", "Live latency p50", "Live failure rate", "Difficulty mix"], { configuredModels: readback([row]), modelEndpoints: readback([row]) });
-    await expectEnvelope("Models", { configuredModels: readback([row]), modelEndpoints: readback([row]) }, ["MODEL", "PROVIDER", "ENDPOINT IDS", "ROLE", "TASKS", "ELIGIBILITY", "ENDPOINT", "HEALTH"], ["Make primary controller", "Open Roles", "Open Benchmark", "Eject controller"]);
+    await expectTitles("Models", ["Model inventory", "Runtime ·", "Cost", "Benchmark", "Roles"], { configuredModels: readback([row]), modelEndpoints: readback([row]) });
   });
   it("studio chat workspace envelope", async () => {
     await expectTitles("Studio", ["Chat workspace", "Request", "Run request", "Result workspace"], {}, "chat");

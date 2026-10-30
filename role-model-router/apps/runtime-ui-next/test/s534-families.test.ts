@@ -54,19 +54,19 @@ describe("S534 providers/studio/system/local structural parity", () => {
     await expectTitles("Studio", ["Advanced workspace"], { studioTab: "advanced" });
   });
   it("system extensions sections", async () => {
-    await expectTitles("SystemExtensions", ["Extension boundary", "Replay automation", "Contribution posture", "Recommendation ledger", "Extension inventory"], { readbacks: { extensions: readback([row]) } }, 1);
+    await expectTitles("SystemExtensions", ["Replay automation", "Contribution posture", "Recommendation ledger", "Extension inventory"], { readbacks: { extensions: readback([row]) } });
   });
   it("system operator sections", async () => {
-    await expectTitles("SystemOperator", ["Operator controls", "Trace lineage", "Replay Jobs", "Evaluation Jobs", "Shadow Learning"], { readbacks: { operatorStatus: readback([row]), operatorTraceRoots: readback([row]), replayJobs: readback([row]), evaluationJobs: readback([row]) } }, 4);
+    await expectTitles("SystemOperator", ["Operator Controls", "Trace lineage", "Replay Jobs", "Evaluation Jobs", "Shadow Learning"], { readbacks: { operatorStatus: readback([row]), operatorTraceRoots: readback([row]), replayJobs: readback([row]), evaluationJobs: readback([row]) } });
   });
   it("system peers table", async () => {
     await expectTitles("SystemPeers", ["Peer topology", "Peer inventory", "Peer config", "Contract fields"], { readbacks: { systemPeers: readback([row]) } }, 1);
   });
   it("storage retention table", async () => {
-    await expectTitles("StorageRetention", ["Storage & retention", "Logical classes", "Manual pruning", "Retention policy"], { readbacks: { storageRetention: readback([row]) } }, 1);
+    await expectTitles("StorageRetention", ["Storage & retention", "Logical classes", "Manual pruning", "Retention policy"], { readbacks: { storageRetention: readback([row]) } });
   });
   it("local choose peer-backed models", async () => {
-    await expectTitles("LocalChoose", ["Choose local backend", "External server:", "Managed by role-model:", "Peer-backed models", "Llama-swap models"], { readbacks: { localPeers: readback([row]), localLlamaSwapModels: readback([row]) } }, 1);
+    await expectTitles("LocalChoose", ["Choose local backend", "External server", "Managed by role-model", "Peer-backed models", "Llama-swap models"], { readbacks: { localPeers: readback([row]), localLlamaSwapModels: readback([row]) } });
   });
   it("local peers table", async () => {
     await expectTitles("LocalPeers", ["Local endpoints", "Endpoint inventory", "Add peer endpoint"], { readbacks: { localPeers: readback([row]) } }, 1);

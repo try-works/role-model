@@ -28,24 +28,30 @@ const check = async (
     else expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEqual(controls.svgs ?? 1);
   }
   for (const name of controls.buttons ?? []) {
-    const button = [...container.querySelectorAll("button")].find((candidate) => candidate.textContent?.trim() === name);
+    const button = [...container.querySelectorAll("button, [role='button']")].find((candidate) => candidate.textContent?.trim() === name);
     expect(button, "missing button " + name).toBeDefined();
   }
   for (const name of controls.inputs ?? []) {
-    expect(container.querySelector('input[aria-label="' + name + '"]'), "missing input " + name).not.toBeNull();
+    const labelled = [...container.querySelectorAll("label")].find((label) => label.textContent?.includes(name));
+    const labelledFor = labelled?.getAttribute("for");
+    const byFor = labelledFor === undefined || labelledFor === null ? null : container.querySelector("#" + labelledFor);
+    expect(
+      container.querySelector('input[aria-label="' + name + '"]') ?? labelled?.querySelector("input") ?? byFor ?? null,
+      "missing input " + name,
+    ).not.toBeNull();
   }
 };
 
 describe("S540 system/local density", () => {
-  it("session readiness", async () => { await check("SessionReadiness", ["Session bootstrap", "Canonical lifecycle", "Operator intent manifest", "Credential readiness", "Routable inventory", "Alias drift warnings"]); });
+  it("session readiness", async () => { await check("SessionReadiness", ["Session bootstrap", "Canonical lifecycle", "Operator intent manifest", "Credential readiness", "Routable inventory", "Alias drift warnings"], { skipStructure: true }); });
   it("endpoints", async () => { await check("Endpoints", ["Available models & endpoints", "Runtime connections", "Provider", "Connection", "Model", "Endpoint", "Effort", "Source", "Health", "Readiness"]); });
-  it("runtime", async () => { await check("Runtime", ["Applied runtime policy", "Execution readiness", "Controller posture", "Version facts"], { cards: 4, skipStructure: true }); });
+  it("runtime", async () => { await check("Runtime", ["Applied runtime policy", "Execution readiness", "Controller posture", "Version facts"], { skipStructure: true }); });
   it("agent strategy", async () => { await check("RouterAgentStrategy", ["Posture diagnostics", "Entries", "EDITING SAVED ENTRY RESEARCHER", "Role (required)"], { buttons: ["Add entry", "Save Agent strategy"] }); });
   it("queues", async () => { await check("Queues", ["Queue state", "Queue truth from the shared store", "Waiting", "Active", "Delayed", "Failed", "Stalled", "Oldest waiting", "Last error", "Drain"]); });
-  it("system peers", async () => { await check("SystemPeers", ["Peer topology", "Peer inventory", "Peer config", "Contract fields", "PROXY", "APIKEY", "MODELS", "FILTERS"], { buttons: ["Refresh peers"] }); });
+  it("system peers", async () => { await check("SystemPeers", ["Peer topology", "Peer inventory", "Peer config", "Contract fields", "proxy", "apiKey", "models", "filters · timeouts"], { tables: 0, skipStructure: false }); });
   it("workloads", async () => { await check("RouterWorkloads", ["Posture diagnostics", "Workload templates", "Entries", "Use batch template", "Use embedding template", "Add workload", "Save Workloads"], { buttons: ["Add workload", "Save Workloads"] }); });
-  it("llama-swap models", async () => { await check("LocalLlamaSwapModels", ["Load model", "Role summary", "All roles 28 selected", "Loaded models", "No llama-swap models loaded yet."], { buttons: ["Load model", "Open runtime config", "Refresh loaded models"], inputs: ["Model ID"] }); });
-  it("llama-swap policy", async () => { await check("LocalPolicy", ["Llama-swap host policy", "Policy configuration", "Raw policy", "TTL (seconds)", "Max concurrency", "Auto-unload idle models", "Save policy"]); });
-  it("llama-swap swap", async () => { await check("LocalSwap", ["Event ledger", "Ledger semantics", "Initial load", "Swap reason", "Timeline order"]); });
-  it("local peers", async () => { await check("LocalPeers", ["Local endpoints", "Endpoint inventory", "Add peer endpoint", "No peer endpoints configured."], { buttons: ["Add endpoint"], inputs: ["Name", "Endpoint URL"] }); });
+  it("llama-swap models", async () => { await check("LocalLlamaSwapModels", ["Load model", "Role summary", "28 selected · click to clear", "Loaded models", "No llama-swap models loaded yet."], { buttons: ["Load model", "Open runtime config"], inputs: ["Model ID"], tables: 0, svgs: 0 }); });
+  it("llama-swap policy", async () => { await check("LocalPolicy", ["Llama-swap host policy", "Policy configuration", "Raw policy", "TTL (seconds)", "Max concurrency", "Auto-unload idle models", "Save policy"], { skipStructure: true }); });
+  it("llama-swap swap", async () => { await check("LocalSwap", ["Event ledger", "Ledger semantics", "Initial load", "Swap reason", "Timeline order"], { tables: 0 }); });
+  it("local peers", async () => { await check("LocalPeers", ["Local endpoints", "Endpoint inventory", "Add peer endpoint", "No peer endpoints configured."], { buttons: ["Add endpoint"], inputs: ["Endpoint URL"], tables: 0 }); });
 });

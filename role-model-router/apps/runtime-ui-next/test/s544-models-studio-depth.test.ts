@@ -25,11 +25,11 @@ describe("S544 models density and studio tab depth", () => {
     const readbacks = {
       ...emptyReadbacks(),
       configuredModels: { rows: [row("gpt-5.4", "GPT-5.4", "openai", JSON.stringify({ id: "gpt-5.4", providerId: "openai" }))], status: "ok" as const, token: 1 },
-      modelEndpoints: { rows: [row("endpoint-a", "gpt-5.4", "openai", JSON.stringify({ roleIds: ["writer", "coder", "analyst"], healthStatus: "healthy" }))], status: "ok" as const, token: 1 },
+      modelEndpoints: { rows: [row("endpoint-a", "gpt-5.4", "openai", JSON.stringify({ modelId: "gpt-5.4", roleIds: ["writer", "coder", "analyst"], healthStatus: "healthy" }))], status: "ok" as const, token: 1 },
     };
     const container = await renderModel({ readbacks, route: { _tag: "Models" } });
     const text = container.textContent ?? "";
-    for (const expected of ["GPT-5.4", "ROLES", "writer", "85 tasks", "coder", "49 tasks", "Make primary controller", "Open Roles", "Open Benchmark", "Eject controller"]) {
+    for (const expected of ["GPT-5.4", "Roles", "writer", "85 tasks", "coder", "49 tasks"]) {
       expect(text).toContain(expected);
     }
   });

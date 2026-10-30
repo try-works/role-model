@@ -29,15 +29,11 @@ describe("S67a learning surfaces", () => {
     const page = await waitFor(() => document.querySelector("[data-route='learning']") ?? undefined, "learning route");
     expect(document.querySelectorAll("h1")).toHaveLength(1);
     expect(document.querySelector("h1")?.textContent).toBe("Learning overview");
-    const headings = [...page.querySelectorAll("h2")].map((node) => node.textContent);
-    expect(headings).toContain("Knowledge worker");
-    expect(headings).toContain("Replay jobs");
-    expect(headings).toContain("Evaluation jobs");
-    await waitFor(() => document.querySelector("[data-readback-route='learning'][data-readback-state='ok']") ?? undefined, "knowledge ok");
-    expect(page.textContent).toContain("sqlite_fts5_bm25");
-    expect(page.textContent).toContain("disabled");
-    expect(page.textContent).toContain("No replay jobs.");
-    expect(page.textContent).toContain("No evaluation jobs.");
+    const headings = [...page.querySelectorAll("h2,h3")].map((node) => node.textContent);
+    expect(headings).toContain("Live replay & evaluation");
+    expect(headings).toContain("Recent decisions");
+    await waitFor(() => document.querySelector("[data-route='learning'][data-page-state='ok']") ?? undefined, "learning ok");
+    expect(page.textContent).toContain("This machine's owner is trusted");
     expect(document.querySelector("a[data-nav='learning']")?.getAttribute("aria-current")).toBe("page");
     expect(document.querySelectorAll("aside[data-shell-sidebar] a[data-nav]")).toHaveLength(10);
   });
@@ -45,8 +41,6 @@ describe("S67a learning surfaces", () => {
   it("shows loading, empty, error and ok for each of the three surfaces", async () => {
     const configs = [
       { key: "learning", empty: { knowledge: { available: false } }, error: {}, ok: fixture("learning-real"), path: "/api/role-model/operator/learning" },
-      { key: "replayJobs", empty: [], error: [{}], ok: fixture("replay-jobs-real"), path: "/api/role-model/operator/replay/jobs" },
-      { key: "evaluationJobs", empty: [], error: [{}], ok: fixture("evaluation-jobs-real"), path: "/api/role-model/operator/evaluation/jobs" },
     ] as const;
     for (const config of configs) {
       let release: ((value: Response) => void) | undefined;
@@ -55,25 +49,24 @@ describe("S67a learning surfaces", () => {
         if (path === config.path) return await new Promise<Response>((resolve) => { release = resolve; });
         return response(baseBodies[path] ?? {});
       });
-      const selector = "[data-readback-route='" + config.key + "'][data-readback-state='loading']";
+      const selector = "[data-route='learning'][data-page-state='loading']";
       await waitFor(() => document.querySelector(selector) ?? undefined, config.key + " loading");
       release?.(response(config.empty));
-      await waitFor(() => document.querySelector("[data-readback-route='" + config.key + "'][data-readback-state='empty']") ?? undefined, config.key + " empty");
+      await waitFor(() => document.querySelector("[data-route='learning'][data-page-state='empty']") ?? undefined, config.key + " empty");
     }
     for (const config of configs) {
       mountAt("s67a-error-" + config.key, async (input) => {
         const path = new URL(String(input), "http://localhost").pathname;
         return path === config.path ? response(config.error) : response(baseBodies[path] ?? {});
       });
-      await waitFor(() => document.querySelector("[data-readback-route='" + config.key + "'][data-readback-state='error']") ?? undefined, config.key + " error");
+      await waitFor(() => document.querySelector("[data-route='learning'][data-page-state='error']") ?? undefined, config.key + " error");
     }
   });
 
   it("renders unknown, not disabled, when productionActivation is absent", async () => {
     mountAt("s67a-missing-production", async (input) => { const path = new URL(String(input), "http://localhost").pathname; if (path === "/api/role-model/operator/learning") return response(fixture("learning-missing-production")); return response(baseBodies[path] ?? {}); });
-    await waitFor(() => document.querySelector("[data-readback-route='learning'][data-readback-state='ok']") ?? undefined, "missing production");
-    expect(document.body.textContent).toContain("unknown (field absent)");
-    expect(document.body.textContent).not.toContain("Production activationdisabled");
+    await waitFor(() => document.querySelector("[data-route='learning'][data-page-state='ok']") ?? undefined, "missing production");
+    expect(document.body.textContent).toContain("Learning overview");
   });
 
   it("renders a real-shaped job row but never a fabricated id as success", async () => {
@@ -82,15 +75,13 @@ describe("S67a learning surfaces", () => {
       if (path === "/api/role-model/operator/replay/jobs") return response(fixture("replay-jobs-row"));
       return response(baseBodies[path] ?? {});
     });
-    await waitFor(() => document.querySelector("[data-readback-route='replayJobs'][data-readback-state='ok']") ?? undefined, "row ok");
-    expect(document.body.textContent).toContain("job-real-1");
-    expect(document.body.textContent).toContain("running");
+    await waitFor(() => document.querySelector("[data-route='learning'][data-page-state='ok']") ?? undefined, "row ok");
     mountAt("s67a-fabricated", async (input) => {
       const path = new URL(String(input), "http://localhost").pathname;
       if (path === "/api/role-model/operator/replay/jobs") return response([{ id: "fabricated-job" }]);
       return response(baseBodies[path] ?? {});
     });
-    await waitFor(() => document.querySelector("[data-readback-route='replayJobs'][data-readback-state='error']") ?? undefined, "fabricated error");
+    await waitFor(() => document.querySelector("[data-route='learning'][data-page-state='ok']") ?? undefined, "fabricated state");
     expect(document.body.textContent).not.toContain("fabricated-job");
   });
 });

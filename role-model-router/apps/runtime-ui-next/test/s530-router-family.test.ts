@@ -26,7 +26,7 @@ const routerConfigRows = [
 
 const candidateRow = { id: "cand-1", label: "gpt-6.1-sol", value: "0.82", meta: JSON.stringify({ endpointId: "openai.personal.global.gpt-6.1-sol", healthStatus: "healthy", providerId: "openai", toolCallingSupported: true }) };
 const decisionRow = { id: "req-1", label: "gpt-6.1-sol", value: "0.9", meta: "openai.personal.global.gpt-6.1-sol" };
-const endpointRow = { id: "endpoint-1", label: "gpt-6.1-sol", value: "active", meta: JSON.stringify({ healthStatus: "healthy", roleIds: "researcher,coder", servingSource: "remote", toolCallingSupported: true }) };
+const endpointRow = { id: "endpoint-1", label: "gpt-6.1-sol", value: "active", meta: JSON.stringify({ healthStatus: "healthy", roleIds: ["researcher", "coder"], servingSource: "remote", toolCallingSupported: true }) };
 
 type Overrides = { readonly readbacks?: Partial<Model["readbacks"]>; readonly controls?: Model["controls"] };
 const renderText = async (tag: AppRoute["_tag"], overrides: Overrides = {}): Promise<string> => {
@@ -73,25 +73,25 @@ describe("S530 router/control family structural parity", () => {
   });
 
   it("/router/strategy renders the routing strategy posture editors", async () => {
-    await expectTitles("RouterStrategy", ["Routing strategy", "Preview only", "Routing mode", "Scoring strategy", "Execution scope"], {
+    await expectTitles("RouterStrategy", ["Routing strategy", "Routing mode", "Scoring strategy", "Execution scope", "Save routing strategy"], {
       readbacks: { routerConfig: readback(routerConfigRows) },
     });
   });
 
   it("/router/config renders the canonical routing strategy surface", async () => {
-    await expectTitles("RouterConfig", ["Routing strategy", "Preview only", "Routing mode", "Scoring strategy"], {
+    await expectTitles("RouterConfig", ["Routing strategy", "Routing mode", "Scoring strategy", "Save routing strategy"], {
       readbacks: { routerConfig: readback(routerConfigRows) },
     });
   });
 
   it("/router/workloads renders workload templates and entries", async () => {
-    await expectTitles("RouterWorkloads", ["Workloads", "Preview only", "Posture diagnostics", "Workload templates", "Entries", "Use batch template", "Use embedding template", "Add workload", "Save Workloads"], {
+    await expectTitles("RouterWorkloads", ["Workloads", "Posture diagnostics", "Workload templates", "Entries", "Use batch template", "Use embedding template", "Add workload", "Save Workloads"], {
       readbacks: { routerConfig: readback(routerConfigRows) },
     });
   });
 
   it("/router/agent-strategy renders the role-bound posture editor", async () => {
-    await expectTitles("RouterAgentStrategy", ["Agent strategy", "Preview only", "Posture diagnostics", "Entries", "Name", "Role (required)"], {
+    await expectTitles("RouterAgentStrategy", ["Agent strategy", "Role-bound postures", "Posture diagnostics", "Entries", "Name", "Role (required)"], {
       readbacks: { routerConfig: readback(routerConfigRows) },
     });
   });

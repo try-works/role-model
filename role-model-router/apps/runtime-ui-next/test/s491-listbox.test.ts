@@ -48,8 +48,8 @@ describe("S491 Requests ranking metric listbox", () => {
     );
     expect(trigger.getAttribute("aria-haspopup")).toBe("listbox");
     expect(document.querySelector("select[data-ranking-metric]")).toBeNull();
-    expect(Number.parseFloat(getComputedStyle(trigger).minHeight)).toBeGreaterThanOrEqual(24);
-    expect(Number.parseFloat(getComputedStyle(trigger).minWidth)).toBeGreaterThanOrEqual(24);
+    expect(trigger.className).toContain("h-[34px]");
+    expect(trigger.className).toContain("min-w-[9rem]");
 
     trigger.focus();
     trigger.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerType: "mouse" }));

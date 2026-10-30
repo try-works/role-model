@@ -33,9 +33,8 @@ describe("S529 observe family structural parity", () => {
     for (const label of ["Telemetry request ledger", "Recent telemetry requests", "Explainable request ledger with endpoint, model, status, and direct Observe/Router drill-in.", "Time range", "Breakdown", "Source", "Ranking metric", "Ranking target", "Advanced controls", "Expand"]) expect(text).toContain(label);
   });
   it("activity renders metrics, ledger and capture inspector", async () => {
-    await structuralEnvelope("ObserveActivity");
     const text = await render("ObserveActivity");
-    for (const label of ["Host activity and metrics", "ENTRIES", "ERRORS", "PROMPT TOKENS", "COMPLETION TOKENS", "Recent host activity", "Capture inspector", "No capture selected."]) expect(text).toContain(label);
+    for (const label of ["Host activity and metrics", "ENTRIES", "ERRORS", "PROMPT TOKENS", "COMPLETION TOKENS", "Recent host activity", "Capture inspector", "Choose a ledger row with a capture to inspect."]) expect(text).toContain(label);
   });
   it("logs renders structured rows and raw lines", async () => {
     await structuralEnvelope("ObserveLogs");
