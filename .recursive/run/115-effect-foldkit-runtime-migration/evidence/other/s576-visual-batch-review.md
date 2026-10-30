@@ -51,3 +51,13 @@ The family pages still select loading/error/empty/rows from `readback.status/mes
 
 No source/test/config file was modified; no commit.
 
+## FINAL re-review — PASS (bounded)
+
+Active model verified **deepseek-flash**. The blocker is fixed in `src/update.ts:389-418`: the Endpoints/Providers navigation branch now computes the same control key as boot, increments that control token, issues `readControl({ key: controlKey, token: controlToken })`, and sets `controls: { ...emptyControls(), [controlKey]: loadingControl(controlToken) }` alongside the three readbacks. Boot (`init.ts:112-132`) and navigation each issue one control read; no path issues both, so no duplicate control read is introduced. The three readback keys remain the same boot/navigation set.
+
+The new test `test/s26k-control.test.ts:243-255` mounts at `/`, pushes popstate for both routes, and requires `[data-control-route=<key>][data-control-state=loading]`. It passes with the source fix.
+
+Verified gates: s26k + s26e + s279 **69/69** (s26k 8/8), full UI suite **808/808 in 76 files**, tsc **0**. No regression to the single-subscription tests. The s67a Learning coverage reduction remains the known explicit limitation from the original review; it is not part of this blocker and is not counted as preserved coverage.
+
+Bounded PASS for the navigation control-read fix; the broader visual batch remains a structural acceptance, not pixel parity/owner visual-delta approval. No source/test/config file was modified; no commit.
+
