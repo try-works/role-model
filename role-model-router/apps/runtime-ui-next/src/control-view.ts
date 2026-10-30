@@ -84,7 +84,7 @@ export const renderControlPage = (
   })();
   return h.section(
     [
-      h.Class("rm3-next-route mt-4"),
+      h.Class("rm3-next-route"),
       h.DataAttribute("route", "control"),
       h.DataAttribute("control-route", spec.key),
       h.DataAttribute("control-state", state.status),

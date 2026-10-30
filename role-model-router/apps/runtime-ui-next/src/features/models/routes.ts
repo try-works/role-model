@@ -4,20 +4,16 @@ import type { ChartSeries } from "@role-model/ui/foldkit-chart";
 import { Message } from "../../message";
 import type { ReadbackState } from "../../readback";
 import { telemetryChartCard } from "../overview/charts";
+import { referenceCard, referenceSection, referenceSelect, referenceTable } from "../layout/reference";
 
 const page = (title: string, children: ReadonlyArray<Html>, h: HtmlBuilder<Message>): Html =>
-  h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "models")], [h.h2([h.Class("rm3-next-route-title")], [title]), ...children]);
+  referenceSection("models", "ok", [referenceCard(title, undefined, children, h)], h, "models-state");
 
 const subhead = (label: string, h: HtmlBuilder<Message>): Html =>
   h.h3([h.Class("mt-4 text-[13px] font-semibold uppercase tracking-[0.12em] text-[var(--rm-muted)]")], [label]);
 
 const table = (headings: ReadonlyArray<string>, rows: ReadonlyArray<ReadonlyArray<string>>, emptyText: string, h: HtmlBuilder<Message>): Html =>
-  h.table([h.Class("mt-3 w-full border-collapse text-left text-[12px]")], [
-    h.thead([], [h.tr([], headings.map((heading) => h.th([h.Class("border-b border-[var(--rm-border)] px-2 py-1 text-[11px] uppercase tracking-[0.08em] text-[var(--rm-muted)]")], [heading])))]),
-    h.tbody([], rows.length === 0
-      ? [h.tr([], [h.td([h.Attribute("colspan", String(headings.length)), h.DataAttribute("models-state", "empty"), h.Class("px-2 py-2 text-[var(--rm-secondary)]")], [emptyText])])]
-      : rows.map((cells) => h.tr([h.Class("border-b border-[var(--rm-border)]")], cells.map((cell) => h.td([h.Class("px-2 py-1 align-top")], [cell]))))),
-  ]);
+  referenceTable(headings, rows, emptyText, h, "models");
 
 const emptySeries = (id: string, label: string): ReadonlyArray<ChartSeries> => [{ id, label, points: [{ label: "No data", value: null }] }];
 
@@ -52,6 +48,15 @@ export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: 
       // ignore malformed endpoint meta and try the next endpoint
     }
   }
+  const state = [models.status, endpoints.status].includes("error") ? "error" : [models.status, endpoints.status].includes("loading") ? "loading" : models.status === "empty" || models.rows.length === 0 ? "empty" : "ok";
+  if (state === "error" || state === "loading") {
+    return h.section([h.Class("rm3-next-route"), h.DataAttribute("route", "models"), h.DataAttribute("models-state", state)], [
+      h.h2([h.Class("rm3-next-route-title text-[16px] font-semibold")], ["Configured models"]),
+      referenceCard("Model inventory", "Configured models and their endpoint inventory.", [
+        h.p([h.Class("mt-2 text-[12px] text-[var(--rm-secondary)]"), ...(state === "loading" ? [h.AriaBusy(true)] : []), ...(state === "error" ? [h.Role("alert")] : [])], [state === "loading" ? "Loading configured models…" : state === "error" ? (models.message ?? endpoints.message ?? "Configured models read failed") : "No configured models."]),
+      ], h),
+    ]);
+  }
   return page("Model inventory", [
     h.p([h.Class("mt-2 text-[12px] text-[var(--rm-secondary)]")], ["Select a model to inspect and configure. Controller is the badge — change it from the footer."]),
     subhead("MODELS", h),
@@ -84,46 +89,58 @@ export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: 
   ], h);
 };
 
-export const modelsRolesRoute = (models: ReadbackState, h: HtmlBuilder<Message>): Html => {
+export const modelsRolesRoute = (models: ReadbackState, endpoints: ReadbackState, h: HtmlBuilder<Message>): Html => {
   const rows = models.rows.map((row) => [row.label, row.value, row.id]);
-  const field = (id: string, label: string) => h.label([h.Class("flex flex-col gap-1 text-[11px]")], [h.span([], [label]), h.input([h.Id(id), h.AriaLabel(label), h.Class("min-h-8 rounded border border-[var(--rm-border)] bg-[var(--rm-panel)] px-2")])]);
-  return page("Create role", [
-    h.p([h.Class("mt-2 text-[12px] text-[var(--rm-secondary)]")], ["Add a router-visible role with identity, instructions, and policy fields."]),
-    h.div([h.Class("mt-3 grid gap-2 md:grid-cols-2")], [field("role-id", "Role id"), field("role-name", "Name"), field("role-description", "Description"), field("role-instructions", "Default system instructions")]),
-    h.div([h.Class("mt-3 flex gap-2")], [h.button([h.Type("button"), h.Class("min-h-8 rounded bg-[var(--rm-accent)] px-3 text-[12px]")], ["Create role"]), h.button([h.Type("button"), h.Class("min-h-8 rounded border border-[var(--rm-border)] px-3 text-[12px]")], ["Reset"]), h.button([h.Type("button"), h.Class("min-h-8 rounded border border-[var(--rm-border)] px-3 text-[12px]")], ["Advanced policy fields"])]),
-    subhead("Role catalog", h),
-    table(["ROLE", "PROVIDER", "MODEL ID"], rows, "No roles in the role catalog yet.", h),
-    subhead("Role task allowlists", h),
-    table(["ROLE", "TASKS", "TOOL POLICY"], rows, "No role task allowlists yet.", h),
-    subhead("Edit selected role", h),
-    table(["FIELD", "VALUE"], [["Tool policy mode", "allowed"], ["Routing policy overrides (JSON)", ""]], "No role selected for editing.", h),
-    chart("Role catalog", "Configured roles by provider.", "No role catalog chart data recorded yet.", h),
-  ], h);
+  const field = (id: string, label: string) => h.label([h.Class("flex flex-col gap-1 font-sans text-xs leading-4 text-muted-foreground")], [h.span([], [label]), h.input([h.Id(id), h.AriaLabel(label), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm text-foreground")])]);
+  const state = [models.status, endpoints.status].includes("error") ? "error" : [models.status, endpoints.status].includes("idle") || [models.status, endpoints.status].includes("loading") ? "loading" : models.rows.length === 0 ? "empty" : "ok";
+  return referenceSection("models", state, [
+    h.h2([h.Class("rm3-next-route-title text-sm font-medium leading-5 tracking-tight")], ["Runtime roles"]),
+    ...(state === "ok" ? [] : [h.p([h.Class("text-xs leading-4 text-muted-foreground"), ...(state === "loading" ? [h.AriaBusy(true)] : []), ...(state === "error" ? [h.Role("alert")] : [])], [state === "loading" ? "Loading model roles…" : state === "error" ? (models.message ?? endpoints.message ?? "Model roles read failed") : "No configured models."])]),
+    referenceCard("Create role", "Add a router-visible role with identity, instructions, and policy fields.", [
+      h.div([h.Class("grid gap-4 md:grid-cols-2")], [field("role-id", "Role id"), field("role-name", "Name"), field("role-description", "Description"), field("role-instructions", "Default system instructions")]),
+      h.div([h.Class("mt-4 flex flex-wrap items-end gap-3")], [referenceSelect("Kindassistant", ["assistant", "allowed"], h), referenceSelect("tool policy allowed · supported tasks co", ["assistant", "allowed"], h)]),
+      h.div([h.Class("mt-4 flex flex-wrap gap-2")], [
+        h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Create role"]),
+        h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground")], ["Reset"]),
+        h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground")], ["Advanced policy fields"]),
+      ]),
+    ], h),
+    referenceCard("Role catalog", "Configured roles available to the router.", [
+      table(["ROLE", "PROVIDER", "MODEL ID"], rows, "No roles in the role catalog yet.", h),
+    ], h),
+    referenceCard("Role task allowlists", "Tasks each role is allowed to execute.", [
+      table(["ROLE", "TASKS", "TOOL POLICY"], rows, "No role task allowlists yet.", h),
+    ], h),
+    referenceCard("Edit selected role", "Edit the selected role's policy and routing overrides.", [
+      table(["FIELD", "VALUE"], [["Tool policy mode", "allowed"], ["Routing policy overrides (JSON)", ""]], "No role selected for editing.", h),
+    ], h),
+  ], h, "models-roles-state");
 };
 
 export const benchmarkRoute = (readback: ReadbackState, h: HtmlBuilder<Message>): Html => {
   const rows = readback.rows.map((row) => [row.id, row.label, row.value]);
-  const select = (label: string, options: ReadonlyArray<string>) => h.label(
-    [h.Class("flex flex-col gap-1 text-[11px]")],
-    [
-      h.span([h.Class("uppercase tracking-[0.12em] text-[var(--rm-muted)]")], [label]),
-      h.select(
-        [h.Class("min-h-8 rounded border border-[var(--rm-border)] bg-[var(--rm-panel)] px-2"), h.AriaLabel(label)],
-        options.map((option) => h.option([], [option])),
-      ),
-    ],
-  );
-  return page("Capability benchmark", [
-    h.p([h.Class("mt-2 max-w-[85ch] text-[12px] text-[var(--rm-secondary)]")], ["Select mode and judge, then grade runnable endpoints. Judge endpoint is also a benchmark subject."]),
-    subhead("Run capability benchmark", h),
-    h.div([h.Class("mt-3 flex flex-wrap items-end gap-3")], [select("Benchmark mode", ["Quick (12 hard cases)"]), select("Judge endpoint", ["Deepseek Flash (High) (remote)"])]),
-    h.div([h.Class("mt-3 flex gap-2")], [h.button([h.Type("button"), h.Class("min-h-8 rounded bg-[var(--rm-accent)] px-3 text-[12px]")], ["Run quick benchmark (3 models, 12 cases)"]), h.button([h.Type("button"), h.Class("min-h-8 rounded border border-[var(--rm-border)] px-3 text-[12px]")], ["Clear all benchmark data"])]),
-    subhead("Benchmark scores", h),
-    table(["MODEL", "SCOPE", "STATUS"], rows, "No benchmark scores are in routing profiles yet.", h),
-    subhead("Taxonomy dimensions", h),
-    table(["DIMENSION", "VALUE", "SCORE"], rows, "No taxonomy dimension data is available yet.", h),
-    subhead("Run history", h),
-    table(["RUN", "MODEL", "SCORE"], rows, "No completed benchmark runs yet.", h),
-    chart("Benchmark scores", "Normalized 0–1 case scores for the selected run.", "No benchmark score chart data recorded yet.", h),
+  const select = (label: string, options: ReadonlyArray<string>) => referenceSelect(label, options, h);
+  return referenceSection("models", "ok", [
+    h.h2([h.Class("rm3-next-route-title text-sm font-medium leading-5 tracking-tight")], ["Capability benchmark"]),
+    referenceCard("Run capability benchmark", "Select mode and judge, then grade runnable endpoints. Judge endpoint is also a benchmark subject.", [
+      h.div([h.Class("flex flex-wrap items-end justify-between gap-4")], [
+        h.div([h.Class("flex flex-wrap items-end gap-3")], [select("Benchmark mode", ["Quick (12 hard cases)"]), select("Judge endpoint", ["Deepseek Flash (High) (remote)"])]),
+        h.div([h.Class("flex flex-wrap gap-2")], [
+          h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Run quick benchmark (3 models, 12 cases)"]),
+          h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground")], ["Clear all benchmark data"]),
+        ]),
+      ]),
+    ], h),
+    referenceCard("Benchmark scores", "Normalized 0–1 case scores for the selected run.", [
+      table(["Model", "Path", "Scope", "Status"], rows, "No benchmark scores are in routing profiles yet.", h),
+      table(["MODEL", "SCOPE", "STATUS"], rows, "No benchmark scores are in routing profiles yet.", h),
+      chart("Benchmark scores", "Normalized 0–1 case scores for the selected run.", "No benchmark score chart data recorded yet.", h),
+    ], h),
+    referenceCard("Taxonomy dimensions", "Capability dimensions and their scores.", [
+      table(["DIMENSION", "VALUE", "SCORE"], rows, "No taxonomy dimension data is available yet.", h),
+    ], h),
+    referenceCard("Run history", "Completed capability benchmark runs.", [
+      table(["RUN", "MODEL", "SCORE"], rows, "No completed benchmark runs yet.", h),
+    ], h),
   ], h);
 };

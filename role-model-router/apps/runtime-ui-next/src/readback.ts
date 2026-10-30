@@ -1303,7 +1303,7 @@ export const renderReadbackPage = (
   })();
   return h.section(
     [
-      h.Class("rm3-next-route mt-4"),
+      h.Class("rm3-next-route"),
       h.DataAttribute("route", "readback"),
       h.DataAttribute("readback-route", spec.key),
       h.DataAttribute("readback-state", state.status),
@@ -1356,7 +1356,9 @@ export const renderReadbackPage = (
   );
 };
 export const readbackKeyForRouteTag = (tag: string): ReadbackKey | null =>
-  tag === "LocalPolicy"
+  tag === "RuntimeConfig"
+    ? "runtimeConfig"
+    : tag === "LocalPolicy"
     ? "localPolicy"
     : tag === "LearningConfiguration"
     ? "learningConfiguration"

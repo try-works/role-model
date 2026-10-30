@@ -132,7 +132,8 @@ const CANONICAL_TARGETS = {
   "/app/system/operator": "/system/operator",
   "/app/system/peers": "/system/peers",
   "/app/system/runtime": "/runtime",
-  "/app/system/runtime-config": "/runtime",
+  "/control/runtime-config": "/runtime/config",
+  "/app/system/runtime-config": "/runtime/config",
   "/app/system/session-readiness": "/session-readiness",
   "/app/system/storage-retention": "/system/storage-retention",
 };

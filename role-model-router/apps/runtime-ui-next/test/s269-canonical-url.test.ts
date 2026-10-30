@@ -124,9 +124,9 @@ describe("S269 typed resolution of original /app URLs", () => {
     { canonical: "/learning", original: "/app/learning", tag: "Learning" },
     { canonical: "/runtime", original: "/app/system/runtime", tag: "Runtime" },
     {
-      canonical: "/runtime",
+      canonical: "/runtime/config",
       original: "/app/system/runtime-config",
-      tag: "Runtime",
+      tag: "RuntimeConfig",
     },
     {
       canonical: "/session-readiness",
@@ -230,10 +230,11 @@ describe("S269 typed resolution of original /app URLs", () => {
     ).toBe("/requests/req-7?window=3600000");
   });
 
-  it("sends both original runtime surfaces through the one implemented Runtime route", async () => {
+  it("routes each original runtime surface to its own implemented route", async () => {
     const module = await legacy();
     expect(module.legacyRedirectForUrl(urlOf("/app/system/runtime"))?.href).toBe("/runtime");
-    expect(module.legacyRedirectForUrl(urlOf("/app/system/runtime-config"))?.href).toBe("/runtime");
+    expect(module.legacyRedirectForUrl(urlOf("/app/system/runtime-config"))?.href).toBe("/runtime/config");
+    expect(module.legacyRedirectForUrl(urlOf("/app/control/runtime-config"))?.href).toBe("/runtime/config");
   });
 });
 
@@ -283,7 +284,7 @@ describe("S269 original redirect entries: 20 resolvable targets", () => {
     { href: "/local/logs", original: "/app/local/logs", tag: "LocalLogs" },
     { href: "/local/peers", original: "/app/local/peers", tag: "LocalPeers" },
     { href: "/control/providers", original: "/app/control/providers", tag: "Providers" },
-    { href: "/runtime", original: "/app/control/runtime-config", tag: "Runtime" },
+    { href: "/runtime/config", original: "/app/control/runtime-config", tag: "RuntimeConfig" },
     {
       href: "/control/controller",
       original: "/app/control/controller",
@@ -363,8 +364,8 @@ describe("S269 53-pattern partition", () => {
   it("partitions 52 supported original paths + / into the 53 original patterns", async () => {
     const module = await legacy();
     const supported = module.SUPPORTED_ORIGINAL_PATHS;
-    expect(supported).toHaveLength(52);
-    expect(supported.filter((path) => !path.includes(":requestId"))).toHaveLength(50);
+    expect(supported).toHaveLength(53);
+    expect(supported.filter((path) => !path.includes(":requestId"))).toHaveLength(51);
     expect(supported.filter((path) => path.includes(":requestId"))).toEqual([
       "/app/observe/requests/:requestId",
       "/app/router/decisions/:requestId",
@@ -375,7 +376,7 @@ describe("S269 53-pattern partition", () => {
       "/",
       ...module.MISSING_ORIGINAL_TARGETS.map((entry) => entry.path),
     ]);
-    expect(partition.size).toBe(53);
+    expect(partition.size).toBe(54);
     for (const entry of module.MISSING_ORIGINAL_TARGETS) {
       expect(supported).not.toContain(entry.path);
       expect(module.legacyRedirectForUrl(urlOf(entry.path))).toBeUndefined();

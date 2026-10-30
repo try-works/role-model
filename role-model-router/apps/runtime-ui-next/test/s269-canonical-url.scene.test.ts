@@ -188,8 +188,8 @@ describe("S269 mounted legacy redirects", () => {
     );
 
     expect(page).toBeDefined();
-    expect(window.location.pathname).toBe("/runtime");
-    expect(document.title).toBe("Runtime | RM3 Foldkit shell");
+    expect(window.location.pathname).toBe("/runtime/config");
+    expect(document.title).toBe("Runtime config | RM3 Foldkit shell");
     expect(countPath("/api/role-model/runtime/config")).toBe(1);
   });
 

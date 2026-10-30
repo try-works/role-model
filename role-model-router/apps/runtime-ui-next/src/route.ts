@@ -53,6 +53,7 @@ const routeCases = {
   Benchmark: {},
   StorageRetention: {},
   Runtime: {},
+  RuntimeConfig: {},
   SessionReadiness: {},
   Dashboard: {},
   LocalSwap: {},
@@ -128,6 +129,7 @@ const systemPeersRouter = Route.mapTo(AppRoute.SystemPeers)(
   pipe(Route.literal("system"), Route.slash(Route.literal("peers"))),
 );
 const runtimeRouter = Route.mapTo(AppRoute.Runtime)(Route.literal("runtime"));
+const runtimeConfigRouter = Route.mapTo(AppRoute.RuntimeConfig)(pipe(Route.literal("runtime"), Route.slash(Route.literal("config"))));
 const sessionReadinessRouter = Route.mapTo(AppRoute.SessionReadiness)(
   Route.literal("session-readiness"),
 );
@@ -193,6 +195,7 @@ export const appRouter = Route.oneOf(
   benchmarkRouter,
   storageRetentionRouter,
   localModelsRedirectRouter,
+  runtimeConfigRouter,
   runtimeRouter,
   sessionReadinessRouter,
   dashboardRouter,

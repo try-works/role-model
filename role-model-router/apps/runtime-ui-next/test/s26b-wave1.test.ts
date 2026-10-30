@@ -75,7 +75,7 @@ describe("S26b wave 1 shell entries", () => {
       () => (document.querySelector("[data-shell-route='Models']") ? true : undefined),
       "the models route",
     );
-    expect(document.querySelector("[data-shell-route='Models']")?.textContent).toBe("Models");
+    expect(document.querySelector("[data-shell-route='Models']")?.textContent).toBe("Configured models");
     expect(document.querySelectorAll("aside[data-shell-sidebar]")).toHaveLength(1);
     expect(document.querySelector("a[data-nav='models']")?.getAttribute("aria-current")).toBe(
       "page",

@@ -5,7 +5,7 @@ import { runtimeConfigDiff, parseRuntimeConfigText } from "../src/runtime-config
 const mounted: Array<{ container: HTMLElement; handle: { dispose(): void } }> = [];
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 const waitFor = async <T>(read: () => T | undefined, label: string): Promise<T> => { const end = Date.now() + 3000; while (Date.now() < end) { const value = read(); if (value !== undefined) return value; await new Promise((r) => setTimeout(r, 10)); } throw new Error("Timed out waiting for " + label); };
-const mount = (fetchImpl: typeof fetch) => { window.history.replaceState({}, "", "/runtime"); const container = document.createElement("div"); container.id = "s76a-" + String(Math.random()); document.body.append(container); const handle = mountShell(container, { readbackFetchImpl: fetchImpl, runtimeConfigFetchImpl: fetchImpl }); mounted.push({ container, handle }); };
+const mount = (fetchImpl: typeof fetch) => { window.history.replaceState({}, "", "/runtime/config"); const container = document.createElement("div"); container.id = "s76a-" + String(Math.random()); document.body.append(container); const handle = mountShell(container, { readbackFetchImpl: fetchImpl, runtimeConfigFetchImpl: fetchImpl }); mounted.push({ container, handle }); };
 const editor = () => document.querySelector("[data-runtime-config-editor]") as HTMLTextAreaElement;
 const setText = (text: string) => { const node = editor(); node.value = text; node.dispatchEvent(new Event("input", { bubbles: true })); };
 afterEach(() => { for (const entry of mounted.splice(0)) { entry.handle.dispose(); entry.container.remove(); } window.history.replaceState({}, "", "/"); });
@@ -18,26 +18,27 @@ describe("S76a runtime config editor", () => {
     expect(runtimeConfigDiff({ a: 1, b: 2 }, { a: 1 })).toEqual(["removed: b"]);
   });
 
-  it("does not offer Review before Load", async () => {
+  it("auto-loads the config on mount so the editor is available without a manual Load", async () => {
     const calls: string[] = [];
     mount(async (input, init) => { calls.push((init?.method ?? "GET") + " " + String(input)); return json({ applied: false, config: { a: 1 } }); });
-    await waitFor(() => document.querySelector("[data-runtime-config-load]") ? true : undefined, "load button");
-    expect(document.querySelector("[data-runtime-config-editor]")).toBeNull();
-    expect(document.querySelector("[data-runtime-config-save]")).toBeNull();
+    await waitFor(() => editor()?.value.includes('"a": 1') ? true : undefined, "editor from the automatic read");
+    expect(document.querySelector("[data-runtime-config-save]")).not.toBeNull();
     expect(calls.filter((call) => call.startsWith("PUT"))).toHaveLength(0);
+    expect(calls.filter((call) => call.startsWith("GET")).length).toBeGreaterThanOrEqual(1);
   });
 
   it("refuses to PUT when the server changed between Load and Confirm", async () => {
     let config = { a: 1, b: 2 };
     const puts: string[] = [];
     mount(async (_input, init) => { if (init?.method === "PUT") { puts.push("PUT"); return json(config); } return json({ applied: false, config }); });
-    await waitFor(() => document.querySelector("[data-runtime-config-load]") ? true : undefined, "load");
-    (document.querySelector("[data-runtime-config-load]") as HTMLButtonElement).click();
     await waitFor(() => editor()?.value.includes('"b": 2') ? true : undefined, "editor");
+    config = { a: 1, b: 5 };
+    (document.querySelector("[data-runtime-config-load]") as HTMLButtonElement).click();
+    await waitFor(() => editor()?.value.includes('"b": 5') ? true : undefined, "refreshed editor");
     setText(JSON.stringify({ a: 1, b: 3 }, null, 2));
     (document.querySelector("[data-runtime-config-save]") as HTMLButtonElement).click();
     await waitFor(() => document.querySelector("[data-runtime-config-confirm-save]") ? true : undefined, "confirm");
-    config = { a: 1, b: 5 };
+    config = { a: 1, b: 6 };
     (document.querySelector("[data-runtime-config-confirm-save]") as HTMLButtonElement).click();
     await waitFor(() => document.querySelector("[data-runtime-config-error]") ? true : undefined, "stale error");
     expect(puts).toHaveLength(0);
@@ -47,8 +48,6 @@ describe("S76a runtime config editor", () => {
   it("blocks invalid JSON with no request", async () => {
     const calls: string[] = [];
     mount(async (input, init) => { calls.push((init?.method ?? "GET") + " " + String(input)); return json({ applied: false, config: { a: 1 } }); });
-    await waitFor(() => document.querySelector("[data-runtime-config-load]") ? true : undefined, "load");
-    (document.querySelector("[data-runtime-config-load]") as HTMLButtonElement).click();
     await waitFor(() => editor()?.value.includes('"a"') ? true : undefined, "editor");
     setText("{bad");
     (document.querySelector("[data-runtime-config-save]") as HTMLButtonElement).click();
@@ -65,8 +64,6 @@ describe("S76a runtime config editor", () => {
       if (method === "PUT") { calls.push({ body: JSON.parse(String(init?.body)), method }); saved = true; return json({ applied: true, config: { a: 1, b: 99 } }); }
       return json({ applied: saved, config: saved ? { a: 1, b: 99 } : { a: 1, b: 2 } });
     });
-    await waitFor(() => document.querySelector("[data-runtime-config-load]") ? true : undefined, "load");
-    (document.querySelector("[data-runtime-config-load]") as HTMLButtonElement).click();
     await waitFor(() => editor()?.value.includes('"b": 2') ? true : undefined, "editor");
     setText(JSON.stringify({ a: 1, b: 3 }, null, 2));
     (document.querySelector("[data-runtime-config-save]") as HTMLButtonElement).click();
@@ -82,8 +79,6 @@ describe("S76a runtime config editor", () => {
 
   it("keeps the previous snapshot and text on 4xx", async () => {
     mount(async (input, init) => (init?.method === "PUT" ? json({ message: "rejected by host" }, 409) : json({ applied: false, config: { a: 1, b: 2 } })));
-    await waitFor(() => document.querySelector("[data-runtime-config-load]") ? true : undefined, "load");
-    (document.querySelector("[data-runtime-config-load]") as HTMLButtonElement).click();
     await waitFor(() => editor()?.value.includes('"b": 2') ? true : undefined, "editor");
     const text = JSON.stringify({ a: 1, b: 3 }, null, 2); setText(text);
     (document.querySelector("[data-runtime-config-save]") as HTMLButtonElement).click();

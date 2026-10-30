@@ -216,20 +216,20 @@ describe("S26h stale clears on successful gap refetch", () => {
     const unauthorized = mountAt("s26h-401", "/requests", {
       readbackReaders: createReadbackClients({ fetchImpl: async () => json({}, 401) }),
     });
-    await waitFor(() => (document.querySelector("h1")?.textContent === "Requests" ? true : undefined), "requests shell title");
+    await waitFor(() => (document.querySelector("h1")?.textContent === "Telemetry request ledger" ? true : undefined), "requests shell title");
     expect(document.body.textContent).not.toContain("m-legacy");
     unauthorized.dispose();
 
     const forbidden = mountAt("s26h-403", "/requests", {
       readbackReaders: createReadbackClients({ fetchImpl: async () => json({}, 403) }),
     });
-    await waitFor(() => (document.querySelector("h1")?.textContent === "Requests" ? true : undefined), "requests shell title");
+    await waitFor(() => (document.querySelector("h1")?.textContent === "Telemetry request ledger" ? true : undefined), "requests shell title");
     expect(document.body.textContent).not.toContain("m-legacy");
     forbidden.dispose();
 
     const invalid = mountAt("s26h-invalid", "/requests", {
       readbackReaders: createReadbackClients({ fetchImpl: async () => json({ bad: true }) }),
     });
-    await waitFor(() => (document.querySelector("h1")?.textContent === "Requests" ? true : undefined), "invalid requests shell title");
+    await waitFor(() => (document.querySelector("h1")?.textContent === "Telemetry request ledger" ? true : undefined), "invalid requests shell title");
   });
 });

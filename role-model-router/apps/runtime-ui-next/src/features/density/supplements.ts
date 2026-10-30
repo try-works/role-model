@@ -4,21 +4,17 @@ import type { ChartSeries } from "@role-model/ui/foldkit-chart";
 import type { Message } from "../../message";
 import type { ReadbackState } from "../../readback";
 import { telemetryChartCard } from "../overview/charts";
+import { card, table as referenceTable } from "../s563-layout";
 
 type H = HtmlBuilder<Message>;
 
 const text = (label: string, h: H): Html => h.p([h.Class("mt-2 max-w-[85ch] text-[12px] text-[var(--rm-secondary)]")], [label]);
 
 const table = (headings: ReadonlyArray<string>, rows: ReadonlyArray<ReadonlyArray<string>>, empty: string, h: H): Html =>
-  h.table([h.Class("mt-3 w-full border-collapse text-left text-[12px]")], [
-    h.thead([], [h.tr([], headings.map((heading) => h.th([h.Class("border-b border-[var(--rm-border)] px-2 py-1 text-[11px] uppercase tracking-[0.08em] text-[var(--rm-muted)]")], [heading])))]),
-    h.tbody([], rows.length === 0
-      ? [h.tr([], [h.td([h.Attribute("colspan", String(headings.length)), h.DataAttribute("density-state", "empty"), h.Class("px-2 py-2 text-[var(--rm-secondary)]")], [empty])])]
-      : rows.map((cells) => h.tr([h.Class("border-b border-[var(--rm-border)]")], cells.map((cell) => h.td([h.Class("px-2 py-1 align-top")], [cell]))))),
-  ]);
+  referenceTable(headings, rows, empty, h);
 
 const section = (title: string, body: ReadonlyArray<Html>, h: H): Html =>
-  h.section([h.Class("mt-6")], [h.h3([h.Class("text-[13px] font-semibold uppercase tracking-[0.12em] text-[var(--rm-muted)]")], [title]), ...body]);
+  h.div([h.Class("mt-4")], [card(title, undefined, body, h)]);
 
 const emptySeries = (id: string, label: string): ReadonlyArray<ChartSeries> => [{ id, label, points: [{ label: "No data", value: null }] }];
 
@@ -49,11 +45,12 @@ export const runtimeSupplement = (base: Html, readback: ReadbackState, h: H): Ht
   ], h);
 
 export const endpointsSupplement = (base: Html, readback: ReadbackState, h: H): Html =>
-  wrap(base, [
+  h.div([], [
+    base,
     section("Available models & endpoints", [text("Available models and endpoint state merged into one registry view.", h), table(["MODEL", "ENDPOINT", "HEALTH", "EFFORT"], readback.rows.map((row) => [row.label, row.id, row.value, row.meta.slice(0, 60)]), "No available models or endpoints recorded yet.", h)], h),
-    section("Runtime connections", [text("Provider, model, and endpoint state merged into one registry view.", h), table(["PROVIDER", "CONNECTION", "MODEL", "ENDPOINT", "EFFORT", "SOURCE", "HEALTH", "READINESS"], readback.rows.map((row) => [row.label, row.id, row.label, row.id, row.meta.slice(0, 40), "Direct provider / remote_api", row.value, "active"]), "No runtime connections recorded yet.", h)], h),
+    section("Runtime connections", [text("Provider, model, and endpoint state merged into one registry view.", h), table(["Provider", "Connection", "Model", "Endpoint", "Effort", "Source", "Health", "Readiness"], readback.rows.map((row) => [row.label, row.id, row.label, row.id, row.meta.slice(0, 40), "Direct provider / remote_api", row.value, "active"]), "No runtime connections recorded yet.", h)], h),
     chart("Runtime connections", "Endpoint health and readiness by connection.", "No runtime connection chart data recorded yet.", h),
-  ], h);
+  ]);
 
 export const queuesSupplement = (base: Html, readback: ReadbackState, h: H): Html =>
   wrap(base, [

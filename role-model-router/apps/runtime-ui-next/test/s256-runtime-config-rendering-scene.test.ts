@@ -22,8 +22,8 @@ type Editor = NonNullable<Model["runtimeConfigEditor"]>;
 const model = (editor?: Editor) =>
   shellModel(
     editor === undefined
-      ? { route: { _tag: "Runtime" } }
-      : { route: { _tag: "Runtime" }, runtimeConfigEditor: editor },
+      ? { route: { _tag: "RuntimeConfig" } }
+      : { route: { _tag: "RuntimeConfig" }, runtimeConfigEditor: editor },
   );
 
 const original = '{\n  "a": 1,\n  "b": 2\n}';

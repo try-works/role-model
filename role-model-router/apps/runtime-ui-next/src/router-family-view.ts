@@ -1,6 +1,7 @@
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 
 import { CONTROL_SPECS, type ControlsState } from "./control";
+import { card, filterBar, table as referenceTable, tableCellClass, tableHeadClass, titleClass, descriptionClass, filterLabelClass, filterControlClass } from "./features/s563-layout";
 import { renderControlPage } from "./control-view";
 import { Message } from "./message";
 import type { ReadbackRow, ReadbacksState } from "./readback";
@@ -13,9 +14,8 @@ import type { ReadbackRow, ReadbacksState } from "./readback";
  */
 type H = HtmlBuilder<Message>;
 
-const eyebrowClass = "text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]";
-const cardClass =
-  "rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-3";
+const eyebrowClass = "font-mono text-[11px] font-normal uppercase leading-4 tracking-[0.08em] text-muted-foreground";
+const cardClass = "rounded-lg border border-border bg-card p-3";
 const bodyClass = "text-[12px] leading-5 text-[var(--rm-secondary)]";
 const strongClass = "text-[13px] font-semibold text-[var(--rm-fg)]";
 
@@ -24,17 +24,12 @@ const sectionCard = (
   description: string | undefined,
   children: readonly Html[],
   h: H,
-): Html =>
-  h.section([h.Class("mt-4 " + cardClass)], [
-    h.h2([h.Class("text-[14px] font-semibold text-[var(--rm-fg)]")], [title]),
-    ...(description === undefined ? [] : [h.p([h.Class("mt-1 " + bodyClass)], [description])]),
-    h.div([h.Class("mt-3 space-y-3")], children),
-  ]);
+): Html => h.div([h.Class("mt-4")], [card(title, description, [h.div([h.Class("space-y-3")], children)], h)]);
 
 const statTile = (label: string, value: string, h: H): Html =>
-  h.div([h.Class(cardClass)], [
+  h.div([h.Class(cardClass + " flex flex-col gap-1")], [
     h.p([h.Class(eyebrowClass)], [label]),
-    h.p([h.Class("mt-1 break-words text-[13px] text-[var(--rm-fg)]")], [value]),
+    h.p([h.Class("break-words font-mono text-sm leading-[18px] font-medium tabular-nums text-foreground")], [value]),
   ]);
 
 const statGrid = (items: readonly { readonly label: string; readonly value: string }[], h: H): Html =>
@@ -44,19 +39,7 @@ const table = (
   headers: readonly string[],
   rows: readonly (readonly string[])[],
   h: H,
-): Html =>
-  h.table([h.Class("w-full min-w-full text-left text-[12px]")], [
-    h.thead([], [h.tr([], headers.map((header) => h.th([h.Class("pb-2 font-normal " + eyebrowClass)], [header])))]),
-    h.tbody(
-      [],
-      rows.map((cells) =>
-        h.tr(
-          [h.Class("border-t border-[var(--rm-border)]")],
-          cells.map((cell) => h.td([h.Class("py-2 align-top text-[var(--rm-secondary)]")], [cell])),
-        ),
-      ),
-    ),
-  ]);
+): Html => referenceTable(headers, rows, "No rows recorded yet.", h);
 
 const controlButton = (label: string, message: Message | undefined, h: H): Html =>
   h.button(
@@ -71,12 +54,10 @@ const controlButton = (label: string, message: Message | undefined, h: H): Html 
   );
 
 const textField = (label: string, value: string, h: H): Html =>
-  h.label([h.Class("flex flex-col gap-1 text-[12px]")], [
-    h.span([h.Class(eyebrowClass)], [label]),
+  h.label([h.Class("flex max-w-[420px] flex-col gap-1.5")], [
+    h.span([h.Class(filterLabelClass)], [label]),
     h.input([
-      h.Class(
-        "w-full max-w-[420px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1.5 text-[12px] text-[var(--rm-fg)]",
-      ),
+      h.Class(filterControlClass),
       h.Type("text"),
       h.Value(value),
       h.Disabled(true),
@@ -85,14 +66,12 @@ const textField = (label: string, value: string, h: H): Html =>
   ]);
 
 const selectField = (label: string, options: readonly string[], selected: string | undefined, h: H): Html =>
-  h.label([h.Class("flex flex-col gap-1 text-[12px]")], [
-    h.span([h.Class(eyebrowClass)], [label]),
+  h.label([h.Class("flex max-w-[420px] flex-col gap-1.5")], [
+    h.span([h.Class(filterLabelClass)], [label]),
     h.select(
       [
         h.AriaLabel(label),
-        h.Class(
-          "w-full max-w-[420px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1.5 text-[12px] text-[var(--rm-fg)]",
-        ),
+        h.Class(filterControlClass),
         h.Disabled(true),
       ],
       options.map((option) =>
@@ -131,7 +110,7 @@ const previewDisclosure = (h: H): Html =>
 
 const familyShell = (routeName: string, state: string, children: readonly Html[], h: H): Html =>
   h.section(
-    [h.Class("rm3-next-route mt-4"), h.DataAttribute("route", routeName), h.DataAttribute("router-family-state", state)],
+    [h.Class("rm3-next-route"), h.DataAttribute("route", routeName), h.DataAttribute("router-family-state", state)],
     children,
   );
 
@@ -171,15 +150,11 @@ export const routerOverviewPage = (readbacks: ReadbacksState, h: H): Html => {
           ],
           h,
         ),
-        ...(configRows.length === 0
-          ? [h.p([h.Class(bodyClass)], ["No model aliases are configured yet."])]
-          : [
-              table(
-                ["Alias", "Mode", "Effective models", "Candidate expansion", "Readiness"],
-                configRows.map((entry) => [entry.label, entry.value, "—", "—", entry.meta]),
-                h,
-              ),
-            ]),
+        table(
+          ["Alias", "Mode", "Effective models", "Candidate expansion", "Readiness"],
+          configRows.map((entry) => [entry.label, entry.value, "—", "—", entry.meta]),
+          h,
+        ),
       ],
       h,
     ),
@@ -187,21 +162,17 @@ export const routerOverviewPage = (readbacks: ReadbacksState, h: H): Html => {
       "Routing candidates",
       "Concrete endpoint and model candidates currently visible to the router for this runtime posture.",
       [
-        ...(candidateRows.length === 0
-          ? [h.p([h.Class(bodyClass)], ["No routing candidates are available."])]
-          : [
-              table(
-                ["Model", "Endpoint", "Source", "Health", "Routing"],
-                candidateRows.map((entry) => [
-                  entry.label,
-                  metaText(entry.meta),
-                  "—",
-                  "—",
-                  entry.value,
-                ]),
-                h,
-              ),
-            ]),
+        table(
+          ["Model", "Endpoint", "Source", "Health", "Routing"],
+          candidateRows.map((entry) => [
+            entry.label,
+            metaText(entry.meta),
+            "—",
+            "—",
+            entry.value,
+          ]),
+          h,
+        ),
       ],
       h,
     ),
@@ -214,7 +185,8 @@ export const routerCandidatesPage = (readbacks: ReadbacksState, h: H): Html => {
   const state = readback.status === "idle" ? "loading" : readback.status;
   const rows = readback.rows;
   return familyShell("router-candidates", state, [
-    h.h2([h.Class("rm3-next-route-title")], ["Router candidates"]),
+    h.h2([h.Class("rm3-next-route-title")], ["Candidate inventory"]),
+    h.h3([h.Class("mt-1 text-[12px] font-semibold uppercase tracking-[0.08em] text-[var(--rm-muted)]")], ["Candidate inventory"]),
     sectionCard(
       "Candidate inventory",
       "CAP is benchmark capability; its evidence is labeled exact, borrowed, or prior so a provider-default arm never reads as a fixed arm's benchmark. Live p50, failure, and samples come only from the exact endpoint's operational telemetry profile.",
@@ -315,6 +287,15 @@ export const routerStrategyPage = (routeName: string, readbacks: ReadbacksState,
       h,
     ),
     sectionCard(
+      "Measured-latency override",
+      "Use measured endpoint latency when it is available instead of the declared cost and quality weights.",
+      [
+        selectField("Measured-latency override", ["off", "on"], "off", h),
+        h.p([h.Class(bodyClass)], ["The override is persisted with the routing posture; the preview editor does not write it."]),
+      ],
+      h,
+    ),
+    sectionCard(
       "Saved posture",
       "The persisted routing strategy and execution mode read from the live host.",
       [
@@ -335,6 +316,13 @@ const posturePage = (kind: "workload" | "role", routeName: string, readbacks: Re
   return familyShell(routeName, state, [
     h.h2([h.Class("rm3-next-route-title")], [title]),
     previewDisclosure(h),
+    ...(kind === "role"
+      ? [filterBar([
+          { label: "Scoring strategy", value: "Quality", options: ["Quality"] },
+          { label: "Routing mode", value: "Baseline", options: ["Baseline"] },
+          { label: "Compute preference", value: "remote", options: ["remote"] },
+        ], h)]
+      : []),
     sectionCard(
       title,
       kind === "role"
@@ -416,7 +404,7 @@ export const controlControllerPage = (controls: ControlsState, h: H): Html => {
   const controller = controls.controlController;
   const current = controller.rows[0]?.value ?? controller.selectedEndpointId ?? "—";
   const state = endpoints.status === "idle" ? "loading" : endpoints.status;
-  return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("route", "control-controller")], [
+  return h.section([h.Class("rm3-next-route"), h.DataAttribute("route", "control-controller")], [
     h.h2([h.Class("rm3-next-route-title")], ["Routing controller"]),
     sectionCard(
       "Controller assignment",

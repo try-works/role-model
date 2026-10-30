@@ -66,7 +66,7 @@ describe("S534 providers/studio/system/local structural parity", () => {
     await expectTitles("StorageRetention", ["Storage & retention", "Logical classes", "Manual pruning", "Retention policy"], { readbacks: { storageRetention: readback([row]) } }, 1);
   });
   it("local choose peer-backed models", async () => {
-    await expectTitles("LocalChoose", ["Choose local backend", "EXTERNAL SERVER", "MANAGED BY ROLE-MODEL", "Peer-backed models", "Llama-swap models"], { readbacks: { localPeers: readback([row]), localLlamaSwapModels: readback([row]) } }, 1);
+    await expectTitles("LocalChoose", ["Choose local backend", "External server:", "Managed by role-model:", "Peer-backed models", "Llama-swap models"], { readbacks: { localPeers: readback([row]), localLlamaSwapModels: readback([row]) } }, 1);
   });
   it("local peers table", async () => {
     await expectTitles("LocalPeers", ["Local endpoints", "Endpoint inventory", "Add peer endpoint"], { readbacks: { localPeers: readback([row]) } }, 1);

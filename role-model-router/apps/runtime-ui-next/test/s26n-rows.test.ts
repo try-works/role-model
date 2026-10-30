@@ -29,12 +29,13 @@ describe("S26n redirects and static rows", () => {
   it("renders local-choose as a static route", async () => {
     mountAt("/local/choose", "s26n-choose");
     const text = await waitFor(() => document.querySelector("[data-route='local-choose']")?.textContent ?? undefined, "local-choose");
-    expect(text).toContain("Choose peer-backed models or llama-swap models.");
+    expect(text).toContain("Peer-backed models");
+  expect(text).toContain("Llama-swap models");
   });
 
   it("redirects /local/models to the Local choose target view", async () => {
     mountAt("/local/models", "s26n-local-models");
     const title = await waitFor(() => document.querySelector(".rm3-next-route-title")?.textContent ?? undefined, "local-models");
-    expect(title).toContain("Local choose");
+    expect(title).toContain("Choose local backend");
   });
 });

@@ -39,7 +39,7 @@ import {
   learningPacksRoute,
 } from "./features/learning-ranking/routes";
 import { studioRoute } from "./features/studio/routes";
-import { runtimeRoute } from "./features/runtime/routes";
+import { runtimeConfigRoute, runtimeRoute } from "./features/runtime/routes";
 import { indexRoute } from "./features/overview/routes";
 import { candidateSpaceCard, overviewStats, telemetryChartCard } from "./features/overview/charts";
 import {
@@ -178,6 +178,7 @@ const routeTitle = (route: Model["route"]): string =>
     RouterConfig: () => "Router config | RM3 Foldkit shell",
     RouterAgentStrategy: () => "Agent strategy | RM3 Foldkit shell",
     Runtime: () => "Runtime | RM3 Foldkit shell",
+    RuntimeConfig: () => "Runtime config | RM3 Foldkit shell",
     SessionReadiness: () => "Session readiness | RM3 Foldkit shell",
     Dashboard: () => "Dashboard | RM3 Foldkit shell",
     LocalSwap: () => "Local swap | RM3 Foldkit shell",
@@ -231,7 +232,7 @@ const shellSections: ReadonlyArray<ShellSection> = [
     href: "/system/session-readiness",
     label: "System",
     nav: "system",
-    tags: ["SystemPeers", "Runtime", "SessionReadiness", "Dashboard", "SystemOperator", "SystemExtensions", "StorageRetention"],
+    tags: ["SystemPeers", "Runtime", "RuntimeConfig", "SessionReadiness", "Dashboard", "SystemOperator", "SystemExtensions", "StorageRetention"],
   },
   {
     href: "/learning",
@@ -286,6 +287,7 @@ const shellPageTitle = (model: Model): string =>
     Benchmark: () => "Capability benchmark",
     StorageRetention: () => "Storage & retention",
     Runtime: () => "Runtime topology",
+    RuntimeConfig: () => "Runtime config",
     SessionReadiness: () => "Session readiness",
     Dashboard: () => "Dashboard",
     LocalSwap: () => "Llama-swap swap history",
@@ -1157,7 +1159,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     Observability: () => observabilitySnapshotRoute(observability, h),
     StoreReceipts: () => storeDegradationReceiptsRoute(readbacks.storeReceipts, h),
     Queues: () => h.div([h.DataAttribute("page-layout", "reference")], [h.h3([h.Class("text-sm font-medium leading-5 text-foreground")], ["Queue state"]), observeQueuesRoute(readbacks.queues, h)]),
-    LocalLogs: () => familyPage("Llama-swap logs", "local-logs", "Rows are parsed into Timestamp, Source, Severity, Request, and message fields so local runtime behavior can be inspected without raw console noise.", [{ label: "Structured local log history", spec: READBACK_SPECS.localLogs, readback: readbacks.localLogs, note: "The ledger is bounded for scanability; parsed rows carry request correlation.", columns: ["Timestamp", "Source", "Severity", "Request", "Message"], rows: (row) => [row.label, row.value, row.meta, "—", "—"] }, { label: "Raw log streams", note: "Raw stdout/stderr streams stay in the host log store and are not reconstructed here." }], h),
+    LocalLogs: () => familyPage("Llama-swap logs", "local-logs", "Rows are parsed into Timestamp, Source, Severity, Request, and message fields so local runtime behavior can be inspected without raw console noise.", [{ label: "Structured local log history", spec: READBACK_SPECS.localLogs, readback: readbacks.localLogs, note: "The ledger is bounded for scanability; parsed rows carry request correlation.", columns: ["Time", "Source", "Level", "Message", "Request"], rows: (row) => [row.label, row.value, row.meta, "—", "—"] }, { label: "Raw log streams", note: "Raw stdout/stderr streams stay in the host log store and are not reconstructed here." }], h),
     RouterCandidates: () => routerCandidatesPage(readbacks, h),
     Requests: () => telemetryRequestsRoute(readbacks.requests, requestsRanking, requestsRankingMetricListbox, requestsRankingTargetListbox, h),
     RequestDetail: () => renderReadbackPage(READBACK_SPECS.requestDetail, readbacks.requestDetail, h),
@@ -1190,21 +1192,22 @@ const routeContent = (ctx: RouteViewContext): Html => {
     LearningDecisions: () => learningDecisionsPage(readbacks.learningDecisions, h),
     LearningEvidence: () => learningEvidencePage(readbacks.learningEvidence, h),
     LearningHistory: () => learningHistoryPage(readbacks.learningHistory, h),
-    LocalPolicy: () => localPolicyPage(readbacks.localPolicy, h),
-    LocalLlamaSwapModels: () => familyPage("Llama-swap models", "local-llama-swap-models", "Load a runtime-config-declared model, assign route roles, and manage the in-memory llama-swap inventory. Role summary: loaded models and assigned roles.", [
+    LocalPolicy: () => policySupplement(localPolicyPage(readbacks.localPolicy, h), readbacks.localPolicy, h),
+    LocalLlamaSwapModels: () => llamaModelsSupplement(familyPage("Llama-swap models", "local-llama-swap-models", "Load a runtime-config-declared model, assign route roles, and manage the in-memory llama-swap inventory. Role summary: loaded models and assigned roles.", [
       { label: "Load model", note: "Model must already be declared in runtime config. Loading triggers the managed swap.", children: [h.div([h.Class("flex flex-wrap items-end gap-3")], [h.label([h.Class("flex flex-col gap-1 font-sans text-xs text-muted-foreground")], [h.span([], ["Model ID"]), h.input([h.Id("llama-model-id"), h.AriaLabel("Model ID"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm")])]), h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Load model"])])] },
       { label: "Loaded models", spec: READBACK_SPECS.localLlamaSwapModels, readback: readbacks.localLlamaSwapModels, columns: ["Model", "Status", "Roles", "Actions"], rows: (row) => [row.label, row.value, row.meta, "—"] },
-    ], h),
-    SystemOperator: () => familyPage("Operator controls", "system-operator", "Inspect bounded replay, evaluation, and shadow-learning state. The access token stays only in this browser component and is never stored.", [{ label: "Operator status", spec: READBACK_SPECS.operatorStatus, readback: readbacks.operatorStatus }, { label: "Trace lineage", spec: READBACK_SPECS.operatorTraceRoots, readback: readbacks.operatorTraceRoots }, { label: "Replay Jobs", spec: READBACK_SPECS.replayJobs, readback: readbacks.replayJobs }, { label: "Evaluation Jobs", spec: READBACK_SPECS.evaluationJobs, readback: readbacks.evaluationJobs }, { label: "Shadow Learning", note: "This page does not enable production learning; shadow-learning actions stay bounded to the readback." }], h),
+    ], h), readbacks.localLlamaSwapModels, h),
+    SystemOperator: () => familyPage("Operator Controls", "system-operator", "Inspect bounded replay, evaluation, and shadow-learning state. The access token stays only in this browser component and is never stored.", [{ label: "Operator status", spec: READBACK_SPECS.operatorStatus, readback: readbacks.operatorStatus }, { label: "Trace lineage", spec: READBACK_SPECS.operatorTraceRoots, readback: readbacks.operatorTraceRoots }, { label: "Replay Jobs", spec: READBACK_SPECS.replayJobs, readback: readbacks.replayJobs }, { label: "Evaluation Jobs", spec: READBACK_SPECS.evaluationJobs, readback: readbacks.evaluationJobs }, { label: "Shadow Learning", note: "This page does not enable production learning; shadow-learning actions stay bounded to the readback." }], h),
     SystemExtensions: () => familyPage("Extensions", "system-extensions", "Extension boundary, replay automation, contribution posture and the extension inventory.", [{ label: "Extension boundary", note: "The host enforces the extension boundary before any extension code runs." }, { label: "Replay automation", note: "Replay automation is configured per extension and reported by the host." }, { label: "Contribution posture", note: "Contribution posture records whether an extension may contribute runtime behavior." }, { label: "Recommendation ledger", note: "Recommendation receipts are recorded in the ledger when an extension produces one." }, { label: "Extension inventory", spec: READBACK_SPECS.extensions, readback: readbacks.extensions }], h),
     Models: () => modelsRoute(readbacks.configuredModels, readbacks.modelEndpoints, h),
-    ModelsRoles: () => modelsRolesRoute(readbacks.configuredModels, h),
+    ModelsRoles: () => modelsRolesRoute(readbacks.configuredModels, readbacks.modelEndpoints, h),
     RouterStrategy: () => routerStrategyPage("router-strategy", readbacks, h),
     RouterWorkloads: () => workloadsSupplement(routerWorkloadsPage(readbacks, h), readbacks.routerConfig, h),
     RouterConfig: () => routerConfigPage(readbacks, h),
     RouterAgentStrategy: () => agentSupplement(routerAgentStrategyPage(readbacks, h), readbacks.routerConfig, h),
     LocalChoose: () => localChoosePage(readbacks, h),
-    Runtime: () => runtimeSupplement(runtimeRoute({ h, readbacks, runtimeConfigEditor, runtimeConfigPage }), readbacks.runtime, h),
+    Runtime: () => runtimeRoute({ h, readbacks, runtimeConfigEditor, runtimeConfigPage }),
+    RuntimeConfig: () => runtimeConfigRoute({ h, readbacks, runtimeConfigEditor, runtimeConfigPage }),
     SessionReadiness: () => sessionSupplement(renderReadbackPage(READBACK_SPECS.sessionReadiness, readbacks.sessionReadiness, h), readbacks.sessionReadiness, h),
     Dashboard: () => renderReadbackPage(READBACK_SPECS.dashboard, readbacks.dashboard, h),
     LocalSwap: () => familyPage("Llama-swap swap history", "local-swap", "Most recent swap events first.", [{ label: "Event ledger", spec: READBACK_SPECS.localSwap, readback: readbacks.localSwap, columns: ["Time", "Event", "Model", "Reason"], rows: (row) => [row.label, row.value, row.meta, "—"] }, { label: "Ledger semantics", note: "Initial load · Swap reason · Timeline order: events appear when the managed host loads a first model, swaps to a new one, or records the operator-visible reason." }], h),
