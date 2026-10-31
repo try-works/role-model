@@ -99,6 +99,20 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
     const roles = [...new Set(endpoints.flatMap((endpoint) => endpoint.roleIds ?? []))];
     return { health, label: row.label, providerId: meta.providerId ?? row.value, roleCount: roles.length };
   });
+  const endpointGroups = new Map<string, Array<{ health: string; modelId: string; roles: number }>>();
+  for (const row of ctx.readbacks.modelEndpoints.rows) {
+    try {
+      // SAFETY: modelEndpoints rows carry the endpoint JSON record in meta.
+      const meta = JSON.parse(row.meta) as { readonly modelId?: string; readonly providerAccountId?: string; readonly healthStatus?: string; readonly roleIds?: ReadonlyArray<string> };
+      const accountId = meta.providerAccountId ?? "";
+      if (accountId.length === 0 || meta.modelId === undefined) continue;
+      const entry = endpointGroups.get(accountId) ?? [];
+      entry.push({ health: meta.healthStatus ?? row.value, modelId: meta.modelId, roles: (meta.roleIds ?? []).length });
+      endpointGroups.set(accountId, entry);
+    } catch {
+      // An endpoint without a readable record is skipped; it cannot be grouped by account.
+    }
+  }
   const providerGroups = [...new Set(modelRows.map((row) => row.providerId))].filter((provider) => provider.length > 0 && modelRows.some((row) => row.providerId === provider));
   const labelClass = "font-sans text-xs font-normal leading-4 text-muted-foreground";
   const fieldClass = "flex flex-col gap-1.5";
@@ -151,6 +165,10 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
               "Credential reference",
               h.input([h.AriaLabel("Credential reference"), h.Type("text"), h.Class(inputClass), h.Attribute("value", credentialRef), h.OnInput((value: string) => Message.ProviderAccountFieldChanged({ field: "credentialRef", value }))]),
             ),
+            field(
+              "API key (optional)",
+              h.input([h.AriaLabel("API key (optional)"), h.Type("password"), h.Class(inputClass), h.Attribute("value", draft.apiKey), h.OnInput((value: string) => Message.ProviderAccountFieldChanged({ field: "apiKey", value }))]),
+            ),
             field("Model", h.select(
               [h.AriaLabel("Model"), h.Class(selectClass), h.OnChange((value: string) => Message.ProviderAccountModelChosen({ modelId: value }))],
               [h.option([h.Value(""), ...(draft.modelInput.length === 0 ? [h.Selected(true)] : [])], ["Select a model…"]),
@@ -160,11 +178,13 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
               [h.Type("button"), h.AriaDisabled(ctx.providerAccount.status === "saving"), h.OnClick(Message.ProviderAccountCreateRequested({})), h.Class("inline-flex h-[34px] w-fit items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-foreground")],
               [ctx.providerAccount.status === "saving" ? "Saving configuration…" : "Save configuration"],
             ),
-            ...(ctx.providerAccount.status === "saved"
-              ? [h.p([h.DataAttribute("provider-account-saved-visible", ""), h.Role("status"), h.Class("font-sans text-[13px] leading-5 text-[var(--rm-success,#2f9e62)]")], ["Provider account saved."])]
-              : ctx.providerAccount.error === undefined
-                ? []
-                : [h.p([h.DataAttribute("provider-account-error-visible", ""), h.Role("alert"), h.Class("font-sans text-[13px] leading-5 text-[var(--rm-error)]")], [ctx.providerAccount.error])]),
+            ...(ctx.providerAccount.notice !== undefined
+              ? [h.p([h.DataAttribute("provider-account-notice-visible", ""), h.Role("status"), h.Class("font-sans text-[13px] leading-5 text-[var(--rm-warning,#b8860b)]")], [ctx.providerAccount.notice])]
+              : ctx.providerAccount.status === "saved"
+                ? [h.p([h.DataAttribute("provider-account-saved-visible", ""), h.Role("status"), h.Class("font-sans text-[13px] leading-5 text-[var(--rm-success,#2f9e62)]")], ["Provider account saved."])]
+                : ctx.providerAccount.error === undefined
+                  ? []
+                  : [h.p([h.DataAttribute("provider-account-error-visible", ""), h.Role("alert"), h.Class("font-sans text-[13px] leading-5 text-[var(--rm-error)]")], [ctx.providerAccount.error])]),
             h.details([h.Class("mt-6 border-t border-border pt-4")], [
               h.summary([h.Class("cursor-pointer font-sans text-sm font-medium text-foreground")], ["Provider account setup"]),
               h.div([h.Class("mt-4 flex flex-col gap-4")], [
@@ -175,7 +195,23 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
           ]),
         ], h),
         card("Configured provider connections", "Endpoints stay grouped by account. Expand a model's roles count to edit which routing roles it can serve.", [
-          providerGroups.length === 0
+          endpointGroups.size > 0
+            ? h.div([h.Class("flex flex-col gap-4")], [...endpointGroups.entries()].map(([accountId, endpoints]) =>
+                h.div([h.Class("flex flex-col gap-1")], [
+                  h.div([h.Class("flex flex-wrap items-baseline gap-2 px-1")], [
+                    h.span([h.Class("truncate font-mono text-[13px] font-semibold text-foreground")], [accountId]),
+                    h.span([h.Class("ml-auto font-sans text-xs text-muted-foreground")], [String(endpoints.length) + " endpoint" + (endpoints.length === 1 ? "" : "s")]),
+                  ]),
+                  h.div([h.Class("flex flex-col")], endpoints.map((endpoint) =>
+                    h.div([h.Class("flex items-center gap-3 border-b border-[var(--rm-border)] px-1 py-2 last:border-b-0")], [
+                      h.span([h.Class("min-w-0 flex-1 truncate font-mono text-[13px] font-semibold text-foreground")], [endpoint.modelId]),
+                      h.span([h.Class("shrink-0 font-sans text-[12px] text-muted-foreground")], [endpoint.health]),
+                      h.span([h.Class("shrink-0 font-sans text-[12px] tabular-nums text-muted-foreground")], [String(endpoint.roles) + " roles"]),
+                    ]),
+                  )),
+                ]),
+              ))
+            : providerGroups.length === 0
             ? ctx.controls.providers.rows.length === 0
               ? h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["No provider connections are configured yet."])
               : h.div([h.Class("flex flex-col gap-3")], ctx.controls.providers.rows.map((row) =>

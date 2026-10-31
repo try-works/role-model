@@ -15,7 +15,7 @@ import {
   parseDiagnosticsSnapshot,
 } from "./diagnostics";
 import { type DeviceAuthClient, type DeviceAuthStartPayload, type DeviceActivationPayload } from "./device-auth";
-import { type ProviderAccountClient, type ProviderAccountCreatePayload } from "./provider-account";
+import { type ProviderAccountActivationBatch, type ProviderAccountClient, type ProviderAccountCreatePayload } from "./provider-account";
 import { type EndpointActivationPayload, type EndpointAdmissionClient, type EndpointBatchPayload } from "./endpoint-admission";
 import { type LearningRankingClient, type LearningRollbackPayload } from "./learning-ranking";
 import { type RequestsRankingClient, type RequestsRankingQuery } from "./requests-ranking";
@@ -415,6 +415,20 @@ const noopDeviceAuthClient: DeviceAuthClient = {
 export const noopDeviceAuthCommands = defineDeviceAuthCommands(noopDeviceAuthClient);
 
 export const defineProviderAccountCommands = (client: ProviderAccountClient) => ({
+  activate: Command.define("ActivateProviderAccountEndpoints", {
+    args: { payload: Schema.String, token: Schema.Number },
+    execute: ({ payload, token }) =>
+      Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            try: () => client.activate(JSON.parse(payload) as ProviderAccountActivationBatch),
+          }),
+        ),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.ProviderAccountEndpointsActivated({ token }) : Message.ProviderAccountFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("provider endpoint activation failed"))), token })),
+      ),
+    messages: [Message.ProviderAccountEndpointsActivated, Message.ProviderAccountFailed],
+  }),
   create: Command.define("CreateProviderAccount", {
     args: { payload: Schema.String, token: Schema.Number },
     execute: ({ payload, token }) =>
@@ -460,6 +474,7 @@ export const defineProviderAccountCommands = (client: ProviderAccountClient) => 
 });
 export type ProviderAccountCommands = ReturnType<typeof defineProviderAccountCommands>;
 const noopProviderAccountClient: ProviderAccountClient = {
+  activate: async () => ({}),
   create: async () => ({}),
   deleteModel: async () => ({}),
   updateKey: async () => ({}),

@@ -31,6 +31,7 @@ export type ReadbackKey =
   | "downstreamOpenAI"
   | "integrationProviders"
   | "providerCatalog"
+  | "providerAccounts"
   | "benchmarkSuite"
   | "storageRetention"
   | "models"
@@ -79,6 +80,7 @@ export const ReadbackKeySchema = Schema.Literals([
   "downstreamOpenAI",
   "integrationProviders",
   "providerCatalog",
+  "providerAccounts",
   "benchmarkSuite",
   "storageRetention",
   "models",
@@ -149,6 +151,7 @@ export const ReadbacksState = Schema.Struct({
   downstreamOpenAI: ReadbackState,
   integrationProviders: ReadbackState,
   providerCatalog: ReadbackState,
+  providerAccounts: ReadbackState,
   benchmarkSuite: ReadbackState,
   storageRetention: ReadbackState,
   models: ReadbackState,
@@ -212,6 +215,7 @@ export const emptyReadbacks = (): ReadbacksState => ({
   downstreamOpenAI: idleReadback(),
   integrationProviders: idleReadback(),
   providerCatalog: idleReadback(),
+  providerAccounts: idleReadback(),
   benchmarkSuite: idleReadback(),
   storageRetention: idleReadback(),
   models: idleReadback(),
@@ -914,6 +918,16 @@ const parseProviderCatalog = (body: unknown, token: number): ReadbackState => {
   return okRows(rows, token);
 };
 
+const parseProviderAccounts = (body: unknown, token: number): ReadbackState => {
+  const list = Array.isArray(body) ? body : [];
+  const rows = list.flatMap((value, index) => {
+    const entry = asRecord(value);
+    if (entry === undefined || typeof entry.providerAccountId !== "string") return [];
+    return [row("account:" + String(index), entry.providerAccountId, typeof entry.providerKind === "string" ? entry.providerKind : "", JSON.stringify(entry))];
+  });
+  return okRows(rows, token);
+};
+
 export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = {
   localLogs: {
     emptyText: "No local logs recorded yet.",
@@ -1036,6 +1050,13 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     label: "Provider catalog",
     parse: parseProviderCatalog,
     path: READBACK_PATHS.providerCatalog,
+  },
+  providerAccounts: {
+    emptyText: "No provider accounts configured yet.",
+    key: "providerAccounts",
+    label: "Provider accounts",
+    parse: parseProviderAccounts,
+    path: READBACK_PATHS.providerAccounts,
   },
   integrationProviders: {
     emptyText: "No integration providers configured yet.",
@@ -1265,6 +1286,7 @@ export const createReadbackClients = (
     downstreamOpenAI: client(READBACK_SPECS.downstreamOpenAI),
     integrationProviders: client(READBACK_SPECS.integrationProviders),
   providerCatalog: client(READBACK_SPECS.providerCatalog),
+  providerAccounts: client(READBACK_SPECS.providerAccounts),
     benchmarkSuite: client(READBACK_SPECS.benchmarkSuite),
     storageRetention: client(READBACK_SPECS.storageRetention),
     models: client(READBACK_SPECS.models),

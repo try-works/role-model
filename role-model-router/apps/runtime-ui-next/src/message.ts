@@ -112,6 +112,7 @@ export const Message: MessageUnion<{
   readonly ProviderAccountModelRemoved: { readonly modelId: typeof Schema.String };
   readonly ProviderAccountCreateRequested: EmptyFields;
   readonly ProviderAccountCreateSucceeded: { readonly token: typeof Schema.Number };
+  readonly ProviderAccountEndpointsActivated: { readonly token: typeof Schema.Number };
   readonly ProviderAccountUpdateKeyRequested: EmptyFields;
   readonly ProviderAccountKeyUpdated: { readonly token: typeof Schema.Number };
   readonly ProviderAccountModelDeleteRequested: { readonly modelId: typeof Schema.String };
@@ -232,6 +233,7 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   ProviderAccountModelRemoved: { modelId: Schema.String },
   ProviderAccountCreateRequested: {},
   ProviderAccountCreateSucceeded: { token: Schema.Number },
+  ProviderAccountEndpointsActivated: { token: Schema.Number },
   ProviderAccountUpdateKeyRequested: {},
   ProviderAccountKeyUpdated: { token: Schema.Number },
   ProviderAccountModelDeleteRequested: { modelId: Schema.String },

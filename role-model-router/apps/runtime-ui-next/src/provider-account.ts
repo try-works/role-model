@@ -46,6 +46,7 @@ export const ProviderAccountStateSchema = Schema.Struct({
   draft: ProviderAccountDraftSchema,
   error: Schema.optional(Schema.String),
   pendingAction: Schema.optional(Schema.Literals(["create", "delete-model", "update-key"])),
+  notice: Schema.optional(Schema.String),
   status: Schema.Literals(["draft", "saving", "saved", "error"]),
   token: Schema.Number,
 });
@@ -125,7 +126,10 @@ export const createProviderAccountPayload = (
   const providerAccountId = draft.providerAccountId.trim();
   const apiKeyMode = draft.authMode === "api-key-static";
   const preserveExisting = draft.existingStatus.trim().length > 0;
-  const lifecycle = apiKeyMode
+  const keepExistingActive = draft.existingStatus === "active" && draft.existingHealthStatus === "healthy";
+  const lifecycle = keepExistingActive
+    ? { healthStatus: "healthy", rotationState: draft.existingRotationState || "stable", status: "active" }
+    : apiKeyMode
     ? preserveExisting && draft.existingStatus === "disabled" && draft.existingHealthStatus === "credentials-missing"
       ? { healthStatus: draft.existingHealthStatus, rotationState: draft.existingRotationState || "not-required", status: draft.existingStatus }
       : { healthStatus: "healthy", rotationState: "stable", status: "active" }
@@ -171,7 +175,13 @@ export const updateProviderKeyPayload = (
   providerAccountId: draft.providerAccountId.trim(),
 });
 
+export interface ProviderAccountActivationBatch {
+  readonly activationBatchId: string;
+  readonly activations: ReadonlyArray<{ readonly providerAccountId: string; readonly modelId: string; readonly region: string; readonly reasoningEffort?: string }>;
+}
+
 export interface ProviderAccountClient {
+  readonly activate: (payload: ProviderAccountActivationBatch) => Promise<unknown>;
   readonly create: (payload: ProviderAccountCreatePayload) => Promise<unknown>;
   readonly deleteModel: (providerAccountId: string, modelId: string) => Promise<unknown>;
   readonly updateKey: (payload: { readonly apiKey: string; readonly providerAccountId: string }) => Promise<unknown>;
@@ -209,6 +219,7 @@ export const createProviderAccountClient = (
     return parsed;
   };
   return {
+    activate: async (payload) => request("/api/role-model/endpoints/batch", "POST", payload),
     create: async (payload) => request("/api/role-model/accounts", "POST", payload),
     deleteModel: async (providerAccountId, modelId) =>
       request(

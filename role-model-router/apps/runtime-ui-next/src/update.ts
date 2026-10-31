@@ -80,6 +80,7 @@ import {
   settleEndpointActivation,
 } from "./endpoint-activation-tracker";
 import {
+  type ProviderAccountActivationBatch,
   createProviderAccountPayload,
   initialProviderAccountState,
   providerAccountBusy,
@@ -171,6 +172,7 @@ const noopReadback = defineReadReadback({
   downstreamOpenAI: async () => ({ body: emptyBody, status: 200 }),
   integrationProviders: async () => ({ body: emptyBody, status: 200 }),
   providerCatalog: async () => ({ body: [], status: 200 }),
+  providerAccounts: async () => ({ body: [], status: 200 }),
   benchmarkSuite: async () => ({ body: emptyBody, status: 200 }),
   storageRetention: async () => ({ body: emptyBody, status: 200 }),
   models: async () => ({ body: emptyBody, status: 200 }),
@@ -389,8 +391,8 @@ const endpointAdmissionCompletion = (
       }
       if (route._tag === "Endpoints" || route._tag === "Providers") {
         const keys: ReadonlyArray<ReadbackKey> = route._tag === "Endpoints"
-          ? ["modelEndpoints", "configuredModels", "integrationProviders", "providerCatalog"]
-          : ["integrationProviders", "configuredModels", "modelEndpoints", "providerCatalog"];
+          ? ["modelEndpoints", "configuredModels", "integrationProviders", "providerCatalog", "providerAccounts"]
+          : ["integrationProviders", "configuredModels", "modelEndpoints", "providerCatalog", "providerAccounts"];
         const readbacks = { ...emptyReadbacks() };
         const controlKey = route._tag === "Endpoints" ? "endpoints" : "providers";
         const controlToken = model.controls[controlKey].token + 1;
@@ -1135,19 +1137,33 @@ const updateLocalPolicyDraft = (
             }
           }).find((entry) => entry.providerId === providerId);
           const variant = provider?.variants?.find((entry) => entry.variantId === variantId) ?? provider?.variants?.[0];
+          const resolvedVariantId = variant?.variantId ?? variantId;
+          const accountId = providerId + ".personal." + resolvedVariantId;
+          const existing = model.readbacks.providerAccounts.rows.flatMap((entry) => {
+            try {
+              // SAFETY: providerAccounts rows carry the account JSON record in meta.
+              return [JSON.parse(entry.meta) as { readonly authMode?: string; readonly credentialRef?: { readonly ref?: string }; readonly healthStatus?: string; readonly providerAccountId?: string; readonly rotationState?: string; readonly status?: string }];
+            } catch {
+              return [];
+            }
+          }).find((entry) => entry.providerAccountId === accountId);
           return {
             model: {
               ...model,
               providerAccount: {
                 ...state,
+                notice: undefined,
                 draft: {
                   ...state.draft,
-                  authMode: variant?.authMode ?? state.draft.authMode,
-                  credentialRef: provider?.envVars?.[0] ?? state.draft.credentialRef,
-                  providerAccountId: providerId + ".personal." + (variant?.variantId ?? variantId),
+                  authMode: existing?.authMode ?? variant?.authMode ?? state.draft.authMode,
+                  credentialRef: existing?.credentialRef?.ref ?? provider?.envVars?.[0] ?? state.draft.credentialRef,
+                  existingHealthStatus: existing?.healthStatus ?? "",
+                  existingRotationState: existing?.rotationState ?? "",
+                  existingStatus: existing?.status ?? "",
+                  providerAccountId: accountId,
                   providerId,
                   providerKind: provider?.providerKind ?? state.draft.providerKind,
-                  variantId: variant?.variantId ?? variantId,
+                  variantId: resolvedVariantId,
                 },
               },
             },
@@ -1168,32 +1184,52 @@ const updateLocalPolicyDraft = (
           const token = state.token + 1;
           return {
             commands: [providerAccountCommands.create({ payload: JSON.stringify(createProviderAccountPayload(state)), token })],
-            model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: "create", status: "saving", token } },
+            model: { ...model, providerAccount: { ...state, error: undefined, notice: undefined, pendingAction: "create", status: "saving", token } },
           };
         },
         ProviderAccountCreateSucceeded: ({ token }: Extract<Message, { readonly _tag: "ProviderAccountCreateSucceeded" }>): UpdateReturn<Model, Message> => {
           const state = model.providerAccount ?? initialProviderAccountState();
           if (token !== state.token) return { model };
+          if (state.draft.apiKey.trim().length > 0) {
+            const keyToken = state.token + 1;
+            return {
+              commands: [providerAccountCommands.updateKey({ payload: JSON.stringify(updateProviderKeyPayload(state.draft)), token: keyToken })],
+              model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: "create", status: "saving", token: keyToken } },
+            };
+          }
+          const chosenModels = state.draft.selectedModelIds.length > 0
+            ? state.draft.selectedModelIds
+            : state.draft.modelInput.trim().length > 0
+              ? [state.draft.modelInput.trim()]
+              : [];
+          if (chosenModels.length > 0) {
+            const activationToken = state.token + 1;
+            const batch: ProviderAccountActivationBatch = {
+              activationBatchId: "activation-" + String(activationToken),
+              activations: chosenModels.map((modelId) => ({ providerAccountId: state.draft.providerAccountId.trim(), modelId, region: "global" })),
+            };
+            return {
+              commands: [providerAccountCommands.activate({ payload: JSON.stringify(batch), token: activationToken })],
+              model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: "create", status: "saving", token: activationToken } },
+            };
+          }
           const catalogToken = model.readbacks.providerCatalog.token + 1;
           const providersToken = model.readbacks.integrationProviders.token + 1;
           const modelsToken = model.readbacks.configuredModels.token + 1;
+          const accountsToken = model.readbacks.providerAccounts.token + 1;
           const controlProvidersToken = model.controls.providers.token + 1;
           return {
             commands: [
               readReadback({ key: "providerCatalog", token: catalogToken }),
               readReadback({ key: "integrationProviders", token: providersToken }),
               readReadback({ key: "configuredModels", token: modelsToken }),
+              readReadback({ key: "providerAccounts", token: accountsToken }),
               readControl({ key: "providers", token: controlProvidersToken }),
             ],
             model: {
               ...model,
               providerAccount: { ...state, error: undefined, pendingAction: undefined, status: "saved" },
-              readbacks: {
-                ...model.readbacks,
-                providerCatalog: loadingReadback(catalogToken),
-                integrationProviders: loadingReadback(providersToken),
-                configuredModels: loadingReadback(modelsToken),
-              },
+              readbacks: { ...model.readbacks, providerCatalog: loadingReadback(catalogToken), integrationProviders: loadingReadback(providersToken), configuredModels: loadingReadback(modelsToken), providerAccounts: loadingReadback(accountsToken) },
               controls: { ...model.controls, providers: loadingControl(controlProvidersToken) },
             },
           };
@@ -1207,9 +1243,58 @@ const updateLocalPolicyDraft = (
             model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: "update-key", status: "saving", token } },
           };
         },
+        ProviderAccountEndpointsActivated: ({ token }: Extract<Message, { readonly _tag: "ProviderAccountEndpointsActivated" }>): UpdateReturn<Model, Message> => {
+          const state = model.providerAccount ?? initialProviderAccountState();
+          // The activation command is the last step of a save; accept its result even if a later save changed the token.
+          const catalogToken = model.readbacks.providerCatalog.token + 1;
+          const providersToken = model.readbacks.integrationProviders.token + 1;
+          const modelsToken = model.readbacks.configuredModels.token + 1;
+          const endpointsToken = model.readbacks.modelEndpoints.token + 1;
+          const accountsToken = model.readbacks.providerAccounts.token + 1;
+          const controlProvidersToken = model.controls.providers.token + 1;
+          return {
+            commands: [
+              readReadback({ key: "providerCatalog", token: catalogToken }),
+              readReadback({ key: "integrationProviders", token: providersToken }),
+              readReadback({ key: "configuredModels", token: modelsToken }),
+              readReadback({ key: "modelEndpoints", token: endpointsToken }),
+              readReadback({ key: "providerAccounts", token: accountsToken }),
+              readControl({ key: "providers", token: controlProvidersToken }),
+            ],
+            model: {
+              ...model,
+              providerAccount: { ...state, error: undefined, notice: undefined, pendingAction: undefined, status: "saved" },
+              readbacks: {
+                ...model.readbacks,
+                providerCatalog: loadingReadback(catalogToken),
+                integrationProviders: loadingReadback(providersToken),
+                configuredModels: loadingReadback(modelsToken),
+                modelEndpoints: loadingReadback(endpointsToken),
+                providerAccounts: loadingReadback(accountsToken),
+              },
+              controls: { ...model.controls, providers: loadingControl(controlProvidersToken) },
+            },
+          };
+        },
         ProviderAccountKeyUpdated: ({ token }: Extract<Message, { readonly _tag: "ProviderAccountKeyUpdated" }>): UpdateReturn<Model, Message> => {
           const state = model.providerAccount ?? initialProviderAccountState();
           if (token !== state.token) return { model };
+          const chosenModels = state.draft.selectedModelIds.length > 0
+            ? state.draft.selectedModelIds
+            : state.draft.modelInput.trim().length > 0
+              ? [state.draft.modelInput.trim()]
+              : [];
+          if (state.pendingAction === "create" && chosenModels.length > 0) {
+            const activationToken = state.token + 1;
+            const batch: ProviderAccountActivationBatch = {
+              activationBatchId: "activation-" + String(activationToken),
+              activations: chosenModels.map((modelId) => ({ providerAccountId: state.draft.providerAccountId.trim(), modelId, region: "global" })),
+            };
+            return {
+              commands: [providerAccountCommands.activate({ payload: JSON.stringify(batch), token: activationToken })],
+              model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: "create", status: "saving", token: activationToken } },
+            };
+          }
           return { model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: undefined, status: "saved" } } };
         },
         ProviderAccountModelDeleteRequested: ({ modelId }: Extract<Message, { readonly _tag: "ProviderAccountModelDeleteRequested" }>): UpdateReturn<Model, Message> => {
@@ -1238,6 +1323,10 @@ const updateLocalPolicyDraft = (
           };
         },
         ProviderAccountFailed: ({ message, token }: Extract<Message, { readonly _tag: "ProviderAccountFailed" }>): UpdateReturn<Model, Message> => {
+          const failedState = model.providerAccount ?? initialProviderAccountState();
+          if (failedState.pendingAction === "create" && message.includes("not ready for endpoint activation")) {
+            return { model: { ...model, providerAccount: { ...failedState, error: undefined, notice: "Provider account saved, but its endpoint was not activated: " + message + ". Add the provider credential, then press Save configuration again.", pendingAction: undefined, status: "saved" } } };
+          }
           const state = model.providerAccount ?? initialProviderAccountState();
           if (token !== state.token) return { model };
           return { model: { ...model, providerAccount: { ...state, error: message, pendingAction: undefined, status: "error" } } };
