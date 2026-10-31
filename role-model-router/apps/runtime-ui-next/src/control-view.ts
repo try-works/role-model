@@ -153,7 +153,7 @@ export const renderControlPage = (
         : [
             h.button(
               [
-                h.AriaLabel(spec.action.label),
+                h.AriaLabel(state.actionStatus === "pending" ? "Dispatching…" : spec.action.label),
                 h.Type("button"),
                 h.Class(
                   "mt-3 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3 py-1.5 text-[12px] font-medium text-[var(--rm-fg)] disabled:opacity-50",
