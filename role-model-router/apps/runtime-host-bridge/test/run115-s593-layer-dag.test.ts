@@ -89,4 +89,18 @@ describe("S593 R27 closed Layer DAG", () => {
     expect(acquired(events)).not.toContain("cli");
     expect(released(events)).toEqual([...acquired(events)].reverse());
   });
+
+  test("the DAG-provided readiness owner passes the composed admission assertion", async () => {
+    const { assertComposedReadiness } = await import("../src/composition-dag.js");
+    const events: string[] = [];
+    const program = Effect.gen(function* () {
+      const host = yield* R27Host;
+      expect(host.readiness.ready()).toBe(true);
+      expect(() => assertComposedReadiness(host.readiness)).not.toThrow();
+    }).pipe(
+      Effect.provide(composeR27HostLayer({ events })),
+    );
+    await Effect.runPromise(program);
+    expect(events).toContain("ready");
+  });
 });

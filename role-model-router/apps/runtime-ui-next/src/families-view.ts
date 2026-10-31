@@ -371,7 +371,7 @@ export const localPeersPage = (readback: ReadbackState, h: H): Html => {
         h.div([h.Class("space-y-2")], [h.label([h.Class(fieldLabel), h.Attribute("for", "peer-url")], ["Endpoint URL"]), h.input([h.Id("peer-url"), h.Type("url"), h.Placeholder("http://127.0.0.1:1234"), h.Class(fieldClass)])]),
         h.div([h.Class("space-y-2")], [h.label([h.Class(fieldLabel), h.Attribute("for", "peer-auth-token")], ["Auth token (optional)"]), h.input([h.Id("peer-auth-token"), h.Type("password"), h.Placeholder("Bearer token (optional)"), h.Class(fieldClass)])]),
       ]),
-      h.button([h.Type("button"), h.Disabled(true), h.DataAttribute("reason-disabled", "peer endpoint registration is managed in the runtime config editor"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["Add endpoint"]),
+      h.button([h.Type("button"), h.Disabled(true), h.AriaDisabled(true), h.DataAttribute("reason-disabled", "peer endpoint registration is managed in the runtime config editor"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["Add endpoint"]),
     ], h),
   ]);
 };
@@ -381,8 +381,8 @@ export const localPeerModelsPage = (readback: ReadbackState, h: H): Html => h.di
     ...(readbackNotice(readback, "Peer models", h) === null ? [] : [readbackNotice(readback, "Peer models", h) as Html]),
     h.div([h.Class("grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_auto] xl:items-end")], [
       h.div([h.Class("space-y-2")], [h.label([h.Class(fieldLabel), h.Attribute("for", "peer-model-id")], ["Model ID"]), h.input([h.Id("peer-model-id"), h.Type("text"), h.Placeholder("openai/gpt-4.1"), h.Class(fieldClass)])]),
-      h.div([h.Class("space-y-2")], [h.p([h.Class(fieldLabel)], ["Roles"]), h.div([h.Class("flex flex-wrap gap-2 py-2")], [h.button([h.Type("button"), h.Disabled(true), h.DataAttribute("reason-disabled", "role assignment happens when a model is declared"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["+ Add role"]), h.button([h.Type("button"), h.Disabled(true), h.DataAttribute("reason-disabled", "role assignment happens when a model is declared"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["Select all roles"])])]),
-      h.div([h.Class("flex items-end")], [h.button([h.Type("button"), h.Disabled(true), h.DataAttribute("reason-disabled", "the host exposes peer models read-only"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["Register model"])]),
+      h.div([h.Class("space-y-2")], [h.p([h.Class(fieldLabel)], ["Roles"]), h.div([h.Class("flex flex-wrap gap-2 py-2")], [h.button([h.Type("button"), h.Disabled(true), h.AriaDisabled(true), h.DataAttribute("reason-disabled", "role assignment happens when a model is declared"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["+ Add role"]), h.button([h.Type("button"), h.Disabled(true), h.AriaDisabled(true), h.DataAttribute("reason-disabled", "role assignment happens when a model is declared"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["Select all roles"])])]),
+      h.div([h.Class("flex items-end")], [h.button([h.Type("button"), h.Disabled(true), h.AriaDisabled(true), h.DataAttribute("reason-disabled", "the host exposes peer models read-only"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["Register model"])]),
     ]),
     h.div([h.Class(mutedPanel + " flex flex-wrap items-center justify-between gap-4 p-3")], [
       h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["Configure at least one peer endpoint first, then register a model id from that peer catalog."]),
@@ -525,7 +525,7 @@ export const systemSessionPage = (readback: ReadbackState, h: H): Html => {
           ...(readback.rows.length > 0 ? [table(["Name", "Value", "Detail"], readback.rows.map((row) => [row.label, row.value, row.meta]), "No session readiness rows recorded yet.", h)] : []),
         ]),
         sessionCard("Canonical lifecycle", "Authority posture and blocking credential accounts.", [h.span([h.Class("rounded-full border border-border bg-secondary px-2 py-0.5 text-xs text-foreground")], [authority]), h.p([h.Class("mt-3 text-sm leading-5 text-muted-foreground")], [authority === "authoritative" ? "Canonical lifecycle data is authoritative." : "Canonical lifecycle data is not authoritative right now."])]),
-        sessionCard("Operator intent manifest", "Declared operator intent for this runtime session.", [h.p([h.Class("text-sm leading-5 text-muted-foreground")], [state === "ok" ? "applied operator-intent.json is readable and schema-valid." : "Operator intent manifest is unavailable for the current session state."]), h.p([h.Class("break-all font-mono text-xs leading-4 text-foreground")], ["operator-intent.json"])]),
+        sessionCard("Operator intent manifest", "Declared operator intent for this runtime session.", [h.p([h.Class("text-sm leading-5 text-muted-foreground")], [state === "ok" ? "Operator intent manifest status is not reported by the operator status readback." : "Operator intent manifest is unavailable for the current session state."]), h.p([h.Class("break-all font-mono text-xs leading-4 text-foreground")], ["operator-intent.json"])]),
       ]),
       h.div([h.Class("space-y-4")], [
         sessionCard("Credential readiness", "Blocking credential counts by class.", [h.span([h.Class("rounded-full border border-border bg-secondary px-2 py-0.5 text-xs text-foreground")], [credentials]), h.p([h.Class("mt-3 text-sm leading-5 text-muted-foreground")], ["Credential class counts are not reported by the operator status readback."])]),
@@ -534,7 +534,7 @@ export const systemSessionPage = (readback: ReadbackState, h: H): Html => {
             ...[["Endpoints", "unavailable"], ["Models", "unavailable"], ["Empty aliases", "unavailable"]].map(([label, value]) => h.div([h.Class("flex items-center justify-between gap-3 py-1.5")], [h.p([h.Class("text-sm leading-5 text-muted-foreground")], [label]), h.p([h.Class("font-mono text-sm leading-[18px] tabular-nums text-foreground")], [value])])),
           ]),
         ]),
-        sessionCard("Alias drift warnings", "Hint models that no longer resolve live.", [h.p([h.Class("text-sm leading-5 text-muted-foreground")], [state === "ok" ? "No alias hint drift warnings." : "Alias drift warnings are unavailable for the current session state."])]),
+        sessionCard("Alias drift warnings", "Hint models that no longer resolve live.", [h.p([h.Class("text-sm leading-5 text-muted-foreground")], [state === "ok" ? "Alias drift warnings are not reported by the operator status readback." : "Alias drift warnings are unavailable for the current session state."])]),
       ]),
     ]),
   ]);
@@ -568,10 +568,10 @@ export const systemStoragePage = (readback: ReadbackState, retention: RetentionS
           h.button([h.Type("button"), h.AriaDisabled(busy), h.DataAttribute("retention-save-policy", ""), h.OnClick(Message.RetentionPolicySaveRequested({ maxAgeDays: Number.parseInt(ageDays, 10) || 30, maxSizeGb: Number.parseInt(sizeGb, 10) || 1 })), h.Class(secondaryButton + " w-full justify-center")], [busy ? "Saving policy…" : "Save policy"]),
         ], h),
         card("Manual pruning", "Dry-run first, then execute the exact hash-bound plan as a cancellable background job.", [
-          h.div([h.Class("flex flex-wrap gap-2")], [h.button([h.Type("button"), h.AriaDisabled(busy), h.DataAttribute("retention-dry-run", ""), h.OnClick(Message.RetentionDryRunRequested({})), h.Class(primaryButton)], ["Dry-run"]), h.button([h.Type("button"), h.AriaDisabled(busy), h.DataAttribute("retention-execute", ""), h.OnClick(Message.RetentionExecuteRequested({})), h.Class(secondaryButton)], ["Execute plan"])]),
+          h.div([h.Class("flex flex-wrap gap-2")], [h.button([h.Type("button"), h.AriaDisabled(busy), h.DataAttribute("retention-dry-run", ""), h.OnClick(Message.RetentionDryRunRequested({})), h.Class(primaryButton)], ["Dry-run"]), h.button([h.Type("button"), h.AriaDisabled(busy || state.manifestHash === undefined), ...(state.manifestHash === undefined ? [h.DataAttribute("reason-disabled", "run a dry-run first to bind the plan hash")] : []), h.DataAttribute("retention-execute", ""), h.OnClick(Message.RetentionExecuteRequested({})), h.Class(secondaryButton)], ["Execute plan"])]),
           h.div([h.Class(mutedPanel + " p-3")], [h.p([h.Class("text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground")], ["Background progress"]), h.p([h.Class("mt-1 text-sm leading-5 text-muted-foreground")], ["Idle - no active retention job"])]),
           ...statusLine,
-          h.p([h.Class("mt-3 text-sm leading-5 text-muted-foreground")], ["No legal holds or Managed policy conflicts."]),
+          h.p([h.Class("mt-3 text-sm leading-5 text-muted-foreground")], ["Legal-hold state is not reported by this readback."]),
         ], h),
       ]),
     ]),
@@ -587,7 +587,7 @@ export const localLlamaModelsPage = (readback: ReadbackState, h: H): Html => h.d
     h.div([h.Class("flex flex-wrap items-start gap-3")], [
       h.div([h.Class("min-w-0 flex-1 space-y-2")], [h.label([h.Class(fieldLabel), h.Attribute("for", "llama-swap-model-id")], ["Model ID"]), h.input([h.Id("llama-swap-model-id"), h.Type("text"), h.Placeholder("lfm2.5-8b-a1b"), h.Class(fieldClass)])]),
       h.div([h.Class("w-[220px] shrink-0 space-y-2")], [h.p([h.Class(fieldLabel)], ["Role summary"]), h.div([h.Class(mutedPanel + " flex min-h-[34px] items-center px-3 py-2")], [h.p([h.Class("break-words font-mono text-[13px] leading-[18px] text-foreground")], ["roles: " + roleSummary])])]),
-      h.div([h.Class("flex items-end self-end")], [h.button([h.Type("button"), h.Disabled(true), h.DataAttribute("reason-disabled", "load via the runtime config llama_swap block"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["Load model"])]),
+      h.div([h.Class("flex items-end self-end")], [h.button([h.Type("button"), h.Disabled(true), h.AriaDisabled(true), h.DataAttribute("reason-disabled", "load via the runtime config llama_swap block"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["Load model"])]),
     ]),
     h.div([h.Class("flex flex-wrap items-center gap-2")], [h.button([h.Type("button"), h.AriaDisabled(true), h.DataAttribute("reason-disabled", "role assignment happens when a model is declared"), h.Class(secondaryButton)], ["All roles"]), h.span([h.Class("text-sm text-muted-foreground")], ["28 selected · click to clear"])]),
     h.div([h.Class("flex flex-wrap gap-2")], [h.a([h.Href("/runtime/config"), h.Role("button"), h.Class(secondaryButton)], ["Open runtime config"])]),

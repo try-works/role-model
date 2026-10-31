@@ -1,5 +1,7 @@
 import { Context, Effect, Layer } from "effect";
 
+import { composeReadinessOwner } from "./composition-dag.js";
+
 /**
  * S593 (R27): the closed shared-leaf Layer DAG for the host composition root.
  *
@@ -159,7 +161,9 @@ const hostLeaf = (
 
 /** Compose the closed graph. No acquire runs until the returned Layer is built. */
 export const composeR27HostLayer = (options: R27LayerOptions = {}): Layer.Layer<R27Host, never, never> => {
-  const shared = options.readiness === undefined ? makeR27ReadinessOwner() : options.readiness;
+  // SAFETY: the shared owner is a composed readiness owner, so a host composed with this
+  // DAG passes assertComposedReadiness in the production admission path.
+  const shared = options.readiness === undefined ? composeReadinessOwner() : options.readiness;
   const patched: R27LayerOptions = { ...options, readiness: shared };
   const options2 = patched;
   const readiness = readinessLeaf(options2);

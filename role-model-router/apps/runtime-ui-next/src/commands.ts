@@ -561,15 +561,15 @@ export const defineStorageRetentionCommands = (client: StorageRetentionClient) =
     execute: ({ token }) =>
       Effect.flatMap(
         Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.dryRun() })),
-        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.RetentionSucceeded({ token }) : Message.RetentionFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("storage retention dry-run failed"))), token })),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.RetentionSucceeded({ token, ...(Exit.isSuccess(exit) && exit.value.manifestHash !== undefined ? { manifestHash: exit.value.manifestHash } : {}) }) : Message.RetentionFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("storage retention dry-run failed"))), token })),
       ),
     messages: [Message.RetentionSucceeded, Message.RetentionFailed],
   }),
   execute: Command.define("RetentionExecute", {
-    args: { token: Schema.Number },
-    execute: ({ token }) =>
+    args: { manifestHash: Schema.String, token: Schema.Number },
+    execute: ({ manifestHash, token }) =>
       Effect.flatMap(
-        Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.execute() })),
+        Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.execute(manifestHash) })),
         (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.RetentionSucceeded({ token }) : Message.RetentionFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("storage retention execute failed"))), token })),
       ),
     messages: [Message.RetentionSucceeded, Message.RetentionFailed],

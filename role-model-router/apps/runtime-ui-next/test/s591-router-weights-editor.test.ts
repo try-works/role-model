@@ -158,4 +158,29 @@ describe("S591 router weights editor", () => {
     expect(writes[0]?.body?.routing?.weights).toBeUndefined();
     expect(writes[0]?.body?.routing?.scoring_strategy).toBe("cost");
   });
+
+  it("persists hydrated host weights when saved without editing", async () => {
+    const writes: Array<{ readonly body: { routing?: Record<string, unknown> }; readonly url: string }> = [];
+    const readbackFetch: typeof fetch = async (input) => {
+      const url = String(input);
+      if (url.includes("/api/role-model/router/config")) {
+        return new Response(JSON.stringify(routerConfigBody), { headers: { "content-type": "application/json" }, status: 200 });
+      }
+      return new Response(JSON.stringify({ rows: [] }), { headers: { "content-type": "application/json" }, status: 200 });
+    };
+    const routerConfigFetch: typeof fetch = async (input, init) => {
+      writes.push({ body: init?.body === undefined ? undefined : JSON.parse(String(init.body)), url: String(input) });
+      return new Response(JSON.stringify({ applied: true, path: "runtime-config.yaml", config: {} }), { headers: { "content-type": "application/json" }, status: 200 });
+    };
+    mountAt(readbackFetch, routerConfigFetch);
+    expect(await waitFor(() => document.querySelector("[data-route='router-strategy']")?.getAttribute("data-router-family-state") ?? null, "strategy ok")).toBe("ok");
+    const save = [...document.querySelectorAll<HTMLButtonElement>("main button")].find((element) => element.textContent?.trim() === "Save routing strategy");
+    save?.click();
+    expect(await waitFor(() => document.querySelector("[data-router-posture-status]")?.getAttribute("data-router-posture-status") ?? null, "saved status")).toBe("saved");
+    expect(writes).toHaveLength(1);
+    expect(writes[0]?.body?.routing).toMatchObject({
+      scoring_strategy: "custom",
+      weights: { quality: 0.4, latency: 0.2, throughput: 0.1, cost: 0.1, reliability: 0.1, preference: 0.1 },
+    });
+  });
 });

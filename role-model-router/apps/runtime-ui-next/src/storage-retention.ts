@@ -3,6 +3,7 @@ import { Schema } from "effect";
 export const RetentionStateSchema = Schema.Struct({
   maxAgeDays: Schema.String,
   maxSizeGb: Schema.String,
+  manifestHash: Schema.optional(Schema.String),
   message: Schema.optional(Schema.String),
   status: Schema.Literals(["idle", "saving", "saved", "error"]),
   token: Schema.Number,
@@ -21,8 +22,8 @@ export interface RetentionPolicyPayload {
 }
 
 export interface StorageRetentionClient {
-  readonly dryRun: () => Promise<unknown>;
-  readonly execute: () => Promise<unknown>;
+  readonly dryRun: () => Promise<{ readonly manifestHash?: string }>;
+  readonly execute: (manifestHash: string) => Promise<unknown>;
   readonly savePolicy: (payload: RetentionPolicyPayload) => Promise<unknown>;
 }
 
@@ -58,9 +59,32 @@ export const createStorageRetentionClient = (
     if (!response.ok) throw new Error(retentionErrorMessage(parsed));
     return parsed;
   };
+  const manifestHashOf = (body: unknown): string | undefined => {
+    if (body === null || typeof body !== "object" || Array.isArray(body)) return undefined;
+    const record = body as Readonly<Record<string, unknown>>;
+    if (typeof record.manifestHash === "string") return record.manifestHash;
+    const retention = record.retention;
+    if (retention !== null && typeof retention === "object" && !Array.isArray(retention)) {
+      const plan = (retention as Readonly<Record<string, unknown>>).currentPlan;
+      if (plan !== null && typeof plan === "object" && !Array.isArray(plan)) {
+        const hash = (plan as Readonly<Record<string, unknown>>).manifestHash;
+        if (typeof hash === "string") return hash;
+      }
+    }
+    return undefined;
+  };
   return {
-    dryRun: async () => request("/api/role-model/storage-retention/dry-run", "POST", {}),
-    execute: async () => request("/api/role-model/storage-retention/execute", "POST", {}),
-    savePolicy: async (payload) => request("/api/role-model/storage-retention/policy", "PUT", payload),
+    dryRun: async () => {
+      const body = await request("/api/role-model/storage-retention/dry-run", "POST", {});
+      return { manifestHash: manifestHashOf(body) };
+    },
+    execute: async (manifestHash) => request("/api/role-model/storage-retention/execute", "POST", { manifestHash }),
+    savePolicy: async (payload) =>
+      request("/api/role-model/storage-retention/policy", "PUT", {
+        maxAgeDays: payload.maxAgeDays,
+        maxBytes: Math.max(0, Math.round(payload.maxSizeGb * 1024 * 1024 * 1024)),
+        policyId: "ui-managed",
+        scope: "all",
+      }),
   };
 };

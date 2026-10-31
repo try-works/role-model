@@ -878,13 +878,16 @@ const updateLocalPolicyDraft = (
         RetentionExecuteRequested: (): UpdateReturn<Model, Message> => {
           const state = model.retention ?? initialRetentionState();
           if (state.status === "saving") return { model };
+          if (state.manifestHash === undefined || state.manifestHash.length === 0) {
+            return { model: { ...model, retention: { ...state, message: "Run a dry-run first: the host executes only the exact hash-bound plan.", status: "error" } } };
+          }
           const token = state.token + 1;
           return {
-            commands: [storageRetentionCommands.execute({ token })],
+            commands: [storageRetentionCommands.execute({ manifestHash: state.manifestHash, token })],
             model: { ...model, retention: { ...state, message: undefined, status: "saving", token } },
           };
         },
-        RetentionSucceeded: ({ token }: Extract<Message, { readonly _tag: "RetentionSucceeded" }>): UpdateReturn<Model, Message> => {
+        RetentionSucceeded: ({ manifestHash, token }: Extract<Message, { readonly _tag: "RetentionSucceeded" }>): UpdateReturn<Model, Message> => {
           const state = model.retention ?? initialRetentionState();
           if (token !== state.token) return { model };
           const readbackToken = model.readbacks.storageRetention.token + 1;
@@ -893,7 +896,7 @@ const updateLocalPolicyDraft = (
             model: {
               ...model,
               readbacks: { ...model.readbacks, storageRetention: loadingReadback(readbackToken) },
-              retention: { ...state, message: "Storage retention action completed.", status: "saved" },
+              retention: { ...state, ...(manifestHash === undefined ? {} : { manifestHash }), message: "Storage retention action completed.", status: "saved" },
             },
           };
         },
@@ -933,13 +936,22 @@ const updateLocalPolicyDraft = (
           const mode = state.mode.length > 0 ? state.mode : persistedMode ?? persisted ?? "baseline";
           const scoringStrategy = state.scoringStrategy.length > 0 ? state.scoringStrategy : persistedScoring ?? "balanced";
           const executionMode = state.executionMode.length > 0 ? state.executionMode : persistedExecution ?? "decision_only";
+          const weightsMetaRow = model.readbacks.routerConfig.rows.find((entry) => entry.id === "routing.weights");
+          let hostWeights: Record<string, number> = {};
+          try {
+            hostWeights = weightsMetaRow === undefined ? {} : (JSON.parse(weightsMetaRow.meta) as Record<string, number>);
+          } catch {
+            hostWeights = {};
+          }
+          const weightOf = (draft: string, key: "quality" | "latency" | "throughput" | "cost" | "reliability" | "preference", fallback: number): number =>
+            draft.length > 0 ? Number(draft) : typeof hostWeights[key] === "number" ? hostWeights[key] : fallback;
           const customWeights = {
-            cost: state.weightCost.length > 0 ? Number(state.weightCost) : 0.5,
-            latency: state.weightLatency.length > 0 ? Number(state.weightLatency) : 0.1,
-            preference: state.weightPreference.length > 0 ? Number(state.weightPreference) : 0.05,
-            quality: state.weightQuality.length > 0 ? Number(state.weightQuality) : 0.15,
-            reliability: state.weightReliability.length > 0 ? Number(state.weightReliability) : 0.15,
-            throughput: state.weightThroughput.length > 0 ? Number(state.weightThroughput) : 0.05,
+            cost: weightOf(state.weightCost, "cost", 0.5),
+            latency: weightOf(state.weightLatency, "latency", 0.1),
+            preference: weightOf(state.weightPreference, "preference", 0.05),
+            quality: weightOf(state.weightQuality, "quality", 0.15),
+            reliability: weightOf(state.weightReliability, "reliability", 0.15),
+            throughput: weightOf(state.weightThroughput, "throughput", 0.05),
           };
           const payload = JSON.stringify({
             executionMode,

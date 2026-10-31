@@ -119,7 +119,7 @@ export const Message: MessageUnion<{
   readonly RetentionPolicySaveRequested: { readonly maxAgeDays: typeof Schema.Number; readonly maxSizeGb: typeof Schema.Number };
   readonly RetentionDryRunRequested: EmptyFields;
   readonly RetentionExecuteRequested: EmptyFields;
-  readonly RetentionSucceeded: { readonly token: typeof Schema.Number };
+  readonly RetentionSucceeded: { readonly manifestHash: Schema.optional<typeof Schema.String>; readonly token: typeof Schema.Number };
   readonly RetentionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LocalLogsRefreshRequested: EmptyFields;
   readonly RouterPostureFieldChanged: { readonly field: typeof RouterPostureFieldSchema; readonly value: typeof Schema.String };
@@ -261,7 +261,7 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   RetentionPolicySaveRequested: { maxAgeDays: Schema.Number, maxSizeGb: Schema.Number },
   RetentionDryRunRequested: {},
   RetentionExecuteRequested: {},
-  RetentionSucceeded: { token: Schema.Number },
+  RetentionSucceeded: { manifestHash: Schema.optional(Schema.String), token: Schema.Number },
   RetentionFailed: { message: Schema.String, token: Schema.Number },
   LocalLogsRefreshRequested: {},
   RouterPostureFieldChanged: { field: RouterPostureFieldSchema, value: Schema.String },

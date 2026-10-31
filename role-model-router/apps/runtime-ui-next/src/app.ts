@@ -159,9 +159,9 @@ export const createShellApp = (options: ShellOptions = {}) => {
       defineLearningRankingCommands(createLearningRankingClient({ ...(options.learningRankingFetchImpl === undefined ? {} : { fetchImpl: options.learningRankingFetchImpl }) })),
       defineRequestsRankingCommands(createRequestsRankingClient({ fetchImpl: options.requestsRankingFetchImpl })),
       defineRouterConfigCommands(createRouterConfigClient({ ...(options.routerConfigFetchImpl === undefined ? {} : { fetchImpl: options.routerConfigFetchImpl }), ...(controlToken === undefined ? {} : { token: controlToken }) })),
-      ...(options.localPolicyFetchImpl === undefined ? [undefined] : [createLocalPolicyCommands(options.localPolicyFetchImpl)]),
-      ...(options.retentionFetchImpl === undefined ? [undefined] : [defineStorageRetentionCommands(createStorageRetentionClient({ ...(options.retentionFetchImpl === undefined ? {} : { fetchImpl: options.retentionFetchImpl }), ...(controlToken === undefined ? {} : { token: controlToken }) }))]),
-      ...(options.operatorLearningFetchImpl === undefined ? [undefined] : [defineOperatorLearningCommands(createOperatorLearningClient(createRuntimeHttpClient({ fetchImpl: options.operatorLearningFetchImpl, tokenProvider: readStoredOperatorToken })))])
+      createLocalPolicyCommands(options.localPolicyFetchImpl ?? globalThis.fetch),
+      defineStorageRetentionCommands(createStorageRetentionClient({ ...(options.retentionFetchImpl === undefined ? {} : { fetchImpl: options.retentionFetchImpl }), ...(controlToken === undefined ? {} : { token: controlToken }) })),
+      defineOperatorLearningCommands(createOperatorLearningClient(createRuntimeHttpClient({ ...(options.operatorLearningFetchImpl === undefined ? {} : { fetchImpl: options.operatorLearningFetchImpl }), tokenProvider: readStoredOperatorToken })))
     ),
     view,
   };

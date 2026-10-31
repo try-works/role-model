@@ -54,23 +54,27 @@ describe("S595 storage retention and control wiring", () => {
     console.log("S595REQS", JSON.stringify(requests), "status", document.querySelector("[data-retention-status]")?.getAttribute("data-retention-status"), "msg", document.querySelector("[data-retention-status]")?.textContent);
     expect(requests.some((request) => request.method === "PUT" && request.url.includes("/api/role-model/storage-retention/policy"))).toBe(true);
     const put = requests.find((request) => request.method === "PUT");
-    expect(put?.body).toMatchObject({ maxAgeDays: 60, maxSizeGb: 2 });
+    expect(put?.body).toMatchObject({ policyId: "ui-managed", scope: "all", maxBytes: 2 * 1024 * 1024 * 1024, maxAgeDays: 60 });
   });
 
   it("runs dry-run and execute against the host", async () => {
-    const requests: Array<{ method: string; url: string }> = [];
+    const requests: Array<{ method: string; url: string; body?: unknown }> = [];
     const retentionFetch: typeof fetch = async (input, init) => {
-      requests.push({ method: init?.method ?? "GET", url: String(input) });
-      return new Response(JSON.stringify({ ok: true }), { headers: { "content-type": "application/json" }, status: 200 });
+      requests.push({ method: init?.method ?? "GET", url: String(input), body: init?.body === undefined ? undefined : JSON.parse(String(init.body)) });
+      return new Response(JSON.stringify({ retention: { currentPlan: { manifestHash: "hash-1" } } }), { headers: { "content-type": "application/json" }, status: 200 });
     };
     mountAt(async () => new Response(JSON.stringify({ rows: [] }), { headers: { "content-type": "application/json" }, status: 200 }), retentionFetch);
     await waitFor(() => document.querySelector("[data-route='storage-retention']")?.getAttribute("data-page-layout") ?? null, "storage page");
+    const execute = document.querySelector<HTMLButtonElement>("[data-retention-execute]");
+    expect(execute?.getAttribute("aria-disabled")).toBe("true");
+    expect(execute?.getAttribute("data-reason-disabled")).toContain("dry-run");
     document.querySelector<HTMLButtonElement>("[data-retention-dry-run]")?.click();
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    await new Promise((resolve) => setTimeout(resolve, 250));
     document.querySelector<HTMLButtonElement>("[data-retention-execute]")?.click();
     await new Promise((resolve) => setTimeout(resolve, 250));
     expect(requests.some((request) => request.method === "POST" && request.url.includes("/api/role-model/storage-retention/dry-run"))).toBe(true);
-    expect(requests.some((request) => request.method === "POST" && request.url.includes("/api/role-model/storage-retention/execute"))).toBe(true);
+    const executeRequest = requests.find((request) => request.method === "POST" && request.url.includes("/api/role-model/storage-retention/execute"));
+    expect(executeRequest?.body).toEqual({ manifestHash: "hash-1" });
   });
 
   it("reasons every remaining handler-less control and wires the logs refresh", async () => {
@@ -79,6 +83,36 @@ describe("S595 storage retention and control wiring", () => {
     await waitFor(() => document.querySelector("[data-route='local-logs']")?.getAttribute("data-page-layout") ?? null, "logs page");
     const refresh = document.querySelector<HTMLButtonElement>("[data-local-logs-refresh]");
     expect(refresh, "wired local logs refresh missing").not.toBeNull();
+  });
+
+  it("marks every remaining handler-less control with an accessible reason", async () => {
+    const cases: Array<{ path: string; marker: string; labels: ReadonlyArray<string> }> = [
+      { path: "/local/peers", marker: "local-peers", labels: ["Add endpoint"] },
+      { path: "/local/peer-models", marker: "local-peer-models", labels: ["Register model", "+ Add role", "Select all roles"] },
+      { path: "/local/llama-swap/models", marker: "local-llama-swap-models", labels: ["Load model", "All roles"] },
+      { path: "/system/operator", marker: "system-operator", labels: ["Create Replay"] },
+      { path: "/system/extensions", marker: "system-extensions", labels: ["Pause", "Download & validate latest"] },
+    ];
+    for (const entry of cases) {
+      window.history.replaceState({}, "", entry.path);
+      const container = document.createElement("div");
+      container.id = "s595-reasons-" + entry.path.replaceAll("/", "-");
+      document.body.append(container);
+      const handle = mountShell(container, {
+        readbackReaders: createReadbackClients({ fetchImpl: async () => new Response(JSON.stringify({ rows: [] }), { headers: { "content-type": "application/json" }, status: 200 }) }),
+      });
+      mounted.push({ container, handle });
+      await waitFor(() => document.querySelector("[data-route='" + entry.marker + "']")?.getAttribute("data-page-layout") ?? null, entry.path);
+      for (const label of entry.labels) {
+        const button = [...document.querySelectorAll<HTMLButtonElement>("button")].find((element) => element.textContent?.trim() === label);
+        expect(button, label + " missing on " + entry.path).toBeDefined();
+        if (button === undefined) continue;
+        const reason = button.getAttribute("data-reason-disabled");
+        expect(reason ?? "", label + " reason text on " + entry.path).not.toBe("");
+        const disabled = button.disabled || button.getAttribute("aria-disabled") === "true";
+        expect(disabled, label + " must be disabled with a reason on " + entry.path).toBe(true);
+      }
+    }
   });
 
   it("updates and rolls back the operator shadow learning state", async () => {
