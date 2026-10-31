@@ -173,6 +173,7 @@ const noopReadback = defineReadReadback({
   integrationProviders: async () => ({ body: emptyBody, status: 200 }),
   providerCatalog: async () => ({ body: [], status: 200 }),
   providerAccounts: async () => ({ body: [], status: 200 }),
+  roles: async () => ({ body: [], status: 200 }),
   benchmarkSuite: async () => ({ body: emptyBody, status: 200 }),
   storageRetention: async () => ({ body: emptyBody, status: 200 }),
   models: async () => ({ body: emptyBody, status: 200 }),
@@ -391,8 +392,8 @@ const endpointAdmissionCompletion = (
       }
       if (route._tag === "Endpoints" || route._tag === "Providers") {
         const keys: ReadonlyArray<ReadbackKey> = route._tag === "Endpoints"
-          ? ["modelEndpoints", "configuredModels", "integrationProviders", "providerCatalog", "providerAccounts"]
-          : ["integrationProviders", "configuredModels", "modelEndpoints", "providerCatalog", "providerAccounts"];
+          ? ["modelEndpoints", "configuredModels", "integrationProviders", "providerCatalog", "providerAccounts", "roles"]
+          : ["integrationProviders", "configuredModels", "modelEndpoints", "providerCatalog", "providerAccounts", "roles"];
         const readbacks = { ...emptyReadbacks() };
         const controlKey = route._tag === "Endpoints" ? "endpoints" : "providers";
         const controlToken = model.controls[controlKey].token + 1;
@@ -965,7 +966,7 @@ const updateLocalPolicyDraft = (
               const first = snapshot.rows.flatMap((entry) => {
                 try {
                   // SAFETY: providerCatalog rows carry the provider JSON record in meta.
-                  return [JSON.parse(entry.meta) as { readonly providerId?: string; readonly providerKind?: string; readonly envVars?: ReadonlyArray<string>; readonly variants?: ReadonlyArray<{ readonly variantId?: string; readonly authMode?: string }> }];
+                  return [JSON.parse(entry.meta) as { readonly apiBase?: string; readonly providerId?: string; readonly providerKind?: string; readonly envVars?: ReadonlyArray<string>; readonly variants?: ReadonlyArray<{ readonly authMode?: string; readonly baseUrl?: string; readonly variantId?: string }> }];
                 } catch {
                   return [];
                 }
@@ -981,6 +982,7 @@ const updateLocalPolicyDraft = (
                       draft: {
                         ...account,
                         authMode: variant?.authMode ?? account.authMode,
+                        baseUrlOverride: variant?.baseUrl ?? first.apiBase ?? account.baseUrlOverride,
                         credentialRef: first.envVars?.[0] ?? account.credentialRef,
                         providerAccountId: first.providerId + ".personal." + (variant?.variantId ?? ""),
                         providerId: first.providerId,
@@ -1131,7 +1133,7 @@ const updateLocalPolicyDraft = (
           const provider = model.readbacks.providerCatalog.rows.flatMap((entry) => {
             try {
               // SAFETY: providerCatalog rows carry the provider JSON record in meta.
-              return [JSON.parse(entry.meta) as { readonly providerId?: string; readonly providerKind?: string; readonly envVars?: ReadonlyArray<string>; readonly variants?: ReadonlyArray<{ readonly variantId?: string; readonly authMode?: string }> }];
+              return [JSON.parse(entry.meta) as { readonly apiBase?: string; readonly providerId?: string; readonly providerKind?: string; readonly envVars?: ReadonlyArray<string>; readonly variants?: ReadonlyArray<{ readonly authMode?: string; readonly baseUrl?: string; readonly variantId?: string }> }];
             } catch {
               return [];
             }
@@ -1142,7 +1144,7 @@ const updateLocalPolicyDraft = (
           const existing = model.readbacks.providerAccounts.rows.flatMap((entry) => {
             try {
               // SAFETY: providerAccounts rows carry the account JSON record in meta.
-              return [JSON.parse(entry.meta) as { readonly authMode?: string; readonly credentialRef?: { readonly ref?: string }; readonly healthStatus?: string; readonly providerAccountId?: string; readonly rotationState?: string; readonly status?: string }];
+              return [JSON.parse(entry.meta) as { readonly authMode?: string; readonly baseUrlOverride?: string; readonly credentialRef?: { readonly ref?: string }; readonly healthStatus?: string; readonly providerAccountId?: string; readonly rotationState?: string; readonly status?: string }];
             } catch {
               return [];
             }
@@ -1156,6 +1158,7 @@ const updateLocalPolicyDraft = (
                 draft: {
                   ...state.draft,
                   authMode: existing?.authMode ?? variant?.authMode ?? state.draft.authMode,
+                  baseUrlOverride: existing?.baseUrlOverride ?? variant?.baseUrl ?? provider?.apiBase ?? state.draft.baseUrlOverride,
                   credentialRef: existing?.credentialRef?.ref ?? provider?.envVars?.[0] ?? state.draft.credentialRef,
                   existingHealthStatus: existing?.healthStatus ?? "",
                   existingRotationState: existing?.rotationState ?? "",
@@ -1182,8 +1185,12 @@ const updateLocalPolicyDraft = (
           const state = model.providerAccount ?? initialProviderAccountState();
           if (providerAccountBusy(state)) return { model };
           const token = state.token + 1;
+          const roleIdsFallback = model.readbacks.roles.rows.map((entry) => entry.value).filter((value) => value.length > 0).join(",");
+          const payloadState = roleIdsFallback.length > 0 && state.draft.roleIdsInput.trim().length === 0
+            ? { ...state, draft: { ...state.draft, roleIdsInput: roleIdsFallback } }
+            : state;
           return {
-            commands: [providerAccountCommands.create({ payload: JSON.stringify(createProviderAccountPayload(state)), token })],
+            commands: [providerAccountCommands.create({ payload: JSON.stringify(createProviderAccountPayload(payloadState)), token })],
             model: { ...model, providerAccount: { ...state, error: undefined, notice: undefined, pendingAction: "create", status: "saving", token } },
           };
         },

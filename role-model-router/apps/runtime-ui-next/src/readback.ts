@@ -32,6 +32,7 @@ export type ReadbackKey =
   | "integrationProviders"
   | "providerCatalog"
   | "providerAccounts"
+  | "roles"
   | "benchmarkSuite"
   | "storageRetention"
   | "models"
@@ -81,6 +82,7 @@ export const ReadbackKeySchema = Schema.Literals([
   "integrationProviders",
   "providerCatalog",
   "providerAccounts",
+  "roles",
   "benchmarkSuite",
   "storageRetention",
   "models",
@@ -152,6 +154,7 @@ export const ReadbacksState = Schema.Struct({
   integrationProviders: ReadbackState,
   providerCatalog: ReadbackState,
   providerAccounts: ReadbackState,
+  roles: ReadbackState,
   benchmarkSuite: ReadbackState,
   storageRetention: ReadbackState,
   models: ReadbackState,
@@ -216,6 +219,7 @@ export const emptyReadbacks = (): ReadbacksState => ({
   integrationProviders: idleReadback(),
   providerCatalog: idleReadback(),
   providerAccounts: idleReadback(),
+  roles: idleReadback(),
   benchmarkSuite: idleReadback(),
   storageRetention: idleReadback(),
   models: idleReadback(),
@@ -928,6 +932,16 @@ const parseProviderAccounts = (body: unknown, token: number): ReadbackState => {
   return okRows(rows, token);
 };
 
+const parseRoles = (body: unknown, token: number): ReadbackState => {
+  const list = Array.isArray(body) ? body : [];
+  const rows = list.flatMap((value, index) => {
+    const entry = asRecord(value);
+    if (entry === undefined || typeof entry.roleId !== "string") return [];
+    return [row("role:" + String(index), typeof entry.label === "string" ? entry.label : entry.roleId, entry.roleId, JSON.stringify(entry))];
+  });
+  return okRows(rows, token);
+};
+
 export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = {
   localLogs: {
     emptyText: "No local logs recorded yet.",
@@ -1050,6 +1064,13 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     label: "Provider catalog",
     parse: parseProviderCatalog,
     path: READBACK_PATHS.providerCatalog,
+  },
+  roles: {
+    emptyText: "No routing roles configured.",
+    key: "roles",
+    label: "Roles",
+    parse: parseRoles,
+    path: READBACK_PATHS.roles,
   },
   providerAccounts: {
     emptyText: "No provider accounts configured yet.",
@@ -1287,6 +1308,7 @@ export const createReadbackClients = (
     integrationProviders: client(READBACK_SPECS.integrationProviders),
   providerCatalog: client(READBACK_SPECS.providerCatalog),
   providerAccounts: client(READBACK_SPECS.providerAccounts),
+  roles: client(READBACK_SPECS.roles),
     benchmarkSuite: client(READBACK_SPECS.benchmarkSuite),
     storageRetention: client(READBACK_SPECS.storageRetention),
     models: client(READBACK_SPECS.models),

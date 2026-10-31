@@ -45,3 +45,8 @@ Sealed artifact built from public HEAD 4284fea5 (version 0.0.20-432-g4284fea5) p
 - Configured provider connections group the live endpoint records by account; a host refusal to activate (credentials not ready) is shown as a warning with the host message instead of a silent no-op.
 - Verified against the inspection host: saving deepseek with a stored key activated `deepseek.personal.deepseek-api-key.global.deepseek-v4.1-flash` and the routing inventory `/v1/models` now lists the deepseek endpoint aliases. Note: activation requires a ready account; with only an env credential reference and no key/env present the host refuses and the UI warns.
 - Full UI suite 808/808, tsc 0.
+## Live routing proof and its two root causes (2026-10-31)
+- `POST /v1/chat/completions` with `model: "deepseek/deepseek-flash"` now returns 200 with `content: "pong"` through endpoint `deepseek.personal.deepseek-api-key.global.deepseek-flash` (healthy, routingEligible true, 28 role ids).
+- Root cause 1: saved accounts had an empty `baseUrlOverride`, so the adapter built the relative URL `/chat/completions` and failed with `Failed to parse URL` (HTTP 503). Selection/seeding now carry the variant base URL or provider apiBase into the payload.
+- Root cause 2: our create payload bound models to zero routing roles, so endpoints were never routing-eligible. A roles readback (`/api/role-model/roles`) now defaults a new model to every routing role, matching the page copy "New models start with all roles selected".
+- Catalog caveat: `deepseek/deepseek-v4.1-flash` maps to upstream `deepseek-v4.1-flash`, which the vendor rejects (vendor supports `deepseek-flash`, `deepseek-v4-pro`); `deepseek/deepseek-flash` is the model that activates healthy and serves requests.
