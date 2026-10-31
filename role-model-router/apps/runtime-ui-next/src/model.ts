@@ -13,6 +13,7 @@ import { DeviceAuthStateSchema } from "./device-auth";
 import { EndpointAdmissionStateSchema } from "./endpoint-admission";
 import { ProviderAccountStateSchema } from "./provider-account";
 import { RouterPostureStateSchema } from "./router-posture";
+import { RetentionStateSchema } from "./storage-retention";
 import { DiagnosticsSnapshot } from "./diagnostics";
 import { ObservabilityState } from "./observability";
 import { ReadbacksState } from "./readback";
@@ -70,6 +71,8 @@ const modelFields = {
   endpointAdmission: endpointsFields.endpointAdmission,
   providerAccount: providersFields.providerAccount,
   routerPosture: Schema.optional(RouterPostureStateSchema),
+  retention: Schema.optional(RetentionStateSchema),
+  operatorLearningMode: Schema.optional(Schema.String),
   observability: shellFields.observability,
   overviewFilters: shellFields.overviewFilters,
   runtimeConfigEditor: runtimeFields.runtimeConfigEditor,

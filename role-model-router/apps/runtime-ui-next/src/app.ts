@@ -3,6 +3,9 @@ import {
   defineDispatchStudio,
   defineDeviceAuthCommands,
   createLocalPolicyCommands,
+  createOperatorLearningClient,
+  defineOperatorLearningCommands,
+  defineStorageRetentionCommands,
   defineProviderAccountCommands,
   defineLearningRankingCommands,
   defineRequestsRankingCommands,
@@ -22,6 +25,8 @@ import { createLearningRankingClient } from "./learning-ranking";
 import { createRequestsRankingClient } from "./requests-ranking";
 import { createProviderAccountClient } from "./provider-account";
 import { createRouterConfigClient } from "./router-config";
+import { createStorageRetentionClient } from "./storage-retention";
+import { createRuntimeHttpClient } from "./http/runtime-client";
 import { type ControlClient, createControlClients } from "./control";
 import type { DiagnosticsReader } from "./diagnostics";
 import { createInit } from "./init";
@@ -71,6 +76,8 @@ export interface ShellOptions {
   readonly requestsRankingFetchImpl?: typeof fetch;
   readonly routerConfigFetchImpl?: typeof fetch;
   readonly localPolicyFetchImpl?: typeof fetch;
+  readonly retentionFetchImpl?: typeof fetch;
+  readonly operatorLearningFetchImpl?: typeof fetch;
   readonly controlToken?: string;
 }
 
@@ -152,7 +159,9 @@ export const createShellApp = (options: ShellOptions = {}) => {
       defineLearningRankingCommands(createLearningRankingClient({ ...(options.learningRankingFetchImpl === undefined ? {} : { fetchImpl: options.learningRankingFetchImpl }) })),
       defineRequestsRankingCommands(createRequestsRankingClient({ fetchImpl: options.requestsRankingFetchImpl })),
       defineRouterConfigCommands(createRouterConfigClient({ ...(options.routerConfigFetchImpl === undefined ? {} : { fetchImpl: options.routerConfigFetchImpl }), ...(controlToken === undefined ? {} : { token: controlToken }) })),
-      ...(options.localPolicyFetchImpl === undefined ? [] : [createLocalPolicyCommands(options.localPolicyFetchImpl)]),
+      ...(options.localPolicyFetchImpl === undefined ? [undefined] : [createLocalPolicyCommands(options.localPolicyFetchImpl)]),
+      ...(options.retentionFetchImpl === undefined ? [undefined] : [defineStorageRetentionCommands(createStorageRetentionClient({ ...(options.retentionFetchImpl === undefined ? {} : { fetchImpl: options.retentionFetchImpl }), ...(controlToken === undefined ? {} : { token: controlToken }) }))]),
+      ...(options.operatorLearningFetchImpl === undefined ? [undefined] : [defineOperatorLearningCommands(createOperatorLearningClient(createRuntimeHttpClient({ fetchImpl: options.operatorLearningFetchImpl, tokenProvider: readStoredOperatorToken })))])
     ),
     view,
   };

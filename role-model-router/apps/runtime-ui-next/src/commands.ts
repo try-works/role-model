@@ -17,6 +17,7 @@ import {
 import { type DeviceAuthClient, type DeviceAuthStartPayload, type DeviceActivationPayload } from "./device-auth";
 import { type ProviderAccountActivationBatch, type ProviderAccountClient, type ProviderAccountCreatePayload } from "./provider-account";
 import { type RouterBlockSavePayload, type RouterConfigClient, type RouterPostureSavePayload } from "./router-config";
+import { type RetentionPolicyPayload, type StorageRetentionClient } from "./storage-retention";
 import { type EndpointActivationPayload, type EndpointAdmissionClient, type EndpointBatchPayload } from "./endpoint-admission";
 import { type LearningRankingClient, type LearningRollbackPayload } from "./learning-ranking";
 import { type RequestsRankingClient, type RequestsRankingQuery } from "./requests-ranking";
@@ -519,6 +520,77 @@ const noopRouterConfigClient: RouterConfigClient = {
 };
 export const noopRouterConfigCommands = defineRouterConfigCommands(noopRouterConfigClient);
 
+export interface OperatorLearningClient {
+  readonly rollback: () => Promise<unknown>;
+  readonly updateMode: (mode: string) => Promise<unknown>;
+}
+export const createOperatorLearningClient = (http: RuntimeHttpClient): OperatorLearningClient => ({
+  rollback: () => http.request<unknown, Record<string, never>>({ method: "POST", path: "/api/role-model/operator/learning/rollback", body: {} }),
+  updateMode: (mode) => http.request<unknown, { mode: string }>({ method: "POST", path: "/api/role-model/operator/learning/mode", body: { mode } }),
+});
+export const defineOperatorLearningCommands = (client: OperatorLearningClient) => ({
+  rollback: Command.define("LearningRollback", {
+    args: { token: Schema.Number },
+    execute: ({ token }) =>
+      Effect.flatMap(
+        Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.rollback() })),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.LearningModeSucceeded({ token }) : Message.LearningModeFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("learning rollback failed"))), token })),
+      ),
+    messages: [Message.LearningModeSucceeded, Message.LearningModeFailed],
+  }),
+  updateMode: Command.define("LearningModeUpdate", {
+    args: { mode: Schema.String, token: Schema.Number },
+    execute: ({ mode, token }) =>
+      Effect.flatMap(
+        Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.updateMode(mode) })),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.LearningModeSucceeded({ token }) : Message.LearningModeFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("learning mode update failed"))), token })),
+      ),
+    messages: [Message.LearningModeSucceeded, Message.LearningModeFailed],
+  }),
+});
+export type OperatorLearningCommands = ReturnType<typeof defineOperatorLearningCommands>;
+const noopOperatorLearningClient: OperatorLearningClient = {
+  rollback: async () => ({}),
+  updateMode: async () => ({}),
+};
+export const noopOperatorLearningCommands = defineOperatorLearningCommands(noopOperatorLearningClient);
+
+export const defineStorageRetentionCommands = (client: StorageRetentionClient) => ({
+  dryRun: Command.define("RetentionDryRun", {
+    args: { token: Schema.Number },
+    execute: ({ token }) =>
+      Effect.flatMap(
+        Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.dryRun() })),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.RetentionSucceeded({ token }) : Message.RetentionFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("storage retention dry-run failed"))), token })),
+      ),
+    messages: [Message.RetentionSucceeded, Message.RetentionFailed],
+  }),
+  execute: Command.define("RetentionExecute", {
+    args: { token: Schema.Number },
+    execute: ({ token }) =>
+      Effect.flatMap(
+        Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.execute() })),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.RetentionSucceeded({ token }) : Message.RetentionFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("storage retention execute failed"))), token })),
+      ),
+    messages: [Message.RetentionSucceeded, Message.RetentionFailed],
+  }),
+  savePolicy: Command.define("RetentionSavePolicy", {
+    args: { payload: Schema.String, token: Schema.Number },
+    execute: ({ payload, token }) =>
+      Effect.flatMap(
+        Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.savePolicy(JSON.parse(payload) as RetentionPolicyPayload) })),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.RetentionSucceeded({ token }) : Message.RetentionFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("storage retention policy save failed"))), token })),
+      ),
+    messages: [Message.RetentionSucceeded, Message.RetentionFailed],
+  }),
+});
+export type StorageRetentionCommands = ReturnType<typeof defineStorageRetentionCommands>;
+const noopStorageRetentionClient: StorageRetentionClient = {
+  dryRun: async () => ({}),
+  execute: async () => ({}),
+  savePolicy: async () => ({}),
+};
+export const noopStorageRetentionCommands = defineStorageRetentionCommands(noopStorageRetentionClient);
 export const defineEndpointAdmissionCommands = (client: EndpointAdmissionClient) => ({
   activate: Command.define("ActivateEndpoint", {
     args: { activationId: Schema.String, generation: Schema.Number, payload: Schema.String },

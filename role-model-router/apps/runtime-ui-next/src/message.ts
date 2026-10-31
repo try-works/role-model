@@ -109,6 +109,19 @@ export const Message: MessageUnion<{
   readonly EndpointAdmissionResetRequested: EmptyFields;
   readonly EndpointAdmissionSucceeded: { readonly activationId: typeof Schema.String; readonly generation: typeof Schema.Number };
   readonly EndpointAdmissionFailed: { readonly activationId: typeof Schema.String; readonly generation: typeof Schema.Number; readonly message: typeof Schema.String };
+  readonly RetentionSizeChanged: { readonly value: typeof Schema.String };
+  readonly RetentionAgeChanged: { readonly value: typeof Schema.String };
+  readonly LearningModeSelectChanged: { readonly mode: typeof Schema.String };
+  readonly LearningModeUpdateRequested: { readonly mode: typeof Schema.String };
+  readonly LearningRollbackRequested: EmptyFields;
+  readonly LearningModeSucceeded: { readonly token: typeof Schema.Number };
+  readonly LearningModeFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly RetentionPolicySaveRequested: { readonly maxAgeDays: typeof Schema.Number; readonly maxSizeGb: typeof Schema.Number };
+  readonly RetentionDryRunRequested: EmptyFields;
+  readonly RetentionExecuteRequested: EmptyFields;
+  readonly RetentionSucceeded: { readonly token: typeof Schema.Number };
+  readonly RetentionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly LocalLogsRefreshRequested: EmptyFields;
   readonly RouterPostureFieldChanged: { readonly field: typeof RouterPostureFieldSchema; readonly value: typeof Schema.String };
   readonly RouterBlockChanged: { readonly block: typeof RouterBlockSchema; readonly value: typeof Schema.String };
   readonly RouterEntryFieldChanged: { readonly field: typeof RouterEntryFieldSchema; readonly value: typeof Schema.String };
@@ -238,6 +251,19 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   EndpointAdmissionResetRequested: {},
   EndpointAdmissionSucceeded: { activationId: Schema.String, generation: Schema.Number },
   EndpointAdmissionFailed: { activationId: Schema.String, generation: Schema.Number, message: Schema.String },
+  RetentionSizeChanged: { value: Schema.String },
+  RetentionAgeChanged: { value: Schema.String },
+  LearningModeSelectChanged: { mode: Schema.String },
+  LearningModeUpdateRequested: { mode: Schema.String },
+  LearningRollbackRequested: {},
+  LearningModeSucceeded: { token: Schema.Number },
+  LearningModeFailed: { message: Schema.String, token: Schema.Number },
+  RetentionPolicySaveRequested: { maxAgeDays: Schema.Number, maxSizeGb: Schema.Number },
+  RetentionDryRunRequested: {},
+  RetentionExecuteRequested: {},
+  RetentionSucceeded: { token: Schema.Number },
+  RetentionFailed: { message: Schema.String, token: Schema.Number },
+  LocalLogsRefreshRequested: {},
   RouterPostureFieldChanged: { field: RouterPostureFieldSchema, value: Schema.String },
   RouterBlockChanged: { block: RouterBlockSchema, value: Schema.String },
   RouterEntryFieldChanged: { field: RouterEntryFieldSchema, value: Schema.String },

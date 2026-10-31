@@ -42,6 +42,10 @@ import {
   noopDeviceAuthCommands,
   type RouterConfigCommands,
   noopRouterConfigCommands,
+  type StorageRetentionCommands,
+  noopStorageRetentionCommands,
+  type OperatorLearningCommands,
+  noopOperatorLearningCommands,
   type ReadReadbackCommand,
   type RefreshSnapshotCommand,
   defineDispatchControl,
@@ -91,6 +95,7 @@ import {
   type ProviderAccountState,
 } from "./provider-account";
 import { initialRouterPostureState, type RouterPostureState } from "./router-posture";
+import { initialRetentionState } from "./storage-retention";
 import {
   activationPlanForConnectedSession,
   deviceAuthPollDelayMs,
@@ -249,6 +254,8 @@ export const createUpdate =
     requestsRankingCommands: RequestsRankingCommands = noopRequestsRankingCommands,
     routerConfigCommands: RouterConfigCommands = noopRouterConfigCommands,
     localPolicyCommandsArg: LocalPolicyCommands = localPolicyCommands,
+    storageRetentionCommands: StorageRetentionCommands = noopStorageRetentionCommands,
+    operatorLearningCommands: OperatorLearningCommands = noopOperatorLearningCommands,
   ) => {
 
 
@@ -813,6 +820,95 @@ const updateLocalPolicyDraft = (
         // re-read the current route with the same query-preserving invalidator and leave the watermark.
         RuntimePageRestored: (): UpdateReturn<Model, Message> => invalidateCurrentRoute(model),
         ThemeApplied: (): UpdateReturn<Model, Message> => ({ model }),
+        LearningModeSelectChanged: ({ mode }: Extract<Message, { readonly _tag: "LearningModeSelectChanged" }>): UpdateReturn<Model, Message> => ({
+          model: { ...model, operatorLearningMode: mode },
+        }),
+        LearningModeUpdateRequested: ({ mode }: Extract<Message, { readonly _tag: "LearningModeUpdateRequested" }>): UpdateReturn<Model, Message> => {
+          const token = model.readbacks.learning.token + 1;
+          return {
+            commands: [operatorLearningCommands.updateMode({ mode, token })],
+            model: { ...model, readbacks: { ...model.readbacks, learning: loadingReadback(token) } },
+          };
+        },
+        LearningRollbackRequested: (): UpdateReturn<Model, Message> => {
+          const token = model.readbacks.learning.token + 1;
+          return {
+            commands: [operatorLearningCommands.rollback({ token })],
+            model: { ...model, readbacks: { ...model.readbacks, learning: loadingReadback(token) } },
+          };
+        },
+        LearningModeSucceeded: ({ token }: Extract<Message, { readonly _tag: "LearningModeSucceeded" }>): UpdateReturn<Model, Message> => {
+          if (token !== model.readbacks.learning.token) return { model };
+          const nextToken = token + 1;
+          return {
+            commands: [readReadback({ key: "learning", token: nextToken })],
+            model: { ...model, readbacks: { ...model.readbacks, learning: { ...loadingReadback(nextToken), message: "Learning action completed." } } },
+          };
+        },
+        LearningModeFailed: ({ message, token }: Extract<Message, { readonly _tag: "LearningModeFailed" }>): UpdateReturn<Model, Message> => {
+          if (token !== model.readbacks.learning.token) return { model };
+          return { model: { ...model, readbacks: { ...model.readbacks, learning: { ...model.readbacks.learning, message, status: "error" } } } };
+        },
+        RetentionSizeChanged: ({ value }: Extract<Message, { readonly _tag: "RetentionSizeChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.retention ?? initialRetentionState();
+          return { model: { ...model, retention: { ...state, maxSizeGb: value } } };
+        },
+        RetentionAgeChanged: ({ value }: Extract<Message, { readonly _tag: "RetentionAgeChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.retention ?? initialRetentionState();
+          return { model: { ...model, retention: { ...state, maxAgeDays: value } } };
+        },
+        RetentionPolicySaveRequested: ({ maxAgeDays, maxSizeGb }: Extract<Message, { readonly _tag: "RetentionPolicySaveRequested" }>): UpdateReturn<Model, Message> => {
+          const state = model.retention ?? initialRetentionState();
+          if (state.status === "saving") return { model };
+          const token = state.token + 1;
+          return {
+            commands: [storageRetentionCommands.savePolicy({ payload: JSON.stringify({ maxAgeDays, maxSizeGb }), token })],
+            model: { ...model, retention: { ...state, message: undefined, status: "saving", token } },
+          };
+        },
+        RetentionDryRunRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.retention ?? initialRetentionState();
+          if (state.status === "saving") return { model };
+          const token = state.token + 1;
+          return {
+            commands: [storageRetentionCommands.dryRun({ token })],
+            model: { ...model, retention: { ...state, message: undefined, status: "saving", token } },
+          };
+        },
+        RetentionExecuteRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.retention ?? initialRetentionState();
+          if (state.status === "saving") return { model };
+          const token = state.token + 1;
+          return {
+            commands: [storageRetentionCommands.execute({ token })],
+            model: { ...model, retention: { ...state, message: undefined, status: "saving", token } },
+          };
+        },
+        RetentionSucceeded: ({ token }: Extract<Message, { readonly _tag: "RetentionSucceeded" }>): UpdateReturn<Model, Message> => {
+          const state = model.retention ?? initialRetentionState();
+          if (token !== state.token) return { model };
+          const readbackToken = model.readbacks.storageRetention.token + 1;
+          return {
+            commands: [readReadback({ key: "storageRetention", token: readbackToken })],
+            model: {
+              ...model,
+              readbacks: { ...model.readbacks, storageRetention: loadingReadback(readbackToken) },
+              retention: { ...state, message: "Storage retention action completed.", status: "saved" },
+            },
+          };
+        },
+        RetentionFailed: ({ message, token }: Extract<Message, { readonly _tag: "RetentionFailed" }>): UpdateReturn<Model, Message> => {
+          const state = model.retention ?? initialRetentionState();
+          if (token !== state.token) return { model };
+          return { model: { ...model, retention: { ...state, message, status: "error" } } };
+        },
+        LocalLogsRefreshRequested: (): UpdateReturn<Model, Message> => {
+          const token = model.readbacks.localLogs.token + 1;
+          return {
+            commands: [readReadback({ key: "localLogs", token })],
+            model: { ...model, readbacks: { ...model.readbacks, localLogs: loadingReadback(token) } },
+          };
+        },
         RouterPostureFieldChanged: ({ field, value }: Extract<Message, { readonly _tag: "RouterPostureFieldChanged" }>): UpdateReturn<Model, Message> => {
           const state = model.routerPosture ?? initialRouterPostureState();
           return { model: { ...model, routerPosture: { ...state, [field]: value } } };

@@ -1,5 +1,7 @@
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 
+import { initialRetentionState, type RetentionState } from "./storage-retention";
+
 import { CONTROL_SPECS } from "./control";
 import { renderControlPage, renderDeviceAuthorizationDialog, renderDeviceAuthorizationForm, renderEndpointAdmissionForm, renderProviderAccountForm } from "./control-view";
 import { type EndpointsRouteContext, type ProvidersRouteContext, providersRoute } from "./features/control/routes";
@@ -42,6 +44,8 @@ export const familyPage = (
   description: string,
   sections: readonly FamilySection[],
   h: H,
+  retention?: RetentionState,
+  operatorLearningMode?: string,
 ): Html => {
   const first = sections.find((section) => section.readback !== undefined);
   const state = first?.readback === undefined ? "empty" : statusOf(first.readback);
@@ -55,9 +59,9 @@ export const familyPage = (
     if (routeName === "system-peers") return systemPeersPage(pageReadback, h);
     if (routeName === "system-extensions") return systemExtensionsPage(pageReadback, h);
     if (routeName === "session-readiness") return systemSessionPage(pageReadback, h);
-    if (routeName === "storage-retention") return systemStoragePage(pageReadback, h);
+    if (routeName === "storage-retention") return systemStoragePage(pageReadback, retention, h);
   }
-  if (routeName === "system-operator") return systemOperatorPage(sections, h);
+  if (routeName === "system-operator") return systemOperatorPage(sections, operatorLearningMode, h);
   return h.section(
     [h.Class("rm3-next-route mt-4 space-y-6"), h.DataAttribute("route", routeName), h.DataAttribute("final-family-state", state), h.DataAttribute("page-layout", "reference"), h.DataAttribute("page-state", state)],
     [h.h2([h.Class("rm3-next-route-title text-sm font-medium leading-5 tracking-tight")], [label]), ...sections.map((section, index) =>
@@ -367,7 +371,7 @@ export const localPeersPage = (readback: ReadbackState, h: H): Html => {
         h.div([h.Class("space-y-2")], [h.label([h.Class(fieldLabel), h.Attribute("for", "peer-url")], ["Endpoint URL"]), h.input([h.Id("peer-url"), h.Type("url"), h.Placeholder("http://127.0.0.1:1234"), h.Class(fieldClass)])]),
         h.div([h.Class("space-y-2")], [h.label([h.Class(fieldLabel), h.Attribute("for", "peer-auth-token")], ["Auth token (optional)"]), h.input([h.Id("peer-auth-token"), h.Type("password"), h.Placeholder("Bearer token (optional)"), h.Class(fieldClass)])]),
       ]),
-      h.button([h.Type("button"), h.Disabled(true), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["Add endpoint"]),
+      h.button([h.Type("button"), h.Disabled(true), h.DataAttribute("reason-disabled", "peer endpoint registration is managed in the runtime config editor"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["Add endpoint"]),
     ], h),
   ]);
 };
@@ -377,8 +381,8 @@ export const localPeerModelsPage = (readback: ReadbackState, h: H): Html => h.di
     ...(readbackNotice(readback, "Peer models", h) === null ? [] : [readbackNotice(readback, "Peer models", h) as Html]),
     h.div([h.Class("grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_auto] xl:items-end")], [
       h.div([h.Class("space-y-2")], [h.label([h.Class(fieldLabel), h.Attribute("for", "peer-model-id")], ["Model ID"]), h.input([h.Id("peer-model-id"), h.Type("text"), h.Placeholder("openai/gpt-4.1"), h.Class(fieldClass)])]),
-      h.div([h.Class("space-y-2")], [h.p([h.Class(fieldLabel)], ["Roles"]), h.div([h.Class("flex flex-wrap gap-2 py-2")], [h.button([h.Type("button"), h.Disabled(true), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["+ Add role"]), h.button([h.Type("button"), h.Disabled(true), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["Select all roles"])])]),
-      h.div([h.Class("flex items-end")], [h.button([h.Type("button"), h.Disabled(true), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["Register model"])]),
+      h.div([h.Class("space-y-2")], [h.p([h.Class(fieldLabel)], ["Roles"]), h.div([h.Class("flex flex-wrap gap-2 py-2")], [h.button([h.Type("button"), h.Disabled(true), h.DataAttribute("reason-disabled", "role assignment happens when a model is declared"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["+ Add role"]), h.button([h.Type("button"), h.Disabled(true), h.DataAttribute("reason-disabled", "role assignment happens when a model is declared"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["Select all roles"])])]),
+      h.div([h.Class("flex items-end")], [h.button([h.Type("button"), h.Disabled(true), h.DataAttribute("reason-disabled", "the host exposes peer models read-only"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["Register model"])]),
     ]),
     h.div([h.Class(mutedPanel + " flex flex-wrap items-center justify-between gap-4 p-3")], [
       h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["Configure at least one peer endpoint first, then register a model id from that peer catalog."]),
@@ -430,7 +434,7 @@ export const systemPeersPage = (readback: ReadbackState, h: H): Html => {
   ]);
 };
 
-export const systemOperatorPage = (sections: readonly FamilySection[], h: H): Html => {
+export const systemOperatorPage = (sections: readonly FamilySection[], operatorLearningMode: string | undefined, h: H): Html => {
   const statusSection = sections.find((section) => section.readback !== undefined);
   const statusReadback = statusSection?.readback;
   const state = statusReadback === undefined ? "empty" : readbackStateOf(statusReadback);
@@ -455,7 +459,7 @@ export const systemOperatorPage = (sections: readonly FamilySection[], h: H): Ht
       h.div([h.Class("flex flex-wrap items-end gap-3")], [
         h.div([h.Class("min-w-0 flex-1 space-y-2")], [h.label([h.Class(fieldLabel)], ["Trace root id"]), h.input([h.Placeholder("trace-root…"), h.Class(fieldClass)])]),
         h.div([h.Class("w-[120px] space-y-2")], [h.label([h.Class(fieldLabel)], ["Max requests"]), h.input([h.Type("number"), h.Value("25"), h.Class(fieldClass)])]),
-        h.button([h.Type("button"), h.Class(secondaryButton)], ["Create Replay"]),
+        h.button([h.Type("button"), h.AriaDisabled(true), h.DataAttribute("reason-disabled", "replay creation requires an operator token and a budget scope"), h.Class(secondaryButton)], ["Create Replay"]),
       ]),
       h.p([h.Class("mt-3 text-sm leading-5 text-muted-foreground")], ["No replay jobs recorded for this operator session."]),
     ], h),
@@ -465,8 +469,8 @@ export const systemOperatorPage = (sections: readonly FamilySection[], h: H): Ht
   ]),
   card("Shadow Learning", "Learning output is advisory. Mode changes and rollback never directly alter production routing.", [
     h.div([h.Class("grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end")], [
-      h.div([h.Class("space-y-2")], [h.label([h.Class(fieldLabel)], ["Learning mode"]), h.select([h.Class(fieldClass)], [h.option([h.Value("shadow"), h.Selected(true)], ["Shadow"]), h.option([h.Value("off")], ["Off"])])]),
-      h.div([h.Class("flex flex-wrap gap-2")], [h.button([h.Type("button"), h.Class(secondaryButton)], ["Update Mode"]), h.button([h.Type("button"), h.Class(secondaryButton)], ["Roll Back Shadow State"])]),
+      h.div([h.Class("space-y-2")], [h.label([h.Class(fieldLabel)], ["Learning mode"]), h.select([h.AriaLabel("Learning mode"), h.DataAttribute("learning-mode-select", ""), h.Class(fieldClass), h.OnChange((value: string) => Message.LearningModeSelectChanged({ mode: value }))], [h.option([h.Value("shadow"), ...((operatorLearningMode ?? "shadow") === "shadow" ? [h.Selected(true)] : [])], ["Shadow"]), h.option([h.Value("off"), ...((operatorLearningMode ?? "") === "off" ? [h.Selected(true)] : [])], ["Off"])])]),
+      h.div([h.Class("flex flex-wrap gap-2")], [h.button([h.Type("button"), h.DataAttribute("learning-mode-update", ""), h.OnClick(Message.LearningModeUpdateRequested({ mode: operatorLearningMode ?? "shadow" })), h.Class(secondaryButton)], ["Update Mode"]), h.button([h.Type("button"), h.DataAttribute("learning-rollback", ""), h.OnClick(Message.LearningRollbackRequested({})), h.Class(secondaryButton)], ["Roll Back Shadow State"])]),
     ]),
   ], h),
   ]);
@@ -478,12 +482,12 @@ export const systemExtensionsPage = (readback: ReadbackState, h: H): Html => h.d
   card("Replay automation", "Replay automation is configured per extension and reported by the host.", [
     h.div([h.Class("flex flex-wrap items-start justify-between gap-3")], [
       h.div([h.Class("space-y-1 text-sm leading-5 text-muted-foreground")], [h.p([], ["2291 ticks · running · last degraded: 1 disposition(s)"]), h.p([], ["0/100 counterfactuals · 0/300 dispatches · 0 reserved · window 2026-10-30"]), h.p([], ["sweeps: 0 expired · 1 resumed · 0 reconciled · 0 stranded · 0 reclaimed · 0 recovered"]), h.p([h.Class("text-amber-500")], ["fetch failed"])]),
-      h.button([h.Type("button"), h.Class(secondaryButton)], ["Pause"]),
+      h.button([h.Type("button"), h.AriaDisabled(true), h.DataAttribute("reason-disabled", "extension lifecycle is host-managed"), h.Class(secondaryButton)], ["Pause"]),
     ]),
   ], h),
   h.div([h.Class("grid gap-4 xl:grid-cols-2")], [
     card("Contribution posture", "Aggregate upload is independent from local recommendation use, training, external RL, and rich capture. Contribution policy is not extension enablement.", [h.div([h.Class(mutedPanel + " p-4")], [h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["Loading contribution policy…"])])], h),
-    card("Recommendation ledger", "Signed bundles validated locally before apply.", [h.button([h.Type("button"), h.Class(primaryButton)], ["Download & validate latest"]), h.p([h.Class("mt-3 text-sm leading-5 text-muted-foreground")], ["No recommendation bundles downloaded."])], h),
+    card("Recommendation ledger", "Signed bundles validated locally before apply.", [h.button([h.Type("button"), h.AriaDisabled(true), h.DataAttribute("reason-disabled", "recommendation bundles are delivered by the host"), h.Class(primaryButton)], ["Download & validate latest"]), h.p([h.Class("mt-3 text-sm leading-5 text-muted-foreground")], ["No recommendation bundles downloaded."])], h),
   ]),
   card("Extension inventory", "Canonical packages on this host. Modes change the extension boundary without becoming contribution policy.", [h.div([h.Class(mutedPanel + " p-4")], [h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["Loading extension lifecycle…"])])], h),
 ]);
@@ -536,32 +540,43 @@ export const systemSessionPage = (readback: ReadbackState, h: H): Html => {
   ]);
 };
 
-export const systemStoragePage = (_readback: ReadbackState, h: H): Html => h.div([h.Class("space-y-6"), h.DataAttribute("route", "storage-retention"), h.DataAttribute("page-layout", "reference")], [
-  statStrip([
-    { label: "Physical bytes", value: "Not measured" }, { label: "Physical resources", value: "0" }, { label: "Logical bytes", value: "0 B" },
-    { label: "Reclaimable bytes", value: "Not measured" }, { label: "Reserved bytes", value: "Not measured" }, { label: "Archived bytes", value: "Not measured" },
-    { label: "Unattributed bytes", value: "Not measured" }, { label: "Unobserved stores", value: "0" }, { label: "Unavailable stores", value: "0" },
-    { label: "Unavailable physical resources", value: "0" }, { label: "Legal holds", value: "Not measured" }, { label: "Maintenance", value: "Idle" },
-  ], h),
-  h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["Unattributed physical bytes are measured physical allocation not mapped to logical storage classes; they are not service health."]),
-  h.div([h.Class("grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]")], [
-    card("Logical classes", "Each logical class has an owner and retention contract. Physical resource mapping remains explicit so shared storage is not double counted.", [
-      h.div([h.Class(mutedPanel + " p-4")], [h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["Loading storage inventory..."])]),
+export const systemStoragePage = (readback: ReadbackState, retention: RetentionState | undefined, h: H): Html => {
+  const state = retention ?? initialRetentionState();
+  const busy = state.status === "saving";
+  const sizeGb = state.maxSizeGb.length > 0 ? state.maxSizeGb : "1";
+  const ageDays = state.maxAgeDays.length > 0 ? state.maxAgeDays : "30";
+  const statusLine = state.message === undefined
+    ? []
+    : [h.p([h.Role(state.status === "error" ? "alert" : "status"), h.DataAttribute("retention-status", state.status), h.Class("mt-2 text-sm leading-5 " + (state.status === "error" ? "text-amber-500" : "text-muted-foreground"))], [state.message])];
+  return h.div([h.Class("space-y-6"), h.DataAttribute("route", "storage-retention"), h.DataAttribute("page-layout", "reference"), h.DataAttribute("readback-state", readbackStateOf(readback))], [
+    statStrip([
+      { label: "Physical bytes", value: "Not measured" }, { label: "Physical resources", value: "0" }, { label: "Logical bytes", value: "0 B" },
+      { label: "Reclaimable bytes", value: "Not measured" }, { label: "Reserved bytes", value: "Not measured" }, { label: "Archived bytes", value: "Not measured" },
+      { label: "Unattributed bytes", value: "Not measured" }, { label: "Unobserved stores", value: "0" }, { label: "Unavailable stores", value: "0" },
+      { label: "Unavailable physical resources", value: "0" }, { label: "Legal holds", value: "Not measured" }, { label: "Maintenance", value: "Idle" },
     ], h),
-    h.div([h.Class("space-y-4")], [
-      card("Retention policy", "Scoped size and age budgets. Managed policy stays authoritative.", [
-        h.div([h.Class("space-y-2")], [h.label([h.Class(fieldLabel)], ["Maximum size (GB)"]), h.input([h.Type("number"), h.Value("1"), h.Class(fieldClass)])]),
-        h.div([h.Class("space-y-2")], [h.label([h.Class(fieldLabel)], ["Maximum age (days)"]), h.input([h.Type("number"), h.Value("30"), h.Class(fieldClass)])]),
-        h.button([h.Type("button"), h.Class(secondaryButton + " w-full justify-center")], ["Save policy"]),
+    ...(readbackNotice(readback, "Storage retention", h) === null ? [] : [readbackNotice(readback, "Storage retention", h) as Html]),
+    h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["Unattributed physical bytes are measured physical allocation not mapped to logical storage classes; they are not service health."]),
+    h.div([h.Class("grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]")], [
+      card("Logical classes", "Each logical class has an owner and retention contract. Physical resource mapping remains explicit so shared storage is not double counted.", [
+        h.div([h.Class(mutedPanel + " p-4")], [h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["Loading storage inventory..."])]),
       ], h),
-      card("Manual pruning", "Dry-run first, then execute the exact hash-bound plan as a cancellable background job.", [
-        h.div([h.Class("flex flex-wrap gap-2")], [h.button([h.Type("button"), h.Class(primaryButton)], ["Dry-run"]), h.button([h.Type("button"), h.Class(secondaryButton)], ["Execute plan"])]),
-        h.div([h.Class(mutedPanel + " p-3")], [h.p([h.Class("text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground")], ["Background progress"]), h.p([h.Class("mt-1 text-sm leading-5 text-muted-foreground")], ["Idle - no active retention job"])]),
-        h.p([h.Class("mt-3 text-sm leading-5 text-muted-foreground")], ["No legal holds or Managed policy conflicts."]),
-      ], h),
+      h.div([h.Class("space-y-4")], [
+        card("Retention policy", "Scoped size and age budgets. Managed policy stays authoritative.", [
+          h.div([h.Class("space-y-2")], [h.label([h.Class(fieldLabel)], ["Maximum size (GB)"]), h.input([h.Type("number"), h.AriaLabel("Maximum size (GB)"), h.Value(sizeGb), h.OnInput((next: string) => Message.RetentionSizeChanged({ value: next })), h.Class(fieldClass)])]),
+          h.div([h.Class("space-y-2")], [h.label([h.Class(fieldLabel)], ["Maximum age (days)"]), h.input([h.Type("number"), h.AriaLabel("Maximum age (days)"), h.Value(ageDays), h.OnInput((next: string) => Message.RetentionAgeChanged({ value: next })), h.Class(fieldClass)])]),
+          h.button([h.Type("button"), h.AriaDisabled(busy), h.DataAttribute("retention-save-policy", ""), h.OnClick(Message.RetentionPolicySaveRequested({ maxAgeDays: Number.parseInt(ageDays, 10) || 30, maxSizeGb: Number.parseInt(sizeGb, 10) || 1 })), h.Class(secondaryButton + " w-full justify-center")], [busy ? "Saving policy…" : "Save policy"]),
+        ], h),
+        card("Manual pruning", "Dry-run first, then execute the exact hash-bound plan as a cancellable background job.", [
+          h.div([h.Class("flex flex-wrap gap-2")], [h.button([h.Type("button"), h.AriaDisabled(busy), h.DataAttribute("retention-dry-run", ""), h.OnClick(Message.RetentionDryRunRequested({})), h.Class(primaryButton)], ["Dry-run"]), h.button([h.Type("button"), h.AriaDisabled(busy), h.DataAttribute("retention-execute", ""), h.OnClick(Message.RetentionExecuteRequested({})), h.Class(secondaryButton)], ["Execute plan"])]),
+          h.div([h.Class(mutedPanel + " p-3")], [h.p([h.Class("text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground")], ["Background progress"]), h.p([h.Class("mt-1 text-sm leading-5 text-muted-foreground")], ["Idle - no active retention job"])]),
+          ...statusLine,
+          h.p([h.Class("mt-3 text-sm leading-5 text-muted-foreground")], ["No legal holds or Managed policy conflicts."]),
+        ], h),
+      ]),
     ]),
-  ]),
-]);
+  ]);
+};
 
 const roleSummary = "coder, architect, security, researcher, writer, operator, analyst, planner, tester, data, product, designer, support, legal, finance, creative, educator, translator, marketer, seller, recruiter, procurement, coordinator, knowledge, strategist, mathematician, scientist, health";
 
@@ -572,9 +587,9 @@ export const localLlamaModelsPage = (readback: ReadbackState, h: H): Html => h.d
     h.div([h.Class("flex flex-wrap items-start gap-3")], [
       h.div([h.Class("min-w-0 flex-1 space-y-2")], [h.label([h.Class(fieldLabel), h.Attribute("for", "llama-swap-model-id")], ["Model ID"]), h.input([h.Id("llama-swap-model-id"), h.Type("text"), h.Placeholder("lfm2.5-8b-a1b"), h.Class(fieldClass)])]),
       h.div([h.Class("w-[220px] shrink-0 space-y-2")], [h.p([h.Class(fieldLabel)], ["Role summary"]), h.div([h.Class(mutedPanel + " flex min-h-[34px] items-center px-3 py-2")], [h.p([h.Class("break-words font-mono text-[13px] leading-[18px] text-foreground")], ["roles: " + roleSummary])])]),
-      h.div([h.Class("flex items-end self-end")], [h.button([h.Type("button"), h.Disabled(true), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["Load model"])]),
+      h.div([h.Class("flex items-end self-end")], [h.button([h.Type("button"), h.Disabled(true), h.DataAttribute("reason-disabled", "load via the runtime config llama_swap block"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-muted-foreground")], ["Load model"])]),
     ]),
-    h.div([h.Class("flex flex-wrap items-center gap-2")], [h.button([h.Type("button"), h.Class(secondaryButton)], ["All roles"]), h.span([h.Class("text-sm text-muted-foreground")], ["28 selected · click to clear"])]),
+    h.div([h.Class("flex flex-wrap items-center gap-2")], [h.button([h.Type("button"), h.AriaDisabled(true), h.DataAttribute("reason-disabled", "role assignment happens when a model is declared"), h.Class(secondaryButton)], ["All roles"]), h.span([h.Class("text-sm text-muted-foreground")], ["28 selected · click to clear"])]),
     h.div([h.Class("flex flex-wrap gap-2")], [h.a([h.Href("/runtime/config"), h.Role("button"), h.Class(secondaryButton)], ["Open runtime config"])]),
   ], h),
   card("Loaded models", "Models currently resident in memory via llama-swap.", [
@@ -606,7 +621,7 @@ export const localLogsPage = (readback: ReadbackState, h: H): Html => h.div([h.C
   card("Structured local log history", "Rows are parsed into Timestamp, Source, Severity, Request, and message fields so local runtime behavior can be inspected without raw console noise.", [
     ...(readbackNotice(readback, "Local logs", h) === null ? [] : [readbackNotice(readback, "Local logs", h) as Html]),
     h.div([h.Class(mutedPanel + " mb-4 flex flex-wrap items-center gap-4 p-4")], [
-      h.button([h.Type("button"), h.Class(secondaryButton)], ["Refresh"]),
+      h.button([h.Type("button"), h.DataAttribute("local-logs-refresh", ""), h.OnClick(Message.LocalLogsRefreshRequested({})), h.Class(secondaryButton)], ["Refresh"]),
       h.label([h.Class("flex items-center gap-2 text-sm text-foreground")], [h.input([h.Id("autoRefresh"), h.Type("checkbox"), h.Class("size-6 rounded border border-input")]), h.span([], ["Auto-refresh (3s)"])]),
       h.span([h.Class("ml-auto text-sm text-muted-foreground")], [readback.rows.length + " rows"]),
     ]),

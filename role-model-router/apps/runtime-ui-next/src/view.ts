@@ -1217,6 +1217,8 @@ interface RouteViewContext {
   readonly deviceAuthDialog: Model["deviceAuthDialog"];
   readonly providerAccount: ProviderAccountState;
   readonly routerPosture: Model["routerPosture"];
+  readonly retention: Model["retention"];
+  readonly operatorLearningMode: Model["operatorLearningMode"];
   readonly endpointAdmission: EndpointAdmissionState;
   readonly chartInteraction: ChartInteractionState | undefined;
   readonly learningRanking: LearningRankingState | undefined;
@@ -1241,6 +1243,8 @@ const routeContent = (ctx: RouteViewContext): Html => {
     deviceAuthDialog,
     providerAccount,
     routerPosture,
+    retention,
+    operatorLearningMode,
     endpointAdmission,
     chartInteraction,
     learningRanking,
@@ -1288,7 +1292,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     IntegrationsDownstream: () => integrationsDownstreamRoute(readbacks.downstreamOpenAI, readbacks.configuredModels, h),
     IntegrationsUpstream: () => integrationsUpstreamRoute(readbacks.integrationProviders, readbacks.configuredModels, h),
     Benchmark: () => benchmarkRoute(readbacks.benchmarkSuite, h),
-    StorageRetention: () => familyPage("Storage & retention", "storage-retention", "Physical and logical storage, retention classes and manual pruning.", [{ label: "Logical classes", note: "Logical classes group rows by retention policy." }, { label: "Retention policy", note: "Category totals, receipts and byte counts are reported by the retention readback." }, { label: "Manual pruning", note: "Prune is manual; the host enforces retention records before deletion." }, { label: "Retention transactions", spec: READBACK_SPECS.storageRetention, readback: readbacks.storageRetention }], h),
+    StorageRetention: () => familyPage("Storage & retention", "storage-retention", "Physical and logical storage, retention classes and manual pruning.", [{ label: "Logical classes", note: "Logical classes group rows by retention policy." }, { label: "Retention policy", note: "Category totals, receipts and byte counts are reported by the retention readback." }, { label: "Manual pruning", note: "Prune is manual; the host enforces retention records before deletion." }, { label: "Retention transactions", spec: READBACK_SPECS.storageRetention, readback: readbacks.storageRetention }], h, retention),
     Studio: () => studioRoute({ h, readbacks, studio, studioPage }),
     Learning: () => learningOverviewRoute(readbacks.learning, readbacks.replayJobs, readbacks.evaluationJobs, learningRanking, h),
     LearningConfiguration: () => learningConfigurationPage(readbacks.learningConfiguration, h),
@@ -1301,7 +1305,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
       { label: "Load model", note: "Model must already be declared in runtime config. Loading triggers the managed swap.", children: [h.div([h.Class("flex flex-wrap items-end gap-3")], [h.label([h.Class("flex flex-col gap-1 font-sans text-xs text-muted-foreground")], [h.span([], ["Model ID"]), h.input([h.Id("llama-model-id"), h.AriaLabel("Model ID"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm")])]), h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Load model"])])] },
       { label: "Loaded models", spec: READBACK_SPECS.localLlamaSwapModels, readback: readbacks.localLlamaSwapModels, columns: ["Model", "Status", "Roles", "Actions"], rows: (row) => [row.label, row.value, row.meta, "—"] },
     ], h), readbacks.localLlamaSwapModels, h),
-    SystemOperator: () => familyPage("Operator Controls", "system-operator", "Inspect bounded replay, evaluation, and shadow-learning state. The access token stays only in this browser component and is never stored.", [{ label: "Operator status", spec: READBACK_SPECS.operatorStatus, readback: readbacks.operatorStatus }, { label: "Trace lineage", spec: READBACK_SPECS.operatorTraceRoots, readback: readbacks.operatorTraceRoots }, { label: "Replay Jobs", spec: READBACK_SPECS.replayJobs, readback: readbacks.replayJobs }, { label: "Evaluation Jobs", spec: READBACK_SPECS.evaluationJobs, readback: readbacks.evaluationJobs }, { label: "Shadow Learning", note: "This page does not enable production learning; shadow-learning actions stay bounded to the readback." }], h),
+    SystemOperator: () => familyPage("Operator Controls", "system-operator", "Inspect bounded replay, evaluation, and shadow-learning state. The access token stays only in this browser component and is never stored.", [{ label: "Operator status", spec: READBACK_SPECS.operatorStatus, readback: readbacks.operatorStatus }, { label: "Trace lineage", spec: READBACK_SPECS.operatorTraceRoots, readback: readbacks.operatorTraceRoots }, { label: "Replay Jobs", spec: READBACK_SPECS.replayJobs, readback: readbacks.replayJobs }, { label: "Evaluation Jobs", spec: READBACK_SPECS.evaluationJobs, readback: readbacks.evaluationJobs }, { label: "Shadow Learning", note: "This page does not enable production learning; shadow-learning actions stay bounded to the readback." }], h, retention, operatorLearningMode),
     SystemExtensions: () => familyPage("Extensions", "system-extensions", "Extension boundary, replay automation, contribution posture and the extension inventory.", [{ label: "Extension boundary", note: "The host enforces the extension boundary before any extension code runs." }, { label: "Replay automation", note: "Replay automation is configured per extension and reported by the host." }, { label: "Contribution posture", note: "Contribution posture records whether an extension may contribute runtime behavior." }, { label: "Recommendation ledger", note: "Recommendation receipts are recorded in the ledger when an extension produces one." }, { label: "Extension inventory", spec: READBACK_SPECS.extensions, readback: readbacks.extensions }], h),
     Models: () => modelsRoute(readbacks.configuredModels, readbacks.modelEndpoints, h),
     ModelsRoles: () => modelsRolesRoute(readbacks.configuredModels, readbacks.modelEndpoints, h),
@@ -1508,6 +1512,8 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                     deviceAuthDialog: model.deviceAuthDialog,
                     providerAccount: model.providerAccount ?? initialProviderAccountState(),
                     routerPosture: model.routerPosture,
+                    retention: model.retention,
+                    operatorLearningMode: model.operatorLearningMode,
                     endpointAdmission: model.endpointAdmission ?? initialEndpointAdmissionState(),
                     chartInteraction: model.chartInteraction,
                     learningRanking: model.learningRanking,
