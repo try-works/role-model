@@ -44,6 +44,11 @@ export class AttemptFenceRejectedError extends Error {
 
 export interface AttemptLease {
   readonly attempt: number;
+  /**
+   * True when the attempt was already completed with durable evidence and this lease is the
+   * idempotent replay of that completion (crash between fence.complete and the queue ack).
+   */
+  readonly completed: boolean;
   readonly expiresAtMs: number;
   readonly jobId: string;
   readonly leaseId: string;
@@ -129,6 +134,26 @@ const AttemptRowSchema = Schema.Struct({
   state: Schema.String,
 });
 const decodeAttemptRow = Schema.decodeUnknownSync(AttemptRowSchema);
+const EvidenceRowSchema = Schema.Struct({
+  digest: Schema.String,
+  lease_id: Schema.String,
+  payload: Schema.String,
+  recorded_at: Schema.Number,
+});
+const decodeEvidenceRow = Schema.decodeUnknownSync(EvidenceRowSchema);
+
+function fencePayloadSchema(): Schema.Codec<FencePayload> {
+  return Schema.Union([
+    Schema.Null,
+    Schema.Boolean,
+    Schema.Number,
+    Schema.String,
+    Schema.Array(Schema.suspend(fencePayloadSchema)),
+    Schema.Record(Schema.String, Schema.suspend(fencePayloadSchema)),
+  ]);
+}
+
+const decodeFencePayload = Schema.decodeUnknownSync(fencePayloadSchema());
 
 function asAttemptRow(value: SqliteRow | undefined): AttemptRow | null {
   if (value === undefined) return null;
@@ -139,14 +164,18 @@ function asAttemptRow(value: SqliteRow | undefined): AttemptRow | null {
   }
 }
 
-function evidenceFromRow(row: EvidenceRow): AttemptEvidence {
-  return {
-    digest: row.digest,
-    leaseId: row.lease_id,
-    // SAFETY: recordEvidence serialized this exact payload on the same connection.
-    payload: JSON.parse(row.payload) as FencePayload,
-    recordedAtMs: row.recorded_at,
-  };
+function evidenceFromRow(row: SqliteRow): AttemptEvidence | null {
+  try {
+    const decoded = decodeEvidenceRow(row);
+    return {
+      digest: decoded.digest,
+      leaseId: decoded.lease_id,
+      payload: decodeFencePayload(JSON.parse(decoded.payload)),
+      recordedAtMs: decoded.recorded_at,
+    };
+  } catch {
+    return null;
+  }
 }
 
 function digestPayload(payload: FencePayload): string {
@@ -250,7 +279,22 @@ export function openAttemptFenceStore({
       const existing = asAttemptRow(selectAttempt.get(input.jobId, input.attempt) as SqliteRow | undefined);
       if (existing !== null) {
         if (existing.state === "completed") {
-          throw new AttemptFenceRejectedError("already_completed", "attempt fence rejected: attempt already completed");
+          // Crash window: fence.complete() landed but the queue never acked. The retry of the
+          // same attempt is an idempotent success only when the durable evidence is still there.
+          // SAFETY: queue_attempt_evidence rows are written only by this module.
+          const evidenceRaw = selectEvidence.get(input.jobId, input.attempt) as SqliteRow | undefined;
+          const evidence = evidenceRaw === undefined ? null : evidenceFromRow(evidenceRaw);
+          if (evidence !== null && evidence.leaseId === existing.lease_id) {
+            return {
+              attempt: existing.attempt,
+              completed: true,
+              expiresAtMs: existing.expires_at,
+              jobId: existing.job_id,
+              leaseId: existing.lease_id,
+              owner: existing.owner,
+            };
+          }
+          throw new AttemptFenceRejectedError("already_completed", "attempt fence rejected: attempt already completed without durable evidence");
         }
         if (existing.state === "active" && existing.expires_at > at) {
           throw new AttemptFenceRejectedError("lease_held", "attempt fence rejected: attempt lease is held");
@@ -261,6 +305,7 @@ export function openAttemptFenceStore({
       }
       const lease: AttemptLease = {
         attempt: input.attempt,
+        completed: false,
         expiresAtMs: at + input.leaseMs,
         jobId: input.jobId,
         leaseId: randomUUID(),
@@ -276,6 +321,14 @@ export function openAttemptFenceStore({
 
     complete(lease) {
       if (killed(lease.jobId)) return { accepted: false, reason: "killed" };
+      if (lease.completed) {
+        // SAFETY: queue_attempt_evidence rows are written only by this module.
+        const evidenceRaw = selectEvidence.get(lease.jobId, lease.attempt) as SqliteRow | undefined;
+        const evidence = evidenceRaw === undefined ? null : evidenceFromRow(evidenceRaw);
+        return evidence !== null && evidence.leaseId === lease.leaseId
+          ? { accepted: true }
+          : { accepted: false, reason: "evidence_missing" };
+      }
       // SAFETY: queue_attempt_fence rows are written only by this module.
       const row = asAttemptRow(selectAttempt.get(lease.jobId, lease.attempt) as SqliteRow | undefined);
       if (row === null || row.state !== "active" || row.lease_id !== lease.leaseId) {
@@ -286,8 +339,9 @@ export function openAttemptFenceStore({
         return { accepted: false, reason: "lease_expired" };
       }
       // SAFETY: queue_attempt_evidence rows are written only by this module.
-      const evidence = selectEvidence.get(lease.jobId, lease.attempt) as EvidenceRow | undefined;
-      if (evidence === undefined || evidence.lease_id !== lease.leaseId) {
+      const evidenceRaw = selectEvidence.get(lease.jobId, lease.attempt) as SqliteRow | undefined;
+      const evidence = evidenceRaw === undefined ? null : evidenceFromRow(evidenceRaw);
+      if (evidence === null || evidence.leaseId !== lease.leaseId) {
         return { accepted: false, reason: "evidence_missing" };
       }
       const completedAt = now();
@@ -320,7 +374,7 @@ export function openAttemptFenceStore({
 
     readEvidence(jobId, attempt) {
       // SAFETY: queue_attempt_evidence rows are written only by this module.
-      const row = selectEvidence.get(jobId, attempt) as EvidenceRow | undefined;
+      const row = selectEvidence.get(jobId, attempt) as SqliteRow | undefined;
       return row === undefined ? null : evidenceFromRow(row);
     },
 

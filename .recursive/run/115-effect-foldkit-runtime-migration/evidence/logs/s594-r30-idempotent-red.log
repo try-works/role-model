@@ -1,0 +1,124 @@
+# R30 completed-fence idempotent retry — RED
+date: 2026-11-01T06:40:42.7131168+08:00
+command: corepack pnpm exec vitest run test/s594-r30-evidence-fence.test.ts
+exit: 1
+expectation: the two new crash-window tests fail because beginAttempt throws already_completed for a completed attempt; the pre-existing six tests pass.
+--- summary ---
+RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:22300) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/s594-r30-evidence-fence.test.ts > R30 attempt fence > leaves the persisted-queue job unacknowledged when the handler records no evidence
+[run101] replay.dispatch job failed terminally:req-fence-missing attempts=1/1 replay.dispatch attempt fence rejected evidence_missing for req-fence-missing
+
+ ❯ test/s594-r30-evidence-fence.test.ts (8 tests | 2 failed) 12451ms
+   ✓ R30 attempt fence > does not acknowledge an attempt until its evidence is durable 40ms
+   ✓ R30 attempt fence > fences evidence and completion after a kill 25ms
+   ✓ R30 attempt fence > fences a late completion after lease expiry and admits only the new lease 29ms
+   ✓ R30 attempt fence > refuses a second active lease for the same attempt 31ms
+   × R30 attempt fence > replays a completed attempt idempotently after a crash before the queue ack 26ms
+     → attempt fence rejected: attempt already completed
+     → EBUSY: resource busy or locked, unlink 'E:\tmp\r30-fence-qABVzQ\fence.sqlite'
+   × R30 attempt fence > acks a persisted-queue retry from an already-completed fence without rerunning the handler 12120ms
+     → timed out waiting for req-fence-crash to reach completed (last: failed)
+   ✓ R30 attempt fence > acks a persisted-queue job only after the handler records durable evidence 92ms
+   ✓ R30 attempt fence > leaves the persisted-queue job unacknowledged when the handler records no evidence 87ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s594-r30-evidence-fence.test.ts > R30 attempt fence > replays a completed attempt idempotently after a crash before the queue ack
+AttemptFenceRejectedError: attempt fence rejected: attempt already completed
+ ❯ Object.beginAttempt src/queue-runtime/fence.ts:253:17
+    251|       if (existing !== null) {
+    252|         if (existing.state === "completed") {
+    253|           throw new AttemptFenceRejectedError("already_completed", "at…
+       |                 ^
+    254|         }
+    255|         if (existing.state === "active" && existing.expires_at > at) {
+ ❯ test/s594-r30-evidence-fence.test.ts:156:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/s594-r30-evidence-fence.test.ts > R30 attempt fence > replays a completed attempt idempotently after a crash before the queue ack
+Error: EBUSY: resource busy or locked, unlink 'E:\tmp\r30-fence-qABVzQ\fence.sqlite'
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/s594-r30-evidence-fence.test.ts > R30 attempt fence > acks a persisted-queue retry from an already-completed fence without rerunning the handler
+Error: timed out waiting for req-fence-crash to reach completed (last: failed)
+ ❯ waitForQueueState test/s594-r30-evidence-fence.test.ts:75:9
+     73|     await new Promise((resolve) => setTimeout(resolve, 20));
+     74|   }
+     75|   throw new Error("timed out waiting for " + jobId + " to reach " + st…
+       |         ^
+     76| };
+     77| 
+ ❯ test/s594-r30-evidence-fence.test.ts:190:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 6 passed (8)
+   Start at  06:40:25
+   Duration  16.75s (transform 2.34s, setup 0ms, collect 3.60s, tests 12.45s, environment 0ms, prepare 237ms)
+--- tail ---
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:22300) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/s594-r30-evidence-fence.test.ts > R30 attempt fence > leaves the persisted-queue job unacknowledged when the handler records no evidence
+[run101] replay.dispatch job failed terminally:req-fence-missing attempts=1/1 replay.dispatch attempt fence rejected evidence_missing for req-fence-missing
+
+ ❯ test/s594-r30-evidence-fence.test.ts (8 tests | 2 failed) 12451ms
+   ✓ R30 attempt fence > does not acknowledge an attempt until its evidence is durable 40ms
+   ✓ R30 attempt fence > fences evidence and completion after a kill 25ms
+   ✓ R30 attempt fence > fences a late completion after lease expiry and admits only the new lease 29ms
+   ✓ R30 attempt fence > refuses a second active lease for the same attempt 31ms
+   × R30 attempt fence > replays a completed attempt idempotently after a crash before the queue ack 26ms
+     → attempt fence rejected: attempt already completed
+     → EBUSY: resource busy or locked, unlink 'E:\tmp\r30-fence-qABVzQ\fence.sqlite'
+   × R30 attempt fence > acks a persisted-queue retry from an already-completed fence without rerunning the handler 12120ms
+     → timed out waiting for req-fence-crash to reach completed (last: failed)
+   ✓ R30 attempt fence > acks a persisted-queue job only after the handler records durable evidence 92ms
+   ✓ R30 attempt fence > leaves the persisted-queue job unacknowledged when the handler records no evidence 87ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s594-r30-evidence-fence.test.ts > R30 attempt fence > replays a completed attempt idempotently after a crash before the queue ack
+AttemptFenceRejectedError: attempt fence rejected: attempt already completed
+ ❯ Object.beginAttempt src/queue-runtime/fence.ts:253:17
+    251|       if (existing !== null) {
+    252|         if (existing.state === "completed") {
+    253|           throw new AttemptFenceRejectedError("already_completed", "at…
+       |                 ^
+    254|         }
+    255|         if (existing.state === "active" && existing.expires_at > at) {
+ ❯ test/s594-r30-evidence-fence.test.ts:156:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/s594-r30-evidence-fence.test.ts > R30 attempt fence > replays a completed attempt idempotently after a crash before the queue ack
+Error: EBUSY: resource busy or locked, unlink 'E:\tmp\r30-fence-qABVzQ\fence.sqlite'
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/s594-r30-evidence-fence.test.ts > R30 attempt fence > acks a persisted-queue retry from an already-completed fence without rerunning the handler
+Error: timed out waiting for req-fence-crash to reach completed (last: failed)
+ ❯ waitForQueueState test/s594-r30-evidence-fence.test.ts:75:9
+     73|     await new Promise((resolve) => setTimeout(resolve, 20));
+     74|   }
+     75|   throw new Error("timed out waiting for " + jobId + " to reach " + st…
+       |         ^
+     76| };
+     77| 
+ ❯ test/s594-r30-evidence-fence.test.ts:190:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 6 passed (8)
+   Start at  06:40:25
+   Duration  16.75s (transform 2.34s, setup 0ms, collect 3.60s, tests 12.45s, environment 0ms, prepare 237ms)
+
+

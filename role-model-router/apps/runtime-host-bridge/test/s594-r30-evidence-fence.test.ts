@@ -145,6 +145,58 @@ describe("R30 attempt fence", () => {
     fence.close();
   });
 
+  it("replays a completed attempt idempotently after a crash before the queue ack", () => {
+    const fence = open();
+    const first = fence.beginAttempt({ jobId: "job-crash", attempt: 1, owner: "worker-a", leaseMs: 60_000 });
+    fence.recordEvidence(first, { output: "durable" });
+    expect(fence.complete(first)).toEqual({ accepted: true });
+
+    // Crash window: the fence says completed but the queue never received its ack. The retry
+    // arrives with the same attempt number; it must be an idempotent success, not already_completed.
+    const replay = fence.beginAttempt({ jobId: "job-crash", attempt: 1, owner: "worker-b", leaseMs: 60_000 });
+    expect(replay.completed).toBe(true);
+    expect(replay.leaseId).toBe(first.leaseId);
+    expect(fence.complete(replay)).toEqual({ accepted: true });
+    expect(fence.readAttempt("job-crash", 1)?.state).toBe("completed");
+    fence.close();
+  });
+
+  it("acks a persisted-queue retry from an already-completed fence without rerunning the handler", async () => {
+    await publishQueuePolicy(1);
+    const runtime = startReplayQueueRuntime({ stateRoot });
+    const fence = open("worker-fence-crash.sqlite");
+    const first = fence.beginAttempt({ jobId: "req-fence-crash", attempt: 1, owner: "crashed-worker", leaseMs: 60_000 });
+    fence.recordEvidence(first, { output: "durable-before-crash" });
+    expect(fence.complete(first)).toEqual({ accepted: true });
+
+    let handlerRan = false;
+    const worker = runReplayDispatchWorker({
+      cancellationPollIntervalMs: 20,
+      fence,
+      handler: async () => {
+        handlerRan = true;
+        throw new Error("handler must not rerun for an already-completed fence");
+      },
+      killSwitchPollIntervalMs: 20,
+      policy: runtime.policy,
+      stateRoot,
+    });
+    try {
+      await runtime.dispatchQueue?.offer({
+        captureRef: "req-fence-crash",
+        endpointIds: ["endpoint-a"],
+        policySetDigest: "digest",
+      });
+      await waitForQueueState("req-fence-crash", "completed");
+      expect(handlerRan).toBe(false);
+      expect(fence.readEvidence("req-fence-crash", 1)?.payload).toEqual({ output: "durable-before-crash" });
+    } finally {
+      await worker.stop();
+      await runtime.stop();
+      fence.close();
+    }
+  });
+
   it("acks a persisted-queue job only after the handler records durable evidence", async () => {
     await publishQueuePolicy(1);
     const runtime = startReplayQueueRuntime({ stateRoot });

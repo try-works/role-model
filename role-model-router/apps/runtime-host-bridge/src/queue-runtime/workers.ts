@@ -308,6 +308,14 @@ function runClaimLoopWorker<Job>({
                     }),
                   catch: (error) => error,
                 });
+          if (lease?.completed === true) {
+            /**
+             * The fence completed before the queue ack landed, so this retry is the idempotent
+             * replay of work already durable: success here lets the queue record its ack without
+             * rerunning the handler.
+             */
+            return;
+          }
           const context: QueueAttemptContext = {
             attempt: info.attempts,
             ...(lease === undefined || fence === undefined
