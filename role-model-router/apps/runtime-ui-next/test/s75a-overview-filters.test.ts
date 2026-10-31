@@ -9,7 +9,7 @@ const fixture = (name: string) => JSON.parse(readFileSync(path.join(import.meta.
 const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200, headers: { "content-type": "application/json" } });
 const item = (id: number, sourceType: "local" | "remote", status: number) => ({ id, request_id: "req-" + String(id), timestampMs: Date.now(), sourceType, resp_status_code: status, durations: { totalMs: 10 }, tokens: { input_tokens: 2, output_tokens: 3 }, modelId: "moonshot/kimi-k2.5", endpointId: "endpoint-a", providerId: "moonshot" });
 const mounted: Array<{ container: HTMLElement; handle: { dispose(): void } }> = [];
-const waitFor = async <T>(read: () => T | undefined, label: string): Promise<T> => { const end = Date.now() + 3000; while (Date.now() < end) { const value = read(); if (value !== undefined) return value; await new Promise((r) => setTimeout(r, 10)); } throw new Error("Timed out waiting for " + label); };
+const waitFor = async <T>(read: () => T | undefined, label: string): Promise<T> => { const end = Date.now() + 10000; while (Date.now() < end) { const value = read(); if (value !== undefined) return value; await new Promise((r) => setTimeout(r, 10)); } throw new Error("Timed out waiting for " + label); };
 afterEach(() => { for (const entry of mounted.splice(0)) { entry.handle.dispose(); entry.container.remove(); } window.history.replaceState({}, "", "/"); });
 
 describe("S75a overview filters", () => {

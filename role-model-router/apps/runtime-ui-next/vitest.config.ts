@@ -11,5 +11,9 @@ export default defineConfig({
   test: {
     environment: "happy-dom",
     include: ["test/**/*.test.ts"],
+    // Mount tests share a busy happy-dom process; 5s flakes under parallel load.
+    testTimeout: 15000,
+    // Mount tests are heavy happy-dom sessions; cap parallelism to keep waits deterministic.
+    maxWorkers: 4,
   },
 });

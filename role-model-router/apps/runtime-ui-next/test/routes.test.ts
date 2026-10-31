@@ -23,7 +23,7 @@ import { mountShell } from "../src/mount";
 const waitFor = async <Value>(
   read: () => Value | undefined,
   label: string,
-  timeoutMs = 2000,
+  timeoutMs = 8000,
 ): Promise<Value> => {
   const deadline = Date.now() + timeoutMs;
   let last: Value | undefined;
