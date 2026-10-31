@@ -369,6 +369,16 @@ export const routerStrategyPage = (
   const scoringStrategy = state.scoringStrategy.length > 0 ? state.scoringStrategy : persistedScoring ?? "balanced";
   const executionMode = state.executionMode.length > 0 ? state.executionMode : persistedExecution ?? "decision_only";
   const busy = state.status === "saving";
+  const weightsMetaRow = rows.find((entry) => entry.id === "routing.weights");
+  let hostWeights: Record<string, number> = {};
+  try {
+    // SAFETY: parseRouterConfig stores the weights object as JSON meta on routing.weights.
+    hostWeights = weightsMetaRow === undefined ? {} : (JSON.parse(weightsMetaRow.meta) as Record<string, number>);
+  } catch {
+    hostWeights = {};
+  }
+  const weightValue = (draftValue: string, key: "quality" | "latency" | "throughput" | "cost" | "reliability" | "preference", fallback: string): string =>
+    draftValue.length > 0 ? draftValue : typeof hostWeights[key] === "number" ? String(hostWeights[key]) : fallback;
   return familyShell(routeName, readState, [
     sectionCard(
       "Routing strategy",
@@ -411,12 +421,12 @@ export const routerStrategyPage = (
       "Quality, latency, throughput, cost, reliability and preference weights are validated and persisted with the routing posture.",
       [
         h.div([h.Class("grid gap-3 sm:grid-cols-3 xl:grid-cols-6")], [
-          weightField("quality", "weightQuality", state.weightQuality.length > 0 ? state.weightQuality : "0.15", h),
-          weightField("latency", "weightLatency", state.weightLatency.length > 0 ? state.weightLatency : "0.1", h),
-          weightField("throughput", "weightThroughput", state.weightThroughput.length > 0 ? state.weightThroughput : "0.05", h),
-          weightField("cost", "weightCost", state.weightCost.length > 0 ? state.weightCost : "0.5", h),
-          weightField("reliability", "weightReliability", state.weightReliability.length > 0 ? state.weightReliability : "0.15", h),
-          weightField("preference", "weightPreference", state.weightPreference.length > 0 ? state.weightPreference : "0.05", h),
+          weightField("quality", "weightQuality", weightValue(state.weightQuality, "quality", "0.15"), h),
+          weightField("latency", "weightLatency", weightValue(state.weightLatency, "latency", "0.1"), h),
+          weightField("throughput", "weightThroughput", weightValue(state.weightThroughput, "throughput", "0.05"), h),
+          weightField("cost", "weightCost", weightValue(state.weightCost, "cost", "0.5"), h),
+          weightField("reliability", "weightReliability", weightValue(state.weightReliability, "reliability", "0.15"), h),
+          weightField("preference", "weightPreference", weightValue(state.weightPreference, "preference", "0.05"), h),
         ]),
       ],
       h,

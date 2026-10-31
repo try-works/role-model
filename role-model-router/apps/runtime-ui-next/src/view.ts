@@ -65,7 +65,6 @@ import {
   llamaModelsSupplement,
   localPeersSupplement,
   peersSupplement,
-  policySupplement,
   queuesSupplement,
   runtimeSupplement,
   sessionSupplement,

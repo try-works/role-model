@@ -830,19 +830,27 @@ const updateLocalPolicyDraft = (
           const state = model.routerPosture ?? initialRouterPostureState();
           if (state.status === "saving") return { model };
           const token = state.token + 1;
+          const persisted = model.readbacks.routerConfig.rows.find((entry) => entry.id === "strategy")?.value;
+          const persistedMode = model.readbacks.routerConfig.rows.find((entry) => entry.id === "routing.mode")?.value;
+          const persistedScoring = model.readbacks.routerConfig.rows.find((entry) => entry.id === "routing.scoringStrategy")?.value;
+          const persistedExecution = model.readbacks.routerConfig.rows.find((entry) => entry.id === "executionMode")?.value;
+          const mode = state.mode.length > 0 ? state.mode : persistedMode ?? persisted ?? "baseline";
+          const scoringStrategy = state.scoringStrategy.length > 0 ? state.scoringStrategy : persistedScoring ?? "balanced";
+          const executionMode = state.executionMode.length > 0 ? state.executionMode : persistedExecution ?? "decision_only";
+          const customWeights = {
+            cost: state.weightCost.length > 0 ? Number(state.weightCost) : 0.5,
+            latency: state.weightLatency.length > 0 ? Number(state.weightLatency) : 0.1,
+            preference: state.weightPreference.length > 0 ? Number(state.weightPreference) : 0.05,
+            quality: state.weightQuality.length > 0 ? Number(state.weightQuality) : 0.15,
+            reliability: state.weightReliability.length > 0 ? Number(state.weightReliability) : 0.15,
+            throughput: state.weightThroughput.length > 0 ? Number(state.weightThroughput) : 0.05,
+          };
           const payload = JSON.stringify({
-            executionMode: state.executionMode.length > 0 ? state.executionMode : "decision_only",
-            mode: state.mode.length > 0 ? state.mode : "baseline",
+            executionMode,
+            mode,
             pinWeights: state.pinWeights === "on",
-            scoringStrategy: state.scoringStrategy.length > 0 ? state.scoringStrategy : "balanced",
-            weights: {
-              cost: state.weightCost.length > 0 ? Number(state.weightCost) : 0.5,
-              latency: state.weightLatency.length > 0 ? Number(state.weightLatency) : 0.1,
-              preference: state.weightPreference.length > 0 ? Number(state.weightPreference) : 0.05,
-              quality: state.weightQuality.length > 0 ? Number(state.weightQuality) : 0.15,
-              reliability: state.weightReliability.length > 0 ? Number(state.weightReliability) : 0.15,
-              throughput: state.weightThroughput.length > 0 ? Number(state.weightThroughput) : 0.05,
-            },
+            scoringStrategy,
+            ...(scoringStrategy === "custom" ? { weights: customWeights } : {}),
           });
           return {
             commands: [routerConfigCommands.savePosture({ payload, token })],

@@ -495,7 +495,7 @@ export const systemSessionPage = (readback: ReadbackState, h: H): Html => {
   const hostHealthRow = overallRow;
   const credentialRow = undefined;
   const bootstrap = state === "ok" ? "complete" : state === "error" ? "failed" : state === "loading" ? "loading" : "unavailable";
-  const hostHealth = state === "ok" ? (hostHealthRow?.value.trim() !== undefined && hostHealthRow.value.trim().length > 0 ? hostHealthRow.value : "ok") : "unavailable";
+  const hostHealth = state === "ok" ? (hostHealthRow?.value.trim() !== undefined && hostHealthRow.value.trim().length > 0 ? hostHealthRow.value : "unknown") : "unavailable";
   const authority = state === "ok" ? "authoritative" : "unavailable";
   // SAFETY: the operator status readback carries no credential-class counts, so this tile reports the honest absence.
   const credentials = "unavailable";
@@ -521,7 +521,7 @@ export const systemSessionPage = (readback: ReadbackState, h: H): Html => {
           ...(readback.rows.length > 0 ? [table(["Name", "Value", "Detail"], readback.rows.map((row) => [row.label, row.value, row.meta]), "No session readiness rows recorded yet.", h)] : []),
         ]),
         sessionCard("Canonical lifecycle", "Authority posture and blocking credential accounts.", [h.span([h.Class("rounded-full border border-border bg-secondary px-2 py-0.5 text-xs text-foreground")], [authority]), h.p([h.Class("mt-3 text-sm leading-5 text-muted-foreground")], [authority === "authoritative" ? "Canonical lifecycle data is authoritative." : "Canonical lifecycle data is not authoritative right now."])]),
-        sessionCard("Operator intent manifest", "Declared operator intent for this runtime session.", [h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["applied operator-intent.json is readable and schema-valid."]), h.p([h.Class("break-all font-mono text-xs leading-4 text-foreground")], ["operator-intent.json"])]),
+        sessionCard("Operator intent manifest", "Declared operator intent for this runtime session.", [h.p([h.Class("text-sm leading-5 text-muted-foreground")], [state === "ok" ? "applied operator-intent.json is readable and schema-valid." : "Operator intent manifest is unavailable for the current session state."]), h.p([h.Class("break-all font-mono text-xs leading-4 text-foreground")], ["operator-intent.json"])]),
       ]),
       h.div([h.Class("space-y-4")], [
         sessionCard("Credential readiness", "Blocking credential counts by class.", [h.span([h.Class("rounded-full border border-border bg-secondary px-2 py-0.5 text-xs text-foreground")], [credentials]), h.p([h.Class("mt-3 text-sm leading-5 text-muted-foreground")], ["Credential class counts are not reported by the operator status readback."])]),
@@ -530,7 +530,7 @@ export const systemSessionPage = (readback: ReadbackState, h: H): Html => {
             ...[["Endpoints", "unavailable"], ["Models", "unavailable"], ["Empty aliases", "unavailable"]].map(([label, value]) => h.div([h.Class("flex items-center justify-between gap-3 py-1.5")], [h.p([h.Class("text-sm leading-5 text-muted-foreground")], [label]), h.p([h.Class("font-mono text-sm leading-[18px] tabular-nums text-foreground")], [value])])),
           ]),
         ]),
-        sessionCard("Alias drift warnings", "Hint models that no longer resolve live.", [h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["No alias hint drift warnings."])]),
+        sessionCard("Alias drift warnings", "Hint models that no longer resolve live.", [h.p([h.Class("text-sm leading-5 text-muted-foreground")], [state === "ok" ? "No alias hint drift warnings." : "Alias drift warnings are unavailable for the current session state."])]),
       ]),
     ]),
   ]);

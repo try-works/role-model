@@ -32,8 +32,7 @@ import {
   drainDeferredRouteCapture,
   startBridgeServer,
 } from "./index.js";
-import { assertComposedBackendOwner, backendStorageRefOf, benchmarkGate, bindBackendStorageRef, composeBackendOwner, onceClose, type ShutdownDrain } from "./composition-dag.js";
-import { makeR27ReadinessOwner } from "./r27-layer-dag.js";
+import { assertComposedBackendOwner, backendStorageRefOf, benchmarkGate, bindBackendStorageRef, composeBackendOwner, composeReadinessOwner, onceClose, type ShutdownDrain } from "./composition-dag.js";
 import { validateRun88PrivateDistributionIdentity } from "./kw-private-loader.js";
 import {
   describeRouterPolicyResolution,
@@ -5193,7 +5192,7 @@ export async function main(): Promise<void> {
   shutdownDrains.push({ name: "benchmark", run: () => { benchmarkGate.cancel("shutdown"); } });
   // S324 (R27 early readiness): the production readiness owner consumed by the Server admission gate.
   // S593: readiness is the DAG readiness leaf owner, not an imperative owner.
-  const readinessOwner = makeR27ReadinessOwner("cli:readiness");
+  const readinessOwner = composeReadinessOwner();
   // S321/S322 (R27): backend teardown runs through the DAG Backend close member; the shared idempotent
   // closer closes the packaged SCOPE (the acquireRelease finalizer owns the runtime), so the DAG path and
   // the later hostScope path can never close it twice.

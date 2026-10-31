@@ -49,6 +49,15 @@ describe("S590 honest SessionReadiness", () => {
     expect(await waitFor(() => document.querySelector("[data-route='session-readiness']")?.getAttribute("data-readback-state") ?? null, "readiness error")).toBe("error");
     expect(health()).toBe("unavailable");
     expect(bootstrap()).toBe("failed");
+    expect(document.body.textContent).toContain("Operator intent manifest is unavailable for the current session state.");
+    expect(document.body.textContent).toContain("Alias drift warnings are unavailable for the current session state.");
+  });
+
+  it("reports unknown health when status is ok but no overall row exists", async () => {
+    mountAt(async () => new Response(JSON.stringify({ observedAt: "2026-10-31T00:00:00.000Z", overall: "" }), { headers: { "content-type": "application/json" }, status: 200 }));
+    expect(await waitFor(() => document.querySelector("[data-route='session-readiness']")?.getAttribute("data-readback-state") ?? null, "readiness ok-no-overall")).toBe("ok");
+    expect(bootstrap()).toBe("complete");
+    expect(health()).toBe("unknown");
   });
 
   it("derives values from ok operator status rows instead of hardcoding them", async () => {

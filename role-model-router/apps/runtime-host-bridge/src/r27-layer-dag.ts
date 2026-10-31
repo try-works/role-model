@@ -159,14 +159,17 @@ const hostLeaf = (
 
 /** Compose the closed graph. No acquire runs until the returned Layer is built. */
 export const composeR27HostLayer = (options: R27LayerOptions = {}): Layer.Layer<R27Host, never, never> => {
-  const readiness = readinessLeaf(options);
-  const permits = nodeLeaf(R27ProviderPermits, "providerPermits", options, readiness);
-  const backend = nodeLeaf(R27Backend, "backend", options, permits);
-  const bootstrap = nodeLeaf(R27Bootstrap, "bootstrap", options, backend);
-  const refresh = nodeLeaf(R27Refresh, "refresh", options, bootstrap);
-  const drains = nodeLeaf(R27Drains, "drains", options, refresh);
-  const benchmarks = nodeLeaf(R27Benchmarks, "benchmarks", options, drains);
-  const server = nodeLeaf(R27Server, "server", options, benchmarks);
-  const cli = nodeLeaf(R27Cli, "cli", options, server);
-  return hostLeaf(options, cli);
+  const shared = options.readiness === undefined ? makeR27ReadinessOwner() : options.readiness;
+  const patched: R27LayerOptions = { ...options, readiness: shared };
+  const options2 = patched;
+  const readiness = readinessLeaf(options2);
+  const permits = nodeLeaf(R27ProviderPermits, "providerPermits", options2, readiness);
+  const backend = nodeLeaf(R27Backend, "backend", options2, permits);
+  const bootstrap = nodeLeaf(R27Bootstrap, "bootstrap", options2, backend);
+  const refresh = nodeLeaf(R27Refresh, "refresh", options2, bootstrap);
+  const drains = nodeLeaf(R27Drains, "drains", options2, refresh);
+  const benchmarks = nodeLeaf(R27Benchmarks, "benchmarks", options2, drains);
+  const server = nodeLeaf(R27Server, "server", options2, benchmarks);
+  const cli = nodeLeaf(R27Cli, "cli", options2, server);
+  return hostLeaf(options2, cli);
 };

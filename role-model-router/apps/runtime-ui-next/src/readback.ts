@@ -819,6 +819,7 @@ const parseRouterConfig = (body: unknown, token: number): ReadbackState => {
   if (routing !== undefined) {
     for (const [key, value] of Object.entries(routing)) {
       if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") rows.push(row("routing." + key, "Routing posture: " + key, String(value), "routing"));
+      else if (key === "weights" && value !== null && typeof value === "object") rows.push(row("routing.weights", "Routing posture: weights", "custom", JSON.stringify(value)));
     }
   }
   for (const kind of ["agentStrategies", "workloads"] as const) {
