@@ -208,7 +208,7 @@ test("a deliberately wrong citation fails", () => {
 const SQL_SERVICE_FILE = "role-model-router/packages/sql-sqlite-node/src/service.ts";
 const SQL_PACKAGE_ROOT = "role-model-router/packages/sql-sqlite-node/";
 const SQL_PRODUCT_CALLERS = [
-  ["role-model-router/apps/runtime-host-bridge/src/cli.ts", 11],
+  ["role-model-router/apps/runtime-host-bridge/src/cli.ts", 12],
   ["role-model-router/apps/runtime-host-bridge/src/index.ts", 19],
   ["role-model-router/apps/runtime-host-bridge/src/queue-runtime/admin.ts", 19],
   ["role-model-router/apps/runtime-host-bridge/src/queue-runtime/store.ts", 18],
