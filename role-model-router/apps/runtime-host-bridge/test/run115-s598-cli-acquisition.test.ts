@@ -1,7 +1,7 @@
 import { Effect, Exit, Layer, Scope } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { composeR27HostLayer, R27_RESOURCE_IDS } from "../src/r27-layer-dag.js";
+import { composeR27HostLayer, R27_RESOURCE_IDS, type R27HostContract } from "../src/r27-layer-dag.js";
 import { composeReadinessOwner } from "../src/composition-dag.js";
 
 /**
@@ -41,5 +41,45 @@ describe("S598 R27 production acquisition", () => {
     for (const id of ["providerPermits", "backend", "bootstrap", "refresh", "drains", "benchmarks", "server", "cli"]) {
       expect(R27_RESOURCE_IDS).toContain(id);
     }
+  });
+
+  test("a DAG node owns its acquired resource (host exposes the server handle) and release closes it", async () => {
+    const events: string[] = [];
+    let host: R27HostContract | undefined;
+    let serverClosed = 0;
+    const scope = Effect.runSync(Scope.make());
+    await Effect.runPromise(Layer.buildWithScope(composeR27HostLayer({
+      events,
+      onHost: (value) => { host = value; },
+      acquire: {
+        server: async () => ({
+          handle: { kind: "bridge-server" },
+          release: async () => { serverClosed += 1; events.push("release:server-handle"); },
+        }),
+      },
+      readiness: composeReadinessOwner(),
+    }), scope));
+    expect(host?.handles.server?.handle).toEqual({ kind: "bridge-server" });
+    expect(events).toContain("acquire:server");
+    await Effect.runPromise(Scope.close(scope, Exit.void));
+    expect(serverClosed).toBe(1);
+  });
+
+  test("a failed resource build aborts startup before later nodes acquire", async () => {
+    const events: string[] = [];
+    const scope = Effect.runSync(Scope.make());
+    await expect(
+      Effect.runPromise(Layer.buildWithScope(composeR27HostLayer({
+        events,
+        readiness: composeReadinessOwner(),
+        acquire: {
+          server: async () => { throw new Error("server resource build failed"); },
+        },
+      }), scope)),
+    ).rejects.toThrow(/server resource build failed/);
+    expect(events).not.toContain("acquire:server");
+    expect(events).not.toContain("acquire:cli");
+    expect(events).not.toContain("ready");
+    await Effect.runPromise(Scope.close(scope, Exit.void)).catch(() => undefined);
   });
 });

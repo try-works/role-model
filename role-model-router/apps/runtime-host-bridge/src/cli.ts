@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { Effect, Exit, Layer, Scope } from "effect";
-import { composeR27HostLayer } from "./r27-layer-dag.js";
+import { composeR27HostLayer, type R27HostContract } from "./r27-layer-dag.js";
 import { createHash, createPublicKey, randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
@@ -5198,15 +5198,6 @@ export async function main(): Promise<void> {
   // composed owner ready. The imperative resource builders still own their individual resources; the
   // DAG is the acquisition spine, and its failure aborts host startup.
   const readinessOwner = composeReadinessOwner();
-  // R27: acquire the closed DAG NOW (before any imperative resource exists). buildWithScope runs the
-  // acquire effects in closed order and marks readiness in the host leaf; a failure here rejects and
-  // aborts host startup. The scope stays open for the CLI lifetime and is closed by the r27-dag drain.
-  const r27DagScope = Effect.runSync(Scope.make());
-  const r27DagEvents: string[] = [];
-  await Effect.runPromise(
-    Layer.buildWithScope(composeR27HostLayer({ events: r27DagEvents, readiness: readinessOwner }), r27DagScope),
-  );
-  shutdownDrains.push({ name: "r27-dag", run: () => Effect.runPromise(Scope.close(r27DagScope, Exit.void)) });
   // S321/S322 (R27): backend teardown runs through the DAG Backend close member; the shared idempotent
   // closer closes the packaged SCOPE (the acquireRelease finalizer owns the runtime), so the DAG path and
   // the later hostScope path can never close it twice.
@@ -5340,31 +5331,37 @@ export async function main(): Promise<void> {
   };
 
   /**
-   * S128 (R27 first rewiring slice): the server is the first host resource owned by an Effect
-   * Scope instead of a hand-registered closer. The value is unchanged and every later reader still
-   * sees `server`; only the ownership moved. Scope.close runs the acquireRelease finalizer exactly
-   * once, and its failure surfaces to releaseHostResources like any other release error.
+   * S598 (R27): the server is acquired by the DAG server node, not by a separate imperative
+   * serverScope. The node's release closes the same BridgeServer handle; the host leaf exposes it
+   * to the CLI and marks readiness only after the real server exists.
    */
   let startedServer: BridgeServer | null = null;
-  const serverScope = Effect.runSync(Scope.make());
-  try {
-    startedServer = await Effect.runPromise(
-      Scope.provide(
-        Effect.acquireRelease(
-          Effect.promise(() => startServer()),
-          (value) => Effect.promise(() => value.close()),
-        ),
-        serverScope,
-      ),
-    );
-    server = startedServer;
-  } catch (error) {
-    await Effect.runPromise(Scope.close(serverScope, Exit.void)).catch(() => undefined);
-    throw error;
+  const r27DagEvents: string[] = [];
+  const r27DagScope = Effect.runSync(Scope.make());
+  let r27Host: R27HostContract | undefined;
+  shutdownDrains.push({ name: "r27-dag", run: () => Effect.runPromise(Scope.close(r27DagScope, Exit.void)) });
+  await Effect.runPromise(
+    Layer.buildWithScope(
+      composeR27HostLayer({
+        events: r27DagEvents,
+        readiness: readinessOwner,
+        onHost: (host) => { r27Host = host; },
+        acquire: {
+          server: async () => {
+            const value = await startServer();
+            return { handle: value, release: () => value.close() };
+          },
+        },
+      }),
+      r27DagScope,
+    ),
+  );
+  const acquiredServer = r27Host?.handles.server?.handle;
+  if (!(acquiredServer instanceof Object) || typeof (acquiredServer as { close?: unknown }).close !== "function") {
+    throw new Error("r27 DAG did not expose the acquired BridgeServer handle");
   }
-  hostScope.register("server", async () => {
-    await Effect.runPromise(Scope.close(serverScope, Exit.void));
-  });
+  startedServer = acquiredServer as BridgeServer;
+  server = startedServer;
 
   console.log(
     JSON.stringify(

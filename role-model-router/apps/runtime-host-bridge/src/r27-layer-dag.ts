@@ -57,8 +57,14 @@ export const makeR27ReadinessOwner = (id = "r27:readiness"): R27Readiness => {
   };
 };
 
+export interface R27AcquiredResource {
+  readonly handle?: unknown;
+  readonly release: () => Promise<void>;
+}
+
 export interface R27Node {
   readonly id: R27ResourceId;
+  readonly handle?: unknown;
   readonly release: () => Promise<void>;
 }
 
@@ -66,6 +72,7 @@ export interface R27HostContract {
   readonly id: string;
   readonly readiness: R27Readiness;
   readonly resources: readonly R27ResourceId[];
+  readonly handles: Readonly<Record<string, R27Node>>;
 }
 
 export class R27Host extends Context.Service<R27Host, R27HostContract>()("R27Host") {}
@@ -84,6 +91,9 @@ export interface R27LayerOptions {
   readonly events?: string[];
   readonly readiness?: R27Readiness;
   readonly failOn?: R27ResourceId;
+  readonly onHost?: (host: R27HostContract) => void;
+  readonly handles?: Record<string, R27Node>;
+  readonly acquire?: Partial<Record<R27ResourceId, () => Promise<R27AcquiredResource>>>;
 }
 
 const eventList = (options: R27LayerOptions): string[] => options.events ?? [];
@@ -120,13 +130,14 @@ const nodeLeaf = <I>(
     Effect.acquireRelease(
       Effect.gen(function* () {
         if (options.failOn === id) return yield* Effect.die(new Error("r27 layer acquisition failed: " + id));
+        const factory = options.acquire?.[id];
+        const acquired = factory === undefined
+          ? { release: async () => { events.push("release:" + id); } }
+          : yield* Effect.promise(() => factory());
         events.push("acquire:" + id);
-        return {
-          id,
-          release: async () => {
-            events.push("release:" + id);
-          },
-        };
+        const node = { id, handle: acquired.handle, release: acquired.release };
+        if (options.handles !== undefined) options.handles[id] = node;
+        return node;
       }),
       (node) => Effect.promise(() => node.release()),
     ),
@@ -148,7 +159,9 @@ const hostLeaf = (
           events.push("acquire:host");
           readiness.markReady();
           events.push("ready");
-          return R27Host.of({ id: "r27:host", readiness, resources: R27_RESOURCE_IDS });
+          const host = R27Host.of({ handles: { ...(options.handles ?? {}) }, id: "r27:host", readiness, resources: R27_RESOURCE_IDS });
+          options.onHost?.(host);
+          return host;
         }),
         () => Effect.sync(() => {
           events.push("release:host");
@@ -164,7 +177,7 @@ export const composeR27HostLayer = (options: R27LayerOptions = {}): Layer.Layer<
   // SAFETY: the shared owner is a composed readiness owner, so a host composed with this
   // DAG passes assertComposedReadiness in the production admission path.
   const shared = options.readiness === undefined ? composeReadinessOwner() : options.readiness;
-  const patched: R27LayerOptions = { ...options, readiness: shared };
+  const patched: R27LayerOptions = { ...options, handles: { ...(options.handles ?? {}) }, readiness: shared };
   const options2 = patched;
   const readiness = readinessLeaf(options2);
   const permits = nodeLeaf(R27ProviderPermits, "providerPermits", options2, readiness);
