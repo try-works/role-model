@@ -171,7 +171,16 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
         ], h),
         card("Configured provider connections", "Endpoints stay grouped by account. Expand a model's roles count to edit which routing roles it can serve.", [
           providerGroups.length === 0
-            ? h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["No provider connections are configured yet."])
+            ? ctx.controls.providers.rows.length === 0
+              ? h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["No provider connections are configured yet."])
+              : h.div([h.Class("flex flex-col gap-3")], ctx.controls.providers.rows.map((row) =>
+                  h.div([h.Class("flex items-center gap-3 border-b border-[var(--rm-border)] px-1 py-2 last:border-b-0")], [
+                    h.span([h.Class("min-w-0 flex-1 truncate font-mono text-[13px] font-semibold text-foreground")], [row.label]),
+                    h.span([h.Class("shrink-0 font-sans text-[12px] text-muted-foreground")], [row.value]),
+                    h.span([h.Class("shrink-0 font-mono text-[11px] text-muted-foreground")], [row.meta]),
+                  ]),
+                ))
+            
             : h.div([h.Class("flex flex-col gap-4")], providerGroups.map((provider) => {
                 const models = modelRows.filter((row) => row.providerId === provider);
                 return h.div([h.Class("flex flex-col gap-1")], [

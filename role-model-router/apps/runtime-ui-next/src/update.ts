@@ -1172,7 +1172,26 @@ const updateLocalPolicyDraft = (
         ProviderAccountCreateSucceeded: ({ token }: Extract<Message, { readonly _tag: "ProviderAccountCreateSucceeded" }>): UpdateReturn<Model, Message> => {
           const state = model.providerAccount ?? initialProviderAccountState();
           if (token !== state.token) return { model };
-          return { model: { ...model, providerAccount: { ...state, error: undefined, pendingAction: undefined, status: "saved" } } };
+          const catalogToken = model.readbacks.providerCatalog.token + 1;
+          const providersToken = model.readbacks.integrationProviders.token + 1;
+          const modelsToken = model.readbacks.configuredModels.token + 1;
+          return {
+            commands: [
+              readReadback({ key: "providerCatalog", token: catalogToken }),
+              readReadback({ key: "integrationProviders", token: providersToken }),
+              readReadback({ key: "configuredModels", token: modelsToken }),
+            ],
+            model: {
+              ...model,
+              providerAccount: { ...state, error: undefined, pendingAction: undefined, status: "saved" },
+              readbacks: {
+                ...model.readbacks,
+                providerCatalog: loadingReadback(catalogToken),
+                integrationProviders: loadingReadback(providersToken),
+                configuredModels: loadingReadback(modelsToken),
+              },
+            },
+          };
         },
         ProviderAccountUpdateKeyRequested: (): UpdateReturn<Model, Message> => {
           const state = model.providerAccount ?? initialProviderAccountState();
