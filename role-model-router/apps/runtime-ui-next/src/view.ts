@@ -1217,6 +1217,7 @@ interface RouteViewContext {
   readonly deviceAuth: DeviceAuthState;
   readonly deviceAuthDialog: Model["deviceAuthDialog"];
   readonly providerAccount: ProviderAccountState;
+  readonly routerPosture: Model["routerPosture"];
   readonly endpointAdmission: EndpointAdmissionState;
   readonly chartInteraction: ChartInteractionState | undefined;
   readonly learningRanking: LearningRankingState | undefined;
@@ -1240,6 +1241,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     deviceAuth,
     deviceAuthDialog,
     providerAccount,
+    routerPosture,
     endpointAdmission,
     chartInteraction,
     learningRanking,
@@ -1304,10 +1306,10 @@ const routeContent = (ctx: RouteViewContext): Html => {
     SystemExtensions: () => familyPage("Extensions", "system-extensions", "Extension boundary, replay automation, contribution posture and the extension inventory.", [{ label: "Extension boundary", note: "The host enforces the extension boundary before any extension code runs." }, { label: "Replay automation", note: "Replay automation is configured per extension and reported by the host." }, { label: "Contribution posture", note: "Contribution posture records whether an extension may contribute runtime behavior." }, { label: "Recommendation ledger", note: "Recommendation receipts are recorded in the ledger when an extension produces one." }, { label: "Extension inventory", spec: READBACK_SPECS.extensions, readback: readbacks.extensions }], h),
     Models: () => modelsRoute(readbacks.configuredModels, readbacks.modelEndpoints, h),
     ModelsRoles: () => modelsRolesRoute(readbacks.configuredModels, readbacks.modelEndpoints, h),
-    RouterStrategy: () => routerStrategyPage("router-strategy", readbacks, h),
-    RouterWorkloads: () => workloadsSupplement(routerWorkloadsPage(readbacks, h), readbacks.routerConfig, h),
-    RouterConfig: () => routerConfigPage(readbacks, h),
-    RouterAgentStrategy: () => agentSupplement(routerAgentStrategyPage(readbacks, h), readbacks.routerConfig, h),
+    RouterStrategy: () => routerStrategyPage("router-strategy", readbacks, routerPosture, h),
+    RouterWorkloads: () => workloadsSupplement(routerWorkloadsPage(readbacks, routerPosture, h), readbacks.routerConfig, h),
+    RouterConfig: () => routerConfigPage(readbacks, routerPosture, h),
+    RouterAgentStrategy: () => agentSupplement(routerAgentStrategyPage(readbacks, routerPosture, h), readbacks.routerConfig, h),
     LocalChoose: () => localChoosePage(readbacks, h),
     Runtime: () => runtimeRoute({ h, readbacks, runtimeConfigEditor, runtimeConfigPage }),
     RuntimeConfig: () => runtimeConfigRoute({ h, readbacks, runtimeConfigEditor, runtimeConfigPage }),
@@ -1506,6 +1508,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                     deviceAuth: model.deviceAuth ?? initialDeviceAuthState(),
                     deviceAuthDialog: model.deviceAuthDialog,
                     providerAccount: model.providerAccount ?? initialProviderAccountState(),
+                    routerPosture: model.routerPosture,
                     endpointAdmission: model.endpointAdmission ?? initialEndpointAdmissionState(),
                     chartInteraction: model.chartInteraction,
                     learningRanking: model.learningRanking,

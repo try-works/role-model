@@ -16,6 +16,7 @@ import {
 } from "./diagnostics";
 import { type DeviceAuthClient, type DeviceAuthStartPayload, type DeviceActivationPayload } from "./device-auth";
 import { type ProviderAccountActivationBatch, type ProviderAccountClient, type ProviderAccountCreatePayload } from "./provider-account";
+import { type RouterBlockSavePayload, type RouterConfigClient, type RouterPostureSavePayload } from "./router-config";
 import { type EndpointActivationPayload, type EndpointAdmissionClient, type EndpointBatchPayload } from "./endpoint-admission";
 import { type LearningRankingClient, type LearningRollbackPayload } from "./learning-ranking";
 import { type RequestsRankingClient, type RequestsRankingQuery } from "./requests-ranking";
@@ -480,6 +481,43 @@ const noopProviderAccountClient: ProviderAccountClient = {
   updateKey: async () => ({}),
 };
 export const noopProviderAccountCommands = defineProviderAccountCommands(noopProviderAccountClient);
+
+export const defineRouterConfigCommands = (client: RouterConfigClient) => ({
+  saveBlock: Command.define("SaveRouterConfigBlock", {
+    args: { payload: Schema.String, token: Schema.Number },
+    execute: ({ payload, token }) =>
+      Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            try: () => client.saveBlock(JSON.parse(payload) as RouterBlockSavePayload),
+          }),
+        ),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.RouterPostureSaved({ token }) : Message.RouterPostureFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("router config update failed"))), token })),
+      ),
+    messages: [Message.RouterPostureSaved, Message.RouterPostureFailed],
+  }),
+  savePosture: Command.define("SaveRouterPosture", {
+    args: { payload: Schema.String, token: Schema.Number },
+    execute: ({ payload, token }) =>
+      Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            try: () => client.savePosture(JSON.parse(payload) as RouterPostureSavePayload),
+          }),
+        ),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.RouterPostureSaved({ token }) : Message.RouterPostureFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("router config update failed"))), token })),
+      ),
+    messages: [Message.RouterPostureSaved, Message.RouterPostureFailed],
+  }),
+});
+export type RouterConfigCommands = ReturnType<typeof defineRouterConfigCommands>;
+const noopRouterConfigClient: RouterConfigClient = {
+  saveBlock: async () => ({}),
+  savePosture: async () => ({}),
+};
+export const noopRouterConfigCommands = defineRouterConfigCommands(noopRouterConfigClient);
 
 export const defineEndpointAdmissionCommands = (client: EndpointAdmissionClient) => ({
   activate: Command.define("ActivateEndpoint", {

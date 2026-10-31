@@ -6,6 +6,7 @@ import {
   defineLearningRankingCommands,
   defineRequestsRankingCommands,
   defineEndpointAdmissionCommands,
+  defineRouterConfigCommands,
   defineDispatchControl,
   defineReadControl,
   defineReadDiagnostics,
@@ -19,6 +20,7 @@ import { createEndpointAdmissionClient } from "./endpoint-admission";
 import { createLearningRankingClient } from "./learning-ranking";
 import { createRequestsRankingClient } from "./requests-ranking";
 import { createProviderAccountClient } from "./provider-account";
+import { createRouterConfigClient } from "./router-config";
 import { type ControlClient, createControlClients } from "./control";
 import type { DiagnosticsReader } from "./diagnostics";
 import { createInit } from "./init";
@@ -66,6 +68,7 @@ export interface ShellOptions {
   readonly endpointAdmissionFetchImpl?: typeof fetch;
   readonly learningRankingFetchImpl?: typeof fetch;
   readonly requestsRankingFetchImpl?: typeof fetch;
+  readonly routerConfigFetchImpl?: typeof fetch;
   readonly controlToken?: string;
 }
 
@@ -146,6 +149,7 @@ export const createShellApp = (options: ShellOptions = {}) => {
       defineEndpointAdmissionCommands(createEndpointAdmissionClient({ ...(options.endpointAdmissionFetchImpl === undefined ? {} : { fetchImpl: options.endpointAdmissionFetchImpl }) })),
       defineLearningRankingCommands(createLearningRankingClient({ ...(options.learningRankingFetchImpl === undefined ? {} : { fetchImpl: options.learningRankingFetchImpl }) })),
       defineRequestsRankingCommands(createRequestsRankingClient({ fetchImpl: options.requestsRankingFetchImpl })),
+      defineRouterConfigCommands(createRouterConfigClient({ ...(options.routerConfigFetchImpl === undefined ? {} : { fetchImpl: options.routerConfigFetchImpl }), ...(controlToken === undefined ? {} : { token: controlToken }) })),
     ),
     view,
   };

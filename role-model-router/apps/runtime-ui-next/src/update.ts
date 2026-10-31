@@ -39,6 +39,8 @@ import {
   type ProviderAccountCommands,
   noopProviderAccountCommands,
   noopDeviceAuthCommands,
+  type RouterConfigCommands,
+  noopRouterConfigCommands,
   type ReadReadbackCommand,
   type RefreshSnapshotCommand,
   defineDispatchControl,
@@ -87,6 +89,7 @@ import {
   updateProviderKeyPayload,
   type ProviderAccountState,
 } from "./provider-account";
+import { initialRouterPostureState, type RouterPostureState } from "./router-posture";
 import {
   activationPlanForConnectedSession,
   deviceAuthPollDelayMs,
@@ -243,6 +246,7 @@ export const createUpdate =
     endpointAdmissionCommands: EndpointAdmissionCommands = noopEndpointAdmissionCommands,
     learningRankingCommands: LearningRankingCommands = noopLearningRankingCommands,
     requestsRankingCommands: RequestsRankingCommands = noopRequestsRankingCommands,
+    routerConfigCommands: RouterConfigCommands = noopRouterConfigCommands,
   ) => {
 
 
@@ -421,6 +425,32 @@ const endpointAdmissionCompletion = (
           },
         };
       }
+      const routerKeys: ReadonlyArray<ReadbackKey> | null =
+        route._tag === "Router"
+          ? ["router", "routerConfig", "routerCandidates", "runtimeConfig", "health"]
+          : route._tag === "RouterStrategy" || route._tag === "RouterWorkloads" || route._tag === "RouterConfig" || route._tag === "RouterAgentStrategy"
+            ? ["routerConfig", "runtimeConfig"]
+            : null;
+      if (routerKeys !== null) {
+        const readbacks = { ...model.readbacks };
+        const commands = routerKeys.map((key) => {
+          const token = readbacks[key].token + 1;
+          readbacks[key] = loadingReadback(token);
+          return readReadback({ key, token });
+        });
+        return {
+          commands: [...commands, scrollShellToTopCommand()],
+          model: {
+            ...model,
+            diagnostics: idleDiagnostics(),
+            observability: idleObservability(),
+            readbacks,
+            refresh: { ...model.refresh, message: undefined, resyncToken: model.refresh.resyncToken + 1, status: "idle" },
+            route,
+            chartInteraction,
+          },
+        };
+      }
       const controlKey = controlKeyForRouteTag(route._tag);
       if (controlKey !== null) {
         const token = model.controls[controlKey].token + 1;
@@ -525,6 +555,8 @@ const updateLocalPolicyDraft = (
       if (model.route._tag === "IntegrationsUpstream") return [{ key: "integrationProviders" }, { key: "configuredModels" }];
       if (model.route._tag === "SystemOperator") return [{ key: "operatorStatus" }, { key: "operatorTraceRoots" }];
       if (model.route._tag === "RuntimeConfig") return [{ key: "runtimeConfig" }];
+      if (model.route._tag === "Router") return [{ key: "router" }, { key: "routerConfig" }, { key: "routerCandidates" }, { key: "runtimeConfig" }, { key: "health" }];
+      if (model.route._tag === "RouterStrategy" || model.route._tag === "RouterWorkloads" || model.route._tag === "RouterConfig" || model.route._tag === "RouterAgentStrategy") return [{ key: "routerConfig" }, { key: "runtimeConfig" }];
       const readbackKey = readbackKeyForRouteTag(model.route._tag);
       if (readbackKey === null) return [];
       const detailId =
@@ -779,6 +811,89 @@ const updateLocalPolicyDraft = (
         // re-read the current route with the same query-preserving invalidator and leave the watermark.
         RuntimePageRestored: (): UpdateReturn<Model, Message> => invalidateCurrentRoute(model),
         ThemeApplied: (): UpdateReturn<Model, Message> => ({ model }),
+        RouterPostureFieldChanged: ({ field, value }: Extract<Message, { readonly _tag: "RouterPostureFieldChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.routerPosture ?? initialRouterPostureState();
+          return { model: { ...model, routerPosture: { ...state, [field]: value } } };
+        },
+        RouterEntryFieldChanged: ({ field, value }: Extract<Message, { readonly _tag: "RouterEntryFieldChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.routerPosture ?? initialRouterPostureState();
+          const key = field === "name" ? "entryName" : field === "role" ? "entryRole" : field === "model" ? "entryModel" : "entryDescription";
+          return { model: { ...model, routerPosture: { ...state, [key]: value } } };
+        },
+        RouterBlockChanged: ({ block, value }: Extract<Message, { readonly _tag: "RouterBlockChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.routerPosture ?? initialRouterPostureState();
+          return { model: { ...model, routerPosture: { ...state, [block === "agent_strategies" ? "agentJson" : "workloadsJson"]: value } } };
+        },
+        RouterPostureSaveRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.routerPosture ?? initialRouterPostureState();
+          if (state.status === "saving") return { model };
+          const token = state.token + 1;
+          const payload = JSON.stringify({
+            executionMode: state.executionMode.length > 0 ? state.executionMode : "decision_only",
+            mode: state.mode.length > 0 ? state.mode : "baseline",
+            pinWeights: state.pinWeights === "on",
+            scoringStrategy: state.scoringStrategy.length > 0 ? state.scoringStrategy : "balanced",
+          });
+          return {
+            commands: [routerConfigCommands.savePosture({ payload, token })],
+            model: { ...model, routerPosture: { ...state, message: undefined, status: "saving", token } },
+          };
+        },
+        RouterBlockSaveRequested: ({ block }: Extract<Message, { readonly _tag: "RouterBlockSaveRequested" }>): UpdateReturn<Model, Message> => {
+          const state = model.routerPosture ?? initialRouterPostureState();
+          if (state.status === "saving") return { model };
+          const token = state.token + 1;
+          const json = block === "agent_strategies" ? state.agentJson : state.workloadsJson;
+          return {
+            commands: [routerConfigCommands.saveBlock({ payload: JSON.stringify({ block, json }), token })],
+            model: { ...model, routerPosture: { ...state, message: undefined, status: "saving", token } },
+          };
+        },
+        RouterPostureSaved: ({ token }: Extract<Message, { readonly _tag: "RouterPostureSaved" }>): UpdateReturn<Model, Message> => {
+          const state = model.routerPosture ?? initialRouterPostureState();
+          if (token !== state.token) return { model };
+          const configToken = model.readbacks.routerConfig.token + 1;
+          const runtimeConfigToken = model.readbacks.runtimeConfig.token + 1;
+          const routerToken = model.readbacks.router.token + 1;
+          return {
+            commands: [
+              readReadback({ key: "routerConfig", token: configToken }),
+              readReadback({ key: "runtimeConfig", token: runtimeConfigToken }),
+              readReadback({ key: "router", token: routerToken }),
+            ],
+            model: {
+              ...model,
+              readbacks: {
+                ...model.readbacks,
+                routerConfig: loadingReadback(configToken),
+                runtimeConfig: loadingReadback(runtimeConfigToken),
+                router: loadingReadback(routerToken),
+              },
+              routerPosture: { ...state, message: "Routing posture saved.", status: "saved" },
+            },
+          };
+        },
+        RouterPostureFailed: ({ message, token }: Extract<Message, { readonly _tag: "RouterPostureFailed" }>): UpdateReturn<Model, Message> => {
+          const state = model.routerPosture ?? initialRouterPostureState();
+          if (token !== state.token) return { model };
+          return { model: { ...model, routerPosture: { ...state, message, status: "error" } } };
+        },
+        RouterPostureResetRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.routerPosture ?? initialRouterPostureState();
+          const configToken = model.readbacks.routerConfig.token + 1;
+          const runtimeConfigToken = model.readbacks.runtimeConfig.token + 1;
+          return {
+            commands: [
+              readReadback({ key: "routerConfig", token: configToken }),
+              readReadback({ key: "runtimeConfig", token: runtimeConfigToken }),
+            ],
+            model: {
+              ...model,
+              readbacks: { ...model.readbacks, routerConfig: loadingReadback(configToken), runtimeConfig: loadingReadback(runtimeConfigToken) },
+              routerPosture: { ...initialRouterPostureState(), token: state.token },
+            },
+          };
+        },
         ToggledTheme: (): UpdateReturn<Model, Message> => {
           const theme = model.theme === "light" ? "dark" : "light";
           return {

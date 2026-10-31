@@ -102,11 +102,24 @@ const initRoute =
           model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), [key]: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
         };
       }
+      if (route._tag === "Router") {
+        const token = 1;
+        return {
+          commands: [
+            readReadback({ key: "router", token }),
+            readReadback({ key: "routerConfig", token }),
+            readReadback({ key: "routerCandidates", token }),
+            readReadback({ key: "runtimeConfig", token }),
+            readReadback({ key: "health", token }),
+          ],
+          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), router: loadingReadback(token), routerConfig: loadingReadback(token), routerCandidates: loadingReadback(token), runtimeConfig: loadingReadback(token), health: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
+        };
+      }
       if (route._tag === "RouterStrategy" || route._tag === "RouterWorkloads" || route._tag === "RouterConfig" || route._tag === "RouterAgentStrategy") {
         const token = 1;
         return {
-          commands: [readReadback({ key: "routerConfig", token })],
-          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), routerConfig: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
+          commands: [readReadback({ key: "routerConfig", token }), readReadback({ key: "runtimeConfig", token })],
+          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), routerConfig: loadingReadback(token), runtimeConfig: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
         };
       }
       if (route._tag === "Endpoints" || route._tag === "Providers") {

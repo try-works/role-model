@@ -39,6 +39,7 @@ interface RouteCase {
   readonly path: string;
   readonly label: string;
   readonly successBody: unknown;
+  readonly initialReads?: number;
   readonly emptyBody: unknown;
   readonly successText: string;
 }
@@ -210,6 +211,7 @@ const routes: readonly RouteCase[] = [
     emptyText: "No router summary available.",
     key: "router",
     label: "Router",
+    initialReads: 5,
     path: "/router",
     stateTestName: "Router renders success, empty, loading and error on the DOM",
     successBody: { alias: "router-alias", mode: "local" },
@@ -444,14 +446,17 @@ describe("S26e shared readback routes", () => {
         () => (fetchCalls >= 1 ? true : undefined),
         `${route.key} initial read`,
       );
-      expect(fetchCalls).toBe(1);
+      const initialReads = route.initialReads ?? 1;
+      expect(fetchCalls).toBe(initialReads);
       expect(active).toBe(1);
       // S278 restores the legacy two-event contract on this same single source.
       expect([...listeners.keys()].sort()).toEqual(["revision.update", "telemetry.update"]);
       listeners.get("revision.update")?.({
         data: JSON.stringify({ revision: 1 }),
       } as MessageEvent<string>);
-      await waitFor(() => (fetchCalls === 2 ? true : undefined), `${route.key} refresh`);
+      await waitFor(() => (fetchCalls > initialReads ? true : undefined), `${route.key} refresh`);
+      // Router pages subscribe to several readbacks; the revision event re-reads the whole plan.
+      expect(fetchCalls).toBeGreaterThan(initialReads);
       expect(active).toBe(1);
       dispose(entry);
     });

@@ -12,6 +12,7 @@ import { RequestsRankingStateSchema } from "./requests-ranking";
 import { DeviceAuthStateSchema } from "./device-auth";
 import { EndpointAdmissionStateSchema } from "./endpoint-admission";
 import { ProviderAccountStateSchema } from "./provider-account";
+import { RouterPostureStateSchema } from "./router-posture";
 import { DiagnosticsSnapshot } from "./diagnostics";
 import { ObservabilityState } from "./observability";
 import { ReadbacksState } from "./readback";
@@ -68,6 +69,7 @@ const modelFields = {
   learningRanking: learningFields.learningRanking,
   endpointAdmission: endpointsFields.endpointAdmission,
   providerAccount: providersFields.providerAccount,
+  routerPosture: Schema.optional(RouterPostureStateSchema),
   observability: shellFields.observability,
   overviewFilters: shellFields.overviewFilters,
   runtimeConfigEditor: runtimeFields.runtimeConfigEditor,

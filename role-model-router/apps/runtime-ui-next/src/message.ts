@@ -16,6 +16,10 @@ import { StudioFieldSchema, StudioTabSchema } from "./studio";
 
 type EmptyFields = Record<never, never>;
 
+const RouterPostureFieldSchema = Schema.Literals(["mode", "scoringStrategy", "executionMode", "pinWeights"]);
+const RouterEntryFieldSchema = Schema.Literals(["name", "role", "model", "description"]);
+const RouterBlockSchema = Schema.Literals(["agent_strategies", "workloads"]);
+
 export const Message: MessageUnion<{
   readonly ChangedUrl: { readonly url: typeof Url.Url };
   readonly Clicked: EmptyFields;
@@ -105,6 +109,14 @@ export const Message: MessageUnion<{
   readonly EndpointAdmissionResetRequested: EmptyFields;
   readonly EndpointAdmissionSucceeded: { readonly activationId: typeof Schema.String; readonly generation: typeof Schema.Number };
   readonly EndpointAdmissionFailed: { readonly activationId: typeof Schema.String; readonly generation: typeof Schema.Number; readonly message: typeof Schema.String };
+  readonly RouterPostureFieldChanged: { readonly field: typeof RouterPostureFieldSchema; readonly value: typeof Schema.String };
+  readonly RouterBlockChanged: { readonly block: typeof RouterBlockSchema; readonly value: typeof Schema.String };
+  readonly RouterEntryFieldChanged: { readonly field: typeof RouterEntryFieldSchema; readonly value: typeof Schema.String };
+  readonly RouterPostureSaveRequested: EmptyFields;
+  readonly RouterBlockSaveRequested: { readonly block: typeof RouterBlockSchema };
+  readonly RouterPostureSaved: { readonly token: typeof Schema.Number };
+  readonly RouterPostureFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly RouterPostureResetRequested: EmptyFields;
   readonly ProviderAccountFieldChanged: { readonly field: typeof ProviderAccountFieldSchema; readonly value: typeof Schema.String };
   readonly ProviderAccountSelectionChanged: { readonly providerId: typeof Schema.String; readonly variantId: typeof Schema.String };
   readonly ProviderAccountModelChosen: { readonly modelId: typeof Schema.String };
@@ -226,6 +238,14 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   EndpointAdmissionResetRequested: {},
   EndpointAdmissionSucceeded: { activationId: Schema.String, generation: Schema.Number },
   EndpointAdmissionFailed: { activationId: Schema.String, generation: Schema.Number, message: Schema.String },
+  RouterPostureFieldChanged: { field: RouterPostureFieldSchema, value: Schema.String },
+  RouterBlockChanged: { block: RouterBlockSchema, value: Schema.String },
+  RouterEntryFieldChanged: { field: RouterEntryFieldSchema, value: Schema.String },
+  RouterPostureSaveRequested: {},
+  RouterBlockSaveRequested: { block: Schema.Literals(["agent_strategies", "workloads"]) },
+  RouterPostureSaved: { token: Schema.Number },
+  RouterPostureFailed: { message: Schema.String, token: Schema.Number },
+  RouterPostureResetRequested: {},
   ProviderAccountFieldChanged: { field: ProviderAccountFieldSchema, value: Schema.String },
   ProviderAccountSelectionChanged: { providerId: Schema.String, variantId: Schema.String },
   ProviderAccountModelChosen: { modelId: Schema.String },
