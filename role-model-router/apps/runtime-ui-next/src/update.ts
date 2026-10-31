@@ -170,6 +170,7 @@ const noopReadback = defineReadReadback({
   queueConfig: async () => ({ body: emptyBody, status: 200 }),
   downstreamOpenAI: async () => ({ body: emptyBody, status: 200 }),
   integrationProviders: async () => ({ body: emptyBody, status: 200 }),
+  providerCatalog: async () => ({ body: [], status: 200 }),
   benchmarkSuite: async () => ({ body: emptyBody, status: 200 }),
   storageRetention: async () => ({ body: emptyBody, status: 200 }),
   models: async () => ({ body: emptyBody, status: 200 }),
@@ -388,8 +389,8 @@ const endpointAdmissionCompletion = (
       }
       if (route._tag === "Endpoints" || route._tag === "Providers") {
         const keys: ReadonlyArray<ReadbackKey> = route._tag === "Endpoints"
-          ? ["modelEndpoints", "configuredModels", "integrationProviders"]
-          : ["integrationProviders", "configuredModels", "modelEndpoints"];
+          ? ["modelEndpoints", "configuredModels", "integrationProviders", "providerCatalog"]
+          : ["integrationProviders", "configuredModels", "modelEndpoints", "providerCatalog"];
         const readbacks = { ...emptyReadbacks() };
         const controlKey = route._tag === "Endpoints" ? "endpoints" : "providers";
         const controlToken = model.controls[controlKey].token + 1;
@@ -955,6 +956,40 @@ const updateLocalPolicyDraft = (
               },
             };
           }
+          if (key === "providerCatalog" && snapshot.status === "ok") {
+            const state = model.providerAccount ?? initialProviderAccountState();
+            const account = state.draft;
+            if (account.providerId.length === 0) {
+              const first = snapshot.rows.flatMap((entry) => {
+                try {
+                  // SAFETY: providerCatalog rows carry the provider JSON record in meta.
+                  return [JSON.parse(entry.meta) as { readonly providerId?: string; readonly providerKind?: string; readonly envVars?: ReadonlyArray<string>; readonly variants?: ReadonlyArray<{ readonly variantId?: string; readonly authMode?: string }> }];
+                } catch {
+                  return [];
+                }
+              }).find((entry) => entry.providerId !== undefined && entry.providerKind !== "local-engine");
+              const variant = first?.variants?.[0];
+              if (first?.providerId !== undefined) {
+                return {
+                  model: {
+                    ...model,
+                    readbacks: { ...model.readbacks, [key]: { ...snapshot, token } },
+                    providerAccount: {
+                      ...state,
+                      draft: {
+                        ...account,
+                        authMode: variant?.authMode ?? account.authMode,
+                        credentialRef: first.envVars?.[0] ?? account.credentialRef,
+                        providerAccountId: first.providerId + ".personal." + (variant?.variantId ?? ""),
+                        providerId: first.providerId,
+                        variantId: variant?.variantId ?? "",
+                      },
+                    },
+                  },
+                };
+              }
+            }
+          }
           if (key === "runtimeConfig") {
             let text = "{}"; let originalText = "{}";
             try { const meta = snapshot.rows[0]?.meta; const parsed = meta === undefined ? undefined : JSON.parse(meta) as { config?: unknown }; if (parsed?.config !== undefined) { text = JSON.stringify(parsed.config, null, 2); originalText = text; } } catch {}
@@ -1087,6 +1122,43 @@ const updateLocalPolicyDraft = (
         ProviderAccountModelRemoved: ({ modelId }: Extract<Message, { readonly _tag: "ProviderAccountModelRemoved" }>): UpdateReturn<Model, Message> => {
           const state = model.providerAccount ?? initialProviderAccountState();
           return { model: { ...model, providerAccount: { ...state, draft: { ...state.draft, selectedModelIds: state.draft.selectedModelIds.filter((id) => id !== modelId) } } } };
+        },
+        ProviderAccountSelectionChanged: ({ providerId, variantId }: Extract<Message, { readonly _tag: "ProviderAccountSelectionChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.providerAccount ?? initialProviderAccountState();
+          const provider = model.readbacks.providerCatalog.rows.flatMap((entry) => {
+            try {
+              // SAFETY: providerCatalog rows carry the provider JSON record in meta.
+              return [JSON.parse(entry.meta) as { readonly providerId?: string; readonly envVars?: ReadonlyArray<string>; readonly variants?: ReadonlyArray<{ readonly variantId?: string; readonly authMode?: string }> }];
+            } catch {
+              return [];
+            }
+          }).find((entry) => entry.providerId === providerId);
+          const variant = provider?.variants?.find((entry) => entry.variantId === variantId) ?? provider?.variants?.[0];
+          return {
+            model: {
+              ...model,
+              providerAccount: {
+                ...state,
+                draft: {
+                  ...state.draft,
+                  authMode: variant?.authMode ?? state.draft.authMode,
+                  credentialRef: provider?.envVars?.[0] ?? state.draft.credentialRef,
+                  providerAccountId: providerId + ".personal." + (variant?.variantId ?? variantId),
+                  providerId,
+                  variantId: variant?.variantId ?? variantId,
+                },
+              },
+            },
+          };
+        },
+        ProviderAccountModelChosen: ({ modelId }: Extract<Message, { readonly _tag: "ProviderAccountModelChosen" }>): UpdateReturn<Model, Message> => {
+          const state = model.providerAccount ?? initialProviderAccountState();
+          return {
+            model: {
+              ...model,
+              providerAccount: { ...state, draft: { ...state.draft, modelInput: modelId, selectedModelIds: [modelId] } },
+            },
+          };
         },
         ProviderAccountCreateRequested: (): UpdateReturn<Model, Message> => {
           const state = model.providerAccount ?? initialProviderAccountState();

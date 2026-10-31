@@ -12,6 +12,7 @@ export const READBACK_PATHS = {
   queueConfig: "/api/role-model/operator/queues/config",
   downstreamOpenAI: "/api/role-model/downstream/openai",
   integrationProviders: "/api/role-model/providers",
+  providerCatalog: "/api/role-model/providers",
   benchmarkSuite: "/api/role-model/benchmark/suite",
   storageRetention: "/api/role-model/storage-retention",
   models: "/api/role-model/models",

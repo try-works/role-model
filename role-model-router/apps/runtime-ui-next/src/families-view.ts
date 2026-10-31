@@ -107,23 +107,55 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
   const inputClass = "h-[34px] w-full rounded-md border border-input bg-secondary px-2.5 font-sans text-sm text-foreground";
   const field = (label: string, control: Html) => h.label([h.Class(fieldClass)], [h.span([h.Class(labelClass)], [label]), control]);
   const draft = ctx.providerAccount.draft;
+  const catalog = ctx.readbacks.providerCatalog.rows.flatMap((row) => {
+    try {
+      // SAFETY: providerCatalog rows carry the provider JSON record in meta.
+      return [JSON.parse(row.meta) as { readonly displayName?: string; readonly envVars?: ReadonlyArray<string>; readonly modelIds?: ReadonlyArray<string>; readonly providerId?: string; readonly providerKind?: string; readonly variants?: ReadonlyArray<{ readonly authMode?: string; readonly label?: string; readonly modelIds?: ReadonlyArray<string>; readonly variantId?: string }> }];
+    } catch {
+      return [];
+    }
+  }).filter((provider) => provider.providerId !== undefined && provider.providerKind !== "local-engine");
+  const selectedProvider = catalog.find((provider) => provider.providerId === draft.providerId) ?? catalog[0];
+  const variants = selectedProvider?.variants ?? [];
+  const selectedVariant = variants.find((variant) => variant.variantId === draft.variantId) ?? variants[0];
+  const modelIds = selectedVariant?.modelIds ?? selectedProvider?.modelIds ?? [];
+  const connectionId = draft.providerAccountId.length > 0
+    ? draft.providerAccountId
+    : selectedProvider?.providerId === undefined
+      ? ""
+      : selectedProvider.providerId + ".personal." + (selectedVariant?.variantId ?? "");
+  const credentialRef = draft.credentialRef.length > 0 ? draft.credentialRef : selectedProvider?.envVars?.[0] ?? "";
   return h.section(
     [h.Class("rm3-next-route"), h.DataAttribute("route", "providers"), h.DataAttribute("page-layout", "reference")],
     [
       h.div([h.Class("grid gap-4 xl:grid-cols-2 xl:items-start")], [
         card("Choose provider and models", "Select the provider, connection method, and model. New models start with all roles selected — edit roles on the configured connection.", [
           h.div([h.Class("grid gap-4")], [
-            field("Provider", h.select([h.AriaLabel("Provider"), h.Class(selectClass)], [h.option([h.Value("302.AI"), h.Selected(true)], ["302.AI"])])),
-            field("Connection method", h.select([h.AriaLabel("Connection method"), h.Class(selectClass)], [h.option([h.Value("302.AI API Key"), h.Selected(true)], ["302.AI API Key"])])),
+            field("Provider", h.select(
+              [h.AriaLabel("Provider"), h.Class(selectClass), h.OnChange((value: string) => Message.ProviderAccountSelectionChanged({ providerId: value, variantId: "" }))],
+              catalog.length === 0
+                ? [h.option([h.Value("")], ["No providers available"])]
+                : catalog.map((provider) => h.option([h.Value(provider.providerId ?? ""), ...(provider.providerId === selectedProvider?.providerId ? [h.Selected(true)] : [])], [provider.displayName ?? provider.providerId ?? ""])),
+            )),
+            field("Connection method", h.select(
+              [h.AriaLabel("Connection method"), h.Class(selectClass), h.OnChange((value: string) => Message.ProviderAccountSelectionChanged({ providerId: selectedProvider?.providerId ?? "", variantId: value }))],
+              variants.length === 0
+                ? [h.option([h.Value("")], ["No connection methods"])]
+                : variants.map((variant) => h.option([h.Value(variant.variantId ?? ""), ...(variant.variantId === selectedVariant?.variantId ? [h.Selected(true)] : [])], [variant.label ?? variant.variantId ?? ""])),
+            )),
             field(
               "Provider connection id",
-              h.input([h.AriaLabel("Provider connection id"), h.Type("text"), h.Class(inputClass), h.Attribute("value", draft.providerAccountId.length > 0 ? draft.providerAccountId : "302ai.personal.302ai-api-key"), h.OnInput((value: string) => Message.ProviderAccountFieldChanged({ field: "providerAccountId", value }))]),
+              h.input([h.AriaLabel("Provider connection id"), h.Type("text"), h.Class(inputClass), h.Attribute("value", connectionId), h.OnInput((value: string) => Message.ProviderAccountFieldChanged({ field: "providerAccountId", value }))]),
             ),
             field(
               "Credential reference",
-              h.input([h.AriaLabel("Credential reference"), h.Type("text"), h.Class(inputClass), h.Attribute("value", draft.credentialRef.length > 0 ? draft.credentialRef : "302AI_API_KEY"), h.OnInput((value: string) => Message.ProviderAccountFieldChanged({ field: "credentialRef", value }))]),
+              h.input([h.AriaLabel("Credential reference"), h.Type("text"), h.Class(inputClass), h.Attribute("value", credentialRef), h.OnInput((value: string) => Message.ProviderAccountFieldChanged({ field: "credentialRef", value }))]),
             ),
-            field("Model", h.select([h.AriaLabel("Model"), h.Class(selectClass)], [h.option([h.Value(""), h.Selected(true)], ["Select a model…"])])),
+            field("Model", h.select(
+              [h.AriaLabel("Model"), h.Class(selectClass), h.OnChange((value: string) => Message.ProviderAccountModelChosen({ modelId: value }))],
+              [h.option([h.Value(""), ...(draft.modelInput.length === 0 ? [h.Selected(true)] : [])], ["Select a model…"]),
+               ...modelIds.map((modelId) => h.option([h.Value(modelId), ...(modelId === draft.modelInput ? [h.Selected(true)] : [])], [modelId]))],
+            )),
             h.button(
               [h.Type("button"), h.AriaDisabled(ctx.providerAccount.status === "saving"), h.OnClick(Message.ProviderAccountCreateRequested({})), h.Class("inline-flex h-[34px] w-fit items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-foreground")],
               [ctx.providerAccount.status === "saving" ? "Saving configuration…" : "Save configuration"],

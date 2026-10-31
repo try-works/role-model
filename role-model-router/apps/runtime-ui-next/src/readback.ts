@@ -30,6 +30,7 @@ export type ReadbackKey =
   | "queueConfig"
   | "downstreamOpenAI"
   | "integrationProviders"
+  | "providerCatalog"
   | "benchmarkSuite"
   | "storageRetention"
   | "models"
@@ -77,6 +78,7 @@ export const ReadbackKeySchema = Schema.Literals([
   "queueConfig",
   "downstreamOpenAI",
   "integrationProviders",
+  "providerCatalog",
   "benchmarkSuite",
   "storageRetention",
   "models",
@@ -146,6 +148,7 @@ export const ReadbacksState = Schema.Struct({
   queueConfig: ReadbackState,
   downstreamOpenAI: ReadbackState,
   integrationProviders: ReadbackState,
+  providerCatalog: ReadbackState,
   benchmarkSuite: ReadbackState,
   storageRetention: ReadbackState,
   models: ReadbackState,
@@ -208,6 +211,7 @@ export const emptyReadbacks = (): ReadbacksState => ({
   queueConfig: idleReadback(),
   downstreamOpenAI: idleReadback(),
   integrationProviders: idleReadback(),
+  providerCatalog: idleReadback(),
   benchmarkSuite: idleReadback(),
   storageRetention: idleReadback(),
   models: idleReadback(),
@@ -900,6 +904,16 @@ const parseObservationDetail = (body: unknown, token: number): ReadbackState => 
   return okRows(rows, token);
 };
 
+const parseProviderCatalog = (body: unknown, token: number): ReadbackState => {
+  const list = Array.isArray(body) ? body : [];
+  const rows = list.flatMap((value, index) => {
+    const entry = asRecord(value);
+    if (entry === undefined || typeof entry.providerId !== "string") return [];
+    return [row("provider:" + String(index), typeof entry.displayName === "string" ? entry.displayName : entry.providerId, typeof entry.providerKind === "string" ? entry.providerKind : "", JSON.stringify(entry))];
+  });
+  return okRows(rows, token);
+};
+
 export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = {
   localLogs: {
     emptyText: "No local logs recorded yet.",
@@ -1015,6 +1029,13 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     label: "Downstream OpenAI",
     parse: parseDownstreamOpenAI,
     path: READBACK_PATHS.downstreamOpenAI,
+  },
+  providerCatalog: {
+    emptyText: "No provider catalog available.",
+    key: "providerCatalog",
+    label: "Provider catalog",
+    parse: parseProviderCatalog,
+    path: READBACK_PATHS.providerCatalog,
   },
   integrationProviders: {
     emptyText: "No integration providers configured yet.",
@@ -1243,6 +1264,7 @@ export const createReadbackClients = (
     queueConfig: client(READBACK_SPECS.queueConfig),
     downstreamOpenAI: client(READBACK_SPECS.downstreamOpenAI),
     integrationProviders: client(READBACK_SPECS.integrationProviders),
+  providerCatalog: client(READBACK_SPECS.providerCatalog),
     benchmarkSuite: client(READBACK_SPECS.benchmarkSuite),
     storageRetention: client(READBACK_SPECS.storageRetention),
     models: client(READBACK_SPECS.models),

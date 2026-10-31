@@ -106,6 +106,8 @@ export const Message: MessageUnion<{
   readonly EndpointAdmissionSucceeded: { readonly activationId: typeof Schema.String; readonly generation: typeof Schema.Number };
   readonly EndpointAdmissionFailed: { readonly activationId: typeof Schema.String; readonly generation: typeof Schema.Number; readonly message: typeof Schema.String };
   readonly ProviderAccountFieldChanged: { readonly field: typeof ProviderAccountFieldSchema; readonly value: typeof Schema.String };
+  readonly ProviderAccountSelectionChanged: { readonly providerId: typeof Schema.String; readonly variantId: typeof Schema.String };
+  readonly ProviderAccountModelChosen: { readonly modelId: typeof Schema.String };
   readonly ProviderAccountModelAdded: EmptyFields;
   readonly ProviderAccountModelRemoved: { readonly modelId: typeof Schema.String };
   readonly ProviderAccountCreateRequested: EmptyFields;
@@ -224,6 +226,8 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   EndpointAdmissionSucceeded: { activationId: Schema.String, generation: Schema.Number },
   EndpointAdmissionFailed: { activationId: Schema.String, generation: Schema.Number, message: Schema.String },
   ProviderAccountFieldChanged: { field: ProviderAccountFieldSchema, value: Schema.String },
+  ProviderAccountSelectionChanged: { providerId: Schema.String, variantId: Schema.String },
+  ProviderAccountModelChosen: { modelId: Schema.String },
   ProviderAccountModelAdded: {},
   ProviderAccountModelRemoved: { modelId: Schema.String },
   ProviderAccountCreateRequested: {},
