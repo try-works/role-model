@@ -712,11 +712,23 @@ export const composeBackendStorage = (input: BackendStorageInput): BackendStorag
       ? createTrackBFileGraphStore({ rootPath: path.join(input.runtimeStateRoot, input.scopeId, "track-b-graph"), scopeId: input.scopeId })
       : undefined;
   const observationStorage = makeObservationStorage(input.capacity ?? 64);
+  // R23 transaction-owned cleanup: cleanup connections opened for this backend storage are owned by
+  // the same lifecycle and must be closed on close (a dangling sync handle keeps the SQLite file locked).
+  const cleanupDatabases = new Set<ReturnType<typeof makeSync>>();
+  const openRetentionCleanupDatabase = (databasePath: string): ReturnType<typeof makeSync> => {
+    const database = makeRetentionCleanupDatabase(databasePath);
+    cleanupDatabases.add(database);
+    return database;
+  };
   let closed = false;
   const close = async (): Promise<void> => {
     if (closed) return;
     closed = true;
     try { await observationStorage.drain(); } catch { }
+    for (const database of cleanupDatabases) {
+      try { database.closeSync(); } catch { }
+    }
+    cleanupDatabases.clear();
   };
   const storage: BackendStorageContract = {
     close,
@@ -724,7 +736,7 @@ export const composeBackendStorage = (input: BackendStorageInput): BackendStorag
     id: "backend-storage:" + input.scopeId,
     initialization,
     observationStorage,
-    openRetentionCleanupDatabase: makeRetentionCleanupDatabase,
+    openRetentionCleanupDatabase,
   };
   return Object.freeze(storage);
 };
