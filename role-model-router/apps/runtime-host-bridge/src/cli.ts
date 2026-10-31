@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { Effect, Exit, Layer, ManagedRuntime, Scope } from "effect";
+import { Effect, Exit, Layer, Scope } from "effect";
 import { composeR27HostLayer } from "./r27-layer-dag.js";
 import { createHash, createPublicKey, randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
@@ -4356,16 +4356,16 @@ export async function runCliBackendBranch(input: {
   } else {
     await input.runPlain();
   }
-  completeCliStartupReadiness(input.bootstrapState, input.readinessOwner);
+  // R27: readiness is marked ONLY by the DAG host leaf (acquire:host); the bootstrap path below
+  // only flips the observable bootstrap state.
+  completeCliStartupReadiness(input.bootstrapState);
 }
 
 export function completeCliStartupReadiness(
   bootstrapState: { status: CliBootstrapState["status"]; message?: string },
-  readinessOwner: { markReady(): void },
 ): void {
   bootstrapState.status = "ready";
   delete bootstrapState.message;
-  readinessOwner.markReady();
 }
 
 export function createCliServerOptions(
@@ -5198,8 +5198,15 @@ export async function main(): Promise<void> {
   // composed owner ready. The imperative resource builders still own their individual resources; the
   // DAG is the acquisition spine, and its failure aborts host startup.
   const readinessOwner = composeReadinessOwner();
-  const r27DagRuntime = ManagedRuntime.make(composeR27HostLayer({ readiness: readinessOwner }));
-  shutdownDrains.push({ name: "r27-dag", run: () => r27DagRuntime.dispose() });
+  // R27: acquire the closed DAG NOW (before any imperative resource exists). buildWithScope runs the
+  // acquire effects in closed order and marks readiness in the host leaf; a failure here rejects and
+  // aborts host startup. The scope stays open for the CLI lifetime and is closed by the r27-dag drain.
+  const r27DagScope = Effect.runSync(Scope.make());
+  const r27DagEvents: string[] = [];
+  await Effect.runPromise(
+    Layer.buildWithScope(composeR27HostLayer({ events: r27DagEvents, readiness: readinessOwner }), r27DagScope),
+  );
+  shutdownDrains.push({ name: "r27-dag", run: () => Effect.runPromise(Scope.close(r27DagScope, Exit.void)) });
   // S321/S322 (R27): backend teardown runs through the DAG Backend close member; the shared idempotent
   // closer closes the packaged SCOPE (the acquireRelease finalizer owns the runtime), so the DAG path and
   // the later hostScope path can never close it twice.
