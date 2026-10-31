@@ -3,15 +3,20 @@ import { Effect } from "effect";
 import { renderToString } from "@role-model-router/foldkit/experimental/server";
 import { describe, expect, it } from "vitest";
 
-import { PAGE_STORIES } from "./support/page-stories";
+import { PAGE_STORIES, type PageStory } from "./support/page-stories";
 import { shellModel } from "./support/runtime-shell";
 import type { Model } from "../src/model";
+import { AppRoute } from "../src/route";
 import { view } from "../src/view";
 
 /**
- * S565: the per-route scene contract, captured from the shipped 0.0.20 build on :3456
- * (test/support/page-stories.ts). Each route is rendered and must show, in order, the reference
- * section headings, every reference table's column set, and every named filter control.
+ * S565: the per-route scene contract. Every routed page tag must have a captured story, and the
+ * page must render that story's section headings, table column sets and named filter controls.
+ *
+ * S592: the story set now covers every tag in the route union (`AppRoute.cases`). Stories tagged
+ * port-captured in `test/support/page-stories.ts` were captured from the current Foldkit render
+ * (no :3456 capture exists for those routes yet); the rest were captured from the shipped 0.0.20
+ * build on :3456. The coverage test at the bottom makes a new route tag without a story RED.
  */
 
 const routeFor = (tag: string): Model["route"] => {
@@ -56,7 +61,7 @@ const renderRoute = async (route: Model["route"], studioTab?: string): Promise<H
   return container;
 };
 
-const sceneFailures = (container: HTMLElement, story: { headings: ReadonlyArray<{ text: string }>; tables: ReadonlyArray<{ headers: ReadonlyArray<string> }>; combos: ReadonlyArray<{ readonly label: string; readonly text: string }> }): string[] => {
+const sceneFailures = (container: HTMLElement, story: PageStory): string[] => {
   const failures: string[] = [];
   const pageTitle = normalise(container.querySelector("h1")?.textContent);
   const headings = [
@@ -90,13 +95,28 @@ const sceneFailures = (container: HTMLElement, story: { headings: ReadonlyArray<
   return failures;
 };
 
-describe("S565 page stories — scene (captured from :3456)", () => {
-  for (const [tag, story] of Object.entries(PAGE_STORIES)) {
-    it(tag + " matches its :3456 story", async () => {
+const stories: Readonly<Record<string, PageStory | undefined>> = PAGE_STORIES;
+// SAFETY: at runtime AppRoute is the Effect TaggedUnion, which carries the per-tag `cases` map the
+// workspace's RouteUnion type does not re-declare. Reading it once here is the only way to derive
+// the full routed tag set instead of hard-coding a list that silently goes stale.
+const routeCases = (AppRoute as unknown as { readonly cases: Readonly<Record<string, unknown>> }).cases;
+const routeTags: readonly string[] = Object.keys(routeCases);
+
+describe("S565 page stories — scene", () => {
+  for (const tag of routeTags) {
+    it(tag + " matches its captured story", async () => {
+      const story = stories[tag];
+      expect(story, "no captured story for route tag " + tag).toBeDefined();
+      if (story === undefined) return;
       const container = await renderRoute(routeFor(tag));
       const failures = sceneFailures(container, story);
       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
       expect(normalise(container.textContent)).not.toContain("Runtime UI");
     });
   }
+
+  it("every route tag in the union has a captured story", () => {
+    const missing = routeTags.filter((tag) => stories[tag] === undefined);
+    expect(missing, "missing page stories: " + missing.join(", ")).toEqual([]);
+  });
 });

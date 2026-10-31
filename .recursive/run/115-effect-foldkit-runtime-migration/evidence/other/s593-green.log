@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/run115-s593-layer-dag.test.ts (3 tests) 29ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  20:23:15
+   Duration  3.39s (transform 1.77s, setup 0ms, collect 2.82s, tests 29ms, environment 0ms, prepare 197ms)
+

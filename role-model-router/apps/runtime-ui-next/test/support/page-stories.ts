@@ -56,7 +56,43 @@ export const PAGE_STORIES = {
   SystemExtensions: {"title":"Extension boundary","headings":[{"level":2,"text":"Replay automation"},{"level":2,"text":"Contribution posture"},{"level":2,"text":"Recommendation ledger"},{"level":2,"text":"Extension inventory"}],"tables":[],"combos":[],"inputs":[],"textLen":1431},
   SystemOperator: {"title":"Operator controls","headings":[{"level":2,"text":"Operator Controls"},{"level":2,"text":"Trace lineage"},{"level":2,"text":"Replay Jobs"},{"level":2,"text":"Evaluation Jobs"},{"level":2,"text":"Shadow Learning"}],"tables":[],"combos":[],"inputs":["Paste a local operator token…","trace-root…"],"textLen":2047},
   SystemPeers: {"title":"Peer topology","headings":[{"level":2,"text":"Peer inventory"},{"level":2,"text":"Peer config"},{"level":2,"text":"Contract fields"}],"tables":[],"combos":[],"inputs":[],"textLen":1272},
+  // --- S592: port-captured stories (no :3456 capture exists for these routes) -------------------
+  // Captured 2026-10-31 from the CURRENT Foldkit port render (renderToString with
+  // test/support/runtime-shell.ts shellModel at the default route state), NOT from the :3456
+  // reference build. They are regression snapshots: they pin today's port render so a change on
+  // these pages is visible in review, but they cannot prove parity with :3456. Re-capture from
+  // :3456 and flip the provenance comment when an owner capture exists.
+  Dashboard: {"title":"Dashboard","headings":[{"level":2,"text":"Dashboard"}],"tables":[],"combos":[],"inputs":[],"textLen":376},
+  Diagnostics: {"title":"Diagnostics","headings":[{"level":2,"text":"Diagnostics: 42"}],"tables":[],"combos":[],"inputs":[],"textLen":284},
+  IntegrationsDownstream: {"title":"Connect your application","headings":[{"level":2,"text":"Connection contract"},{"level":2,"text":"Consumer setup"}],"tables":[],"combos":[],"inputs":[],"textLen":1538},
+  IntegrationsUpstream: {"title":"Upstream passthrough","headings":[{"level":2,"text":"Provider accounts in scope"},{"level":2,"text":"Boundary guidance"},{"level":2,"text":"Upstream target inventory"}],"tables":[],"combos":[],"inputs":[],"textLen":1055},
+  NotFound: {"title":"Not found: /missing","headings":[{"level":2,"text":"Not found: /missing"}],"tables":[],"combos":[],"inputs":[],"textLen":361},
+  QueuesConfiguration: {"title":"Queue configuration","headings":[{"level":2,"text":"Queue configuration"}],"tables":[],"combos":[],"inputs":[],"textLen":406},
+  RequestDetail: {"title":"Telemetry request detail","headings":[{"level":2,"text":"Request detail"}],"tables":[],"combos":[],"inputs":[],"textLen":401},
+  RouterDecisionDetail: {"title":"Routing decision detail","headings":[{"level":2,"text":"Router decision detail"}],"tables":[],"combos":[],"inputs":[],"textLen":416},
+  RuntimeConfig: {"title":"Runtime config","headings":[{"level":2,"text":"Runtime"},{"level":2,"text":"Runtime config"}],"tables":[],"combos":[],"inputs":[],"textLen":719},
+  // Studio renders one route with tabs; this is the default (chat) render. The five per-tab
+  // captures remain in STUDIO_TAB_STORIES below.
+  Studio: {"title":"Chat workspace","headings":[{"level":2,"text":"Request"},{"level":2,"text":"Result workspace"}],"tables":[],"combos":[],"inputs":[],"textLen":352},
 } as const satisfies Record<string, PageStory>;
+
+/**
+ * S592: the route tags whose PAGE_STORIES entry was captured from the current port render rather
+ * than from the shipped 0.0.20 build on :3456. Keep in sync with the block comment above; the
+ * coverage test in s565 runs every route tag either way.
+ */
+export const PORT_CAPTURED_ROUTE_TAGS = [
+  "Dashboard",
+  "Diagnostics",
+  "IntegrationsDownstream",
+  "IntegrationsUpstream",
+  "NotFound",
+  "QueuesConfiguration",
+  "RequestDetail",
+  "RouterDecisionDetail",
+  "RuntimeConfig",
+  "Studio",
+] as const;
 
 export const STUDIO_TAB_STORIES = {
   advanced: {"title":"Advanced workspace","headings":[{"level":2,"text":"Endpoint family"},{"level":2,"text":"Response workspace"}],"tables":[],"combos":[{"label":"Family","text":"Responses"},{"label":"Model","text":"DeepSeek V4.1 Flash (High)"}],"inputs":[],"textLen":1075},

@@ -1,6 +1,7 @@
 export interface RouterPostureSavePayload {
   readonly executionMode: string;
   readonly pinWeights: boolean;
+  readonly weights: Readonly<Record<string, number>>;
   readonly mode: string;
   readonly scoringStrategy: string;
 }
@@ -56,7 +57,7 @@ export const createRouterConfigClient = (
     savePosture: async (payload) =>
       put({
         execution_mode: payload.executionMode,
-        routing: { mode: payload.mode, pin_weights: payload.pinWeights, scoring_strategy: payload.scoringStrategy },
+        routing: { mode: payload.mode, pin_weights: payload.pinWeights, scoring_strategy: payload.scoringStrategy, weights: payload.weights },
       }),
   };
 };

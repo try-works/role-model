@@ -1,0 +1,27 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run115-s593-layer-dag.test.ts [ test/run115-s593-layer-dag.test.ts ]
+Error: Cannot find module '../src/r27-layer-dag.js' imported from 'D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge/test/run115-s593-layer-dag.test.ts'
+ ❯ test/run115-s593-layer-dag.test.ts:4:1
+      2| import { describe, expect, test } from "vitest";
+      3| 
+      4| import {
+       | ^
+      5|   composeR27HostLayer,
+      6|   makeR27ReadinessOwner,
+
+Caused by: Error: Failed to load url ../src/r27-layer-dag.js (resolved id: ../src/r27-layer-dag.js) in D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge/test/run115-s593-layer-dag.test.ts. Does the file exist?
+ ❯ loadAndTransform E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  20:18:40
+   Duration  3.39s (transform 1.68s, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 223ms)
+

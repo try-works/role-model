@@ -1297,7 +1297,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     LearningDecisions: () => learningDecisionsPage(readbacks.learningDecisions, h),
     LearningEvidence: () => learningEvidencePage(readbacks.learningEvidence, h),
     LearningHistory: () => learningHistoryPage(readbacks.learningHistory, h),
-    LocalPolicy: () => policySupplement(localPolicyPage(readbacks.localPolicy, h), readbacks.localPolicy, h),
+    LocalPolicy: () => localPolicyPage(readbacks.localPolicy, h),
     LocalLlamaSwapModels: () => llamaModelsSupplement(familyPage("Llama-swap models", "local-llama-swap-models", "Load a runtime-config-declared model, assign route roles, and manage the in-memory llama-swap inventory. Role summary: loaded models and assigned roles.", [
       { label: "Load model", note: "Model must already be declared in runtime config. Loading triggers the managed swap.", children: [h.div([h.Class("flex flex-wrap items-end gap-3")], [h.label([h.Class("flex flex-col gap-1 font-sans text-xs text-muted-foreground")], [h.span([], ["Model ID"]), h.input([h.Id("llama-model-id"), h.AriaLabel("Model ID"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm")])]), h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Load model"])])] },
       { label: "Loaded models", spec: READBACK_SPECS.localLlamaSwapModels, readback: readbacks.localLlamaSwapModels, columns: ["Model", "Status", "Roles", "Actions"], rows: (row) => [row.label, row.value, row.meta, "—"] },

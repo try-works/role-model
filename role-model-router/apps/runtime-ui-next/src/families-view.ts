@@ -490,25 +490,44 @@ export const systemExtensionsPage = (readback: ReadbackState, h: H): Html => h.d
 
 export const systemSessionPage = (readback: ReadbackState, h: H): Html => {
   const count = readback.rows.length;
+  const state = readback.status === "idle" ? "loading" : readback.status;
+  const overallRow = readback.rows.find((entry) => entry.id === "overall");
+  const hostHealthRow = overallRow;
+  const credentialRow = undefined;
+  const bootstrap = state === "ok" ? "complete" : state === "error" ? "failed" : state === "loading" ? "loading" : "unavailable";
+  const hostHealth = state === "ok" ? (hostHealthRow?.value.trim() !== undefined && hostHealthRow.value.trim().length > 0 ? hostHealthRow.value : "ok") : "unavailable";
+  const authority = state === "ok" ? "authoritative" : "unavailable";
+  // SAFETY: the operator status readback carries no credential-class counts, so this tile reports the honest absence.
+  const credentials = "unavailable";
   const sessionCard = (title: string, description: string, body: readonly Html[]) => card(title, description, body, h);
+  const tile = (label: string, value: string, key: string): Html =>
+    h.div([h.Class("rounded-lg border border-border bg-card p-3")], [
+      h.p([h.Class("font-mono text-[11px] font-normal uppercase leading-4 tracking-[0.08em] text-muted-foreground")], [label]),
+      h.p([h.DataAttribute(key, value), h.Class("font-mono text-sm font-medium text-foreground")], [value]),
+    ]);
   return h.div([h.Class("space-y-6"), h.DataAttribute("route", "session-readiness"), h.DataAttribute("page-layout", "reference"), h.DataAttribute("readback-route", "sessionReadiness"), h.DataAttribute("readback-state", readbackStateOf(readback))], [
     ...(readbackNotice(readback, "Session readiness", h) === null ? [] : [readbackNotice(readback, "Session readiness", h) as Html]),
-    statStrip([{ label: "Bootstrap", value: count > 0 ? "complete" : "unavailable" }, { label: "Host health", value: "ok" }, { label: "Authority", value: "authoritative" }, { label: "Routable", value: String(count) }], h),
+    h.div([h.Class("grid gap-2 sm:grid-cols-2 xl:grid-cols-4")], [
+      tile("Bootstrap", bootstrap, "session-bootstrap"),
+      tile("Host health", hostHealth, "session-host-health"),
+      tile("Authority", authority, "session-authority"),
+      tile("Credentials", credentials, "session-credentials"),
+    ]),
     h.div([h.Class("grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]")], [
       h.div([h.Class("space-y-4")], [
         sessionCard("Session bootstrap", "Persisted bootstrap ladder for the current host session.", [
-          h.div([h.Class("mb-4 flex flex-wrap items-center gap-3")], [h.span([h.Class("rounded-full border border-border bg-secondary px-2 py-0.5 text-xs text-foreground")], ["complete"])]),
-          h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["identity, endpoints, peers, vendors, local reload, remote health, inventory were all persisted in the current session."]),
+          h.div([h.Class("mb-4 flex flex-wrap items-center gap-3")], [h.span([h.Class("rounded-full border border-border bg-secondary px-2 py-0.5 text-xs text-foreground")], [bootstrap])]),
+          h.p([h.Class("text-sm leading-5 text-muted-foreground")], [bootstrap === "complete" ? "identity, endpoints, peers, vendors, local reload, remote health, inventory were all persisted in the current session." : "The bootstrap ladder is " + bootstrap + " for the current session."]),
           ...(readback.rows.length > 0 ? [table(["Name", "Value", "Detail"], readback.rows.map((row) => [row.label, row.value, row.meta]), "No session readiness rows recorded yet.", h)] : []),
         ]),
-        sessionCard("Canonical lifecycle", "Authority posture and blocking credential accounts.", [h.span([h.Class("rounded-full border border-border bg-secondary px-2 py-0.5 text-xs text-foreground")], ["authoritative"]), h.p([h.Class("mt-3 text-sm leading-5 text-muted-foreground")], ["Canonical lifecycle data is authoritative and no credential blockers remain."])]),
+        sessionCard("Canonical lifecycle", "Authority posture and blocking credential accounts.", [h.span([h.Class("rounded-full border border-border bg-secondary px-2 py-0.5 text-xs text-foreground")], [authority]), h.p([h.Class("mt-3 text-sm leading-5 text-muted-foreground")], [authority === "authoritative" ? "Canonical lifecycle data is authoritative." : "Canonical lifecycle data is not authoritative right now."])]),
         sessionCard("Operator intent manifest", "Declared operator intent for this runtime session.", [h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["applied operator-intent.json is readable and schema-valid."]), h.p([h.Class("break-all font-mono text-xs leading-4 text-foreground")], ["operator-intent.json"])]),
       ]),
       h.div([h.Class("space-y-4")], [
-        sessionCard("Credential readiness", "Blocking credential counts by class.", [h.span([h.Class("rounded-full border border-border bg-secondary px-2 py-0.5 text-xs text-foreground")], ["no blockers"]), h.p([h.Class("mt-3 text-sm leading-5 text-muted-foreground")], ["No credential blockers reported for the current session."])]),
+        sessionCard("Credential readiness", "Blocking credential counts by class.", [h.span([h.Class("rounded-full border border-border bg-secondary px-2 py-0.5 text-xs text-foreground")], [credentials]), h.p([h.Class("mt-3 text-sm leading-5 text-muted-foreground")], ["Credential class counts are not reported by the operator status readback."])]),
         sessionCard("Routable inventory", "Endpoints and models available to routing.", [
           h.div([], [
-            ...[["Endpoints", String(count)], ["Models", "0"], ["Empty aliases", "0"]].map(([label, value]) => h.div([h.Class("flex items-center justify-between gap-3 py-1.5")], [h.p([h.Class("text-sm leading-5 text-muted-foreground")], [label]), h.p([h.Class("font-mono text-sm leading-[18px] tabular-nums text-foreground")], [value])])),
+            ...[["Endpoints", "unavailable"], ["Models", "unavailable"], ["Empty aliases", "unavailable"]].map(([label, value]) => h.div([h.Class("flex items-center justify-between gap-3 py-1.5")], [h.p([h.Class("text-sm leading-5 text-muted-foreground")], [label]), h.p([h.Class("font-mono text-sm leading-[18px] tabular-nums text-foreground")], [value])])),
           ]),
         ]),
         sessionCard("Alias drift warnings", "Hint models that no longer resolve live.", [h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["No alias hint drift warnings."])]),

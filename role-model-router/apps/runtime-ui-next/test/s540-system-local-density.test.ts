@@ -51,7 +51,7 @@ describe("S540 system/local density", () => {
   it("system peers", async () => { await check("SystemPeers", ["Peer topology", "Peer inventory", "Peer config", "Contract fields", "proxy", "apiKey", "models", "filters · timeouts"], { tables: 0, skipStructure: false }); });
   it("workloads", async () => { await check("RouterWorkloads", ["Posture diagnostics", "Workload templates", "Entries", "Use batch template", "Use embedding template", "Add workload", "Save Workloads"], { buttons: ["Add workload", "Save Workloads"] }); });
   it("llama-swap models", async () => { await check("LocalLlamaSwapModels", ["Load model", "Role summary", "28 selected · click to clear", "Loaded models", "No llama-swap models loaded yet."], { buttons: ["Load model", "Open runtime config"], inputs: ["Model ID"], tables: 0, svgs: 0 }); });
-  it("llama-swap policy", async () => { await check("LocalPolicy", ["Llama-swap host policy", "Policy configuration", "Raw policy", "TTL (seconds)", "Max concurrency", "Auto-unload idle models", "Save policy"], { skipStructure: true }); });
+  it("llama-swap policy", async () => { await check("LocalPolicy", ["Llama-swap host policy", "Policy configuration", "Raw policy", "Edit runtime behavior for local model loading and unloading.", "No local policy readback is available."], { skipStructure: true }); });
   it("llama-swap swap", async () => { await check("LocalSwap", ["Event ledger", "Ledger semantics", "Initial load", "Swap reason", "Timeline order"], { tables: 0 }); });
   it("local peers", async () => { await check("LocalPeers", ["Local endpoints", "Endpoint inventory", "Add peer endpoint", "No peer endpoints configured."], { buttons: ["Add endpoint"], inputs: ["Endpoint URL"], tables: 0 }); });
 });

@@ -2,6 +2,7 @@ import {
   type RefreshSnapshotReader,
   defineDispatchStudio,
   defineDeviceAuthCommands,
+  createLocalPolicyCommands,
   defineProviderAccountCommands,
   defineLearningRankingCommands,
   defineRequestsRankingCommands,
@@ -69,6 +70,7 @@ export interface ShellOptions {
   readonly learningRankingFetchImpl?: typeof fetch;
   readonly requestsRankingFetchImpl?: typeof fetch;
   readonly routerConfigFetchImpl?: typeof fetch;
+  readonly localPolicyFetchImpl?: typeof fetch;
   readonly controlToken?: string;
 }
 
@@ -150,6 +152,7 @@ export const createShellApp = (options: ShellOptions = {}) => {
       defineLearningRankingCommands(createLearningRankingClient({ ...(options.learningRankingFetchImpl === undefined ? {} : { fetchImpl: options.learningRankingFetchImpl }) })),
       defineRequestsRankingCommands(createRequestsRankingClient({ fetchImpl: options.requestsRankingFetchImpl })),
       defineRouterConfigCommands(createRouterConfigClient({ ...(options.routerConfigFetchImpl === undefined ? {} : { fetchImpl: options.routerConfigFetchImpl }), ...(controlToken === undefined ? {} : { token: controlToken }) })),
+      ...(options.localPolicyFetchImpl === undefined ? [] : [createLocalPolicyCommands(options.localPolicyFetchImpl)]),
     ),
     view,
   };

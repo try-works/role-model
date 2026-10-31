@@ -81,7 +81,7 @@ describe("S584 router posture wiring", () => {
     expect(writes[0]?.url).toBe("/api/role-model/runtime/config");
     expect(writes[0]?.body).toEqual({
       execution_mode: "decision_only",
-      routing: { mode: "hybrid", pin_weights: false, scoring_strategy: "cost" },
+      routing: { mode: "hybrid", pin_weights: false, scoring_strategy: "cost", weights: { quality: 0.15, latency: 0.1, throughput: 0.05, cost: 0.5, reliability: 0.15, preference: 0.05 } },
     });
   });
 });

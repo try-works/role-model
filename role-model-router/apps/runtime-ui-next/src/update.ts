@@ -35,6 +35,7 @@ import {
   type LearningRankingCommands,
   noopLearningRankingCommands,
   localPolicyCommands,
+  type LocalPolicyCommands,
   noopEndpointAdmissionCommands,
   type ProviderAccountCommands,
   noopProviderAccountCommands,
@@ -247,6 +248,7 @@ export const createUpdate =
     learningRankingCommands: LearningRankingCommands = noopLearningRankingCommands,
     requestsRankingCommands: RequestsRankingCommands = noopRequestsRankingCommands,
     routerConfigCommands: RouterConfigCommands = noopRouterConfigCommands,
+    localPolicyCommandsArg: LocalPolicyCommands = localPolicyCommands,
   ) => {
 
 
@@ -833,6 +835,14 @@ const updateLocalPolicyDraft = (
             mode: state.mode.length > 0 ? state.mode : "baseline",
             pinWeights: state.pinWeights === "on",
             scoringStrategy: state.scoringStrategy.length > 0 ? state.scoringStrategy : "balanced",
+            weights: {
+              cost: state.weightCost.length > 0 ? Number(state.weightCost) : 0.5,
+              latency: state.weightLatency.length > 0 ? Number(state.weightLatency) : 0.1,
+              preference: state.weightPreference.length > 0 ? Number(state.weightPreference) : 0.05,
+              quality: state.weightQuality.length > 0 ? Number(state.weightQuality) : 0.15,
+              reliability: state.weightReliability.length > 0 ? Number(state.weightReliability) : 0.15,
+              throughput: state.weightThroughput.length > 0 ? Number(state.weightThroughput) : 0.05,
+            },
           });
           return {
             commands: [routerConfigCommands.savePosture({ payload, token })],
@@ -1472,7 +1482,7 @@ const updateLocalPolicyDraft = (
           if (draft === undefined || state.status !== "ok") return { model };
           const token = state.token + 1;
           return {
-            commands: [localPolicyCommands.save({ payload: JSON.stringify(draft), token })],
+            commands: [localPolicyCommandsArg.save({ payload: JSON.stringify(draft), token })],
             model: { ...model, readbacks: { ...model.readbacks, localPolicy: { ...state, message: undefined, status: "loading", token } } },
           };
         },

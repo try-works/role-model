@@ -611,6 +611,16 @@ export const defineLocalPolicyCommands = (client: LocalPolicyClient) => ({
     messages: [Message.LocalPolicySaved, Message.LocalPolicySaveFailed],
   }),
 });
+export type LocalPolicyCommands = ReturnType<typeof defineLocalPolicyCommands>;
+export const createLocalPolicyCommands = (fetchImpl: typeof fetch): LocalPolicyCommands =>
+  defineLocalPolicyCommands(
+    createLocalPolicyClient(
+      createRuntimeHttpClient({
+        fetchImpl,
+        tokenProvider: readStoredOperatorToken,
+      }),
+    ),
+  );
 export const localPolicyCommands = defineLocalPolicyCommands(
   createLocalPolicyClient(
     createRuntimeHttpClient({

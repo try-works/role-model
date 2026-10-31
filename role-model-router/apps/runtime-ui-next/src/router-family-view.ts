@@ -407,6 +407,21 @@ export const routerStrategyPage = (
       h,
     ),
     sectionCard(
+      "Routing weights",
+      "Quality, latency, throughput, cost, reliability and preference weights are validated and persisted with the routing posture.",
+      [
+        h.div([h.Class("grid gap-3 sm:grid-cols-3 xl:grid-cols-6")], [
+          weightField("quality", "weightQuality", state.weightQuality.length > 0 ? state.weightQuality : "0.15", h),
+          weightField("latency", "weightLatency", state.weightLatency.length > 0 ? state.weightLatency : "0.1", h),
+          weightField("throughput", "weightThroughput", state.weightThroughput.length > 0 ? state.weightThroughput : "0.05", h),
+          weightField("cost", "weightCost", state.weightCost.length > 0 ? state.weightCost : "0.5", h),
+          weightField("reliability", "weightReliability", state.weightReliability.length > 0 ? state.weightReliability : "0.15", h),
+          weightField("preference", "weightPreference", state.weightPreference.length > 0 ? state.weightPreference : "0.05", h),
+        ]),
+      ],
+      h,
+    ),
+    sectionCard(
       "Saved posture",
       "The persisted routing strategy and execution mode read from the live host.",
       [
@@ -418,6 +433,26 @@ export const routerStrategyPage = (
     ),
   ], h);
 };
+
+const weightField = (
+  metric: string,
+  field: "weightQuality" | "weightLatency" | "weightThroughput" | "weightCost" | "weightReliability" | "weightPreference",
+  value: string,
+  h: H,
+): Html =>
+  h.label([h.Class("flex max-w-[200px] flex-col gap-1.5")], [
+    h.span([h.Class(filterLabelClass)], [metric + " weight"]),
+    h.input([
+      h.DataAttribute("router-weight", metric),
+      h.AriaLabel(metric + " weight"),
+      h.Type("number"),
+      h.Step("0.01"),
+      h.Min("0"),
+      h.Class(filterControlClass),
+      h.Value(value),
+      h.OnInput((next: string) => Message.RouterPostureFieldChanged({ field, value: next })),
+    ]),
+  ]);
 
 const wiredTextField = (
   label: string,
