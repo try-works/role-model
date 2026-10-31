@@ -1,11 +1,18 @@
 # S581 — sealed packaged rebuild and gate matrix
 
-Sealed artifact built from public HEAD 972ef511 (version 0.0.20-423-g972ef511) paired with the private track-B distribution rebuilt against the same public tree (13 extensions, sidecar sha 57713aca…, compatibility generation N).
+Sealed artifact built from public HEAD bbda1d7d (version 0.0.20-425-gbbda1d7d) paired with the private track-B distribution rebuilt against the same public tree (13 extensions, sidecar sha 57713aca…, compatibility generation N).
 
 ## Artifact
 - Package: role-model-router/dist/release/win32-x64 (role-model-dev.exe, launcher, .bat, sha sidecar, manifest, build/client, track-b-runtime)
 - Executable sha256: fdf2441680e664ba86b7ddbdae2cf896bc9bdd8319eddc44de51b3339792da0e
 - validate-packaging: healthy, modelCount 8, roleDefinitionCount 28, extensionCount 13, chat + responses output text present.
+
+## Final verification on this artifact
+- UI suite: 808/808 in 76 files, tsc 0.
+- verify-packaged-candidate: 12/12 maintained journeys PASS.
+- audit-rendered-ui: 20/20 routes PASS.
+- dialog-a11y-audit: PASS.
+- ui-parity: 128/128 PASS.
 
 ## Gates
 - verify-packaged-candidate: 12/12 PASS (health, models, telemetry, controller, learning, replay jobs, evaluation jobs, ui css, ui bundle, ui theme boot, chat completion, ui shell).
