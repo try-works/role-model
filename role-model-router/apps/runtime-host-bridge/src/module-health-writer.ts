@@ -23,6 +23,24 @@ import type {
  * Effect-side: Effect.onExit/:7269, Effect.sync/:1215, Exit.isFailure (Exit.ts:435).
  */
 
+/**
+ * R20 calibrated-limit gate. The record/byte/ingress/formatting/TTL/query limits still require
+ * the owner's calibration approval, so limit-driven enablement stays OFF. The writer does not
+ * flip this flag; its defaults are placeholders and diagnostics.enabled remains the explicit
+ * calibration decision.
+ */
+export const MODULE_HEALTH_LIMITS_ENABLED = false;
+
+export type ModuleHealthEscape =
+  | Cause.Cause<unknown>
+  | Error
+  | { readonly statusCode?: unknown }
+  | string
+  | number
+  | boolean
+  | null
+  | undefined;
+
 export const MODULE_HEALTH_DEFAULT_CAPACITY = 64;
 export const MODULE_HEALTH_MAX_CAPACITY = 256;
 export const MODULE_HEALTH_DEFAULT_MAX_CODE_BYTES = 96;
@@ -48,6 +66,8 @@ export interface ModuleHealthWriter {
   readonly recordCause: (cause: Cause.Cause<unknown>) => void;
   /** Observes a plain error. Never throws, never reads the error's properties. */
   readonly recordError: (error: unknown) => void;
+  /** Observes a request escape: client-caused 4xx is separated, everything else is a Cause. */
+  readonly recordEscape: (error: ModuleHealthEscape) => boolean;
   /** The single report edge: records the final Exit of a program and returns it unchanged. */
   readonly observe: <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
   /** Bounded records, newest first. */
@@ -183,6 +203,29 @@ export const makeModuleHealthWriter = (
     }
   };
 
+  const isClientCausedEscape = (error: ModuleHealthEscape): boolean => {
+    if (error === null || error === undefined || Object(error) !== error) return false;
+    try {
+      // SAFETY: only an optional numeric statusCode is read; a hostile accessor falls through to a module failure.
+      const statusCode = (error as { readonly statusCode?: unknown }).statusCode;
+      const numeric = Number(statusCode);
+      return Number.isFinite(numeric) && numeric >= 400 && numeric < 500;
+    } catch {
+      return false;
+    }
+  };
+
+  const recordEscape = (error: ModuleHealthEscape): boolean => {
+    try {
+      if (isClientCausedEscape(error)) return false;
+      recordCause(Cause.isCause(error) ? error : Cause.fail(error));
+      return true;
+    } catch {
+      outageCount += 1;
+      return false;
+    }
+  };
+
   const recordError = (_error: unknown): void => {
     // Deliberately does not read the error: no message, name, stack or cause graph capture.
     push("error", "error");
@@ -228,6 +271,7 @@ export const makeModuleHealthWriter = (
     outages: () => outageCount,
     recordCause,
     recordError,
+    recordEscape,
     records,
     source,
   };

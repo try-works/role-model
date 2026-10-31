@@ -20584,9 +20584,10 @@ export function createModuleHealthComposition(
   });
   return {
     reportRequestFailure: (error: unknown) => {
-      if (isClientCausedModuleHealthEscape(error)) return;
-      const cause = moduleHealthCauseForEscape(error);
-      writer.recordCause(cause);
+      // One writer-owned edge: client-caused 4xx escapes are separated and Fail/Die/Interrupt is
+      // classified from the Cause without reading hostile error properties.
+      // SAFETY: the transport reject value is an arbitrary JS throw; the writer narrows it without property reads.
+      writer.recordEscape(error as Parameters<ModuleHealthWriter["recordEscape"]>[0]);
     },
     // S421: module diagnostics are the writer's owner-local ring buffer, never business telemetry rows.
     source: () => writer.source(),

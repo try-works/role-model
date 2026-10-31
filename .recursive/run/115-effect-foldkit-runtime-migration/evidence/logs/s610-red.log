@@ -1,0 +1,117 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+
+ ❯ role-model-router/apps/runtime-host-bridge/test/module-health-writer.test.ts (18 tests | 5 failed) 80ms
+   ✓ module health writer > keeps a bounded ring buffer and counts every overflow instead of growing 11ms
+   ✓ module health writer > distinguishes Fail, Die and Interrupt and leaves each original cause intact 5ms
+   ✓ module health writer > bounds one cause's reasons and counts the rest instead of growing 5ms
+   ✓ module health writer > records a plain error without reading hostile accessors 2ms
+   ✓ module health writer > contains a throwing reporter so the business result is unchanged 5ms
+   ✓ module health writer > contains a cause whose reasons accessor throws 1ms
+   ✓ module health writer > does not recurse on a cyclic error or a reused error 1ms
+   ✓ module health writer > records a nested/mixed cause without merging the kinds or recursing 4ms
+   ✓ module health writer > preserves an acquire/finalizer mixed exit with and without the writer 6ms
+   ✓ module health writer > keeps the business value/error identity identical with and without the writer 3ms
+   ✓ module health writer > is a single report owner: one write per observed exit and none for success or inner failures 2ms
+   ✓ module health writer > redacts: only four bounded scalars leave the writer, never a message or fiber dump 1ms
+   × module health writer > separates client-caused 4xx escapes from module failures at the writer edge 8ms
+     → writer.recordEscape is not a function
+   × module health writer > contains hostile client-status accessors and still records a genuine module failure 12ms
+     → expected [Function] to not throw an error but 'TypeError: writer.recordEscape is not…' was thrown
+   × module health writer > classifies Fail/Die/Interrupt at the escape edge and preserves mixed reasons 1ms
+     → writer.recordEscape is not a function
+   × module health writer > does not recurse on a cyclic or reused escape object 3ms
+     → expected [Function] to not throw an error but 'TypeError: writer.recordEscape is not…' was thrown
+   × module health writer > keeps the calibrated limits gate OFF 2ms
+     → expected undefined to be false // Object.is equality
+   ✓ module health writer > feeds the diagnostics read contract: identity, records, loss and empty state 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  role-model-router/apps/runtime-host-bridge/test/module-health-writer.test.ts > module health writer > separates client-caused 4xx escapes from module failures at the writer edge
+TypeError: writer.recordEscape is not a function
+ ❯ role-model-router/apps/runtime-host-bridge/test/module-health-writer.test.ts:298:19
+    296|   it("separates client-caused 4xx escapes from module failures at the …
+    297|     const writer = makeModuleHealthWriter();
+    298|     expect(writer.recordEscape({ statusCode: 404 })).toBe(false);
+       |                   ^
+    299|     expect(writer.recordEscape({ statusCode: 422, reason: "invalid" })…
+    300|     expect(writer.records()).toHaveLength(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  role-model-router/apps/runtime-host-bridge/test/module-health-writer.test.ts > module health writer > contains hostile client-status accessors and still records a genuine module failure
+AssertionError: expected [Function] to not throw an error but 'TypeError: writer.recordEscape is not…' was thrown
+
+- Expected: 
+undefined
+
++ Received: 
+"TypeError: writer.recordEscape is not a function"
+
+ ❯ role-model-router/apps/runtime-host-bridge/test/module-health-writer.test.ts:313:52
+    311|     });
+    312|     const writer = makeModuleHealthWriter();
+    313|     expect(() => writer.recordEscape(hostile)).not.toThrow();
+       |                                                    ^
+    314|     expect(writer.records().map((record) => record.code)).toEqual(["ca…
+    315|     expect(writer.outages()).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  role-model-router/apps/runtime-host-bridge/test/module-health-writer.test.ts > module health writer > classifies Fail/Die/Interrupt at the escape edge and preserves mixed reasons
+TypeError: writer.recordEscape is not a function
+ ❯ role-model-router/apps/runtime-host-bridge/test/module-health-writer.test.ts:321:12
+    319|   it("classifies Fail/Die/Interrupt at the escape edge and preserves m…
+    320|     const writer = makeModuleHealthWriter();
+    321|     writer.recordEscape(Cause.fail(new Error("fail")));
+       |            ^
+    322|     writer.recordEscape(Cause.die(new Error("die")));
+    323|     writer.recordEscape(Cause.interrupt(9));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  role-model-router/apps/runtime-host-bridge/test/module-health-writer.test.ts > module health writer > does not recurse on a cyclic or reused escape object
+AssertionError: expected [Function] to not throw an error but 'TypeError: writer.recordEscape is not…' was thrown
+
+- Expected: 
+undefined
+
++ Received: 
+"TypeError: writer.recordEscape is not a function"
+
+ ❯ role-model-router/apps/runtime-host-bridge/test/module-health-writer.test.ts:343:12
+    341|       writer.recordEscape(reused);
+    342|       writer.recordEscape(reused);
+    343|     }).not.toThrow();
+       |            ^
+    344|     expect(writer.records()).toHaveLength(3);
+    345|     expect(writer.outages()).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  role-model-router/apps/runtime-host-bridge/test/module-health-writer.test.ts > module health writer > keeps the calibrated limits gate OFF
+AssertionError: expected undefined to be false // Object.is equality
+
+- Expected: 
+false
+
++ Received: 
+undefined
+
+ ❯ role-model-router/apps/runtime-host-bridge/test/module-health-writer.test.ts:349:42
+    347| 
+    348|   it("keeps the calibrated limits gate OFF", () => {
+    349|     expect(MODULE_HEALTH_LIMITS_ENABLED).toBe(false);
+       |                                          ^
+    350|   });
+    351| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 13 passed (18)
+   Start at  06:08:25
+   Duration  5.95s (transform 2.23s, setup 0ms, collect 3.75s, tests 80ms, environment 1ms, prepare 447ms)
+

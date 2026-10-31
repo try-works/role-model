@@ -1,0 +1,19 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+
+(node:25448) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ role-model-router/apps/runtime-host-bridge/test/module-health-writer.test.ts (18 tests) 69ms
+(node:21016) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12676) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ role-model-router/apps/runtime-host-bridge/test/s366-module-health-edge.test.ts (4 tests) 24ms
+ ✓ role-model-router/apps/runtime-host-bridge/test/run115-s10b-module-health-wiring.test.ts (2 tests) 28ms
+ ✓ role-model-router/apps/runtime-host-bridge/test/s369-diagnostics-query-source.test.ts (4 tests) 678ms
+
+ Test Files  4 passed (4)
+      Tests  28 passed (28)
+   Start at  06:09:25
+   Duration  14.35s (transform 9.44s, setup 0ms, collect 38.99s, tests 798ms, environment 2ms, prepare 2.22s)
+
