@@ -1,7 +1,7 @@
 import { Effect, Exit, Layer, Scope } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { composeR27HostLayer, R27_RESOURCE_IDS, type R27HostContract } from "../src/r27-layer-dag.js";
+import { closeR27HostScope, composeR27HostLayer, R27_RESOURCE_IDS, type R27HostContract } from "../src/r27-layer-dag.js";
 import { composeReadinessOwner } from "../src/composition-dag.js";
 
 /**
@@ -53,15 +53,18 @@ describe("S598 R27 production acquisition", () => {
       onHost: (value) => { host = value; },
       acquire: {
         server: async () => ({
-          handle: { kind: "bridge-server" },
+          handle: { close: async () => { serverClosed += 1; }, kind: "bridge-server" },
           release: async () => { serverClosed += 1; events.push("release:server-handle"); },
         }),
       },
       readiness: composeReadinessOwner(),
     }), scope));
-    expect(host?.handles.server?.handle).toEqual({ kind: "bridge-server" });
+    expect(host?.handles.server?.handle).toMatchObject({ kind: "bridge-server" });
+    expect(typeof (host?.handles.server?.handle as { close?: unknown }).close).toBe("function");
     expect(events).toContain("acquire:server");
-    await Effect.runPromise(Scope.close(scope, Exit.void));
+    await closeR27HostScope(scope);
+    expect(serverClosed).toBe(1);
+    await closeR27HostScope(scope);
     expect(serverClosed).toBe(1);
   });
 
@@ -81,5 +84,27 @@ describe("S598 R27 production acquisition", () => {
     expect(events).not.toContain("acquire:cli");
     expect(events).not.toContain("ready");
     await Effect.runPromise(Scope.close(scope, Exit.void)).catch(() => undefined);
+  });
+  test("a fail-after-server host error releases the acquired server scope", async () => {
+    const events: string[] = [];
+    let serverClosed = 0;
+    const scope = Effect.runSync(Scope.make());
+    await expect(
+      Effect.runPromise(Layer.buildWithScope(composeR27HostLayer({
+        events,
+        failAfter: "server",
+        readiness: composeReadinessOwner(),
+        acquire: {
+          server: async () => ({
+            handle: { close: async () => { serverClosed += 1; }, kind: "bridge-server" },
+            release: async () => { serverClosed += 1; },
+          }),
+        },
+      }), scope)),
+    ).rejects.toThrow(/r27 host acquisition failed after server/);
+    await closeR27HostScope(scope).catch(() => undefined);
+    expect(serverClosed).toBe(1);
+    expect(events).toContain("acquire:server");
+    expect(events).not.toContain("ready");
   });
 });

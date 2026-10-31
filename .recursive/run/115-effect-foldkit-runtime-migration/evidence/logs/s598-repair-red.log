@@ -1,0 +1,1661 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:25796) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run115-s598-cli-acquisition.test.ts (6 tests | 1 failed | 5 skipped) 53ms
+   ↓ S598 R27 production acquisition > acquires the closed DAG in order, marks readiness from the host leaf, and releases in reverse
+   ↓ S598 R27 production acquisition > a failing DAG acquisition rejects, aborting startup
+   ↓ S598 R27 production acquisition > the resource id set covers every acquired non-leaf node
+   ↓ S598 R27 production acquisition > a DAG node owns its acquired resource (host exposes the server handle) and release closes it
+   ↓ S598 R27 production acquisition > a failed resource build aborts startup before later nodes acquire
+   × S598 R27 production acquisition > a fail-after-server host error releases the acquired server scope 51ms
+     → promise resolved "{ _id: 'Context', …(1) }" instead of rejecting
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run115-s598-cli-acquisition.test.ts > S598 R27 production acquisition > a fail-after-server host error releases the acquired server scope
+AssertionError: promise resolved "{ _id: 'Context', …(1) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "_id": "Context",
++   "services": [
++     {
++       "key": "R27ReadinessService",
++       "value": {
++         "id": "readiness:run115-s21a",
++         "markFailed": [Function markFailed],
++         "markReady": [Function markReady],
++         "ready": [Function ready],
++         "state": [Function state],
++       },
++     },
++     {
++       "key": "R27ProviderPermits",
++       "value": {
++         "handle": undefined,
++         "id": "providerPermits",
++         "release": [Function release],
++       },
++     },
++     {
++       "key": "R27Backend",
++       "value": {
++         "handle": undefined,
++         "id": "backend",
++         "release": [Function release],
++       },
++     },
++     {
++       "key": "R27Bootstrap",
++       "value": {
++         "handle": undefined,
++         "id": "bootstrap",
++         "release": [Function release],
++       },
++     },
++     {
++       "key": "R27Refresh",
++       "value": {
++         "handle": undefined,
++         "id": "refresh",
++         "release": [Function release],
++       },
++     },
++     {
++       "key": "R27Drains",
++       "value": {
++         "handle": undefined,
++         "id": "drains",
++         "release": [Function release],
++       },
++     },
++     {
++       "key": "R27Benchmarks",
++       "value": {
++         "handle": undefined,
++         "id": "benchmarks",
++         "release": [Function release],
++       },
++     },
++     {
++       "key": "R27Server",
++       "value": {
++         "handle": {
++           "close": [Function close],
++           "kind": "bridge-server",
++         },
++         "id": "server",
++         "release": [Function release],
++       },
++     },
++     {
++       "key": "R27Cli",
++       "value": {
++         "handle": undefined,
++         "id": "cli",
++         "release": [Function release],
++       },
++     },
++     {
++       "key": "R27Host",
++       "value": {
++         "handles": {
++           "backend": {
++             "handle": undefined,
++             "id": "backend",
++             "release": [Function release],
++           },
++           "benchmarks": {
++             "handle": undefined,
++             "id": "benchmarks",
++             "release": [Function release],
++           },
++           "bootstrap": {
++             "handle": undefined,
++             "id": "bootstrap",
++             "release": [Function release],
++           },
++           "cli": {
++             "handle": undefined,
++             "id": "cli",
++             "release": [Function release],
++           },
++           "drains": {
++             "handle": undefined,
++             "id": "drains",
++             "release": [Function release],
++           },
++           "providerPermits": {
++             "handle": undefined,
++             "id": "providerPermits",
++             "release": [Function release],
++           },
++           "refresh": {
++             "handle": undefined,
++             "id": "refresh",
++             "release": [Function release],
++           },
++           "server": {
++             "handle": {
++               "close": [Function close],
++               "kind": "bridge-server",
++             },
++             "id": "server",
++             "release": [Function release],
++           },
++         },
++         "id": "r27:host",
++         "readiness": {
++           "id": "readiness:run115-s21a",
++           "markFailed": [Function markFailed],
++           "markReady": [Function markReady],
++           "ready": [Function ready],
++           "state": [Function state],
++         },
++         "resources": [
++           "readiness",
++           "providerPermits",
++           "backend",
++           "bootstrap",
++           "refresh",
++           "drains",
++           "benchmarks",
++           "server",
++           "cli",
++         ],
++       },
++     },
++     {
++       "key": "effect/Layer/CurrentMemoMap",
++       "value": MemoMapImpl {
++         "map": Map {
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27ReadinessService",
++                       "value": {
++                         "id": "readiness:run115-s21a",
++                         "markFailed": [Function markFailed],
++                         "markReady": [Function markReady],
++                         "ready": [Function ready],
++                         "state": [Function state],
++                       },
++                     },
++                     {
++                       "key": "R27ProviderPermits",
++                       "value": {
++                         "handle": undefined,
++                         "id": "providerPermits",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Backend",
++                       "value": {
++                         "handle": undefined,
++                         "id": "backend",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Bootstrap",
++                       "value": {
++                         "handle": undefined,
++                         "id": "bootstrap",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Refresh",
++                       "value": {
++                         "handle": undefined,
++                         "id": "refresh",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Drains",
++                       "value": {
++                         "handle": undefined,
++                         "id": "drains",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Benchmarks",
++                       "value": {
++                         "handle": undefined,
++                         "id": "benchmarks",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Server",
++                       "value": {
++                         "handle": {
++                           "close": [Function close],
++                           "kind": "bridge-server",
++                         },
++                         "id": "server",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Cli",
++                       "value": {
++                         "handle": undefined,
++                         "id": "cli",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Host",
++                       "value": {
++                         "handles": {
++                           "backend": {
++                             "handle": undefined,
++                             "id": "backend",
++                             "release": [Function release],
++                           },
++                           "benchmarks": {
++                             "handle": undefined,
++                             "id": "benchmarks",
++                             "release": [Function release],
++                           },
++                           "bootstrap": {
++                             "handle": undefined,
++                             "id": "bootstrap",
++                             "release": [Function release],
++                           },
++                           "cli": {
++                             "handle": undefined,
++                             "id": "cli",
++                             "release": [Function release],
++                           },
++                           "drains": {
++                             "handle": undefined,
++                             "id": "drains",
++                             "release": [Function release],
++                           },
++                           "providerPermits": {
++                             "handle": undefined,
++                             "id": "providerPermits",
++                             "release": [Function release],
++                           },
++                           "refresh": {
++                             "handle": undefined,
++                             "id": "refresh",
++                             "release": [Function release],
++                           },
++                           "server": {
++                             "handle": {
++                               "close": [Function close],
++                               "kind": "bridge-server",
++                             },
++                             "id": "server",
++                             "release": [Function release],
++                           },
++                         },
++                         "id": "r27:host",
++                         "readiness": {
++                           "id": "readiness:run115-s21a",
++                           "markFailed": [Function markFailed],
++                           "markReady": [Function markReady],
++                           "ready": [Function ready],
++                           "state": [Function state],
++                         },
++                         "resources": [
++                           "readiness",
++                           "providerPermits",
++                           "backend",
++                           "bootstrap",
++                           "refresh",
++                           "drains",
++                           "benchmarks",
++                           "server",
++                           "cli",
++                         ],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": undefined,
++                 "finalizerKey": undefined,
++                 "finalizers": Map {
++                   {
++                     "parent": [Circular],
++                     "state": {
++                       "_tag": "Open",
++                       "finalizer": [Function finalizer],
++                       "finalizerKey": {},
++                       "finalizers": undefined,
++                     },
++                     "strategy": "sequential",
++                     "~effect/Scope": "~effect/Scope",
++                     "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++                   } => [Function anonymous],
++                   {
++                     "parent": [Circular],
++                     "state": {
++                       "_tag": "Open",
++                       "finalizer": [Function finalizer],
++                       "finalizerKey": {},
++                       "finalizers": undefined,
++                     },
++                     "strategy": "sequential",
++                     "~effect/Scope": "~effect/Scope",
++                     "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++                   } => [Function anonymous],
++                 },
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27ReadinessService",
++                       "value": {
++                         "id": "readiness:run115-s21a",
++                         "markFailed": [Function markFailed],
++                         "markReady": [Function markReady],
++                         "ready": [Function ready],
++                         "state": [Function state],
++                       },
++                     },
++                     {
++                       "key": "R27ProviderPermits",
++                       "value": {
++                         "handle": undefined,
++                         "id": "providerPermits",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Backend",
++                       "value": {
++                         "handle": undefined,
++                         "id": "backend",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Bootstrap",
++                       "value": {
++                         "handle": undefined,
++                         "id": "bootstrap",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Refresh",
++                       "value": {
++                         "handle": undefined,
++                         "id": "refresh",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Drains",
++                       "value": {
++                         "handle": undefined,
++                         "id": "drains",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Benchmarks",
++                       "value": {
++                         "handle": undefined,
++                         "id": "benchmarks",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Server",
++                       "value": {
++                         "handle": {
++                           "close": [Function close],
++                           "kind": "bridge-server",
++                         },
++                         "id": "server",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Cli",
++                       "value": {
++                         "handle": undefined,
++                         "id": "cli",
++                         "release": [Function release],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": undefined,
++                 "finalizerKey": undefined,
++                 "finalizers": Map {
++                   {
++                     "parent": [Circular],
++                     "state": {
++                       "_tag": "Open",
++                       "finalizer": [Function finalizer],
++                       "finalizerKey": {},
++                       "finalizers": undefined,
++                     },
++                     "strategy": "sequential",
++                     "~effect/Scope": "~effect/Scope",
++                     "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++                   } => [Function anonymous],
++                   {
++                     "parent": [Circular],
++                     "state": {
++                       "_tag": "Open",
++                       "finalizer": [Function finalizer],
++                       "finalizerKey": {},
++                       "finalizers": undefined,
++                     },
++                     "strategy": "sequential",
++                     "~effect/Scope": "~effect/Scope",
++                     "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++                   } => [Function anonymous],
++                 },
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27ReadinessService",
++                       "value": {
++                         "id": "readiness:run115-s21a",
++                         "markFailed": [Function markFailed],
++                         "markReady": [Function markReady],
++                         "ready": [Function ready],
++                         "state": [Function state],
++                       },
++                     },
++                     {
++                       "key": "R27ProviderPermits",
++                       "value": {
++                         "handle": undefined,
++                         "id": "providerPermits",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Backend",
++                       "value": {
++                         "handle": undefined,
++                         "id": "backend",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Bootstrap",
++                       "value": {
++                         "handle": undefined,
++                         "id": "bootstrap",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Refresh",
++                       "value": {
++                         "handle": undefined,
++                         "id": "refresh",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Drains",
++                       "value": {
++                         "handle": undefined,
++                         "id": "drains",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Benchmarks",
++                       "value": {
++                         "handle": undefined,
++                         "id": "benchmarks",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Server",
++                       "value": {
++                         "handle": {
++                           "close": [Function close],
++                           "kind": "bridge-server",
++                         },
++                         "id": "server",
++                         "release": [Function release],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": undefined,
++                 "finalizerKey": undefined,
++                 "finalizers": Map {
++                   {
++                     "parent": [Circular],
++                     "state": {
++                       "_tag": "Open",
++                       "finalizer": [Function finalizer],
++                       "finalizerKey": {},
++                       "finalizers": undefined,
++                     },
++                     "strategy": "sequential",
++                     "~effect/Scope": "~effect/Scope",
++                     "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++                   } => [Function anonymous],
++                   {
++                     "parent": [Circular],
++                     "state": {
++                       "_tag": "Open",
++                       "finalizer": [Function finalizer],
++                       "finalizerKey": {},
++                       "finalizers": undefined,
++                     },
++                     "strategy": "sequential",
++                     "~effect/Scope": "~effect/Scope",
++                     "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++                   } => [Function anonymous],
++                 },
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27ReadinessService",
++                       "value": {
++                         "id": "readiness:run115-s21a",
++                         "markFailed": [Function markFailed],
++                         "markReady": [Function markReady],
++                         "ready": [Function ready],
++                         "state": [Function state],
++                       },
++                     },
++                     {
++                       "key": "R27ProviderPermits",
++                       "value": {
++                         "handle": undefined,
++                         "id": "providerPermits",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Backend",
++                       "value": {
++                         "handle": undefined,
++                         "id": "backend",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Bootstrap",
++                       "value": {
++                         "handle": undefined,
++                         "id": "bootstrap",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Refresh",
++                       "value": {
++                         "handle": undefined,
++                         "id": "refresh",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Drains",
++                       "value": {
++                         "handle": undefined,
++                         "id": "drains",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Benchmarks",
++                       "value": {
++                         "handle": undefined,
++                         "id": "benchmarks",
++                         "release": [Function release],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": undefined,
++                 "finalizerKey": undefined,
++                 "finalizers": Map {
++                   {
++                     "parent": [Circular],
++                     "state": {
++                       "_tag": "Open",
++                       "finalizer": [Function finalizer],
++                       "finalizerKey": {},
++                       "finalizers": undefined,
++                     },
++                     "strategy": "sequential",
++                     "~effect/Scope": "~effect/Scope",
++                     "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++                   } => [Function anonymous],
++                   {
++                     "parent": [Circular],
++                     "state": {
++                       "_tag": "Open",
++                       "finalizer": [Function finalizer],
++                       "finalizerKey": {},
++                       "finalizers": undefined,
++                     },
++                     "strategy": "sequential",
++                     "~effect/Scope": "~effect/Scope",
++                     "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++                   } => [Function anonymous],
++                 },
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27ReadinessService",
++                       "value": {
++                         "id": "readiness:run115-s21a",
++                         "markFailed": [Function markFailed],
++                         "markReady": [Function markReady],
++                         "ready": [Function ready],
++                         "state": [Function state],
++                       },
++                     },
++                     {
++                       "key": "R27ProviderPermits",
++                       "value": {
++                         "handle": undefined,
++                         "id": "providerPermits",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Backend",
++                       "value": {
++                         "handle": undefined,
++                         "id": "backend",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Bootstrap",
++                       "value": {
++                         "handle": undefined,
++                         "id": "bootstrap",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Refresh",
++                       "value": {
++                         "handle": undefined,
++                         "id": "refresh",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Drains",
++                       "value": {
++                         "handle": undefined,
++                         "id": "drains",
++                         "release": [Function release],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": undefined,
++                 "finalizerKey": undefined,
++                 "finalizers": Map {
++                   {
++                     "parent": [Circular],
++                     "state": {
++                       "_tag": "Open",
++                       "finalizer": [Function finalizer],
++                       "finalizerKey": {},
++                       "finalizers": undefined,
++                     },
++                     "strategy": "sequential",
++                     "~effect/Scope": "~effect/Scope",
++                     "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++                   } => [Function anonymous],
++                   {
++                     "parent": [Circular],
++                     "state": {
++                       "_tag": "Open",
++                       "finalizer": [Function finalizer],
++                       "finalizerKey": {},
++                       "finalizers": undefined,
++                     },
++                     "strategy": "sequential",
++                     "~effect/Scope": "~effect/Scope",
++                     "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++                   } => [Function anonymous],
++                 },
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27ReadinessService",
++                       "value": {
++                         "id": "readiness:run115-s21a",
++                         "markFailed": [Function markFailed],
++                         "markReady": [Function markReady],
++                         "ready": [Function ready],
++                         "state": [Function state],
++                       },
++                     },
++                     {
++                       "key": "R27ProviderPermits",
++                       "value": {
++                         "handle": undefined,
++                         "id": "providerPermits",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Backend",
++                       "value": {
++                         "handle": undefined,
++                         "id": "backend",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Bootstrap",
++                       "value": {
++                         "handle": undefined,
++                         "id": "bootstrap",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Refresh",
++                       "value": {
++                         "handle": undefined,
++                         "id": "refresh",
++                         "release": [Function release],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": undefined,
++                 "finalizerKey": undefined,
++                 "finalizers": Map {
++                   {
++                     "parent": [Circular],
++                     "state": {
++                       "_tag": "Open",
++                       "finalizer": [Function finalizer],
++                       "finalizerKey": {},
++                       "finalizers": undefined,
++                     },
++                     "strategy": "sequential",
++                     "~effect/Scope": "~effect/Scope",
++                     "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++                   } => [Function anonymous],
++                   {
++                     "parent": [Circular],
++                     "state": {
++                       "_tag": "Open",
++                       "finalizer": [Function finalizer],
++                       "finalizerKey": {},
++                       "finalizers": undefined,
++                     },
++                     "strategy": "sequential",
++                     "~effect/Scope": "~effect/Scope",
++                     "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++                   } => [Function anonymous],
++                 },
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27ReadinessService",
++                       "value": {
++                         "id": "readiness:run115-s21a",
++                         "markFailed": [Function markFailed],
++                         "markReady": [Function markReady],
++                         "ready": [Function ready],
++                         "state": [Function state],
++                       },
++                     },
++                     {
++                       "key": "R27ProviderPermits",
++                       "value": {
++                         "handle": undefined,
++                         "id": "providerPermits",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Backend",
++                       "value": {
++                         "handle": undefined,
++                         "id": "backend",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Bootstrap",
++                       "value": {
++                         "handle": undefined,
++                         "id": "bootstrap",
++                         "release": [Function release],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": undefined,
++                 "finalizerKey": undefined,
++                 "finalizers": Map {
++                   {
++                     "parent": [Circular],
++                     "state": {
++                       "_tag": "Open",
++                       "finalizer": [Function finalizer],
++                       "finalizerKey": {},
++                       "finalizers": undefined,
++                     },
++                     "strategy": "sequential",
++                     "~effect/Scope": "~effect/Scope",
++                     "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++                   } => [Function anonymous],
++                   {
++                     "parent": [Circular],
++                     "state": {
++                       "_tag": "Open",
++                       "finalizer": [Function finalizer],
++                       "finalizerKey": {},
++                       "finalizers": undefined,
++                     },
++                     "strategy": "sequential",
++                     "~effect/Scope": "~effect/Scope",
++                     "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++                   } => [Function anonymous],
++                 },
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27ReadinessService",
++                       "value": {
++                         "id": "readiness:run115-s21a",
++                         "markFailed": [Function markFailed],
++                         "markReady": [Function markReady],
++                         "ready": [Function ready],
++                         "state": [Function state],
++                       },
++                     },
++                     {
++                       "key": "R27ProviderPermits",
++                       "value": {
++                         "handle": undefined,
++                         "id": "providerPermits",
++                         "release": [Function release],
++                       },
++                     },
++                     {
++                       "key": "R27Backend",
++                       "value": {
++                         "handle": undefined,
++                         "id": "backend",
++                         "release": [Function release],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": undefined,
++                 "finalizerKey": undefined,
++                 "finalizers": Map {
++                   {
++                     "parent": [Circular],
++                     "state": {
++                       "_tag": "Open",
++                       "finalizer": [Function finalizer],
++                       "finalizerKey": {},
++                       "finalizers": undefined,
++                     },
++                     "strategy": "sequential",
++                     "~effect/Scope": "~effect/Scope",
++                     "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++                   } => [Function anonymous],
++                   {
++                     "parent": [Circular],
++                     "state": {
++                       "_tag": "Open",
++                       "finalizer": [Function finalizer],
++                       "finalizerKey": {},
++                       "finalizers": undefined,
++                     },
++                     "strategy": "sequential",
++                     "~effect/Scope": "~effect/Scope",
++                     "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++                   } => [Function anonymous],
++                 },
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27ReadinessService",
++                       "value": {
++                         "id": "readiness:run115-s21a",
++                         "markFailed": [Function markFailed],
++                         "markReady": [Function markReady],
++                         "ready": [Function ready],
++                         "state": [Function state],
++                       },
++                     },
++                     {
++                       "key": "R27ProviderPermits",
++                       "value": {
++                         "handle": undefined,
++                         "id": "providerPermits",
++                         "release": [Function release],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": undefined,
++                 "finalizerKey": undefined,
++                 "finalizers": Map {
++                   {
++                     "parent": [Circular],
++                     "state": {
++                       "_tag": "Open",
++                       "finalizer": [Function finalizer],
++                       "finalizerKey": {},
++                       "finalizers": undefined,
++                     },
++                     "strategy": "sequential",
++                     "~effect/Scope": "~effect/Scope",
++                     "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++                   } => [Function anonymous],
++                   {
++                     "parent": [Circular],
++                     "state": {
++                       "_tag": "Open",
++                       "finalizer": [Function finalizer],
++                       "finalizerKey": {},
++                       "finalizers": undefined,
++                     },
++                     "strategy": "sequential",
++                     "~effect/Scope": "~effect/Scope",
++                     "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++                   } => [Function anonymous],
++                 },
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27ReadinessService",
++                       "value": {
++                         "id": "readiness:run115-s21a",
++                         "markFailed": [Function markFailed],
++                         "markReady": [Function markReady],
++                         "ready": [Function ready],
++                         "state": [Function state],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": [Function anonymous],
++                 "finalizerKey": {},
++                 "finalizers": undefined,
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27ProviderPermits",
++                       "value": {
++                         "handle": undefined,
++                         "id": "providerPermits",
++                         "release": [Function release],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": [Function anonymous],
++                 "finalizerKey": {},
++                 "finalizers": undefined,
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27Backend",
++                       "value": {
++                         "handle": undefined,
++                         "id": "backend",
++                         "release": [Function release],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": [Function anonymous],
++                 "finalizerKey": {},
++                 "finalizers": undefined,
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27Bootstrap",
++                       "value": {
++                         "handle": undefined,
++                         "id": "bootstrap",
++                         "release": [Function release],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": [Function anonymous],
++                 "finalizerKey": {},
++                 "finalizers": undefined,
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27Refresh",
++                       "value": {
++                         "handle": undefined,
++                         "id": "refresh",
++                         "release": [Function release],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": [Function anonymous],
++                 "finalizerKey": {},
++                 "finalizers": undefined,
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27Drains",
++                       "value": {
++                         "handle": undefined,
++                         "id": "drains",
++                         "release": [Function release],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": [Function anonymous],
++                 "finalizerKey": {},
++                 "finalizers": undefined,
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27Benchmarks",
++                       "value": {
++                         "handle": undefined,
++                         "id": "benchmarks",
++                         "release": [Function release],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": [Function anonymous],
++                 "finalizerKey": {},
++                 "finalizers": undefined,
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27Server",
++                       "value": {
++                         "handle": {
++                           "close": [Function close],
++                           "kind": "bridge-server",
++                         },
++                         "id": "server",
++                         "release": [Function release],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": [Function anonymous],
++                 "finalizerKey": {},
++                 "finalizers": undefined,
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27Cli",
++                       "value": {
++                         "handle": undefined,
++                         "id": "cli",
++                         "release": [Function release],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": [Function anonymous],
++                 "finalizerKey": {},
++                 "finalizers": undefined,
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++           {
++             "build": [Function anonymous],
++           } => {
++             "deferred": {
++               "effect": {
++                 "_id": "Exit",
++                 "_tag": "Success",
++                 "value": {
++                   "_id": "Context",
++                   "services": [
++                     {
++                       "key": "R27Host",
++                       "value": {
++                         "handles": {
++                           "backend": {
++                             "handle": undefined,
++                             "id": "backend",
++                             "release": [Function release],
++                           },
++                           "benchmarks": {
++                             "handle": undefined,
++                             "id": "benchmarks",
++                             "release": [Function release],
++                           },
++                           "bootstrap": {
++                             "handle": undefined,
++                             "id": "bootstrap",
++                             "release": [Function release],
++                           },
++                           "cli": {
++                             "handle": undefined,
++                             "id": "cli",
++                             "release": [Function release],
++                           },
++                           "drains": {
++                             "handle": undefined,
++                             "id": "drains",
++                             "release": [Function release],
++                           },
++                           "providerPermits": {
++                             "handle": undefined,
++                             "id": "providerPermits",
++                             "release": [Function release],
++                           },
++                           "refresh": {
++                             "handle": undefined,
++                             "id": "refresh",
++                             "release": [Function release],
++                           },
++                           "server": {
++                             "handle": {
++                               "close": [Function close],
++                               "kind": "bridge-server",
++                             },
++                             "id": "server",
++                             "release": [Function release],
++                           },
++                         },
++                         "id": "r27:host",
++                         "readiness": {
++                           "id": "readiness:run115-s21a",
++                           "markFailed": [Function markFailed],
++                           "markReady": [Function markReady],
++                           "ready": [Function ready],
++                           "state": [Function state],
++                         },
++                         "resources": [
++                           "readiness",
++                           "providerPermits",
++                           "backend",
++                           "bootstrap",
++                           "refresh",
++                           "drains",
++                           "benchmarks",
++                           "server",
++                           "cli",
++                         ],
++                       },
++                     },
++                   ],
++                 },
++               },
++               "resumes": undefined,
++             },
++             "finalizer": [Function finalizer],
++             "observers": 1,
++             "scope": {
++               "parent": undefined,
++               "state": {
++                 "_tag": "Open",
++                 "finalizer": [Function anonymous],
++                 "finalizerKey": {},
++                 "finalizers": undefined,
++               },
++               "strategy": "sequential",
++               "~effect/Scope": "~effect/Scope",
++               "~effect/Scope/Closeable": "~effect/Scope/Closeable",
++             },
++           },
++         },
++         "parent": undefined,
++       },
++     },
++   ],
+  }
+
+ ❯ test/run115-s598-cli-acquisition.test.ts:104:5
+    102|         },
+    103|       }), scope)),
+    104|     ).rejects.toThrow(/r27 host acquisition failed after server/);
+       |     ^
+    105|     await closeR27HostScope(scope).catch(() => undefined);
+    106|     expect(serverClosed).toBe(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 skipped (6)
+   Start at  06:35:37
+   Duration  5.88s (transform 3.01s, setup 0ms, collect 5.18s, tests 53ms, environment 0ms, prepare 238ms)
+

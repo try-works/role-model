@@ -1,4 +1,4 @@
-import { Context, Effect, Layer } from "effect";
+import { Context, Effect, Exit, Layer, Scope } from "effect";
 
 import { composeReadinessOwner } from "./composition-dag.js";
 
@@ -94,6 +94,7 @@ export interface R27LayerOptions {
   readonly onHost?: (host: R27HostContract) => void;
   readonly handles?: Record<string, R27Node>;
   readonly acquire?: Partial<Record<R27ResourceId, () => Promise<R27AcquiredResource>>>;
+  readonly failAfter?: R27ResourceId;
 }
 
 const eventList = (options: R27LayerOptions): string[] => options.events ?? [];
@@ -156,6 +157,7 @@ const hostLeaf = (
       R27Host,
       Effect.acquireRelease(
         Effect.gen(function* () {
+          if (options.failAfter !== undefined) return yield* Effect.die(new Error("r27 host acquisition failed after " + options.failAfter));
           events.push("acquire:host");
           readiness.markReady();
           events.push("ready");
@@ -173,6 +175,10 @@ const hostLeaf = (
 };
 
 /** Compose the closed graph. No acquire runs until the returned Layer is built. */
+/** Close the DAG scope; idempotent by Effect Scope semantics. */
+export const closeR27HostScope = (scope: Scope.Closeable): Promise<void> =>
+  Effect.runPromise(Scope.close(scope, Exit.void));
+
 export const composeR27HostLayer = (options: R27LayerOptions = {}): Layer.Layer<R27Host, never, never> => {
   // SAFETY: the shared owner is a composed readiness owner, so a host composed with this
   // DAG passes assertComposedReadiness in the production admission path.

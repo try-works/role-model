@@ -5211,6 +5211,7 @@ export async function main(): Promise<void> {
   const configuredEndpointIdsRef: { current: readonly string[] } = { current: [] };
   const bootstrapState: CliBootstrapState = { status: "pending" };
   let shutdownPromise: Promise<void> | null = null;
+  let closeR27Dag: (() => Promise<void>) | null = null;
   let stopExtensionRuntimeWatchdog: (() => void) | null = null;
   let extensionRuntimeFailurePromise: Promise<void> | null = null;
   const failExtensionRuntime = (error: unknown): Promise<void> => {
@@ -5246,6 +5247,12 @@ export async function main(): Promise<void> {
     shutdownPromise = (async () => {
       stopExtensionRuntimeWatchdog?.();
       stopExtensionRuntimeWatchdog = null;
+      if (closeR27Dag !== null) {
+        try { await closeR27Dag(); } catch (error) {
+          process.exitCode = 1;
+          console.error("release failed at r27-dag: " + (error instanceof Error ? error.message : String(error)));
+        }
+      }
       const releaseResult = await hostScope.close();
       server = null;
       extensionRuntimeOwner = null;
@@ -5339,10 +5346,12 @@ export async function main(): Promise<void> {
   const r27DagEvents: string[] = [];
   const r27DagScope = Effect.runSync(Scope.make());
   let r27Host: R27HostContract | undefined;
-  shutdownDrains.push({ name: "r27-dag", run: () => Effect.runPromise(Scope.close(r27DagScope, Exit.void)) });
-  await Effect.runPromise(
-    Layer.buildWithScope(
-      composeR27HostLayer({
+  let r27DagClosePromise: Promise<void> | null = null;
+  closeR27Dag = () => (r27DagClosePromise ??= Effect.runPromise(Scope.close(r27DagScope, Exit.void)));
+  try {
+    await Effect.runPromise(
+      Layer.buildWithScope(
+        composeR27HostLayer({
         events: r27DagEvents,
         readiness: readinessOwner,
         onHost: (host) => { r27Host = host; },
@@ -5353,11 +5362,16 @@ export async function main(): Promise<void> {
           },
         },
       }),
-      r27DagScope,
-    ),
-  );
+        r27DagScope,
+      ),
+    );
+  } catch (error) {
+    await closeR27Dag().catch(() => undefined);
+    throw error;
+  }
   const acquiredServer = r27Host?.handles.server?.handle;
   if (!(acquiredServer instanceof Object) || typeof (acquiredServer as { close?: unknown }).close !== "function") {
+    await closeR27Dag().catch(() => undefined);
     throw new Error("r27 DAG did not expose the acquired BridgeServer handle");
   }
   startedServer = acquiredServer as BridgeServer;
