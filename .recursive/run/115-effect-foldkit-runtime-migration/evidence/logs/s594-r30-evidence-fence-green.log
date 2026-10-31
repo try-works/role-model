@@ -1,0 +1,59 @@
+# R30 evidence-before-ack + kill/lease fence — GREEN
+date: 2026-11-01T06:24:23.4020636+08:00
+command: corepack pnpm exec vitest run test/s594-r30-evidence-fence.test.ts test/run101-r4-queue-runtime.test.ts test/run101-r4-replay-queue.test.ts test/run101-r4-replay-queue-wiring.test.ts test/run101-r5-public-evaluation-queue.test.ts test/run101-r6-learner-queue.test.ts test/run101-r9-queue-operator-proxy.test.ts test/run101-r2-public-queue-store.test.ts test/run101-r3-packaged-queue-policy.test.ts
+exit: 0
+--- output ---
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:15632) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run101-r6-learner-queue.test.ts (4 tests) 10079ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp6 R6 learner queues > keeps a skipped group claimable instead of consuming it  3610ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp6 R6 learner queues > carries learner progress across a worker restart  3903ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp6 R6 learner queues > serializes promotion so two candidates never promote at once  2551ms
+(node:24116) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run101-r5-public-evaluation-queue.test.ts (3 tests) 5188ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp5 R5 evaluation.score (host) > keeps one job per unit of work and runs the handler once  1615ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp5 R5 evaluation.score (host) > retries rather than acknowledging when the handler's evidence write fails  3550ms
+(node:26256) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run101-r4-replay-queue.test.ts (5 tests) 4708ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp4 R4 replay.dispatch > offers exactly one job per captureRef  383ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp4 R4 replay.dispatch > retries a retryable failure on the persisted attempt count and then succeeds  4032ms
+(node:5316) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run101-r4-queue-runtime.test.ts > @recursive:101-effect-mq-queue-rebuild @sp4 R4 replay queue runtime > stays legacy when no policy document exists
+[run101] replay queue stays legacy: queue policy: no queue policy found (looked for E:\tmp\run101-sp4-runtime-qPmztG\queues\queue-policy.json)
+
+stderr | test/run101-r4-queue-runtime.test.ts > @recursive:101-effect-mq-queue-rebuild @sp4 R4 replay queue runtime > stays legacy when the document is invalid
+[run101] replay queue stays legacy: queue policy: schemaVersion must be role-model.queue-policy.v1
+
+ ✓ test/run101-r4-queue-runtime.test.ts (5 tests) 2742ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp4 R4 replay queue runtime > runs a worker in queue mode and hands it the offered job  1566ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp4 R4 replay queue runtime > keeps the worker from claiming while the kill switch is engaged  1046ms
+(node:21912) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run101-r2-public-queue-store.test.ts (4 tests) 1844ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp2 R2 public queue store > lets only one claimer hold a job while the lock is live  395ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp2 R2 public queue store > re-claims a job whose holder died without acknowledging  1364ms
+(node:22816) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/s594-r30-evidence-fence.test.ts > R30 attempt fence > leaves the persisted-queue job unacknowledged when the handler records no evidence
+[run101] replay.dispatch job failed terminally:req-fence-missing attempts=1/1 replay.dispatch attempt fence rejected evidence_missing for req-fence-missing
+
+ ✓ test/s594-r30-evidence-fence.test.ts (6 tests) 410ms
+ ✓ test/run101-r4-replay-queue-wiring.test.ts (4 tests) 32ms
+ ✓ test/run101-r9-queue-operator-proxy.test.ts (3 tests) 11ms
+stderr | test/run101-r3-packaged-queue-policy.test.ts
+Using an object as a third argument is deprecated. Vitest 4 will throw an error if the third argument is not a timeout number. Please use the second argument for options. See more at https://vitest.dev/guide/migration
+
+ ✓ test/run101-r3-packaged-queue-policy.test.ts (4 tests | 1 skipped) 10ms
+
+ Test Files  9 passed (9)
+      Tests  37 passed | 1 skipped (38)
+   Start at  06:23:39
+   Duration  43.74s (transform 3.45s, setup 0ms, collect 12.87s, tests 25.02s, environment 4ms, prepare 2.51s)
+
+

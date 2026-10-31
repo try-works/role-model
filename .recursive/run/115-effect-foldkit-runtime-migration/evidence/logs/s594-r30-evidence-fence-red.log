@@ -1,0 +1,34 @@
+# R30 evidence-before-ack + kill/lease fence — RED
+date: 2026-11-01T06:10:16.8298677+08:00
+command: corepack pnpm exec vitest run test/s594-r30-evidence-fence.test.ts
+exit: 1
+expectation: fail because src/queue-runtime/fence.ts does not exist yet
+--- output ---
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s594-r30-evidence-fence.test.ts [ test/s594-r30-evidence-fence.test.ts ]
+Error: Cannot find module '../src/queue-runtime/fence.js' imported from 'D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge/test/s594-r30-evidence-fence.test.ts'
+ ❯ test/s594-r30-evidence-fence.test.ts:6:1
+      4| import { afterEach, beforeEach, describe, expect, it } from "vitest";
+      5| 
+      6| import {
+       | ^
+      7|   AttemptFenceRejectedError,
+      8|   openAttemptFenceStore,
+
+Caused by: Error: Failed to load url ../src/queue-runtime/fence.js (resolved id: ../src/queue-runtime/fence.js) in D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge/test/s594-r30-evidence-fence.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  06:10:15
+   Duration  1.23s (transform 145ms, setup 0ms, collect 0ms, tests 0ms, environment 1ms, prepare 429ms)
+
+
