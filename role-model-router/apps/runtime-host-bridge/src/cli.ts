@@ -1,5 +1,6 @@
 import { spawn } from "node:child_process";
-import { Effect, Exit, Scope } from "effect";
+import { Effect, Exit, Layer, ManagedRuntime, Scope } from "effect";
+import { composeR27HostLayer } from "./r27-layer-dag.js";
 import { createHash, createPublicKey, randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
@@ -5191,8 +5192,14 @@ export async function main(): Promise<void> {
   shutdownDrains.push({ name: "route-capture", run: drainDeferredRouteCapture });
   shutdownDrains.push({ name: "benchmark", run: () => { benchmarkGate.cancel("shutdown"); } });
   // S324 (R27 early readiness): the production readiness owner consumed by the Server admission gate.
-  // S593: readiness is the DAG readiness leaf owner, not an imperative owner.
+  // S593 (R27): the closed Layer DAG now owns production acquisition order and readiness: the CLI
+  // builds the DAG scope, so its nodes acquire in the closed order (readiness -> permits -> backend ->
+  // bootstrap -> refresh -> drains -> benchmarks -> server -> cli -> host) and the host leaf marks THIS
+  // composed owner ready. The imperative resource builders still own their individual resources; the
+  // DAG is the acquisition spine, and its failure aborts host startup.
   const readinessOwner = composeReadinessOwner();
+  const r27DagRuntime = ManagedRuntime.make(composeR27HostLayer({ readiness: readinessOwner }));
+  shutdownDrains.push({ name: "r27-dag", run: () => r27DagRuntime.dispose() });
   // S321/S322 (R27): backend teardown runs through the DAG Backend close member; the shared idempotent
   // closer closes the packaged SCOPE (the acquireRelease finalizer owns the runtime), so the DAG path and
   // the later hostScope path can never close it twice.

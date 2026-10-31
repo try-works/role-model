@@ -1,27 +1,85 @@
+RED-EVIDENCE-METHOD: composeR27HostLayer was temporarily replaced (same worktree, deps intact) with a stub layer that performs no acquisitions, and the s593 suite was run; the four tests fail behaviorally (no acquire/release/ready events, readiness never marked). The original module was restored from a backup copy. GREEN follows on the restored tree (this suite passes 4/4 with the wired production CLI at cli.ts).
 
  RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
 
+(node:18400) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run115-s593-layer-dag.test.ts (4 tests | 4 failed) 3038ms
+   × S593 R27 closed Layer DAG > (a) composition performs no acquisition; every top-level resource is Layer-provided 17ms
+     → expected [] to include 'ready'
+   × S593 R27 closed Layer DAG > (b) Layer.launch reaches ready then releases in order on interrupt 3012ms
+     → timed out waiting for readiness
+   × S593 R27 closed Layer DAG > (c) readiness is pending before launch and partial shutdown releases only acquired resources on failure 5ms
+     → expected 'pending' to be 'failed' // Object.is equality
+   × S593 R27 closed Layer DAG > the DAG-provided readiness owner passes the composed admission assertion 3ms
+     → expected false to be true // Object.is equality
 
-⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
 
- FAIL  test/run115-s593-layer-dag.test.ts [ test/run115-s593-layer-dag.test.ts ]
-Error: Cannot find module '../src/r27-layer-dag.js' imported from 'D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge/test/run115-s593-layer-dag.test.ts'
- ❯ test/run115-s593-layer-dag.test.ts:4:1
-      2| import { describe, expect, test } from "vitest";
-      3| 
-      4| import {
-       | ^
-      5|   composeR27HostLayer,
-      6|   makeR27ReadinessOwner,
+ FAIL  test/run115-s593-layer-dag.test.ts > S593 R27 closed Layer DAG > (a) composition performs no acquisition; every top-level resource is Layer-provided
+AssertionError: expected [] to include 'ready'
+ ❯ test/run115-s593-layer-dag.test.ts:37:28
+     35|           Effect.gen(function* () {
+     36|             const value = yield* R27Host;
+     37|             expect(events).toContain("ready");
+       |                            ^
+     38|             return value;
+     39|           }),
 
-Caused by: Error: Failed to load url ../src/r27-layer-dag.js (resolved id: ../src/r27-layer-dag.js) in D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge/test/run115-s593-layer-dag.test.ts. Does the file exist?
- ❯ loadAndTransform E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:22663:33
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
 
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+ FAIL  test/run115-s593-layer-dag.test.ts > S593 R27 closed Layer DAG > (b) Layer.launch reaches ready then releases in order on interrupt
+Error: timed out waiting for readiness
+ ❯ waitFor test/run115-s593-layer-dag.test.ts:17:9
+     15|     await new Promise((resolve) => setTimeout(resolve, 10));
+     16|   }
+     17|   throw new Error("timed out waiting for readiness");
+       |         ^
+     18| };
+     19| 
+ ❯ test/run115-s593-layer-dag.test.ts:59:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/run115-s593-layer-dag.test.ts > S593 R27 closed Layer DAG > (c) readiness is pending before launch and partial shutdown releases only acquired resources on failure
+AssertionError: expected 'pending' to be 'failed' // Object.is equality
+
+Expected: "failed"
+Received: "pending"
+
+ ❯ test/run115-s593-layer-dag.test.ts:85:38
+     83|     );
+     84| 
+     85|     expect(readiness.state().status).toBe("failed");
+       |                                      ^
+     86|     expect(events).not.toContain("ready");
+     87|     expect(acquired(events)).toContain("benchmarks");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/run115-s593-layer-dag.test.ts > S593 R27 closed Layer DAG > the DAG-provided readiness owner passes the composed admission assertion
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/run115-s593-layer-dag.test.ts:98:38
+     96|     const program = Effect.gen(function* () {
+     97|       const host = yield* R27Host;
+     98|       expect(host.readiness.ready()).toBe(true);
+       |                                      ^
+     99|       expect(() => assertComposedReadiness(host.readiness)).not.toThro…
+    100|     }).pipe(
+ ❯ test/run115-s593-layer-dag.test.ts:103:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
 
 
  Test Files  1 failed (1)
-      Tests  no tests
-   Start at  20:18:40
-   Duration  3.39s (transform 1.68s, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 223ms)
+      Tests  4 failed (4)
+   Start at  23:19:58
+   Duration  8.04s (transform 2.56s, setup 0ms, collect 4.44s, tests 3.04s, environment 0ms, prepare 202ms)
 
