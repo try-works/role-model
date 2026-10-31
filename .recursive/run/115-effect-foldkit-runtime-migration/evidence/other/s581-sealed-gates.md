@@ -1,6 +1,6 @@
 # S581 — sealed packaged rebuild and gate matrix
 
-Sealed artifact built from public HEAD bbda1d7d (version 0.0.20-425-gbbda1d7d) paired with the private track-B distribution rebuilt against the same public tree (13 extensions, sidecar sha 57713aca…, compatibility generation N).
+Sealed artifact built from public HEAD 4ba2d94b (version 0.0.20-428-g4ba2d94b) paired with the private track-B distribution rebuilt against the same public tree (13 extensions, sidecar sha 57713aca…, compatibility generation N).
 
 ## Artifact
 - Package: role-model-router/dist/release/win32-x64 (role-model-dev.exe, launcher, .bat, sha sidecar, manifest, build/client, track-b-runtime)
@@ -30,3 +30,7 @@ Sealed artifact built from public HEAD bbda1d7d (version 0.0.20-425-gbbda1d7d) p
 - compare-release needs the preserved v0.0.20 React artifact (or an explicit path/approval).
 - Real-client R15/R16-live/R39 approvals and stage/prod Run88 identity remain outstanding.
 - Visual-delta sign-off: this batch is structurally verified and audit-clean; pixel-level owner approval is still required.
+## Provider catalog wiring (owner-reported defect)
+- The Providers page previously rendered placeholder selects (302.AI / 302.AI API Key / Select a model…) so no provider or model could be chosen.
+- Added the providerCatalog readback (/api/role-model/providers) at boot and on navigation, seeded the account draft from the first remote provider/variant, and rendered Provider / Connection method / Model from the live catalog: 268 remote providers, real variant labels, per-variant model ids, derived connection id and credential env reference.
+- Selecting a provider/variant patches providerId, variantId, authMode, credentialRef and connection id; choosing a model becomes the account allowedModels entry. Creating an account re-reads catalog/providers/models and the Configured provider connections card falls back to the control-surface account rows so new connections are visible.
