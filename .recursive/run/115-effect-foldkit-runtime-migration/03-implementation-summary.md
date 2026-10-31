@@ -1903,6 +1903,8 @@ Phase 3 has NOT been audited. This artifact makes no coverage or approval claim 
 
 Status for every in-scope requirement. Regenerated after a controller write error truncated the artifact; dispositions reflect the recorded evidence, and clauses without implementation are blocked rather than projected.
 
+> SUPERSEDE NOTE (2026-11-01, independent audits e890b6d2/00695ee2): the ledger rows below predate the S594-S600 audit-remediation closeout. Corrections at final product HEAD (0.0.20-453-gfbab6294): (a) R19 is re-verified - the s4 contracts-inventory citations were refreshed after the cli.ts R27 line drift and the test is 7/7 GREEN (commit ae0e9beb); (b) R27 is no longer "acquisition still imperative / DAG not closed" - the closed DAG is eagerly acquired in production (cli.ts:5204-5208), readiness is leaf-marked only, failure aborts startup; residual is that node leaves are acquisition records, not resource owners (named follow-up in s599/s600). The authoritative final disposition is evidence/other/s600-final-closeout.md.
+
 
 
 - R1 | Status: blocked | Rationale: no implementation or evidence yet in this phase | Blocking Evidence: `/.recursive/run/115-effect-foldkit-runtime-migration/00-requirements.md`
