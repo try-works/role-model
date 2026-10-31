@@ -982,6 +982,7 @@ const updateLocalPolicyDraft = (
                         credentialRef: first.envVars?.[0] ?? account.credentialRef,
                         providerAccountId: first.providerId + ".personal." + (variant?.variantId ?? ""),
                         providerId: first.providerId,
+                        providerKind: first.providerKind ?? account.providerKind,
                         variantId: variant?.variantId ?? "",
                       },
                     },
@@ -1128,7 +1129,7 @@ const updateLocalPolicyDraft = (
           const provider = model.readbacks.providerCatalog.rows.flatMap((entry) => {
             try {
               // SAFETY: providerCatalog rows carry the provider JSON record in meta.
-              return [JSON.parse(entry.meta) as { readonly providerId?: string; readonly envVars?: ReadonlyArray<string>; readonly variants?: ReadonlyArray<{ readonly variantId?: string; readonly authMode?: string }> }];
+              return [JSON.parse(entry.meta) as { readonly providerId?: string; readonly providerKind?: string; readonly envVars?: ReadonlyArray<string>; readonly variants?: ReadonlyArray<{ readonly variantId?: string; readonly authMode?: string }> }];
             } catch {
               return [];
             }
@@ -1145,6 +1146,7 @@ const updateLocalPolicyDraft = (
                   credentialRef: provider?.envVars?.[0] ?? state.draft.credentialRef,
                   providerAccountId: providerId + ".personal." + (variant?.variantId ?? variantId),
                   providerId,
+                  providerKind: provider?.providerKind ?? state.draft.providerKind,
                   variantId: variant?.variantId ?? variantId,
                 },
               },
@@ -1175,11 +1177,13 @@ const updateLocalPolicyDraft = (
           const catalogToken = model.readbacks.providerCatalog.token + 1;
           const providersToken = model.readbacks.integrationProviders.token + 1;
           const modelsToken = model.readbacks.configuredModels.token + 1;
+          const controlProvidersToken = model.controls.providers.token + 1;
           return {
             commands: [
               readReadback({ key: "providerCatalog", token: catalogToken }),
               readReadback({ key: "integrationProviders", token: providersToken }),
               readReadback({ key: "configuredModels", token: modelsToken }),
+              readControl({ key: "providers", token: controlProvidersToken }),
             ],
             model: {
               ...model,
@@ -1190,6 +1194,7 @@ const updateLocalPolicyDraft = (
                 integrationProviders: loadingReadback(providersToken),
                 configuredModels: loadingReadback(modelsToken),
               },
+              controls: { ...model.controls, providers: loadingControl(controlProvidersToken) },
             },
           };
         },

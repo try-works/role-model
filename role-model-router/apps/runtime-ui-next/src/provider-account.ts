@@ -134,9 +134,14 @@ export const createProviderAccountPayload = (
       : preserveExisting && draft.existingStatus === "active" && draft.existingHealthStatus === "healthy"
         ? { healthStatus: draft.existingHealthStatus, rotationState: draft.existingRotationState || "stable", status: draft.existingStatus }
         : { healthStatus: "credentials-missing", rotationState: "in-progress", status: "disabled" };
+  const chosenModels = draft.selectedModelIds.length > 0
+    ? draft.selectedModelIds
+    : draft.modelInput.trim().length > 0
+      ? [draft.modelInput.trim()]
+      : [];
   return {
     accountScope: "workspace-default",
-    allowedModels: [...new Set(draft.selectedModelIds)],
+    allowedModels: [...new Set(chosenModels)],
     authMode: draft.authMode,
     baseUrlOverride: draft.baseUrlOverride.trim(),
     budgetPolicyRef: "budget.default",

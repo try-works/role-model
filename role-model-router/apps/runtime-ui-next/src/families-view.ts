@@ -160,6 +160,11 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
               [h.Type("button"), h.AriaDisabled(ctx.providerAccount.status === "saving"), h.OnClick(Message.ProviderAccountCreateRequested({})), h.Class("inline-flex h-[34px] w-fit items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-foreground")],
               [ctx.providerAccount.status === "saving" ? "Saving configuration…" : "Save configuration"],
             ),
+            ...(ctx.providerAccount.status === "saved"
+              ? [h.p([h.DataAttribute("provider-account-saved-visible", ""), h.Role("status"), h.Class("font-sans text-[13px] leading-5 text-[var(--rm-success,#2f9e62)]")], ["Provider account saved."])]
+              : ctx.providerAccount.error === undefined
+                ? []
+                : [h.p([h.DataAttribute("provider-account-error-visible", ""), h.Role("alert"), h.Class("font-sans text-[13px] leading-5 text-[var(--rm-error)]")], [ctx.providerAccount.error])]),
             h.details([h.Class("mt-6 border-t border-border pt-4")], [
               h.summary([h.Class("cursor-pointer font-sans text-sm font-medium text-foreground")], ["Provider account setup"]),
               h.div([h.Class("mt-4 flex flex-col gap-4")], [
@@ -199,6 +204,17 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
                 ]);
               })),
         ], h),
+        ...(ctx.controls.providers.rows.length === 0
+          ? []
+          : [card("Provider accounts", "Host accounts created for this runtime, with their credential state.", [
+              h.div([h.Class("flex flex-col")], ctx.controls.providers.rows.map((row) =>
+                h.div([h.Class("flex items-center gap-3 border-b border-[var(--rm-border)] px-1 py-2 last:border-b-0")], [
+                  h.span([h.Class("min-w-0 flex-1 truncate font-mono text-[13px] font-semibold text-foreground")], [row.label]),
+                  h.span([h.Class("shrink-0 font-sans text-[12px] text-muted-foreground")], [row.value]),
+                  h.span([h.Class("shrink-0 font-mono text-[11px] text-muted-foreground")], [row.meta]),
+                ]),
+              )),
+            ], h)]),
       ]),
       renderDeviceAuthorizationForm(ctx.deviceAuth, ctx.deviceAuthDialog, h, false),
       renderDeviceAuthorizationDialog(ctx.deviceAuth, ctx.deviceAuthDialog, h),
