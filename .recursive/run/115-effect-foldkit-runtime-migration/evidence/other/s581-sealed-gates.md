@@ -1,6 +1,6 @@
 # S581 — sealed packaged rebuild and gate matrix
 
-Sealed artifact built from public HEAD edb7b7d7 (version 0.0.20-431-gedb7b7d7) paired with the private track-B distribution rebuilt against the same public tree (13 extensions, sidecar sha 57713aca…, compatibility generation N).
+Sealed artifact built from public HEAD 4284fea5 (version 0.0.20-432-g4284fea5) paired with the private track-B distribution rebuilt against the same public tree (13 extensions, sidecar sha 57713aca…, compatibility generation N).
 
 ## Artifact
 - Package: role-model-router/dist/release/win32-x64 (role-model-dev.exe, launcher, .bat, sha sidecar, manifest, build/client, track-b-runtime)
@@ -39,3 +39,9 @@ Sealed artifact built from public HEAD edb7b7d7 (version 0.0.20-431-gedb7b7d7) p
 - Fixed the catalog seed and selection patch to carry providerKind, fall back from modelInput when Add model was not used so allowedModels is populated, refresh catalog/providers/models plus the control-surface account list after create, and show a visible saved/error line plus a Provider accounts card.
 - End-to-end proof on the inspection host: selected abacus + its model, clicked Save, got the visible "Provider account saved." line, and the host stored `abacus.personal.abacus-api-key` with allowedModels ["abacus/claude-3-7-sonnet-20250219"]. The account is disabled/credentials-missing because its credential env variable is not present on that host - honest host validation, not a UI failure.
 - Final artifact gates on 0.0.20-431-gedb7b7d7: packaging healthy, verify-packaged-candidate 12/12, audit-rendered-ui 20/20, dialog a11y PASS; UI suite 808/808, tsc 0.
+## Provider save -> endpoint activation (owner-reported defect)
+- Saving a provider previously only upserted the account; no endpoints were activated, so new models never appeared in the connections list or the routing model inventory.
+- The save flow now chains upsert -> optional API-key store (update-key repair) -> endpoint activation (/api/role-model/endpoints/batch) -> reload of catalog, accounts, configured models and endpoints. Existing account status/health/rotation are read from /api/role-model/accounts and preserved so an active connection is not downgraded by a save.
+- Configured provider connections group the live endpoint records by account; a host refusal to activate (credentials not ready) is shown as a warning with the host message instead of a silent no-op.
+- Verified against the inspection host: saving deepseek with a stored key activated `deepseek.personal.deepseek-api-key.global.deepseek-v4.1-flash` and the routing inventory `/v1/models` now lists the deepseek endpoint aliases. Note: activation requires a ready account; with only an env credential reference and no key/env present the host refuses and the UI warns.
+- Full UI suite 808/808, tsc 0.
