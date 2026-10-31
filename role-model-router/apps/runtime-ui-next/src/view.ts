@@ -98,7 +98,7 @@ const localPolicyPage = (readback: ReadbacksState["localPolicy"], h: HtmlBuilder
       ]),
     ]);
   return h.section(
-    [h.Class("rm3-next-route"), h.DataAttribute("route", "local-policy"), h.DataAttribute("local-policy-state", readback.status)],
+    [h.Class("rm3-next-route"), h.DataAttribute("route", "local-policy"), h.DataAttribute("page-layout", "reference"), h.DataAttribute("local-policy-state", readback.status)],
     [
       h.h2([h.Class("rm3-next-route-title")], ["Llama-swap host policy"]),
       familySvg(h),
