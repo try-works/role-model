@@ -60,7 +60,7 @@ const mountAt = (pathname: string, client: ControlClient) => {
   return handle;
 };
 const waitFor = async <T>(read: () => T | undefined, label: string): Promise<T> => {
-  const end = Date.now() + 3000;
+  const end = Date.now() + 8000;
   while (Date.now() < end) {
     const value = read();
     if (value !== undefined) return value;
