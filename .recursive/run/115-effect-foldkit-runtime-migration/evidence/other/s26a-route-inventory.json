@@ -258,6 +258,7 @@
       "hostEndpoints": [
         "/api/role-model/providers",
         "/api/role-model/accounts",
+        "/api/role-model/roles",
         "/api/role-model/models"
       ],
       "requiresHostEndpoint": false,

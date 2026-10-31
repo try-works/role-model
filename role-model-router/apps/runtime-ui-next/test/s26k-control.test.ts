@@ -112,7 +112,7 @@ describe("S26k control surface", () => {
           new Promise((resolve) => {
             resolveRead = resolve;
           }),
-      });
+      }, 15000);
       mountAt(route.path, loading);
       const loadingNode = await waitFor(
         () =>
