@@ -1,11 +1,29 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import { Effect, Exit, Layer, Scope } from "effect";
 import { describe, expect, test } from "vitest";
 
 import * as cli from "../src/cli.js";
 import * as bridge from "../src/index.js";
+import { composeReadinessOwner } from "../src/composition-dag.js";
+import { composeR27HostLayer } from "../src/r27-layer-dag.js";
 import { resolveRuntimeChannelProfile } from "../src/runtime-channel.js";
+
+
+const dagOwner = (): { readonly owner: ReturnType<typeof composeReadinessOwner>; readonly calls: () => number } => {
+  const composed = composeReadinessOwner();
+  let calls = 0;
+  return {
+    calls: () => calls,
+    owner: { ...composed, markReady: () => { calls += 1; composed.markReady(); } },
+  };
+};
+const composeDag = async (owner: ReturnType<typeof composeReadinessOwner>) => {
+  const scope = Effect.runSync(Scope.make());
+  await Effect.runPromise(Layer.buildWithScope(composeR27HostLayer({ readiness: owner as never }), scope));
+  return scope;
+};
 
 describe("cli startup readiness", () => {
   test("rejects every packaged runtime channel when its Track B manifest is absent", () => {
@@ -132,16 +150,21 @@ describe("cli startup readiness", () => {
   });
 });
 describe("S478 packaged readiness transition", () => {
-  test("marks the shared readiness owner exactly once and clears bootstrap message", () => {
+  test("the DAG host leaf marks the shared readiness owner once; the bootstrap helper only clears state", async () => {
     const state: Parameters<typeof cli.completeCliStartupReadiness>[0] = {
       status: "pending",
       message: "runtime_initializing",
     };
-    let readyCalls = 0;
-    cli.completeCliStartupReadiness(state, { markReady: () => { readyCalls += 1; } });
-    expect(state.status).toBe("ready");
-    expect("message" in state).toBe(false);
-    expect(readyCalls).toBe(1);
+    const observed = dagOwner();
+    const scope = await composeDag(observed.owner);
+    try {
+      cli.completeCliStartupReadiness(state, observed.owner);
+      expect(state.status).toBe("ready");
+      expect("message" in state).toBe(false);
+      expect(observed.calls()).toBe(1);
+    } finally {
+      await Effect.runPromise(Scope.close(scope, Exit.void));
+    }
   });
 });
 describe("S478/S479 packaged branch readiness", () => {
@@ -150,35 +173,45 @@ describe("S478/S479 packaged branch readiness", () => {
       status: "pending",
       message: "runtime_initializing",
     };
-    let readyCalls = 0;
+    const observed = dagOwner();
     let packagedRan = false;
     let plainRan = false;
-    await cli.runCliBackendBranch({
-      bootstrapState: state,
-      hasPackagedDistribution: true,
-      readinessOwner: { markReady: () => { readyCalls += 1; } },
-      runPackaged: async () => { packagedRan = true; },
-      runPlain: async () => { plainRan = true; },
-    });
+    const scope = await composeDag(observed.owner);
+    try {
+      await cli.runCliBackendBranch({
+        bootstrapState: state,
+        hasPackagedDistribution: true,
+        readinessOwner: observed.owner,
+        runPackaged: async () => { packagedRan = true; },
+        runPlain: async () => { plainRan = true; },
+      });
+    } finally {
+      await Effect.runPromise(Scope.close(scope, Exit.void));
+    }
     expect(packagedRan).toBe(true);
     expect(plainRan).toBe(false);
     expect(state.status).toBe("ready");
     expect("message" in state).toBe(false);
-    expect(readyCalls).toBe(1);
+    expect(observed.calls()).toBe(1);
   });
 
   test("a non-packaged branch run still marks readiness exactly once", async () => {
     const state: Parameters<typeof cli.completeCliStartupReadiness>[0] = { status: "pending", message: "x" };
-    let readyCalls = 0;
-    await cli.runCliBackendBranch({
-      bootstrapState: state,
-      hasPackagedDistribution: false,
-      readinessOwner: { markReady: () => { readyCalls += 1; } },
-      runPackaged: async () => {},
-      runPlain: async () => {},
-    });
+    const observed = dagOwner();
+    const scope = await composeDag(observed.owner);
+    try {
+      await cli.runCliBackendBranch({
+        bootstrapState: state,
+        hasPackagedDistribution: false,
+        readinessOwner: observed.owner,
+        runPackaged: async () => {},
+        runPlain: async () => {},
+      });
+    } finally {
+      await Effect.runPromise(Scope.close(scope, Exit.void));
+    }
     expect(state.status).toBe("ready");
-    expect(readyCalls).toBe(1);
+    expect(observed.calls()).toBe(1);
   });
 });
 describe("S479 branch selection", () => {

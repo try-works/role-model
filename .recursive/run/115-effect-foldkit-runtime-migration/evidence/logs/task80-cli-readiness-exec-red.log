@@ -1,0 +1,229 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:23960) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/executable.test.ts (24 tests | 1 failed) 255ms
+   ✓ runtime-host-bridge executable packaging > resolves an explicit external release root so dev and stage package trees cannot overwrite each other 11ms
+   ✓ runtime-host-bridge executable packaging > does not treat imported package-sea modules as direct CLI execution 1ms
+   ✓ runtime-host-bridge executable packaging > resolves Go through PATH unless GO_BINARY overrides it 1ms
+   ✓ runtime-host-bridge executable packaging > builds bundled llama-swap without commit or checkout-path identity 2ms
+   ✓ runtime-host-bridge executable packaging > declares a runtime export condition for the built runtime dependency graph 52ms
+   ✓ runtime-host-bridge executable packaging > declares target-scoped SEA config and standalone release inputs for Windows packaging 7ms
+   ✓ runtime-host-bridge executable packaging > generates a direct Windows batch launcher without the PowerShell wrapper sidecar 1ms
+   ✓ runtime-host-bridge executable packaging > builds the Windows launcher package so build-tag helper files are included 3ms
+   ✓ runtime-host-bridge executable packaging > ships install and compose artifacts for packaged runtime distribution 8ms
+   ✓ runtime-host-bridge executable packaging > wires device-authorization readback into the packaged runtime cli server 6ms
+   ✓ runtime-host-bridge executable packaging > RUN88-I-PUB-R8-AC04 wires packaged candidate identity into the runtime backend 7ms
+   × runtime-host-bridge executable packaging > wires latest-request-id startup parity into every non-QA runtime launch path 30ms
+     → expected 'import { readFile } from "node:fs/pro…' to contain 'listRecentRequestIds'
+   ✓ runtime-host-bridge executable packaging > packaged runtime validation exercises account activation and routed request flows 3ms
+   ✓ runtime-host-bridge executable packaging > packaged runtime validation exercises taxonomy manifest and compact task parity 4ms
+   ✓ runtime-host-bridge executable packaging > packaged runtime validation exercises the extension catalog from packaged contracts 3ms
+   ✓ runtime-host-bridge executable packaging > packaged runtime validation tears down the packaged process tree before cleaning release artifacts 4ms
+   ✓ runtime-host-bridge executable packaging > packaged runtime validation rebuilds the bridge before creating the SEA executable 1ms
+   ✓ runtime-host-bridge executable packaging > packaged runtime recreates the release directory to avoid stale fixture artifacts 3ms
+   ✓ runtime-host-bridge executable packaging > release timestamp stamping refreshes nested copied assets with stale upstream mtimes 25ms
+   ✓ runtime-host-bridge executable packaging > production release guard accepts clean runtime artifacts 19ms
+   ✓ runtime-host-bridge executable packaging > production release guard rejects router fixtures and mock markers 17ms
+   ✓ runtime-host-bridge executable packaging > packaging rules still forbid testdata/router-runtime path fragment including mcp-connectors.json 12ms
+   ✓ runtime-host-bridge executable packaging > production release guard rejects persisted LiteLLM fixture endpoint markers 12ms
+   ✓ runtime-host-bridge executable packaging > production release guard rejects the synthetic packaging credential sentinel (R7) 17ms
+(node:8652) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/cli-startup-readiness.test.ts (10 tests | 3 failed) 261ms
+   ✓ cli startup readiness > rejects every packaged runtime channel when its Track B manifest is absent 8ms
+   ✓ cli startup readiness > binds health and static UI before backend initialization completes 195ms
+   ✓ cli startup readiness > exposes lightweight latest-request-id reads from the non-QA cli startup wiring 20ms
+   × S478 packaged readiness transition > marks the shared readiness owner exactly once and clears bootstrap message 21ms
+     → expected +0 to be 1 // Object.is equality
+   × S478/S479 packaged branch readiness > a packaged branch run through runCliBackendBranch marks readiness exactly once 5ms
+     → expected +0 to be 1 // Object.is equality
+   × S478/S479 packaged branch readiness > a non-packaged branch run still marks readiness exactly once 3ms
+     → expected +0 to be 1 // Object.is equality
+   ✓ S479 branch selection > manifest present without a release id selects the packaged path 1ms
+   ✓ S479 branch selection > a release id without a manifest falls back to the plain path without TypeError 1ms
+   ✓ S480 development Run88 gate > development distribution with no release id skips Run88 identity validation 1ms
+   ✓ S480 development Run88 gate > stage release id still enforces the stage identity 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/cli-startup-readiness.test.ts > S478 packaged readiness transition > marks the shared readiness owner exactly once and clears bootstrap message
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/cli-startup-readiness.test.ts:144:24
+    142|     expect(state.status).toBe("ready");
+    143|     expect("message" in state).toBe(false);
+    144|     expect(readyCalls).toBe(1);
+       |                        ^
+    145|   });
+    146| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/cli-startup-readiness.test.ts > S478/S479 packaged branch readiness > a packaged branch run through runCliBackendBranch marks readiness exactly once
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/cli-startup-readiness.test.ts:167:24
+    165|     expect(state.status).toBe("ready");
+    166|     expect("message" in state).toBe(false);
+    167|     expect(readyCalls).toBe(1);
+       |                        ^
+    168|   });
+    169| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/cli-startup-readiness.test.ts > S478/S479 packaged branch readiness > a non-packaged branch run still marks readiness exactly once
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/cli-startup-readiness.test.ts:181:24
+    179|     });
+    180|     expect(state.status).toBe("ready");
+    181|     expect(readyCalls).toBe(1);
+       |                        ^
+    182|   });
+    183| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/executable.test.ts > runtime-host-bridge executable packaging > wires latest-request-id startup parity into every non-QA runtime launch path
+AssertionError: expected 'import { readFile } from "node:fs/pro…' to contain 'listRecentRequestIds'
+
+- Expected
++ Received
+
+- listRecentRequestIds
++ import { readFile } from "node:fs/promises";
++ import path from "node:path";
++ import { createCliServerOptions } from "../src/cli.js";
++ import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
++ import {
++   createOwnedTrackBSidecarSpec,
++   createPackagedProductionRuntime,
++   createProductionExtensionRuntime,
++   createTrackBBridgeServerOptions,
++ } from "../src/track-b-runtime.js";
++
++ const repoRoot = "D:/DEV/role-model";
++ const runtimeStateRoot = "C:/Users/erikb/AppData/Local/Role Model Runtime/state";
++ const scopeId = "runtime-host-bridge";
++
++ const sidecarArtifactPath = process.env.ROLE_MODEL_TRACK_B_SIDECAR_PATH?.trim();
++ const sidecarArtifactSha256 = process.env.ROLE_MODEL_TRACK_B_SIDECAR_SHA256?.trim();
++ const extensionManifestPath = process.env.ROLE_MODEL_TRACK_B_RUNTIME_MANIFEST?.trim();
++ if (!sidecarArtifactPath || !sidecarArtifactSha256 || !extensionManifestPath) {
++   throw new Error("packaged Track B sidecar and extension manifest are required");
++ }
++ const extensionManifest = JSON.parse(await readFile(extensionManifestPath, "utf8")) as {
++   readonly schemaVersion: string;
++   readonly extensions: readonly {
++     readonly descriptor: {
++       readonly id: string;
++       readonly protocolVersion: string;
++       readonly capabilities: readonly string[];
++     };
++     readonly modulePath: string;
++     readonly artifactSha256: string;
++   }[];
++ };
++ if (extensionManifest.schemaVersion !== "role-model.track-b-runtime-distribution.v1") {
++   throw new Error("unsupported Track B runtime distribution manifest");
++ }
++ const extensionRuntime = await createProductionExtensionRuntime({
++   stateRoot: path.join(runtimeStateRoot, scopeId, "extensions"),
++   authorizationEpoch: 1,
++   extensions: extensionManifest.extensions.map((extension) => ({
++     ...extension,
++     modulePath: path.resolve(path.dirname(extensionManifestPath), extension.modulePath),
++   })),
++ });
++ const composed = await createPackagedProductionRuntime({
++   stateRoot: path.join(runtimeStateRoot, scopeId, "track-b"),
++   sidecar: createOwnedTrackBSidecarSpec({
++     artifactPath: path.resolve(sidecarArtifactPath),
++     artifactSha256: sidecarArtifactSha256,
++     stateRoot: path.join(runtimeStateRoot, scopeId, "track-b"),
++   }),
++   createBackend: ({ trackBOperationsEndpoint }) =>
++     createRuntimeBridgeBackend({
++       repoRoot,
++       runtimeStateRoot,
++       scopeId,
++       runtimeVendorStartup: "enabled",
++       unifiedRuntimeConfigPath: `${runtimeStateRoot}/${scopeId}/runtime-config.yaml`,
++       trackBOperationsEndpoint,
++     }),
++ });
++ const backend = composed.backend;
++ let backendOwner: import("../src/composition-dag.js").BackendOwner | undefined;
++ const serverOptions = createCliServerOptions(
++   {
++     host: "127.0.0.1",
++     port: 3456,
++     staticRoot: path.join(repoRoot, "role-model-router", "apps", "runtime-ui", "build", "client"),
++     runtimeStateRoot,
++   },
++   {
++     getBackend: () => backend,
++   },
++   undefined,
++   (owner) => {
++     backendOwner = owner;
++   },
++ );
++ const mergedOptions = { ...serverOptions, ...createTrackBBridgeServerOptions(backend) };
++ // The spread drops non-enumerable symbols; carry the backend-owner ref descriptor across the merge so the
++ // explicit backend owner and the owned options stay consistent (the explicit backend is still authoritative).
++ for (const symbol of Object.getOwnPropertySymbols(serverOptions)) {
++   const descriptor = Object.getOwnPropertyDescriptor(serverOptions, symbol);
++   if (descriptor !== undefined) Object.defineProperty(mergedOptions, symbol, descriptor);
++ }
++ // SAFETY: mergedOptions is the composed StartBridgeServerOptions plus the Track-B bridge overrides.
++ const server = await startBridgeServer(
++   mergedOptions as never,
++   backendOwner === undefined ? undefined : { backend: backendOwner },
++ );
++
++ console.log(`Production runtime on http://127.0.0.1:${server.port}`);
++ process.on("SIGINT", async () => {
++   await server.close();
++   await composed.close();
++   await extensionRuntime.close();
++   process.exit(0);
++ });
+
+ ❯ test/executable.test.ts:459:30
+    457|     expect(cliText).toContain('"listRecentRequestIds"');
+    458|     expect(startText).toContain("listRecentRequestIds");
+    459|     expect(prodLauncherText).toContain("listRecentRequestIds");
+       |                              ^
+    460|   });
+    461| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  4 failed | 30 passed (34)
+   Start at  10:46:05
+   Duration  23.75s (transform 11.52s, setup 0ms, collect 20.79s, tests 517ms, environment 2ms, prepare 984ms)
+
