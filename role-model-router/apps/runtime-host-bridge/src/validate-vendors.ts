@@ -356,6 +356,7 @@ type RuntimeValidationConfig = {
     readonly strategy: "balanced";
   };
   readonly observed_data?: {
+    readonly enabled?: boolean;
     readonly difficulty_learning?: {
       readonly override?: {
         readonly min_samples?: number;
@@ -1199,6 +1200,7 @@ export async function createRuntimeVendorValidationPlan(options: {
       remoteConfig,
       hybridConfig: {
         ...createDecisionConfig(),
+        observed_data: { enabled: false },
         difficulty_classifier: {
           enabled: true,
           rubric_version: "v1",
@@ -1279,6 +1281,7 @@ export async function createRuntimeVendorValidationPlan(options: {
     remoteConfig,
     hybridConfig: {
       ...createDecisionConfig(),
+      observed_data: { enabled: false },
       difficulty_classifier: {
         enabled: true,
         rubric_version: "v1",
@@ -1931,6 +1934,7 @@ export async function runRuntimeVendorValidation(options: {
             await waitForRuntimeModelEndpointsReady(hybridRuntime.backend, [
               plan.localModelId,
               plan.remoteModelId,
+              plan.codexModelId,
             ]);
             const hybridLocal = await hybridRuntime.backend.executeResponses(
               {

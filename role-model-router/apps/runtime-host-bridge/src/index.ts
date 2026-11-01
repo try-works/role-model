@@ -6343,6 +6343,20 @@ export function readObservedProfilesForRouting(input: {
     NonNullable<RuntimeRoutingDiagnostics["observedProfile"]>
   >;
 } {
+  /**
+   * Run 115 R30 regression: an operator that turns observed data off gets routing from the
+   * declared catalog only. Before this gate the validation harness disabled observed data but
+   * still read live profiles, so a profile written by a previous case could flip a later alias
+   * from the local vendor to the remote one depending on write visibility. "enabled: false"
+   * must mean no observed profile participates in routing at all.
+   */
+  if (input.observedDataConfig.enabled === false) {
+    return {
+      observedProfilesByEndpointId: {},
+      throughputPenaltyStateByEndpointId: {},
+      diagnosticsByEndpointId: {},
+    };
+  }
   const endpointIds = [
     ...new Set(input.registry.endpoints.map((endpoint) => endpoint.identity.endpoint_id)),
   ];

@@ -1,0 +1,36 @@
+# validate-vendors order-dependent corpus — RED observations (pre-fix)
+
+This failure is intermittent and load-sensitive, so the raw runs are recorded as observations
+rather than one clean repro. All three observations are from the pre-fix tree.
+
+## 1) Exact 5-file order (2026-11-01 14:20 local)
+command: corepack pnpm exec vitest run test/s594-r30-evidence-fence.test.ts test/run101-r2-public-queue-store.test.ts test/run101-r5-cancel-drain.test.ts test/run101-r9-queue-operator-proxy.test.ts test/validate-vendors.test.ts
+result: exit 1 — 1 failed | 21 passed (22)
+failure: Corpus case craft.chat.non-tool-mentions-tools.005 produced execution family vendor-litellm instead of vendor-llama-swap.
+
+## 2) s594 + validate only (2026-11-01 15:32 local)
+command: corepack pnpm exec vitest run test/s594-r30-evidence-fence.test.ts test/validate-vendors.test.ts
+result: exit 1 — 1 failed | 9 passed (10)
+failure: Corpus case pi.responses.alias-easy-001 produced execution family remote-service instead of vendor-llama-swap
+  (endpoint=openai.personal.openai-codex-subscription.global.gpt-5.4, model=chatgpt/gpt-5.4,
+  vendor=chatgpt-codex-responses, adapter=codex-subscription-responses)
+diagnostics: cacheContinuity.activeEndpointId=codex; difficultyRouting.strategy=cost;
+  observedProfile.source=runtime-state; observedProfile.readMode=per-request.
+
+## 3) Pairwise/process isolation used for diagnosis
+- s594 direct fence-store tests + validate: 2/2 pass in each of 2 attempts.
+- s594 integration-only tests + validate: 2/2 pass in each of 2 attempts.
+- s594 and validate in separate vitest processes: pass.
+- s594 + validate in one process: failed in 1 of the first attempts.
+This places the trigger in process-local runtime state/timing, not in the queue rows, temp dirs,
+kill switches, or environment variables (the queue tests mutate none of those).
+
+## Root cause
+The queue suites change elapsed time/scheduling enough for the hybrid runtime's observed endpoint
+profiles (written by warmups and earlier corpus cases) to become visible to later corpus requests.
+The validation plan already disables observed learning for corpus routing, but
+readObservedProfilesForRouting ignored observed_data.enabled and still read live profiles, so the
+cost strategy could select the remote/Codex endpoint for a case whose expected family is local.
+Waiting for the codex endpoint or disabling observed data on the corpus-only config removes the
+race; the second validation test still exercises observed-profile diagnostics because it uses a
+config with observed data enabled.

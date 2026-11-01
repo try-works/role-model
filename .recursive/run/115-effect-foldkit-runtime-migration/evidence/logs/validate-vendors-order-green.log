@@ -1,0 +1,18 @@
+# validate-vendors order-dependent corpus — GREEN after fix
+date: 2026-11-01T17:19:40.3697292+08:00
+fix: observed_data.enabled === false is honoured for routing; validation hybrid configs disable observed profiles; hybrid readiness also waits for the codex endpoint.
+contract: the exact 5-file order (s594 + r2 + r5 + r9 + validate-vendors) must not flip corpus alias vendor selection.
+--- exact 5-file order ---
+RUN 1 EXIT=0
+Tests  22 passed (22)
+RUN 2 EXIT=0
+Tests  22 passed (22)
+RUN 3 EXIT=0
+Tests  22 passed (22)
+RUN 4 EXIT=0
+Tests  22 passed (22)
+--- related observed-data suites ---
+RELATED EXIT=0
+Test Files  3 passed (3)
+Tests  13 passed (13)
+EXACT5_FAILS=0
