@@ -75,7 +75,7 @@ describe("S46a Studio", () => {
       { tab: "images", path: "/v1/images/generations", body: { mode: "generate", model: "moonshot/kimi-k2.5", prompt: "A quiet harbour at dawn", size: "1024x1024" } },
       { tab: "audio", path: "/v1/audio/speech", body: { input: "A quiet harbour at dawn", model: "moonshot/kimi-k2.5", response_format: "mp3", voice: "alloy" } },
       { tab: "rerank", path: "/v1/rerank", body: { documents: ["first document", "second document"], model: "moonshot/kimi-k2.5", query: "Which document is first?", top_n: 5 } },
-      { tab: "advanced", path: "/v1/responses", body: { model: "moonshot/kimi-k2.5", max_tokens: 64, messages: [{ role: "user", content: "Hello" }] } },
+      { tab: "advanced", path: "/v1/responses", body: { model: "moonshot/kimi-k2.5", messages: [{ role: "user", content: "Hello" }] } },
     ] as const;
     mountStudio("s258-dispatch", async (input, init) => {
       const pathname = new URL(String(input), "http://localhost").pathname;
