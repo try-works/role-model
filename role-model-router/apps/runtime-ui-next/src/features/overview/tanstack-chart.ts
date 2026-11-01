@@ -31,7 +31,9 @@ export const tanstackChartSvg = (
     entry.points.map((point) => ({ label: point.label, series: entry.id, value: point.value })),
   );
   const hasPoints = rows.some((row) => row.value !== null);
-  const svg = (() => {
+  const escapeAttribute = (value: string): string =>
+    value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
+  const rendered = (() => {
     if (!hasPoints) {
       return '<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' +
         options.ariaLabel.replaceAll('"', "&quot;") +
@@ -48,6 +50,7 @@ export const tanstackChartSvg = (
         kind === "bar"
           ? barY(rows, { x: "label", y: "value", z: "series" })
           : lineY(rows, {
+              points: true,
               strokeWidth: 2,
               x: "label",
               y: "value",
@@ -60,11 +63,26 @@ export const tanstackChartSvg = (
       },
     });
     const scene = createChartScene(definition, { height: options.height, width: options.width });
-    return renderChartSvg(scene, { ariaLabel: options.ariaLabel });
+    let svg = renderChartSvg(scene, { ariaLabel: options.ariaLabel });
+    for (const point of scene.points) {
+      if (point.datum.value === null) continue;
+      const key = escapeAttribute(point.key);
+      const attrs = ' data-chart-series-id="' + escapeAttribute(point.datum.series) +
+        '" data-chart-point-label="' + escapeAttribute(point.datum.label) +
+        '" data-chart-point=""';
+      const dotKey = 'data-ts-key="' + key + ':dot"';
+      const exactKey = 'data-ts-key="' + key + '"';
+      if (svg.includes(dotKey)) {
+        svg = svg.replace(dotKey, dotKey + attrs);
+      } else if (svg.includes(exactKey)) {
+        svg = svg.replace(exactKey, exactKey + attrs);
+      }
+    }
+    return svg;
   })();
   // One a11y model: a non-interactive img plus the visible numeric table. TanStack marks the root
   // tabindex=0 for its interaction runtime, which this static server-rendered surface does not own.
-  const withoutTabindex = svg.replace(' tabindex="0"', "");
+  const withoutTabindex = rendered.replace(' tabindex="0"', "");
   return withoutTabindex.replace(
     "<svg ",
     '<svg data-chart-part="chart" data-chart-series-count="' +

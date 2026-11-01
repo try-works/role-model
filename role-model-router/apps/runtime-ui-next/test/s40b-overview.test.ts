@@ -59,6 +59,7 @@ describe("S40b bucketed overview", () => {
     expect(document.body.textContent).toContain("23:00");
     expect(document.body.textContent).toContain("02:00");
     expect(document.querySelector("[data-chart-point-label='02:00']")).toBeNull();
+    expect(document.querySelector("[data-chart-series-id][data-chart-point-label='00:00']")).not.toBeNull();
     const seriesPath = document.querySelector("[data-chart-part='chart'] path[data-ts-key*='segment']");
     expect(seriesPath).not.toBeNull();
     expect(seriesPath?.getAttribute("d")).toContain("M");

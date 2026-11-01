@@ -82,6 +82,11 @@ describe("S612 telemetry chart card visible contract", () => {
     expect(table?.textContent).toContain("Latency trend");
     expect(table?.textContent).toContain("00:00");
     expect(table?.textContent).toContain("30");
+    const point = svg?.querySelector("[data-chart-series-id='latency'][data-chart-point-label='00:00']");
+    expect(point).not.toBeNull();
+    expect(point?.getAttribute("data-chart-series-id")).toBe("latency");
+    expect(point?.getAttribute("data-chart-point-label")).toBe("00:00");
+    expect(point?.getAttribute("data-chart-point")).not.toBeNull();
     expect(card.querySelector(".sr-only")).toBeNull();
   });
 
