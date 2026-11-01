@@ -1,0 +1,9 @@
+
+> role-model@0.0.0 runtime:verify-packaged-candidate D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration
+> node scripts/runtime/verify-packaged-candidate.mjs
+
+FAIL ui identity: the static root is not the bytes this package ships (assets/main.css differs; assets/main.js differs; assets/main.js.map differs)
+  static:  D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-ui-next\dist\client
+  package: D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\dist\release\win32-x64\build\client
+Pass --static-root D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\dist\release\win32-x64\build\client, or rebuild the distribution.
+ ELIFECYCLE  Command failed with exit code 2.
