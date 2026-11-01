@@ -110,6 +110,9 @@ const candidateSpaceSvg = (rows: ReadonlyArray<CandidateRow>, h: HtmlBuilder<Mes
 
 export const candidateSpaceCard = (candidates: ReadbackState, h: HtmlBuilder<Message>): Html => {
   const rows = candidateRows(candidates);
+  // R13: honest state - when every candidate lacks a benchmark profile, say so instead of
+  // drawing an all-neutral scatter that reads as measured data.
+  const allUnprofiled = rows.length > 0 && rows.every((row) => row.cost === null && row.quality === null && row.speed === null);
   const swatches = [
     "bg-[var(--rm3-chart-cost)]",
     "bg-[var(--rm3-chart-1)]",
@@ -127,6 +130,9 @@ export const candidateSpaceCard = (candidates: ReadbackState, h: HtmlBuilder<Mes
         h.h2([h.Class("text-sm font-medium leading-5 tracking-tight text-foreground")], ["Model pool"]),
         h.p([h.Class("text-xs leading-4 text-muted-foreground")], ["Route candidates by quality, cost, and speed. Marker size is proportional to route score. Cost axis is inverted: higher is cheaper."]),
       ]),
+      ...(allUnprofiled
+        ? [h.p([h.DataAttribute("model-pool-honest", ""), h.Class("text-xs leading-4 text-muted-foreground")], ["No benchmark profile is reported yet: markers sit at neutral placement until the host reports operational profiles. Run a benchmark to populate quality, cost and speed."])]
+        : []),
       h.div([h.Class("grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(220px,280px)]")], [
         h.div([h.Class("flex min-h-[280px] w-full items-center justify-center overflow-hidden")], [candidateSpaceSvg(rows, h)]),
         h.div([h.Class("flex h-full min-h-[280px] flex-col gap-3")], [
