@@ -9,7 +9,10 @@ import {
   resolveAutoQueueConfigPath,
   resolveAutoQueueDailyCap,
 } from "../src/queue-runtime/auto-queue.js";
-import { createReplayLedger } from "../src/track-b-replay-ledger.js";
+import {
+  createReplayLedger,
+  replayBudgetAvailable,
+} from "../src/track-b-replay-ledger.js";
 import {
   mergeUnifiedRuntimeConfigDocuments,
   parseUnifiedRuntimeConfigText,
@@ -141,6 +144,17 @@ describe("auto-queue daily cap config", () => {
     expect(reserve("capture-2").accepted).toBe(false);
     dailyCap = 2;
     expect(reserve("capture-2").accepted).toBe(true);
+  });
+
+  it("reports no budget when the hard ceiling is zero even unenforced", () => {
+    const ledger = createReplayLedger({
+      filePath: path.join(stateRoot, "unavailable-ledger.json"),
+      now: () => Date.UTC(2026, 0, 1, 12),
+      limits: applyAutoQueueDailyCap({ enforced: false }, 0),
+    });
+    const status = ledger.status();
+    expect(status.hardCounterfactualLimit).toBe(0);
+    expect(replayBudgetAvailable(status)).toBe(false);
   });
 
   it("refuses automatic replays when disabled on a non-production channel", () => {

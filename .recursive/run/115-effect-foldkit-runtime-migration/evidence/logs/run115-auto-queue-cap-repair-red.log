@@ -1,24 +1,23 @@
 # Run 115 auto-queue cap review repair — RED evidence
 
-Both HOLDs were reproduced as collected behavioural failures against commit a2cbcb33.
+Both HOLDs and the availability polish were reproduced as collected behavioural failures.
 
 ## HOLD 1: the resolver read the wrong unified-config path
 Pre-fix resolver used <runtimeStateRoot>/<scopeId>/runtime-config.yaml, while the host writes
-<runtimeStateRoot>/runtime-config.yaml (or the legacy <runtimeStateRoot>/state/runtime-config.yaml).
-Test: write a root config with daily_cap: 7, call the real
-resolveChannelScopedReplayLedgerLimits, expect 7.
-Pre-fix result: default 100 -> failed. The old suite only called resolveAutoQueueDailyCap with an
-explicit path, so it never exercised the resolver.
+<runtimeStateRoot>/runtime-config.yaml (or legacy <runtimeStateRoot>/state/runtime-config.yaml).
+Test: root config daily_cap 7 through the real resolver -> expected 7; pre-fix returned default 100.
 
 ## HOLD 2: enabled:false did not bind on non-production channels
-Test: ledger limits applied from dailyCap 0 with enforced:false (development/stage default), reserve
-one capture.
-Pre-fix result: accepted:true -> failed, because the ledger only consulted the cap when enforced.
+Test: limits from dailyCap 0 with enforced:false, reserve one capture -> pre-fix accepted:true.
 
-## Additional pre-fix failure
-applyAutoQueueDailyCap did not set the hard ceiling; the expectation for
-hardCounterfactualLimit: N failed (missing).
+## Availability polish: replayBudgetAvailable ignored the hard ceiling
+Test: ledger status from applyAutoQueueDailyCap({enforced:false}, 0) must expose
+hardCounterfactualLimit 0 and replayBudgetAvailable(status) must be false. Pre-fix:
+hardCounterfactualLimit was absent from the status object (undefined vs 0) and the availability
+check returned true for every unenforced status.
 
-RED command: corepack pnpm exec vitest run test/run115-auto-queue-cap.test.ts
-Result after adding the resolver/non-production assertions: 3 failed | 7 passed (10), with the exact
-failures above (resolver returned default 100, hard field missing, disabled reservation accepted).
+RED commands/results:
+- new suite after adding resolver/non-production assertions: 3 failed | 7 passed (10)
+  (resolver default 100, hard field missing, disabled reservation accepted)
+- after adding the availability assertion: 1 failed | 12 passed (13)
+  (hardCounterfactualLimit undefined; availability not consulted)

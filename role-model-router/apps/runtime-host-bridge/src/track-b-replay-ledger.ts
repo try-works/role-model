@@ -81,6 +81,8 @@ export interface ReplayLedgerStatus {
   readonly dispatches: number;
   readonly counterfactualLimit: number;
   readonly dispatchLimit: number;
+  /** Hard auto-queue ceiling, checked on every channel; null means no hard bound. */
+  readonly hardCounterfactualLimit: number | null;
   /** False when the ceilings are measured but not enforced on this channel. */
   readonly enforced: boolean;
 }
@@ -208,6 +210,14 @@ export interface ReplayLedger {
  * finds capacity.
  */
 export function replayBudgetAvailable(status: ReplayLedgerStatus): boolean {
+  // The hard auto-queue ceiling binds admission before a reservation can refuse,
+  // even on channels where the ordinary daily budget is measured but not enforced.
+  if (
+    status.hardCounterfactualLimit !== null &&
+    status.counterfactuals >= status.hardCounterfactualLimit
+  ) {
+    return false;
+  }
   if (!status.enforced) return true;
   return status.dispatches + status.reservedDispatches < status.dispatchLimit;
 }
@@ -276,6 +286,7 @@ export function createReplayLedger(options: {
       dispatches: row.dispatches.length,
       counterfactualLimit: limits.counterfactualsPerDay,
       dispatchLimit: limits.dispatchesPerDay,
+      hardCounterfactualLimit: limits.hardCounterfactualLimit,
       enforced: limits.enforced,
     };
   };

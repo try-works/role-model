@@ -3,26 +3,30 @@
 date: 2026-11-01
 contract: replay.auto_queue is in the unified runtime config readback, defaults to
 enabled=true/daily_cap=100, accepts PUT patches, and maps onto a hard replay ledger daily
-counterfactual ceiling that binds on every channel.
+counterfactual ceiling that binds on every channel and on the admission availability check.
 
 ## Path resolution (HOLD 1)
 resolveAutoQueueConfigPath mirrors the host: explicit --unified-runtime-config first, then
 <runtimeStateRoot>/runtime-config.yaml, then legacy <runtimeStateRoot>/state/runtime-config.yaml.
-The CLI resolver receives options.unifiedRuntimeConfigPath and is exported for the resolver-level
-test.
+The CLI resolver receives options.unifiedRuntimeConfigPath and is exported for resolver-level tests.
 
 ## Disabled/cap enforcement (HOLD 2)
 applyAutoQueueDailyCap sets hardCounterfactualLimit alongside counterfactualsPerDay. The ledger
 checks the hard ceiling before the channel-scoped enforced guard, so enabled:false (0) refuses on
-development/stage too.
+development/stage too. replayBudgetAvailable now returns false when the hard ceiling is spent,
+including hard 0 under enforced:false, so upper layers do not attempt a reservation that must fail.
 
 ## New suite
 command: corepack pnpm exec vitest run test/run115-auto-queue-cap.test.ts
-result: 12 passed (12)
+result: 13 passed (13)
+
+## Budget suite
+command: corepack pnpm exec vitest run test/run100-replay-budget-channel-enforcement.test.ts
+result: 6 passed (6)
 
 ## Combined
 command: corepack pnpm exec vitest run test/unified-runtime-config.test.ts test/backend-unified-runtime-config.test.ts test/run115-auto-queue-cap.test.ts test/s594-r30-evidence-fence.test.ts test/run101-r2-public-queue-store.test.ts test/run101-r5-cancel-drain.test.ts test/run101-r9-queue-operator-proxy.test.ts test/run100-replay-budget-channel-enforcement.test.ts
-result: 8 files, 99 passed
+result: 8 files, 100 passed
 
 ## Typecheck
 command: corepack pnpm exec tsc -p tsconfig.json --noEmit
