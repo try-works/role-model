@@ -14,21 +14,26 @@ const cli = readFileSync(path.join(import.meta.dirname, "..", "src", "cli.ts"), 
 const kinds = [...cli.matchAll(/hostScope\.register\("([a-zA-Z]+)"/g)].map((match) => match[1]);
 
 describe("S134 every registration closes a scope", () => {
-  it("registers the five contracted resources", () => {
+  it("registers the four hostScope resources; the server is DAG-owned", () => {
     expect(kinds.sort()).toEqual([
       "backend",
       "extensionRuntime",
       "extensionRuntimeOwner",
       "packagedRuntime",
-      "server",
     ]);
+    expect(cli).not.toContain('hostScope.register("server"');
+    expect(cli).toContain("server: async () => {");
   });
 
   it("every registration body closes a scope and none calls a resource close directly", () => {
     for (const kind of kinds) {
       const start = cli.indexOf(`hostScope.register("${kind}"`);
       const body = cli.slice(start, start + 300);
-      expect(body, kind).toContain("Scope.close(");
+      if (kind === "packagedRuntime") {
+        expect(body, kind).toContain("closePackagedRuntimeOnce()");
+      } else {
+        expect(body, kind).toContain("Scope.close(");
+      }
       expect(body, kind).not.toMatch(/await (server|backend|packagedRuntime|extensionRuntime)\.(close|shutdown)\(\)/);
     }
   });

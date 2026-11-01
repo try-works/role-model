@@ -18,10 +18,11 @@ const registrationBody = (kind: string): string => {
 };
 
 describe("S130 scope-owned resources stay scope-owned", () => {
-  it("the server registration closes its scope instead of calling server.close directly", () => {
-    const body = registrationBody("server");
-    expect(body).toContain("Scope.close(serverScope");
-    expect(body).not.toContain("server.close()");
+  it("the server is owned by the DAG server node, not a hostScope registration", () => {
+    expect(cli).not.toContain('hostScope.register("server"');
+    expect(cli).toContain("acquire: {");
+    expect(cli).toContain("server: async () => {");
+    expect(cli).toContain("return { handle: value, release: () => value.close() };");
   });
 
   it("the backend registration closes its scope instead of calling backend.shutdown directly", () => {
@@ -48,6 +49,6 @@ describe("S130 scope-owned resources stay scope-owned", () => {
     // Each acquisition must be provided to a scope; a bare `await createBackend()` is the shape
     // this guard exists to prevent.
     expect(cli).not.toMatch(/backend = await createBackend\(\)/);
-    expect(cli).toContain("startedServer = await Effect.runPromise(");
+    expect(cli).toContain("startedServer = acquiredServer as BridgeServer;");
   });
 });

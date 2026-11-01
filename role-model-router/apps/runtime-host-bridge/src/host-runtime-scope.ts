@@ -1,6 +1,7 @@
 import { releaseHostResources, type HostReleaseError, type HostReleaseResult } from "./release-host-resources.js";
 
-export const HOST_RUNTIME_KINDS = ["server", "packagedRuntime", "backend", "extensionRuntimeOwner", "extensionRuntime"] as const;
+/** S134/R27: the server is owned by the DAG server node, so it is not a hostScope kind. */
+export const HOST_RUNTIME_KINDS = ["packagedRuntime", "backend", "extensionRuntimeOwner", "extensionRuntime"] as const;
 export type HostRuntimeKind = (typeof HOST_RUNTIME_KINDS)[number];
 
 export interface HostRuntimeRegistration {

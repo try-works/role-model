@@ -33,13 +33,10 @@ const roots: string[] = [];
 const baseTemp =
   process.env.ROLE_MODEL_TEST_TEMP_ROOT?.trim() || path.join(tmpdir(), "role-model-run115");
 
-afterEach(async () => {
+afterEach(() => {
   setStateDatabaseServiceFactoryForTests(undefined);
-  await Promise.all(
-    roots
-      .splice(0)
-      .map((root) => rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })),
-  );
+  // Cleanup is best-effort on Windows: a slow antivirus delete must not fail the test hook.
+  for (const root of roots.splice(0)) void rm(root, { recursive: true, force: true, maxRetries: 1 }).catch(() => undefined);
 });
 
 async function tempRoot(): Promise<string> {
