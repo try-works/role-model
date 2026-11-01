@@ -198,7 +198,7 @@ const mockServer = createServer((request, response) => {
         body = {};
       }
       mock.chatModels.push(typeof body.model === "string" ? body.model : "");
-      record("MOCK upstream received POST " + url + " model=" + String(body.model ?? "") + " body_bytes=" + String(raw.length));
+      record("MOCK upstream received POST " + url + " model=" + String(body.model ?? "") + " body_bytes=" + String(raw.length) + " max_tokens=" + (body.max_tokens === undefined ? "absent" : String(body.max_tokens)));
       send(200, {
         id: "chatcmpl-routing-e2e-mock",
         object: "chat.completion",
@@ -454,7 +454,6 @@ try {
     chat = await call("POST", "/v1/chat/completions", {
       model: chosenModel,
       messages: [{ role: "user", content: "Say routing works in five words." }],
-      max_tokens: 32,
     }, { "x-request-id": requestId });
     if (chat.status !== 200) throw new Error("chat HTTP " + String(chat.status) + ": " + truncate(chat.text, 500));
     const body = chat.body;
@@ -473,6 +472,16 @@ try {
     const carried = mock.chatBodies.slice(-delta).some((raw) => raw.includes("Say routing works in five words."));
     if (!carried) throw new Error("the mock upstream calls did not carry this request's prompt; another caller produced them");
     return "mock_chat_requests_for_this_call=" + String(delta) + " models=" + JSON.stringify(mock.chatModels.slice(-delta));
+  });
+
+  await check("provider request carries no token cap", async () => {
+    const last = mock.chatBodies[mock.chatBodies.length - 1];
+    if (last === undefined) throw new Error("no provider request body was captured");
+    const parsed = JSON.parse(last);
+    for (const key of ["max_tokens", "max_completion_tokens", "max_output_tokens"]) {
+      if (Object.hasOwn(parsed, key)) throw new Error(key + "=" + String(parsed[key]) + " reached the provider; the client path injected a token cap");
+    }
+    return "provider body has no max_tokens/max_completion_tokens/max_output_tokens";
   });
 
   await check("router decision recorded", async () => {

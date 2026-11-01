@@ -54,8 +54,7 @@ const exe = path.resolve(value("--exe") ?? path.join(checkoutRoot, "role-model-r
 const stateSource = path.resolve(value("--state-source") ?? "D:/DEV/rm-clean/live-state2");
 const port = Number(value("--port") ?? 3461);
 const model = value("--model") ?? "deepseek/deepseek-flash";
-const maxTokens = Number(value("--max-tokens") ?? 16);
-const retryMaxTokens = Number(value("--retry-max-tokens") ?? 256);
+
 const expectedVersion = value("--expect-version") ?? "0.0.20-471-g2e4aca6b";
 const expectedSha256 = value("--expect-sha256");
 const healthBudgetMs = Number(process.env.ROUTING_LIVE_HEALTH_TIMEOUT_MS ?? 240_000);
@@ -131,7 +130,6 @@ record("exe=" + exe);
 record("state_source=" + stateSource);
 record("port=" + String(port));
 record("model=" + model);
-record("max_tokens=" + String(maxTokens) + " retry_max_tokens=" + String(retryMaxTokens));
 record("expect_version=" + expectedVersion);
 record("started_at=" + new Date().toISOString());
 record("");
@@ -321,65 +319,23 @@ try {
   });
 
   const requestId = "routing-live-" + String(Date.now());
-  const attempts = [];
   await check("POST /v1/chat/completions returns a real DeepSeek completion", async () => {
-    const send = async (budget) => {
-      const result = await call("POST", "/v1/chat/completions", {
-        model: chosenModel,
-        messages: [{ role: "user", content: "Reply with the single word pong." }],
-        max_tokens: budget,
-      });
-      const body = result.body;
-      const choice = body?.choices?.[0];
-      const attempt = {
-        budget,
-        status: result.status,
-        body,
-        content: typeof choice?.message?.content === "string" ? choice.message.content.trim() : "",
-        finish: choice?.finish_reason,
-        completionTokens: body?.usage?.completion_tokens,
-        totalTokens: body?.usage?.total_tokens,
-      };
-      attempts.push(attempt);
-      return attempt;
-    };
-    const realCompletion = (attempt) =>
-      attempt.status === 200 &&
-      attempt.body?.object === "chat.completion" &&
-      attempt.content.length > 0 &&
-      typeof attempt.totalTokens === "number" &&
-      attempt.totalTokens > 0 &&
-      attempt.finish === "stop" &&
-      typeof attempt.body?.model === "string" &&
-      attempt.body.model.toLowerCase().includes("deepseek");
-
-    const budgeted = Number.isInteger(maxTokens) && maxTokens > 0 ? maxTokens : 16;
-    const primary = await send(budgeted);
-    if (realCompletion(primary)) {
-      return "max_tokens=" + String(budgeted) + " model=" + primary.body.model + " total_tokens=" + String(primary.totalTokens) + " content=" + truncate(primary.content, 40);
-    }
-    if (primary.finish === "length") {
-      // The router selected a reasoning arm (effort max/high). With the instructed 16-token budget the
-      // provider spends the whole completion budget reasoning, so content is empty and finish_reason is
-      // length. That is a real product behaviour, not a transport failure; record it, then complete the
-      // proof with a budget large enough for the reasoning turn and the visible answer.
-      record(
-        "PRIMARY max_tokens=" + String(budgeted) + " exhausted by reasoning (completion_tokens=" +
-          String(primary.completionTokens) + ", content empty, finish_reason=length); retrying with max_tokens=" +
-          String(retryMaxTokens) + " to prove the completion path",
-      );
-      const retryBudget = Number.isInteger(retryMaxTokens) && retryMaxTokens > budgeted ? retryMaxTokens : budgeted * 16;
-      const retried = await send(retryBudget);
-      if (realCompletion(retried)) {
-        return "max_tokens=" + String(retryBudget) + " (after the 16-token reasoning truncation) model=" + retried.body.model + " total_tokens=" + String(retried.totalTokens) + " content=" + truncate(retried.content, 40);
-      }
-      throw new Error(
-        "no real completion in either attempt: primary={finish:" + String(primary.finish) + ",completion_tokens:" + String(primary.completionTokens) + ",content_len:" + String(primary.content.length) + "} retry={finish:" + String(retried.finish) + ",completion_tokens:" + String(retried.completionTokens) + ",content_len:" + String(retried.content.length) + "}",
-      );
-    }
-    throw new Error(
-      "chat did not return a usable completion: status=" + String(primary.status) + " finish_reason=" + String(primary.finish) + " content_len=" + String(primary.content.length) + " total_tokens=" + String(primary.totalTokens),
-    );
+    // No token budget: the owner removed the cap. The route/provider decides when to stop, so the
+    // assertion is a real completed completion, not a budget being filled.
+    const result = await call("POST", "/v1/chat/completions", {
+      model: chosenModel,
+      messages: [{ role: "user", content: "Reply with the single word pong." }],
+    });
+    if (result.status !== 200) throw new Error("chat HTTP " + String(result.status) + ": " + redact(truncate(result.text, 600)));
+    const body = result.body;
+    if (body?.object !== "chat.completion") throw new Error("object " + String(body?.object));
+    const choice = body?.choices?.[0];
+    const content = choice?.message?.content;
+    if (typeof content !== "string" || content.trim().length === 0) throw new Error("assistant content is empty");
+    if (typeof body?.usage?.total_tokens !== "number" || body.usage.total_tokens <= 0) throw new Error("usage.total_tokens is " + String(body?.usage?.total_tokens));
+    if (choice?.finish_reason !== "stop") throw new Error("finish_reason " + String(choice?.finish_reason));
+    if (typeof body?.model !== "string" || !body.model.toLowerCase().includes("deepseek")) throw new Error("response model is " + String(body?.model));
+    return "model=" + body.model + " total_tokens=" + String(body.usage.total_tokens) + " finish=stop content=" + truncate(String(content).trim(), 40);
   });
 
   await check("router decision recorded for this run", async () => {

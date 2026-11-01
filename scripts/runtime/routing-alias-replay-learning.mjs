@@ -18,7 +18,7 @@
  *      baseline.remote-only (or the exact declared remote-only baseline alias), plus the researcher posture
  *      scope declared in the live runtime config readback;
  *   3. sends POST /v1/chat/completions through that alias with a declared role_model taxonomy intent
- *      (researcher / a canonical researcher task) and max_tokens 256;
+ *      (researcher / a canonical researcher task) with no token budget;
  *   4. asserts HTTP 200, a real remote completion (content + usage.total_tokens > 0) and a routing decision
  *      with providerId=deepseek, sourceType=remote, finishReason=stop; captures the full decision row and
  *      the request observation's routing diagnostics;
@@ -62,8 +62,6 @@ const port = Number(value("--port") ?? 3462);
 const expectedVersion = value("--expect-version") ?? "0.0.20-471-g2e4aca6b";
 const aliasPreference = value("--alias") ?? "baseline.remote-only";
 const roleId = value("--role") ?? "researcher";
-const maxTokens = Number(value("--max-tokens") ?? 256);
-const retryMaxTokens = Number(value("--retry-max-tokens") ?? 2048);
 const healthBudgetMs = Number(process.env.ROUTING_LIVE_HEALTH_TIMEOUT_MS ?? 240_000);
 const logPath = path.resolve(
   value("--log") ??
@@ -158,7 +156,7 @@ record("exe=" + exe);
 record("state_source=" + stateSource);
 record("port=" + String(port));
 record("expect_version=" + expectedVersion);
-record("requested_alias=" + aliasPreference + " role=" + roleId + " max_tokens=" + String(maxTokens));
+record("requested_alias=" + aliasPreference + " role=" + roleId);
 record("started_at=" + new Date().toISOString());
 record("");
 if (!existsSync(exe)) notRun("packaged executable not found: " + exe);
@@ -383,83 +381,45 @@ try {
   record("");
 
   // ---- taxonomy-scoped request ----------------------------------------------------------------
-  const requestBase = "routing-alias-" + String(Date.now());
+  const finalRequestId = "routing-alias-" + String(Date.now());
   record("## Taxonomy-scoped chat");
   let observationRequestId;
-  let finalRequestId = requestBase;
-  const chatAttempts = [];
   await check("POST /v1/chat/completions returns a real remote completion", async () => {
-    const send = async (budget, label) => {
-      const attemptRequestId = requestBase + "-" + label;
-      const result = await call(
-        "POST",
-        "/v1/chat/completions",
-        {
-          model: chosenAlias,
-          messages: [
-            // Keep the TAXONOMY declaration in role_model (that is what routes the request under the
-            // researcher posture) and keep the ask short: the router selects a reasoning arm, and a long
-            // multi-source research prompt consumes the whole completion budget on reasoning before any
-            // visible answer (observed finish_reason=length at 256 and 2048 tokens).
-            { role: "system", content: "Taxonomy posture: " + roleId + "/" + String(researcherTask.id) + ", remote-only execution." },
-            { role: "user", content: "Name one primary source domain for EU AI Act updates. Answer in one sentence." },
-          ],
-          max_tokens: budget,
-          role_model: {
-            contract_version: 1,
-            intent: {
-              taxonomy_version: taxonomyManifest.taxonomyVersion,
-              classification_contract_version: taxonomyManifest.classificationContractVersion,
-              requested_role_id: roleId,
-              task_type: String(researcherTask.id),
-              source: "operator_ui",
-              confidence: 0.9,
-            },
+    // No token budget: the owner removed the cap (including the reasoning-arm truncation retry that
+    // only existed because a fixed budget could be consumed before the visible answer).
+    const result = await call(
+      "POST",
+      "/v1/chat/completions",
+      {
+        model: chosenAlias,
+        messages: [
+          { role: "system", content: "Taxonomy posture: " + roleId + "/" + String(researcherTask.id) + ", remote-only execution." },
+          { role: "user", content: "Name one primary source domain for EU AI Act updates. Answer in one sentence." },
+        ],
+        role_model: {
+          contract_version: 1,
+          intent: {
+            taxonomy_version: taxonomyManifest.taxonomyVersion,
+            classification_contract_version: taxonomyManifest.classificationContractVersion,
+            requested_role_id: roleId,
+            task_type: String(researcherTask.id),
+            source: "operator_ui",
+            confidence: 0.9,
           },
         },
-        { "x-request-id": attemptRequestId, "x-role-model-requested-role-id": roleId },
-      );
-      const body = result.body;
-      const choice = body?.choices?.[0];
-      const attempt = {
-        requestId: attemptRequestId,
-        budget,
-        status: result.status,
-        body,
-        content: typeof choice?.message?.content === "string" ? choice.message.content.trim() : "",
-        finish: choice?.finish_reason,
-        total: body?.usage?.total_tokens,
-        completionTokens: body?.usage?.completion_tokens,
-      };
-      chatAttempts.push(attempt);
-      finalRequestId = attemptRequestId;
-      return attempt;
-    };
-    const usable = (attempt) =>
-      attempt.status === 200 &&
-      attempt.body?.object === "chat.completion" &&
-      attempt.content.length > 0 &&
-      typeof attempt.total === "number" &&
-      attempt.total > 0 &&
-      typeof attempt.body?.model === "string" &&
-      attempt.body.model.length > 0;
-
-    const primary = await send(maxTokens, "a1");
-    if (usable(primary) && primary.finish === "stop") {
-      return "max_tokens=" + String(maxTokens) + " model=" + primary.body.model + " total_tokens=" + String(primary.total) + " finish=stop content=" + truncate(primary.content, 120);
-    }
-    if (primary.status === 200 && primary.finish === "length") {
-      // The router selects a reasoning arm (effort max/high). The instructed 256-token budget can be
-      // entirely consumed by the reasoning turn on this task, so record that and complete the proof with
-      // a larger budget instead of pretending the truncation was a completion.
-      record("PRIMARY max_tokens=" + String(maxTokens) + " exhausted by reasoning (completion_tokens=" + String(primary.completionTokens) + ", content empty, finish_reason=length); retrying with max_tokens=" + String(retryMaxTokens));
-      const retried = await send(retryMaxTokens, "a2");
-      if (usable(retried) && retried.finish === "stop") {
-        return "max_tokens=" + String(retryMaxTokens) + " (after the " + String(maxTokens) + "-token reasoning truncation) model=" + retried.body.model + " total_tokens=" + String(retried.total) + " finish=stop content=" + truncate(retried.content, 120);
-      }
-      throw new Error("no real completion in either attempt: primary={finish:" + String(primary.finish) + ",completion_tokens:" + String(primary.completionTokens) + "}, retry={status:" + String(retried.status) + ",finish:" + String(retried.finish) + ",completion_tokens:" + String(retried.completionTokens) + ",content_len:" + String(retried.content.length) + "}");
-    }
-    throw new Error("chat did not return a usable completion: status=" + String(primary.status) + " finish=" + String(primary.finish) + " content_len=" + String(primary.content.length) + " total=" + String(primary.total));
+      },
+      { "x-request-id": finalRequestId, "x-role-model-requested-role-id": roleId },
+    );
+    if (result.status !== 200) throw new Error("chat HTTP " + String(result.status) + ": " + redact(truncate(result.text, 600)));
+    const body = result.body;
+    if (body?.object !== "chat.completion") throw new Error("object " + String(body?.object));
+    const choice = body?.choices?.[0];
+    const content = choice?.message?.content;
+    if (typeof content !== "string" || content.trim().length === 0) throw new Error("assistant content is empty");
+    if (typeof body?.usage?.total_tokens !== "number" || body.usage.total_tokens <= 0) throw new Error("usage.total_tokens is " + String(body?.usage?.total_tokens));
+    if (choice?.finish_reason !== "stop") throw new Error("finish_reason " + String(choice?.finish_reason));
+    if (typeof body?.model !== "string" || body.model.length === 0) throw new Error("response model is empty");
+    return "model=" + body.model + " total_tokens=" + String(body.usage.total_tokens) + " finish=stop content=" + truncate(String(content).trim(), 120);
   });
 
   // ---- decision row + observation -------------------------------------------------------------

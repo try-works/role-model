@@ -230,7 +230,7 @@ if (has("--seed-chat")) {
     const response = await fetch(base + "/v1/chat/completions", {
       method: "POST",
       headers: { "content-type": "application/json", connection: "close" },
-      body: JSON.stringify({ model, messages: [{ role: "user", content: "seed" }], max_tokens: 16 }),
+      body: JSON.stringify({ model, messages: [{ role: "user", content: "seed" }] }),
     });
     console.log("seeded chat: status " + String(response.status));
   } catch (error) {

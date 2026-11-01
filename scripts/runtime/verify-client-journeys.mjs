@@ -176,7 +176,7 @@ try {
     const response = await fetch(base + "/v1/chat/completions", {
       method: "POST",
       headers: { "content-type": "application/json", connection: "close" },
-      body: JSON.stringify({ model: requested, messages: [{ role: "user", content: "Say hello in five words." }], max_tokens: 32 }),
+      body: JSON.stringify({ model: requested, messages: [{ role: "user", content: "Say hello in five words." }] }),
     });
     if (response.status !== 200) throw new Error("chat status " + String(response.status));
     const body = await response.json();

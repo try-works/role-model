@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s254-studio-request-shape.test.ts (8 tests) 28ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  19:09:05
+   Duration  11.99s (transform 4.39s, setup 0ms, collect 7.09s, tests 28ms, environment 3.21s, prepare 576ms)
+

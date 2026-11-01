@@ -25,7 +25,7 @@ const requests: readonly StudioRequest[] = [
   },
   {
     tab: "advanced", method: "POST", path: "/v1/responses",
-    body: { model: "moonshot/kimi-k2.5", max_tokens: 64, messages: [{ role: "user", content: "Hello" }] },
+    body: { model: "moonshot/kimi-k2.5", messages: [{ role: "user", content: "Hello" }] },
   },
 ];
 
