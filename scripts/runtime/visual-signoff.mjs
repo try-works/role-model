@@ -65,6 +65,9 @@ const foldkitPng = path.join(evidenceDir, "foldkit.png");
 // through these overrides instead; they are copied into the evidence directory like any other capture.
 const prodPngOverride = value("--production-png");
 const foldkitPngOverride = value("--foldkit-png");
+// Provenance: a run whose images came from --production-png/--foldkit-png did NOT capture through the
+// harness, and its result line must say so instead of claiming two captures.
+const suppliedCaptures = prodPngOverride !== undefined || foldkitPngOverride !== undefined;
 
 const lines = [];
 const record = (line = "") => {
@@ -217,28 +220,32 @@ const bootHost = async (label, port, stateRoot, extraArgs) => {
 };
 const stopHost = async (child) => {
   if (child === null || child.exitCode !== null) return;
-  child.kill();
-  const exited = await new Promise((resolve) => {
+  // The exit listener must exist before the kill: a tree kill can make the host exit before the listener
+  // is attached, and awaiting an already-emitted exit event would park for the full timeout.
+  const exited = new Promise((resolve) => {
+    if (child.exitCode !== null || child.signalCode !== null) {
+      resolve(true);
+      return;
+    }
     const timer = setTimeout(() => resolve(false), 10_000);
     child.once("exit", () => {
       clearTimeout(timer);
       resolve(true);
     });
   });
-  if (!exited || process.platform === "win32") {
-    // On Windows the host can leave Track B sidecar children holding the state root; kill the tree and
-    // give the filesystem a moment before the caller deletes the credential copy.
-    if (process.platform === "win32") {
-      spawnSync("taskkill", ["/PID", String(child.pid), "/T", "/F"], { stdio: "ignore" });
-      spawnSync("ping", ["-n", "2", "127.0.0.1"], { stdio: "ignore" });
-    } else {
-      try {
-        process.kill(child.pid, "SIGKILL");
-      } catch {
-        // already gone
-      }
-    }
+  if (process.platform === "win32") {
+    // Kill the tree BEFORE the parent exits: once the host is gone, taskkill /T can no longer find its
+    // Track B sidecar children by parent PID, and those children keep the state root open (measured:
+    // EPERM deleting the credential copy after a graceful parent exit).
+    spawnSync("taskkill", ["/PID", String(child.pid), "/T", "/F"], { stdio: "ignore" });
+  } else {
+    child.kill();
   }
+  if (!(await exited) && process.platform === "win32") {
+    spawnSync("taskkill", ["/PID", String(child.pid), "/T", "/F"], { stdio: "ignore" });
+  }
+  // Give the OS a moment to release the sidecar file handles before the caller deletes the copy.
+  if (process.platform === "win32") spawnSync("ping", ["-n", "3", "127.0.0.1"], { stdio: "ignore" });
 };
 
 const failures = [];
@@ -346,6 +353,11 @@ try {
       await new Promise((resolve) => setTimeout(resolve, 2000));
     }
   }
+  // Stop the vision host as soon as the response body is in hand: its Track B children hold the state
+  // root, and the fail-closed deletion below must be able to remove the credential copy.
+  await stopHost(visionHost);
+  visionHost = null;
+  record("vision_host_stopped_before_cleanup=true");
   record("vision_status=" + String(response.status));
   record("vision_response=" + redact(truncate(text, 12000)));
   if (response.status !== 200) failures.push("vision comparison HTTP " + String(response.status));
@@ -362,6 +374,7 @@ try {
   record("VISION_ANSWER=" + redact(visionAnswer));
   const verdictMatch = /VISUAL_VERDICT:\s*(parity|minor-deltas|major-deltas)/i.exec(visionAnswer);
   record("VISION_VERDICT=" + (verdictMatch === null ? "unparsed" : verdictMatch[1]));
+  record("VISION_VERDICT_NOTE=the verdict is a delta between the captures AS TAKEN and is NOT a design-match acceptance; the captures differ in data source (production live vs Foldkit fixture-backed), which dominates the comparison");
   const sourceAfter = treeSignature(stateSource);
   record("state_source_unchanged=" + String(sourceAfter === sourceBefore));
   if (sourceAfter !== sourceBefore) failures.push("credential state source changed during the run");
@@ -375,17 +388,36 @@ try {
     // from a just-killed sidecar cannot leave it behind.
     let removed = false;
     let lastError = "";
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    for (let attempt = 1; attempt <= 10 && !removed; attempt += 1) {
+    // Detached Track B worker processes can outlive the host tree kill and keep the copy open. Kill any
+    // node/role-model-dev process whose command line names THIS copy (never a wildcard, never another run's
+    // state root), then retry the delete.
+    const needle = visionCopy.replace(/'/g, "''");
+    const ps = "$n='" + needle + "'; Get-CimInstance Win32_Process | Where-Object { ($_.Name -eq 'node.exe' -or $_.Name -eq 'role-model-dev.exe') -and $_.CommandLine -and $_.CommandLine.Contains($n) } | ForEach-Object { taskkill /PID $_.ProcessId /T /F | Out-Null }";
+    spawnSync("powershell", ["-NoProfile", "-NonInteractive", "-Command", ps], { stdio: "ignore" });
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    const attemptRemoval = () => {
       try {
         rmSync(visionCopy, { force: true, recursive: true });
-        removed = true;
       } catch (error) {
         lastError = error instanceof Error ? error.message : String(error);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
+      if (!existsSync(visionCopy)) return true;
+      // Second strategy: the OS rmdir can succeed where the Node recursive delete hit a transient handle.
+      const fallback = spawnSync("cmd", ["/c", "rd", "/s", "/q", visionCopy], { stdio: "ignore" });
+      if (!existsSync(visionCopy)) return true;
+      if (fallback.status !== 0) lastError = lastError || "rd exit " + String(fallback.status);
+      return false;
+    };
+    // A just-killed sidecar (or an external scanner) can hold the tree for tens of seconds; retry for a
+    // bounded minute, and FAIL the run if the credential copy still exists afterwards.
+    for (let attempt = 1; attempt <= 30 && !removed; attempt += 1) {
+      removed = attemptRemoval();
+      if (!removed) await new Promise((resolve) => setTimeout(resolve, 2000));
     }
     record("vision_state_copy_removed=" + String(removed) + (removed ? "" : " error=" + redact(lastError)));
+    // Fail closed: a surviving credential copy is a failed run, never a pass.
+    if (!removed) failures.push("cleanup_failed: could not delete credential state copy " + visionCopy + " (" + lastError + ")");
+    record("cleanup_failed=" + String(!removed));
   }
 }
 
@@ -395,7 +427,10 @@ record("production_shot=" + (prodShot === undefined ? "missing" : prodShot.file 
 record("foldkit_shot=" + (foldkitShot === undefined ? "missing" : foldkitShot.file + " sha256=" + foldkitShot.sha256));
 record("vision_model=" + visionModel);
 record("vision_answer_chars=" + String(visionAnswer.length));
-if (failures.length === 0) record("RESULT: PASS (two screenshots captured, deepseek-flash comparison returned an answer)");
+record("captures=" + (suppliedCaptures ? "supplied-overrides (Chrome CLI capture unavailable under the sandbox named-pipe policy)" : "captured by the harness"));
+if (failures.length === 0) record(suppliedCaptures
+  ? "RESULT: PASS (comparison answered on supplied captures; Chrome CLI capture unavailable; the verdict is data-state-dominated and is NOT a design-match acceptance)"
+  : "RESULT: PASS (two screenshots captured by the harness, deepseek-flash comparison returned an answer; the verdict is data-state-dominated and is NOT a design-match acceptance)");
 else {
   record("RESULT: FAIL (" + String(failures.length) + " failure(s))");
   for (const failure of failures) record("  " + redact(failure));
