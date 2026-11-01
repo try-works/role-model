@@ -34,6 +34,7 @@ const controlClient: ControlClient = {
 const studioClient: StudioClient = async () => ({ contentType: "", status: 500, text: "" });
 
 const runtimeConfigClient: RuntimeConfigClient = {
+  patchReplayAutoQueue: async () => ({ body: { config: {} }, status: 200 }),
   read: async () => ({ body: { config: {} }, status: 200 }),
   save: async () => ({ body: { config: {} }, status: 200 }),
 };

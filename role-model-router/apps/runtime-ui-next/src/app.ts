@@ -18,6 +18,7 @@ import {
   defineReadReadback,
   defineRefreshSnapshot,
   defineSaveRuntimeConfig,
+  defineReplayAutoQueueCommands,
 } from "./commands";
 import { createDeviceAuthClient } from "./device-auth";
 import { createEndpointAdmissionClient } from "./endpoint-admission";
@@ -134,7 +135,9 @@ export const createShellApp = (options: ShellOptions = {}) => {
     });
   const readControl = defineReadControl(controlClient);
   const dispatchControl = defineDispatchControl(controlClient);
-  const saveRuntimeConfig = defineSaveRuntimeConfig(createRuntimeConfigClient({ ...(options.runtimeConfigFetchImpl === undefined ? {} : { fetchImpl: options.runtimeConfigFetchImpl }), ...(controlToken === undefined ? {} : { token: controlToken }) }));
+  const runtimeConfigClient = createRuntimeConfigClient({ fetchImpl: options.runtimeConfigFetchImpl, token: controlToken });
+  const saveRuntimeConfig = defineSaveRuntimeConfig(runtimeConfigClient);
+  const replayAutoQueueCommands = defineReplayAutoQueueCommands(runtimeConfigClient);
   const readReadback = defineReadReadback(readbackReaders);
   const studioClient = options.studioClient ?? createStudioClient({ ...(options.studioBaseUrl === undefined ? {} : { baseUrl: options.studioBaseUrl }), ...(options.studioFetchImpl === undefined ? {} : { fetchImpl: options.studioFetchImpl }) });
   const dispatchStudio = defineDispatchStudio(studioClient);
@@ -161,7 +164,9 @@ export const createShellApp = (options: ShellOptions = {}) => {
       defineRouterConfigCommands(createRouterConfigClient({ ...(options.routerConfigFetchImpl === undefined ? {} : { fetchImpl: options.routerConfigFetchImpl }), ...(controlToken === undefined ? {} : { token: controlToken }) })),
       createLocalPolicyCommands(options.localPolicyFetchImpl ?? globalThis.fetch),
       defineStorageRetentionCommands(createStorageRetentionClient({ ...(options.retentionFetchImpl === undefined ? {} : { fetchImpl: options.retentionFetchImpl }), ...(controlToken === undefined ? {} : { token: controlToken }) })),
-      defineOperatorLearningCommands(createOperatorLearningClient(createRuntimeHttpClient({ ...(options.operatorLearningFetchImpl === undefined ? {} : { fetchImpl: options.operatorLearningFetchImpl }), tokenProvider: readStoredOperatorToken })))
+      // oxlint-disable-next-line no-conditional-empty-object-spread -- pre-existing option spread, only the trailing comma changed here.
+      defineOperatorLearningCommands(createOperatorLearningClient(createRuntimeHttpClient({ ...(options.operatorLearningFetchImpl === undefined ? {} : { fetchImpl: options.operatorLearningFetchImpl }), tokenProvider: readStoredOperatorToken }))),
+      replayAutoQueueCommands
     ),
     view,
   };

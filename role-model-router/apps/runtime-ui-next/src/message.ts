@@ -89,6 +89,11 @@ export const Message: MessageUnion<{
   readonly RequestsRankingSubmitRequested: EmptyFields;
   readonly RequestsRankingLoaded: { readonly rows: typeof RequestsRankingRowsSchema; readonly token: typeof Schema.Number };
   readonly RequestsRankingFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly ReplayAutoQueueToggleChanged: { readonly value: typeof Schema.String };
+  readonly ReplayAutoQueueCapChanged: { readonly value: typeof Schema.String };
+  readonly ReplayAutoQueueSaveRequested: EmptyFields;
+  readonly ReplayAutoQueueSaved: { readonly token: typeof Schema.Number };
+  readonly ReplayAutoQueueSaveFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LearningLadderToggleRequested: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly taskTypeId: typeof Schema.String };
   readonly LearningLadderUpdated: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly scopeId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LearningLadderFailed: { readonly message: typeof Schema.String; readonly roleId: typeof Schema.String; readonly scopeId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
@@ -231,6 +236,11 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   RequestsRankingSubmitRequested: {},
   RequestsRankingLoaded: { rows: RequestsRankingRowsSchema, token: Schema.Number },
   RequestsRankingFailed: { message: Schema.String, token: Schema.Number },
+  ReplayAutoQueueToggleChanged: { value: Schema.String },
+  ReplayAutoQueueCapChanged: { value: Schema.String },
+  ReplayAutoQueueSaveRequested: {},
+  ReplayAutoQueueSaved: { token: Schema.Number },
+  ReplayAutoQueueSaveFailed: { message: Schema.String, token: Schema.Number },
   LearningLadderToggleRequested: { rolledBack: Schema.Boolean, roleId: Schema.String, taskTypeId: Schema.String },
   LearningLadderUpdated: { rolledBack: Schema.Boolean, roleId: Schema.String, scopeId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
   LearningLadderFailed: { message: Schema.String, roleId: Schema.String, scopeId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },

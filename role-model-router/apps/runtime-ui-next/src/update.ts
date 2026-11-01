@@ -55,6 +55,8 @@ import {
   defineReadReadback,
   defineRefreshSnapshot,
   type SaveRuntimeConfigCommand,
+  type ReplayAutoQueueCommands,
+  noopReplayAutoQueueCommands,
 } from "./commands";
 import {
   CONTROL_SPECS,
@@ -256,6 +258,7 @@ export const createUpdate =
     localPolicyCommandsArg: LocalPolicyCommands = localPolicyCommands,
     storageRetentionCommands: StorageRetentionCommands = noopStorageRetentionCommands,
     operatorLearningCommands: OperatorLearningCommands = noopOperatorLearningCommands,
+    replayAutoQueueCommands: ReplayAutoQueueCommands = noopReplayAutoQueueCommands,
   ) => {
 
 
@@ -848,6 +851,35 @@ const updateLocalPolicyDraft = (
         LearningModeFailed: ({ message, token }: Extract<Message, { readonly _tag: "LearningModeFailed" }>): UpdateReturn<Model, Message> => {
           if (token !== model.readbacks.learning.token) return { model };
           return { model: { ...model, readbacks: { ...model.readbacks, learning: { ...model.readbacks.learning, message, status: "error" } } } };
+        },
+        ReplayAutoQueueToggleChanged: ({ value }: Extract<Message, { readonly _tag: "ReplayAutoQueueToggleChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.learningReplayAutoQueue ?? { dailyCap: "100", enabled: "on", status: "idle" as const };
+          return { model: { ...model, learningReplayAutoQueue: { ...state, enabled: value === "on" ? "on" : "off", status: "idle" } } };
+        },
+        ReplayAutoQueueCapChanged: ({ value }: Extract<Message, { readonly _tag: "ReplayAutoQueueCapChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.learningReplayAutoQueue ?? { dailyCap: "100", enabled: "on", status: "idle" as const };
+          return { model: { ...model, learningReplayAutoQueue: { ...state, dailyCap: value, status: "idle" } } };
+        },
+        ReplayAutoQueueSaveRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.learningReplayAutoQueue ?? { dailyCap: "100", enabled: "on", status: "idle" as const };
+          const parsed = Number.parseInt(state.dailyCap === "" ? "100" : state.dailyCap, 10);
+          const dailyCap = Number.isFinite(parsed) && parsed >= 0 ? parsed : 100;
+          const token = model.readbacks.runtimeConfig.token + 1;
+          return {
+            commands: [replayAutoQueueCommands.save({ dailyCap, enabled: state.enabled === "on", token })],
+            model: { ...model, learningReplayAutoQueue: { ...state, message: undefined, status: "saving" } },
+          };
+        },
+        ReplayAutoQueueSaved: (): UpdateReturn<Model, Message> => {
+          const state = model.learningReplayAutoQueue ?? { dailyCap: "100", enabled: "on", status: "idle" as const };
+          return {
+            commands: [readReadback({ key: "runtimeConfig", token: model.readbacks.runtimeConfig.token + 1 })],
+            model: { ...model, learningReplayAutoQueue: { ...state, message: "Replay auto-queue updated.", status: "saved" } },
+          };
+        },
+        ReplayAutoQueueSaveFailed: ({ message }: Extract<Message, { readonly _tag: "ReplayAutoQueueSaveFailed" }>): UpdateReturn<Model, Message> => {
+          const state = model.learningReplayAutoQueue ?? { dailyCap: "100", enabled: "on", status: "idle" as const };
+          return { model: { ...model, learningReplayAutoQueue: { ...state, message, status: "error" } } };
         },
         RetentionSizeChanged: ({ value }: Extract<Message, { readonly _tag: "RetentionSizeChanged" }>): UpdateReturn<Model, Message> => {
           const state = model.retention ?? initialRetentionState();

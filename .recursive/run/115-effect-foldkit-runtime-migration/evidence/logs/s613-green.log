@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s613-replay-auto-queue.test.ts (3 tests) 27ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  20:27:37
+   Duration  14.45s (transform 7.01s, setup 0ms, collect 11.13s, tests 27ms, environment 2.12s, prepare 448ms)
+

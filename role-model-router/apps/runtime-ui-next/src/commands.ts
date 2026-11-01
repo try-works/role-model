@@ -22,7 +22,7 @@ import { type EndpointActivationPayload, type EndpointAdmissionClient, type Endp
 import { type LearningRankingClient, type LearningRollbackPayload } from "./learning-ranking";
 import { type RequestsRankingClient, type RequestsRankingQuery } from "./requests-ranking";
 import { Message } from "./message";
-import type { RuntimeConfigClient } from "./runtime-config";
+import { createRuntimeConfigClient, type RuntimeConfigClient } from "./runtime-config";
 import { type StudioClient, StudioState, studioRequestFor } from "./studio";
 import { type ObservabilityReader, parseObservabilitySnapshot } from "./observability";
 import { type RuntimeHttpClient, createRuntimeHttpClient } from "./http/runtime-client";
@@ -314,6 +314,31 @@ export const defineSaveRuntimeConfig = (client: RuntimeConfigClient) =>
     },
   });
 export type SaveRuntimeConfigCommand = ReturnType<typeof defineSaveRuntimeConfig>;
+export const defineReplayAutoQueueCommands = (client: RuntimeConfigClient) => ({
+  save: Command.define("ReplayAutoQueueSave", {
+    args: { dailyCap: Schema.Number, enabled: Schema.Boolean, token: Schema.Number },
+    messages: [Message.ReplayAutoQueueSaved, Message.ReplayAutoQueueSaveFailed],
+    execute: ({ dailyCap, enabled, token }) =>
+      Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            try: () => client.patchReplayAutoQueue({ dailyCap, enabled }),
+          }),
+        ),
+        (exit) => Effect.succeed(
+          Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+            ? Message.ReplayAutoQueueSaved({ token })
+            : Message.ReplayAutoQueueSaveFailed({
+                message: "Replay auto-queue save failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0),
+                token,
+              }),
+        ),
+      ),
+  }),
+});
+export type ReplayAutoQueueCommands = ReturnType<typeof defineReplayAutoQueueCommands>;
+export const noopReplayAutoQueueCommands = defineReplayAutoQueueCommands(createRuntimeConfigClient({ fetchImpl: async () => new Response("{}", { status: 200 }) }));
 export const defineDispatchStudio = (client: StudioClient) =>
   Command.define("DispatchStudio", {
     args: { state: StudioState, token: Schema.Number },

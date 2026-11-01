@@ -50,7 +50,12 @@ export interface RuntimeConfigClientOptions {
   readonly fetchImpl?: typeof fetch;
   readonly token?: string;
 }
+export interface ReplayAutoQueuePatch {
+  readonly dailyCap: number;
+  readonly enabled: boolean;
+}
 export interface RuntimeConfigClient {
+  readonly patchReplayAutoQueue: (patch: ReplayAutoQueuePatch) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly read: () => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly save: (config: Readonly<Record<string, unknown>>) => Promise<{ readonly body: unknown; readonly status: number }>;
 }
@@ -59,6 +64,14 @@ export const createRuntimeConfigClient = (options: RuntimeConfigClientOptions = 
   const url = (options.baseUrl ?? "") + "/api/role-model/runtime/config";
   const headers = (base: Record<string, string>): Record<string, string> => ({ ...base, ...(options.token === undefined ? {} : { authorization: `Bearer ${options.token}` }) });
   return {
+    patchReplayAutoQueue: async (patch) => {
+      const response = await fetchImpl(url, {
+        body: JSON.stringify({ replay: { auto_queue: { daily_cap: patch.dailyCap, enabled: patch.enabled } } }),
+        headers: headers({ "content-type": "application/json" }),
+        method: "PUT",
+      });
+      return { body: await response.json(), status: response.status };
+    },
     read: async () => {
       const response = await fetchImpl(url, { cache: "no-store", headers: headers({ accept: "application/json" }) });
       return { body: await response.json(), status: response.status };

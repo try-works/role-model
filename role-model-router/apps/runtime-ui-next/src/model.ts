@@ -47,7 +47,15 @@ const requestsFields = {
   requestsRankingMetricListbox: Schema.optional(Schema.Any),
   requestsRankingTargetListbox: Schema.optional(Schema.Any),
 };
-const learningFields = { learningRanking: Schema.optional(LearningRankingStateSchema) };
+const learningFields = {
+  learningRanking: Schema.optional(LearningRankingStateSchema),
+  learningReplayAutoQueue: Schema.optional(Schema.Struct({
+    dailyCap: Schema.String,
+    enabled: Schema.String,
+    message: Schema.optional(Schema.String),
+    status: Schema.Literals(["idle", "saving", "saved", "error"]),
+  })),
+};
 const deviceAuthFields = {
   deviceAuth: Schema.optional(DeviceAuthStateSchema),
   deviceAuthDialog: Schema.optional(Schema.Any),
@@ -68,6 +76,7 @@ const modelFields = {
   requestsRankingMetricListbox: requestsFields.requestsRankingMetricListbox,
   requestsRankingTargetListbox: requestsFields.requestsRankingTargetListbox,
   learningRanking: learningFields.learningRanking,
+  learningReplayAutoQueue: learningFields.learningReplayAutoQueue,
   endpointAdmission: endpointsFields.endpointAdmission,
   providerAccount: providersFields.providerAccount,
   routerPosture: Schema.optional(RouterPostureStateSchema),
