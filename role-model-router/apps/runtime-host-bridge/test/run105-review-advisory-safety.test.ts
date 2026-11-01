@@ -491,8 +491,12 @@ privateTest("larger admission spills provenance and leaves a bounded routable sn
   expect(
     (await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, taskTypeId })).ladder.packId,
   ).toBe(result.ladders[0].ladder.packId);
-  // Baseline paired-store limitation: the spilled ladder is written, but this reader is unavailable.
-  expect((await read(s.input)).advisoryState).toBe("unavailable");
+  const spilled = await read(s.input);
+  expect(spilled).toMatchObject({
+    advisoryState: "fresh",
+    confidence: 0.75,
+    preferredRoutePackage: "endpoint:a",
+  });
 });
 
 privateTest.each([

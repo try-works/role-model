@@ -109,6 +109,66 @@ const asRecord = (value: unknown): Record<string, unknown> | null =>
     ? (value as Record<string, unknown>)
     : null;
 
+/**
+ * R32/R105 spill reassembly: the private materializer externalises oversized provenance into
+ * route_ladder_evidence_part documents and reassembles it on read. The public reader must do the
+ * same, or a spilled ladder silently loses its authoritative advisory.
+ */
+const reassembleLadderProvenance = async (
+  invoke: (capability: string, value: Readonly<Record<string, unknown>>) => Promise<unknown>,
+  scopeId: string,
+  provenance: Record<string, unknown>,
+): Promise<Record<string, unknown> | null> => {
+  const spill = asRecord(provenance.spill);
+  const parts = spill?.parts;
+  if (!Array.isArray(parts) || parts.length === 0) return provenance;
+  if (parts.length > 4096) return null;
+  const decoded = new Array<string | null>(parts.length).fill(null);
+  let next = 0;
+  const readPart = async (entry: unknown): Promise<string | null> => {
+    const part = asRecord(entry);
+    const id = boundedText(part?.id);
+    const sha256 = part?.sha256;
+    if (!id || typeof sha256 !== "string" || !/^[a-f0-9]{64}$/.test(sha256)) return null;
+    const rawPart = asRecord(await invoke("knowledge:read", { id, scope: scopeId }));
+    const document = asRecord(rawPart?.businessOutput) ?? rawPart;
+    const body = asRecord(document?.provenance);
+    const data = body?.data;
+    if (
+      !document ||
+      document.type !== "route_ladder_evidence_part" ||
+      document.version !== 1 ||
+      document.scope !== scopeId ||
+      typeof data !== "string" ||
+      createHash("sha256").update(data).digest("hex") !== sha256
+    )
+      return null;
+    return data;
+  };
+  // Bounded parallel reads: a spilled oversized ladder can have hundreds of parts, and a serial
+  // read would exceed the advisory budget long before it could serve a route decision.
+  const worker = async (): Promise<void> => {
+    while (next < parts.length) {
+      const index = next++;
+      decoded[index] = await readPart(parts[index]);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(8, parts.length) }, worker));
+  if (decoded.some((value) => value === null)) return null;
+  let encoded = "";
+  for (const value of decoded) encoded += value ?? "";
+  try {
+    const restored = JSON.parse(Buffer.from(encoded, "base64").toString("utf8")) as unknown;
+    const inline = asRecord(restored);
+    if (!inline) return null;
+    const { spill: _spill, ...descriptor } = provenance;
+    return { ...inline, ...descriptor };
+  } catch {
+    return null;
+  }
+};
+
+
 const boundedText = (value: unknown): string | null =>
   typeof value === "string" && value.trim() ? value.trim() : null;
 
@@ -243,7 +303,11 @@ export async function readTrackBRouteAdvisoryFromRollout(
     // readCapability, workerPid) beside the document, so the content-addressed digest must be computed
     // over the INNER document the knowledge-store actually addressed, not the envelope.
     const document = asRecord(rawDocument?.businessOutput) ?? rawDocument;
-    const metadata = asRecord(document?.provenance);
+    const inlineMetadata = asRecord(document?.provenance);
+    const metadata =
+      inlineMetadata === null
+        ? undefined
+        : (await reassembleLadderProvenance(input.invoke, scopeId, inlineMetadata)) ?? undefined;
     if (process.env.ROLE_MODEL_ADVISORY_DIAG) {
       console.error(
         `[advisory-diag] doc keys=${Object.keys(document ?? {}).join(",")} type=${document?.type} ver=${document?.version} docScope=${document?.scope} scopeId=${scopeId} mScopeId=${metadata?.scopeId} mRole=${metadata?.roleId} roleId=${roleId} mTask=${metadata?.taskTypeId} taskId=${taskTypeId} mTax=${metadata?.taxonomyVersion} tax=${taxonomyVersion} digestMatch=${document ? documentDigest(document) === packId : false}`,

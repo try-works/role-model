@@ -1,0 +1,123 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:1628) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run105-review-advisory-safety.test.ts (80 tests | 1 failed | 79 skipped) 6729ms
+   ↓ real-store admitted confidence, explicit cohort and exact scoped reads without promotion
+   ↓ real-store rewrite/cache time cannot refresh evidence
+   ↓ revalidation uses evidence age
+   ↓ unknown evidence time never becomes fresh
+   ↓ real scope kill switch suppresses derived ladder
+   ↓ real pending guardrail stays fresh but sustained breach suppresses without activePackageId
+   ↓ real per-task rollback reversible with exact unavailable identity
+   ↓ invalid policy undefined never widens exposure
+   ↓ invalid policy null never widens exposure
+   ↓ invalid policy -1 never widens exposure
+   ↓ invalid policy 101 never widens exposure
+   ↓ invalid policy NaN never widens exposure
+   ↓ stage S2 uses configured policy when no rollout promotion
+   ↓ stage S3 uses configured policy when no rollout promotion
+   ↓ stage S4 uses configured policy when no rollout promotion
+   ↓ rejects mismatched ladder scopeId
+   ↓ rejects mismatched ladder roleId
+   ↓ rejects mismatched ladder taskTypeId
+   ↓ unknown/mismatched evidence id fails closed
+   ↓ unknown/mismatched evidence type fails closed
+   ↓ unknown/mismatched evidence version fails closed
+   ↓ unknown/mismatched evidence scope fails closed
+   ↓ unknown/mismatched evidence confidence fails closed
+   ↓ unknown/mismatched evidence evidenceAtMs fails closed
+   ↓ unknown/mismatched evidence roleId fails closed
+   ↓ unknown/mismatched evidence taskTypeId fails closed
+   ↓ unknown/mismatched evidence scopeId fails closed
+   ↓ unknown/mismatched evidence taxonomyVersion fails closed
+   ↓ unknown/mismatched evidence groupIds fails closed
+   ↓ unknown/mismatched evidence endpointEvidence fails closed
+   ↓ corrupt rung rank 0 returns unavailable not throw
+   ↓ corrupt rung rank -1 returns unavailable not throw
+   ↓ corrupt rung rank 1.5 returns unavailable not throw
+   ↓ corrupt rung rank NaN returns unavailable not throw
+   ↓ corrupt rung rank 1 returns unavailable not throw
+   ↓ bounded corruption duplicateRank fails closed
+   ↓ bounded corruption duplicateEndpoint fails closed
+   ↓ bounded corruption badStatus fails closed
+   ↓ bounded corruption overBound fails closed
+   ↓ unreadable knowledge:read-route-ladder is bounded unavailable
+   ↓ unreadable knowledge:read is bounded unavailable
+   ↓ unreadable knowledge:rollout-state is bounded unavailable
+   ↓ authentic stored metadata corruption scopeId refuses
+   ↓ authentic stored metadata corruption roleId refuses
+   ↓ authentic stored metadata corruption taskTypeId refuses
+   ↓ authentic stored metadata corruption taxonomyVersion refuses
+   ↓ authentic stored metadata corruption confidence refuses
+   ↓ authentic stored metadata corruption groupIds refuses
+   ↓ authentic stored metadata corruption endpointEvidence refuses
+   ↓ authentic stored metadata corruption evidenceAtMs refuses
+   ↓ corrupt/suppressed rollout rolled_back refuses
+   ↓ corrupt/suppressed rollout degraded refuses
+   ↓ corrupt/suppressed rollout wrongScope refuses
+   ↓ corrupt/suppressed rollout badCohort refuses
+   ↓ corrupt/suppressed rollout missingKillState refuses
+   ↓ explicit unclassified/partial null never borrows legacy scope
+   ↓ explicit unclassified/partial roleOnly never borrows legacy scope
+   ↓ explicit unclassified/partial taskOnly never borrows legacy scope
+   ↓ retained removed endpoint proof does not disable legitimate remaining rung
+   ↓ all-empty new floor preserves old admission and applies user removal
+   ↓ new regression evidence preserves accepted confidence/time/rank while current removal still applies
+   × larger admission spills provenance and leaves a bounded routable snapshot 6723ms
+     → expected { preferredRoutePackage: null, …(11) } to match object { advisoryState: 'fresh', …(2) }
+(9 matching properties omitted from actual)
+   ↓ real stored accepted evidence missingPolicy fails closed
+   ↓ real stored accepted evidence badK fails closed
+   ↓ real stored accepted evidence shortOwnProof fails closed
+   ↓ real stored accepted evidence belowOwnMean fails closed
+   ↓ real stored accepted evidence missingEffective fails closed
+   ↓ real stored accepted evidence extraEffective fails closed
+   ↓ real stored accepted evidence missingOwnGroups fails closed
+   ↓ real stored accepted evidence duplicateOwnGroups fails closed
+   ↓ real stored accepted evidence unknownOwnGroup fails closed
+   ↓ real stored accepted evidence badOwnTime fails closed
+   ↓ real stored accepted evidence badOwnTaxonomy fails closed
+   ↓ real stored accepted evidence missingRankEvidence fails closed
+   ↓ all historical endpoints removed under empty new floor yields no advisory but retains proof
+   ↓ unknown measured taxonomy never receives caller taxonomy relabel
+   ↓ accepted metadata relationship countMismatch refuses
+   ↓ accepted metadata relationship badPolicyMean refuses
+   ↓ accepted metadata relationship badRankDigest refuses
+   ↓ accepted metadata relationship rankOutsideWatermark refuses
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-review-advisory-safety.test.ts > larger admission spills provenance and leaves a bounded routable snapshot
+AssertionError: expected { preferredRoutePackage: null, …(11) } to match object { advisoryState: 'fresh', …(2) }
+(9 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "advisoryState": "fresh",
+-   "confidence": 0.75,
+-   "preferredRoutePackage": "endpoint:a",
++   "advisoryState": "unavailable",
++   "confidence": 0,
++   "preferredRoutePackage": null,
+  }
+
+ ❯ test/run105-review-advisory-safety.test.ts:495:19
+    493|   ).toBe(result.ladders[0].ladder.packId);
+    494|   const spilled = await read(s.input);
+    495|   expect(spilled).toMatchObject({
+       |                   ^
+    496|     advisoryState: "fresh",
+    497|     confidence: 0.75,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 79 skipped (80)
+   Start at  09:43:58
+   Duration  9.19s (transform 4.36s, setup 0ms, collect 363ms, tests 6.73s, environment 1ms, prepare 875ms)
+
