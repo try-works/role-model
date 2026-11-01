@@ -8,3 +8,4 @@
    Start at  20:23:15
    Duration  3.39s (transform 1.77s, setup 0ms, collect 2.82s, tests 29ms, environment 0ms, prepare 197ms)
 
+NOTE (2026-11-01): this log recorded the suite when it had 3 tests. The suite gained a fourth test (the DAG-provided composed-admission assertion) in a later commit; current suite is 4/4 (see evidence/logs/s598-green.log and run115-s593-layer-dag.test.ts).
