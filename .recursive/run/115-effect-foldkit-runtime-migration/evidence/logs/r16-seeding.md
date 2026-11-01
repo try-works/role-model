@@ -39,22 +39,23 @@ Launching both hosts with `-WorkingDirectory D:/DEV/role-model/.worktrees/115-ef
 ## Healthy state
 
 - 3470: **healthy**, version 0.0.20 (commit 945a8906...)
-- 3471: **healthy**, version 0.0.20-386-g8bc397b2 (commit 8bc397b2...)
+- 3471: **healthy**, version 0.0.20-478-g2d4fa10b (commit 2d4fa10b..., executable sha256 bfa365e1...)
 
 Both expose the same 2 accounts / 4 endpoints / 2 device-auth sessions.
 
-**Artifact discrepancy to flag:** the rebuilt dist manifest declares `0.0.20-478-g2d4fa10b`, but the `role-model-dev.exe` in that directory reports `0.0.20-386-g8bc397b2` from /api/version, and its file timestamp is 2026-11-01 18:39. The requested 478 binary is therefore not actually the binary that ran.
+**Artifact identity (corrected):** the dist manifest, executable sha256, and /api/version all agree on `0.0.20-478-g2d4fa10b` (`2d4fa10b...`, exe sha `BFA365E1...`) once the host is launched with `--repo-root` pointing at the dist manifest root. My earlier 386 reading came from passing `--repo-root D:/DEV/rm-clean/115-public` (an older source checkout), which made /api/version report that checkout's version while the binary was already 478.
 
-## Comparison smoke
+## Comparison smoke (confirmed 478)
 
-`node scripts/runtime/compare-release.mjs --left http://127.0.0.1:3470 --right http://127.0.0.1:3471 --fixture-root D:/DEV/rm-clean/115-public/testdata/router-runtime/fixtures`
+`node scripts/runtime/compare-release.mjs --left http://127.0.0.1:3470 --right http://127.0.0.1:3471 --fixture-root D:/DEV/rm-clean/115-public/testdata/router-runtime/fixtures --expect-left-version 0.0.20 --expect-right-version 0.0.20-478-g2d4fa10b --allow-cross-channel`
 
 Result: 4 same, 3 additive-shape, 1 different, 1 environment-state.
 
-- different: /api/role-model/router/summary recentDecisionCount 0 vs 3 (state/history difference, not config).
-- additive-shape: /healthz, runtime/summary, endpoints.
-- environment-state: telemetry/summary.
+- identity left=0.0.20 right=0.0.20-478-g2d4fa10b
+- different: /api/role-model/router/summary recentDecisionCount 0 vs 3 (state/history difference)
+- additive-shape: /healthz, runtime/summary, endpoints
+- environment-state: telemetry/summary
 
-Full output: evidence/logs/r16-compare-seeded.log.
+Full output: evidence/logs/r16-compare-seeded-478.log.
 
-Hosts remain running on 3470/3471 for the R16 comparison. `key-lifecycle.json` was removed from both copied roots before launch; the runtime regenerated its own on startup (expected).
+Hosts remain running on 3470 (PID 27904) and 3471 (PID 25652) for the R16 comparison. `key-lifecycle.json` was removed from both copied roots before launch; the runtime regenerated its own on startup (expected).
