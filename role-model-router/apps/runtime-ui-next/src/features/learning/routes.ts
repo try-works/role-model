@@ -1,6 +1,7 @@
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 
-import type { Message } from "../../message";
+import { Message } from "../../message";
+import type { Model } from "../../model";
 import { READBACK_SPECS, type ReadbackState, renderReadbackPage } from "../../readback";
 import type { LearningRankingState } from "../learning-ranking/model";
 import { referenceCard, referenceDescription, referenceSection, referenceTable } from "../layout/reference";
@@ -60,14 +61,53 @@ const page = (title: string, routeName: string, readback: ReadbackState, descrip
 const table = (headers: ReadonlyArray<string>, rows: ReadonlyArray<ReadonlyArray<string>>, emptyText: string, h: HtmlBuilder<Message>): Html =>
   referenceTable(headers, rows, emptyText, h, "learning");
 
-export const learningOverviewRoute = (readback: ReadbackState, replayJobs: ReadbackState, evaluationJobs: ReadbackState, ranking: LearningRankingState | undefined, h: HtmlBuilder<Message>): Html => {
+export const learningOverviewRoute = (readback: ReadbackState, replayJobs: ReadbackState, evaluationJobs: ReadbackState, ranking: LearningRankingState | undefined, learningReplayAutoQueue: Model["learningReplayAutoQueue"], h: HtmlBuilder<Message>): Html => {
   void replayJobs;
   void evaluationJobs;
   void ranking;
+  const autoQueue = learningReplayAutoQueue ?? { dailyCap: "100", enabled: "on", status: "idle" as const };
+  const autoQueueOn = autoQueue.enabled === "on";
+  const autoQueueStatus = autoQueue.message ?? (autoQueue.status === "saving" ? "Saving…" : autoQueue.status === "saved" ? "Replay auto-queue updated." : "Applies to eligible routed requests; saves to runtime config.");
   return referenceSection("learning", stateOf(readback), [
     referenceCard("Learning overview", "What the learning loop is doing right now, read from durable state.", [
       operatorToken("learning-overview-token", h),
       h.div([h.Class("mt-4")], [loading("Loading learning state…", h)]),
+    ], h),
+    referenceCard("Replay auto-queue", "Automatically queue eligible routed requests for replay, bounded by a daily cap.", [
+      h.div([h.DataAttribute("replay-auto-queue", ""), h.Class("flex flex-col gap-3")], [
+        h.div([h.Class("flex flex-wrap items-end gap-3")], [
+          h.div([h.Class("flex flex-col gap-1")], [
+            h.span([h.Class("font-sans text-xs leading-4 text-muted-foreground")], ["Auto-queue"]),
+            h.button([
+              h.Type("button"),
+              h.DataAttribute("replay-auto-queue-toggle", ""),
+              h.AriaPressed(autoQueueOn ? "true" : "false"),
+              h.Class("inline-flex h-[34px] min-w-[64px] items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground"),
+              h.OnClick(Message.ReplayAutoQueueToggleChanged({ value: autoQueueOn ? "off" : "on" })),
+            ], [autoQueueOn ? "On" : "Off"]),
+          ]),
+          h.label([h.Class("flex flex-col gap-1 font-sans text-xs leading-4 text-muted-foreground")], [
+            "Daily cap",
+            h.input([
+              h.Type("number"),
+              h.DataAttribute("replay-auto-queue-cap", ""),
+              h.AriaLabel("Daily replay cap"),
+              h.Value(autoQueue.dailyCap),
+              h.Class("h-[34px] w-[130px] rounded-md border border-input bg-secondary px-2.5 font-mono text-sm text-foreground"),
+              h.OnInput((next) => Message.ReplayAutoQueueCapChanged({ value: next })),
+            ]),
+          ]),
+          h.button([
+            h.Type("button"),
+            h.DataAttribute("replay-auto-queue-save", ""),
+            h.Disabled(autoQueue.status === "saving"),
+            h.AriaDisabled(autoQueue.status === "saving"),
+            h.Class("inline-flex h-[34px] items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground disabled:opacity-60"),
+            h.OnClick(Message.ReplayAutoQueueSaveRequested({})),
+          ], ["Save"]),
+        ]),
+        h.p([h.DataAttribute("replay-auto-queue-status", autoQueue.status), h.Role(autoQueue.status === "error" ? "alert" : "status"), h.Class("text-xs leading-4 text-muted-foreground")], [autoQueueStatus]),
+      ]),
     ], h),
     livePanel(h),
     referenceCard("Recent decisions", "The newest replay decisions among the last 0 observations; the selection follows the configured activation stage. Each row is one decision with its observation count.", [
