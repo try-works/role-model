@@ -1,0 +1,22 @@
+# run101-r5-cancel-drain — GREEN evidence for the deterministic contract
+date: 2026-11-01T08:53:17.1550028+08:00
+contract: drain flag exists before the worker starts; no claim while draining; after clearing, poll for a claim instead of a fixed sleep; delivery is at-least-once, so a post-clear redelivery is allowed.
+DRAIN ATTEMPT 1 EXIT=0
+Test Files  1 passed (1)
+Tests  5 passed (5)
+DRAIN ATTEMPT 2 EXIT=0
+Test Files  1 passed (1)
+Tests  5 passed (5)
+DRAIN ATTEMPT 3 EXIT=0
+Test Files  1 passed (1)
+Tests  5 passed (5)
+DRAIN ATTEMPT 4 EXIT=0
+Test Files  1 passed (1)
+Tests  5 passed (5)
+DRAIN ATTEMPT 5 EXIT=0
+Test Files  1 passed (1)
+Tests  5 passed (5)
+QUEUE SUITES EXIT=0
+Test Files  9 passed (9)
+Tests  39 passed | 1 skipped (40)
+DRAIN_FAILS=0
