@@ -15,6 +15,8 @@
  * The artifact is version/sha pinned: --expect-version and --expect-sha256 (defaults to the 505 dev
  * artifact) refuse to run on any other binary. Raw API traffic and host output go to one evidence log;
  * no credential bytes are read or written.
+ *
+ * Usage: node --import tsx scripts/runtime/replay-autoqueue-integration.mjs
  */
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -22,10 +24,37 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { createServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const checkoutRoot = path.resolve(__dirname, "../..");
+/**
+ * Use the PRODUCT projections, not local copies: the readback row must be produced by the same
+ * parser the Learning Overview hydrates from, and the disabled check must be the ledger's real
+ * replayBudgetAvailable. Run with `node --import tsx` so the TypeScript modules load.
+ */
+const uiReadbackModule = await import(
+  pathToFileURL(
+    path.join(checkoutRoot, "role-model-router", "apps", "runtime-ui-next", "src", "readback.ts"),
+  ).href
+);
+const ledgerModule = await import(
+  pathToFileURL(
+    path.join(
+      checkoutRoot,
+      "role-model-router",
+      "apps",
+      "runtime-host-bridge",
+      "src",
+      "track-b-replay-ledger.ts",
+    ),
+  ).href
+);
+const parseRuntimeConfigFixture = uiReadbackModule.parseRuntimeConfigFixture;
+const replayBudgetAvailable = ledgerModule.replayBudgetAvailable;
+if (typeof parseRuntimeConfigFixture !== "function" || typeof replayBudgetAvailable !== "function") {
+  throw new Error("could not import the product readback/budget functions");
+}
 const args = process.argv.slice(2);
 const value = (name) => {
   const index = args.indexOf(name);
@@ -215,17 +244,6 @@ const replayBudget = (body) => {
   if (budget === null || typeof budget !== "object") throw new Error("replay status has no budget object");
   return budget;
 };
-/** Same expression replayBudgetAvailable uses, from the status fields the loop publishes. */
-const replayBudgetAvailableFromStatus = (budget) => {
-  if (
-    typeof budget.hardCounterfactualLimit === "number" &&
-    budget.counterfactuals >= budget.hardCounterfactualLimit
-  ) {
-    return false;
-  }
-  if (budget.enforced === false) return true;
-  return budget.dispatches + budget.reservedDispatches < budget.dispatchLimit;
-};
 const EXPECTED_DAILY_CAP = 25;
 const configAutoQueue = (body) => {
   if (body === null || typeof body !== "object") throw new Error("runtime config is not an object");
@@ -236,17 +254,13 @@ const configAutoQueue = (body) => {
   if (autoQueue === null || typeof autoQueue !== "object") throw new Error("runtime config has no config.replay.autoQueue");
   return autoQueue;
 };
-/** The same projection parseRuntimeConfig uses to build the Learning Overview readback row. */
+/** The real UI parser builds the Learning Overview readback rows from this GET body. */
 const runtimeConfigReadbackRow = (configBody, rowId) => {
-  const autoQueue = configAutoQueue(configBody);
-  const enabled = autoQueue.enabled === undefined ? true : autoQueue.enabled === true;
-  const rawCap = Number(autoQueue.dailyCap ?? autoQueue.daily_cap);
-  const dailyCap = Number.isInteger(rawCap) && rawCap >= 1 && rawCap <= 1_000_000 ? rawCap : 100;
-  return {
-    id: rowId,
-    meta: JSON.stringify({ dailyCap, enabled }),
-    value: enabled ? "on" : "off",
-  };
+  const state = parseRuntimeConfigFixture(configBody, 1);
+  if (state.status !== "ok") throw new Error("runtimeConfig readback parser status is " + state.status);
+  const row = state.rows.find((entry) => entry.id === rowId);
+  if (!row) throw new Error("runtimeConfig readback has no row " + rowId);
+  return row;
 };
 
 const main = async () => {
@@ -318,8 +332,8 @@ const main = async () => {
     if (budget.hardCounterfactualLimit !== 0) {
       throw new Error("hardCounterfactualLimit is " + String(budget.hardCounterfactualLimit) + ", expected 0");
     }
-    if (replayBudgetAvailableFromStatus(budget)) {
-      throw new Error("budget availability is true despite the hard zero ceiling");
+    if (replayBudgetAvailable(budget)) {
+      throw new Error("product replayBudgetAvailable is true despite the hard zero ceiling");
     }
     return "hardCounterfactualLimit=0 budgetAvailable=false";
   });

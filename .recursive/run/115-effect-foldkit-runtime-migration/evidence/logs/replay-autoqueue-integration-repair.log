@@ -1,0 +1,32 @@
+# Replay auto-queue harness — review repair evidence
+
+## HOLD 2 investigation: product replayBudgetAvailable
+The product function at
+role-model-router/apps/runtime-host-bridge/src/track-b-replay-ledger.ts:212 currently reads:
+
+  if (status.hardCounterfactualLimit !== null && status.counterfactuals >= status.hardCounterfactualLimit) return false;
+  if (!status.enforced) return true;
+
+The hard-ceiling branch is first, so (enforced:false, hardCounterfactualLimit:0) returns false. The
+artifact source commit e0b1800a is a descendant of afda292e (git merge-base --is-ancestor exit 0), so
+the packaged 505 build includes that function. A direct import of the real function under tsx returns
+false for that exact status; the host regression test in test/run115-auto-queue-cap.test.ts
+("reports no budget when the hard ceiling is zero even unenforced") covers the same contract and is
+green. No product change was required; the reviewer's cited "if (!status.enforced) return true first"
+ordering is not present at current HEAD or in e0b1800a.
+
+## HOLD 1: real product functions in the harness
+Removed the local runtimeConfigReadbackRow/replayBudgetAvailableFromStatus copies. The harness now
+imports:
+- parseRuntimeConfigFixture from role-model-router/apps/runtime-ui-next/src/readback.ts (the real
+  Learning Overview parser), and projects the live GET body through it;
+- replayBudgetAvailable from the real ledger module and calls it on the live status budget.
+Run with: node --import tsx scripts/runtime/replay-autoqueue-integration.mjs
+Final live run on artifact 0.0.20-505-ge0b1800a / sha 6d90b28a...: 7/7 checks passed.
+
+## Reservation API note
+The host exposes POST /api/role-model/track-b/replay, but it requires a durable routed capture and
+candidate/budget body before it reaches ledger reservation; there is no bare reserve endpoint. The
+real product replayBudgetAvailable check on the live status plus the ledger reservation regression
+test are the refusal evidence used here. The harness does not fabricate a capture just to force a
+budget refusal.
