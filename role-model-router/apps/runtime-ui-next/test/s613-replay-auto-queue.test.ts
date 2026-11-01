@@ -40,6 +40,35 @@ describe("S613 replay auto-queue plumbing", () => {
     expect(Message.ReplayAutoQueueSaveFailed({ message: "no", token: 1 })._tag).toBe("ReplayAutoQueueSaveFailed");
   });
 
+  it("hydrates the persisted auto-queue values from the runtime-config readback", () => {
+    const update = createUpdate(defineReadDiagnostics(async () => ({ body: { records: [], state: "empty" }, status: 200 })));
+    const model = shellModel({ route: { _tag: "Learning" } });
+    const hydrated = update(model, Message.ReadbackLoaded({
+      key: "runtimeConfig",
+      snapshot: {
+        rows: [{ id: "replay.autoQueue", label: "Replay auto-queue", meta: JSON.stringify({ dailyCap: 25, enabled: false }), value: "off" }],
+        status: "ok",
+        token: 0,
+      },
+      token: 0,
+    }));
+    expect(hydrated.model.learningReplayAutoQueue).toMatchObject({ dailyCap: "25", enabled: "off" });
+  });
+
+  it("rejects a zero or over-maximum cap before any command is dispatched", () => {
+    const update = createUpdate(defineReadDiagnostics(async () => ({ body: { records: [], state: "empty" }, status: 200 })));
+    const model = shellModel({ route: { _tag: "Learning" }, learningReplayAutoQueue: { dailyCap: "0", enabled: "on", status: "idle" } });
+    const zero = update(model, Message.ReplayAutoQueueSaveRequested());
+    expect(zero.commands ?? []).toHaveLength(0);
+    expect(zero.model.learningReplayAutoQueue).toMatchObject({ status: "error" });
+    const over = update({ ...model, learningReplayAutoQueue: { dailyCap: "1000001", enabled: "on", status: "idle" } }, Message.ReplayAutoQueueSaveRequested());
+    expect(over.commands ?? []).toHaveLength(0);
+    expect(over.model.learningReplayAutoQueue).toMatchObject({ status: "error" });
+    const upper = update({ ...model, learningReplayAutoQueue: { dailyCap: "1000000", enabled: "on", status: "idle" } }, Message.ReplayAutoQueueSaveRequested());
+    expect(upper.commands ?? []).toHaveLength(1);
+    expect(upper.model.learningReplayAutoQueue).toMatchObject({ status: "saving" });
+  });
+
   it("stores the toggle and cap draft in the learning auto-queue state", () => {
     const update = createUpdate(defineReadDiagnostics(async () => ({ body: { records: [], state: "empty" }, status: 200 })));
     const model = shellModel({ route: { _tag: "Learning" } });
@@ -75,6 +104,10 @@ describe("S613 replay auto-queue Learning overview card", () => {
     expect(toggle?.getAttribute("aria-pressed")).toBe("true");
     const cap = card.querySelector("[data-replay-auto-queue-cap]");
     expect(cap?.getAttribute("value")).toBe("100");
+    expect(cap?.getAttribute("min")).toBe("1");
+    expect(cap?.getAttribute("max")).toBe("1000000");
+    expect(cap?.getAttribute("aria-valuemin")).toBe("1");
+    expect(cap?.getAttribute("aria-valuemax")).toBe("1000000");
     expect(card.querySelector("[data-replay-auto-queue-save]")).not.toBeNull();
     expect(card.querySelector("[data-replay-auto-queue-status]")?.getAttribute("data-replay-auto-queue-status")).toBe("idle");
   });
@@ -83,6 +116,7 @@ describe("S613 replay auto-queue Learning overview card", () => {
     const saved = document.createElement("div");
     saved.innerHTML = (await renderLearning({ dailyCap: "25", enabled: "off", message: "Replay auto-queue updated.", status: "saved" })).innerHTML;
     expect(saved.querySelector("[data-replay-auto-queue-toggle]")?.getAttribute("aria-pressed")).toBe("false");
+    expect(saved.querySelector("[data-replay-auto-queue-cap]")?.getAttribute("value")).toBe("25");
     expect(saved.querySelector("[data-replay-auto-queue-status='saved']")?.textContent).toContain("Replay auto-queue updated.");
     const failed = document.createElement("div");
     failed.innerHTML = (await renderLearning({ dailyCap: "100", enabled: "on", message: "HTTP 500", status: "error" })).innerHTML;

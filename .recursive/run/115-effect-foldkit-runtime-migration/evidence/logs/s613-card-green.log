@@ -1,8 +1,7 @@
 
  RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
 
- ✓ test/s613-replay-auto-queue.test.ts (5 tests) 600ms
-   ✓ S613 replay auto-queue Learning overview card > renders the card controls from the model state  325ms
+ ✓ test/s540-system-local-density.test.ts (11 tests) 773ms
 stderr | test/s611-r13-model-pool-honest.test.ts > S611 R13 model pool honesty > says when no benchmark profile is reported
 [foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
 
@@ -11,7 +10,7 @@ stderr | test/s611-r13-model-pool-honest.test.ts > S611 R13 model pool honesty >
   export default defineConfig({ plugins: [foldkit()] })
 
 Starting without Model preservation.
-[foldkit] Slow view: 30.1ms (budget: 16ms), triggered by init. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+[foldkit] Slow view: 25.4ms (budget: 16ms), triggered by init. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
   _tag: 'View',
   model: {
     clicks: 0,
@@ -77,10 +76,10 @@ Starting without Model preservation.
     theme: 'dark'
   },
   message: { _id: 'Option', _tag: 'None' },
-  durationMs: 30.13170000000173,
+  durationMs: 25.40269999999873,
   thresholdMs: 16
 }
-[foldkit] Slow patch: 145.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+[foldkit] Slow patch: 91.7ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
   _tag: 'Patch',
   model: {
     clicks: 0,
@@ -146,12 +145,159 @@ Starting without Model preservation.
     theme: 'dark'
   },
   message: { _id: 'Option', _tag: 'None' },
-  durationMs: 145.10280000000057,
+  durationMs: 91.73729999999705,
+  thresholdMs: 8
+}
+
+stderr | test/s40b-overview.test.ts > S40b bucketed overview > buckets Day hourly, omits empty buckets, and clamps an end-boundary item to 23:00
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow view: 35.9ms (budget: 16ms), triggered by init. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'View',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 35.91320000000269,
+  thresholdMs: 16
+}
+[foldkit] Slow patch: 139.9ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 139.93669999999838,
   thresholdMs: 8
 }
 
 stderr | test/s611-r13-model-pool-honest.test.ts > S611 R13 model pool honesty > says when no benchmark profile is reported
-[foldkit] Slow update: 12.0ms (budget: 4ms), triggered by ReadbackLoaded. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+[foldkit] Slow update: 7.7ms (budget: 4ms), triggered by ReadbackLoaded. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
   _tag: 'Update',
   previousModel: {
     clicks: 0,
@@ -290,7 +436,7 @@ stderr | test/s611-r13-model-pool-honest.test.ts > S611 R13 model pool honesty >
     snapshot: { rows: [], status: 'empty', token: 1 },
     token: 1
   },
-  durationMs: 12.027000000001863,
+  durationMs: 7.728500000001077,
   thresholdMs: 4
 } {
   _tag: 'ReadbackLoaded',
@@ -299,250 +445,8 @@ stderr | test/s611-r13-model-pool-honest.test.ts > S611 R13 model pool honesty >
   token: 1
 }
 
-stderr | test/s40b-overview.test.ts > S40b bucketed overview > buckets Day hourly, omits empty buckets, and clamps an end-boundary item to 23:00
-[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
-
-  import { foldkit } from '@foldkit/vite-plugin'
-
-  export default defineConfig({ plugins: [foldkit()] })
-
-Starting without Model preservation.
-[foldkit] Slow view: 45.8ms (budget: 16ms), triggered by init. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
-  _tag: 'View',
-  model: {
-    clicks: 0,
-    controls: {
-      controlController: [Object],
-      endpoints: [Object],
-      providers: [Object]
-    },
-    diagnostics: { records: [], routeId: '', status: 'idle' },
-    observability: { rows: [], status: 'idle', token: 0 },
-    readbacks: {
-      dashboard: [Object],
-      localLogs: [Object],
-      localPeers: [Object],
-      systemPeers: [Object],
-      localSwap: [Object],
-      observeActivity: [Object],
-      observeLogs: [Object],
-      observeRouting: [Object],
-      queues: [Object],
-      requests: [Object],
-      routerCandidates: [Object],
-      routerDecisions: [Object],
-      router: [Object],
-      requestDetail: [Object],
-      routerDecisionDetail: [Object],
-      localPeerModels: [Object],
-      queueConfig: [Object],
-      downstreamOpenAI: [Object],
-      integrationProviders: [Object],
-      providerCatalog: [Object],
-      providerAccounts: [Object],
-      roles: [Object],
-      benchmarkSuite: [Object],
-      storageRetention: [Object],
-      models: [Object],
-      runtimeSummary: [Object],
-      health: [Object],
-      overviewMetrics: [Object],
-      learning: [Object],
-      learningConfiguration: [Object],
-      learningPacks: [Object],
-      learningDecisions: [Object],
-      learningEvidence: [Object],
-      learningHistory: [Object],
-      localLlamaSwapModels: [Object],
-      localPolicy: [Object],
-      operatorStatus: [Object],
-      operatorTraceRoots: [Object],
-      extensions: [Object],
-      replayJobs: [Object],
-      evaluationJobs: [Object],
-      configuredModels: [Object],
-      modelEndpoints: [Object],
-      runtimeConfig: [Object],
-      routerConfig: [Object],
-      runtime: [Object],
-      sessionReadiness: [Object],
-      storeReceipts: [Object]
-    },
-    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
-    route: { _tag: 'Index' },
-    theme: 'dark'
-  },
-  message: { _id: 'Option', _tag: 'None' },
-  durationMs: 45.77379999999903,
-  thresholdMs: 16
-}
-[foldkit] Slow patch: 288.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
-  _tag: 'Patch',
-  model: {
-    clicks: 0,
-    controls: {
-      controlController: [Object],
-      endpoints: [Object],
-      providers: [Object]
-    },
-    diagnostics: { records: [], routeId: '', status: 'idle' },
-    observability: { rows: [], status: 'idle', token: 0 },
-    readbacks: {
-      dashboard: [Object],
-      localLogs: [Object],
-      localPeers: [Object],
-      systemPeers: [Object],
-      localSwap: [Object],
-      observeActivity: [Object],
-      observeLogs: [Object],
-      observeRouting: [Object],
-      queues: [Object],
-      requests: [Object],
-      routerCandidates: [Object],
-      routerDecisions: [Object],
-      router: [Object],
-      requestDetail: [Object],
-      routerDecisionDetail: [Object],
-      localPeerModels: [Object],
-      queueConfig: [Object],
-      downstreamOpenAI: [Object],
-      integrationProviders: [Object],
-      providerCatalog: [Object],
-      providerAccounts: [Object],
-      roles: [Object],
-      benchmarkSuite: [Object],
-      storageRetention: [Object],
-      models: [Object],
-      runtimeSummary: [Object],
-      health: [Object],
-      overviewMetrics: [Object],
-      learning: [Object],
-      learningConfiguration: [Object],
-      learningPacks: [Object],
-      learningDecisions: [Object],
-      learningEvidence: [Object],
-      learningHistory: [Object],
-      localLlamaSwapModels: [Object],
-      localPolicy: [Object],
-      operatorStatus: [Object],
-      operatorTraceRoots: [Object],
-      extensions: [Object],
-      replayJobs: [Object],
-      evaluationJobs: [Object],
-      configuredModels: [Object],
-      modelEndpoints: [Object],
-      runtimeConfig: [Object],
-      routerConfig: [Object],
-      runtime: [Object],
-      sessionReadiness: [Object],
-      storeReceipts: [Object]
-    },
-    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
-    route: { _tag: 'Index' },
-    theme: 'dark'
-  },
-  message: { _id: 'Option', _tag: 'None' },
-  durationMs: 288.77700000000186,
-  thresholdMs: 8
-}
-
 stderr | test/s611-r13-model-pool-honest.test.ts > S611 R13 model pool honesty > says when no benchmark profile is reported
-[foldkit] Slow view: 23.1ms (budget: 16ms), triggered by ReadbackLoaded. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
-  _tag: 'View',
-  model: {
-    clicks: 0,
-    controls: {
-      controlController: [Object],
-      endpoints: [Object],
-      providers: [Object]
-    },
-    diagnostics: { records: [], routeId: '', status: 'idle' },
-    observability: { rows: [], status: 'idle', token: 0 },
-    readbacks: {
-      dashboard: [Object],
-      localLogs: [Object],
-      localPeers: [Object],
-      systemPeers: [Object],
-      localSwap: [Object],
-      observeActivity: [Object],
-      observeLogs: [Object],
-      observeRouting: [Object],
-      queues: [Object],
-      requests: [Object],
-      routerCandidates: [Object],
-      routerDecisions: [Object],
-      router: [Object],
-      requestDetail: [Object],
-      routerDecisionDetail: [Object],
-      localPeerModels: [Object],
-      queueConfig: [Object],
-      downstreamOpenAI: [Object],
-      integrationProviders: [Object],
-      providerCatalog: [Object],
-      providerAccounts: [Object],
-      roles: [Object],
-      benchmarkSuite: [Object],
-      storageRetention: [Object],
-      models: [Object],
-      runtimeSummary: [Object],
-      health: [Object],
-      overviewMetrics: [Object],
-      learning: [Object],
-      learningConfiguration: [Object],
-      learningPacks: [Object],
-      learningDecisions: [Object],
-      learningEvidence: [Object],
-      learningHistory: [Object],
-      localLlamaSwapModels: [Object],
-      localPolicy: [Object],
-      operatorStatus: [Object],
-      operatorTraceRoots: [Object],
-      extensions: [Object],
-      replayJobs: [Object],
-      evaluationJobs: [Object],
-      configuredModels: [Object],
-      modelEndpoints: [Object],
-      runtimeConfig: [Object],
-      routerConfig: [Object],
-      runtime: [Object],
-      sessionReadiness: [Object],
-      storeReceipts: [Object]
-    },
-    refresh: {
-      lastAppliedRevision: 0,
-      resyncToken: 0,
-      status: 'live',
-      message: undefined
-    },
-    route: { _tag: 'Router' },
-    theme: 'dark',
-    runtimeConfigEditor: {
-      diff: [],
-      originalText: '{}',
-      status: 'editing',
-      text: '{}',
-      token: 1
-    }
-  },
-  message: {
-    _id: 'Option',
-    _tag: 'Some',
-    value: {
-      _tag: 'ReadbackLoaded',
-      key: 'health',
-      snapshot: [Object],
-      token: 1
-    }
-  },
-  durationMs: 23.100900000001275,
-  thresholdMs: 16
-} {
-  _tag: 'ReadbackLoaded',
-  key: 'health',
-  snapshot: { rows: [ [Object], [Object], [Object] ], status: 'ok', token: 1 },
-  token: 1
-}
-[foldkit] Slow patch: 13.9ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+[foldkit] Slow patch: 8.5ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
   _tag: 'Patch',
   model: {
     clicks: 0,
@@ -629,7 +533,7 @@ stderr | test/s611-r13-model-pool-honest.test.ts > S611 R13 model pool honesty >
       token: 1
     }
   },
-  durationMs: 13.88799999999901,
+  durationMs: 8.5441000000028,
   thresholdMs: 8
 } {
   _tag: 'ReadbackLoaded',
@@ -639,7 +543,7 @@ stderr | test/s611-r13-model-pool-honest.test.ts > S611 R13 model pool honesty >
 }
 
 stderr | test/s40b-overview.test.ts > S40b bucketed overview > buckets Day hourly, omits empty buckets, and clamps an end-boundary item to 23:00
-[foldkit] Slow update: 9.5ms (budget: 4ms), triggered by ReadbackLoaded. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+[foldkit] Slow update: 11.1ms (budget: 4ms), triggered by ReadbackLoaded. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
   _tag: 'Update',
   previousModel: {
     clicks: 0,
@@ -778,7 +682,7 @@ stderr | test/s40b-overview.test.ts > S40b bucketed overview > buckets Day hourl
     snapshot: { detailId: '86400000', rows: [Array], status: 'ok', token: 1 },
     token: 1
   },
-  durationMs: 9.47439999999915,
+  durationMs: 11.082900000001246,
   thresholdMs: 4
 } {
   _tag: 'ReadbackLoaded',
@@ -788,7 +692,7 @@ stderr | test/s40b-overview.test.ts > S40b bucketed overview > buckets Day hourl
 }
 
 stderr | test/s611-r13-model-pool-honest.test.ts > S611 R13 model pool honesty > says when no benchmark profile is reported
-[foldkit] Slow update: 9.4ms (budget: 4ms), triggered by ChangedUrl. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+[foldkit] Slow update: 9.0ms (budget: 4ms), triggered by ChangedUrl. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
   _tag: 'Update',
   previousModel: {
     clicks: 0,
@@ -953,7 +857,7 @@ stderr | test/s611-r13-model-pool-honest.test.ts > S611 R13 model pool honesty >
       hash: [Object]
     }
   },
-  durationMs: 9.397000000000844,
+  durationMs: 8.954499999999825,
   thresholdMs: 4
 } {
   _tag: 'ChangedUrl',
@@ -967,216 +871,8 @@ stderr | test/s611-r13-model-pool-honest.test.ts > S611 R13 model pool honesty >
   }
 }
 
-stderr | test/s611-r13-model-pool-honest.test.ts > S611 R13 model pool honesty > says when no benchmark profile is reported
-[foldkit] Slow view: 28.5ms (budget: 16ms), triggered by ReadbackLoaded. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
-  _tag: 'View',
-  model: {
-    clicks: 0,
-    controls: {
-      controlController: [Object],
-      endpoints: [Object],
-      providers: [Object]
-    },
-    diagnostics: { records: [], routeId: '', status: 'idle' },
-    observability: { rows: [], status: 'idle', token: 0 },
-    readbacks: {
-      dashboard: [Object],
-      localLogs: [Object],
-      localPeers: [Object],
-      systemPeers: [Object],
-      localSwap: [Object],
-      observeActivity: [Object],
-      observeLogs: [Object],
-      observeRouting: [Object],
-      queues: [Object],
-      requests: [Object],
-      routerCandidates: [Object],
-      routerDecisions: [Object],
-      router: [Object],
-      requestDetail: [Object],
-      routerDecisionDetail: [Object],
-      localPeerModels: [Object],
-      queueConfig: [Object],
-      downstreamOpenAI: [Object],
-      integrationProviders: [Object],
-      providerCatalog: [Object],
-      providerAccounts: [Object],
-      roles: [Object],
-      benchmarkSuite: [Object],
-      storageRetention: [Object],
-      models: [Object],
-      runtimeSummary: [Object],
-      health: [Object],
-      overviewMetrics: [Object],
-      learning: [Object],
-      learningConfiguration: [Object],
-      learningPacks: [Object],
-      learningDecisions: [Object],
-      learningEvidence: [Object],
-      learningHistory: [Object],
-      localLlamaSwapModels: [Object],
-      localPolicy: [Object],
-      operatorStatus: [Object],
-      operatorTraceRoots: [Object],
-      extensions: [Object],
-      replayJobs: [Object],
-      evaluationJobs: [Object],
-      configuredModels: [Object],
-      modelEndpoints: [Object],
-      runtimeConfig: [Object],
-      routerConfig: [Object],
-      runtime: [Object],
-      sessionReadiness: [Object],
-      storeReceipts: [Object]
-    },
-    refresh: {
-      lastAppliedRevision: 0,
-      resyncToken: 1,
-      status: 'idle',
-      message: undefined
-    },
-    route: { _tag: 'Index' },
-    theme: 'dark',
-    runtimeConfigEditor: {
-      diff: [],
-      originalText: '{}',
-      status: 'editing',
-      text: '{}',
-      token: 1
-    },
-    chartInteraction: { hiddenSeriesIds: [], routeTag: 'Index', token: 1, tooltip: null },
-    pendingRedirectHref: undefined
-  },
-  message: {
-    _id: 'Option',
-    _tag: 'Some',
-    value: {
-      _tag: 'ReadbackLoaded',
-      key: 'overviewMetrics',
-      snapshot: [Object],
-      token: 1
-    }
-  },
-  durationMs: 28.51550000000134,
-  thresholdMs: 16
-} {
-  _tag: 'ReadbackLoaded',
-  key: 'overviewMetrics',
-  snapshot: {
-    message: 'Overview metrics read failed: invalid response',
-    rows: [],
-    status: 'error',
-    token: 1
-  },
-  token: 1
-}
-[foldkit] Slow patch: 110.5ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
-  _tag: 'Patch',
-  model: {
-    clicks: 0,
-    controls: {
-      controlController: [Object],
-      endpoints: [Object],
-      providers: [Object]
-    },
-    diagnostics: { records: [], routeId: '', status: 'idle' },
-    observability: { rows: [], status: 'idle', token: 0 },
-    readbacks: {
-      dashboard: [Object],
-      localLogs: [Object],
-      localPeers: [Object],
-      systemPeers: [Object],
-      localSwap: [Object],
-      observeActivity: [Object],
-      observeLogs: [Object],
-      observeRouting: [Object],
-      queues: [Object],
-      requests: [Object],
-      routerCandidates: [Object],
-      routerDecisions: [Object],
-      router: [Object],
-      requestDetail: [Object],
-      routerDecisionDetail: [Object],
-      localPeerModels: [Object],
-      queueConfig: [Object],
-      downstreamOpenAI: [Object],
-      integrationProviders: [Object],
-      providerCatalog: [Object],
-      providerAccounts: [Object],
-      roles: [Object],
-      benchmarkSuite: [Object],
-      storageRetention: [Object],
-      models: [Object],
-      runtimeSummary: [Object],
-      health: [Object],
-      overviewMetrics: [Object],
-      learning: [Object],
-      learningConfiguration: [Object],
-      learningPacks: [Object],
-      learningDecisions: [Object],
-      learningEvidence: [Object],
-      learningHistory: [Object],
-      localLlamaSwapModels: [Object],
-      localPolicy: [Object],
-      operatorStatus: [Object],
-      operatorTraceRoots: [Object],
-      extensions: [Object],
-      replayJobs: [Object],
-      evaluationJobs: [Object],
-      configuredModels: [Object],
-      modelEndpoints: [Object],
-      runtimeConfig: [Object],
-      routerConfig: [Object],
-      runtime: [Object],
-      sessionReadiness: [Object],
-      storeReceipts: [Object]
-    },
-    refresh: {
-      lastAppliedRevision: 0,
-      resyncToken: 1,
-      status: 'idle',
-      message: undefined
-    },
-    route: { _tag: 'Index' },
-    theme: 'dark',
-    runtimeConfigEditor: {
-      diff: [],
-      originalText: '{}',
-      status: 'editing',
-      text: '{}',
-      token: 1
-    },
-    chartInteraction: { hiddenSeriesIds: [], routeTag: 'Index', token: 1, tooltip: null },
-    pendingRedirectHref: undefined
-  },
-  message: {
-    _id: 'Option',
-    _tag: 'Some',
-    value: {
-      _tag: 'ReadbackLoaded',
-      key: 'overviewMetrics',
-      snapshot: [Object],
-      token: 1
-    }
-  },
-  durationMs: 110.49630000000252,
-  thresholdMs: 8
-} {
-  _tag: 'ReadbackLoaded',
-  key: 'overviewMetrics',
-  snapshot: {
-    message: 'Overview metrics read failed: invalid response',
-    rows: [],
-    status: 'error',
-    token: 1
-  },
-  token: 1
-}
-
- ✓ test/s611-r13-model-pool-honest.test.ts (1 test) 1541ms
-   ✓ S611 R13 model pool honesty > says when no benchmark profile is reported  1535ms
 stderr | test/s40b-overview.test.ts > S40b bucketed overview > buckets Day hourly, omits empty buckets, and clamps an end-boundary item to 23:00
-[foldkit] Slow view: 117.6ms (budget: 16ms), triggered by ReadbackLoaded. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+[foldkit] Slow view: 93.0ms (budget: 16ms), triggered by ReadbackLoaded. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
   _tag: 'View',
   model: {
     clicks: 0,
@@ -1256,7 +952,7 @@ stderr | test/s40b-overview.test.ts > S40b bucketed overview > buckets Day hourl
       token: 1
     }
   },
-  durationMs: 117.57969999999841,
+  durationMs: 92.99470000000292,
   thresholdMs: 16
 } {
   _tag: 'ReadbackLoaded',
@@ -1264,7 +960,7 @@ stderr | test/s40b-overview.test.ts > S40b bucketed overview > buckets Day hourl
   snapshot: { rows: [ [Object], [Object], [Object] ], status: 'ok', token: 1 },
   token: 1
 }
-[foldkit] Slow patch: 344.6ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+[foldkit] Slow patch: 242.1ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
   _tag: 'Patch',
   model: {
     clicks: 0,
@@ -1344,7 +1040,7 @@ stderr | test/s40b-overview.test.ts > S40b bucketed overview > buckets Day hourl
       token: 1
     }
   },
-  durationMs: 344.5519000000022,
+  durationMs: 242.1382999999987,
   thresholdMs: 8
 } {
   _tag: 'ReadbackLoaded',
@@ -1353,6 +1049,214 @@ stderr | test/s40b-overview.test.ts > S40b bucketed overview > buckets Day hourl
   token: 1
 }
 
+stderr | test/s611-r13-model-pool-honest.test.ts > S611 R13 model pool honesty > says when no benchmark profile is reported
+[foldkit] Slow view: 24.8ms (budget: 16ms), triggered by ReadbackLoaded. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'View',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 1,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Index' },
+    theme: 'dark',
+    runtimeConfigEditor: {
+      diff: [],
+      originalText: '{}',
+      status: 'editing',
+      text: '{}',
+      token: 1
+    },
+    chartInteraction: { hiddenSeriesIds: [], routeTag: 'Index', token: 1, tooltip: null },
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'overviewMetrics',
+      snapshot: [Object],
+      token: 1
+    }
+  },
+  durationMs: 24.819100000000617,
+  thresholdMs: 16
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'overviewMetrics',
+  snapshot: {
+    message: 'Overview metrics read failed: invalid response',
+    rows: [],
+    status: 'error',
+    token: 1
+  },
+  token: 1
+}
+[foldkit] Slow patch: 104.8ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 1,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Index' },
+    theme: 'dark',
+    runtimeConfigEditor: {
+      diff: [],
+      originalText: '{}',
+      status: 'editing',
+      text: '{}',
+      token: 1
+    },
+    chartInteraction: { hiddenSeriesIds: [], routeTag: 'Index', token: 1, tooltip: null },
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'overviewMetrics',
+      snapshot: [Object],
+      token: 1
+    }
+  },
+  durationMs: 104.83139999999912,
+  thresholdMs: 8
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'overviewMetrics',
+  snapshot: {
+    message: 'Overview metrics read failed: invalid response',
+    rows: [],
+    status: 'error',
+    token: 1
+  },
+  token: 1
+}
+
+ ✓ test/s611-r13-model-pool-honest.test.ts (1 test) 1404ms
+   ✓ S611 R13 model pool honesty > says when no benchmark profile is reported  1399ms
 stderr | test/s40b-overview.test.ts > S40b bucketed overview > accepts the real metrics body with object-valued tokens
 [foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
 
@@ -1361,7 +1265,7 @@ stderr | test/s40b-overview.test.ts > S40b bucketed overview > accepts the real 
   export default defineConfig({ plugins: [foldkit()] })
 
 Starting without Model preservation.
-[foldkit] Slow patch: 105.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+[foldkit] Slow patch: 82.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
   _tag: 'Patch',
   model: {
     clicks: 0,
@@ -1427,12 +1331,12 @@ Starting without Model preservation.
     theme: 'dark'
   },
   message: { _id: 'Option', _tag: 'None' },
-  durationMs: 105.47999999999956,
+  durationMs: 82.13009999999849,
   thresholdMs: 8
 }
 
 stderr | test/s40b-overview.test.ts > S40b bucketed overview > accepts the real metrics body with object-valued tokens
-[foldkit] Slow view: 35.3ms (budget: 16ms), triggered by ReadbackLoaded. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+[foldkit] Slow view: 33.9ms (budget: 16ms), triggered by ReadbackLoaded. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
   _tag: 'View',
   model: {
     clicks: 0,
@@ -1512,7 +1416,7 @@ stderr | test/s40b-overview.test.ts > S40b bucketed overview > accepts the real 
       token: 1
     }
   },
-  durationMs: 35.278000000002066,
+  durationMs: 33.94419999999809,
   thresholdMs: 16
 } {
   _tag: 'ReadbackLoaded',
@@ -1520,7 +1424,7 @@ stderr | test/s40b-overview.test.ts > S40b bucketed overview > accepts the real 
   snapshot: { rows: [ [Object], [Object], [Object] ], status: 'ok', token: 1 },
   token: 1
 }
-[foldkit] Slow patch: 249.6ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+[foldkit] Slow patch: 271.0ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
   _tag: 'Patch',
   model: {
     clicks: 0,
@@ -1600,7 +1504,7 @@ stderr | test/s40b-overview.test.ts > S40b bucketed overview > accepts the real 
       token: 1
     }
   },
-  durationMs: 249.64180000000124,
+  durationMs: 271.0443000000014,
   thresholdMs: 8
 } {
   _tag: 'ReadbackLoaded',
@@ -1609,8 +1513,7 @@ stderr | test/s40b-overview.test.ts > S40b bucketed overview > accepts the real 
   token: 1
 }
 
- ✓ test/s565-page-stories.scene.test.ts (51 tests) 3245ms
-   ✓ S565 page stories — scene > Index matches its captured story  398ms
+ ✓ test/s565-page-stories.scene.test.ts (51 tests) 2412ms
 stderr | test/s40b-overview.test.ts > S40b bucketed overview > shows per-model rail counts from the same items
 [foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
 
@@ -1619,7 +1522,7 @@ stderr | test/s40b-overview.test.ts > S40b bucketed overview > shows per-model r
   export default defineConfig({ plugins: [foldkit()] })
 
 Starting without Model preservation.
-[foldkit] Slow patch: 123.0ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+[foldkit] Slow patch: 75.3ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
   _tag: 'Patch',
   model: {
     clicks: 0,
@@ -1685,20 +1588,13 @@ Starting without Model preservation.
     theme: 'dark'
   },
   message: { _id: 'Option', _tag: 'None' },
-  durationMs: 123.03180000000066,
+  durationMs: 75.31869999999981,
   thresholdMs: 8
 }
 
-stderr | test/s40b-overview.test.ts > S40b bucketed overview > switches Week and ignores a late Day response
-[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
-
-  import { foldkit } from '@foldkit/vite-plugin'
-
-  export default defineConfig({ plugins: [foldkit()] })
-
-Starting without Model preservation.
-[foldkit] Slow patch: 69.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
-  _tag: 'Patch',
+stderr | test/s40b-overview.test.ts > S40b bucketed overview > shows per-model rail counts from the same items
+[foldkit] Slow view: 34.3ms (budget: 16ms), triggered by ReadbackLoaded. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'View',
   model: {
     clicks: 0,
     controls: {
@@ -1758,17 +1654,39 @@ Starting without Model preservation.
       sessionReadiness: [Object],
       storeReceipts: [Object]
     },
-    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
     route: { _tag: 'Index' },
     theme: 'dark'
   },
-  message: { _id: 'Option', _tag: 'None' },
-  durationMs: 69.07129999999961,
-  thresholdMs: 8
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'routerCandidates',
+      snapshot: [Object],
+      token: 1
+    }
+  },
+  durationMs: 34.252300000000105,
+  thresholdMs: 16
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'routerCandidates',
+  snapshot: {
+    message: 'Router candidates read failed: invalid response',
+    rows: [],
+    status: 'error',
+    token: 1
+  },
+  token: 1
 }
-
-stderr | test/s40b-overview.test.ts > S40b bucketed overview > switches Week and ignores a late Day response
-[foldkit] Slow patch: 9.7ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+[foldkit] Slow patch: 188.0ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
   _tag: 'Patch',
   model: {
     clicks: 0,
@@ -1848,17 +1766,100 @@ stderr | test/s40b-overview.test.ts > S40b bucketed overview > switches Week and
       token: 1
     }
   },
-  durationMs: 9.722000000001572,
+  durationMs: 188.0064999999995,
   thresholdMs: 8
 } {
   _tag: 'ReadbackLoaded',
   key: 'routerCandidates',
-  snapshot: { rows: [ [Object], [Object], [Object] ], status: 'ok', token: 1 },
+  snapshot: {
+    message: 'Router candidates read failed: invalid response',
+    rows: [],
+    status: 'error',
+    token: 1
+  },
   token: 1
 }
 
 stderr | test/s40b-overview.test.ts > S40b bucketed overview > switches Week and ignores a late Day response
-[foldkit] Slow view: 18.6ms (budget: 16ms), triggered by ReadbackLoaded. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 52.7ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 52.66469999999754,
+  thresholdMs: 8
+}
+
+stderr | test/s40b-overview.test.ts > S40b bucketed overview > switches Week and ignores a late Day response
+[foldkit] Slow view: 17.6ms (budget: 16ms), triggered by ReadbackLoaded. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
   _tag: 'View',
   model: {
     clicks: 0,
@@ -1939,7 +1940,7 @@ stderr | test/s40b-overview.test.ts > S40b bucketed overview > switches Week and
       token: 2
     }
   },
-  durationMs: 18.61279999999897,
+  durationMs: 17.647399999998015,
   thresholdMs: 16
 } {
   _tag: 'ReadbackLoaded',
@@ -1947,7 +1948,7 @@ stderr | test/s40b-overview.test.ts > S40b bucketed overview > switches Week and
   snapshot: { rows: [ [Object] ], status: 'ok', token: 2 },
   token: 2
 }
-[foldkit] Slow patch: 42.5ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+[foldkit] Slow patch: 40.0ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
   _tag: 'Patch',
   model: {
     clicks: 0,
@@ -2028,7 +2029,7 @@ stderr | test/s40b-overview.test.ts > S40b bucketed overview > switches Week and
       token: 2
     }
   },
-  durationMs: 42.52720000000045,
+  durationMs: 40.04609999999957,
   thresholdMs: 8
 } {
   _tag: 'ReadbackLoaded',
@@ -2045,7 +2046,7 @@ stderr | test/s40b-overview.test.ts > S40b bucketed overview > renders explicit 
   export default defineConfig({ plugins: [foldkit()] })
 
 Starting without Model preservation.
-[foldkit] Slow patch: 62.0ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+[foldkit] Slow patch: 56.2ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
   _tag: 'Patch',
   model: {
     clicks: 0,
@@ -2111,8 +2112,103 @@ Starting without Model preservation.
     theme: 'dark'
   },
   message: { _id: 'Option', _tag: 'None' },
-  durationMs: 62.011099999999715,
+  durationMs: 56.164600000000064,
   thresholdMs: 8
+}
+
+stderr | test/s40b-overview.test.ts > S40b bucketed overview > renders explicit empty and rejects fabricated metrics
+[foldkit] Slow view: 20.0ms (budget: 16ms), triggered by ReadbackLoaded. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'View',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'routerCandidates',
+      snapshot: [Object],
+      token: 1
+    }
+  },
+  durationMs: 20.031000000002678,
+  thresholdMs: 16
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'routerCandidates',
+  snapshot: {
+    message: 'Router candidates read failed: invalid response',
+    rows: [],
+    status: 'error',
+    token: 1
+  },
+  token: 1
 }
 
 stderr | test/s40b-overview.test.ts > S40b bucketed overview > rejects a fabricated metrics body
@@ -2123,7 +2219,7 @@ stderr | test/s40b-overview.test.ts > S40b bucketed overview > rejects a fabrica
   export default defineConfig({ plugins: [foldkit()] })
 
 Starting without Model preservation.
-[foldkit] Slow patch: 48.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+[foldkit] Slow patch: 52.0ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
   _tag: 'Patch',
   model: {
     clicks: 0,
@@ -2189,22 +2285,22 @@ Starting without Model preservation.
     theme: 'dark'
   },
   message: { _id: 'Option', _tag: 'None' },
-  durationMs: 48.772000000000844,
+  durationMs: 52.0099999999984,
   thresholdMs: 8
 }
 
- ✓ test/s40b-overview.test.ts (7 tests) 5873ms
-   ✓ S40b bucketed overview > buckets Day hourly, omits empty buckets, and clamps an end-boundary item to 23:00  1716ms
-   ✓ S40b bucketed overview > accepts the real metrics body with object-valued tokens  1024ms
-   ✓ S40b bucketed overview > shows per-model rail counts from the same items  690ms
-   ✓ S40b bucketed overview > switches Week and ignores a late Day response  1174ms
-   ✓ S40b bucketed overview > renders explicit empty and rejects fabricated metrics  639ms
-   ✓ S40b bucketed overview > rejects a fabricated metrics body  615ms
- ✓ test/s612-tanstack-chart.test.ts (7 tests) 364ms
- ✓ test/s540-system-local-density.test.ts (11 tests) 773ms
+ ✓ test/s40b-overview.test.ts (7 tests) 5649ms
+   ✓ S40b bucketed overview > buckets Day hourly, omits empty buckets, and clamps an end-boundary item to 23:00  1341ms
+   ✓ S40b bucketed overview > accepts the real metrics body with object-valued tokens  1029ms
+   ✓ S40b bucketed overview > shows per-model rail counts from the same items  880ms
+   ✓ S40b bucketed overview > switches Week and ignores a late Day response  1112ms
+   ✓ S40b bucketed overview > renders explicit empty and rejects fabricated metrics  656ms
+   ✓ S40b bucketed overview > rejects a fabricated metrics body  619ms
+ ✓ test/s612-tanstack-chart.test.ts (7 tests) 352ms
+ ✓ test/s613-replay-auto-queue.test.ts (7 tests) 432ms
 
  Test Files  6 passed (6)
-      Tests  82 passed (82)
-   Start at  20:49:27
-   Duration  33.89s (transform 11.97s, setup 0ms, collect 73.30s, tests 12.39s, environment 20.77s, prepare 4.12s)
+      Tests  84 passed (84)
+   Start at  21:20:29
+   Duration  29.68s (transform 10.05s, setup 0ms, collect 66.87s, tests 11.02s, environment 17.78s, prepare 3.51s)
 

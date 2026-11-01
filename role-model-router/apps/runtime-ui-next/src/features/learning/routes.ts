@@ -91,7 +91,11 @@ export const learningOverviewRoute = (readback: ReadbackState, replayJobs: Readb
             h.input([
               h.Type("number"),
               h.DataAttribute("replay-auto-queue-cap", ""),
-              h.AriaLabel("Daily replay cap"),
+              h.AriaLabel("Daily replay cap, minimum 1, maximum 1000000"),
+              h.Min("1"),
+              h.Max("1000000"),
+              h.Attribute("aria-valuemin", "1"),
+              h.Attribute("aria-valuemax", "1000000"),
               h.Value(autoQueue.dailyCap),
               h.Class("h-[34px] w-[130px] rounded-md border border-input bg-secondary px-2.5 font-mono text-sm text-foreground"),
               h.OnInput((next) => Message.ReplayAutoQueueCapChanged({ value: next })),

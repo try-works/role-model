@@ -862,11 +862,18 @@ const updateLocalPolicyDraft = (
         },
         ReplayAutoQueueSaveRequested: (): UpdateReturn<Model, Message> => {
           const state = model.learningReplayAutoQueue ?? { dailyCap: "100", enabled: "on", status: "idle" as const };
-          const parsed = Number.parseInt(state.dailyCap === "" ? "100" : state.dailyCap, 10);
-          const dailyCap = Number.isFinite(parsed) && parsed >= 0 ? parsed : 100;
+          const parsed = Number(state.dailyCap);
+          if (!Number.isInteger(parsed) || parsed < 1 || parsed > 1_000_000) {
+            return {
+              model: {
+                ...model,
+                learningReplayAutoQueue: { ...state, message: "Daily cap must be a whole number from 1 to 1,000,000.", status: "error" },
+              },
+            };
+          }
           const token = model.readbacks.runtimeConfig.token + 1;
           return {
-            commands: [replayAutoQueueCommands.save({ dailyCap, enabled: state.enabled === "on", token })],
+            commands: [replayAutoQueueCommands.save({ dailyCap: parsed, enabled: state.enabled === "on", token })],
             model: { ...model, learningReplayAutoQueue: { ...state, message: undefined, status: "saving" } },
           };
         },
@@ -1204,6 +1211,38 @@ const updateLocalPolicyDraft = (
         },
         ReadbackLoaded: ({ key, snapshot, token }: Extract<Message, { readonly _tag: "ReadbackLoaded" }>): UpdateReturn<Model, Message> => {
           if (token !== model.readbacks[key].token) return { model };
+          if (key === "runtimeConfig" && snapshot.status === "ok") {
+            const persisted = snapshot.rows.find((entry) => entry.id === "replay.autoQueue");
+            if (persisted !== undefined) {
+              try {
+                const meta: unknown = JSON.parse(persisted.meta);
+                // SAFETY: the replay.autoQueue row is written by parseRuntimeConfig with this exact meta shape.
+                const record = meta as { readonly enabled?: unknown; readonly dailyCap?: unknown } | null;
+                if (record !== null && Object(record) === record && "enabled" in record && "dailyCap" in record) {
+                  const enabled = record.enabled === true;
+                  const numericCap = Number(record.dailyCap);
+                  const dailyCap = Number.isInteger(numericCap) && numericCap >= 1 && numericCap <= 1_000_000 ? String(numericCap) : "100";
+                  const current = model.learningReplayAutoQueue;
+                  const status = current?.status === "saving" ? "saving" : current?.status === "saved" ? "saved" : current?.status === "error" ? "error" : "idle";
+                  const queue = {
+                    dailyCap,
+                    enabled: enabled ? "on" : "off",
+                    message: current?.message,
+                    status,
+                  } satisfies { dailyCap: string; enabled: "off" | "on"; message?: string; status: "error" | "idle" | "saved" | "saving" };
+                  return {
+                    model: {
+                      ...model,
+                      learningReplayAutoQueue: queue,
+                      readbacks: { ...model.readbacks, [key]: { ...snapshot, token } },
+                    },
+                  };
+                }
+              } catch {
+                // A malformed replay row falls through to the ordinary readback update; it never fabricates values.
+              }
+            }
+          }
           if (key === "learningPacks") {
             if (snapshot.token !== model.readbacks[key].token) return { model };
             const fresh = snapshot.status === "ok" || snapshot.status === "empty";

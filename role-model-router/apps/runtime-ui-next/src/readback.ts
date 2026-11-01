@@ -848,7 +848,15 @@ const parseRuntimeConfig = (body: unknown, token: number): ReadbackState => {
   if (record === undefined || !("config" in record)) return failedReadback("Runtime config read failed: invalid response", token);
   const config = record.config === null ? {} : asRecord(record.config);
   if (config === undefined) return failedReadback("Runtime config read failed: invalid response", token);
-  return okRows([row("runtimeConfig", "Runtime config", JSON.stringify(config, null, 2), JSON.stringify({ applied: record.applied === true, config, path: typeof record.path === "string" ? record.path : null }))], token);
+  const replay = asRecord(config.replay);
+  const autoQueue = asRecord(replay?.autoQueue) ?? asRecord(replay?.auto_queue);
+  const enabled = autoQueue?.enabled === true;
+  const rawCap = Number(autoQueue?.dailyCap ?? autoQueue?.daily_cap);
+  const dailyCap = Number.isInteger(rawCap) && rawCap >= 1 && rawCap <= 1_000_000 ? rawCap : 100;
+  return okRows([
+    row("runtimeConfig", "Runtime config", JSON.stringify(config, null, 2), JSON.stringify({ applied: record.applied === true, config, path: record.path === undefined ? null : String(record.path) })),
+    row("replay.autoQueue", "Replay auto-queue", enabled ? "on" : "off", JSON.stringify({ dailyCap, enabled })),
+  ], token);
 };
 const parseRuntimeSummary = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
