@@ -1,0 +1,44 @@
+▶ packaged parity lane helpers
+  ✔ parses PASS/FAIL assertion outcomes in order and ignores narrating lines (4.2351ms)
+  ✔ reports PARITY for identical outcomes and DIVERGENCE for a changed one (1.1694ms)
+  ✔ reports INCOMPLETE when a run produced no assertion outcomes (2.6954ms)
+  ✔ classifies a compare-release summary: same/additive/environment is parity, different is not (1.6207ms)
+  ✔ states the selfcheck surface honestly (0.6148ms)
+✔ packaged parity lane helpers (13.6066ms)
+▶ selfcheck surface scan is not fooled by minified bundles
+  ✖ ignores react+digest co-occurrence inside a one-line bundle but reports a route marker in source (11.3811ms)
+✖ selfcheck surface scan is not fooled by minified bundles (12.1106ms)
+ℹ tests 6
+ℹ suites 2
+ℹ pass 5
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 327.6372
+
+✖ failing tests:
+
+test at scripts\runtime\packaged-parity-lane.test.mjs:92:3
+✖ ignores react+digest co-occurrence inside a one-line bundle but reports a route marker in source (11.3811ms)
+  AssertionError [ERR_ASSERTION]: a minified bundle's react+digest co-occurrence is not a selfcheck surface
+  
+  1 !== 0
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/packaged-parity-lane.test.mjs:102:14)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at node:internal/test_runner/test:1514:71
+      at node:internal/per_context/primordials:464:82
+      at new Promise (<anonymous>)
+      at new SafePromise (node:internal/per_context/primordials:433:3)
+      at node:internal/per_context/primordials:464:9
+      at Array.map (<anonymous>) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 1,
+    expected: 0,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
