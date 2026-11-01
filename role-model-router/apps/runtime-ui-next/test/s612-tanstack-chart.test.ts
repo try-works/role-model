@@ -1,6 +1,11 @@
+import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
+import { renderToString } from "@role-model-router/foldkit/experimental/server";
+
+import { telemetryChartCard } from "../src/features/overview/charts.js";
 import { tanstackChartSvg } from "../src/features/overview/tanstack-chart.js";
+import { shellModel } from "./support/runtime-shell.js";
 
 /** S612 (R9/R10): TanStack Charts is the chart engine behind the Foldkit Html surface. */
 
@@ -17,6 +22,8 @@ describe("S612 TanStack chart adapter", () => {
     expect(svg).toContain('viewBox="0 0 640 220"');
     expect(svg).toContain("<path");
     expect(svg).toContain('role="img"');
+    expect(svg).toContain('data-chart-part="chart"');
+    expect(svg).not.toContain("tabindex=");
   });
 
   it("keeps one series per color and handles a null point without inventing data", () => {
@@ -30,5 +37,75 @@ describe("S612 TanStack chart adapter", () => {
     expect(svg).toContain("<svg");
     expect(svg).toContain('aria-label="Empty"');
     expect(svg).not.toContain("<path");
+  });
+});
+
+const renderCard = async (input: {
+  readonly hasData: boolean;
+  readonly kind: "area" | "bar" | "line";
+  readonly series: typeof series;
+  readonly state: "empty" | "error" | "loading" | "ready";
+}): Promise<HTMLElement> => {
+  const rendered = await Effect.runPromise(renderToString({
+    init: () => ({ model: shellModel({ route: { _tag: "Index" } }), commands: [] }),
+    view: (_model, h) => ({
+      body: telemetryChartCard({
+        description: "card test",
+        emptyMessage: "No data yet",
+        // SAFETY: renderToString infers Message=unknown for this fixture view; the card emits no handlers.
+        h: h as Parameters<typeof telemetryChartCard>[0]["h"],
+        hasData: input.hasData,
+        kind: input.kind,
+        series: input.series,
+        state: input.state,
+        title: "Latency trend",
+      }),
+      title: "chart card test",
+    }),
+  }, { isHydratable: false }));
+  const container = document.createElement("div");
+  container.innerHTML = rendered.html;
+  return container;
+};
+
+describe("S612 telemetry chart card visible contract", () => {
+  it("renders the visible TanStack svg plus the visible numeric table for a line card", async () => {
+    const card = await renderCard({ hasData: true, kind: "line", series, state: "ready" });
+    const svg = card.querySelector("[data-chart-part='chart']");
+    const table = card.querySelector("[data-chart-part='table']");
+    expect(svg).not.toBeNull();
+    expect(svg?.getAttribute("role")).toBe("img");
+    expect(svg?.getAttribute("aria-label")).toBe("Latency trend");
+    expect(svg?.getAttribute("data-chart-series-count")).toBe("2");
+    expect(svg?.getAttribute("tabindex")).toBeNull();
+    expect(table).not.toBeNull();
+    expect(table?.textContent).toContain("Latency trend");
+    expect(table?.textContent).toContain("00:00");
+    expect(table?.textContent).toContain("30");
+    expect(card.querySelector(".sr-only")).toBeNull();
+  });
+
+  it("renders a TanStack bar scene for a bar card", async () => {
+    const card = await renderCard({ hasData: true, kind: "bar", series, state: "ready" });
+    const svg = card.querySelector("[data-chart-part='chart']");
+    expect(svg).not.toBeNull();
+    expect(svg?.querySelectorAll("rect").length).toBeGreaterThan(0);
+    expect(card.querySelector("[data-chart-part='table']")).not.toBeNull();
+  });
+
+  it("keeps a null bucket as a gap without NaN and still renders the table row", async () => {
+    const card = await renderCard({ hasData: true, kind: "line", series, state: "ready" });
+    expect(card.textContent).not.toContain("NaN");
+    expect(card.textContent).toContain("02:00");
+    expect(card.textContent).toContain("—");
+  });
+
+  it("renders the empty state svg and table without asserting fabricated points", async () => {
+    const card = await renderCard({ hasData: false, kind: "line", series, state: "empty" });
+    const svg = card.querySelector("[data-chart-part='chart']");
+    expect(svg).not.toBeNull();
+    expect(svg?.getAttribute("data-chart-series-count")).toBe("0");
+    expect(svg?.querySelector("path")).toBeNull();
+    expect(card.textContent).toContain("No data yet");
   });
 });

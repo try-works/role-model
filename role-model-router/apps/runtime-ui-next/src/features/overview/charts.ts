@@ -1,5 +1,5 @@
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
-import { view as chartView, type ChartSeries } from "@role-model/ui/foldkit-chart";
+import type { ChartSeries } from "@role-model/ui/foldkit-chart";
 import { tanstackChartSvg } from "./tanstack-chart";
 
 import type { Message } from "../../message";
@@ -163,39 +163,26 @@ export const candidateSpaceCard = (candidates: ReadbackState, h: HtmlBuilder<Mes
   );
 };
 
-const barSvg = (series: ReadonlyArray<ChartSeries>, h: HtmlBuilder<Message>): Html => {
-  const labels = series[0]?.points.map((point) => point.label) ?? [];
-  const max = Math.max(1, ...series.flatMap((item) => item.points.flatMap((point) => (point.value === null ? [] : [point.value]))));
-  const width = 640;
-  const height = 220;
-  const left = 56;
-  const bottom = 184;
-  const slot = (width - left - 16) / Math.max(labels.length, 1);
-  return h.svg([
-    h.Attribute("viewBox", "0 0 " + String(width) + " " + String(height)),
-    h.Class("mt-2 h-auto w-full"),
-    h.Role("img"),
-    h.AriaLabel("Success vs failure volume bar chart"),
-    h.DataAttribute("overview-bar-chart", ""),
-  ], [
-    h.line([h.Attribute("x1", String(left)), h.Attribute("y1", String(bottom)), h.Attribute("x2", String(width - 16)), h.Attribute("y2", String(bottom)), h.Stroke("var(--rm-border)")]),
-    ...series.flatMap((item, seriesIndex) =>
-      item.points.flatMap((point, index) => {
-        const value = point.value;
-        if (value === null) return [];
-        const barWidth = Math.max(3, slot / (series.length + 1));
-        const x = left + index * slot + 4 + seriesIndex * barWidth;
-        const barHeight = ((value / max) * (bottom - 20));
-        return [h.rect([
-          h.Attribute("x", String(x)),
-          h.Attribute("y", String(bottom - barHeight)),
-          h.Attribute("width", String(barWidth)),
-          h.Attribute("height", String(barHeight)),
-          h.Fill(seriesIndex === 0 ? "var(--rm-success, #2f9e62)" : "var(--rm-danger)"),
-          h.DataAttribute("bar-series", item.id),
-        ])];
+const chartTable = (
+  series: ReadonlyArray<ChartSeries>,
+  title: string,
+  h: HtmlBuilder<Message>,
+): Html => {
+  const labels: string[] = [];
+  for (const entry of series) for (const point of entry.points) if (!labels.includes(point.label)) labels.push(point.label);
+  return h.table([h.DataAttribute("chart-part", "table"), h.Class("mt-3 w-full border-collapse text-left text-xs")], [
+    h.caption([h.Class("pb-2 text-xs text-muted-foreground")], [title]),
+    h.thead([], [h.tr([], [
+      h.th([h.Attribute("scope", "col"), h.Class("border-b border-border py-1 pr-3 font-medium")], ["Bucket"]),
+      ...series.map((entry) => h.th([h.Attribute("scope", "col"), h.Class("border-b border-border py-1 pr-3 text-right font-medium")], [entry.label])),
+    ])]),
+    h.tbody([], labels.map((label) => h.tr([], [
+      h.th([h.Attribute("scope", "row"), h.Class("border-b border-border/60 py-1 pr-3 font-normal")], [label]),
+      ...series.map((entry) => {
+        const point = entry.points.find((candidate) => candidate.label === label);
+        return h.td([h.Class("border-b border-border/60 py-1 pr-3 text-right font-mono tabular-nums")], [point?.value === null || point?.value === undefined ? "—" : String(point.value)]);
       }),
-    ),
+    ]))),
   ]);
 };
 
@@ -209,32 +196,19 @@ export const telemetryChartCard = (input: {
   readonly state: "empty" | "error" | "loading" | "ready";
   readonly title: string;
 }): Html => {
-  const chartViewNode = chartView(
-    {
-      ariaLabel: input.title,
-      series: input.series,
-      state:
-        input.state === "loading"
-          ? { status: "loading" }
-          : input.state === "error"
-            ? { reason: "Telemetry read failed", status: "error" }
-            : input.hasData
-              ? { status: "ready" }
-              : { status: "empty" },
-      title: "",
-      yUnit: input.kind === "area" ? "tokens" : undefined,
-    },
-    input.h,
-  );
-  const chart =
-    input.kind === "bar"
-      ? barSvg(input.series, input.h)
-      : input.h.div([], [
-          input.h.div([input.h.Class("rm3-tanstack-chart"), input.h.InnerHTML(tanstackChartSvg(input.series, { ariaLabel: input.title, height: 220, width: 640 }))], []),
-          // R9/R10 contract bridge: the Foldkit chart node keeps the accessible table, point labels
-          // and data attributes that existing chart tests read while TanStack paints the visual SVG.
-          input.h.div([input.h.Class("sr-only")], [chartViewNode]),
-        ]);
+  const chartSeries = input.hasData ? input.series : [];
+  const chart = input.h.div([input.h.Class("flex w-full flex-col gap-2")], [
+    input.h.div([
+      input.h.Class("rm3-tanstack-chart block h-[220px] w-full"),
+      input.h.InnerHTML(tanstackChartSvg(chartSeries, {
+        ariaLabel: input.title,
+        height: 220,
+        kind: input.kind,
+        width: 640,
+      })),
+    ], []),
+    chartTable(chartSeries, input.title, input.h),
+  ]);
   const empty = input.hasData
     ? null
     : input.h.p(

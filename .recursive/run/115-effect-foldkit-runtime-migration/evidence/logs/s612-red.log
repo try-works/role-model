@@ -1,34 +1,59 @@
 
- RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
 
+ ❯ test/s612-tanstack-chart.test.ts (7 tests | 3 failed) 228ms
+   ✓ S612 TanStack chart adapter > renders responsive, accessible static SVG through TanStack Charts 32ms
+   ✓ S612 TanStack chart adapter > keeps one series per color and handles a null point without inventing data 5ms
+   ✓ S612 TanStack chart adapter > returns an empty-state svg instead of a broken chart when there are no points 1ms
+   × S612 telemetry chart card visible contract > renders the visible TanStack svg plus the visible numeric table for a line card 121ms
+     → expected null not to be null
+   × S612 telemetry chart card visible contract > renders a TanStack bar scene for a bar card 12ms
+     → expected null not to be null
+   ✓ S612 telemetry chart card visible contract > keeps a null bucket as a gap without NaN and still renders the table row 32ms
+   × S612 telemetry chart card visible contract > renders the empty state svg and table without asserting fabricated points 23ms
+     → expected null not to be null
 
-⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
 
- FAIL  role-model-router/apps/runtime-ui-next/test/s612-tanstack-chart.test.ts [ role-model-router/apps/runtime-ui-next/test/s612-tanstack-chart.test.ts ]
-Error: Transform failed with 1 error:
-D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next/test/s612-tanstack-chart.test.ts:31:39: ERROR: Expected ")" but found "Empty"
-  Plugin: vite:esbuild
-  File: D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next/test/s612-tanstack-chart.test.ts:31:39
-  
-  Expected ")" but found "Empty"
-  29 |      const svg = tanstackChartSvg([], { ariaLabel: "Empty", height: 120, width: 400 });
-  30 |      expect(svg).toContain("<svg");
-  31 |      expect(svg).toContain("aria-label="Empty"");
-     |                                         ^
-  32 |      expect(svg).not.toContain("<path");
-  33 |    });
-  
- ❯ failureErrorWithLog node_modules/.pnpm/esbuild@0.27.7/node_modules/esbuild/lib/main.js:1748:15
- ❯ node_modules/.pnpm/esbuild@0.27.7/node_modules/esbuild/lib/main.js:1017:50
- ❯ responseCallbacks.<computed> node_modules/.pnpm/esbuild@0.27.7/node_modules/esbuild/lib/main.js:884:9
- ❯ handleIncomingPacket node_modules/.pnpm/esbuild@0.27.7/node_modules/esbuild/lib/main.js:939:12
- ❯ Socket.readFromStdout node_modules/.pnpm/esbuild@0.27.7/node_modules/esbuild/lib/main.js:862:7
+ FAIL  test/s612-tanstack-chart.test.ts > S612 telemetry chart card visible contract > renders the visible TanStack svg plus the visible numeric table for a line card
+AssertionError: expected null not to be null
+ ❯ test/s612-tanstack-chart.test.ts:76:21
+     74|     const svg = card.querySelector("[data-chart-part='chart']");
+     75|     const table = card.querySelector("[data-chart-part='table']");
+     76|     expect(svg).not.toBeNull();
+       |                     ^
+     77|     expect(svg?.getAttribute("role")).toBe("img");
+     78|     expect(svg?.getAttribute("aria-label")).toBe("Latency trend");
 
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/s612-tanstack-chart.test.ts > S612 telemetry chart card visible contract > renders a TanStack bar scene for a bar card
+AssertionError: expected null not to be null
+ ❯ test/s612-tanstack-chart.test.ts:91:21
+     89|     const card = await renderCard({ hasData: true, kind: "bar", series…
+     90|     const svg = card.querySelector("[data-chart-part='chart']");
+     91|     expect(svg).not.toBeNull();
+       |                     ^
+     92|     expect(svg?.querySelectorAll("rect").length).toBeGreaterThan(0);
+     93|     expect(card.querySelector("[data-chart-part='table']")).not.toBeNu…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/s612-tanstack-chart.test.ts > S612 telemetry chart card visible contract > renders the empty state svg and table without asserting fabricated points
+AssertionError: expected null not to be null
+ ❯ test/s612-tanstack-chart.test.ts:106:21
+    104|     const card = await renderCard({ hasData: false, kind: "line", seri…
+    105|     const svg = card.querySelector("[data-chart-part='chart']");
+    106|     expect(svg).not.toBeNull();
+       |                     ^
+    107|     expect(svg?.getAttribute("data-chart-series-count")).toBe("0");
+    108|     expect(svg?.querySelector("path")).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
 
 
  Test Files  1 failed (1)
-      Tests  no tests
-   Start at  19:10:34
-   Duration  3.36s (transform 85ms, setup 0ms, collect 0ms, tests 0ms, environment 1ms, prepare 1.04s)
+      Tests  3 failed | 4 passed (7)
+   Start at  19:44:49
+   Duration  16.13s (transform 6.76s, setup 0ms, collect 12.02s, tests 228ms, environment 2.65s, prepare 416ms)
 

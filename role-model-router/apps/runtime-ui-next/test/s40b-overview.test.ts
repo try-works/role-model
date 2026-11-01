@@ -59,8 +59,9 @@ describe("S40b bucketed overview", () => {
     expect(document.body.textContent).toContain("23:00");
     expect(document.body.textContent).toContain("02:00");
     expect(document.querySelector("[data-chart-point-label='02:00']")).toBeNull();
-    const segmented = [...document.querySelectorAll("path.rm3-chart-series")].some((path) => (path.getAttribute("d")?.match(/M/g)?.length ?? 0) >= 2);
-    expect(segmented).toBe(true);
+    const seriesPath = document.querySelector("[data-chart-part='chart'] path[data-ts-key*='segment']");
+    expect(seriesPath).not.toBeNull();
+    expect(seriesPath?.getAttribute("d")).toContain("M");
     expect(document.querySelector("[data-overview-card='Model pool']")).not.toBeNull();
     expect(document.body.textContent).toContain("Model pool");
     expect(document.body.textContent).toContain("openai/gpt-4.1-mini-fast");
