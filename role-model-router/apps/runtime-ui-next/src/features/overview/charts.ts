@@ -1,5 +1,6 @@
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 import { view as chartView, type ChartSeries } from "@role-model/ui/foldkit-chart";
+import { tanstackChartSvg } from "./tanstack-chart";
 
 import type { Message } from "../../message";
 import type { ReadbackState } from "../../readback";
@@ -208,26 +209,32 @@ export const telemetryChartCard = (input: {
   readonly state: "empty" | "error" | "loading" | "ready";
   readonly title: string;
 }): Html => {
+  const chartViewNode = chartView(
+    {
+      ariaLabel: input.title,
+      series: input.series,
+      state:
+        input.state === "loading"
+          ? { status: "loading" }
+          : input.state === "error"
+            ? { reason: "Telemetry read failed", status: "error" }
+            : input.hasData
+              ? { status: "ready" }
+              : { status: "empty" },
+      title: "",
+      yUnit: input.kind === "area" ? "tokens" : undefined,
+    },
+    input.h,
+  );
   const chart =
     input.kind === "bar"
       ? barSvg(input.series, input.h)
-      : chartView(
-          {
-            ariaLabel: input.title,
-            series: input.series,
-            state:
-              input.state === "loading"
-                ? { status: "loading" }
-                : input.state === "error"
-                  ? { reason: "Telemetry read failed", status: "error" }
-                  : input.hasData
-                    ? { status: "ready" }
-                    : { status: "empty" },
-            title: "",
-            yUnit: input.kind === "area" ? "tokens" : undefined,
-          },
-          input.h,
-        );
+      : input.h.div([], [
+          input.h.div([input.h.Class("rm3-tanstack-chart"), input.h.InnerHTML(tanstackChartSvg(input.series, { ariaLabel: input.title, height: 220, width: 640 }))], []),
+          // R9/R10 contract bridge: the Foldkit chart node keeps the accessible table, point labels
+          // and data attributes that existing chart tests read while TanStack paints the visual SVG.
+          input.h.div([input.h.Class("sr-only")], [chartViewNode]),
+        ]);
   const empty = input.hasData
     ? null
     : input.h.p(

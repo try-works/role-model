@@ -28,6 +28,7 @@
     "@role-model-router/foldkit": "workspace:*",
     "@role-model-router/foldkit-ui": "workspace:*",
     "@role-model/ui": "workspace:*",
+    "@tanstack/charts": "1.1.0",
     "effect": "workspace:*"
   }
 }
