@@ -41,7 +41,7 @@ export const tanstackChartSvg = (
         String(options.width) +
         " " +
         String(options.height) +
-        '" data-chart-part="chart" data-chart-series-count="0"></svg>';
+        '"></svg>';
     }
     const kind = options.kind ?? "line";
     const definition = defineChart({

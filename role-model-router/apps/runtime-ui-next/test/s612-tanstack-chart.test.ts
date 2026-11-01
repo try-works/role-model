@@ -37,6 +37,8 @@ describe("S612 TanStack chart adapter", () => {
     expect(svg).toContain("<svg");
     expect(svg).toContain('aria-label="Empty"');
     expect(svg).not.toContain("<path");
+    expect((svg.match(/data-chart-part=/g) ?? []).length).toBe(1);
+    expect((svg.match(/data-chart-series-count=/g) ?? []).length).toBe(1);
   });
 });
 
@@ -95,6 +97,11 @@ describe("S612 telemetry chart card visible contract", () => {
     const svg = card.querySelector("[data-chart-part='chart']");
     expect(svg).not.toBeNull();
     expect(svg?.querySelectorAll("rect").length).toBeGreaterThan(0);
+    const bar = svg?.querySelector("rect[data-chart-series-id='latency'][data-chart-point-label='00:00']");
+    expect(bar).not.toBeNull();
+    expect(bar?.getAttribute("data-chart-series-id")).toBe("latency");
+    expect(bar?.getAttribute("data-chart-point-label")).toBe("00:00");
+    expect(bar?.getAttribute("data-chart-point")).not.toBeNull();
     expect(card.querySelector("[data-chart-part='table']")).not.toBeNull();
   });
 
