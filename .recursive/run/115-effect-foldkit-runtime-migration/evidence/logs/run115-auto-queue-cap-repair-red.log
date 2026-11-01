@@ -1,0 +1,24 @@
+# Run 115 auto-queue cap review repair — RED evidence
+
+Both HOLDs were reproduced as collected behavioural failures against commit a2cbcb33.
+
+## HOLD 1: the resolver read the wrong unified-config path
+Pre-fix resolver used <runtimeStateRoot>/<scopeId>/runtime-config.yaml, while the host writes
+<runtimeStateRoot>/runtime-config.yaml (or the legacy <runtimeStateRoot>/state/runtime-config.yaml).
+Test: write a root config with daily_cap: 7, call the real
+resolveChannelScopedReplayLedgerLimits, expect 7.
+Pre-fix result: default 100 -> failed. The old suite only called resolveAutoQueueDailyCap with an
+explicit path, so it never exercised the resolver.
+
+## HOLD 2: enabled:false did not bind on non-production channels
+Test: ledger limits applied from dailyCap 0 with enforced:false (development/stage default), reserve
+one capture.
+Pre-fix result: accepted:true -> failed, because the ledger only consulted the cap when enforced.
+
+## Additional pre-fix failure
+applyAutoQueueDailyCap did not set the hard ceiling; the expectation for
+hardCounterfactualLimit: N failed (missing).
+
+RED command: corepack pnpm exec vitest run test/run115-auto-queue-cap.test.ts
+Result after adding the resolver/non-production assertions: 3 failed | 7 passed (10), with the exact
+failures above (resolver returned default 100, hard field missing, disabled reservation accepted).

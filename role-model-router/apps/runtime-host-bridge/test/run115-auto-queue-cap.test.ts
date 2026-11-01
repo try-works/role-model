@@ -3,7 +3,12 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { resolveAutoQueueDailyCap, applyAutoQueueDailyCap } from "../src/queue-runtime/auto-queue.js";
+import { resolveChannelScopedReplayLedgerLimits } from "../src/cli.js";
+import {
+  applyAutoQueueDailyCap,
+  resolveAutoQueueConfigPath,
+  resolveAutoQueueDailyCap,
+} from "../src/queue-runtime/auto-queue.js";
 import { createReplayLedger } from "../src/track-b-replay-ledger.js";
 import {
   mergeUnifiedRuntimeConfigDocuments,
@@ -25,6 +30,7 @@ afterEach(async () => {
 });
 
 const configPath = () => path.join(stateRoot, "runtime-config.yaml");
+const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..", "..", "..");
 
 describe("auto-queue daily cap config", () => {
   it("defaults the readback to 100 and renders the section", () => {
@@ -58,10 +64,66 @@ describe("auto-queue daily cap config", () => {
     expect(resolveAutoQueueDailyCap(configPath())).toBe(7);
   });
 
+  it("resolves the host's root, legacy and explicit unified-config paths", async () => {
+    expect(resolveAutoQueueConfigPath({ runtimeStateRoot: stateRoot })).toBe(configPath());
+    const { mkdir } = await import("node:fs/promises");
+    const legacy = path.join(stateRoot, "state", "runtime-config.yaml");
+    await mkdir(path.dirname(legacy), { recursive: true });
+    await writeFile(legacy, "version: '1.0'\n", "utf8");
+    expect(resolveAutoQueueConfigPath({ runtimeStateRoot: stateRoot })).toBe(legacy);
+    const explicit = path.join(stateRoot, "explicit-config.yaml");
+    expect(resolveAutoQueueConfigPath({ runtimeStateRoot: stateRoot, unifiedRuntimeConfigPath: explicit })).toBe(explicit);
+  });
+
+  it("reads a root-config PUT through the real ledger resolver", async () => {
+    const scopeId = "scope-auto-queue";
+    await writeFile(
+      configPath(),
+      "version: '1.0'\nreplay:\n  auto_queue:\n    daily_cap: 7\n",
+      "utf8",
+    );
+    const limits = resolveChannelScopedReplayLedgerLimits({
+      repoRoot,
+      runtimeStateRoot: stateRoot,
+      scopeId,
+      channel: "development",
+    });
+    expect(limits.counterfactualsPerDay).toBe(7);
+    expect(limits.hardCounterfactualLimit).toBe(7);
+  });
+
+  it("prefers the host's explicit unified-config path over root and legacy", async () => {
+    const explicit = path.join(stateRoot, "explicit-config.yaml");
+    await writeFile(explicit, "version: '1.0'\nreplay:\n  auto_queue:\n    daily_cap: 9\n", "utf8");
+    const limits = resolveChannelScopedReplayLedgerLimits({
+      repoRoot,
+      runtimeStateRoot: stateRoot,
+      scopeId: "scope-explicit",
+      channel: "development",
+      unifiedRuntimeConfigPath: explicit,
+    });
+    expect(limits.counterfactualsPerDay).toBe(9);
+  });
+
+  it("falls back to the legacy state/runtime-config.yaml document", async () => {
+    const { mkdir } = await import("node:fs/promises");
+    const legacy = path.join(stateRoot, "state", "runtime-config.yaml");
+    await mkdir(path.dirname(legacy), { recursive: true });
+    await writeFile(legacy, "version: '1.0'\nreplay:\n  auto_queue:\n    daily_cap: 5\n", "utf8");
+    const limits = resolveChannelScopedReplayLedgerLimits({
+      repoRoot,
+      runtimeStateRoot: stateRoot,
+      scopeId: "scope-legacy",
+      channel: "development",
+    });
+    expect(limits.counterfactualsPerDay).toBe(5);
+  });
+
   it("applies the cap to the replay ledger's daily counterfactual ceiling", () => {
     expect(applyAutoQueueDailyCap({ dispatchesPerDay: 300 }, 7)).toEqual({
       counterfactualsPerDay: 7,
       dispatchesPerDay: 300,
+      hardCounterfactualLimit: 7,
     });
   });
 
@@ -79,6 +141,17 @@ describe("auto-queue daily cap config", () => {
     expect(reserve("capture-2").accepted).toBe(false);
     dailyCap = 2;
     expect(reserve("capture-2").accepted).toBe(true);
+  });
+
+  it("refuses automatic replays when disabled on a non-production channel", () => {
+    const ledger = createReplayLedger({
+      filePath: path.join(stateRoot, "disabled-ledger.json"),
+      now: () => Date.UTC(2026, 0, 1, 12),
+      limits: applyAutoQueueDailyCap({ enforced: false }, 0),
+    });
+    expect(
+      ledger.reserve({ captureRef: "capture-disabled", policySetDigest: "digest", candidateDispatches: 1 }),
+    ).toMatchObject({ accepted: false, code: "budget_exhausted" });
   });
 
   it("refuses the replay after the configured cap is spent", () => {

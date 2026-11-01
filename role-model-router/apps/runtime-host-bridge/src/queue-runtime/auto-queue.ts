@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
 
 import type { ReplayLedgerLimits } from "../track-b-replay-ledger.js";
 import {
@@ -37,6 +38,23 @@ export function resolveAutoQueueSettings(configPath?: string): AutoQueueSettings
   }
 }
 
+/**
+ * The host's unified config path resolution, mirrored here for the cap read:
+ * explicit `--unified-runtime-config` first, then the root document, then the
+ * legacy `state/runtime-config.yaml` document. The explicit path wins even when
+ * no file exists yet, so a first PUT creates the document the host reads.
+ */
+export function resolveAutoQueueConfigPath(input: {
+  readonly runtimeStateRoot: string;
+  readonly unifiedRuntimeConfigPath?: string;
+}): string {
+  if (input.unifiedRuntimeConfigPath) return input.unifiedRuntimeConfigPath;
+  const rootConfig = path.join(input.runtimeStateRoot, "runtime-config.yaml");
+  if (existsSync(rootConfig)) return rootConfig;
+  const legacyConfig = path.join(input.runtimeStateRoot, "state", "runtime-config.yaml");
+  return existsSync(legacyConfig) ? legacyConfig : rootConfig;
+}
+
 export function resolveAutoQueueDailyCap(configPath?: string): number {
   return resolveAutoQueueSettings(configPath).dailyCap;
 }
@@ -51,5 +69,11 @@ export function applyAutoQueueDailyCap(
   dailyCap: number,
 ): Partial<ReplayLedgerLimits> {
   const counterfactualsPerDay = Number.isSafeInteger(dailyCap) && dailyCap >= 0 ? dailyCap : 0;
-  return { ...limits, counterfactualsPerDay };
+  return {
+    ...limits,
+    counterfactualsPerDay,
+    // The hard ceiling is checked before the channel-scoped `enforced` guard, so a
+    // disabled auto-queue or a configured cap binds on dev/stage as well.
+    hardCounterfactualLimit: counterfactualsPerDay,
+  };
 }

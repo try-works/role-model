@@ -20,6 +20,12 @@ export interface ReplayLedgerLimits {
   readonly counterfactualsPerDay: number;
   readonly dispatchesPerDay: number;
   /**
+   * A hard ceiling that refuses reservations on every channel, independent of
+   * `enforced`. The auto-queue config uses it so `enabled: false` (or a daily cap)
+   * cannot be bypassed by the production-only budget enforcement policy.
+   */
+  readonly hardCounterfactualLimit: number | null;
+  /**
    * Run 100 phase-5 repair (operator instruction 2026-09-21): whether the ceilings may *refuse* work.
    * The accounting is unconditional - every dispatch is still recorded and reported - but the daily
    * ceiling is a production delivery guard, so on dev/stage the loop must not starve itself on it.
@@ -30,6 +36,7 @@ export interface ReplayLedgerLimits {
 export const DEFAULT_REPLAY_LEDGER_LIMITS: ReplayLedgerLimits = Object.freeze({
   counterfactualsPerDay: 100,
   dispatchesPerDay: 300,
+  hardCounterfactualLimit: null,
   enforced: true,
 });
 
@@ -218,6 +225,8 @@ export function createReplayLedger(options: {
       options.limits?.counterfactualsPerDay ?? DEFAULT_REPLAY_LEDGER_LIMITS.counterfactualsPerDay,
     dispatchesPerDay:
       options.limits?.dispatchesPerDay ?? DEFAULT_REPLAY_LEDGER_LIMITS.dispatchesPerDay,
+    hardCounterfactualLimit:
+      options.limits?.hardCounterfactualLimit ?? DEFAULT_REPLAY_LEDGER_LIMITS.hardCounterfactualLimit,
     enforced: options.limits?.enforced ?? DEFAULT_REPLAY_LEDGER_LIMITS.enforced,
   };
   const currentLimits = (): ReplayLedgerLimits => {
@@ -286,10 +295,18 @@ export function createReplayLedger(options: {
           detail: "this capture already finalized a counterfactual in this window",
         };
       }
+      const counterfactualCount = window.counterfactuals.length + window.reservations.length;
       if (
-        limits.enforced &&
-        window.counterfactuals.length + window.reservations.length >= limits.counterfactualsPerDay
+        limits.hardCounterfactualLimit !== null &&
+        counterfactualCount >= limits.hardCounterfactualLimit
       ) {
+        return {
+          accepted: false,
+          code: "budget_exhausted",
+          detail: "the auto-queue daily replay ceiling is exhausted",
+        };
+      }
+      if (limits.enforced && counterfactualCount >= limits.counterfactualsPerDay) {
         return {
           accepted: false,
           code: "budget_exhausted",

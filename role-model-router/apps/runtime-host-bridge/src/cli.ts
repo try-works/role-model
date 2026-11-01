@@ -107,6 +107,7 @@ import {
 } from "./learner-revalidation.js";
 import {
   applyAutoQueueDailyCap,
+  resolveAutoQueueConfigPath,
   resolveAutoQueueSettings,
 } from "./queue-runtime/auto-queue.js";
 import { evaluationAttemptOutcome } from "./queue-runtime/evaluation.js";
@@ -522,11 +523,12 @@ export function readPersistedControllerEndpointId(input: {
   });
 }
 
-function resolveChannelScopedReplayLedgerLimits(input: {
+export function resolveChannelScopedReplayLedgerLimits(input: {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
   readonly channel: string;
+  readonly unifiedRuntimeConfigPath?: string;
 }): Partial<ReplayLedgerLimits> {
   const resolved = resolveReplayLedgerLimits();
   /**
@@ -536,7 +538,10 @@ function resolveChannelScopedReplayLedgerLimits(input: {
    * on the next tick/restart without a separate env var.
    */
   const autoQueue = resolveAutoQueueSettings(
-    path.join(input.runtimeStateRoot, input.scopeId, "runtime-config.yaml"),
+    resolveAutoQueueConfigPath({
+      runtimeStateRoot: input.runtimeStateRoot,
+      unifiedRuntimeConfigPath: input.unifiedRuntimeConfigPath,
+    }),
   );
   const withCap = applyAutoQueueDailyCap(
     resolved,
@@ -5669,6 +5674,7 @@ export async function main(): Promise<void> {
           runtimeStateRoot: options.runtimeStateRoot,
           scopeId: options.scopeId,
           channel,
+          unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
         }),
         // Re-read the operator's cap each reservation/record so a Learning Overview
         // PUT takes effect on the next automatic replay, without a runtime restart.
@@ -5678,6 +5684,7 @@ export async function main(): Promise<void> {
             runtimeStateRoot: options.runtimeStateRoot,
             scopeId: options.scopeId,
             channel,
+            unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
           }),
       });
       const policySet = buildReplayPolicySet();
@@ -9296,6 +9303,7 @@ export async function main(): Promise<void> {
               runtimeStateRoot: options.runtimeStateRoot,
               scopeId: options.scopeId,
               channel: packagedProfile?.channel ?? "development",
+              unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
             }),
           });
           const replayLedgerStatus = replayLedger.status();
@@ -11062,6 +11070,7 @@ export async function main(): Promise<void> {
                   runtimeStateRoot: options.runtimeStateRoot,
                   scopeId: options.scopeId,
                   channel,
+                  unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
                 }),
               }),
               replayPolicySet: buildReplayPolicySet(),
@@ -11109,6 +11118,7 @@ export async function main(): Promise<void> {
                           runtimeStateRoot: options.runtimeStateRoot,
                           scopeId: options.scopeId,
                           channel,
+                          unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
                         }),
                       }).status().window,
                     }),
