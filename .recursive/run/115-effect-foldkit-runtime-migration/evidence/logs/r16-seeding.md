@@ -4,49 +4,57 @@ Owner-approved 2026-11-01. Production :3456 and its state were not touched.
 
 ## Isolated targets
 
-| side | binary | port | state root | scope | base |
+| side | binary | port | state root | scope | root construction |
 |---|---|---|---|---|---|
-| R | D:/role-model-router/0.0.20/role-model.exe | 3470 | D:/DEV/rm-clean/r16-seed-left | standalone-runtime | compare-state-r (old artifact-store SQLite schema) |
-| C | role-model-router/dist/release/win32-x64/role-model-dev.exe | 3471 | D:/DEV/rm-clean/r16-seed-right | standalone-runtime-dev | compare-state-d (current artifact-store schema) |
+| R | D:/role-model-router/0.0.20/role-model.exe | 3470 | D:/DEV/rm-clean/r16-seed-left | standalone-runtime | compare-state-r (old artifact-store SQLite schema) + live-state2 config/accounts/endpoints |
+| C | role-model-router/dist/release/win32-x64/role-model-dev.exe | 3471 | D:/DEV/rm-clean/r16-seed-right | standalone-runtime-dev | byte copy of live-state2 (known authorized pattern) |
 
-The different bases are deliberate: the preserved 0.0.20 binary was never pointed at the candidate artifact schema.
+The left base is deliberately the old artifact-store schema: the preserved 0.0.20 binary was never pointed at candidate-migrated state.
 
 ## Seeded authorized configuration
 
-Equivalent authorized config was copied/imported into both roots from the production-pattern live state:
+Both roots now have the same authorized config:
 
-- runtime-config.yaml sha256 `569e6ed25a3bde15528ea6e02a83dcf8c5f7a308b6d1d3edb3590d7f8f461b34` on both roots.
-- provider_accounts: 2 identical rows on both roots
+- runtime-config.yaml sha256 `569e6ed25a3bde15528ea6e02a83dcf8c5f7a308b6d1d3edb3590d7f8f461b34`
+- provider_accounts: 2 identical rows
   - deepseek.personal.deepseek-api-key
   - openai.personal.openai-codex-subscription
-- runtime_endpoints: 4 identical rows on both roots
+- runtime_endpoints: 4 identical rows
   - deepseek...deepseek-flash-high
   - deepseek...deepseek-flash-max
   - openai...gpt-6-astra
   - openai...gpt-6.1-sol
-- provider_device_auth_sessions: 2 identical rows on both roots.
-- credentials directory copied to both roots (1 credential file each; bytes never printed).
-- old test-only accounts (anthropic.team.shared, openai.personal.primary) removed from both memory DBs.
-- key-lifecycle.json removed from both copied roots after seeding and after the launch attempts (absent at handoff).
+- provider_device_auth_sessions: 2 identical rows
+- credentials directory copied (1 file each; bytes never printed)
+- old test-only accounts (anthropic.team.shared, openai.personal.primary) removed
 
-No credential bytes, tokens, or account secrets are recorded in this evidence.
+No credential bytes/tokens/account secrets are recorded here.
 
-## Launch attempts
+## Root cause of the sidecar failure
 
-Both binaries were launched with isolated roots, the copied runtime-config, 127.0.0.1 ports, and their own Track B manifests. Both reached HTTP health but stayed 503:
+The first launch attempts failed because the process working directory was `D:/DEV`; the host-spawned Track B sidecar resolves the public taxonomy relative to cwd and tried `C:\Program Files\nodejs\role-model-router\...` and `D:\DEV\data\taxonomy\...`, then exited 1 with a bundled-source stack line.
 
-- 3470: sessionBootstrap.backend=status failed, "Track B sidecar exited before readiness (1): ..." (the sidecar error text contains a large bundled-source line).
-- 3471: same backend failure.
+Launching both hosts with `-WorkingDirectory D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration` makes the taxonomy resolvable. No host code change was needed.
 
-The failing sidecar was reproduced independently: running each package's runtime-operations-server.mjs directly with the same state root/manifest starts and prints {"type":"ready"} (right sidecar on 3490; old sidecar on an ephemeral port). The host-spawn path still exits 1 before readiness. No compare-release or routing harness was run against a 503 host.
+## Healthy state
 
-Processes were stopped and ports 3470/3471/3490 released. Production :3456 remained owned by PID 23120 throughout.
+- 3470: **healthy**, version 0.0.20 (commit 945a8906...)
+- 3471: **healthy**, version 0.0.20-386-g8bc397b2 (commit 8bc397b2...)
 
-Launch/health evidence:
-- evidence/logs/r16-left-stdout.log, r16-left-stderr.log
-- evidence/logs/r16-right-stdout.log, r16-right-stderr.log
+Both expose the same 2 accounts / 4 endpoints / 2 device-auth sessions.
 
-## Status
+**Artifact discrepancy to flag:** the rebuilt dist manifest declares `0.0.20-478-g2d4fa10b`, but the `role-model-dev.exe` in that directory reports `0.0.20-386-g8bc397b2` from /api/version, and its file timestamp is 2026-11-01 18:39. The requested 478 binary is therefore not actually the binary that ran.
 
-Seeding: complete and verified equivalent (same config hash, 2 accounts, 4 endpoints, 2 device-auth sessions).
-Comparison: BLOCKED on the host-spawned Track B sidecar failure above; not a seeding mismatch.
+## Comparison smoke
+
+`node scripts/runtime/compare-release.mjs --left http://127.0.0.1:3470 --right http://127.0.0.1:3471 --fixture-root D:/DEV/rm-clean/115-public/testdata/router-runtime/fixtures`
+
+Result: 4 same, 3 additive-shape, 1 different, 1 environment-state.
+
+- different: /api/role-model/router/summary recentDecisionCount 0 vs 3 (state/history difference, not config).
+- additive-shape: /healthz, runtime/summary, endpoints.
+- environment-state: telemetry/summary.
+
+Full output: evidence/logs/r16-compare-seeded.log.
+
+Hosts remain running on 3470/3471 for the R16 comparison. `key-lifecycle.json` was removed from both copied roots before launch; the runtime regenerated its own on startup (expected).

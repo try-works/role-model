@@ -1,0 +1,15 @@
+identity left=0.0.20 right=0.0.20-386-g8bc397b2
+additive-shape /healthz (200/200)
+additive-shape /api/role-model/runtime/summary (200/200)
+same /api/role-model/models (200/200)
+additive-shape /api/role-model/endpoints (200/200)
+different /api/role-model/router/summary (200/200)
+environment-state /api/role-model/telemetry/summary (200/200)
+same /api/role-model/operator/learning (200/200)
+same /api/role-model/operator/replay/jobs (200/200)
+same /api/role-model/operator/evaluation/jobs (200/200)
+value-diff /api/role-model/router/summary: recentDecisionCount (0 -> 3)
+shape-delta keys /healthz: -runtime.channel, -runtime.name, -runtime.endpoint, -runtime.release_id, -runtime.private_distribution_sha256
+shape-delta keys /api/role-model/runtime/summary: -runtime.channel, -runtime.name, -runtime.endpoint, -runtime.release_id, -runtime.private_distribution_sha256
+shape-delta keys /api/role-model/endpoints: +3.executionCooldown
+{"additive-shape":3,"same":4,"different":1,"environment-state":1}
