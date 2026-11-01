@@ -209,6 +209,8 @@ export function createReplayLedger(options: {
   readonly filePath: string;
   readonly now?: () => number;
   readonly limits?: Partial<ReplayLedgerLimits>;
+  /** Re-read the live limits on every accounting call (the UI cap applies without a restart). */
+  readonly limitsProvider?: () => Partial<ReplayLedgerLimits>;
 }): ReplayLedger {
   const now = options.now ?? (() => Date.now());
   const limits: ReplayLedgerLimits = {
@@ -217,6 +219,10 @@ export function createReplayLedger(options: {
     dispatchesPerDay:
       options.limits?.dispatchesPerDay ?? DEFAULT_REPLAY_LEDGER_LIMITS.dispatchesPerDay,
     enforced: options.limits?.enforced ?? DEFAULT_REPLAY_LEDGER_LIMITS.enforced,
+  };
+  const currentLimits = (): ReplayLedgerLimits => {
+    const live = options.limitsProvider?.() ?? {};
+    return { ...limits, ...live };
   };
 
   const load = (): LedgerFile => {
@@ -250,6 +256,7 @@ export function createReplayLedger(options: {
     window.reservations.reduce((total, row) => total + row.candidateDispatches, 0);
 
   const statusFor = (file: LedgerFile, atMs: number): ReplayLedgerStatus => {
+    const limits = currentLimits();
     const window = replayBudgetWindow(atMs);
     const row = file.windows[window] ?? emptyWindow();
     return {
@@ -267,6 +274,7 @@ export function createReplayLedger(options: {
   return {
     filePath: options.filePath,
     reserve(input) {
+      const limits = currentLimits();
       const atMs = now();
       const file = load();
       const window = windowOf(file, atMs);
@@ -352,6 +360,7 @@ export function createReplayLedger(options: {
     },
     record(input) {
       assertReplayReceiptMetadataOnly(input as unknown as Record<string, unknown>);
+      const limits = currentLimits();
       const atMs = now();
       const file = load();
       const window = windowOf(file, atMs);

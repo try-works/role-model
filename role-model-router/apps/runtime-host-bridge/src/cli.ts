@@ -105,6 +105,10 @@ import {
   learnerReceiptTimeMs,
   runLearnerRevalidationPass,
 } from "./learner-revalidation.js";
+import {
+  applyAutoQueueDailyCap,
+  resolveAutoQueueSettings,
+} from "./queue-runtime/auto-queue.js";
 import { evaluationAttemptOutcome } from "./queue-runtime/evaluation.js";
 // Run 101 R4: the replay plane's queue runtime (policy-driven mode, offer and
 // worker). Imported here so the auto-replay loop's composition can start it.
@@ -525,7 +529,20 @@ function resolveChannelScopedReplayLedgerLimits(input: {
   readonly channel: string;
 }): Partial<ReplayLedgerLimits> {
   const resolved = resolveReplayLedgerLimits();
-  if (resolved.enforced !== undefined) return resolved;
+  /**
+   * Run 115: the Learning Overview's persisted auto-queue cap is the daily
+   * counterfactual ceiling the replay ledger already enforces. Read it from the
+   * scope's runtime config on every ledger construction so a config PUT applies
+   * on the next tick/restart without a separate env var.
+   */
+  const autoQueue = resolveAutoQueueSettings(
+    path.join(input.runtimeStateRoot, input.scopeId, "runtime-config.yaml"),
+  );
+  const withCap = applyAutoQueueDailyCap(
+    resolved,
+    autoQueue.enabled ? autoQueue.dailyCap : 0,
+  );
+  if (resolved.enforced !== undefined) return withCap;
   const snapshot = readLearningPolicyFile({
     repoRoot: input.repoRoot,
     stateRoot: resolveLearningPolicyStateRoot({
@@ -536,7 +553,7 @@ function resolveChannelScopedReplayLedgerLimits(input: {
     scopeId: input.scopeId,
   });
   return {
-    ...resolved,
+    ...withCap,
     enforced: replayBudgetEnforcedForChannel(
       // A missing policy source falls through to the documented default scoping (production only).
       snapshot?.effective.replayBudgetEnforcement,
@@ -5653,6 +5670,15 @@ export async function main(): Promise<void> {
           scopeId: options.scopeId,
           channel,
         }),
+        // Re-read the operator's cap each reservation/record so a Learning Overview
+        // PUT takes effect on the next automatic replay, without a runtime restart.
+        limitsProvider: () =>
+          resolveChannelScopedReplayLedgerLimits({
+            repoRoot: options.repoRoot,
+            runtimeStateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+            channel,
+          }),
       });
       const policySet = buildReplayPolicySet();
       const intervalMs = Number(process.env.ROLE_MODEL_AUTO_REPLAY_INTERVAL_MS ?? 30_000);

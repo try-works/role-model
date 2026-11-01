@@ -1,0 +1,27 @@
+# Run 115 auto-queue daily cap — GREEN evidence
+
+date: 2026-11-01
+contract: replay.auto_queue is in the unified runtime config readback, defaults to
+enabled=true/daily_cap=100, accepts PUT patches, and maps onto the replay ledger's daily
+counterfactual ceiling; the automatic replay ledger re-reads the cap per accounting call so a
+config change applies without a restart.
+
+## New suite
+command: corepack pnpm exec vitest run test/run115-auto-queue-cap.test.ts
+result: 7 passed (7)
+
+## Config suites
+command: corepack pnpm exec vitest run test/unified-runtime-config.test.ts test/backend-unified-runtime-config.test.ts test/run115-auto-queue-cap.test.ts
+result: 3 files, 67 passed
+
+## Queue suites
+command: corepack pnpm exec vitest run test/s594-r30-evidence-fence.test.ts test/run101-r2-public-queue-store.test.ts test/run101-r5-cancel-drain.test.ts test/run101-r9-queue-operator-proxy.test.ts test/run115-auto-queue-cap.test.ts
+result: 5 files, 27 passed
+
+## Replay budget suite
+command: corepack pnpm exec vitest run test/run100-replay-budget-channel-enforcement.test.ts
+result: 1 file, 6 passed
+
+## Typecheck
+command: corepack pnpm exec tsc -p tsconfig.json --noEmit
+result: exit 0

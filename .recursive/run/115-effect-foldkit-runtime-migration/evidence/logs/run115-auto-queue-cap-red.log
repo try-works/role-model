@@ -1,0 +1,23 @@
+# Run 115 auto-queue daily cap — RED evidence
+
+## Phase 1: missing seam (setup failure)
+command: corepack pnpm exec vitest run test/run115-auto-queue-cap.test.ts
+result: suite failed to import ../src/queue-runtime/auto-queue.js (module did not exist).
+This is setup evidence only; it is not the behavioural RED.
+
+## Phase 2: behavioural RED with the seam stubbed
+A temporary stub exposed resolveAutoQueueDailyCap/applyAutoQueueDailyCap but returned the
+default and did not apply a cap, and the config parser/renderer did not know the replay section.
+command: corepack pnpm exec vitest run test/run115-auto-queue-cap.test.ts
+result: 4 collected tests failed behaviourally:
+  - defaults the readback to 100 and renders the section: expected undefined to equal
+    { autoQueue: { dailyCap: 100, enabled: true } }
+  - round-trips a configured cap: expected undefined to be 25
+  - reads the cap from persisted config: expected 100 to be 7
+  - applies the cap to the replay ledger ceiling: expected { dispatchesPerDay: 300 } to equal
+    { counterfactualsPerDay: 7, dispatchesPerDay: 300 }
+
+## Root gap
+The replay loop already offers admitted captures to replay.dispatch and the ledger already has a
+daily counterfactual ceiling (default 100), but the cap was env/constant-only and absent from the
+runtime config readback, so the Learning Overview could not read or change it.
