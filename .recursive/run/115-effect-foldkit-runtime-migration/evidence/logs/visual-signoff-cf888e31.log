@@ -1,0 +1,81 @@
+# S615 visual sign-off (deepseek-flash vision)
+head=cf888e31
+production_url=http://127.0.0.1:3456
+foldkit_exe=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\dist\release\win32-x64\role-model-dev.exe
+expected_version=0.0.20-478-g2d4fa10b
+vision_model=baseline.remote-only
+chrome=C:\Program Files\Google\Chrome\Application\chrome.exe
+started_at=2026-11-01T11:34:07.148Z
+
+manifest_version=0.0.20-478-g2d4fa10b
+exe_sha256=bfa365e188ba01fa9d8962e13fd7692a1ef9b0148d5e816104c154fdefe4d1a3
+evidence_dir=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\.recursive\run\115-effect-foldkit-runtime-migration\evidence\logs\visual-signoff-cf888e31
+
+production_capture=supplied (Chrome CLI screenshot path unavailable under the sandbox named-pipe policy)
+production_shot(source=supplied) bytes=120581 sha256=8aa6a80fc47671ad9c79dc470f80753003c6992f32182655d831d2535be6eb59
+foldkit_capture=supplied (see production_capture note)
+foldkit_shot(source=supplied) bytes=90518 sha256=3104b0c1c6f7f756eed3091ba15eabb09c4079340deb2ce296c8ab5bcafe1c3a
+state_source_signature_sha256=61e90f97ebdfec46c7e52e0c8ac948bfad7d3a5b46f7b2d0e12bc3fbeb9d24f3
+spawn[vision]: D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\dist\release\win32-x64\role-model-dev.exe --repo-root D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\dist\release\win32-x64 --runtime-state-root E:\tmp\visual-vision-2Supm1\state --host 127.0.0.1 --port 3464
+healthz[vision]={"runtime":{"version":"0.0.20-478-g2d4fa10b","release_version":"0.0.20-478-g2d4fa10b","commit":"2d4fa10be62df9bf9c12b79e3958f9a67e30d69c","build_date":"2026-11-01T10:39:33.602Z","channel":"development","name":"role-model-dev","endpoint":"http://127.0.0.1:3458","source_tree":"4f8d667fdaef88823a27a48cb2275e816c9f6c71","executable_sha256":"bfa365e188ba01fa9d8962e13fd7692a1ef9b0148d5e816104c154fdefe4d1a3","core_payload_sha256":"bfa365e188ba01fa9d8962e13fd7692a1ef9b0148d5e816104c154fdefe4d1a3","configVersion":"1.0"},"status":"healthy","executionMode":"remote_only","vendors":{"llama-swap":{"vendorId":"llama-swap","healthStatus":"inactive"},"litellm":{"vendorId":"litellm","healthStatus":"inactive"}},"inactiveVendors":["llama-swap","litellm"],"credentialLifecycleAuthority":{"state":"provisional","bootstrapStatus":"running"},"sessionBootstrap":{"status":"running","startedAt":"2026-11-01T11:34:20.773Z","finishedAt":null,"stages":[]},"ready":true}
+healthz[vision]={"runtime":{"version":"0.0.20-478-g2d4fa10b","release_version":"0.0.20-478-g2d4fa10b","commit":"2d4fa10be62df9bf9c12b79e3958f9a67e30d69c","build_date":"2026-11-01T10:39:33.602Z","channel":"development","name":"role-model-dev","endpoint":"http://127.0.0.1:3458","source_tree":"4f8d667fdaef88823a27a48cb2275e816c9f6c71","executable_sha256":"bfa365e188ba01fa9d8962e13fd7692a1ef9b0148d5e816104c154fdefe4d1a3","core_payload_sha256":"bfa365e188ba01fa9d8962e13fd7692a1ef9b0148d5e816104c154fdefe4d1a3","configVersion":"1.0"},"status":"healthy","executionMode":"remote_only","vendors":{"llama-swap":{"vendorId":"llama-swap","healthStatus":"inactive"},"litellm":{"vendorId":"litellm","healthStatus":"inactive"}},"inactiveVendors":["llama-swap","litellm"],"credentialLifecycleAuthority":{"state":"provisional","bootstrapStatus":"running"},"sessionBootstrap":{"status":"running","startedAt":"2026-11-01T11:34:20.773Z","finishedAt":null,"stages":[]},"ready":true}
+healthz[vision]={"runtime":{"version":"0.0.20-478-g2d4fa10b","release_version":"0.0.20-478-g2d4fa10b","commit":"2d4fa10be62df9bf9c12b79e3958f9a67e30d69c","build_date":"2026-11-01T10:39:33.602Z","channel":"development","name":"role-model-dev","endpoint":"http://127.0.0.1:3458","source_tree":"4f8d667fdaef88823a27a48cb2275e816c9f6c71","executable_sha256":"bfa365e188ba01fa9d8962e13fd7692a1ef9b0148d5e816104c154fdefe4d1a3","core_payload_sha256":"bfa365e188ba01fa9d8962e13fd7692a1ef9b0148d5e816104c154fdefe4d1a3","configVersion":"1.0"},"status":"healthy","executionMode":"remote_only","vendors":{"llama-swap":{"vendorId":"llama-swap","healthStatus":"inactive"},"litellm":{"vendorId":"litellm","healthStatus":"inactive"}},"inactiveVendors":["llama-swap","litellm"],"credentialLifecycleAuthority":{"state":"authoritative","bootstrapStatus":"ready"},"sessionBootstrap":{"status":"ready","startedAt":"2026-11-01T11:34:20.774Z","finishedAt":"2026-11-01T11:34:23.920Z","stages":[{"stageId":"credentials","status":"ready","startedAt":"2026-11-01T11:34:20.774Z","finishedAt":"2026-11-01T11:34:20.908Z","details":{"pendingAttempted":0,"pendingSucceeded":0,"pendingConnected":0,"pendingFailed":0,"pendingDeferred":0,"refreshAttem…(2718 bytes)
+
+vision_request model=baseline.remote-only images=120581/90518 bytes (base64 omitted)
+vision_status=200
+vision_response={"id":"chatcmpl-role-model","object":"chat.completion","created":1793532915,"model":"deepseek/deepseek-flash","choices":[{"index":0,"message":{"role":"assistant","content":"**1. Header and navigation**\n- Both show the same top-left `role-model` label, `Runtime overview` title, and theme control at upper right.\n- Sidebar labels and order match: Overview, Studio, Local, Remote, Models, Router, Observe, Connect, System, Learning. Overview is selected in both.\n- Image 2 shows a vertical scrollbar at the far right; Image 1 does not in the supplied screenshot.\n\n**2. Main content blocks and cards/tables**\n- Both contain the same three main cards: `Model pool`, `Token usage over time`, and `Cache efficiency trend`.\n- `Model pool` candidate list differs substantially:\n  - Production: 4 candidates — `deepseek-flash (High)` 0.660, `deepseek-flash (Max)` 0.441, `gpt-5.1-sol` 0.053, `gpt-6-astra` 0.005.\n  - Rebuilt: 3 candidates — `openai/gpt-4.1-mini-fast`, `claude-3.7-sonnet`, `gpt-5.4`, each with a dash instead of a numeric score.\n- In the model-pool plot, production shows four markers spread across the diamond/axis area. Rebuilt shows three markers tightly clustered near the upper center/left of the diamond.\n- `Token usage over time` is populated in production with a teal area chart, time-axis labels from 00:00 to 24:00, y-axis labels `889k`/`500k`/`250k`/`0`, and a three-item legend. Rebuilt shows an empty chart area with `1 tokens`/`0.5 tokens`/`0 tokens`, `No data`, and empty-state copy.\n- Production includes the note “36 row(s) in this slice do not support inputTokens.”; rebuilt instead says “No token-bearing requests have been recorded yet.”\n- `Cache efficiency trend`: production shows the top of the chart with `8874k` and `100%` visible. Rebuilt shows the card title and description but no chart content in the visible viewport.\n- Sidebar model/request list differs:\n  - Production: `chatgpt/gpt-6-astra` 32, `DeepSeek V4.1 Flash_` 32, `DeepSeek V4.1 Flash_` 32, `chatgpt/gpt-6.1-sol` 4.\n  - Rebuilt: `Claude 3.7 Sonnet` 0, `gpt-5.4` 0, `GPT-4.1 Mini Fast` 0.\n- `CACHE` shows `no live samples` in both.\n- `ROUTER ENDPOINT`: production shows `127.0.0.1:3456/v1` with `baseline_remote-only`; rebuilt shows `127.0.0.1:3458/v1` with a dash beneath it.\n\n**3. Typography and wording**\n- Card headings and descriptive text for `Model pool`, `Token usage over time`, and `Cache efficiency trend` match.\n- Top filter labels match, but the Breakdown value differs: production shows the truncated value `By endpoint vari...`; rebuilt shows `Total`.\n- Candidate model names, scores, and telemetry details differ as listed above.\n- Empty-state wording (`No data`, `No token-bearing requests have been recorded yet.`) is present only in the rebuilt token chart.\n- The production token chart legend includes `Input tokens`, `Output tokens`, and `Total tokens`; rebuilt shows only `Input tokens` and `Output tokens` beneath the empty chart.\n\n**4. Colours and theme**\n- Both use the same dark theme: near-black page and panels, light gray text, dark selected sidebar item, and blue accent on the selected `Day` button.\n- Production’s token chart uses a teal/green filled area; rebuilt’s token area is blank/gray with no filled data.\n- Candidate marker/legend colours differ because the candidate sets differ: production uses blue/purple/tan/blue markers; rebuilt uses orange/blue/green markers.\n\n**5. Spacing and layout**\n- Sidebar width, main-content left alignment, filter-row placement, and card horizontal boundaries are broadly aligned between the two.\n- The rebuilt `Model pool` panel ends slightly higher than production’s.\n- The rebuilt token-usage panel is taller due to the empty-state area, pushing the `Cache efficiency trend` card lower than in production.\n- The right-side vertical scrollbar is visible only in the rebuilt screenshot.\n\n**6. Anything missing or extra**\n- Missing from rebuilt versus production: populated token usage chart, time-axis ticks, token legend including `Total tokens`, numeric route scores, the selected `By endpoint...` breakdown value, the token-row note, the visible cache-efficiency chart top, the `baseline_remote-only` endpoint label, and production’s model/request rows and counts.\n- Extra in rebuilt: the empty-state token chart with explicit “No data” messaging, zero-count model rows, `Total` in the Breakdown selector, and a visible page scrollbar.\n\nVISUAL_VERDICT: major-deltas"},"finish_reason":"stop"}],"usage":{"prompt_tokens":2113,"completion_tokens":7939,"total_tokens":10052}}
+
+
+VISION_ANSWER=**1. Header and navigation**
+- Both show the same top-left `role-model` label, `Runtime overview` title, and theme control at upper right.
+- Sidebar labels and order match: Overview, Studio, Local, Remote, Models, Router, Observe, Connect, System, Learning. Overview is selected in both.
+- Image 2 shows a vertical scrollbar at the far right; Image 1 does not in the supplied screenshot.
+
+**2. Main content blocks and cards/tables**
+- Both contain the same three main cards: `Model pool`, `Token usage over time`, and `Cache efficiency trend`.
+- `Model pool` candidate list differs substantially:
+  - Production: 4 candidates — `deepseek-flash (High)` 0.660, `deepseek-flash (Max)` 0.441, `gpt-5.1-sol` 0.053, `gpt-6-astra` 0.005.
+  - Rebuilt: 3 candidates — `openai/gpt-4.1-mini-fast`, `claude-3.7-sonnet`, `gpt-5.4`, each with a dash instead of a numeric score.
+- In the model-pool plot, production shows four markers spread across the diamond/axis area. Rebuilt shows three markers tightly clustered near the upper center/left of the diamond.
+- `Token usage over time` is populated in production with a teal area chart, time-axis labels from 00:00 to 24:00, y-axis labels `889k`/`500k`/`250k`/`0`, and a three-item legend. Rebuilt shows an empty chart area with `1 tokens`/`0.5 tokens`/`0 tokens`, `No data`, and empty-state copy.
+- Production includes the note “36 row(s) in this slice do not support inputTokens.”; rebuilt instead says “No token-bearing requests have been recorded yet.”
+- `Cache efficiency trend`: production shows the top of the chart with `8874k` and `100%` visible. Rebuilt shows the card title and description but no chart content in the visible viewport.
+- Sidebar model/request list differs:
+  - Production: `chatgpt/gpt-6-astra` 32, `DeepSeek V4.1 Flash_` 32, `DeepSeek V4.1 Flash_` 32, `chatgpt/gpt-6.1-sol` 4.
+  - Rebuilt: `Claude 3.7 Sonnet` 0, `gpt-5.4` 0, `GPT-4.1 Mini Fast` 0.
+- `CACHE` shows `no live samples` in both.
+- `ROUTER ENDPOINT`: production shows `127.0.0.1:3456/v1` with `baseline_remote-only`; rebuilt shows `127.0.0.1:3458/v1` with a dash beneath it.
+
+**3. Typography and wording**
+- Card headings and descriptive text for `Model pool`, `Token usage over time`, and `Cache efficiency trend` match.
+- Top filter labels match, but the Breakdown value differs: production shows the truncated value `By endpoint vari...`; rebuilt shows `Total`.
+- Candidate model names, scores, and telemetry details differ as listed above.
+- Empty-state wording (`No data`, `No token-bearing requests have been recorded yet.`) is present only in the rebuilt token chart.
+- The production token chart legend includes `Input tokens`, `Output tokens`, and `Total tokens`; rebuilt shows only `Input tokens` and `Output tokens` beneath the empty chart.
+
+**4. Colours and theme**
+- Both use the same dark theme: near-black page and panels, light gray text, dark selected sidebar item, and blue accent on the selected `Day` button.
+- Production’s token chart uses a teal/green filled area; rebuilt’s token area is blank/gray with no filled data.
+- Candidate marker/legend colours differ because the candidate sets differ: production uses blue/purple/tan/blue markers; rebuilt uses orange/blue/green markers.
+
+**5. Spacing and layout**
+- Sidebar width, main-content left alignment, filter-row placement, and card horizontal boundaries are broadly aligned between the two.
+- The rebuilt `Model pool` panel ends slightly higher than production’s.
+- The rebuilt token-usage panel is taller due to the empty-state area, pushing the `Cache efficiency trend` card lower than in production.
+- The right-side vertical scrollbar is visible only in the rebuilt screenshot.
+
+**6. Anything missing or extra**
+- Missing from rebuilt versus production: populated token usage chart, time-axis ticks, token legend including `Total tokens`, numeric route scores, the selected `By endpoint...` breakdown value, the token-row note, the visible cache-efficiency chart top, the `baseline_remote-only` endpoint label, and production’s model/request rows and counts.
+- Extra in rebuilt: the empty-state token chart with explicit “No data” messaging, zero-count model rows, `Total` in the Breakdown selector, and a visible page scrollbar.
+
+VISUAL_VERDICT: major-deltas
+VISION_VERDICT=major-deltas
+state_source_unchanged=true
+vision_state_copy_removed=false error=EPERM, Permission denied: \\?\E:\tmp\visual-vision-2Supm1 '\\?\E:\tmp\visual-vision-2Supm1'
+
+# RESULT
+production_shot=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\.recursive\run\115-effect-foldkit-runtime-migration\evidence\logs\visual-signoff-cf888e31\production-3456.png sha256=8aa6a80fc47671ad9c79dc470f80753003c6992f32182655d831d2535be6eb59
+foldkit_shot=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\.recursive\run\115-effect-foldkit-runtime-migration\evidence\logs\visual-signoff-cf888e31\foldkit.png sha256=3104b0c1c6f7f756eed3091ba15eabb09c4079340deb2ce296c8ab5bcafe1c3a
+vision_model=baseline.remote-only
+vision_answer_chars=4267
+RESULT: PASS (two screenshots captured, deepseek-flash comparison returned an answer)
