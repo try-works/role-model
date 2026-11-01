@@ -1,0 +1,3 @@
+(node:20968) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"status":"PASS","extensionCount":13,"sidecarSha256":"57713acac261ad2e638335053413f32016f6ac0a079791202557df272203c33a"}
