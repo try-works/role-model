@@ -24,6 +24,9 @@ export const PARITY_CAPTURE_DEFAULTS = Object.freeze({
   randomSeed: 0x9e3779b9,
   stableCount: 2,
   deadlineMs: 15_000,
+  // R14 rendered wave: the React app rendered a loading shell as "ready" (5852-byte capture vs 84738 when
+  // loaded). A page must also expose at least this much visible text before a capture is accepted.
+  minLoadedTextChars: 200,
   timezone: "UTC",
   viewport: DEFAULT_VIEWPORT,
 });
@@ -50,6 +53,25 @@ const READINESS_EXPRESSION = `(() => {
   const recorder = window.__parityCapture;
   return JSON.stringify({ fontsReady, imagesReady, mutations: recorder ? recorder.mutations : 0, pendingRequests: recorder ? recorder.pendingRequests : 0, readyState: document.readyState });
 })()`;
+
+/**
+ * R14 rendered wave: the loaded gate. The readiness probe above only proves fonts/images settled and the DOM
+ * is quiet; a loading shell satisfies that. This probe requires a real <main> with a minimum amount of
+ * visible text, which a loading panel does not have.
+ */
+export const LOADED_EXPRESSION = `(() => {
+  const main = document.querySelector("main");
+  const text = ((document.body && document.body.innerText) || "").replace(/\\s+/g, " ").trim();
+  return JSON.stringify({ hasMain: main !== null, textLength: text.length, title: document.title || "" });
+})()`;
+
+/** Pure judgement over the LOADED_EXPRESSION payload; exported so the gate itself is unit-pinned. */
+export const isLoadedPayload = (payload, minLoadedTextChars = PARITY_CAPTURE_DEFAULTS.minLoadedTextChars) =>
+  payload !== null &&
+  typeof payload === "object" &&
+  payload.hasMain === true &&
+  typeof payload.textLength === "number" &&
+  payload.textLength >= minLoadedTextChars;
 
 /** Reads the in-page recorder installed by the determinism bootstrap before navigation. */
 const RECORDER_EXPRESSION =
@@ -200,7 +222,10 @@ const validateOptions = (options) => {
   }
   const stableCount = options.stableCount ?? PARITY_CAPTURE_DEFAULTS.stableCount;
   if (!isPositiveInteger(stableCount) || stableCount < 2) fail("stableCount must be an integer >= 2");
+  const minLoadedTextChars = options.minLoadedTextChars ?? PARITY_CAPTURE_DEFAULTS.minLoadedTextChars;
+  if (!isPositiveInteger(minLoadedTextChars)) fail("minLoadedTextChars must be a positive integer");
   return {
+    minLoadedTextChars,
     deadlineMs: options.deadlineMs ?? PARITY_CAPTURE_DEFAULTS.deadlineMs,
     fixedEpochMs: options.fixedEpochMs ?? PARITY_CAPTURE_DEFAULTS.fixedEpochMs,
     pollMs: options.pollMs ?? PARITY_CAPTURE_DEFAULTS.pollMs,
@@ -335,6 +360,23 @@ export const captureParityScreenshot = async (options) => {
     phase = "hide";
     await evaluateValue(sendBounded, STYLE_EXPRESSION);
 
+    phase = "loaded";
+    const loadedStarted = Date.now();
+    let loadedPayload;
+    for (;;) {
+      loadedPayload = await readJson(sendBounded, LOADED_EXPRESSION);
+      if (isLoadedPayload(loadedPayload, config.minLoadedTextChars)) break;
+      if (remaining() <= 0) {
+        throw new ParityCaptureError(
+          "capture_not_loaded",
+          "page content did not reach the loaded gate (" + String(config.minLoadedTextChars) + " visible characters) before the deadline",
+          { phase, loaded: loadedPayload, minLoadedTextChars: config.minLoadedTextChars },
+        );
+      }
+      await sleep(config.pollMs);
+    }
+    const loadedMs = Date.now() - loadedStarted;
+
     phase = "readiness";
     const readinessStarted = Date.now();
     let quietSince = null;
@@ -434,6 +476,7 @@ export const captureParityScreenshot = async (options) => {
       stableCount: config.stableCount,
       timezone: config.timezone,
       timings: {
+        loadedMs,
         navigationMs,
         quietMs: config.quietMs,
         readinessMs,

@@ -334,6 +334,18 @@ export const evaluateSelfcheck = ({ chromeAvailable, chromeUserDataRoot, executa
   return { ...base, comparisons, evidence, ignoredCount, route: SCENARIO_ROUTE, status: "PASSED", targets: perTarget };
 };
 
+/**
+ * R14 rendered wave: a page that never reaches the loaded gate is NOT RUN (the capture never represented a
+ * rendered UI), while any other capture failure stays FAILED. Exported so the mapping is unit-pinned.
+ */
+export const statusForCaptureError = (error) => {
+  const code = error !== null && typeof error === "object" ? error.code : undefined;
+  const message = reasonFrom(error);
+  return code === "capture_not_loaded"
+    ? { exitCode: 2, reason: "capture-not-loaded: " + message, status: "NOT_RUN" }
+    : { exitCode: 1, reason: "capture-failed: " + message, status: "FAILED" };
+};
+
 export const runSelfcheck = async ({ capture, chromeAvailable, chromeUserDataRoot, executable, repoRoot, runCount = DEFAULT_RUN_COUNT, targets, tempRoot }) => {
   const resolved = targets ?? resolveTargets({ repoRoot: repoRoot ?? process.cwd() });
   if (!chromeAvailable) return evaluateSelfcheck({ chromeAvailable, chromeUserDataRoot, executable, runs: [], targets: resolved, tempRoot });
@@ -349,13 +361,14 @@ export const runSelfcheck = async ({ capture, chromeAvailable, chromeUserDataRoo
     }
     return evaluateSelfcheck({ chromeAvailable, chromeUserDataRoot, executable, runs, targets: resolved, tempRoot });
   } catch (error) {
+    const classified = statusForCaptureError(error);
     return {
       chromeUserDataRoot,
       executable,
-      exitCode: 1,
-      reason: "capture-failed: " + reasonFrom(error),
+      exitCode: classified.exitCode,
+      reason: classified.reason,
       scope: "browser-parity",
-      status: "FAILED",
+      status: classified.status,
       tempRoot,
     };
   }

@@ -18,7 +18,9 @@ import {
   planTargets,
   runMutationCheck,
   runSelfcheck,
+  statusForCaptureError,
 } from "./parity-selfcheck.mjs";
+import { isLoadedPayload } from "./parity-capture.mjs";
 
 /**
  * S294 (R14): the selfcheck runner must prove React-vs-React 0 differences and run determinism, record the
@@ -524,4 +526,30 @@ test("S342c the default required drive stays E: when the env override is absent"
   } else {
     assert.equal(resolveRequiredTempDrive(undefined), "E:");
   }
+});
+
+/**
+ * S616 (R14 rendered wave): the capture must not fire on a loading shell. react-run0 was a 5852-byte
+ * loading capture while run1 was 84738 bytes, which the lane honestly reported as "nondeterministic:
+ * react". The loaded gate below is the fix: a page below the minimum visible content is NOT loaded, and a
+ * not-loaded capture must map to NOT_RUN (exit 2), never a FAILED pseudo-capture or a fake pass.
+ */
+test("S616: the loaded gate rejects a loading shell and accepts a loaded page", () => {
+  assert.equal(isLoadedPayload({ hasMain: false, textLength: 60 }, 200), false, "a shell without main is not loaded");
+  assert.equal(isLoadedPayload({ hasMain: true, textLength: 120 }, 200), false, "a short loading panel is not loaded");
+  assert.equal(isLoadedPayload({ hasMain: true, textLength: 2148 }, 200), true, "the rendered overview page is loaded");
+  assert.equal(isLoadedPayload({ hasMain: true, textLength: 200 }, 200), true, "the boundary is inclusive");
+  assert.equal(isLoadedPayload(undefined, 200), false, "a missing payload is not loaded");
+});
+
+test("S616: a not-loaded capture maps to NOT_RUN, other capture failures stay FAILED", () => {
+  const notLoaded = statusForCaptureError({ code: "capture_not_loaded", message: "page content did not reach the loaded gate" });
+  assert.equal(notLoaded.status, "NOT_RUN");
+  assert.equal(notLoaded.exitCode, 2);
+  assert.match(notLoaded.reason, /capture-not-loaded/);
+
+  const timeout = statusForCaptureError({ code: "capture_timeout", message: "navigation did not complete" });
+  assert.equal(timeout.status, "FAILED");
+  assert.equal(timeout.exitCode, 1);
+  assert.match(timeout.reason, /capture-failed/);
 });

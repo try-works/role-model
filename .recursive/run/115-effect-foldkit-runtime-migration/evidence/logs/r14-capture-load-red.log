@@ -1,0 +1,25 @@
+file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:23
+import { isLoadedPayload } from "./parity-capture.mjs";
+         ^^^^^^^^^^^^^^^
+SyntaxError: The requested module './parity-capture.mjs' does not provide an export named 'isLoadedPayload'
+    at #_instantiate (node:internal/modules/esm/module_job:254:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:369:5)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:691:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.11.0
+✖ scripts\runtime\parity-selfcheck.test.mjs (480.0905ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 532.3089
+
+✖ failing tests:
+
+test at scripts\runtime\parity-selfcheck.test.mjs:1:1
+✖ scripts\runtime\parity-selfcheck.test.mjs (480.0905ms)
+  'test failed'
