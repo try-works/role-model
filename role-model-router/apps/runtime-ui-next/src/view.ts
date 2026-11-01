@@ -1222,6 +1222,7 @@ interface RouteViewContext {
   readonly endpointAdmission: EndpointAdmissionState;
   readonly chartInteraction: ChartInteractionState | undefined;
   readonly learningRanking: LearningRankingState | undefined;
+  readonly learningReplayAutoQueue: Model["learningReplayAutoQueue"];
   readonly requestsRanking: RequestsRankingState | undefined;
   readonly requestsRankingMetricListbox: Model["requestsRankingMetricListbox"];
   readonly requestsRankingTargetListbox: Model["requestsRankingTargetListbox"];
@@ -1248,6 +1249,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     endpointAdmission,
     chartInteraction,
     learningRanking,
+    learningReplayAutoQueue,
     requestsRanking,
     requestsRankingMetricListbox,
     requestsRankingTargetListbox,
@@ -1294,7 +1296,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     Benchmark: () => benchmarkRoute(readbacks.benchmarkSuite, h),
     StorageRetention: () => familyPage("Storage & retention", "storage-retention", "Physical and logical storage, retention classes and manual pruning.", [{ label: "Logical classes", note: "Logical classes group rows by retention policy." }, { label: "Retention policy", note: "Category totals, receipts and byte counts are reported by the retention readback." }, { label: "Manual pruning", note: "Prune is manual; the host enforces retention records before deletion." }, { label: "Retention transactions", spec: READBACK_SPECS.storageRetention, readback: readbacks.storageRetention }], h, retention),
     Studio: () => studioRoute({ h, readbacks, studio, studioPage }),
-    Learning: () => learningOverviewRoute(readbacks.learning, readbacks.replayJobs, readbacks.evaluationJobs, learningRanking, h),
+    Learning: () => learningOverviewRoute(readbacks.learning, readbacks.replayJobs, readbacks.evaluationJobs, learningRanking, learningReplayAutoQueue, h),
     LearningConfiguration: () => learningConfigurationPage(readbacks.learningConfiguration, h),
     LearningPacks: () => learningPacksPage(readbacks.learningPacks, h),
     LearningDecisions: () => learningDecisionsPage(readbacks.learningDecisions, h),
@@ -1500,6 +1502,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                     : []),
                   routeContent({
                     route: model.route,
+                    learningReplayAutoQueue: model.learningReplayAutoQueue,
                     diagnostics: model.diagnostics,
                     observability: model.observability,
                     readbacks: model.readbacks,
