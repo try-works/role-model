@@ -850,7 +850,7 @@ const parseRuntimeConfig = (body: unknown, token: number): ReadbackState => {
   if (config === undefined) return failedReadback("Runtime config read failed: invalid response", token);
   const replay = asRecord(config.replay);
   const autoQueue = asRecord(replay?.autoQueue) ?? asRecord(replay?.auto_queue);
-  const enabled = autoQueue?.enabled === true;
+  const enabled = autoQueue?.enabled === undefined ? true : autoQueue.enabled === true;
   const rawCap = Number(autoQueue?.dailyCap ?? autoQueue?.daily_cap);
   const dailyCap = Number.isInteger(rawCap) && rawCap >= 1 && rawCap <= 1_000_000 ? rawCap : 100;
   return okRows([
@@ -858,6 +858,9 @@ const parseRuntimeConfig = (body: unknown, token: number): ReadbackState => {
     row("replay.autoQueue", "Replay auto-queue", enabled ? "on" : "off", JSON.stringify({ dailyCap, enabled })),
   ], token);
 };
+/** Test-only typed entry to the same parser; the readback client still passes its unknown JSON body. */
+export const parseRuntimeConfigFixture = (body: { readonly applied?: unknown; readonly config?: unknown; readonly path?: unknown }, token: number): ReadbackState =>
+  parseRuntimeConfig(body, token);
 const parseRuntimeSummary = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
   if (record === undefined) return failedReadback("Runtime summary read failed: invalid response", token);

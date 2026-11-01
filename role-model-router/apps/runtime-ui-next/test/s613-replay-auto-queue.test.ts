@@ -5,6 +5,7 @@ import { view } from "../src/view";
 
 
 import { createRuntimeConfigClient } from "../src/runtime-config";
+import { parseRuntimeConfigFixture } from "../src/readback";
 import { Message } from "../src/message";
 import { createUpdate } from "../src/update";
 import { defineReadDiagnostics } from "../src/commands";
@@ -40,19 +41,22 @@ describe("S613 replay auto-queue plumbing", () => {
     expect(Message.ReplayAutoQueueSaveFailed({ message: "no", token: 1 })._tag).toBe("ReplayAutoQueueSaveFailed");
   });
 
-  it("hydrates the persisted auto-queue values from the runtime-config readback", () => {
+  it("hydrates the persisted auto-queue values from the runtime-config readback", async () => {
     const update = createUpdate(defineReadDiagnostics(async () => ({ body: { records: [], state: "empty" }, status: 200 })));
     const model = shellModel({ route: { _tag: "Learning" } });
-    const hydrated = update(model, Message.ReadbackLoaded({
-      key: "runtimeConfig",
-      snapshot: {
-        rows: [{ id: "replay.autoQueue", label: "Replay auto-queue", meta: JSON.stringify({ dailyCap: 25, enabled: false }), value: "off" }],
-        status: "ok",
-        token: 0,
-      },
-      token: 0,
-    }));
+    const snapshot = parseRuntimeConfigFixture({ applied: true, config: { replay: { autoQueue: { dailyCap: 25, enabled: false } } } }, 0);
+    const hydrated = update(model, Message.ReadbackLoaded({ key: "runtimeConfig", snapshot, token: 0 }));
     expect(hydrated.model.learningReplayAutoQueue).toMatchObject({ dailyCap: "25", enabled: "off" });
+    const card = document.createElement("div");
+    card.innerHTML = (await renderLearning(hydrated.model.learningReplayAutoQueue)).innerHTML;
+    expect(card.querySelector("[data-replay-auto-queue-cap]")?.getAttribute("value")).toBe("25");
+    expect(card.querySelector("[data-replay-auto-queue-toggle]")?.getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("falls back to the host default on when the autoQueue fields are absent", () => {
+    const snapshot = parseRuntimeConfigFixture({ config: {} }, 0);
+    const row = snapshot.rows.find((entry) => entry.id === "replay.autoQueue");
+    expect(row?.meta).toBe(JSON.stringify({ dailyCap: 100, enabled: true }));
   });
 
   it("rejects a zero or over-maximum cap before any command is dispatched", () => {
