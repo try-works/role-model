@@ -874,19 +874,21 @@ const updateLocalPolicyDraft = (
           const token = model.readbacks.runtimeConfig.token + 1;
           return {
             commands: [replayAutoQueueCommands.save({ dailyCap: parsed, enabled: state.enabled === "on", token })],
-            model: { ...model, learningReplayAutoQueue: { ...state, message: undefined, status: "saving" } },
+            model: { ...model, learningReplayAutoQueue: { ...state, message: undefined, status: "saving", token } },
           };
         },
-        ReplayAutoQueueSaved: (): UpdateReturn<Model, Message> => {
+        ReplayAutoQueueSaved: ({ token }: Extract<Message, { readonly _tag: "ReplayAutoQueueSaved" }>): UpdateReturn<Model, Message> => {
           const state = model.learningReplayAutoQueue ?? { dailyCap: "100", enabled: "on", status: "idle" as const };
+          if (state.token !== undefined && token !== state.token) return { model };
           return {
             commands: [readReadback({ key: "runtimeConfig", token: model.readbacks.runtimeConfig.token + 1 })],
-            model: { ...model, learningReplayAutoQueue: { ...state, message: "Replay auto-queue updated.", status: "saved" } },
+            model: { ...model, learningReplayAutoQueue: { ...state, message: "Replay auto-queue updated.", status: "saved", token } },
           };
         },
-        ReplayAutoQueueSaveFailed: ({ message }: Extract<Message, { readonly _tag: "ReplayAutoQueueSaveFailed" }>): UpdateReturn<Model, Message> => {
+        ReplayAutoQueueSaveFailed: ({ message, token }: Extract<Message, { readonly _tag: "ReplayAutoQueueSaveFailed" }>): UpdateReturn<Model, Message> => {
           const state = model.learningReplayAutoQueue ?? { dailyCap: "100", enabled: "on", status: "idle" as const };
-          return { model: { ...model, learningReplayAutoQueue: { ...state, message, status: "error" } } };
+          if (state.token !== undefined && token !== state.token) return { model };
+          return { model: { ...model, learningReplayAutoQueue: { ...state, message, status: "error", token } } };
         },
         RetentionSizeChanged: ({ value }: Extract<Message, { readonly _tag: "RetentionSizeChanged" }>): UpdateReturn<Model, Message> => {
           const state = model.retention ?? initialRetentionState();
@@ -1291,7 +1293,7 @@ const updateLocalPolicyDraft = (
                   const dailyCap = Number.isInteger(numericCap) && numericCap >= 1 && numericCap <= 1_000_000 ? String(numericCap) : "100";
                   const current = model.learningReplayAutoQueue;
                   const status = current?.status === "saving" ? "saving" : current?.status === "saved" ? "saved" : current?.status === "error" ? "error" : "idle";
-                  hydrated = { dailyCap, enabled: enabled ? "on" : "off", message: current?.message, status } satisfies { dailyCap: string; enabled: "off" | "on"; message?: string; status: "error" | "idle" | "saved" | "saving" };
+                  hydrated = { dailyCap, enabled: enabled ? "on" : "off", message: current?.message, status, token: current?.token } satisfies { dailyCap: string; enabled: "off" | "on"; message?: string; status: "error" | "idle" | "saved" | "saving"; token?: number };
                 }
               } catch {
                 // A malformed replay row leaves the current auto-queue state untouched; it never fabricates values.

@@ -73,6 +73,17 @@ describe("S613 replay auto-queue plumbing", () => {
     expect(upper.model.learningReplayAutoQueue).toMatchObject({ status: "saving" });
   });
 
+  it("ignores stale save responses and accepts the current token", () => {
+    const update = createUpdate(defineReadDiagnostics(async () => ({ body: { records: [], state: "empty" }, status: 200 })));
+    const model = shellModel({ learningReplayAutoQueue: { dailyCap: "25", enabled: "off", status: "saving", token: 2 }, route: { _tag: "Learning" } });
+    const staleSaved = update(model, Message.ReplayAutoQueueSaved({ token: 1 }));
+    expect(staleSaved.model.learningReplayAutoQueue).toMatchObject({ status: "saving", token: 2 });
+    const staleFailed = update(model, Message.ReplayAutoQueueSaveFailed({ message: "old", token: 1 }));
+    expect(staleFailed.model.learningReplayAutoQueue).toMatchObject({ status: "saving", token: 2 });
+    const fresh = update(model, Message.ReplayAutoQueueSaved({ token: 2 }));
+    expect(fresh.model.learningReplayAutoQueue).toMatchObject({ status: "saved", token: 2 });
+  });
+
   it("stores the toggle and cap draft in the learning auto-queue state", () => {
     const update = createUpdate(defineReadDiagnostics(async () => ({ body: { records: [], state: "empty" }, status: 200 })));
     const model = shellModel({ route: { _tag: "Learning" } });

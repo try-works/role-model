@@ -54,6 +54,7 @@ const learningFields = {
     enabled: Schema.String,
     message: Schema.optional(Schema.String),
     status: Schema.Literals(["idle", "saving", "saved", "error"]),
+    token: Schema.optional(Schema.Number),
   })),
 };
 const deviceAuthFields = {
