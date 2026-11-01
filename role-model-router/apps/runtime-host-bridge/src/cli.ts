@@ -5378,6 +5378,15 @@ export async function main(): Promise<void> {
         readiness: readinessOwner,
         onHost: (host) => { r27Host = host; },
         acquire: {
+          // bootstrap, drains and benchmarks are owned by their nodes now; their handles are the
+          // same objects the server owner consumes, and the DAG scope releases them after the server.
+          bootstrap: async () => ({ handle: bootstrapState, release: async () => {} }),
+          drains: async () => ({ handle: shutdownDrains, release: async () => { shutdownDrains.length = 0; } }),
+          benchmarks: async () => ({ handle: benchmarkGate, release: async () => { benchmarkGate.cancel("r27-scope-close"); } }),
+          // backend/refresh remain records: the backend is created inside the branch/sidecar
+          // acquire path that startServer owns, and refresh starts only after extension-runtime
+          // readiness. Moving either before the server would invert the locked acquisition order;
+          // recorded follow-up rather than a silent imperative acquisition.
           server: async () => {
             const value = await startServer();
             return { handle: value, release: () => value.close() };
