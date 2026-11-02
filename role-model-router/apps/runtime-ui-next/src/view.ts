@@ -1224,6 +1224,9 @@ interface RouteViewContext {
   readonly learningRanking: LearningRankingState | undefined;
   readonly learningReplayAutoQueue: Model["learningReplayAutoQueue"];
   readonly modelsView: Model["modelsView"];
+  readonly learningOperatorToken: Model["learningOperatorToken"];
+  readonly learningPackAction: Model["learningPackAction"];
+  readonly learningDecisionFilters: Model["learningDecisionFilters"];
   readonly requestsRanking: RequestsRankingState | undefined;
   readonly requestsRankingMetricListbox: Model["requestsRankingMetricListbox"];
   readonly requestsRankingTargetListbox: Model["requestsRankingTargetListbox"];
@@ -1252,6 +1255,9 @@ const routeContent = (ctx: RouteViewContext): Html => {
     learningRanking,
     learningReplayAutoQueue,
     modelsView,
+    learningOperatorToken,
+    learningPackAction,
+    learningDecisionFilters,
     requestsRanking,
     requestsRankingMetricListbox,
     requestsRankingTargetListbox,
@@ -1298,12 +1304,12 @@ const routeContent = (ctx: RouteViewContext): Html => {
     Benchmark: () => benchmarkRoute(readbacks.benchmarkSuite, h, modelsView, readbacks.modelEndpoints),
     StorageRetention: () => familyPage("Storage & retention", "storage-retention", "Physical and logical storage, retention classes and manual pruning.", [{ label: "Logical classes", note: "Logical classes group rows by retention policy." }, { label: "Retention policy", note: "Category totals, receipts and byte counts are reported by the retention readback." }, { label: "Manual pruning", note: "Prune is manual; the host enforces retention records before deletion." }, { label: "Retention transactions", spec: READBACK_SPECS.storageRetention, readback: readbacks.storageRetention }], h, retention),
     Studio: () => studioRoute({ h, readbacks, studio, studioPage }),
-    Learning: () => learningOverviewRoute(readbacks.learning, readbacks.replayJobs, readbacks.evaluationJobs, learningRanking, learningReplayAutoQueue, h),
-    LearningConfiguration: () => learningConfigurationPage(readbacks.learningConfiguration, h),
-    LearningPacks: () => learningPacksPage(readbacks.learningPacks, h),
-    LearningDecisions: () => learningDecisionsPage(readbacks.learningDecisions, h),
-    LearningEvidence: () => learningEvidencePage(readbacks.learningEvidence, h),
-    LearningHistory: () => learningHistoryPage(readbacks.learningHistory, h),
+    Learning: () => learningOverviewRoute(readbacks.learning, readbacks.replayJobs, readbacks.evaluationJobs, learningRanking, learningReplayAutoQueue, h, learningOperatorToken),
+    LearningConfiguration: () => learningConfigurationPage(readbacks.learningConfiguration, h, learningOperatorToken, learningPackAction),
+    LearningPacks: () => learningPacksPage(readbacks.learningPacks, h, learningOperatorToken, learningPackAction),
+    LearningDecisions: () => learningDecisionsPage(readbacks.learningDecisions, h, learningOperatorToken, learningDecisionFilters),
+    LearningEvidence: () => learningEvidencePage(readbacks.learningEvidence, h, learningOperatorToken, learningPackAction),
+    LearningHistory: () => learningHistoryPage(readbacks.learningHistory, h, learningOperatorToken, learningPackAction),
     LocalPolicy: () => localPolicyPage(readbacks.localPolicy, h),
     LocalLlamaSwapModels: () => llamaModelsSupplement(familyPage("Llama-swap models", "local-llama-swap-models", "Load a runtime-config-declared model, assign route roles, and manage the in-memory llama-swap inventory. Role summary: loaded models and assigned roles.", [
       { label: "Load model", note: "Model must already be declared in runtime config. Loading triggers the managed swap.", children: [h.div([h.Class("flex flex-wrap items-end gap-3")], [h.label([h.Class("flex flex-col gap-1 font-sans text-xs text-muted-foreground")], [h.span([], ["Model ID"]), h.input([h.Id("llama-model-id"), h.AriaLabel("Model ID"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm")])]), h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Load model"])])] },
@@ -1506,6 +1512,9 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                     route: model.route,
                     learningReplayAutoQueue: model.learningReplayAutoQueue,
     modelsView: model.modelsView,
+    learningOperatorToken: model.learningOperatorToken,
+    learningPackAction: model.learningPackAction,
+    learningDecisionFilters: model.learningDecisionFilters,
                     diagnostics: model.diagnostics,
                     observability: model.observability,
                     readbacks: model.readbacks,
