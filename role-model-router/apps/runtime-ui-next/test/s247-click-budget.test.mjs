@@ -20,10 +20,36 @@ const BUDGET = {
   "s26k-control.test.ts": 1,
   "s40b-overview.test.ts": 1,
   // S258 coverage repair: retain pointer/idle and tab -> real client integration.
-  "s46a-studio.test.ts": 6,
+  "s46a-studio.test.ts": 4,
   "s73a-controller.test.ts": 1,
   // S258: restore invalid-save no-PUT integration; scene states alone are not equivalent.
-  "s76a-runtime-config.test.ts": 11
+  "s76a-runtime-config.test.ts": 8,
+  // S584: exercise the real Save routing strategy button through the wired posture handler.
+  "s584-router-posture-wiring.test.ts": 1,
+  // S589: exercise the real Save local policy button through the wired policy handler.
+  "s589-local-policy-wired.test.ts": 1,
+  // S591: three weight-editor save paths (valid, clamped, rejected) through the wired save button.
+  "s591-router-weights-editor.test.ts": 3,
+  // S595: Save retention, dry-run, execute, learning mode update, and rollback through real controls.
+  "s595-storage-retention.test.ts": 5
+};
+
+/** S247 policy: every budgeted click site names the user path it proves. */
+const RATIONALE = {
+  "diagnostics.test.ts": "diagnostics refresh control",
+  "mount.test.ts": "shell mount interaction",
+  "routes.test.ts": "route navigation interaction",
+  "s25b-refresh-owner-gap.test.ts": "refresh-owner gap control",
+  "s26b-wave1.test.ts": "wave-1 controls",
+  "s26k-control.test.ts": "control page action",
+  "s40b-overview.test.ts": "overview interaction",
+  "s46a-studio.test.ts": "studio run controls",
+  "s73a-controller.test.ts": "controller selection",
+  "s76a-runtime-config.test.ts": "config editor save/confirm controls",
+  "s584-router-posture-wiring.test.ts": "Save routing strategy (decision_only)",
+  "s589-local-policy-wired.test.ts": "Save local policy (ttl 900)",
+  "s591-router-weights-editor.test.ts": "Save routing strategy from three weight drafts",
+  "s595-storage-retention.test.ts": "Save retention, dry-run, execute, mode update, rollback"
 };
 
 const testDirectory = path.join(import.meta.dirname);
@@ -57,4 +83,9 @@ test("S247: the total click count does not grow", async () => {
   const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
   const budgetTotal = Object.values(BUDGET).reduce((sum, n) => sum + n, 0);
   assert.ok(total <= budgetTotal, "synthetic clicks " + String(total) + " > budget " + String(budgetTotal));
+});
+
+test("S247: every recorded budget entry names the user path it exercises", () => {
+  const missing = Object.keys(BUDGET).filter((file) => (RATIONALE[file] ?? "").trim().length === 0);
+  assert.deepEqual(missing, [], "record the purpose of the click site in RATIONALE");
 });
