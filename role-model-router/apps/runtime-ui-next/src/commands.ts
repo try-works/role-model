@@ -726,6 +726,82 @@ export const localPolicyCommands = defineLocalPolicyCommands(
   ),
 );
 
+export interface ModelsClient {
+  readonly clearBenchmark: () => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly createRole: (draft: Readonly<Record<string, string>>) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly runBenchmark: (mode: string, judge: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly setRoles: (modelId: string, roleIds: ReadonlyArray<string>) => Promise<{ readonly body: unknown; readonly status: number }>;
+}
+export const createModelsClient = (options: { readonly fetchImpl?: typeof fetch } = {}): ModelsClient => {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const send = async (path: string, method: string, body: string) => {
+    const response = await fetchImpl(path, { body, headers: { "content-type": "application/json" }, method });
+    return { body: await response.json(), status: response.status };
+  };
+  return {
+    clearBenchmark: () => send("/api/role-model/benchmark/run", "DELETE", "{}"),
+    createRole: (draft) => send("/api/role-model/roles", "POST", JSON.stringify(draft)),
+    runBenchmark: (mode, judge) => send("/api/role-model/benchmark/run", "POST", JSON.stringify({ judge, mode })),
+    setRoles: (modelId, roleIds) => send("/api/role-model/local/models/" + encodeURIComponent(modelId) + "/roles", "PUT", JSON.stringify({
+      disabledRoleIds: [],
+      enabledRoleIds: [...roleIds],
+      roleAssignmentMode: "include",
+      roleIds: [...roleIds],
+    })),
+  };
+};
+export const defineModelsCommands = (client: ModelsClient) => ({
+  clearBenchmark: Command.define("ClearBenchmark", {
+    args: { token: Schema.Number },
+    execute: ({ token }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.clearBenchmark() })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.ModelsActionSucceeded({ message: "Benchmark data cleared.", token })
+          : Message.ModelsActionFailed({ message: "Clear benchmark failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
+    messages: [Message.ModelsActionSucceeded, Message.ModelsActionFailed],
+  }),
+  createRole: Command.define("CreateRole", {
+    args: { draftJson: Schema.String, token: Schema.Number },
+    execute: ({ draftJson, token }) => {
+      // SAFETY: draftJson is JSON.stringify of the validated role draft built by update.
+      const draft = JSON.parse(draftJson) as Readonly<Record<string, string>>;
+      return Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.createRole(draft) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.ModelsActionSucceeded({ message: "Role created.", token })
+          : Message.ModelsActionFailed({ message: "Create role failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token })));
+    },
+    messages: [Message.ModelsActionSucceeded, Message.ModelsActionFailed],
+  }),
+  runBenchmark: Command.define("RunBenchmark", {
+    args: { judge: Schema.String, mode: Schema.String, token: Schema.Number },
+    execute: ({ judge, mode, token }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.runBenchmark(mode, judge) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.ModelsActionSucceeded({ message: "Benchmark run requested.", token })
+          : Message.ModelsActionFailed({ message: "Benchmark run failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
+    messages: [Message.ModelsActionSucceeded, Message.ModelsActionFailed],
+  }),
+  setRoles: Command.define("SetModelRoles", {
+    args: { modelId: Schema.String, roleIdsJson: Schema.String, token: Schema.Number },
+    execute: ({ modelId, roleIdsJson, token }) => {
+      // SAFETY: roleIdsJson is JSON.stringify of the string array computed by the update handler.
+      const roleIds = JSON.parse(roleIdsJson) as ReadonlyArray<string>;
+      return Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.setRoles(modelId, roleIds) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.ModelsActionSucceeded({ message: "Model roles saved.", token })
+          : Message.ModelsActionFailed({ message: "Save model roles failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token })));
+    },
+    messages: [Message.ModelsActionSucceeded, Message.ModelsActionFailed],
+  }),
+});
+export type ModelsCommands = ReturnType<typeof defineModelsCommands>;
+export const noopModelsCommands = defineModelsCommands({
+  clearBenchmark: async () => ({ body: {}, status: 200 }),
+  createRole: async () => ({ body: {}, status: 200 }),
+  runBenchmark: async () => ({ body: {}, status: 200 }),
+  setRoles: async () => ({ body: {}, status: 200 }),
+});
+
 const noopLearningRankingClient: LearningRankingClient = { rollbackLadder: async () => undefined };
 export const noopLearningRankingCommands = defineLearningRankingCommands(noopLearningRankingClient);
 

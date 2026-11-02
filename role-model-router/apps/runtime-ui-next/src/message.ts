@@ -19,6 +19,7 @@ type EmptyFields = Record<never, never>;
 const RouterPostureFieldSchema = Schema.Literals(["mode", "scoringStrategy", "executionMode", "pinWeights", "weightQuality", "weightLatency", "weightThroughput", "weightCost", "weightReliability", "weightPreference"]);
 const RouterEntryFieldSchema = Schema.Literals(["name", "role", "model", "description"]);
 const RouterBlockSchema = Schema.Literals(["agent_strategies", "workloads"]);
+const RoleDraftFieldSchema = Schema.Literals(["roleId", "name", "description", "instructions", "kind", "toolPolicy"]);
 
 export const Message: MessageUnion<{
   readonly ChangedUrl: { readonly url: typeof Url.Url };
@@ -94,6 +95,18 @@ export const Message: MessageUnion<{
   readonly ReplayAutoQueueSaveRequested: EmptyFields;
   readonly ReplayAutoQueueSaved: { readonly token: typeof Schema.Number };
   readonly ReplayAutoQueueSaveFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly ModelCardSelected: { readonly modelId: typeof Schema.String };
+  readonly ModelsRoleToggled: { readonly enabled: typeof Schema.Boolean; readonly modelId: typeof Schema.String; readonly roleId: typeof Schema.String };
+  readonly RoleDraftChanged: { readonly field: typeof RoleDraftFieldSchema; readonly value: typeof Schema.String };
+  readonly RoleDraftReset: EmptyFields;
+  readonly RoleCreateRequested: EmptyFields;
+  readonly RoleAdvancedPolicyToggled: EmptyFields;
+  readonly BenchmarkModeChanged: { readonly value: typeof Schema.String };
+  readonly BenchmarkJudgeChanged: { readonly value: typeof Schema.String };
+  readonly BenchmarkRunRequested: EmptyFields;
+  readonly BenchmarkClearRequested: EmptyFields;
+  readonly ModelsActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly ModelsActionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LearningLadderToggleRequested: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly taskTypeId: typeof Schema.String };
   readonly LearningLadderUpdated: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly scopeId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LearningLadderFailed: { readonly message: typeof Schema.String; readonly roleId: typeof Schema.String; readonly scopeId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
@@ -241,6 +254,18 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   ReplayAutoQueueSaveRequested: {},
   ReplayAutoQueueSaved: { token: Schema.Number },
   ReplayAutoQueueSaveFailed: { message: Schema.String, token: Schema.Number },
+  ModelCardSelected: { modelId: Schema.String },
+  ModelsRoleToggled: { enabled: Schema.Boolean, modelId: Schema.String, roleId: Schema.String },
+  RoleDraftChanged: { field: RoleDraftFieldSchema, value: Schema.String },
+  RoleDraftReset: {},
+  RoleCreateRequested: {},
+  RoleAdvancedPolicyToggled: {},
+  BenchmarkModeChanged: { value: Schema.String },
+  BenchmarkJudgeChanged: { value: Schema.String },
+  BenchmarkRunRequested: {},
+  BenchmarkClearRequested: {},
+  ModelsActionSucceeded: { message: Schema.String, token: Schema.Number },
+  ModelsActionFailed: { message: Schema.String, token: Schema.Number },
   LearningLadderToggleRequested: { rolledBack: Schema.Boolean, roleId: Schema.String, taskTypeId: Schema.String },
   LearningLadderUpdated: { rolledBack: Schema.Boolean, roleId: Schema.String, scopeId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
   LearningLadderFailed: { message: Schema.String, roleId: Schema.String, scopeId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },

@@ -1,0 +1,90 @@
+
+ RUN  v3.2.4 E:/rm-tmp/s618-base/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s618-models-wiring.test.ts (5 tests | 5 failed) 252ms
+   × S618 models route wiring > renders every model as a real selectable control and selects the state model 229ms
+     → expected  to have a length of 2 but got +0
+   × S618 models route wiring > stores model selection in state 5ms
+     → Message.ModelCardSelected is not a function
+   × S618 models route wiring > dispatches a role-binding command and records the optimistic override 4ms
+     → Message.ModelsRoleToggled is not a function
+   × S618 models route wiring > persists the create-role draft and dispatches creation 3ms
+     → Message.RoleDraftChanged is not a function
+   × S618 models route wiring > wires benchmark mode/judge/run/clear 3ms
+     → Message.BenchmarkModeChanged is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s618-models-wiring.test.ts > S618 models route wiring > renders every model as a real selectable control and selects the state model
+AssertionError: expected  to have a length of 2 but got +0
+
+- Expected
++ Received
+
+- 2
++ 0
+
+ ❯ test/s618-models-wiring.test.ts:46:21
+     44|     const container = await render({ selectedModelId: "beta" });
+     45|     const buttons = container.querySelectorAll("[data-model-card]");
+     46|     expect(buttons).toHaveLength(2);
+       |                     ^
+     47|     expect(container.textContent).toContain("Runtime · beta");
+     48|     expect(container.querySelector("[data-model-card='beta']")?.getAtt…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  test/s618-models-wiring.test.ts > S618 models route wiring > stores model selection in state
+TypeError: Message.ModelCardSelected is not a function
+ ❯ test/s618-models-wiring.test.ts:53:40
+     51|   it("stores model selection in state", () => {
+     52|     const model = shellModel({ route: { _tag: "Models" } });
+     53|     const next = update(model, Message.ModelCardSelected({ modelId: "b…
+       |                                        ^
+     54|     expect(next.model.modelsView?.selectedModelId).toBe("beta");
+     55|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  test/s618-models-wiring.test.ts > S618 models route wiring > dispatches a role-binding command and records the optimistic override
+TypeError: Message.ModelsRoleToggled is not a function
+ ❯ test/s618-models-wiring.test.ts:60:40
+     58|     const base = shellModel({ route: { _tag: "Models" } });
+     59|     const model = { ...base, readbacks: { ...base.readbacks, modelEndp…
+     60|     const next = update(model, Message.ModelsRoleToggled({ enabled: fa…
+       |                                        ^
+     61|     expect(next.commands ?? []).toHaveLength(1);
+     62|     expect(next.model.modelsView?.roleOverrides).toEqual([{ enabled: f…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  test/s618-models-wiring.test.ts > S618 models route wiring > persists the create-role draft and dispatches creation
+TypeError: Message.RoleDraftChanged is not a function
+ ❯ test/s618-models-wiring.test.ts:68:41
+     66|     const base = shellModel({ route: { _tag: "ModelsRoles" } });
+     67|     const model = { ...base, readbacks: { ...base.readbacks, modelEndp…
+     68|     const typed = update(model, Message.RoleDraftChanged({ field: "rol…
+       |                                         ^
+     69|     expect(typed.model.modelsView?.roleDraft?.roleId).toBe("legal");
+     70|     const created = update(typed.model, Message.RoleCreateRequested());
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  test/s618-models-wiring.test.ts > S618 models route wiring > wires benchmark mode/judge/run/clear
+TypeError: Message.BenchmarkModeChanged is not a function
+ ❯ test/s618-models-wiring.test.ts:76:40
+     74|   it("wires benchmark mode/judge/run/clear", () => {
+     75|     const model = shellModel({ route: { _tag: "Benchmark" } });
+     76|     const mode = update(model, Message.BenchmarkModeChanged({ value: "…
+       |                                        ^
+     77|     expect(mode.model.modelsView?.benchmarkMode).toBe("full");
+     78|     const judge = update(mode.model, Message.BenchmarkJudgeChanged({ v…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed (5)
+   Start at  04:07:52
+   Duration  27.51s (transform 13.36s, setup 0ms, collect 21.96s, tests 252ms, environment 3.63s, prepare 600ms)
+

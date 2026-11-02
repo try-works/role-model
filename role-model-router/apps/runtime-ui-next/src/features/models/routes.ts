@@ -2,6 +2,7 @@ import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 import type { ChartSeries } from "@role-model/ui/foldkit-chart";
 
 import { Message } from "../../message";
+import type { Model } from "../../model";
 import type { ReadbackState } from "../../readback";
 import { telemetryChartCard } from "../overview/charts";
 import { referenceCard, referenceSection, referenceSelect, referenceTable } from "../layout/reference";
@@ -28,7 +29,7 @@ const ROLE_TASK_COUNTS = {
   writer: 85,
 } as const;
 
-export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: HtmlBuilder<Message>): Html => {
+export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: HtmlBuilder<Message>, modelsView?: Model["modelsView"]): Html => {
   const endpointMeta = endpoints.rows.flatMap((row) => {
     try {
       // SAFETY: modelEndpoints writes this JSON object; fields are read defensively.
@@ -58,7 +59,12 @@ export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: 
       roles: roles.length > 0 ? roles : (Object.keys(ROLE_TASK_COUNTS) as Array<keyof typeof ROLE_TASK_COUNTS>).slice(0, 8),
     };
   });
-  const selected = cards[0];
+  const selected = cards.find((card) => card.id === modelsView?.selectedModelId) ?? cards[0];
+  const roleOverrides = modelsView?.roleOverrides ?? [];
+  const selectedRoles = (selected?.roles ?? []).filter((role) => {
+    const override = roleOverrides.find((entry) => entry.modelId === selected?.id && entry.roleId === role);
+    return override === undefined ? true : override.enabled;
+  });
   const eyebrow = "font-sans text-[11px] font-semibold uppercase leading-[14px] tracking-[0.04em] text-[var(--rm-muted)]";
   const factLabel = "font-sans text-[13px] leading-[18px] text-[var(--rm-muted)]";
   const factValue = "text-right font-sans text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]";
@@ -97,12 +103,16 @@ export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: 
                 h.div(
                   [h.Class("overflow-hidden rounded-[var(--rm-radius-field)] border border-[var(--rm-border)]")],
                   cards.map((card, index) =>
-                    h.div(
+                    h.button(
                       [
+                        h.Type("button"),
+                        h.DataAttribute("model-card", card.id),
+                        h.AriaPressed(index === cards.indexOf(selected ?? cards[0]!) ? "true" : "false"),
                         h.Class(
                           "flex w-full items-start gap-2.5 border-b border-[var(--rm-border)] px-3 py-2.5 text-left last:border-b-0 border-l-[3px] " +
-                            (index === 0 ? "border-l-[var(--rm-accent)] bg-[var(--rm-surface-strong)]" : "border-l-transparent"),
+                            (card.id === selected?.id ? "border-l-[var(--rm-accent)] bg-[var(--rm-surface-strong)]" : "border-l-transparent"),
                         ),
+                        h.OnClick(Message.ModelCardSelected({ modelId: card.id })),
                       ],
                       [
                         h.div([h.Class("min-w-0 flex-1 space-y-1")], [
@@ -161,14 +171,23 @@ export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: 
               ]),
               h.ul(
                 [h.Class("space-y-2 pr-1"), h.DataAttribute("models-role-list", "")],
-                (selected?.roles ?? []).map((role) =>
-                  h.li([h.Class("flex items-center gap-3 border-b border-[var(--rm-border)] py-2 last:border-b-0")], [
-                    h.span([h.Attribute("aria-hidden", "true"), h.Class("flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-[var(--rm-fg)] text-[10px] text-[var(--rm-bg)]")], ["✓"]),
-                    h.span([h.Class("min-w-0 flex-1 truncate font-sans text-[13px] font-semibold leading-4 text-foreground")], [role]),
-                    h.span([h.Class("shrink-0 font-sans text-[12px] tabular-nums text-muted-foreground")], [String(ROLE_TASK_COUNTS[role as keyof typeof ROLE_TASK_COUNTS] ?? 0) + " tasks"]),
-                    h.span([h.Class("shrink-0 text-muted-foreground")], [">"]),
-                  ]),
-                ),
+                // SAFETY: ROLE_TASK_COUNTS is a literal record; Object.keys yields its role labels.
+                (selected === undefined ? [] : (Object.keys(ROLE_TASK_COUNTS) as Array<keyof typeof ROLE_TASK_COUNTS>)).map((role) => {
+                  const enabled = selectedRoles.includes(role);
+                  return h.li([h.Class("border-b border-[var(--rm-border)] last:border-b-0")], [
+                    h.button([
+                      h.Type("button"),
+                      h.DataAttribute("models-role-toggle", String(role)),
+                      h.AriaPressed(enabled ? "true" : "false"),
+                      h.Class("flex w-full items-center gap-3 py-2 text-left"),
+                      h.OnClick(Message.ModelsRoleToggled({ enabled: !enabled, modelId: selected?.id ?? "", roleId: String(role) })),
+                    ], [
+                      h.span([h.Attribute("aria-hidden", "true"), h.Class("flex size-4 shrink-0 items-center justify-center rounded-[4px] " + (enabled ? "bg-[var(--rm-fg)] text-[10px] text-[var(--rm-bg)]" : "border border-[var(--rm-border)]"))], [enabled ? "✓" : ""]),
+                      h.span([h.Class("min-w-0 flex-1 truncate font-sans text-[13px] font-semibold leading-4 text-foreground")], [String(role)]),
+                      h.span([h.Class("shrink-0 font-sans text-[12px] tabular-nums text-muted-foreground")], [String(ROLE_TASK_COUNTS[role] ?? 0) + " tasks"]),
+                    ]),
+                  ]);
+                }),
               ),
             ]),
           ]),
@@ -176,21 +195,27 @@ export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: 
   ], h);
 };
 
-export const modelsRolesRoute = (models: ReadbackState, endpoints: ReadbackState, h: HtmlBuilder<Message>): Html => {
+export const modelsRolesRoute = (models: ReadbackState, endpoints: ReadbackState, h: HtmlBuilder<Message>, modelsView?: Model["modelsView"]): Html => {
   const rows = models.rows.map((row) => [row.label, row.value, row.id]);
-  const field = (id: string, label: string) => h.label([h.Class("flex flex-col gap-1 font-sans text-xs leading-4 text-muted-foreground")], [h.span([], [label]), h.input([h.Id(id), h.AriaLabel(label), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm text-foreground")])]);
+  const draft = modelsView?.roleDraft ?? { description: "", instructions: "", kind: "assistant", name: "", roleId: "", toolPolicy: "allowed" };
+  const field = (id: string, label: string, key: "description" | "instructions" | "name" | "roleId") => h.label([h.Class("flex flex-col gap-1 font-sans text-xs leading-4 text-muted-foreground")], [h.span([], [label]), h.input([h.Id(id), h.Value(draft[key]), h.AriaLabel(label), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm text-foreground"), h.OnInput((next) => Message.RoleDraftChanged({ field: key, value: next }))])]);
   const state = [models.status, endpoints.status].includes("error") ? "error" : [models.status, endpoints.status].includes("idle") || [models.status, endpoints.status].includes("loading") ? "loading" : models.rows.length === 0 ? "empty" : "ok";
   return referenceSection("models", state, [
     h.h2([h.Class("rm3-next-route-title text-sm font-medium leading-5 tracking-tight")], ["Runtime roles"]),
     ...(state === "ok" ? [] : [h.p([h.Class("text-xs leading-4 text-muted-foreground"), ...(state === "loading" ? [h.AriaBusy(true)] : []), ...(state === "error" ? [h.Role("alert")] : [])], [state === "loading" ? "Loading model roles…" : state === "error" ? (models.message ?? endpoints.message ?? "Model roles read failed") : "No configured models."])]),
     referenceCard("Create role", "Add a router-visible role with identity, instructions, and policy fields.", [
-      h.div([h.Class("grid gap-4 md:grid-cols-2")], [field("role-id", "Role id"), field("role-name", "Name"), field("role-description", "Description"), field("role-instructions", "Default system instructions")]),
-      h.div([h.Class("mt-4 flex flex-wrap items-end gap-3")], [referenceSelect("Kindassistant", ["assistant", "allowed"], h), referenceSelect("tool policy allowed · supported tasks co", ["assistant", "allowed"], h)]),
-      h.div([h.Class("mt-4 flex flex-wrap gap-2")], [
-        h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Create role"]),
-        h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground")], ["Reset"]),
-        h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground")], ["Advanced policy fields"]),
+      h.div([h.Class("grid gap-4 md:grid-cols-2")], [field("role-id", "Role id", "roleId"), field("role-name", "Name", "name"), field("role-description", "Description", "description"), field("role-instructions", "Default system instructions", "instructions")]),
+      h.div([h.Class("mt-4 flex flex-wrap items-end gap-3")], [
+        h.label([h.Class("flex flex-col gap-1 font-sans text-xs leading-4 text-muted-foreground")], ["Kind", h.select([h.AriaLabel("Kind"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm text-foreground"), h.Value(draft.kind), h.OnInput((next) => Message.RoleDraftChanged({ field: "kind", value: next }))], ["assistant", "allowed"].map((value) => h.option([h.Value(value)], [value])))]),
+        h.label([h.Class("flex flex-col gap-1 font-sans text-xs leading-4 text-muted-foreground")], ["Tool policy mode", h.select([h.AriaLabel("Tool policy mode"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm text-foreground"), h.Value(draft.toolPolicy), h.OnInput((next) => Message.RoleDraftChanged({ field: "toolPolicy", value: next }))], ["assistant", "allowed"].map((value) => h.option([h.Value(value)], [value])))]),
       ]),
+      modelsView?.advancedPolicy === true ? h.p([h.DataAttribute("models-advanced-policy", ""), h.Class("mt-4 rounded-md border border-dashed border-border p-3 text-xs leading-4 text-muted-foreground")], ["Advanced policy fields are enabled for this draft. Kind: " + draft.kind + " · Tool policy: " + draft.toolPolicy]) : null,
+      h.div([h.Class("mt-4 flex flex-wrap gap-2")], [
+        h.button([h.Type("button"), h.DataAttribute("models-create-role", ""), h.OnClick(Message.RoleCreateRequested({})), h.Class("inline-flex h-[34px] items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Create role"]),
+        h.button([h.Type("button"), h.OnClick(Message.RoleDraftReset({})), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground")], ["Reset"]),
+        h.button([h.Type("button"), h.AriaPressed(modelsView?.advancedPolicy === true ? "true" : "false"), h.OnClick(Message.RoleAdvancedPolicyToggled({})), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground")], ["Advanced policy fields"]),
+      ]),
+      modelsView?.actionMessage === undefined ? null : h.p([h.Role("status"), h.Class("mt-3 text-xs text-muted-foreground")], [modelsView.actionMessage]),
     ], h),
     referenceCard("Role catalog", "Configured roles available to the router.", [
       table(["ROLE", "PROVIDER", "MODEL ID"], rows, "No roles in the role catalog yet.", h),
@@ -204,17 +229,22 @@ export const modelsRolesRoute = (models: ReadbackState, endpoints: ReadbackState
   ], h, "models-roles-state");
 };
 
-export const benchmarkRoute = (readback: ReadbackState, h: HtmlBuilder<Message>): Html => {
+export const benchmarkRoute = (readback: ReadbackState, h: HtmlBuilder<Message>, modelsView?: Model["modelsView"]): Html => {
   const rows = readback.rows.map((row) => [row.id, row.label, row.value]);
-  const select = (label: string, options: ReadonlyArray<string>) => referenceSelect(label, options, h);
+  const mode = modelsView?.benchmarkMode ?? "Quick (12 hard cases)";
+  const judge = modelsView?.benchmarkJudge ?? "Deepseek Flash (High) (remote)";
+  const select = (label: string, options: ReadonlyArray<string>, value: string, onChange: (next: string) => Message) => h.label([h.Class("flex flex-col gap-1 font-sans text-xs leading-4 text-muted-foreground")], [label, h.select([h.AriaLabel(label), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm text-foreground"), h.Value(value), h.OnInput(onChange)], options.map((option) => h.option([h.Value(option)], [option])))]);
   return referenceSection("models", "ok", [
     h.h2([h.Class("rm3-next-route-title text-sm font-medium leading-5 tracking-tight")], ["Capability benchmark"]),
     referenceCard("Run capability benchmark", "Select mode and judge, then grade runnable endpoints. Judge endpoint is also a benchmark subject.", [
       h.div([h.Class("flex flex-wrap items-end justify-between gap-4")], [
-        h.div([h.Class("flex flex-wrap items-end gap-3")], [select("Benchmark mode", ["Quick (12 hard cases)"]), select("Judge endpoint", ["Deepseek Flash (High) (remote)"])]),
+        h.div([h.Class("flex flex-wrap items-end gap-3")], [
+          select("Benchmark mode", ["Quick (12 hard cases)", "Full"], mode, (next) => Message.BenchmarkModeChanged({ value: next })),
+          select("Judge endpoint", ["Deepseek Flash (High) (remote)", "custom"], judge, (next) => Message.BenchmarkJudgeChanged({ value: next })),
+        ]),
         h.div([h.Class("flex flex-wrap gap-2")], [
-          h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Run quick benchmark (3 models, 12 cases)"]),
-          h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground")], ["Clear all benchmark data"]),
+          h.button([h.Type("button"), h.OnClick(Message.BenchmarkRunRequested({})), h.Class("inline-flex h-[34px] items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Run quick benchmark (3 models, 12 cases)"]),
+          h.button([h.Type("button"), h.OnClick(Message.BenchmarkClearRequested({})), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground")], ["Clear all benchmark data"]),
         ]),
       ]),
     ], h),

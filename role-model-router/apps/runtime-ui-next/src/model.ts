@@ -57,6 +57,24 @@ const learningFields = {
     token: Schema.optional(Schema.Number),
   })),
 };
+const modelsFields = {
+  modelsView: Schema.optional(Schema.Struct({
+    actionMessage: Schema.optional(Schema.String),
+    advancedPolicy: Schema.optional(Schema.Boolean),
+    benchmarkJudge: Schema.optional(Schema.String),
+    benchmarkMode: Schema.optional(Schema.String),
+    roleDraft: Schema.optional(Schema.Struct({
+      description: Schema.String,
+      instructions: Schema.String,
+      kind: Schema.String,
+      name: Schema.String,
+      roleId: Schema.String,
+      toolPolicy: Schema.String,
+    })),
+    roleOverrides: Schema.optional(Schema.Array(Schema.Struct({ enabled: Schema.Boolean, modelId: Schema.String, roleId: Schema.String }))),
+    selectedModelId: Schema.optional(Schema.String),
+  })),
+};
 const deviceAuthFields = {
   deviceAuth: Schema.optional(DeviceAuthStateSchema),
   deviceAuthDialog: Schema.optional(Schema.Any),
@@ -69,6 +87,7 @@ const modelFields = {
   clicks: shellFields.clicks,
   controls: shellFields.controls,
   deviceAuth: deviceAuthFields.deviceAuth,
+  modelsView: modelsFields.modelsView,
   deviceAuthDialog: deviceAuthFields.deviceAuthDialog,
   deviceAuthModalKey: deviceAuthFields.deviceAuthModalKey,
   chartInteraction: shellFields.chartInteraction,
@@ -106,11 +125,13 @@ export type DeviceAuthModelSlice = Pick<Model, keyof typeof deviceAuthFields>;
 export type ProvidersModelSlice = Pick<Model, keyof typeof providersFields>;
 export type EndpointsModelSlice = Pick<Model, keyof typeof endpointsFields>;
 export type StudioModelSlice = Pick<Model, keyof typeof studioFields>;
+export type ModelsModelSlice = Pick<Model, keyof typeof modelsFields>;
 export type RuntimeModelSlice = Pick<Model, keyof typeof runtimeFields>;
 
 export const withLearningSlice = (model: Model, slice: LearningModelSlice): Model => ({ ...model, ...slice });
 export const withDeviceAuthSlice = (model: Model, slice: DeviceAuthModelSlice): Model => ({ ...model, ...slice });
 export const withProvidersSlice = (model: Model, slice: ProvidersModelSlice): Model => ({ ...model, ...slice });
 export const withEndpointsSlice = (model: Model, slice: EndpointsModelSlice): Model => ({ ...model, ...slice });
+export const withModelsSlice = (model: Model, slice: ModelsModelSlice): Model => ({ ...model, ...slice });
 export const withStudioSlice = (model: Model, slice: StudioModelSlice): Model => ({ ...model, ...slice });
 export const withRuntimeSlice = (model: Model, slice: RuntimeModelSlice): Model => ({ ...model, ...slice });

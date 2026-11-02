@@ -57,6 +57,8 @@ import {
   type SaveRuntimeConfigCommand,
   type ReplayAutoQueueCommands,
   noopReplayAutoQueueCommands,
+  type ModelsCommands,
+  noopModelsCommands,
 } from "./commands";
 import {
   CONTROL_SPECS,
@@ -259,6 +261,7 @@ export const createUpdate =
     storageRetentionCommands: StorageRetentionCommands = noopStorageRetentionCommands,
     operatorLearningCommands: OperatorLearningCommands = noopOperatorLearningCommands,
     replayAutoQueueCommands: ReplayAutoQueueCommands = noopReplayAutoQueueCommands,
+    modelsCommands: ModelsCommands = noopModelsCommands,
   ) => {
 
 
@@ -889,6 +892,88 @@ const updateLocalPolicyDraft = (
           const state = model.learningReplayAutoQueue ?? { dailyCap: "100", enabled: "on", status: "idle" as const };
           if (state.token !== undefined && token !== state.token) return { model };
           return { model: { ...model, learningReplayAutoQueue: { ...state, message, status: "error", token } } };
+        },
+        ModelCardSelected: ({ modelId }: Extract<Message, { readonly _tag: "ModelCardSelected" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { model: { ...model, modelsView: { ...state, selectedModelId: modelId } } };
+        },
+        ModelsRoleToggled: ({ enabled, modelId, roleId }: Extract<Message, { readonly _tag: "ModelsRoleToggled" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          const overrides = (state.roleOverrides ?? []).filter((entry) => !(entry.modelId === modelId && entry.roleId === roleId));
+          overrides.push({ enabled, modelId, roleId });
+          const baseline = new Set<string>();
+          for (const row of model.readbacks.modelEndpoints.rows) {
+            try {
+              // SAFETY: modelEndpoints rows carry this JSON record in meta.
+              const meta = JSON.parse(row.meta) as { readonly modelId?: string; readonly roleIds?: readonly string[] };
+              if (meta.modelId === modelId) for (const id of meta.roleIds ?? []) baseline.add(id);
+            } catch {
+              // Unparseable rows contribute no roles.
+            }
+          }
+          for (const entry of overrides) {
+            if (entry.modelId !== modelId) continue;
+            if (entry.enabled) baseline.add(entry.roleId);
+            else baseline.delete(entry.roleId);
+          }
+          const token = model.readbacks.modelEndpoints.token + 1;
+          return {
+            commands: [modelsCommands.setRoles({ modelId, roleIdsJson: JSON.stringify([...baseline].sort()), token })],
+            model: { ...model, modelsView: { ...state, roleOverrides: overrides } },
+          };
+        },
+        RoleDraftChanged: ({ field, value }: Extract<Message, { readonly _tag: "RoleDraftChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          const draft = state.roleDraft ?? { description: "", instructions: "", kind: "assistant", name: "", roleId: "", toolPolicy: "allowed" };
+          return { model: { ...model, modelsView: { ...state, roleDraft: { ...draft, [field]: value } } } };
+        },
+        RoleDraftReset: (): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { model: { ...model, modelsView: { ...state, roleDraft: undefined } } };
+        },
+        RoleAdvancedPolicyToggled: (): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { model: { ...model, modelsView: { ...state, advancedPolicy: state.advancedPolicy !== true } } };
+        },
+        RoleCreateRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          const draft = state.roleDraft ?? { description: "", instructions: "", kind: "assistant", name: "", roleId: "", toolPolicy: "allowed" };
+          const token = model.readbacks.modelEndpoints.token + 1;
+          return {
+            commands: [modelsCommands.createRole({ draftJson: JSON.stringify({
+              description: draft.description,
+              kind: draft.kind,
+              name: draft.name,
+              role_id: draft.roleId,
+              system_instructions: draft.instructions,
+              tool_policy: draft.toolPolicy,
+            }), token })],
+            model: { ...model, modelsView: { ...state, roleDraft: draft } },
+          };
+        },
+        BenchmarkModeChanged: ({ value }: Extract<Message, { readonly _tag: "BenchmarkModeChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { model: { ...model, modelsView: { ...state, benchmarkMode: value } } };
+        },
+        BenchmarkJudgeChanged: ({ value }: Extract<Message, { readonly _tag: "BenchmarkJudgeChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { model: { ...model, modelsView: { ...state, benchmarkJudge: value } } };
+        },
+        BenchmarkRunRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { commands: [modelsCommands.runBenchmark({ judge: state.benchmarkJudge ?? "", mode: state.benchmarkMode ?? "quick", token: model.readbacks.modelEndpoints.token + 1 })], model };
+        },
+        BenchmarkClearRequested: (): UpdateReturn<Model, Message> => ({
+          commands: [modelsCommands.clearBenchmark({ token: model.readbacks.modelEndpoints.token + 1 })],
+          model,
+        }),
+        ModelsActionSucceeded: ({ message }: Extract<Message, { readonly _tag: "ModelsActionSucceeded" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { model: { ...model, modelsView: { ...state, actionMessage: message } } };
+        },
+        ModelsActionFailed: ({ message }: Extract<Message, { readonly _tag: "ModelsActionFailed" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { model: { ...model, modelsView: { ...state, actionMessage: message } } };
         },
         RetentionSizeChanged: ({ value }: Extract<Message, { readonly _tag: "RetentionSizeChanged" }>): UpdateReturn<Model, Message> => {
           const state = model.retention ?? initialRetentionState();
