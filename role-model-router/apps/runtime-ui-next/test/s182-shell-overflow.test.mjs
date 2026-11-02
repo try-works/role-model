@@ -16,7 +16,7 @@ test("S182: the shell main column is a shrinking flex item, not w-full", () => {
   const mainClass = source
     .split("\n")
     .map((line) => line.trim())
-    .find((line) => line.startsWith('h.Class("rm3-next-shell'));
+    .find((line) => line.includes('h.Class("flex min-h-0 min-w-0 flex-1 flex-col bg-background")'));
   assert.ok(mainClass, "the main column class is still in one place");
   assert.match(mainClass, /min-w-0/, "a flex child needs min-w-0 to be allowed to shrink");
   assert.match(mainClass, /flex-1/);

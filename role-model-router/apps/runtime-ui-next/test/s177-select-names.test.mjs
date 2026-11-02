@@ -14,13 +14,14 @@ import { test } from "node:test";
 const source = await readFile(path.join(import.meta.dirname, "..", "src", "view.ts"), "utf8");
 
 test("S177: the filter select carries an aria-label", () => {
-  const selectLine = source
-    .split("\n")
-    .find((line) => line.includes('h.DataAttribute("overview-filter", filter)'));
-  assert.ok(selectLine, "the filter select is still built in one place");
-  assert.match(selectLine, /h\.AriaLabel\(label\)/, "the select must be named by its field label");
+  const markerAt = source.indexOf('h.DataAttribute("overview-filter", filter)');
+  assert.ok(markerAt > 0, "the filter select is still built in one place");
+  // The Foldkit port wraps the attributes over several lines. Check the select's own
+  // attribute block, not one arbitrary source line, or a correct multi-line control reads as missing.
+  const selectBlock = source.slice(source.lastIndexOf("h.select(", markerAt), source.indexOf("options.map", markerAt));
+  assert.match(selectBlock, /h\.AriaLabel\(label\)/, "the select must be named by its field label");
   // S199: presence alone is vacuous - an empty label would pass it.
-  assert.equal(selectLine.includes('h.AriaLabel("")'), false, "an empty aria-label is not a name");
+  assert.equal(selectBlock.includes('h.AriaLabel("")'), false, "an empty aria-label is not a name");
 });
 
 test("S177: no select is added without a name in the port", () => {
