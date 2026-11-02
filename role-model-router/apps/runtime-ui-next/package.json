@@ -18,7 +18,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test:invariants": "node --test test/*.test.mjs",
     "build": "node build.mjs",
-    "test:handler-presence": "vitest run test/s617-handler-presence.test.ts"
+    "test:handler-presence": "vitest run test/s617-handler-presence.test.ts",
+    "handler-presence:reconcile": "node --import tsx test/tools/handler-presence-reconcile.ts"
   },
   "devDependencies": {
     "happy-dom": "^20.0.0",

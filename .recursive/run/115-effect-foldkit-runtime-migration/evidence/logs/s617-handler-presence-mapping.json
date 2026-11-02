@@ -1,0 +1,644 @@
+{
+  "buckets": {
+    "gap": 8,
+    "matched": 32,
+    "nonNative": 8,
+    "unmatched": 0,
+    "wired": 13
+  },
+  "humanTotal": 61,
+  "identities": {
+    "allItems": true,
+    "nativeOnly": true,
+    "walker": true,
+    "modelsFamily": true
+  },
+  "items": [
+    {
+      "bucket": "non_native_affordance",
+      "control": "clickable model row (div)",
+      "id": "H001",
+      "label": "each model display name",
+      "route": "/models",
+      "routeTag": "Models"
+    },
+    {
+      "bucket": "non_native_affordance",
+      "control": "detail selection",
+      "id": "H002",
+      "label": "hard-coded `cards[0]`; no row selection",
+      "route": "/models",
+      "routeTag": "Models"
+    },
+    {
+      "bucket": "wired_s618",
+      "control": "input ×4",
+      "id": "H003",
+      "label": "Role id",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles"
+    },
+    {
+      "bucket": "wired_s618",
+      "control": "input ×4",
+      "id": "H004",
+      "label": "Name",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles"
+    },
+    {
+      "bucket": "wired_s618",
+      "control": "input ×4",
+      "id": "H005",
+      "label": "Description",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles"
+    },
+    {
+      "bucket": "wired_s618",
+      "control": "input ×4",
+      "id": "H006",
+      "label": "Default system instructions",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles"
+    },
+    {
+      "bucket": "wired_s618",
+      "control": "select ×2",
+      "id": "H007",
+      "label": "\"Kindassistant\"",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles"
+    },
+    {
+      "bucket": "wired_s618",
+      "control": "select ×2",
+      "id": "H008",
+      "label": "\"tool policy allowed · supported tasks co\"",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles"
+    },
+    {
+      "bucket": "wired_s618",
+      "control": "button",
+      "id": "H009",
+      "label": "Create role",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles"
+    },
+    {
+      "bucket": "wired_s618",
+      "control": "button",
+      "id": "H010",
+      "label": "Reset",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles"
+    },
+    {
+      "bucket": "wired_s618",
+      "control": "button",
+      "id": "H011",
+      "label": "Advanced policy fields",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles"
+    },
+    {
+      "bucket": "non_native_affordance",
+      "control": "table rows",
+      "id": "H012",
+      "label": "Role catalog / Role task allowlists (no row action)",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles"
+    },
+    {
+      "bucket": "non_native_affordance",
+      "control": "table rows",
+      "id": "H013",
+      "label": "Edit selected role (hard-coded field rows)",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles"
+    },
+    {
+      "bucket": "wired_s618",
+      "control": "select ×2",
+      "id": "H014",
+      "label": "Benchmark mode",
+      "route": "/system/benchmark",
+      "routeTag": "Benchmark"
+    },
+    {
+      "bucket": "wired_s618",
+      "control": "select ×2",
+      "id": "H015",
+      "label": "Judge endpoint",
+      "route": "/system/benchmark",
+      "routeTag": "Benchmark"
+    },
+    {
+      "bucket": "wired_s618",
+      "control": "button",
+      "id": "H016",
+      "label": "Run quick benchmark (3 models, 12 cases)",
+      "route": "/system/benchmark",
+      "routeTag": "Benchmark"
+    },
+    {
+      "bucket": "wired_s618",
+      "control": "button",
+      "id": "H017",
+      "label": "Clear all benchmark data",
+      "route": "/system/benchmark",
+      "routeTag": "Benchmark"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "password input",
+      "id": "H018",
+      "label": "Operator token",
+      "route": "/learning",
+      "routeTag": "Learning",
+      "walkerLabel": "Operator token",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>label[1]>input[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "password input",
+      "id": "H019",
+      "label": "Operator token",
+      "route": "/learning/configuration",
+      "routeTag": "LearningConfiguration",
+      "walkerLabel": "Operator token",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>label[1]>input[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "password input",
+      "id": "H020",
+      "label": "Operator token",
+      "route": "/learning/packs",
+      "routeTag": "LearningPacks",
+      "walkerLabel": "Operator token",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>label[1]>input[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "button",
+      "id": "H021",
+      "label": "Roll back active pack (scope-wide)",
+      "route": "/learning/packs",
+      "routeTag": "LearningPacks",
+      "walkerLabel": "Roll back active pack (scope-wide)",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[3]>button[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "button",
+      "id": "H022",
+      "label": "Engage kill switch",
+      "route": "/learning/packs",
+      "routeTag": "LearningPacks",
+      "walkerLabel": "Engage kill switch",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[3]>button[2]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "button",
+      "id": "H023",
+      "label": "Release kill switch",
+      "route": "/learning/packs",
+      "routeTag": "LearningPacks",
+      "walkerLabel": "Release kill switch",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[3]>button[3]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "password input",
+      "id": "H024",
+      "label": "Operator token",
+      "route": "/learning/decisions",
+      "routeTag": "LearningDecisions",
+      "walkerLabel": "Operator token",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>label[1]>input[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "select ×3",
+      "id": "H025",
+      "label": "Role",
+      "route": "/learning/decisions",
+      "routeTag": "LearningDecisions",
+      "walkerLabel": "Role all roles",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "select ×3",
+      "id": "H026",
+      "label": "Task",
+      "route": "/learning/decisions",
+      "routeTag": "LearningDecisions",
+      "walkerLabel": "Task all tasks",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "select ×3",
+      "id": "H027",
+      "label": "Outcome",
+      "route": "/learning/decisions",
+      "routeTag": "LearningDecisions",
+      "walkerLabel": "Outcome all outcomes",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[3]>select[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "password input",
+      "id": "H028",
+      "label": "Operator token",
+      "route": "/learning/evidence",
+      "routeTag": "LearningEvidence",
+      "walkerLabel": "Operator token",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>label[1]>input[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "password input",
+      "id": "H029",
+      "label": "Operator token",
+      "route": "/learning/history",
+      "routeTag": "LearningHistory",
+      "walkerLabel": "Operator token",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>label[1]>input[1]"
+    },
+    {
+      "bucket": "scanner_gap",
+      "control": "button ×4",
+      "id": "H030",
+      "label": "Day",
+      "route": "/requests",
+      "routeTag": "Requests"
+    },
+    {
+      "bucket": "scanner_gap",
+      "control": "button ×4",
+      "id": "H031",
+      "label": "Week",
+      "route": "/requests",
+      "routeTag": "Requests"
+    },
+    {
+      "bucket": "scanner_gap",
+      "control": "button ×4",
+      "id": "H032",
+      "label": "Month",
+      "route": "/requests",
+      "routeTag": "Requests"
+    },
+    {
+      "bucket": "scanner_gap",
+      "control": "button ×4",
+      "id": "H033",
+      "label": "90 days",
+      "route": "/requests",
+      "routeTag": "Requests"
+    },
+    {
+      "bucket": "scanner_gap",
+      "control": "select",
+      "id": "H034",
+      "label": "Breakdown",
+      "route": "/requests",
+      "routeTag": "Requests"
+    },
+    {
+      "bucket": "scanner_gap",
+      "control": "select",
+      "id": "H035",
+      "label": "Source",
+      "route": "/requests",
+      "routeTag": "Requests"
+    },
+    {
+      "bucket": "scanner_gap",
+      "control": "button",
+      "id": "H036",
+      "label": "Expand (Advanced controls)",
+      "route": "/requests",
+      "routeTag": "Requests"
+    },
+    {
+      "bucket": "scanner_gap",
+      "control": "select",
+      "id": "H037",
+      "label": "Status family",
+      "route": "/requests",
+      "routeTag": "Requests"
+    },
+    {
+      "bucket": "non_native_affordance",
+      "control": "table rows",
+      "id": "H038",
+      "label": "Recent telemetry requests (no row drill-in despite copy)",
+      "route": "/requests",
+      "routeTag": "Requests"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "segmented button ×2",
+      "id": "H039",
+      "label": "All sources",
+      "route": "/observe/logs",
+      "routeTag": "ObserveLogs",
+      "walkerLabel": "All sources",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[2]>div[1]>button[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "segmented button ×2",
+      "id": "H040",
+      "label": "combined",
+      "route": "/observe/logs",
+      "routeTag": "ObserveLogs",
+      "walkerLabel": "combined",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[2]>div[1]>button[2]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "button ×4",
+      "id": "H041",
+      "label": "Day",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "walkerLabel": "Day",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[1]>div[1]>button[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "button ×4",
+      "id": "H042",
+      "label": "Week",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "walkerLabel": "Week",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[1]>div[1]>button[2]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "button ×4",
+      "id": "H043",
+      "label": "Month",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "walkerLabel": "Month",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[1]>div[1]>button[3]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "button ×4",
+      "id": "H044",
+      "label": "90 days",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "walkerLabel": "90 days",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[1]>div[1]>button[4]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "select ×3",
+      "id": "H045",
+      "label": "Breakdown",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "walkerLabel": "Breakdown",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[1]>select[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "select ×3",
+      "id": "H046",
+      "label": "Source",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "walkerLabel": "Source",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[2]>select[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "select ×3",
+      "id": "H047",
+      "label": "Difficulty",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "walkerLabel": "Difficulty",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[3]>select[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "button",
+      "id": "H048",
+      "label": "Expand",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "walkerLabel": "Expand",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>button[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "button",
+      "id": "H049",
+      "label": "Refresh",
+      "route": "/observe/observability-snapshot",
+      "routeTag": "Observability",
+      "walkerLabel": "Refresh",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>button[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "button",
+      "id": "H050",
+      "label": "Refresh",
+      "route": "/observe/store-degradation-receipts",
+      "routeTag": "StoreReceipts",
+      "walkerLabel": "Refresh",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>button[1]"
+    },
+    {
+      "bucket": "non_native_affordance",
+      "control": "activity rows (div)",
+      "id": "H051",
+      "label": "recent host activity; no capture drill-in",
+      "route": "/observe/activity",
+      "routeTag": "ObserveActivity"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "input",
+      "id": "H052",
+      "label": "Endpoint URL",
+      "route": "/local/peers",
+      "routeTag": "LocalPeers",
+      "walkerLabel": "http://127.0.0.1:1234",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>div[1]>section[2]>div[2]>div[1]>div[1]>input[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "password input",
+      "id": "H053",
+      "label": "Auth token (optional)",
+      "route": "/local/peers",
+      "routeTag": "LocalPeers",
+      "walkerLabel": "Bearer token (optional)",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>div[1]>section[2]>div[2]>div[1]>div[2]>input[1]"
+    },
+    {
+      "bucket": "non_native_affordance",
+      "control": "table row actions",
+      "id": "H054",
+      "label": "Check health / Remove (plain text, no buttons)",
+      "route": "/local/peers",
+      "routeTag": "LocalPeers"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "input",
+      "id": "H055",
+      "label": "Model ID",
+      "route": "/local/peer-models",
+      "routeTag": "LocalPeerModels",
+      "walkerLabel": "openai/gpt-4.1",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>div[1]>section[1]>div[2]>div[1]>div[1]>input[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "input",
+      "id": "H056",
+      "label": "Model ID",
+      "route": "/local/llama-swap/models",
+      "routeTag": "LocalLlamaSwapModels",
+      "walkerLabel": "lfm2.5-8b-a1b",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>div[1]>section[1]>div[2]>div[1]>div[1]>input[1]"
+    },
+    {
+      "bucket": "non_native_affordance",
+      "control": "static text",
+      "id": "H057",
+      "label": "\"28 selected · click to clear\" (looks actionable)",
+      "route": "/local/llama-swap/models",
+      "routeTag": "LocalLlamaSwapModels"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "password input",
+      "id": "H058",
+      "label": "Operator access token",
+      "route": "/system/operator",
+      "routeTag": "SystemOperator",
+      "walkerLabel": "Paste a local operator token…",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>div[1]>section[2]>div[2]>div[1]>input[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "button",
+      "id": "H059",
+      "label": "Load Operator State",
+      "route": "/system/operator",
+      "routeTag": "SystemOperator",
+      "walkerLabel": "Load Operator State",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>div[1]>section[2]>div[2]>div[1]>button[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "input",
+      "id": "H060",
+      "label": "Trace root id",
+      "route": "/system/operator",
+      "routeTag": "SystemOperator",
+      "walkerLabel": "trace-root…",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>div[1]>div[1]>section[1]>div[2]>div[1]>div[1]>input[1]"
+    },
+    {
+      "bucket": "matched_walker",
+      "control": "number input",
+      "id": "H061",
+      "label": "Max requests",
+      "route": "/system/operator",
+      "routeTag": "SystemOperator",
+      "walkerLabel": "25",
+      "walkerPath": "div[1]>div[1]>main[1]>div[1]>div[1]>div[1]>section[1]>div[2]>div[1]>div[2]>input[1]"
+    }
+  ],
+  "modelsFamily": {
+    "affordance": 4,
+    "rows": 17,
+    "wired": 13
+  },
+  "nativeTotal": 53,
+  "unmatched": [],
+  "walkerOnly": [
+    {
+      "label": "(unlabelled input)",
+      "path": "div[1]>div[1]>main[1]>div[1]>div[1]>section[1]>div[2]>div[1]>label[1]>input[1]",
+      "route": "LocalLogs",
+      "tag": "input",
+      "index": 2,
+      "used": false
+    },
+    {
+      "label": "Advisory state all fresh stale unavailable",
+      "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[4]>select[1]",
+      "route": "LearningDecisions",
+      "tag": "select",
+      "index": 16,
+      "used": false
+    },
+    {
+      "label": "Observation origin live shadow all",
+      "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[5]>select[1]",
+      "route": "LearningDecisions",
+      "tag": "select",
+      "index": 17,
+      "used": false
+    },
+    {
+      "label": "Operator token",
+      "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[2]>div[2]>label[1]>input[1]",
+      "route": "LearningEvidence",
+      "tag": "input",
+      "index": 19,
+      "used": false
+    },
+    {
+      "label": "All roles",
+      "path": "div[1]>div[1]>main[1]>div[1]>div[1]>section[1]>div[2]>div[2]>button[1]",
+      "route": "LocalLlamaSwapModels",
+      "tag": "button",
+      "index": 22,
+      "used": false
+    },
+    {
+      "label": "Create Replay",
+      "path": "div[1]>div[1]>main[1]>div[1]>div[1]>div[1]>section[1]>div[2]>div[1]>button[1]",
+      "route": "SystemOperator",
+      "tag": "button",
+      "index": 27,
+      "used": false
+    },
+    {
+      "label": "Pause",
+      "path": "div[1]>div[1]>main[1]>div[1]>div[1]>section[1]>div[2]>div[1]>button[1]",
+      "route": "SystemExtensions",
+      "tag": "button",
+      "index": 28,
+      "used": false
+    },
+    {
+      "label": "Download & validate latest",
+      "path": "div[1]>div[1]>main[1]>div[1]>div[1]>div[2]>section[2]>div[2]>button[1]",
+      "route": "SystemExtensions",
+      "tag": "button",
+      "index": 29,
+      "used": false
+    }
+  ],
+  "walkerTotal": 40
+}
