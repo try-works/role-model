@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s617-handler-presence.test.ts (7 tests) 558ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  03:39:44
+   Duration  35.90s (transform 15.31s, setup 0ms, collect 24.81s, tests 558ms, environment 5.17s, prepare 1.48s)
+

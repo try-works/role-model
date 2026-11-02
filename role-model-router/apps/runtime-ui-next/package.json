@@ -17,7 +17,8 @@
     "test": "tsc --noEmit -p tsconfig.json && vitest run && node --test test/*.test.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test:invariants": "node --test test/*.test.mjs",
-    "build": "node build.mjs"
+    "build": "node build.mjs",
+    "test:handler-presence": "vitest run test/s617-handler-presence.test.ts"
   },
   "devDependencies": {
     "happy-dom": "^20.0.0",

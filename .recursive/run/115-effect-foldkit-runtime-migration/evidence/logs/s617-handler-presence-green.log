@@ -1,0 +1,63 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s617-handler-presence.test.ts (7 tests | 2 failed) 1932ms
+   ✓ S617 handler-presence: structural walker > accepts a button wired with OnClick and flags one without any handler 114ms
+   ✓ S617 handler-presence: structural walker > flags inputs, selects and textareas without OnInput/OnChange, and accepts wired ones 21ms
+   ✓ S617 handler-presence: structural walker > treats an anchor as wired only when it has a real href or a click handler 22ms
+   ✓ S617 handler-presence: structural walker > recognises role=button/tab/option controls, and disabled controls are reported but not dead 24ms
+   ✓ S617 handler-presence: routed inventory > scans every routed tag; the one known recorder gap is documented, not hidden  1152ms
+   × S617 handler-presence: routed inventory > finds today's known dead controls from evidence/logs/ui-dead-controls-inventory.md 330ms
+     → expected false to be true // Object.is equality
+   × S617 handler-presence: routed inventory > matches the committed baseline inventory, so a new dead control fails the suite 228ms
+     → ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-ui-next\support\handler-presence-baseline.json'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s617-handler-presence.test.ts > S617 handler-presence: routed inventory > finds today's known dead controls from evidence/logs/ui-dead-controls-inventory.md
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/s617-handler-presence.test.ts:125:81
+    123|     expect(learning?.unwired.some((entry) => entry.label.includes("Ope…
+    124|     const roles = scans.find((scan) => scan.route === "ModelsRoles");
+    125|     expect(roles?.unwired.some((entry) => entry.label.includes("Create…
+       |                                                                                 ^
+    126|   });
+    127| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s617-handler-presence.test.ts > S617 handler-presence: routed inventory > matches the committed baseline inventory, so a new dead control fails the suite
+Error: ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-ui-next\support\handler-presence-baseline.json'
+ ❯ test/s617-handler-presence.test.ts:135:33
+    133|       writeFileSync(baselinePath, JSON.stringify(actual, null, 2) + "\…
+    134|     }
+    135|     const baseline = JSON.parse(readFileSync(baselinePath, "utf8"));
+       |                                 ^
+    136|     expect(actual).toEqual(baseline);
+    137|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 5 passed (7)
+   Start at  03:35:37
+   Duration  66.35s (transform 34.02s, setup 0ms, collect 52.77s, tests 1.93s, environment 8.30s, prepare 1.16s)
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s617-handler-presence.test.ts (7 tests) 517ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  03:41:49
+   Duration  26.67s (transform 12.85s, setup 0ms, collect 21.56s, tests 517ms, environment 2.99s, prepare 539ms)
+
