@@ -916,9 +916,20 @@ const updateLocalPolicyDraft = (
             if (entry.enabled) baseline.add(entry.roleId);
             else baseline.delete(entry.roleId);
           }
+          let kind: "llama-swap" | "peer" = "peer";
+          for (const row of model.readbacks.modelEndpoints.rows) {
+            try {
+              // SAFETY: modelEndpoints rows carry this JSON record in meta.
+              const meta = JSON.parse(row.meta) as { readonly endpointId?: string; readonly modelId?: string; readonly providerId?: string };
+              if (meta.modelId !== modelId) continue;
+              if ((meta.providerId ?? meta.endpointId ?? "").toLowerCase().includes("llama")) kind = "llama-swap";
+            } catch {
+              // Unparseable rows leave the default peer kind.
+            }
+          }
           const token = model.readbacks.modelEndpoints.token + 1;
           return {
-            commands: [modelsCommands.setRoles({ modelId, roleIdsJson: JSON.stringify([...baseline].sort()), token })],
+            commands: [modelsCommands.setRoles({ kind, modelId, roleIdsJson: JSON.stringify([...baseline].sort()), token })],
             model: { ...model, modelsView: { ...state, roleOverrides: overrides } },
           };
         },
@@ -941,12 +952,19 @@ const updateLocalPolicyDraft = (
           const token = model.readbacks.modelEndpoints.token + 1;
           return {
             commands: [modelsCommands.createRole({ draftJson: JSON.stringify({
+              default_system_instructions: draft.instructions,
               description: draft.description,
-              kind: draft.kind,
+              forbidden_capabilities: [],
               name: draft.name,
+              output_contracts: [],
+              preferred_capabilities: [],
+              required_capabilities: [],
               role_id: draft.roleId,
-              system_instructions: draft.instructions,
-              tool_policy: draft.toolPolicy,
+              role_kind: draft.kind,
+              routing_policy_overrides: {},
+              safety_policy_refs: [],
+              task_types_supported: [],
+              tool_policy: { mode: draft.toolPolicy },
             }), token })],
             model: { ...model, modelsView: { ...state, roleDraft: draft } },
           };
@@ -961,7 +979,8 @@ const updateLocalPolicyDraft = (
         },
         BenchmarkRunRequested: (): UpdateReturn<Model, Message> => {
           const state = model.modelsView ?? {};
-          return { commands: [modelsCommands.runBenchmark({ judge: state.benchmarkJudge ?? "", mode: state.benchmarkMode ?? "quick", token: model.readbacks.modelEndpoints.token + 1 })], model };
+          const rawMode = (state.benchmarkMode ?? "quick").toLowerCase().includes("full") ? "full" : "quick";
+          return { commands: [modelsCommands.runBenchmark({ judgeEndpointId: state.benchmarkJudge ?? "", mode: rawMode, token: model.readbacks.modelEndpoints.token + 1 })], model };
         },
         BenchmarkClearRequested: (): UpdateReturn<Model, Message> => ({
           commands: [modelsCommands.clearBenchmark({ token: model.readbacks.modelEndpoints.token + 1 })],

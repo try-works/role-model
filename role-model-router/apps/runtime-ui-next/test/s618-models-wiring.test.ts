@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { renderToString } from "@role-model-router/foldkit/experimental/server";
 
-import { defineReadDiagnostics } from "../src/commands";
+import { createModelsClient, defineModelsCommands, defineReadDiagnostics } from "../src/commands";
 import { Message } from "../src/message";
 import { createUpdate } from "../src/update";
 import { modelsRoute } from "../src/features/models/routes";
@@ -69,6 +69,37 @@ describe("S618 models route wiring", () => {
     expect(typed.model.modelsView?.roleDraft?.roleId).toBe("legal");
     const created = update(typed.model, Message.RoleCreateRequested());
     expect(created.commands ?? []).toHaveLength(1);
+  });
+
+  it("sends the exact host contracts for all four model commands", async () => {
+    const calls: Array<{ readonly body: unknown; readonly method: string; readonly path: string }> = [];
+    const commands = defineModelsCommands(createModelsClient({
+      fetchImpl: async (input, init) => {
+        const url = new URL(String(input), "http://localhost");
+        calls.push({ body: init?.body === undefined ? undefined : JSON.parse(String(init.body)), method: String(init?.method), path: url.pathname });
+        return new Response("{}", { status: 200 });
+      },
+    }));
+    await Effect.runPromise(commands.clearBenchmark({ token: 1 }).effect);
+    await Effect.runPromise(commands.runBenchmark({ judgeEndpointId: "judge-1", mode: "quick", token: 1 }).effect);
+    await Effect.runPromise(commands.setRoles({ kind: "peer", modelId: "model-1", roleIdsJson: JSON.stringify(["coder"]), token: 1 }).effect);
+    await Effect.runPromise(commands.setRoles({ kind: "llama-swap", modelId: "model-2", roleIdsJson: JSON.stringify(["writer"]), token: 1 }).effect);
+    await Effect.runPromise(commands.createRole({ draftJson: JSON.stringify({
+      default_system_instructions: "", description: "", forbidden_capabilities: [], name: "n", output_contracts: [],
+      preferred_capabilities: [], required_capabilities: [], role_id: "legal", role_kind: "assistant",
+      routing_policy_overrides: {}, safety_policy_refs: [], task_types_supported: [], tool_policy: { mode: "allowed" },
+    }), token: 1 }).effect);
+    expect(calls[0]).toMatchObject({ method: "DELETE", path: "/api/role-model/benchmark/data" });
+    expect(calls[1]).toEqual({ body: { judgeEndpointId: "judge-1", mode: "quick" }, method: "POST", path: "/api/role-model/benchmark/runs" });
+    expect(calls[2]).toMatchObject({ method: "PUT", path: "/api/role-model/local/peer/models/model-1/roles" });
+    expect(calls[2]?.body).toEqual({ disabledRoleIds: [], enabledRoleIds: ["coder"], roleAssignmentMode: "include", roleIds: ["coder"] });
+    expect(calls[3]).toMatchObject({ method: "PUT", path: "/api/role-model/local/llama-swap/models/model-2/roles" });
+    expect(calls[4]).toMatchObject({ method: "POST", path: "/api/role-model/roles" });
+    expect(calls[4]?.body).toEqual({
+      default_system_instructions: "", description: "", forbidden_capabilities: [], name: "n", output_contracts: [],
+      preferred_capabilities: [], required_capabilities: [], role_id: "legal", role_kind: "assistant",
+      routing_policy_overrides: {}, safety_policy_refs: [], task_types_supported: [], tool_policy: { mode: "allowed" },
+    });
   });
 
   it("wires benchmark mode/judge/run/clear", () => {

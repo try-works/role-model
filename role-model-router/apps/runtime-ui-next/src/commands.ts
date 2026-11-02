@@ -730,7 +730,7 @@ export interface ModelsClient {
   readonly clearBenchmark: () => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly createRole: (draft: Readonly<Record<string, string>>) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly runBenchmark: (mode: string, judge: string) => Promise<{ readonly body: unknown; readonly status: number }>;
-  readonly setRoles: (modelId: string, roleIds: ReadonlyArray<string>) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly setRoles: (modelId: string, kind: "llama-swap" | "peer", roleIds: ReadonlyArray<string>) => Promise<{ readonly body: unknown; readonly status: number }>;
 }
 export const createModelsClient = (options: { readonly fetchImpl?: typeof fetch } = {}): ModelsClient => {
   const fetchImpl = options.fetchImpl ?? fetch;
@@ -739,10 +739,10 @@ export const createModelsClient = (options: { readonly fetchImpl?: typeof fetch 
     return { body: await response.json(), status: response.status };
   };
   return {
-    clearBenchmark: () => send("/api/role-model/benchmark/run", "DELETE", "{}"),
+    clearBenchmark: () => send("/api/role-model/benchmark/data", "DELETE", "{}"),
     createRole: (draft) => send("/api/role-model/roles", "POST", JSON.stringify(draft)),
-    runBenchmark: (mode, judge) => send("/api/role-model/benchmark/run", "POST", JSON.stringify({ judge, mode })),
-    setRoles: (modelId, roleIds) => send("/api/role-model/local/models/" + encodeURIComponent(modelId) + "/roles", "PUT", JSON.stringify({
+    runBenchmark: (mode, judge) => send("/api/role-model/benchmark/runs", "POST", JSON.stringify({ judgeEndpointId: judge, mode })),
+    setRoles: (modelId, kind, roleIds) => send("/api/role-model/local/" + kind + "/models/" + encodeURIComponent(modelId) + "/roles", "PUT", JSON.stringify({
       disabledRoleIds: [],
       enabledRoleIds: [...roleIds],
       roleAssignmentMode: "include",
@@ -773,20 +773,20 @@ export const defineModelsCommands = (client: ModelsClient) => ({
     messages: [Message.ModelsActionSucceeded, Message.ModelsActionFailed],
   }),
   runBenchmark: Command.define("RunBenchmark", {
-    args: { judge: Schema.String, mode: Schema.String, token: Schema.Number },
-    execute: ({ judge, mode, token }) =>
-      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.runBenchmark(mode, judge) })), (exit) =>
+    args: { judgeEndpointId: Schema.String, mode: Schema.Literals(["full", "quick"]), token: Schema.Number },
+    execute: ({ judgeEndpointId, mode, token }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.runBenchmark(mode, judgeEndpointId) })), (exit) =>
         Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
           ? Message.ModelsActionSucceeded({ message: "Benchmark run requested.", token })
           : Message.ModelsActionFailed({ message: "Benchmark run failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
     messages: [Message.ModelsActionSucceeded, Message.ModelsActionFailed],
   }),
   setRoles: Command.define("SetModelRoles", {
-    args: { modelId: Schema.String, roleIdsJson: Schema.String, token: Schema.Number },
-    execute: ({ modelId, roleIdsJson, token }) => {
+    args: { kind: Schema.Literals(["llama-swap", "peer"]), modelId: Schema.String, roleIdsJson: Schema.String, token: Schema.Number },
+    execute: ({ kind, modelId, roleIdsJson, token }) => {
       // SAFETY: roleIdsJson is JSON.stringify of the string array computed by the update handler.
       const roleIds = JSON.parse(roleIdsJson) as ReadonlyArray<string>;
-      return Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.setRoles(modelId, roleIds) })), (exit) =>
+      return Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.setRoles(modelId, kind, roleIds) })), (exit) =>
         Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
           ? Message.ModelsActionSucceeded({ message: "Model roles saved.", token })
           : Message.ModelsActionFailed({ message: "Save model roles failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token })));
