@@ -1,0 +1,65 @@
+
+ RUN  v4.1.11 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/provider-openai
+
+ ❯ test/index.test.ts (36 tests | 1 failed) 261ms
+     × uses DeepSeek's current published provider model ids 97ms
+     ✓ still derives non-DeepSeek upstream ids from the provider prefix 10ms
+     ✓ can be created for the openai-compatible adapter family 4ms
+     ✓ Run 108 D9 forwards raw chat JSON object response_format 17ms
+     ✓ builds an OpenAI responses request and normalizes text, usage, and tool calls 17ms
+     ✓ normalizes a streamed OpenAI responses transcript into final text, tool calls, and usage 9ms
+     ✓ preserves cached-token detail fields from a streamed OpenAI responses transcript 4ms
+     ✓ preserves hosted OpenAI responses tools instead of coercing them into function tools 2ms
+     ✓ forces the OpenAI Responses API path when hosted tools are requested 2ms
+     ✓ keeps Kimi hosted web search on chat-completions and disables thinking 6ms
+     ✓ builds an OpenAI-compatible chat-completions request for Kimi and normalizes the reply 7ms
+     ✓ maps moonshot/kimi-k3 to upstream k3 and omits K3-incompatible fixed knobs 3ms
+     ✓ keeps moonshot/kimi-k2.7-code on its existing upstream id and omits fixed temperature 4ms
+     ✓ omits fixed temperature for moonshot/kimi-k2.5 2ms
+     ✓ omits fixed temperature for moonshot/kimi-k2.6 1ms
+     ✓ forwards forced chat-completions tool_choice to the downstream OpenAI request body 2ms
+     ✓ forwards chat-completions reasoning controls to the downstream OpenAI request body 2ms
+     ✓ forwards responses tool_choice, reasoning, continuation, and session-affinity hints 4ms
+     ✓ forwards responses parallel_tool_calls when explicitly true 3ms
+     ✓ forwards responses parallel_tool_calls when explicitly false 1ms
+     ✓ omits responses parallel_tool_calls when the caller left it unset 5ms
+     ✓ normalizes an OpenAI-compatible chat-completions SSE transcript for Kimi K3 streaming 6ms
+     ✓ preserves cached-token detail fields from a streamed chat-completions transcript 4ms
+     ✓ advertises implicit prompt caching support for OpenAI-family providers 2ms
+     ✓ normalizes OpenAI Responses cached-token detail fields without rewriting totals 3ms
+     ✓ normalizes Kimi chat-completions cached tokens from top-level usage 3ms
+     ✓ forwards chat-completions prompt_cache_key when prompt caching is enabled 2ms
+     ✓ normalizes reasoning-only chat-completions bodies into assistant output text 2ms
+     ✓ forwards null assistant content and tool-turn fields for chat completions 2ms
+     ✓ renders responses continuation turns as function_call and function_call_output items 3ms
+     ✓ normalizes a streamed chat-completions transcript with nested choices[0].usage 2ms
+     ✓ estimates input tokens when streamed usage is absent and labels provenance 4ms
+     ✓ marks request-size usage unavailable when the captured provider body cannot be serialized 3ms
+     ✓ requests Kimi streamed usage and forwards a capable prompt cache key on the final wire body 2ms
+     ✓ does not activate prompt caching for an unsupported selected capability 2ms
+     ✓ normalizes nested final usage when a streamed Kimi response ends with tool_calls 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > OpenAI provider upstream model identity > uses DeepSeek's current published provider model ids
+AssertionError: expected 'deepseek-v4.1-flash' to be 'deepseek-flash' // Object.is equality
+
+Expected: "deepseek-flash"
+Received: "deepseek-v4.1-flash"
+
+ ❯ test/index.test.ts:17:82
+     15|     // slot keeps `deepseek-v4-pro`. A legacy catalog id must not be s…
+     16|     // verbatim, because the provider no longer lists or accepts it.
+     17|     expect(resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-v4.…
+       |                                                                                  ^
+     18|       "deepseek-flash",
+     19|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 35 passed (36)
+   Start at  20:00:33
+   Duration  4.88s (transform 1.25s, setup 0ms, import 1.61s, tests 261ms, environment 2ms)
+

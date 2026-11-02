@@ -29,6 +29,9 @@ const OPENAI_MODEL_REQUEST_POLICIES: Record<string, OpenAIModelRequestPolicy> = 
   // `deepseek-flash` while the pro slot keeps `deepseek-v4-pro`. The catalog
   // keeps the historical canonical ids so existing endpoint configuration stays
   // valid, and the provider request must use the ids the provider advertises.
+  "deepseek/deepseek-v4.1-flash": {
+    upstreamModelId: "deepseek-flash",
+  },
   "deepseek/deepseek-v4-flash": {
     upstreamModelId: "deepseek-flash",
   },

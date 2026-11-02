@@ -14,6 +14,9 @@ describe("OpenAI provider upstream model identity", () => {
     // published as `deepseek-flash` (no `deepseek-v4-` segment) while the pro
     // slot keeps `deepseek-v4-pro`. A legacy catalog id must not be sent
     // verbatim, because the provider no longer lists or accepts it.
+    expect(resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-v4.1-flash")).toBe(
+      "deepseek-flash",
+    );
     expect(resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-v4-flash")).toBe(
       "deepseek-flash",
     );
