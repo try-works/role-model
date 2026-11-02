@@ -67,6 +67,25 @@ describe("S617 reconciliation CLI guard", () => {
     rmSync(dir, { force: true, recursive: true });
   });
 
+  it("invalid mapping fails with exit 1, names the violation and writes nothing", { timeout: 240_000 }, () => {
+    const { dir, env, mappingPath } = fixture();
+    expect(run(env, ["--refresh"]).status).toBe(0);
+    const mapping = JSON.parse(readFileSync(mappingPath, "utf8"));
+    const matched = mapping.items.find((entry: { bucket: string; walkerPath: string | null }) => entry.bucket === "matched_walker");
+    expect(matched).toBeDefined();
+    matched.walkerPath = null; // convention violation: matched_walker must carry walkerPath
+    writeFileSync(mappingPath, JSON.stringify(mapping, null, 2) + "\n");
+    const before = sha256(mappingPath);
+    const humanBefore = sha256(join(dir, "ui-dead-controls-inventory.md"));
+    const result = run(env);
+    expect(result.status).toBe(1); // invalid contract shape -> exactly 1 (changed is 2, missing is 3)
+    expect(result.stderr).toContain("walkerPath");
+    expect(result.stderr.toLowerCase()).toContain("nothing written");
+    expect(sha256(mappingPath)).toBe(before);
+    expect(sha256(join(dir, "ui-dead-controls-inventory.md"))).toBe(humanBefore);
+    rmSync(dir, { force: true, recursive: true });
+  });
+
   it("changed mapping fails with exit 2 and no write", { timeout: 240_000 }, () => {
     const { dir, env, mappingPath } = fixture();
     expect(run(env, ["--refresh"]).status).toBe(0);
