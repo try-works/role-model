@@ -1223,6 +1223,7 @@ interface RouteViewContext {
   readonly chartInteraction: ChartInteractionState | undefined;
   readonly learningRanking: LearningRankingState | undefined;
   readonly learningReplayAutoQueue: Model["learningReplayAutoQueue"];
+  readonly modelsView: Model["modelsView"];
   readonly requestsRanking: RequestsRankingState | undefined;
   readonly requestsRankingMetricListbox: Model["requestsRankingMetricListbox"];
   readonly requestsRankingTargetListbox: Model["requestsRankingTargetListbox"];
@@ -1250,6 +1251,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     chartInteraction,
     learningRanking,
     learningReplayAutoQueue,
+    modelsView,
     requestsRanking,
     requestsRankingMetricListbox,
     requestsRankingTargetListbox,
@@ -1293,7 +1295,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     QueuesConfiguration: () => renderReadbackPage(READBACK_SPECS.queueConfig, readbacks.queueConfig, h),
     IntegrationsDownstream: () => integrationsDownstreamRoute(readbacks.downstreamOpenAI, readbacks.configuredModels, h),
     IntegrationsUpstream: () => integrationsUpstreamRoute(readbacks.integrationProviders, readbacks.configuredModels, h),
-    Benchmark: () => benchmarkRoute(readbacks.benchmarkSuite, h),
+    Benchmark: () => benchmarkRoute(readbacks.benchmarkSuite, h, modelsView),
     StorageRetention: () => familyPage("Storage & retention", "storage-retention", "Physical and logical storage, retention classes and manual pruning.", [{ label: "Logical classes", note: "Logical classes group rows by retention policy." }, { label: "Retention policy", note: "Category totals, receipts and byte counts are reported by the retention readback." }, { label: "Manual pruning", note: "Prune is manual; the host enforces retention records before deletion." }, { label: "Retention transactions", spec: READBACK_SPECS.storageRetention, readback: readbacks.storageRetention }], h, retention),
     Studio: () => studioRoute({ h, readbacks, studio, studioPage }),
     Learning: () => learningOverviewRoute(readbacks.learning, readbacks.replayJobs, readbacks.evaluationJobs, learningRanking, learningReplayAutoQueue, h),
@@ -1309,8 +1311,8 @@ const routeContent = (ctx: RouteViewContext): Html => {
     ], h), readbacks.localLlamaSwapModels, h),
     SystemOperator: () => familyPage("Operator Controls", "system-operator", "Inspect bounded replay, evaluation, and shadow-learning state. The access token stays only in this browser component and is never stored.", [{ label: "Operator status", spec: READBACK_SPECS.operatorStatus, readback: readbacks.operatorStatus }, { label: "Trace lineage", spec: READBACK_SPECS.operatorTraceRoots, readback: readbacks.operatorTraceRoots }, { label: "Replay Jobs", spec: READBACK_SPECS.replayJobs, readback: readbacks.replayJobs }, { label: "Evaluation Jobs", spec: READBACK_SPECS.evaluationJobs, readback: readbacks.evaluationJobs }, { label: "Shadow Learning", note: "This page does not enable production learning; shadow-learning actions stay bounded to the readback." }], h, retention, operatorLearningMode),
     SystemExtensions: () => familyPage("Extensions", "system-extensions", "Extension boundary, replay automation, contribution posture and the extension inventory.", [{ label: "Extension boundary", note: "The host enforces the extension boundary before any extension code runs." }, { label: "Replay automation", note: "Replay automation is configured per extension and reported by the host." }, { label: "Contribution posture", note: "Contribution posture records whether an extension may contribute runtime behavior." }, { label: "Recommendation ledger", note: "Recommendation receipts are recorded in the ledger when an extension produces one." }, { label: "Extension inventory", spec: READBACK_SPECS.extensions, readback: readbacks.extensions }], h),
-    Models: () => modelsRoute(readbacks.configuredModels, readbacks.modelEndpoints, h),
-    ModelsRoles: () => modelsRolesRoute(readbacks.configuredModels, readbacks.modelEndpoints, h),
+    Models: () => modelsRoute(readbacks.configuredModels, readbacks.modelEndpoints, h, modelsView),
+    ModelsRoles: () => modelsRolesRoute(readbacks.configuredModels, readbacks.modelEndpoints, h, modelsView),
     RouterStrategy: () => routerStrategyPage("router-strategy", readbacks, routerPosture, h),
     RouterWorkloads: () => workloadsSupplement(routerWorkloadsPage(readbacks, routerPosture, h), readbacks.routerConfig, h),
     RouterConfig: () => routerConfigPage(readbacks, routerPosture, h),
@@ -1503,6 +1505,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                   routeContent({
                     route: model.route,
                     learningReplayAutoQueue: model.learningReplayAutoQueue,
+    modelsView: model.modelsView,
                     diagnostics: model.diagnostics,
                     observability: model.observability,
                     readbacks: model.readbacks,
