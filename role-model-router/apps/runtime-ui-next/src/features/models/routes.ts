@@ -206,8 +206,8 @@ export const modelsRolesRoute = (models: ReadbackState, endpoints: ReadbackState
     referenceCard("Create role", "Add a router-visible role with identity, instructions, and policy fields.", [
       h.div([h.Class("grid gap-4 md:grid-cols-2")], [field("role-id", "Role id", "roleId"), field("role-name", "Name", "name"), field("role-description", "Description", "description"), field("role-instructions", "Default system instructions", "instructions")]),
       h.div([h.Class("mt-4 flex flex-wrap items-end gap-3")], [
-        h.label([h.Class("flex flex-col gap-1 font-sans text-xs leading-4 text-muted-foreground")], ["Kind", h.select([h.AriaLabel("Kind"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm text-foreground"), h.Value(draft.kind), h.OnInput((next) => Message.RoleDraftChanged({ field: "kind", value: next }))], ["assistant", "allowed"].map((value) => h.option([h.Value(value)], [value])))]),
-        h.label([h.Class("flex flex-col gap-1 font-sans text-xs leading-4 text-muted-foreground")], ["Tool policy mode", h.select([h.AriaLabel("Tool policy mode"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm text-foreground"), h.Value(draft.toolPolicy), h.OnInput((next) => Message.RoleDraftChanged({ field: "toolPolicy", value: next }))], ["assistant", "allowed"].map((value) => h.option([h.Value(value)], [value])))]),
+        h.label([h.Class("flex flex-col gap-1 font-sans text-xs leading-4 text-muted-foreground")], ["Kind", h.select([h.AriaLabel("Kind"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm text-foreground"), h.Value(draft.kind), h.OnInput((next) => Message.RoleDraftChanged({ field: "kind", value: next }))], ["assistant", "tool", "system"].map((value) => h.option([h.Value(value)], [value])))]),
+        h.label([h.Class("flex flex-col gap-1 font-sans text-xs leading-4 text-muted-foreground")], ["Tool policy mode", h.select([h.AriaLabel("Tool policy mode"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm text-foreground"), h.Value(draft.toolPolicy), h.OnInput((next) => Message.RoleDraftChanged({ field: "toolPolicy", value: next }))], ["disabled", "limited", "allowed"].map((value) => h.option([h.Value(value)], [value])))]),
       ]),
       modelsView?.advancedPolicy === true ? h.p([h.DataAttribute("models-advanced-policy", ""), h.Class("mt-4 rounded-md border border-dashed border-border p-3 text-xs leading-4 text-muted-foreground")], ["Advanced policy fields are enabled for this draft. Kind: " + draft.kind + " · Tool policy: " + draft.toolPolicy]) : null,
       h.div([h.Class("mt-4 flex flex-wrap gap-2")], [
@@ -229,10 +229,23 @@ export const modelsRolesRoute = (models: ReadbackState, endpoints: ReadbackState
   ], h, "models-roles-state");
 };
 
-export const benchmarkRoute = (readback: ReadbackState, h: HtmlBuilder<Message>, modelsView?: Model["modelsView"]): Html => {
+export const benchmarkRoute = (readback: ReadbackState, h: HtmlBuilder<Message>, modelsView?: Model["modelsView"], endpoints?: ReadbackState): Html => {
   const rows = readback.rows.map((row) => [row.id, row.label, row.value]);
   const mode = modelsView?.benchmarkMode ?? "Quick (12 hard cases)";
-  const judge = modelsView?.benchmarkJudge ?? "Deepseek Flash (High) (remote)";
+  const endpointOptions = (endpoints?.rows ?? []).flatMap((row) => {
+    try {
+      // SAFETY: modelEndpoints rows carry this JSON record in meta.
+      const meta = JSON.parse(row.meta) as { readonly endpointId?: string; readonly modelId?: string };
+      if (meta.endpointId === undefined) return [];
+      return [{ label: meta.endpointId + (meta.modelId === undefined ? "" : " · " + meta.modelId), value: meta.endpointId }];
+    } catch {
+      return [];
+    }
+  });
+  const judgeOptions = endpointOptions.length === 0
+    ? [{ label: "Custom judge endpoint", value: "" }]
+    : [...endpointOptions, { label: "Custom judge endpoint", value: "" }];
+  const judge = modelsView?.benchmarkJudge ?? judgeOptions[0]?.value ?? "";
   const select = (label: string, options: ReadonlyArray<string>, value: string, onChange: (next: string) => Message) => h.label([h.Class("flex flex-col gap-1 font-sans text-xs leading-4 text-muted-foreground")], [label, h.select([h.AriaLabel(label), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm text-foreground"), h.Value(value), h.OnInput(onChange)], options.map((option) => h.option([h.Value(option)], [option])))]);
   return referenceSection("models", "ok", [
     h.h2([h.Class("rm3-next-route-title text-sm font-medium leading-5 tracking-tight")], ["Capability benchmark"]),
@@ -240,7 +253,7 @@ export const benchmarkRoute = (readback: ReadbackState, h: HtmlBuilder<Message>,
       h.div([h.Class("flex flex-wrap items-end justify-between gap-4")], [
         h.div([h.Class("flex flex-wrap items-end gap-3")], [
           select("Benchmark mode", ["Quick (12 hard cases)", "Full"], mode, (next) => Message.BenchmarkModeChanged({ value: next })),
-          select("Judge endpoint", ["Deepseek Flash (High) (remote)", "custom"], judge, (next) => Message.BenchmarkJudgeChanged({ value: next })),
+          h.label([h.Class("flex flex-col gap-1 font-sans text-xs leading-4 text-muted-foreground")], ["Judge endpoint", h.select([h.AriaLabel("Judge endpoint"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm text-foreground"), h.Value(judge), h.OnInput((next) => Message.BenchmarkJudgeChanged({ value: next }))], judgeOptions.map((option) => h.option([h.Value(option.value)], [option.label])))]),
         ]),
         h.div([h.Class("flex flex-wrap gap-2")], [
           h.button([h.Type("button"), h.OnClick(Message.BenchmarkRunRequested({})), h.Class("inline-flex h-[34px] items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Run quick benchmark (3 models, 12 cases)"]),

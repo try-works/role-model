@@ -1,0 +1,70 @@
+
+ RUN  v3.2.4 E:/rm-tmp/s618-hold-base/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s618-models-wiring.test.ts (8 tests | 2 failed) 760ms
+   ✓ S618 models route wiring > renders every model as a real selectable control and selects the state model  416ms
+   ✓ S618 models route wiring > stores model selection in state 14ms
+   ✓ S618 models route wiring > dispatches a role-binding command and records the optimistic override 9ms
+   ✓ S618 models route wiring > persists the create-role draft and dispatches creation 5ms
+   × S618 models route wiring > renders benchmark judge options from endpoint ids and stores the selected id 187ms
+     → expected [ …(2) ] to deeply equal [ 'judge-1', 'judge-2', '' ]
+   × S618 models route wiring > renders the host role_kind and tool-policy option values and routes a non-default selection 80ms
+     → expected [ 'assistant', 'allowed' ] to deeply equal [ 'assistant', 'tool', 'system' ]
+   ✓ S618 models route wiring > sends the exact host contracts for all four model commands 25ms
+   ✓ S618 models route wiring > wires benchmark mode/judge/run/clear 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s618-models-wiring.test.ts > S618 models route wiring > renders benchmark judge options from endpoint ids and stores the selected id
+AssertionError: expected [ …(2) ] to deeply equal [ 'judge-1', 'judge-2', '' ]
+
+- Expected
++ Received
+
+  [
+-   "judge-1",
+-   "judge-2",
+-   "",
++   "Deepseek Flash (High) (remote)",
++   "custom",
+  ]
+
+ ❯ test/s618-models-wiring.test.ts:114:20
+    112|     })()).html;
+    113|     const values = [...container.querySelectorAll("select[aria-label='…
+    114|     expect(values).toEqual(["judge-1", "judge-2", ""]);
+       |                    ^
+    115|     expect(container.textContent).toContain("judge-1 · model-one");
+    116|     const model = shellModel({ route: { _tag: "Benchmark" } });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s618-models-wiring.test.ts > S618 models route wiring > renders the host role_kind and tool-policy option values and routes a non-default selection
+AssertionError: expected [ 'assistant', 'allowed' ] to deeply equal [ 'assistant', 'tool', 'system' ]
+
+- Expected
++ Received
+
+  [
+    "assistant",
+-   "tool",
+-   "system",
++   "allowed",
+  ]
+
+ ❯ test/s618-models-wiring.test.ts:122:127
+    120|   it("renders the host role_kind and tool-policy option values and rou…
+    121|     const container = await renderRoles({ roleDraft: { description: ""…
+    122|     expect([...container.querySelectorAll("select[aria-label='Kind'] o…
+       |                                                                                                                               ^
+    123|     expect([...container.querySelectorAll("select[aria-label='Tool pol…
+    124|     const calls: Array<{ readonly body: unknown; readonly method: stri…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 6 passed (8)
+   Start at  05:12:01
+   Duration  27.77s (transform 12.12s, setup 0ms, collect 20.47s, tests 760ms, environment 4.47s, prepare 743ms)
+

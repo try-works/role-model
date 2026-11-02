@@ -6,8 +6,9 @@ import { renderToString } from "@role-model-router/foldkit/experimental/server";
 import { createModelsClient, defineModelsCommands, defineReadDiagnostics } from "../src/commands";
 import { Message } from "../src/message";
 import { createUpdate } from "../src/update";
-import { modelsRoute } from "../src/features/models/routes";
+import { benchmarkRoute, modelsRolesRoute, modelsRoute } from "../src/features/models/routes";
 import type { Model } from "../src/model";
+import type { ReadbackState } from "../src/readback";
 import { shellModel } from "./support/runtime-shell";
 
 /** S618 (task-92): /models family wiring. */
@@ -39,6 +40,30 @@ const render = async (modelsView?: Model["modelsView"]): Promise<HTMLElement> =>
 
 const update = createUpdate(defineReadDiagnostics(async () => ({ body: { records: [], state: "empty" }, status: 200 })));
 
+const renderBenchmark = async (modelsView?: Model["modelsView"]): Promise<HTMLElement> => {
+  const rendered = await Effect.runPromise(renderToString({
+    init: () => ({ model: shellModel({ route: { _tag: "Benchmark" } }), commands: [] }),
+    // SAFETY: renderToString infers Message=unknown; benchmarkRoute only emits typed messages.
+    view: (_model, h) => ({ body: benchmarkRoute(readbackWith({ rows: [] }), h as Parameters<typeof benchmarkRoute>[1], modelsView, endpoints), title: "benchmark" }),
+  }, { isHydratable: false }));
+  const container = document.createElement("div");
+  container.innerHTML = rendered.html;
+  return container;
+};
+
+const renderRoles = async (modelsView?: Model["modelsView"]): Promise<HTMLElement> => {
+  const rendered = await Effect.runPromise(renderToString({
+    init: () => ({ model: shellModel({ route: { _tag: "ModelsRoles" } }), commands: [] }),
+    // SAFETY: renderToString infers Message=unknown; modelsRolesRoute only emits typed messages.
+    view: (_model, h) => ({ body: modelsRolesRoute(models, endpoints, h as Parameters<typeof modelsRolesRoute>[2], modelsView), title: "roles" }),
+  }, { isHydratable: false }));
+  const container = document.createElement("div");
+  container.innerHTML = rendered.html;
+  return container;
+};
+
+const readbackWith = (input: { readonly rows: ReadbackState["rows"] }): ReadbackState => ({ rows: input.rows, status: "ok", token: 0 });
+
 describe("S618 models route wiring", () => {
   it("renders every model as a real selectable control and selects the state model", async () => {
     const container = await render({ selectedModelId: "beta" });
@@ -69,6 +94,45 @@ describe("S618 models route wiring", () => {
     expect(typed.model.modelsView?.roleDraft?.roleId).toBe("legal");
     const created = update(typed.model, Message.RoleCreateRequested());
     expect(created.commands ?? []).toHaveLength(1);
+  });
+
+  it("renders benchmark judge options from endpoint ids and stores the selected id", async () => {
+    const endpointsWithModel = readbackWith({ rows: [
+      { id: "e1", label: "e1", meta: JSON.stringify({ endpointId: "judge-1", modelId: "model-one" }), value: "remote" },
+      { id: "e2", label: "e2", meta: JSON.stringify({ endpointId: "judge-2", modelId: "model-two" }), value: "remote" },
+    ] });
+    const container = document.createElement("div");
+    container.innerHTML = (await (async () => {
+      const rendered = await Effect.runPromise(renderToString({
+        init: () => ({ model: shellModel({ route: { _tag: "Benchmark" } }), commands: [] }),
+        // SAFETY: renderToString infers Message=unknown; benchmarkRoute only emits typed messages.
+        view: (_model, h) => ({ body: benchmarkRoute({ rows: [], status: "ok", token: 0 }, h as Parameters<typeof benchmarkRoute>[1], undefined, endpointsWithModel), title: "benchmark" }),
+      }, { isHydratable: false }));
+      return { html: rendered.html };
+    })()).html;
+    const values = [...container.querySelectorAll("select[aria-label='Judge endpoint'] option")].map((option) => option.getAttribute("value"));
+    expect(values).toEqual(["judge-1", "judge-2", ""]);
+    expect(container.textContent).toContain("judge-1 · model-one");
+    const model = shellModel({ route: { _tag: "Benchmark" } });
+    expect(update(model, Message.BenchmarkJudgeChanged({ value: "judge-2" })).model.modelsView?.benchmarkJudge).toBe("judge-2");
+  });
+
+  it("renders the host role_kind and tool-policy option values and routes a non-default selection", async () => {
+    const container = await renderRoles({ roleDraft: { description: "", instructions: "", kind: "assistant", name: "", roleId: "", toolPolicy: "allowed" } });
+    expect([...container.querySelectorAll("select[aria-label='Kind'] option")].map((option) => option.getAttribute("value"))).toEqual(["assistant", "tool", "system"]);
+    expect([...container.querySelectorAll("select[aria-label='Tool policy mode'] option")].map((option) => option.getAttribute("value"))).toEqual(["disabled", "limited", "allowed"]);
+    const calls: Array<{ readonly body: unknown; readonly method: string; readonly path: string }> = [];
+    const commands = defineModelsCommands(createModelsClient({
+      fetchImpl: async (input, init) => {
+        calls.push({ body: init?.body === undefined ? undefined : JSON.parse(String(init.body)), method: String(init?.method), path: new URL(String(input), "http://localhost").pathname });
+        return new Response("{}", { status: 200 });
+      },
+    }));
+    const model = shellModel({ route: { _tag: "ModelsRoles" }, modelsView: { roleDraft: { description: "d", instructions: "i", kind: "tool", name: "n", roleId: "legal", toolPolicy: "limited" } } });
+    const queued = update(model, Message.RoleCreateRequested());
+    const args = (queued.commands ?? [])[0] as unknown as { readonly args: { readonly draftJson: string; readonly token: number } };
+    await Effect.runPromise(commands.createRole(args.args).effect);
+    expect(calls[0]?.body).toMatchObject({ role_kind: "tool", tool_policy: { mode: "limited" } });
   });
 
   it("sends the exact host contracts for all four model commands", async () => {
