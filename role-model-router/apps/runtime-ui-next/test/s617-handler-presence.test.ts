@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 
 import type { Message } from "../src/message";
 import {
+  type Inventory,
+  type InventoryEntry,
   interactiveElements,
   recordingHtmlBuilder,
   renderInventory,
@@ -127,14 +129,21 @@ describe("S617 handler-presence: routed inventory", () => {
     expect(peers?.unwired.some((entry) => entry.label.includes("http://127.0.0.1:1234"))).toBe(true);
   });
 
-  it("matches the committed baseline inventory, so a new dead control fails the suite", () => {
+  it("fails on a NEW dead control, while wiring one up is allowed to ratchet the baseline down", () => {
     const scans = scanAllRoutes();
     const actual = renderInventory(scans);
     const baselinePath = fileURLToPath(new URL("test/support/handler-presence-baseline.json", "file://" + process.cwd() + "/"));
     if (process.env.UPDATE_HANDLER_PRESENCE_BASELINE === "1") {
       writeFileSync(baselinePath, JSON.stringify(actual, null, 2) + "\n");
     }
-    const baseline = JSON.parse(readFileSync(baselinePath, "utf8"));
-    expect(actual).toEqual(baseline);
+    const baseline: Inventory = JSON.parse(readFileSync(baselinePath, "utf8"));
+    const deadKey = (route: string, entry: InventoryEntry): string => route + "|" + entry.path + "|" + entry.tag + "|" + entry.label;
+    // Monotone ratchet: a control that becomes wired (or disappears) is an improvement and must NOT fail
+    // the suite while another task is landing its wiring; a newly dead control always fails.
+    const actualDead = new Set(actual.routes.flatMap((route) => route.unwired.map((entry) => deadKey(route.route, entry))));
+    const baselineDead = new Set(baseline.routes.flatMap((route) => route.unwired.map((entry) => deadKey(route.route, entry))));
+    const added = [...actualDead].filter((key) => !baselineDead.has(key));
+    const removed = [...baselineDead].filter((key) => !actualDead.has(key));
+    expect(added, "new dead controls: " + added.join(", ") + (removed.length === 0 ? "" : " (wired up since the baseline: " + removed.join(", ") + ")")).toEqual([]);
   });
 });

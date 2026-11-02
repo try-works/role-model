@@ -1,7 +1,7 @@
 # S617 handler-presence baseline inventory
-Generated from the route table with the recording HtmlBuilder; this is the dead-control ratchet.
+Generated from the route table with the recording HtmlBuilder; the ratchet fails on NEW dead controls only.
 
-routes=50 elements=1555 deadControls=121 disabledControls=5
+routes=50 elements=1557 deadControls=119 disabledControls=5
 scanner_errors=1 :: Requests: Foldkit: html element constructors must be called inside a runtime-driven render. The element was built outside a view, or foldkit was loaded as more than one instance (a bundler split foldkit and @foldkit/ui into separate copies).
 Index: 45 interactive, 30 wired, 0 disabled, 15 dead
   - option "all" @ div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>label[1]>select[1]>option[1]
@@ -95,13 +95,11 @@ ModelsRoles: 38 interactive, 34 wired, 0 disabled, 4 dead
   - option "allowed" @ div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[2]>label[1]>select[1]>option[2]
   - option "assistant" @ div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[2]>label[2]>select[1]>option[1]
   - option "allowed" @ div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[2]>label[2]>select[1]>option[2]
-Benchmark: 31 interactive, 25 wired, 0 disabled, 6 dead
-  - select "Benchmark mode Quick (12 hard cases)" @ div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]
+Benchmark: 33 interactive, 29 wired, 0 disabled, 4 dead
   - option "Quick (12 hard cases)" @ div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]>option[1]
-  - select "Judge endpoint Deepseek Flash (High) (remote)" @ div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]
+  - option "Full" @ div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]>option[2]
   - option "Deepseek Flash (High) (remote)" @ div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]>option[1]
-  - button "Run quick benchmark (3 models, 12 cases)" @ div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[2]>button[1]
-  - button "Clear all benchmark data" @ div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[2]>button[2]
+  - option "custom" @ div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]>option[2]
 StorageRetention: 33 interactive, 33 wired, 0 disabled, 0 dead
 Runtime: 30 interactive, 30 wired, 0 disabled, 0 dead
 RuntimeConfig: 29 interactive, 29 wired, 0 disabled, 0 dead

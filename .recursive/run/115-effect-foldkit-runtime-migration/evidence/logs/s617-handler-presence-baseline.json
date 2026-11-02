@@ -601,15 +601,9 @@
     },
     {
       "disabledCount": 0,
-      "elementCount": 31,
+      "elementCount": 33,
       "route": "Benchmark",
       "unwired": [
-        {
-          "label": "Benchmark mode Quick (12 hard cases)",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]",
-          "role": null,
-          "tag": "select"
-        },
         {
           "label": "Quick (12 hard cases)",
           "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]>option[1]",
@@ -617,10 +611,10 @@
           "tag": "option"
         },
         {
-          "label": "Judge endpoint Deepseek Flash (High) (remote)",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]",
+          "label": "Full",
+          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]>option[2]",
           "role": null,
-          "tag": "select"
+          "tag": "option"
         },
         {
           "label": "Deepseek Flash (High) (remote)",
@@ -629,19 +623,13 @@
           "tag": "option"
         },
         {
-          "label": "Run quick benchmark (3 models, 12 cases)",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[2]>button[1]",
+          "label": "custom",
+          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]>option[2]",
           "role": null,
-          "tag": "button"
-        },
-        {
-          "label": "Clear all benchmark data",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[2]>button[2]",
-          "role": null,
-          "tag": "button"
+          "tag": "option"
         }
       ],
-      "wiredCount": 25
+      "wiredCount": 29
     },
     {
       "disabledCount": 0,
@@ -1100,9 +1088,9 @@
     }
   ],
   "totals": {
-    "deadControls": 121,
+    "deadControls": 119,
     "disabledControls": 5,
-    "elements": 1555,
+    "elements": 1557,
     "routes": 50
   }
 }
