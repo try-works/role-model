@@ -170,3 +170,20 @@ Error: ENOENT: no such file or directory, open 'D:\DEV\.recursive\run\115-effect
    Start at  05:29:21
    Duration  33.43s (transform 16.16s, setup 0ms, collect 51.29s, tests 1.52s, environment 9.31s, prepare 1.50s)
 
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s617-handler-presence.test.ts (9 tests) 625ms
+   ✓ S617 handler-presence: routed inventory > scans every routed tag; the one known recorder gap is documented, not hidden  326ms
+ ✓ test/tools/handler-presence-reconcile.test.ts (8 tests) 708ms
+   ✓ S617 reconciliation guard > planReconcile reports unchanged without modifying the committed mapping  366ms
+ ✓ test/tools/handler-presence-reconcile-cli.test.ts (3 tests) 46718ms
+   ✓ S617 reconciliation CLI guard > missing mapping fails closed: non-zero, no files written  9310ms
+   ✓ S617 reconciliation CLI guard > --refresh bootstraps, and the next run is unchanged with no write  17618ms
+   ✓ S617 reconciliation CLI guard > changed mapping fails with exit 2 and no write  19781ms
+
+ Test Files  3 passed (3)
+      Tests  20 passed (20)
+   Start at  05:59:51
+   Duration  52.88s (transform 13.12s, setup 0ms, collect 42.61s, tests 48.05s, environment 12.45s, prepare 2.03s)
+

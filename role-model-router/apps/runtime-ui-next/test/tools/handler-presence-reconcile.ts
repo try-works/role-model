@@ -242,8 +242,7 @@ const evidenceDir = () => {
   return root + ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/";
 };
 
-export const writeEvidence = ({ head, humanItems, inventory, mapping, scans }: { head: string; humanItems: HumanItem[]; inventory: ReturnType<typeof renderInventory>; mapping: ReconcileMapping; scans: ReturnType<typeof scanAllRoutes>; }): void => {
-  const dir = evidenceDir();
+export const writeEvidence = ({ dir, head, humanItems, inventory, mapping, scans }: { dir: string; head: string; humanItems: HumanItem[]; inventory: ReturnType<typeof renderInventory>; mapping: ReconcileMapping; scans: ReturnType<typeof scanAllRoutes>; }): void => {
   writeFileSync(dir + "s617-human-items.json", JSON.stringify({ total: humanItems.length, items: humanItems }, null, 2) + "\n");
   writeFileSync(dir + "s617-handler-presence-mapping.json", JSON.stringify(mapping, null, 2) + "\n");
   writeFileSync(dir + "s617-handler-presence-baseline.json", JSON.stringify(inventory, null, 2) + "\n");
@@ -289,17 +288,25 @@ export const writeEvidence = ({ head, humanItems, inventory, mapping, scans }: {
 };
 
 const main = () => {
-  const dir = evidenceDir();
+  // Test seam: the CLI guard tests isolate the evidence dir so they can never touch committed evidence.
+  const dirRaw = process.env.S617_RECONCILE_EVIDENCE ?? evidenceDir();
+  const dir = dirRaw.endsWith("/") || dirRaw.endsWith("\\") ? dirRaw : dirRaw + "/";
+  const mappingPath = process.env.S617_RECONCILE_MAPPING ?? dir + "s617-handler-presence-mapping.json";
   const refresh = process.argv.includes("--refresh");
   const plan = planReconcile({
     baselineDir: fileURLToPath(new URL("../support/", import.meta.url)),
     humanMarkdownPath: dir + "ui-dead-controls-inventory.md",
-    mappingPath: dir + "s617-handler-presence-mapping.json",
+    mappingPath,
   });
   const summary = { buckets: plan.mapping.buckets, humanTotal: plan.mapping.humanTotal, identities: plan.mapping.identities, modelsFamily: plan.mapping.modelsFamily, nativeTotal: plan.mapping.nativeTotal, status: plan.status, walkerOnly: plan.mapping.walkerOnly.length, walkerTotal: plan.mapping.walkerTotal };
   if (plan.violations.length > 0) {
     console.error("RECONCILE INVALID (nothing written):\n" + plan.violations.join("\n"));
     process.exitCode = 1;
+    return;
+  }
+  if (plan.status === "missing" && !refresh) {
+    console.error("RECONCILE FAILED: committed mapping is missing at " + mappingPath + "; run with --refresh to bootstrap (nothing written).");
+    process.exitCode = 3;
     return;
   }
   if (plan.status === "unchanged" && !refresh) {
@@ -312,8 +319,8 @@ const main = () => {
     process.exitCode = 2;
     return;
   }
-  const head = execSync("git rev-parse --short HEAD", { cwd: dir, encoding: "utf8" }).trim();
-  writeEvidence({ head, humanItems: plan.humanItems, inventory: plan.inventory, mapping: plan.mapping, scans: plan.scans });
+  const head = execSync("git rev-parse --short HEAD", { cwd: process.cwd(), encoding: "utf8" }).trim();
+  writeEvidence({ dir, head, humanItems: plan.humanItems, inventory: plan.inventory, mapping: plan.mapping, scans: plan.scans });
   console.log(JSON.stringify({ ...summary, wrote: true }));
   if (plan.diff.length > 0) console.error("REFRESH DIFF:\n" + plan.diff.join("\n"));
   if (!Object.values(plan.mapping.identities).every(Boolean)) process.exitCode = 1;

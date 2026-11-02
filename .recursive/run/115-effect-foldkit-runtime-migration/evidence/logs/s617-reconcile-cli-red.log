@@ -1,0 +1,62 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/tools/handler-presence-reconcile-cli.test.ts (3 tests | 3 failed) 30780ms
+   × S617 reconciliation CLI guard > missing mapping fails closed: non-zero, no files written 10176ms
+     → expected +0 not to be +0 // Object.is equality
+   × S617 reconciliation CLI guard > --refresh bootstraps, and the next run is unchanged with no write 10292ms
+     → expected false to be true // Object.is equality
+   × S617 reconciliation CLI guard > changed mapping fails with exit 2 and no write 10305ms
+     → ENOENT: no such file or directory, open 'E:\tmp\s617-cli-u8Fvho\s617-handler-presence-mapping.json'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/tools/handler-presence-reconcile-cli.test.ts > S617 reconciliation CLI guard > missing mapping fails closed: non-zero, no files written
+AssertionError: expected +0 not to be +0 // Object.is equality
+ ❯ test/tools/handler-presence-reconcile-cli.test.ts:48:31
+     46|     const humanBefore = sha256(join(dir, "ui-dead-controls-inventory.m…
+     47|     const result = run(env);
+     48|     expect(result.status).not.toBe(0);
+       |                               ^
+     49|     expect(result.stderr).toContain("missing");
+     50|     expect(result.stderr).toContain("--refresh");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/tools/handler-presence-reconcile-cli.test.ts > S617 reconciliation CLI guard > --refresh bootstraps, and the next run is unchanged with no write
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/tools/handler-presence-reconcile-cli.test.ts:60:37
+     58|     const first = run(env, ["--refresh"]);
+     59|     expect(first.status).toBe(0);
+     60|     expect(existsSync(mappingPath)).toBe(true);
+       |                                     ^
+     61|     const shaAfterRefresh = sha256(mappingPath);
+     62|     const second = run(env);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/tools/handler-presence-reconcile-cli.test.ts > S617 reconciliation CLI guard > changed mapping fails with exit 2 and no write
+Error: ENOENT: no such file or directory, open 'E:\tmp\s617-cli-u8Fvho\s617-handler-presence-mapping.json'
+ ❯ test/tools/handler-presence-reconcile-cli.test.ts:72:33
+     70|     const { dir, env, mappingPath } = fixture();
+     71|     expect(run(env, ["--refresh"]).status).toBe(0);
+     72|     const tampered = JSON.parse(readFileSync(mappingPath, "utf8"));
+       |                                 ^
+     73|     tampered.items.splice(7, 1);
+     74|     writeFileSync(mappingPath, JSON.stringify(tampered, null, 2) + "\n…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  05:53:58
+   Duration  36.60s (transform 220ms, setup 0ms, collect 204ms, tests 30.78s, environment 3.58s, prepare 750ms)
+

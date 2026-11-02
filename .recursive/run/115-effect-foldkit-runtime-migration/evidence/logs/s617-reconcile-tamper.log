@@ -1,24 +1,30 @@
-# S617 reconcile guard - end-to-end tamper proof
+# S617 reconcile guard - end-to-end tamper proof (rerun against the CURRENT mapping)
 
-Method: dropped item H008 from the committed s617-handler-presence-mapping.json (row count 61 -> 60), ran
+Method: copied the committed mapping bytes, dropped item H008 from the copy (row count 61 -> 60), ran
 node --import tsx role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.ts, then restored
 the original bytes and ran it again.
 
-## Tampered run
+## Bytes/hashes
+- committed mapping: 19,130 bytes, sha256 55de10bad55bcd895b1a605ffc5657a4e561242944ebf53e4f4ea69bf2b638ee
+- tampered mapping (H008 dropped): 18,826 bytes, sha256 ca097426a796134bac78f1cc7ae671271ed3a2e6a467f3c6702c9ac86913f9d6
+- tampered mapping AFTER the generator run: 18,826 bytes, sha256 ca097426a796134bac78f1cc7ae671271ed3a2e6a467f3c6702c9ac86913f9d6
+  => identical to the tampered input: the guard WROTE NOTHING.
+- restored mapping: 19,130 bytes, sha256 55de10bad55bcd895b1a605ffc5657a4e561242944ebf53e4f4ea69bf2b638ee
+  => identical to the original committed bytes.
+
+## Tampered run (exit 2)
 RECONCILE FAILED: committed mapping differs (nothing written). Re-run with --refresh to accept:
 row count 60 -> 61
 added row H008
 EXIT=2
-- committed mapping file byte-identical afterwards: true (18,802 bytes, unchanged)
 
-## Restored run
+## Restored run (exit 0, no writes)
 {"buckets":{"matched_walker":20,"non_native_affordance":8,"scanner_gap":8,"unmatched":0,"wired_after_inventory":25},
  "humanTotal":61,"identities":{"allItems":true,"modelsFamily":true,"nativeOnly":true,"walker":true},
  "modelsFamily":{"affordance":4,"rows":17,"wired":13},"nativeTotal":53,"status":"unchanged","walkerOnly":5,
  "walkerTotal":25,"wrote":false}
 RECONCILE OK: committed mapping matches; no files written.
 EXIT=0
-- restored mapping equals the original: true
 
-This proves the guard refuses to rewrite committed evidence on ANY difference, including a single dropped row,
-and a no-op rerun writes nothing.
+The size claim is measured against the CURRENT mapping at HEAD (19,130 bytes), and both the before/after sha256
+of the tampered file and the restored-vs-original sha256 are recorded above.
