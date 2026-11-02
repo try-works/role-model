@@ -1,0 +1,15 @@
+✔ S177: the filter select carries an aria-label (7.9274ms)
+✔ S177: no select is added without a name in the port (2.3266ms)
+✔ S181: the shell offers a skip link to main content (6.0101ms)
+✔ S181: the skip link is a child of the shell, not one of its attributes (1.5466ms)
+✔ S182: the shell main column is a shrinking flex item, not w-full (13.9655ms)
+✔ S205: every --rm token referenced by the port is defined (11.6455ms)
+✔ S205: the port does not rely on ring utilities, which do not compose on these elements (1.2775ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 779.3558

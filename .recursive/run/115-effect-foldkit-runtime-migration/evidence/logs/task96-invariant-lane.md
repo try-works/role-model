@@ -26,4 +26,4 @@ Exact patch (lead applies; view.ts is lead-owned):
 - `test/s181-skip-link.test.mjs` — current shell class; same child-not-attribute assertion.
 - `test/s182-shell-overflow.test.mjs` — current main-column class; same overflow assertions.
 
-No assertion was removed or weakened. s177/s181/s182 now 5/5 green. Lane remains red on s205 until the view patch lands.
+No assertion was removed or weakened. s177/s181/s182/s205 are 7/7 green (task96-target-green.log). The lead applied the s205 view patch as baa867ab. The full lane is now 18/21; the only remaining failures are the separate S247 synthetic-click-budget assertions (s619-learning-controls), which are outside this task.
