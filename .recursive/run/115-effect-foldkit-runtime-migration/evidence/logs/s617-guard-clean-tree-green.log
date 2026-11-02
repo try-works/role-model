@@ -1,35 +1,50 @@
-# S617 guard lane - clean worktree run
+# S617 guard lane - clean worktree run (final contract, 22/22)
 
-Why: the previous s617-reconcile-guard-green.log was generated from the wrong cwd on a dirty shared tree
-(TS5058 tsconfig.json not found, then 8/8 failures). It is deleted and replaced by this real run.
+Why: earlier guard evidence was invalid (TS5058 from wrong cwd; then a vitest exit 1 caused by blocking spawns).
+This run is the authoritative clean-tree receipt for the reconcile contract.
 
-Tree: clean detached worktree D:/DEV/rm-clean/harness-check at HEAD 933d5979
-  (git worktree add D:/DEV/rm-clean/harness-check HEAD --detach, then checkout 933d5979)
-Node modules: junctions to the main worktree's installed store (root node_modules + app node_modules);
-  no source file in the clean tree was modified, no dependency was installed.
+Tree: detached clean worktree D:/DEV/rm-clean/harness-check at HEAD 35023419
+  created via: git worktree add D:/DEV/rm-clean/harness-check HEAD --detach (then checkout 35023419)
+Node modules: junctions to the main worktree's installed store; no source edits and no install in the clean tree.
 Cwd: D:/DEV/rm-clean/harness-check/role-model-router/apps/runtime-ui-next
-Commands:
-  corepack pnpm exec tsc --noEmit -p tsconfig.json
-  corepack pnpm exec vitest run test/s617-handler-presence.test.ts test/tools/handler-presence-reconcile.test.ts test/tools/handler-presence-reconcile-cli.test.ts
 
-Result: tsc exit 0; 3 test files passed; 20/20 tests passed (s617 9 + reconcile unit 8 + reconcile CLI 3).
-Exit codes pinned by the CLI guard: unchanged 0 / changed 2 / missing 3 / --refresh bootstraps then unchanged 0.
+## Raw tsc command and output
+  $ corepack pnpm exec tsc --noEmit -p tsconfig.json
+  tsc stdout/stderr: (empty - no diagnostics)
+  TSC_EXIT=0
 
-## Raw output
+## Raw vitest command and result
+  $ corepack pnpm exec vitest run test/s617-handler-presence.test.ts test/tools/handler-presence-reconcile.test.ts test/tools/handler-presence-reconcile-cli.test.ts
+  ✓ test/s617-handler-presence.test.ts (9 tests) 780ms
+  ✓ test/tools/handler-presence-reconcile.test.ts (9 tests) 1099ms
+  ✓ test/tools/handler-presence-reconcile-cli.test.ts (4 tests) 77908ms
+  Test Files  3 passed (3)
+  Tests  22 passed (22)
+  VITEST_EXIT=0
+
+## Exit-code contract pinned by the CLI guard (process level, isolated evidence dir)
+  0 = unchanged (no write)        1 = invalid mapping/convention violation (no write, names walkerPath)
+  2 = changed/stale mapping (no write, prints diff)   3 = missing mapping (no write, names --refresh)
+  --refresh = explicit bootstrap/write; the next run is then unchanged (0, no write).
+  Note: the CLI guard spawns asynchronously; spawnSync blocked the vitest worker event loop and produced a
+  worker RPC timeout (exit 1) even with all assertions passing, which is why this suite previously misreported.
+
+## Raw vitest output
 
  RUN  v3.2.4 D:/DEV/rm-clean/harness-check/role-model-router/apps/runtime-ui-next
 
- ✓ test/s617-handler-presence.test.ts (9 tests) 758ms
-   ✓ S617 handler-presence: routed inventory > scans every routed tag; the one known recorder gap is documented, not hidden  376ms
- ✓ test/tools/handler-presence-reconcile.test.ts (8 tests) 1033ms
-   ✓ S617 reconciliation guard > planReconcile reports unchanged without modifying the committed mapping  494ms
- ✓ test/tools/handler-presence-reconcile-cli.test.ts (3 tests) 58803ms
-   ✓ S617 reconciliation CLI guard > missing mapping fails closed: non-zero, no files written  12248ms
-   ✓ S617 reconciliation CLI guard > --refresh bootstraps, and the next run is unchanged with no write  24016ms
-   ✓ S617 reconciliation CLI guard > changed mapping fails with exit 2 and no write  22519ms
+ ✓ test/s617-handler-presence.test.ts (9 tests) 780ms
+   ✓ S617 handler-presence: routed inventory > scans every routed tag; the one known recorder gap is documented, not hidden  387ms
+ ✓ test/tools/handler-presence-reconcile.test.ts (9 tests) 1099ms
+   ✓ S617 reconciliation guard > planReconcile reports unchanged without modifying the committed mapping  437ms
+ ✓ test/tools/handler-presence-reconcile-cli.test.ts (4 tests) 77908ms
+   ✓ S617 reconciliation CLI guard > missing mapping fails closed: non-zero, no files written  11808ms
+   ✓ S617 reconciliation CLI guard > --refresh bootstraps, and the next run is unchanged with no write  22633ms
+   ✓ S617 reconciliation CLI guard > invalid mapping fails with exit 1, names the violation and writes nothing  21614ms
+   ✓ S617 reconciliation CLI guard > changed mapping fails with exit 2 and no write  21842ms
 
  Test Files  3 passed (3)
-      Tests  20 passed (20)
-   Start at  06:15:39
-   Duration  67.76s (transform 21.76s, setup 0ms, collect 70.36s, tests 60.59s, environment 18.74s, prepare 2.51s)
+      Tests  22 passed (22)
+   Start at  06:50:36
+   Duration  85.92s (transform 16.61s, setup 0ms, collect 53.78s, tests 79.79s, environment 16.63s, prepare 2.28s)
 
