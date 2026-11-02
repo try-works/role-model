@@ -178,139 +178,43 @@
       "disabledCount": 0,
       "elementCount": 32,
       "route": "Learning",
-      "unwired": [
-        {
-          "label": "Operator token",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>label[1]>input[1]",
-          "role": null,
-          "tag": "input"
-        }
-      ],
-      "wiredCount": 31
+      "unwired": [],
+      "wiredCount": 32
     },
     {
       "disabledCount": 0,
       "elementCount": 29,
       "route": "LearningConfiguration",
-      "unwired": [
-        {
-          "label": "Operator token",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>label[1]>input[1]",
-          "role": null,
-          "tag": "input"
-        }
-      ],
-      "wiredCount": 28
+      "unwired": [],
+      "wiredCount": 29
     },
     {
       "disabledCount": 0,
       "elementCount": 32,
       "route": "LearningPacks",
-      "unwired": [
-        {
-          "label": "Operator token",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>label[1]>input[1]",
-          "role": null,
-          "tag": "input"
-        },
-        {
-          "label": "Roll back active pack (scope-wide)",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[3]>button[1]",
-          "role": null,
-          "tag": "button"
-        },
-        {
-          "label": "Engage kill switch",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[3]>button[2]",
-          "role": null,
-          "tag": "button"
-        },
-        {
-          "label": "Release kill switch",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[3]>button[3]",
-          "role": null,
-          "tag": "button"
-        }
-      ],
-      "wiredCount": 28
+      "unwired": [],
+      "wiredCount": 32
     },
     {
       "disabledCount": 0,
       "elementCount": 34,
       "route": "LearningDecisions",
-      "unwired": [
-        {
-          "label": "Operator token",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>label[1]>input[1]",
-          "role": null,
-          "tag": "input"
-        },
-        {
-          "label": "Role all roles",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]",
-          "role": null,
-          "tag": "select"
-        },
-        {
-          "label": "Task all tasks",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]",
-          "role": null,
-          "tag": "select"
-        },
-        {
-          "label": "Outcome all outcomes",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[3]>select[1]",
-          "role": null,
-          "tag": "select"
-        },
-        {
-          "label": "Advisory state all fresh stale unavailable",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[4]>select[1]",
-          "role": null,
-          "tag": "select"
-        },
-        {
-          "label": "Observation origin live shadow all",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[5]>select[1]",
-          "role": null,
-          "tag": "select"
-        }
-      ],
-      "wiredCount": 28
+      "unwired": [],
+      "wiredCount": 34
     },
     {
       "disabledCount": 0,
       "elementCount": 30,
       "route": "LearningEvidence",
-      "unwired": [
-        {
-          "label": "Operator token",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>label[1]>input[1]",
-          "role": null,
-          "tag": "input"
-        },
-        {
-          "label": "Operator token",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[2]>div[2]>label[1]>input[1]",
-          "role": null,
-          "tag": "input"
-        }
-      ],
-      "wiredCount": 28
+      "unwired": [],
+      "wiredCount": 30
     },
     {
       "disabledCount": 0,
       "elementCount": 29,
       "route": "LearningHistory",
-      "unwired": [
-        {
-          "label": "Operator token",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>label[1]>input[1]",
-          "role": null,
-          "tag": "input"
-        }
-      ],
-      "wiredCount": 28
+      "unwired": [],
+      "wiredCount": 29
     },
     {
       "disabledCount": 1,
@@ -608,7 +512,7 @@
     }
   ],
   "totals": {
-    "deadControls": 40,
+    "deadControls": 25,
     "disabledControls": 5,
     "elements": 1478,
     "routes": 50

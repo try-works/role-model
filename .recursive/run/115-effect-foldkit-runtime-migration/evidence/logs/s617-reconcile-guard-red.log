@@ -1,0 +1,25 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/tools/handler-presence-reconcile.test.ts [ test/tools/handler-presence-reconcile.test.ts ]
+TypeError: The URL must be of scheme file
+ ❯ test/tools/handler-presence-reconcile.ts:17:18
+     15|  */
+     16| 
+     17| const repoRoot = fileURLToPath(new URL("../../../../../", import.meta.…
+       |                  ^
+     18| const evidenceLogs = repoRoot + ".recursive/run/115-effect-foldkit-run…
+     19| const humanMarkdownPath = evidenceLogs + "ui-dead-controls-inventory.m…
+ ❯ test/tools/handler-presence-reconcile.test.ts:8:1
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  05:12:40
+   Duration  29.78s (transform 13.96s, setup 0ms, collect 0ms, tests 0ms, environment 4.78s, prepare 765ms)
+

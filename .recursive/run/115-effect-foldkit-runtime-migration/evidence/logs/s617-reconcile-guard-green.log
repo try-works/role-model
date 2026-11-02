@@ -1,0 +1,172 @@
+error TS5058: The specified path does not exist: 'tsconfig.json'.
+
+ RUN  v4.1.11 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+
+ ❯ role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts (8 tests | 8 failed) 174ms
+     × passes an unchanged mapping comparison 33ms
+     × detects a mutated bucket and names the row 4ms
+     × detects a dropped row 3ms
+     × detects a wrong identity total 2ms
+     × enforces the walkerPath null convention 4ms
+     × planReconcile reports unchanged without modifying the committed mapping 2ms
+     × planReconcile detects a tampered committed mapping without rewriting it 28ms
+     × planReconcile reports missing when no mapping is committed 33ms
+ ❯ role-model-router/apps/runtime-ui-next/test/s617-handler-presence.test.ts (9 tests | 1 failed) 1159ms
+     ✓ accepts a button wired with OnClick and flags one without any handler 34ms
+     ✓ flags inputs, selects and textareas without OnInput/OnChange, and accepts wired ones 13ms
+     ✓ treats an anchor as wired only when it has a real href or a click handler 3ms
+     ✓ recognises role=button/tab/option controls, and disabled controls are reported but not dead 7ms
+     ✓ scans every routed tag; the one known recorder gap is documented, not hidden  480ms
+     ✓ finds today's known dead controls from evidence/logs/ui-dead-controls-inventory.md 249ms
+     ✓ the comparison FAILS on a synthetic newly dead control and names it 5ms
+     ✓ the comparison PASSES when a baseline control becomes wired or disappears 2ms
+     × matches the committed baseline, so a new dead control fails the suite 330ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  role-model-router/apps/runtime-ui-next/test/s617-handler-presence.test.ts > S617 handler-presence: routed inventory > matches the committed baseline, so a new dead control fails the suite
+Error: ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\test\support\handler-presence-baseline.json'
+ ❯ role-model-router/apps/runtime-ui-next/test/s617-handler-presence.test.ts:180:44
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts > S617 reconciliation guard > passes an unchanged mapping comparison
+Error: ENOENT: no such file or directory, open 'D:\DEV\.recursive\run\115-effect-foldkit-runtime-migration\evidence\logs\s617-handler-presence-mapping.json'
+ ❯ loadCommitted role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts:30:58
+     28| const baselineRoot = fileURLToPath(new URL("test/support/", "file://" …
+     29|
+     30| const loadCommitted = (): ReconcileMapping => JSON.parse(readFileSync(…
+       |                                                          ^
+     31|
+     32| const clone = (mapping: ReconcileMapping): ReconcileMapping => JSON.pa…
+ ❯ role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts:45:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts > S617 reconciliation guard > detects a mutated bucket and names the row
+Error: ENOENT: no such file or directory, open 'D:\DEV\.recursive\run\115-effect-foldkit-runtime-migration\evidence\logs\s617-handler-presence-mapping.json'
+ ❯ loadCommitted role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts:30:58
+     28| const baselineRoot = fileURLToPath(new URL("test/support/", "file://" …
+     29|
+     30| const loadCommitted = (): ReconcileMapping => JSON.parse(readFileSync(…
+       |                                                          ^
+     31|
+     32| const clone = (mapping: ReconcileMapping): ReconcileMapping => JSON.pa…
+ ❯ role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts:50:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts > S617 reconciliation guard > detects a dropped row
+Error: ENOENT: no such file or directory, open 'D:\DEV\.recursive\run\115-effect-foldkit-runtime-migration\evidence\logs\s617-handler-presence-mapping.json'
+ ❯ loadCommitted role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts:30:58
+     28| const baselineRoot = fileURLToPath(new URL("test/support/", "file://" …
+     29|
+     30| const loadCommitted = (): ReconcileMapping => JSON.parse(readFileSync(…
+       |                                                          ^
+     31|
+     32| const clone = (mapping: ReconcileMapping): ReconcileMapping => JSON.pa…
+ ❯ role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts:61:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts > S617 reconciliation guard > detects a wrong identity total
+Error: ENOENT: no such file or directory, open 'D:\DEV\.recursive\run\115-effect-foldkit-runtime-migration\evidence\logs\s617-handler-presence-mapping.json'
+ ❯ loadCommitted role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts:30:58
+     28| const baselineRoot = fileURLToPath(new URL("test/support/", "file://" …
+     29|
+     30| const loadCommitted = (): ReconcileMapping => JSON.parse(readFileSync(…
+       |                                                          ^
+     31|
+     32| const clone = (mapping: ReconcileMapping): ReconcileMapping => JSON.pa…
+ ❯ role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts:70:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts > S617 reconciliation guard > enforces the walkerPath null convention
+Error: ENOENT: no such file or directory, open 'D:\DEV\.recursive\run\115-effect-foldkit-runtime-migration\evidence\logs\s617-handler-presence-mapping.json'
+ ❯ loadCommitted role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts:30:58
+     28| const baselineRoot = fileURLToPath(new URL("test/support/", "file://" …
+     29|
+     30| const loadCommitted = (): ReconcileMapping => JSON.parse(readFileSync(…
+       |                                                          ^
+     31|
+     32| const clone = (mapping: ReconcileMapping): ReconcileMapping => JSON.pa…
+ ❯ role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts:77:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts > S617 reconciliation guard > planReconcile reports unchanged without modifying the committed mapping
+Error: ENOENT: no such file or directory, open 'D:\DEV\.recursive\run\115-effect-foldkit-runtime-migration\evidence\logs\s617-handler-presence-mapping.json'
+ ❯ role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts:90:20
+     88|
+     89|   it("planReconcile reports unchanged without modifying the committed …
+     90|     const before = readFileSync(committedMappingPath, "utf8");
+       |                    ^
+     91|     const plan = planReconcile({ baselineDir: baselineRoot, humanMarkd…
+     92|     expect(plan.status).toBe("unchanged");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts > S617 reconciliation guard > planReconcile detects a tampered committed mapping without rewriting it
+Error: ENOENT: no such file or directory, open 'D:\DEV\.recursive\run\115-effect-foldkit-runtime-migration\evidence\logs\s617-handler-presence-mapping.json'
+ ❯ loadCommitted role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts:30:58
+     28| const baselineRoot = fileURLToPath(new URL("test/support/", "file://" …
+     29|
+     30| const loadCommitted = (): ReconcileMapping => JSON.parse(readFileSync(…
+       |                                                          ^
+     31|
+     32| const clone = (mapping: ReconcileMapping): ReconcileMapping => JSON.pa…
+ ❯ withTempMapping role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts:37:25
+ ❯ role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts:98:34
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts > S617 reconciliation guard > planReconcile reports missing when no mapping is committed
+Error: ENOENT: no such file or directory, open 'D:\DEV\.recursive\run\115-effect-foldkit-runtime-migration\evidence\logs\ui-dead-controls-inventory.md'
+ ❯ planReconcile role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.ts:225:33
+    223|
+    224| export const planReconcile = ({ baselineDir, humanMarkdownPath, mappin…
+    225|   const humanItems = parseHuman(readFileSync(humanMarkdownPath, "utf8"…
+       |                                 ^
+    226|   const scans = scanAllRoutes();
+    227|   const inventory = renderInventory(scans);
+ ❯ role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.test.ts:113:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  9 failed | 8 passed (17)
+   Start at  05:15:17
+   Duration  96.64s (transform 143.04s, setup 0ms, import 179.70s, tests 1.33s, environment 30ms)
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s617-handler-presence.test.ts (9 tests) 1469ms
+   ✓ S617 handler-presence: routed inventory > scans every routed tag; the one known recorder gap is documented, not hidden  779ms
+   ✓ S617 handler-presence: routed inventory > matches the committed baseline, so a new dead control fails the suite  462ms
+ ✓ test/tools/handler-presence-reconcile.test.ts (8 tests) 1637ms
+   ✓ S617 reconciliation guard > planReconcile reports unchanged without modifying the committed mapping  736ms
+   ✓ S617 reconciliation guard > planReconcile detects a tampered committed mapping without rewriting it  353ms
+   ✓ S617 reconciliation guard > planReconcile reports missing when no mapping is committed  356ms
+
+ Test Files  2 passed (2)
+      Tests  17 passed (17)
+   Start at  05:19:40
+   Duration  53.27s (transform 26.50s, setup 0ms, collect 82.04s, tests 3.11s, environment 15.31s, prepare 1.94s)
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s617-handler-presence.test.ts (9 tests) 716ms
+   ✓ S617 handler-presence: routed inventory > scans every routed tag; the one known recorder gap is documented, not hidden  366ms
+ ✓ test/tools/handler-presence-reconcile.test.ts (8 tests) 808ms
+   ✓ S617 reconciliation guard > planReconcile reports unchanged without modifying the committed mapping  396ms
+
+ Test Files  2 passed (2)
+      Tests  17 passed (17)
+   Start at  05:29:21
+   Duration  33.43s (transform 16.16s, setup 0ms, collect 51.29s, tests 1.52s, environment 9.31s, prepare 1.50s)
+

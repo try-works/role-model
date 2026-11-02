@@ -1,0 +1,24 @@
+# S617 reconcile guard - end-to-end tamper proof
+
+Method: dropped item H008 from the committed s617-handler-presence-mapping.json (row count 61 -> 60), ran
+node --import tsx role-model-router/apps/runtime-ui-next/test/tools/handler-presence-reconcile.ts, then restored
+the original bytes and ran it again.
+
+## Tampered run
+RECONCILE FAILED: committed mapping differs (nothing written). Re-run with --refresh to accept:
+row count 60 -> 61
+added row H008
+EXIT=2
+- committed mapping file byte-identical afterwards: true (18,802 bytes, unchanged)
+
+## Restored run
+{"buckets":{"matched_walker":20,"non_native_affordance":8,"scanner_gap":8,"unmatched":0,"wired_after_inventory":25},
+ "humanTotal":61,"identities":{"allItems":true,"modelsFamily":true,"nativeOnly":true,"walker":true},
+ "modelsFamily":{"affordance":4,"rows":17,"wired":13},"nativeTotal":53,"status":"unchanged","walkerOnly":5,
+ "walkerTotal":25,"wrote":false}
+RECONCILE OK: committed mapping matches; no files written.
+EXIT=0
+- restored mapping equals the original: true
+
+This proves the guard refuses to rewrite committed evidence on ANY difference, including a single dropped row,
+and a no-op rerun writes nothing.

@@ -145,9 +145,10 @@ describe("S617 handler-presence: routed inventory", () => {
   it("finds today's known dead controls from evidence/logs/ui-dead-controls-inventory.md", () => {
     const scans = scanAllRoutes();
     const learning = scans.find((scan) => scan.route === "Learning");
-    expect(learning?.unwired.some((entry) => entry.label.includes("Operator token"))).toBe(true);
+    // S619 wired the Learning family from the inventory; these must no longer be dead.
+    expect(learning?.unwired.some((entry) => entry.label.includes("Operator token"))).toBe(false);
     const packs = scans.find((scan) => scan.route === "LearningPacks");
-    expect(packs?.unwired.some((entry) => entry.label.includes("Engage kill switch"))).toBe(true);
+    expect(packs?.unwired.some((entry) => entry.label.includes("Engage kill switch"))).toBe(false);
     const peers = scans.find((scan) => scan.route === "LocalPeers");
     expect(peers?.unwired.some((entry) => entry.label.includes("http://127.0.0.1:1234"))).toBe(true);
   });
