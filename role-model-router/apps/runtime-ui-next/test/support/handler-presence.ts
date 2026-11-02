@@ -162,7 +162,10 @@ const eventForAttribute = (name: string): string | null => {
 const describe = (node: RecordedNode, path: string): InteractiveElement | null => {
   const tag = node.tag.toLowerCase();
   const role = attrValue(node.attrs, "Role") === undefined ? rawAttribute(node.attrs, "role") : String(attrValue(node.attrs, "Role"));
-  const interactive = INTERACTIVE_TAGS.has(tag) || tag === "option" || (role !== null && INTERACTIVE_ROLES.has(role));
+  // A native <option> is never independently wirable: the select owns the change event, and counting the
+  // option as a dead control inflated the baseline (15 dead per page for one unwired select). Options are
+  // part of the select's inventory; role=option on a non-option element (a custom listbox row) still counts.
+  const interactive = INTERACTIVE_TAGS.has(tag) || (tag !== "option" && role !== null && INTERACTIVE_ROLES.has(role));
   if (!interactive) return null;
   const handlers: string[] = [];
   for (const attr of node.attrs) {
@@ -234,6 +237,30 @@ export const interactiveElements = (html: unknown): InteractiveElement[] => {
 
 /** The controls a user can reach whose wiring is absent (disabled controls are reported, not dead). */
 export const unwiredControls = (html: unknown): InteractiveElement[] => interactiveElements(html).filter((entry) => entry.dead);
+
+/** Stable identity of one dead control across scans (route + structural path + tag + label). */
+export const deadKey = (route: string, entry: InventoryEntry): string => route + "|" + entry.path + "|" + entry.tag + "|" + entry.label;
+
+export interface DeadKeyComparison {
+  /** Controls present now that the baseline did not have: a regression, and the only failing direction. */
+  readonly added: ReadonlyArray<string>;
+  /** Baseline controls that are now wired or gone: an improvement, always allowed. */
+  readonly removed: ReadonlyArray<string>;
+}
+
+/**
+ * S617 ratchet comparison, pure and unit-pinned: added is the regression list and must be empty for a
+ * green suite; removed ratchets the baseline down and must never fail. Extracted from the test so both
+ * directions are exercised with synthetic inventories instead of only comparing the scan to itself.
+ */
+export const compareDeadKeys = (actual: Inventory, baseline: Inventory): DeadKeyComparison => {
+  const actualDead = new Set(actual.routes.flatMap((route) => route.unwired.map((entry) => deadKey(route.route, entry))));
+  const baselineDead = new Set(baseline.routes.flatMap((route) => route.unwired.map((entry) => deadKey(route.route, entry))));
+  return {
+    added: [...actualDead].filter((key) => !baselineDead.has(key)).sort(),
+    removed: [...baselineDead].filter((key) => !actualDead.has(key)).sort(),
+  };
+};
 
 const routeFor = (tag: string): Model["route"] => {
   switch (tag) {

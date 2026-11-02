@@ -2,100 +2,9 @@
   "routes": [
     {
       "disabledCount": 0,
-      "elementCount": 45,
+      "elementCount": 30,
       "route": "Index",
-      "unwired": [
-        {
-          "label": "all",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>label[1]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "endpoint",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>label[1]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "model",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>label[1]>select[1]>option[3]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "provider",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>label[1]>select[1]>option[4]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "all",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>label[2]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "local",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>label[2]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "remote",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>label[2]>select[1]>option[3]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "all",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>label[3]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "success",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>label[3]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "failure",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>label[3]>select[1]>option[3]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "unknown",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>label[3]>select[1]>option[4]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "all",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>label[4]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "easy",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>label[4]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "medium",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>label[4]>select[1]>option[3]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "hard",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>label[4]>select[1]>option[4]",
-          "role": null,
-          "tag": "option"
-        }
-      ],
+      "unwired": [],
       "wiredCount": 30
     },
     {
@@ -327,7 +236,7 @@
     },
     {
       "disabledCount": 0,
-      "elementCount": 44,
+      "elementCount": 34,
       "route": "LearningDecisions",
       "unwired": [
         {
@@ -343,22 +252,10 @@
           "tag": "select"
         },
         {
-          "label": "all roles",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
           "label": "Task all tasks",
           "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]",
           "role": null,
           "tag": "select"
-        },
-        {
-          "label": "all tasks",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
         },
         {
           "label": "Outcome all outcomes",
@@ -367,64 +264,16 @@
           "tag": "select"
         },
         {
-          "label": "all outcomes",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[3]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
           "label": "Advisory state all fresh stale unavailable",
           "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[4]>select[1]",
           "role": null,
           "tag": "select"
         },
         {
-          "label": "all",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[4]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "fresh",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[4]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "stale",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[4]>select[1]>option[3]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "unavailable",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[4]>select[1]>option[4]",
-          "role": null,
-          "tag": "option"
-        },
-        {
           "label": "Observation origin live shadow all",
           "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[5]>select[1]",
           "role": null,
           "tag": "select"
-        },
-        {
-          "label": "live",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[5]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "shadow",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[5]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "all",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[5]>select[1]>option[3]",
-          "role": null,
-          "tag": "option"
         }
       ],
       "wiredCount": 28
@@ -492,7 +341,7 @@
     },
     {
       "disabledCount": 0,
-      "elementCount": 32,
+      "elementCount": 30,
       "route": "SystemOperator",
       "unwired": [
         {
@@ -524,18 +373,6 @@
           "path": "div[1]>div[1]>main[1]>div[1]>div[1]>div[1]>section[1]>div[2]>div[1]>button[1]",
           "role": null,
           "tag": "button"
-        },
-        {
-          "label": "shadow",
-          "path": "div[1]>div[1]>main[1]>div[1]>div[1]>section[4]>div[2]>div[1]>div[1]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "off",
-          "path": "div[1]>div[1]>main[1]>div[1]>div[1]>section[4]>div[2]>div[1]>div[1]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
         }
       ],
       "wiredCount": 25
@@ -569,66 +406,16 @@
     },
     {
       "disabledCount": 0,
-      "elementCount": 38,
+      "elementCount": 34,
       "route": "ModelsRoles",
-      "unwired": [
-        {
-          "label": "assistant",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[2]>label[1]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "allowed",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[2]>label[1]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "assistant",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[2]>label[2]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "allowed",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[2]>label[2]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        }
-      ],
+      "unwired": [],
       "wiredCount": 34
     },
     {
       "disabledCount": 0,
-      "elementCount": 33,
+      "elementCount": 29,
       "route": "Benchmark",
-      "unwired": [
-        {
-          "label": "Quick (12 hard cases)",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "Full",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "Deepseek Flash (High) (remote)",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "custom",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        }
-      ],
+      "unwired": [],
       "wiredCount": 29
     },
     {
@@ -675,100 +462,9 @@
     },
     {
       "disabledCount": 0,
-      "elementCount": 56,
+      "elementCount": 41,
       "route": "RouterStrategy",
-      "unwired": [
-        {
-          "label": "baseline",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "difficulty",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "hybrid",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]>option[3]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "intelligent",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]>option[4]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "balanced",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "quality",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "latency",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]>option[3]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "cost",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]>option[4]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "custom",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]>option[5]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "decision_only",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[3]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "hybrid",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[3]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "local_only",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[3]>select[1]>option[3]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "remote_only",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[3]>select[1]>option[4]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "off",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[2]>section[1]>div[2]>div[1]>label[1]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "on",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[2]>section[1]>div[2]>div[1]>label[1]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        }
-      ],
+      "unwired": [],
       "wiredCount": 41
     },
     {
@@ -780,100 +476,9 @@
     },
     {
       "disabledCount": 0,
-      "elementCount": 49,
+      "elementCount": 34,
       "route": "RouterConfig",
-      "unwired": [
-        {
-          "label": "baseline",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "difficulty",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "hybrid",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]>option[3]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "intelligent",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[1]>select[1]>option[4]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "balanced",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "quality",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "latency",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]>option[3]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "cost",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]>option[4]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "custom",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[2]>select[1]>option[5]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "decision_only",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[3]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "hybrid",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[3]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "local_only",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[3]>select[1]>option[3]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "remote_only",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[1]>section[1]>div[2]>div[1]>div[1]>label[3]>select[1]>option[4]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "off",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>section[1]>div[2]>div[1]>label[1]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "on",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>section[1]>div[2]>div[1]>label[1]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        }
-      ],
+      "unwired": [],
       "wiredCount": 34
     },
     {
@@ -912,7 +517,7 @@
     },
     {
       "disabledCount": 0,
-      "elementCount": 48,
+      "elementCount": 37,
       "route": "ObserveRouting",
       "unwired": [
         {
@@ -946,82 +551,16 @@
           "tag": "select"
         },
         {
-          "label": "Total",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[1]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "By endpoint variant",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[1]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "By upstream model",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[1]>select[1]>option[3]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "By provider",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[1]>select[1]>option[4]",
-          "role": null,
-          "tag": "option"
-        },
-        {
           "label": "Source",
           "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[2]>select[1]",
           "role": null,
           "tag": "select"
         },
         {
-          "label": "All sources",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[2]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "Local only",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[2]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "Remote only",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[2]>select[1]>option[3]",
-          "role": null,
-          "tag": "option"
-        },
-        {
           "label": "Difficulty",
           "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[3]>select[1]",
           "role": null,
           "tag": "select"
-        },
-        {
-          "label": "All buckets",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[3]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "Easy only",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[3]>select[1]>option[2]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "Medium only",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[3]>select[1]>option[3]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "Hard only",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[3]>select[1]>option[4]",
-          "role": null,
-          "tag": "option"
         },
         {
           "label": "Expand",
@@ -1041,28 +580,9 @@
     },
     {
       "disabledCount": 0,
-      "elementCount": 55,
+      "elementCount": 52,
       "route": "Providers",
-      "unwired": [
-        {
-          "label": "No providers available",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>section[1]>div[2]>div[1]>label[1]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "No connection methods",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>section[1]>div[2]>div[1]>label[2]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        },
-        {
-          "label": "Select a model…",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>section[1]>div[2]>div[1]>label[6]>select[1]>option[1]",
-          "role": null,
-          "tag": "option"
-        }
-      ],
+      "unwired": [],
       "wiredCount": 52
     },
     {
@@ -1088,9 +608,9 @@
     }
   ],
   "totals": {
-    "deadControls": 119,
+    "deadControls": 40,
     "disabledControls": 5,
-    "elements": 1557,
+    "elements": 1478,
     "routes": 50
   }
 }

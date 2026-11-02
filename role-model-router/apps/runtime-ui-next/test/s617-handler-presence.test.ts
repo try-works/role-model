@@ -7,6 +7,9 @@ import type { Message } from "../src/message";
 import {
   type Inventory,
   type InventoryEntry,
+  type InventoryRoute,
+  compareDeadKeys,
+  deadKey,
   interactiveElements,
   recordingHtmlBuilder,
   renderInventory,
@@ -25,6 +28,24 @@ import {
  */
 
 const sentinel = (() => undefined) as never;
+
+const deadEntry = (label: string, path = "div[1]>button[1]"): InventoryEntry => ({ label, path, role: null, tag: "button" });
+const inventoryRoute = (route: string, unwired: ReadonlyArray<InventoryEntry>): InventoryRoute => ({
+  disabledCount: 0,
+  elementCount: unwired.length + 1,
+  route,
+  unwired,
+  wiredCount: 1,
+});
+const inventoryOf = (routes: ReadonlyArray<InventoryRoute>): Inventory => ({
+  routes,
+  totals: {
+    deadControls: routes.reduce((sum, route) => sum + route.unwired.length, 0),
+    disabledControls: 0,
+    elements: routes.reduce((sum, route) => sum + route.elementCount, 0),
+    routes: routes.length,
+  },
+});
 
 const tree = (build: (h: ReturnType<typeof recordingHtmlBuilder>) => unknown) =>
   interactiveElements(build(recordingHtmlBuilder<unknown>()));
@@ -64,9 +85,11 @@ describe("S617 handler-presence: structural walker", () => {
     expect(wiredInput?.wired).toBe(true);
     expect(select?.wired).toBe(false);
     expect(textarea?.wired).toBe(false);
-    // The option inside the select is interactive too (role=option), but the aria-labelled select owns
-    // the meaningful dead control; both are reported.
-    expect(elements.some((entry) => entry.tag === "option")).toBe(true);
+    // A native <option> is owned by its select and is NOT independently wirable, so it is not a dead control
+    // of its own (the select is). A role=option on a non-option element (custom listbox row) still counts.
+    expect(elements.some((entry) => entry.tag === "option")).toBe(false);
+    const customRow = tree((h) => h.div([h.Role("option")], ["All"]));
+    expect(customRow.some((entry) => entry.role === "option" && entry.tag === "div")).toBe(true);
   });
 
   it("treats an anchor as wired only when it has a real href or a click handler", () => {
@@ -129,7 +152,24 @@ describe("S617 handler-presence: routed inventory", () => {
     expect(peers?.unwired.some((entry) => entry.label.includes("http://127.0.0.1:1234"))).toBe(true);
   });
 
-  it("fails on a NEW dead control, while wiring one up is allowed to ratchet the baseline down", () => {
+  it("the comparison FAILS on a synthetic newly dead control and names it", () => {
+    const baseline = inventoryOf([inventoryRoute("Models", [deadEntry("Save")])]);
+    const actual = inventoryOf([inventoryRoute("Models", [deadEntry("Save"), deadEntry("Delete", "div[1]>button[2]")])]);
+    const comparison = compareDeadKeys(actual, baseline);
+    expect(comparison.added).toEqual([deadKey("Models", deadEntry("Delete", "div[1]>button[2]"))]);
+    expect(comparison.added.length).toBe(1);
+    expect(comparison.removed).toEqual([]);
+  });
+
+  it("the comparison PASSES when a baseline control becomes wired or disappears", () => {
+    const baseline = inventoryOf([inventoryRoute("Models", [deadEntry("Save"), deadEntry("Delete", "div[1]>button[2]")])]);
+    const actual = inventoryOf([inventoryRoute("Models", [deadEntry("Save")])]);
+    const comparison = compareDeadKeys(actual, baseline);
+    expect(comparison.added).toEqual([]);
+    expect(comparison.removed).toEqual([deadKey("Models", deadEntry("Delete", "div[1]>button[2]"))]);
+  });
+
+  it("matches the committed baseline, so a new dead control fails the suite", () => {
     const scans = scanAllRoutes();
     const actual = renderInventory(scans);
     const baselinePath = fileURLToPath(new URL("test/support/handler-presence-baseline.json", "file://" + process.cwd() + "/"));
@@ -137,13 +177,7 @@ describe("S617 handler-presence: routed inventory", () => {
       writeFileSync(baselinePath, JSON.stringify(actual, null, 2) + "\n");
     }
     const baseline: Inventory = JSON.parse(readFileSync(baselinePath, "utf8"));
-    const deadKey = (route: string, entry: InventoryEntry): string => route + "|" + entry.path + "|" + entry.tag + "|" + entry.label;
-    // Monotone ratchet: a control that becomes wired (or disappears) is an improvement and must NOT fail
-    // the suite while another task is landing its wiring; a newly dead control always fails.
-    const actualDead = new Set(actual.routes.flatMap((route) => route.unwired.map((entry) => deadKey(route.route, entry))));
-    const baselineDead = new Set(baseline.routes.flatMap((route) => route.unwired.map((entry) => deadKey(route.route, entry))));
-    const added = [...actualDead].filter((key) => !baselineDead.has(key));
-    const removed = [...baselineDead].filter((key) => !actualDead.has(key));
-    expect(added, "new dead controls: " + added.join(", ") + (removed.length === 0 ? "" : " (wired up since the baseline: " + removed.join(", ") + ")")).toEqual([]);
+    const comparison = compareDeadKeys(actual, baseline);
+    expect(comparison.added, "new dead controls: " + comparison.added.join(", ") + (comparison.removed.length === 0 ? "" : " (wired up since the baseline: " + comparison.removed.join(", ") + ")")).toEqual([]);
   });
 });

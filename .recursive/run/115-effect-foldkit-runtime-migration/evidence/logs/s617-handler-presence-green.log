@@ -76,3 +76,17 @@ Error: ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\115
    Start at  03:48:13
    Duration  36.33s (transform 16.31s, setup 0ms, collect 26.59s, tests 628ms, environment 6.27s, prepare 1.06s)
 
+
+> @role-model-router/runtime-ui-next@0.0.0 test:handler-presence D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-ui-next
+> vitest run test/s617-handler-presence.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s617-handler-presence.test.ts (9 tests) 510ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  04:22:16
+   Duration  23.77s (transform 10.71s, setup 0ms, collect 17.99s, tests 510ms, environment 3.32s, prepare 629ms)
+

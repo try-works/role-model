@@ -1,11 +1,11 @@
 
  RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
 
- ✓ test/s617-handler-presence.test.ts (7 tests) 603ms
-   ✓ S617 handler-presence: routed inventory > scans every routed tag; the one known recorder gap is documented, not hidden  307ms
+ ✓ test/s617-handler-presence.test.ts (9 tests) 607ms
+   ✓ S617 handler-presence: routed inventory > scans every routed tag; the one known recorder gap is documented, not hidden  312ms
 
  Test Files  1 passed (1)
-      Tests  7 passed (7)
-   Start at  03:45:42
-   Duration  35.55s (transform 15.05s, setup 0ms, collect 24.66s, tests 603ms, environment 7.25s, prepare 1.18s)
+      Tests  9 passed (9)
+   Start at  04:11:12
+   Duration  35.29s (transform 16.24s, setup 0ms, collect 27.07s, tests 607ms, environment 5.23s, prepare 755ms)
 
