@@ -1462,7 +1462,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                       h.Type("button"),
                       h.DataAttribute("slot", "role-model-theme-toggle"),
                       h.AriaLabel(model.theme === "dark" ? "Switch to light mode" : "Switch to dark mode"),
-                      h.Class("inline-flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground outline-none hover:bg-accent focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"),
+                      h.Class("inline-flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-accent " + focusRingClass),
                       h.OnClick(Message.ToggledTheme()),
                     ],
                     [model.theme === "dark" ? sunIcon(h) : moonIcon(h)],
