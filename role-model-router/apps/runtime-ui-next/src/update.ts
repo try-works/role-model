@@ -242,6 +242,26 @@ const isPendingRedirectEcho = (
   model.pendingRedirectHref === incomingHref &&
   sameRoute(resolved.route, model.route);
 
+const requestsQuery = (state: NonNullable<Model["requestsFilters"]>): string => {
+  const params = new URLSearchParams({
+    breakdown: state.breakdown,
+    difficulty: state.difficulty,
+    range: state.range,
+    source: state.source,
+    statusFamily: state.statusFamily,
+  });
+  return "?" + params.toString();
+};
+const observeQuery = (state: NonNullable<Model["observeRoutingFilters"]>): string => {
+  const params = new URLSearchParams({
+    breakdown: state.breakdown,
+    difficulty: state.difficulty,
+    range: state.range,
+    source: state.source,
+  });
+  return "?" + params.toString();
+};
+
 export const createUpdate =
   (
     readDiagnostics: ReadDiagnosticsCommand,
@@ -1058,6 +1078,46 @@ const updateLocalPolicyDraft = (
         ModelsActionFailed: ({ message }: Extract<Message, { readonly _tag: "ModelsActionFailed" }>): UpdateReturn<Model, Message> => {
           const state = model.modelsView ?? {};
           return { model: { ...model, modelsView: { ...state, actionMessage: message } } };
+        },
+        RequestsRangeChanged: ({ value }: Extract<Message, { readonly _tag: "RequestsRangeChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.requestsFilters ?? { breakdown: "Total", difficulty: "All buckets", expanded: false, range: "Day", source: "All sources", statusFamily: "All statuses" };
+          const next = { ...state, range: value };
+          const token = model.readbacks.requests.token + 1;
+          return { commands: [readReadback({ key: "requests", query: requestsQuery(next), token })], model: { ...model, readbacks: { ...model.readbacks, requests: loadingReadback(token) }, requestsFilters: next } };
+        },
+        RequestsFilterChanged: ({ field, value }: Extract<Message, { readonly _tag: "RequestsFilterChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.requestsFilters ?? { breakdown: "Total", difficulty: "All buckets", expanded: false, range: "Day", source: "All sources", statusFamily: "All statuses" };
+          const next = { ...state, [field]: value };
+          const token = model.readbacks.requests.token + 1;
+          return { commands: [readReadback({ key: "requests", query: requestsQuery(next), token })], model: { ...model, readbacks: { ...model.readbacks, requests: loadingReadback(token) }, requestsFilters: next } };
+        },
+        RequestsAdvancedToggled: (): UpdateReturn<Model, Message> => {
+          const state = model.requestsFilters ?? { breakdown: "Total", difficulty: "All buckets", expanded: false, range: "Day", source: "All sources", statusFamily: "All statuses" };
+          return { model: { ...model, requestsFilters: { ...state, expanded: !state.expanded } } };
+        },
+        ObserveRangeChanged: ({ value }: Extract<Message, { readonly _tag: "ObserveRangeChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.observeRoutingFilters ?? { breakdown: "Total", difficulty: "All buckets", expanded: false, range: "Day", source: "All sources" };
+          const next = { ...state, range: value };
+          const token = model.readbacks.observeRouting.token + 1;
+          return { commands: [readReadback({ key: "observeRouting", query: observeQuery(next), token })], model: { ...model, readbacks: { ...model.readbacks, observeRouting: loadingReadback(token) }, observeRoutingFilters: next } };
+        },
+        ObserveFilterChanged: ({ field, value }: Extract<Message, { readonly _tag: "ObserveFilterChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.observeRoutingFilters ?? { breakdown: "Total", difficulty: "All buckets", expanded: false, range: "Day", source: "All sources" };
+          const next = { ...state, [field]: value };
+          const token = model.readbacks.observeRouting.token + 1;
+          return { commands: [readReadback({ key: "observeRouting", query: observeQuery(next), token })], model: { ...model, readbacks: { ...model.readbacks, observeRouting: loadingReadback(token) }, observeRoutingFilters: next } };
+        },
+        ObserveAdvancedToggled: (): UpdateReturn<Model, Message> => {
+          const state = model.observeRoutingFilters ?? { breakdown: "Total", difficulty: "All buckets", expanded: false, range: "Day", source: "All sources" };
+          return { model: { ...model, observeRoutingFilters: { ...state, expanded: !state.expanded } } };
+        },
+        ObservabilityRefreshRequested: (): UpdateReturn<Model, Message> => {
+          const token = model.observability.token + 1;
+          return { commands: [readObservability({ token })], model: { ...model, observability: { ...model.observability, status: "loading", token } } };
+        },
+        StoreReceiptsRefreshRequested: (): UpdateReturn<Model, Message> => {
+          const token = model.readbacks.storeReceipts.token + 1;
+          return { commands: [readReadback({ key: "storeReceipts", token })], model: { ...model, readbacks: { ...model.readbacks, storeReceipts: loadingReadback(token) } } };
         },
         RetentionSizeChanged: ({ value }: Extract<Message, { readonly _tag: "RetentionSizeChanged" }>): UpdateReturn<Model, Message> => {
           const state = model.retention ?? initialRetentionState();

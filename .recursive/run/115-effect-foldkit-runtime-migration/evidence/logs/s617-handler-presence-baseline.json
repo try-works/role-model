@@ -18,29 +18,15 @@
       "disabledCount": 0,
       "elementCount": 30,
       "route": "Observability",
-      "unwired": [
-        {
-          "label": "Refresh",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>button[1]",
-          "role": null,
-          "tag": "button"
-        }
-      ],
-      "wiredCount": 29
+      "unwired": [],
+      "wiredCount": 30
     },
     {
       "disabledCount": 0,
       "elementCount": 30,
       "route": "StoreReceipts",
-      "unwired": [
-        {
-          "label": "Refresh",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>button[1]",
-          "role": null,
-          "tag": "button"
-        }
-      ],
-      "wiredCount": 29
+      "unwired": [],
+      "wiredCount": 30
     },
     {
       "disabledCount": 0,
@@ -423,57 +409,8 @@
       "disabledCount": 0,
       "elementCount": 37,
       "route": "ObserveRouting",
-      "unwired": [
-        {
-          "label": "Day",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[1]>div[1]>button[1]",
-          "role": null,
-          "tag": "button"
-        },
-        {
-          "label": "Week",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[1]>div[1]>button[2]",
-          "role": null,
-          "tag": "button"
-        },
-        {
-          "label": "Month",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[1]>div[1]>button[3]",
-          "role": null,
-          "tag": "button"
-        },
-        {
-          "label": "90 days",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[1]>div[1]>button[4]",
-          "role": null,
-          "tag": "button"
-        },
-        {
-          "label": "Breakdown",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[1]>select[1]",
-          "role": null,
-          "tag": "select"
-        },
-        {
-          "label": "Source",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[2]>select[1]",
-          "role": null,
-          "tag": "select"
-        },
-        {
-          "label": "Difficulty",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[3]>select[1]",
-          "role": null,
-          "tag": "select"
-        },
-        {
-          "label": "Expand",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>button[1]",
-          "role": null,
-          "tag": "button"
-        }
-      ],
-      "wiredCount": 29
+      "unwired": [],
+      "wiredCount": 37
     },
     {
       "disabledCount": 0,
@@ -512,7 +449,7 @@
     }
   ],
   "totals": {
-    "deadControls": 25,
+    "deadControls": 15,
     "disabledControls": 5,
     "elements": 1478,
     "routes": 50

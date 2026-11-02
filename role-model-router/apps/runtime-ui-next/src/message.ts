@@ -20,6 +20,8 @@ const RouterPostureFieldSchema = Schema.Literals(["mode", "scoringStrategy", "ex
 const RouterEntryFieldSchema = Schema.Literals(["name", "role", "model", "description"]);
 const RouterBlockSchema = Schema.Literals(["agent_strategies", "workloads"]);
 const RoleDraftFieldSchema = Schema.Literals(["roleId", "name", "description", "instructions", "kind", "toolPolicy"]);
+const RequestsFilterFieldSchema = Schema.Literals(["breakdown", "difficulty", "source", "statusFamily"]);
+const ObserveFilterFieldSchema = Schema.Literals(["breakdown", "difficulty", "source"]);
 
 export const Message: MessageUnion<{
   readonly ChangedUrl: { readonly url: typeof Url.Url };
@@ -106,6 +108,14 @@ export const Message: MessageUnion<{
   readonly BenchmarkRunRequested: EmptyFields;
   readonly BenchmarkClearRequested: EmptyFields;
   readonly ModelsActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly RequestsRangeChanged: { readonly value: typeof Schema.String };
+  readonly RequestsFilterChanged: { readonly field: typeof RequestsFilterFieldSchema; readonly value: typeof Schema.String };
+  readonly RequestsAdvancedToggled: EmptyFields;
+  readonly ObserveRangeChanged: { readonly value: typeof Schema.String };
+  readonly ObserveFilterChanged: { readonly field: typeof ObserveFilterFieldSchema; readonly value: typeof Schema.String };
+  readonly ObserveAdvancedToggled: EmptyFields;
+  readonly ObservabilityRefreshRequested: EmptyFields;
+  readonly StoreReceiptsRefreshRequested: EmptyFields;
   readonly ModelsActionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LearningLadderToggleRequested: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly taskTypeId: typeof Schema.String };
   readonly LearningLadderUpdated: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly scopeId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
@@ -274,6 +284,14 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   BenchmarkClearRequested: {},
   ModelsActionSucceeded: { message: Schema.String, token: Schema.Number },
   ModelsActionFailed: { message: Schema.String, token: Schema.Number },
+  RequestsRangeChanged: { value: Schema.String },
+  RequestsFilterChanged: { field: RequestsFilterFieldSchema, value: Schema.String },
+  RequestsAdvancedToggled: {},
+  ObserveRangeChanged: { value: Schema.String },
+  ObserveFilterChanged: { field: ObserveFilterFieldSchema, value: Schema.String },
+  ObserveAdvancedToggled: {},
+  ObservabilityRefreshRequested: {},
+  StoreReceiptsRefreshRequested: {},
   LearningLadderToggleRequested: { rolledBack: Schema.Boolean, roleId: Schema.String, taskTypeId: Schema.String },
   LearningLadderUpdated: { rolledBack: Schema.Boolean, roleId: Schema.String, scopeId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
   LearningLadderFailed: { message: Schema.String, roleId: Schema.String, scopeId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },

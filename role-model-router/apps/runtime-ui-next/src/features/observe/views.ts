@@ -46,16 +46,25 @@ const observeChart = (
 
 const observeCharts = (card: Html, h: HtmlBuilder<Message>): Html => chartGrid([{ span: 12, body: card }], h);
 
-const observeFilterBar = (h: HtmlBuilder<Message>, extra: ReadonlyArray<string> = []): Html => {
+const observeFilterBar = (
+  h: HtmlBuilder<Message>,
+  extra: ReadonlyArray<string> = [],
+  filters?: { readonly breakdown: string; readonly difficulty: string; readonly expanded: boolean; readonly range: string; readonly source: string },
+  on?: {
+    readonly advanced: () => Message;
+    readonly filter: (field: "breakdown" | "difficulty" | "source", value: string) => Message;
+    readonly range: (value: string) => Message;
+  },
+): Html => {
   const labelClass = "font-sans text-xs font-normal leading-4 text-muted-foreground";
   const fieldClass = "flex shrink-0 flex-col gap-1.5";
   const selectClass =
     "flex h-[34px] min-w-[9rem] items-center justify-between gap-2 rounded-md border border-input bg-secondary px-2.5 text-left font-sans text-sm text-foreground";
-  const field = (label: string, value: string, options: ReadonlyArray<string>) =>
+  const field = (label: string, value: string, options: ReadonlyArray<string>, key: "breakdown" | "difficulty" | "source") =>
     h.label([h.Class(fieldClass)], [
       h.span([h.Class(labelClass)], [label]),
       h.select(
-        [h.AriaLabel(label), h.Class(selectClass)],
+        [h.AriaLabel(label), h.Class(selectClass), h.Value(value), ...(on === undefined ? [] : [h.OnInput((next) => on.filter(key, next))])],
         options.map((option) => h.option([h.Value(option), ...(option === value ? [h.Selected(true)] : [])], [option])),
       ),
     ]);
@@ -67,14 +76,16 @@ const observeFilterBar = (h: HtmlBuilder<Message>, extra: ReadonlyArray<string> 
           h.span([h.Class(labelClass)], ["Time range"]),
           h.div(
             [h.Class("flex h-9 w-fit shrink-0 items-center gap-1 rounded-md border border-border bg-secondary p-1"), h.Attribute("role", "group"), h.AriaLabel("Time range")],
-            ["Day", "Week", "Month", "90 days"].map((option, index) =>
+            ["Day", "Week", "Month", "90 days"].map((option) =>
               h.button(
                 [
                   h.Type("button"),
-                  h.AriaPressed(String(index === 0)),
+                  h.AriaPressed(String((filters?.range ?? "Day") === option)),
+                  h.DataAttribute("requests-range", option),
+                  ...(on === undefined ? [] : [h.OnClick(on.range(option))]),
                   h.Class(
                     "flex h-7 shrink-0 items-center justify-center whitespace-nowrap rounded-[5px] px-2.5 font-sans text-sm leading-[18px] " +
-                      (index === 0 ? "bg-primary font-semibold text-primary-foreground" : "font-normal text-muted-foreground hover:text-foreground"),
+                      ((filters?.range ?? "Day") === option ? "bg-primary font-semibold text-primary-foreground" : "font-normal text-muted-foreground hover:text-foreground"),
                   ),
                 ],
                 [option],
@@ -83,9 +94,9 @@ const observeFilterBar = (h: HtmlBuilder<Message>, extra: ReadonlyArray<string> 
           ),
         ]),
         h.div([h.Class("flex flex-wrap items-end gap-3")], [
-          field("Breakdown", "By endpoint variant", ["Total", "By endpoint variant", "By upstream model", "By provider"]),
-          field("Source", "All sources", ["All sources", "Local only", "Remote only"]),
-          ...(extra.includes("Difficulty") ? [field("Difficulty", "All buckets", ["All buckets", "Easy only", "Medium only", "Hard only"])] : []),
+          field("Breakdown", filters?.breakdown ?? "By endpoint variant", ["Total", "By endpoint variant", "By upstream model", "By provider"], "breakdown"),
+          field("Source", filters?.source ?? "All sources", ["All sources", "Local only", "Remote only"], "source"),
+          ...(extra.includes("Difficulty") ? [field("Difficulty", filters?.difficulty ?? "All buckets", ["All buckets", "Easy only", "Medium only", "Hard only"], "difficulty")] : []),
         ]),
       ],
     ),
@@ -93,7 +104,7 @@ const observeFilterBar = (h: HtmlBuilder<Message>, extra: ReadonlyArray<string> 
       [h.Class("flex w-full flex-wrap items-center justify-between gap-4 rounded-lg border border-border bg-card p-3"), h.DataAttribute("observe-advanced", "")],
       [
         h.span([h.Class("font-sans text-sm font-medium text-foreground")], ["Advanced controls"]),
-        h.button([h.Type("button"), h.AriaExpanded(false), h.Class("inline-flex h-[34px] items-center gap-1 rounded-md border border-border bg-background px-3 font-sans text-sm text-foreground")], ["Expand"]),
+        h.button([h.Type("button"), h.AriaExpanded(filters?.expanded === true), ...(on === undefined ? [] : [h.OnClick(on.advanced())]), h.Class("inline-flex h-[34px] items-center gap-1 rounded-md border border-border bg-background px-3 font-sans text-sm text-foreground")], ["Expand"]),
       ],
     ),
   ]);
@@ -105,6 +116,7 @@ export const telemetryRequestsRoute = (
   metricListbox: Model["requestsRankingMetricListbox"],
   targetListbox: Model["requestsRankingTargetListbox"],
   h: HtmlBuilder<Message>,
+  filters?: Model["requestsFilters"],
 ): Html => {
   const rows = readback.rows.map((row) => [row.id, row.label, row.meta, row.value]);
   const current = ranking ?? { metric: "averageLatencyMs", rankingTarget: "endpointId", rows: [], status: "idle" as const, token: 0 };
@@ -113,11 +125,11 @@ export const telemetryRequestsRoute = (
   const fieldClass = "flex shrink-0 flex-col gap-1.5";
   const selectClass =
     "flex h-[34px] min-w-[9rem] items-center justify-between gap-2 rounded-md border border-input bg-secondary px-2.5 text-left font-sans text-sm text-foreground";
-  const fieldSelect = (label: string, value: string, options: ReadonlyArray<string>) =>
+  const fieldSelect = (label: string, value: string, options: ReadonlyArray<string>, field: "breakdown" | "source" | "statusFamily") =>
     h.label([h.Class(fieldClass)], [
       h.span([h.Class(labelClass)], [label]),
       h.select(
-        [h.AriaLabel(label), h.DataAttribute("requests-filter", label.toLowerCase().replace(/ /g, "-")), h.Class(selectClass)],
+        [h.AriaLabel(label), h.DataAttribute("requests-filter", label.toLowerCase().replace(/ /g, "-")), h.Class(selectClass), h.Value(value), h.OnInput((next) => Message.RequestsFilterChanged({ field, value: next }))],
         options.map((option) => h.option([h.Value(option), ...(option === value ? [h.Selected(true)] : [])], [option])),
       ),
     ]);
@@ -134,7 +146,7 @@ export const telemetryRequestsRoute = (
     [loading ? "Querying…" : "Run ranking"],
   );
   const expand = h.button(
-    [h.Type("button"), h.AriaExpanded(false), h.Class("inline-flex h-[34px] items-center gap-1 rounded-md border border-border bg-background px-3 font-sans text-sm text-foreground")],
+    [h.Type("button"), h.AriaExpanded(filters?.expanded === true), h.OnClick(Message.RequestsAdvancedToggled({})), h.Class("inline-flex h-[34px] items-center gap-1 rounded-md border border-border bg-background px-3 font-sans text-sm text-foreground")],
     ["Expand"],
   );
   return h.section(
@@ -151,15 +163,16 @@ export const telemetryRequestsRoute = (
                 h.Attribute("role", "group"),
                 h.AriaLabel("Time range"),
               ],
-              ["Day", "Week", "Month", "90 days"].map((option, index) =>
+              ["Day", "Week", "Month", "90 days"].map((option) =>
                 h.button(
                   [
                     h.Type("button"),
-                    h.AriaPressed(String(index === 0)),
+                    h.AriaPressed(String((filters?.range ?? "Day") === option)),
                     h.DataAttribute("requests-range", option),
+                    h.OnClick(Message.RequestsRangeChanged({ value: option })),
                     h.Class(
                       "flex h-7 shrink-0 items-center justify-center whitespace-nowrap rounded-[5px] px-2.5 font-sans text-sm leading-[18px] " +
-                        (index === 0 ? "bg-primary font-semibold text-primary-foreground" : "font-normal text-muted-foreground hover:text-foreground"),
+                        ((filters?.range ?? "Day") === option ? "bg-primary font-semibold text-primary-foreground" : "font-normal text-muted-foreground hover:text-foreground"),
                     ),
                   ],
                   [option],
@@ -170,8 +183,8 @@ export const telemetryRequestsRoute = (
           h.div(
             [h.Class("flex flex-wrap items-end gap-3")],
             [
-              fieldSelect("Breakdown", "Total", ["Total", "By endpoint variant", "By upstream model", "By provider"]),
-              fieldSelect("Source", "All sources", ["All sources", "Local only", "Remote only"]),
+              fieldSelect("Breakdown", filters?.breakdown ?? "Total", ["Total", "By endpoint variant", "By upstream model", "By provider"], "breakdown"),
+              fieldSelect("Source", filters?.source ?? "All sources", ["All sources", "Local only", "Remote only"], "source"),
               listboxField(
                 "Ranking metric",
                 requestsMetricListboxView(
@@ -208,7 +221,7 @@ export const telemetryRequestsRoute = (
           h.div(
             [h.Class("hidden"), h.DataAttribute("requests-advanced-fields", "")],
             [
-              fieldSelect("Status family", "All statuses", ["All statuses", "Success only", "Failure only", "Unknown only"]),
+              fieldSelect("Status family", filters?.statusFamily ?? "All statuses", ["All statuses", "Success only", "Failure only", "Unknown only"], "statusFamily"),
               runRanking,
             ],
           ),
@@ -308,8 +321,12 @@ export const observeLogsRoute = (readback: ReadbackState, h: HtmlBuilder<Message
   ], h);
 };
 
-export const observeRoutingRoute = (readback: ReadbackState, h: HtmlBuilder<Message>): Html => page("Routing analytics", [
-  observeFilterBar(h, ["Difficulty"]),
+export const observeRoutingRoute = (readback: ReadbackState, h: HtmlBuilder<Message>, filters?: Model["observeRoutingFilters"]): Html => page("Routing analytics", [
+  observeFilterBar(h, ["Difficulty"], filters, {
+    advanced: () => Message.ObserveAdvancedToggled({}),
+    filter: (field, value) => Message.ObserveFilterChanged({ field, value }),
+    range: (value) => Message.ObserveRangeChanged({ value }),
+  }),
   section("Routing results", "Bounded routing analytics for the selected filters.", [
     table(["Model", "Endpoint", "Count"], readback.rows.map((row) => [row.label, row.meta, row.value]), "No routing rows recorded yet.", h),
   ], h),
@@ -321,7 +338,7 @@ export const observabilitySnapshotRoute = (state: ObservabilityState, h: HtmlBui
     section("Observability snapshot", "What this runtime has measured: routing decisions served, captures admitted for replay, evaluation finalise refusals, and learner candidates examined. The readback is the live metric registry of the running host, not a stored projection.", [
       h.div([h.Class("flex flex-wrap items-center justify-between gap-3 pb-2")], [
         h.p([h.Class("font-sans text-[13px] leading-5 text-muted-foreground")], [String(state.rows.length) + " metric row(s) in the registry"]),
-        h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground")], ["Refresh"]),
+        h.button([h.Type("button"), h.DataAttribute("observability-refresh", ""), h.OnClick(Message.ObservabilityRefreshRequested({})), h.Class("inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground")], ["Refresh"]),
       ]),
       ...(state.rows.length === 0
         ? [empty("No metric rows in the registry.", h)]
@@ -342,7 +359,7 @@ export const storeDegradationReceiptsRoute = (readback: ReadbackState, h: HtmlBu
     section("Store degradation receipts", "Materialization failures (R3 ladder writes, R6b development floors) are never silent: every failed write lands a durable, operator-visible receipt in the knowledge store and the knowledge worker store.", [
       h.div([h.Class("flex flex-wrap items-center justify-between gap-3 pb-2")], [
         h.p([h.Class("font-sans text-[13px] leading-5 text-muted-foreground")], [String(readback.rows.length) + " receipt row(s) across both stores"]),
-        h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground")], ["Refresh"]),
+        h.button([h.Type("button"), h.DataAttribute("store-receipts-refresh", ""), h.OnClick(Message.StoreReceiptsRefreshRequested({})), h.Class("inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground")], ["Refresh"]),
       ]),
       ...(readback.rows.length === 0
         ? [empty("No receipt rows recorded in this store.", h)]

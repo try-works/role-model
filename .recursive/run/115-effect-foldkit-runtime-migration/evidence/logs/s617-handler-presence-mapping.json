@@ -1,10 +1,10 @@
 {
   "buckets": {
-    "matched_walker": 20,
+    "matched_walker": 10,
     "non_native_affordance": 8,
     "scanner_gap": 8,
     "unmatched": 0,
-    "wired_after_inventory": 25
+    "wired_after_inventory": 35
   },
   "humanTotal": 61,
   "identities": {
@@ -420,9 +420,9 @@
       "label": "Day",
       "route": "/observe/routing",
       "routeTag": "ObserveRouting",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[1]>div[1]>button[1]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "button ×4",
@@ -430,9 +430,9 @@
       "label": "Week",
       "route": "/observe/routing",
       "routeTag": "ObserveRouting",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[1]>div[1]>button[2]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "button ×4",
@@ -440,9 +440,9 @@
       "label": "Month",
       "route": "/observe/routing",
       "routeTag": "ObserveRouting",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[1]>div[1]>button[3]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "button ×4",
@@ -450,9 +450,9 @@
       "label": "90 days",
       "route": "/observe/routing",
       "routeTag": "ObserveRouting",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[1]>div[1]>button[4]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "select ×3",
@@ -460,9 +460,9 @@
       "label": "Breakdown",
       "route": "/observe/routing",
       "routeTag": "ObserveRouting",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[1]>select[1]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "select ×3",
@@ -470,9 +470,9 @@
       "label": "Source",
       "route": "/observe/routing",
       "routeTag": "ObserveRouting",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[2]>select[1]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "select ×3",
@@ -480,9 +480,9 @@
       "label": "Difficulty",
       "route": "/observe/routing",
       "routeTag": "ObserveRouting",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[3]>select[1]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "button",
@@ -490,9 +490,9 @@
       "label": "Expand",
       "route": "/observe/routing",
       "routeTag": "ObserveRouting",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>button[1]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "button",
@@ -500,9 +500,9 @@
       "label": "Refresh",
       "route": "/observe/observability-snapshot",
       "routeTag": "Observability",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>button[1]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "button",
@@ -510,9 +510,9 @@
       "label": "Refresh",
       "route": "/observe/store-degradation-receipts",
       "routeTag": "StoreReceipts",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>button[1]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "activity rows (div)",
@@ -664,5 +664,5 @@
       "tag": "button"
     }
   ],
-  "walkerTotal": 25
+  "walkerTotal": 15
 }

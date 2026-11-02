@@ -70,6 +70,25 @@ const learningFields = {
     token: Schema.optional(Schema.Number),
   })),
 };
+const requestsFieldsExtra = {
+  requestsFilters: Schema.optional(Schema.Struct({
+    breakdown: Schema.String,
+    difficulty: Schema.String,
+    expanded: Schema.Boolean,
+    range: Schema.String,
+    source: Schema.String,
+    statusFamily: Schema.String,
+  })),
+};
+const observeFields = {
+  observeRoutingFilters: Schema.optional(Schema.Struct({
+    breakdown: Schema.String,
+    difficulty: Schema.String,
+    expanded: Schema.Boolean,
+    range: Schema.String,
+    source: Schema.String,
+  })),
+};
 const modelsFields = {
   modelsView: Schema.optional(Schema.Struct({
     actionMessage: Schema.optional(Schema.String),
@@ -101,6 +120,8 @@ const modelFields = {
   controls: shellFields.controls,
   deviceAuth: deviceAuthFields.deviceAuth,
   modelsView: modelsFields.modelsView,
+  requestsFilters: requestsFieldsExtra.requestsFilters,
+  observeRoutingFilters: observeFields.observeRoutingFilters,
   deviceAuthDialog: deviceAuthFields.deviceAuthDialog,
   deviceAuthModalKey: deviceAuthFields.deviceAuthModalKey,
   chartInteraction: shellFields.chartInteraction,
@@ -142,6 +163,8 @@ export type ProvidersModelSlice = Pick<Model, keyof typeof providersFields>;
 export type EndpointsModelSlice = Pick<Model, keyof typeof endpointsFields>;
 export type StudioModelSlice = Pick<Model, keyof typeof studioFields>;
 export type ModelsModelSlice = Pick<Model, keyof typeof modelsFields>;
+export type RequestsFiltersSlice = Pick<Model, keyof typeof requestsFieldsExtra>;
+export type ObserveFiltersSlice = Pick<Model, keyof typeof observeFields>;
 export type RuntimeModelSlice = Pick<Model, keyof typeof runtimeFields>;
 
 export const withLearningSlice = (model: Model, slice: LearningModelSlice): Model => ({ ...model, ...slice });

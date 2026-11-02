@@ -76,6 +76,10 @@ const WIRED_EVIDENCE: Readonly<Record<string, string>> = {
   LearningHistory: "S619 learning wiring",
   LearningPacks: "S619 learning wiring",
   ModelsRoles: "S618 models wiring",
+  Observability: "S619 requests/observe wiring",
+  ObserveRouting: "S619 requests/observe wiring",
+  Requests: "S619 requests/observe wiring",
+  StoreReceipts: "S619 requests/observe wiring",
 };
 
 const ALIASES: Readonly<Record<string, string>> = {
