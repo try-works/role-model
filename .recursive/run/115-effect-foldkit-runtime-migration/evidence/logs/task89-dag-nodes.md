@@ -25,12 +25,14 @@ Both are explicitly recorded in the CLI acquire block rather than silently left 
 - RED: task89-s603-red.log (CLI static contract failed before factories).
 - GREEN: task89-s603-green.log.
 
-## Host suite
+## Host suite (corrected: pinned Vitest 3.2.4)
 
-`test:ci` ran 464 files, 2619 tests: **2615 passed, 4 skipped, 3 failed suites**. The three failures are pre-existing and unrelated to this slice:
+The earlier "3 failed suites" report was a **Vitest-version artifact**: `corepack pnpm exec vitest` resolved Vitest 4.1.11 from D:/deepseek-harness instead of the project-pinned 3.2.4. Those three suites are not real failures.
 
-- test/index.test.ts — oxc parse of `readonly Array<...>` in the generated 16k-line test.
-- test/run101-r3-packaged-queue-policy.test.ts — Vitest 4 removed the `it(name, fn, options)` signature.
-- test/s324-readiness.test.ts — duplicate `type Captured` declaration.
+Full host suite with the pinned runner:
 
-No failure touches the DAG or CLI paths; all CLI/DAG suites pass.
+`node node_modules/.pnpm/vitest@3.2.4_.../node_modules/vitest/vitest.mjs run` (cwd runtime-host-bridge)
+
+**461 passed | 3 skipped files; 2843 passed | 5 skipped tests; 0 failed.**
+
+This includes the new run115-s603-cli-dag-nodes.test.ts (2 tests) and all CLI/DAG suites. Evidence: task89-v3-suite.log.
