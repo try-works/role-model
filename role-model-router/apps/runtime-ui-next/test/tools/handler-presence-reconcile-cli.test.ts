@@ -45,7 +45,8 @@ describe("S617 reconciliation CLI guard", () => {
     const { dir, env, mappingPath } = fixture();
     const humanBefore = sha256(join(dir, "ui-dead-controls-inventory.md"));
     const result = run(env);
-    expect(result.status).not.toBe(0);
+    // Fail closed with a distinct exit code: 3 = missing mapping (2 is changed, 1 is invalid).
+    expect(result.status).toBe(3);
     expect(result.stderr).toContain("missing");
     expect(result.stderr).toContain("--refresh");
     expect(existsSync(mappingPath)).toBe(false);
