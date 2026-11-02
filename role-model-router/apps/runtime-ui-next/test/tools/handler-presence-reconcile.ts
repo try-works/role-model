@@ -217,7 +217,7 @@ export interface PlanResult {
   inventory: ReturnType<typeof renderInventory>;
   mapping: ReconcileMapping;
   scans: ReturnType<typeof scanAllRoutes>;
-  status: "changed" | "missing" | "unchanged";
+  status: "changed" | "invalid" | "missing" | "unchanged";
   violations: string[];
 }
 
@@ -233,7 +233,11 @@ export const planReconcile = ({ baselineDir, humanMarkdownPath, mappingPath }: {
   void baselineDir;
   if (!existsSync(mappingPath)) return { diff: [], humanItems, inventory, mapping, scans, status: "missing", violations };
   const previous = JSON.parse(readFileSync(mappingPath, "utf8")) as ReconcileMapping;
+  // The committed mapping itself must satisfy the convention: an invalid committed file is exit 1 (contract
+  // invalid), never exit 2 (stale) and never a rewrite.
+  const previousViolations = validateMappingShape(previous);
   const diff = compareMapping(previous, mapping);
+  if (previousViolations.length > 0) return { diff, humanItems, inventory, mapping, scans, status: "invalid", violations: previousViolations };
   return { diff, humanItems, inventory, mapping, scans, status: diff.length === 0 ? "unchanged" : "changed", violations };
 };
 

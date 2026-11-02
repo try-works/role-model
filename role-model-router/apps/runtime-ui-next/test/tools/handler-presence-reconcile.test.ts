@@ -96,13 +96,28 @@ describe("S617 reconciliation guard", () => {
 
   it("planReconcile detects a tampered committed mapping without rewriting it", () => {
     const { dir, mappingPath } = withTempMapping((mapping) => {
+      // Keep the shape VALID so this exercises the stale/changed path (invalid shape is a separate exit 1).
       mapping.items[0].bucket = "unmatched";
+      mapping.items[0].walkerPath = null;
       mapping.items.splice(5, 1);
     });
     const before = readFileSync(mappingPath, "utf8");
     const plan = planReconcile({ baselineDir: baselineRoot, humanMarkdownPath, mappingPath });
     expect(plan.status).toBe("changed");
     expect((plan.diff ?? []).join("\n")).toMatch(/row count|bucket/);
+    expect(readFileSync(mappingPath, "utf8")).toBe(before);
+    rmSync(dir, { force: true, recursive: true });
+  });
+
+  it("planReconcile reports invalid (not changed) for a committed convention violation", () => {
+    const { dir, mappingPath } = withTempMapping((mapping) => {
+      const matched = mapping.items.find((entry) => entry.bucket === "matched_walker");
+      if (matched !== undefined) matched.walkerPath = null;
+    });
+    const before = readFileSync(mappingPath, "utf8");
+    const plan = planReconcile({ baselineDir: baselineRoot, humanMarkdownPath, mappingPath });
+    expect(plan.status).toBe("invalid");
+    expect(plan.violations.join("\n")).toContain("walkerPath");
     expect(readFileSync(mappingPath, "utf8")).toBe(before);
     rmSync(dir, { force: true, recursive: true });
   });
