@@ -1248,6 +1248,8 @@ export interface ReadbackClientOptions {
   readonly fetchImpl?: typeof fetch;
   readonly baseUrl?: string;
   readonly token?: string;
+  /** Resolve the operator bearer at request time (the Learning token field updates storage). */
+  readonly tokenProvider?: () => string | undefined;
 }
 
 export const createReadbackClient = (
@@ -1260,8 +1262,9 @@ export const createReadbackClient = (
     const url = new URL(spec.pathFor?.(input.id ?? "") ?? spec.path, base);
     if (input.query !== undefined) url.search = input.query;
     const headers: Record<string, string> = { accept: "application/json" };
-    if (options.token !== undefined && options.token.length > 0) {
-      headers.authorization = `Bearer ${options.token}`;
+    const token = options.tokenProvider?.() ?? options.token;
+    if (token !== undefined && token.length > 0) {
+      headers.authorization = `Bearer ${token}`;
     }
     const response = await fetchImpl(url.toString(), {
       cache: "no-store",

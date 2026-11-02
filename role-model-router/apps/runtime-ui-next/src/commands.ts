@@ -546,14 +546,42 @@ const noopRouterConfigClient: RouterConfigClient = {
 export const noopRouterConfigCommands = defineRouterConfigCommands(noopRouterConfigClient);
 
 export interface OperatorLearningClient {
+  readonly killSwitch: (body: Record<string, unknown>) => Promise<unknown>;
   readonly rollback: () => Promise<unknown>;
+  readonly rollbackPack: (body: Record<string, unknown>) => Promise<unknown>;
   readonly updateMode: (mode: string) => Promise<unknown>;
 }
 export const createOperatorLearningClient = (http: RuntimeHttpClient): OperatorLearningClient => ({
+  killSwitch: (body) => http.request<unknown, Record<string, unknown>>({ method: "POST", path: "/api/role-model/operator/learning/kill-switch", body }),
   rollback: () => http.request<unknown, Record<string, never>>({ method: "POST", path: "/api/role-model/operator/learning/rollback", body: {} }),
+  rollbackPack: (body) => http.request<unknown, Record<string, unknown>>({ method: "POST", path: "/api/role-model/operator/learning/rollback-pack", body }),
   updateMode: (mode) => http.request<unknown, { mode: string }>({ method: "POST", path: "/api/role-model/operator/learning/mode", body: { mode } }),
 });
 export const defineOperatorLearningCommands = (client: OperatorLearningClient) => ({
+  killSwitch: Command.define("LearningKillSwitch", {
+    args: { engaged: Schema.Boolean, scopeId: Schema.String, token: Schema.Number },
+    execute: ({ engaged, scopeId, token }) =>
+      Effect.flatMap(
+        Effect.exit(Effect.tryPromise({
+          catch: (cause) => new Error(describeCause(cause)),
+          try: () => client.killSwitch(engaged ? { scopeId } : { engaged: false, scopeId }),
+        })),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.LearningKillSwitchSucceeded({ token }) : Message.LearningKillSwitchFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("learning kill switch failed"))), token })),
+      ),
+    messages: [Message.LearningKillSwitchSucceeded, Message.LearningKillSwitchFailed],
+  }),
+  rollbackPack: Command.define("LearningPackRollback", {
+    args: { scopeId: Schema.String, token: Schema.Number },
+    execute: ({ scopeId, token }) =>
+      Effect.flatMap(
+        Effect.exit(Effect.tryPromise({
+          catch: (cause) => new Error(describeCause(cause)),
+          try: () => client.rollbackPack({ reason: "operator_ui_rollback", scopeId }),
+        })),
+        (exit) => Effect.succeed(Exit.isSuccess(exit) ? Message.LearningPackRollbackSucceeded({ token }) : Message.LearningPackRollbackFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("learning pack rollback failed"))), token })),
+      ),
+    messages: [Message.LearningPackRollbackSucceeded, Message.LearningPackRollbackFailed],
+  }),
   rollback: Command.define("LearningRollback", {
     args: { token: Schema.Number },
     execute: ({ token }) =>
@@ -575,7 +603,9 @@ export const defineOperatorLearningCommands = (client: OperatorLearningClient) =
 });
 export type OperatorLearningCommands = ReturnType<typeof defineOperatorLearningCommands>;
 const noopOperatorLearningClient: OperatorLearningClient = {
+  killSwitch: async () => ({}),
   rollback: async () => ({}),
+  rollbackPack: async () => ({}),
   updateMode: async () => ({}),
 };
 export const noopOperatorLearningCommands = defineOperatorLearningCommands(noopOperatorLearningClient);

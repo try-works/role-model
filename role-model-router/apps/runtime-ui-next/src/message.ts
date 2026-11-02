@@ -110,6 +110,14 @@ export const Message: MessageUnion<{
   readonly LearningLadderToggleRequested: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly taskTypeId: typeof Schema.String };
   readonly LearningLadderUpdated: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly scopeId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LearningLadderFailed: { readonly message: typeof Schema.String; readonly roleId: typeof Schema.String; readonly scopeId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly LearningOperatorTokenChanged: { readonly value: typeof Schema.String };
+  readonly LearningDecisionFilterChanged: { readonly filter: typeof Schema.String; readonly value: typeof Schema.String };
+  readonly LearningPackRollbackRequested: EmptyFields;
+  readonly LearningPackRollbackSucceeded: { readonly token: typeof Schema.Number };
+  readonly LearningPackRollbackFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly LearningKillSwitchRequested: { readonly engaged: typeof Schema.Boolean };
+  readonly LearningKillSwitchSucceeded: { readonly token: typeof Schema.Number };
+  readonly LearningKillSwitchFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LocalPolicyAutoUnloadToggled: EmptyFields;
   readonly LocalPolicyMaxConcurrencyChanged: { readonly value: typeof Schema.Number };
   readonly LocalPolicyResetRequested: EmptyFields;
@@ -269,6 +277,14 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   LearningLadderToggleRequested: { rolledBack: Schema.Boolean, roleId: Schema.String, taskTypeId: Schema.String },
   LearningLadderUpdated: { rolledBack: Schema.Boolean, roleId: Schema.String, scopeId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
   LearningLadderFailed: { message: Schema.String, roleId: Schema.String, scopeId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
+  LearningOperatorTokenChanged: { value: Schema.String },
+  LearningDecisionFilterChanged: { filter: Schema.String, value: Schema.String },
+  LearningPackRollbackRequested: {},
+  LearningPackRollbackSucceeded: { token: Schema.Number },
+  LearningPackRollbackFailed: { message: Schema.String, token: Schema.Number },
+  LearningKillSwitchRequested: { engaged: Schema.Boolean },
+  LearningKillSwitchSucceeded: { token: Schema.Number },
+  LearningKillSwitchFailed: { message: Schema.String, token: Schema.Number },
   LocalPolicyAutoUnloadToggled: {},
   LocalPolicyMaxConcurrencyChanged: { value: Schema.Number },
   LocalPolicyResetRequested: {},

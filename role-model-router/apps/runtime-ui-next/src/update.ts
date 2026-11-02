@@ -19,6 +19,7 @@ import {
   endpointAdmissionResetState,
 } from "./features/endpoint-activation/update";
 
+import { writeStoredOperatorToken } from "./operator-token";
 import { DEFAULT_OVERVIEW_FILTERS, overviewQuery, type OverviewFilters } from "./overview-filters";
 import { parseRuntimeConfigRecord, parseRuntimeConfigText, runtimeConfigDiff, runtimeConfigText } from "./runtime-config";
 
@@ -854,6 +855,70 @@ const updateLocalPolicyDraft = (
         LearningModeFailed: ({ message, token }: Extract<Message, { readonly _tag: "LearningModeFailed" }>): UpdateReturn<Model, Message> => {
           if (token !== model.readbacks.learning.token) return { model };
           return { model: { ...model, readbacks: { ...model.readbacks, learning: { ...model.readbacks.learning, message, status: "error" } } } };
+        },
+        LearningOperatorTokenChanged: ({ value }: Extract<Message, { readonly _tag: "LearningOperatorTokenChanged" }>): UpdateReturn<Model, Message> => {
+          writeStoredOperatorToken(value);
+          return { model: { ...model, learningOperatorToken: value } };
+        },
+        LearningDecisionFilterChanged: ({ filter, value }: Extract<Message, { readonly _tag: "LearningDecisionFilterChanged" }>): UpdateReturn<Model, Message> => {
+          const filters = model.learningDecisionFilters ?? {};
+          return { model: { ...model, learningDecisionFilters: { ...filters, [filter]: value } } };
+        },
+        LearningPackRollbackRequested: (): UpdateReturn<Model, Message> => {
+          const token = model.readbacks.learningPacks.token + 1;
+          const scopeId = model.readbacks.learningPacks.scopeId ?? "standalone-runtime-dev";
+          return {
+            commands: [operatorLearningCommands.rollbackPack({ scopeId, token })],
+            model: {
+              ...model,
+              learningPackAction: { status: "saving", token },
+              readbacks: { ...model.readbacks, learningPacks: loadingReadback(token) },
+            },
+          };
+        },
+        LearningPackRollbackSucceeded: ({ token }: Extract<Message, { readonly _tag: "LearningPackRollbackSucceeded" }>): UpdateReturn<Model, Message> => {
+          if (token !== model.learningPackAction?.token) return { model };
+          const nextToken = token + 1;
+          return {
+            commands: [readReadback({ key: "learningPacks", token: nextToken })],
+            model: {
+              ...model,
+              learningPackAction: { message: "Pack rollback completed.", status: "saved", token },
+              readbacks: { ...model.readbacks, learningPacks: loadingReadback(nextToken) },
+            },
+          };
+        },
+        LearningPackRollbackFailed: ({ message, token }: Extract<Message, { readonly _tag: "LearningPackRollbackFailed" }>): UpdateReturn<Model, Message> => {
+          if (token !== model.learningPackAction?.token) return { model };
+          return { model: { ...model, learningPackAction: { message, status: "error", token } } };
+        },
+        LearningKillSwitchRequested: ({ engaged }: Extract<Message, { readonly _tag: "LearningKillSwitchRequested" }>): UpdateReturn<Model, Message> => {
+          const token = model.readbacks.learningPacks.token + 1;
+          const scopeId = model.readbacks.learningPacks.scopeId ?? "standalone-runtime-dev";
+          return {
+            commands: [operatorLearningCommands.killSwitch({ engaged, scopeId, token })],
+            model: {
+              ...model,
+              learningPackAction: { status: "saving", token },
+              readbacks: { ...model.readbacks, learningPacks: loadingReadback(token) },
+            },
+          };
+        },
+        LearningKillSwitchSucceeded: ({ token }: Extract<Message, { readonly _tag: "LearningKillSwitchSucceeded" }>): UpdateReturn<Model, Message> => {
+          if (token !== model.learningPackAction?.token) return { model };
+          const nextToken = token + 1;
+          return {
+            commands: [readReadback({ key: "learningPacks", token: nextToken })],
+            model: {
+              ...model,
+              learningPackAction: { message: "Learning kill switch updated.", status: "saved", token },
+              readbacks: { ...model.readbacks, learningPacks: loadingReadback(nextToken) },
+            },
+          };
+        },
+        LearningKillSwitchFailed: ({ message, token }: Extract<Message, { readonly _tag: "LearningKillSwitchFailed" }>): UpdateReturn<Model, Message> => {
+          if (token !== model.learningPackAction?.token) return { model };
+          return { model: { ...model, learningPackAction: { message, status: "error", token } } };
         },
         ReplayAutoQueueToggleChanged: ({ value }: Extract<Message, { readonly _tag: "ReplayAutoQueueToggleChanged" }>): UpdateReturn<Model, Message> => {
           const state = model.learningReplayAutoQueue ?? { dailyCap: "100", enabled: "on", status: "idle" as const };

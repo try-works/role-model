@@ -31,7 +31,9 @@ const BUDGET = {
   // S591: three weight-editor save paths (valid, clamped, rejected) through the wired save button.
   "s591-router-weights-editor.test.ts": 3,
   // S595: Save retention, dry-run, execute, learning mode update, and rollback through real controls.
-  "s595-storage-retention.test.ts": 5
+  "s595-storage-retention.test.ts": 5,
+  // S619: scope-wide rollback, engage kill switch, release kill switch through the wired LearningPacks controls.
+  "s619-learning-controls.test.ts": 3
 };
 
 /** S247 policy: every budgeted click site names the user path it proves. */
@@ -49,7 +51,8 @@ const RATIONALE = {
   "s584-router-posture-wiring.test.ts": "Save routing strategy (decision_only)",
   "s589-local-policy-wired.test.ts": "Save local policy (ttl 900)",
   "s591-router-weights-editor.test.ts": "Save routing strategy from three weight drafts",
-  "s595-storage-retention.test.ts": "Save retention, dry-run, execute, mode update, rollback"
+  "s595-storage-retention.test.ts": "Save retention, dry-run, execute, mode update, rollback",
+  "s619-learning-controls.test.ts": "Scope-wide pack rollback with operator token; engage then release the learning kill switch"
 };
 
 const testDirectory = path.join(import.meta.dirname);

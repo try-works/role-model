@@ -48,6 +48,19 @@ const requestsFields = {
   requestsRankingTargetListbox: Schema.optional(Schema.Any),
 };
 const learningFields = {
+  learningDecisionFilters: Schema.optional(Schema.Struct({
+    advisoryState: Schema.optional(Schema.String),
+    origin: Schema.optional(Schema.String),
+    outcome: Schema.optional(Schema.String),
+    role: Schema.optional(Schema.String),
+    task: Schema.optional(Schema.String),
+  })),
+  learningOperatorToken: Schema.optional(Schema.String),
+  learningPackAction: Schema.optional(Schema.Struct({
+    message: Schema.optional(Schema.String),
+    status: Schema.Literals(["idle", "saving", "saved", "error"]),
+    token: Schema.optional(Schema.Number),
+  })),
   learningRanking: Schema.optional(LearningRankingStateSchema),
   learningReplayAutoQueue: Schema.optional(Schema.Struct({
     dailyCap: Schema.String,
@@ -95,6 +108,9 @@ const modelFields = {
   requestsRanking: requestsFields.requestsRanking,
   requestsRankingMetricListbox: requestsFields.requestsRankingMetricListbox,
   requestsRankingTargetListbox: requestsFields.requestsRankingTargetListbox,
+  learningDecisionFilters: learningFields.learningDecisionFilters,
+  learningOperatorToken: learningFields.learningOperatorToken,
+  learningPackAction: learningFields.learningPackAction,
   learningRanking: learningFields.learningRanking,
   learningReplayAutoQueue: learningFields.learningReplayAutoQueue,
   endpointAdmission: endpointsFields.endpointAdmission,

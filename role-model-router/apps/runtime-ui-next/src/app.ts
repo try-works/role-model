@@ -108,7 +108,12 @@ export const createShellApp = (options: ShellOptions = {}) => {
   );
   const storedToken = readStoredOperatorToken();
   const observabilityToken = options.observabilityToken ?? storedToken;
-  const readbackToken = options.readbackToken ?? storedToken;
+  /**
+   * S619: the Learning operator-token field persists to storage; readbacks resolve the bearer at
+   * request time so a newly entered token feeds the next operator read. An explicit injected
+   * readbackToken keeps its fixed value (test/embedding contract).
+   */
+  const readbackToken = options.readbackToken;
   const observabilityReader =
     options.readObservability ??
     createObservabilityClient({
@@ -126,7 +131,9 @@ export const createShellApp = (options: ShellOptions = {}) => {
     createReadbackClients({
       ...(options.readbackBaseUrl === undefined ? {} : { baseUrl: options.readbackBaseUrl }),
       ...(options.readbackFetchImpl === undefined ? {} : { fetchImpl: options.readbackFetchImpl }),
-      ...(readbackToken === undefined ? {} : { token: readbackToken }),
+      ...(readbackToken === undefined
+        ? { tokenProvider: readStoredOperatorToken }
+        : { token: readbackToken }),
     });
   const controlToken = options.controlToken ?? storedToken;
   const controlClient =
