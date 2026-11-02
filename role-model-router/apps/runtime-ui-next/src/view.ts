@@ -1225,6 +1225,8 @@ interface RouteViewContext {
   readonly learningReplayAutoQueue: Model["learningReplayAutoQueue"];
   readonly modelsView: Model["modelsView"];
   readonly learningOperatorToken: Model["learningOperatorToken"];
+  readonly requestsFilters: Model["requestsFilters"];
+  readonly observeRoutingFilters: Model["observeRoutingFilters"];
   readonly learningPackAction: Model["learningPackAction"];
   readonly learningDecisionFilters: Model["learningDecisionFilters"];
   readonly requestsRanking: RequestsRankingState | undefined;
@@ -1256,6 +1258,8 @@ const routeContent = (ctx: RouteViewContext): Html => {
     learningReplayAutoQueue,
     modelsView,
     learningOperatorToken,
+    requestsFilters,
+    observeRoutingFilters,
     learningPackAction,
     learningDecisionFilters,
     requestsRanking,
@@ -1279,7 +1283,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     Queues: () => h.div([h.DataAttribute("page-layout", "reference")], [observeQueuesRoute(readbacks.queues, h)]),
     LocalLogs: () => familyPage("Llama-swap logs", "local-logs", "Rows are parsed into Timestamp, Source, Severity, Request, and message fields so local runtime behavior can be inspected without raw console noise.", [{ label: "Structured local log history", spec: READBACK_SPECS.localLogs, readback: readbacks.localLogs, note: "The ledger is bounded for scanability; parsed rows carry request correlation.", columns: ["Time", "Source", "Level", "Message", "Request"], rows: (row) => [row.label, row.value, row.meta, "—", "—"] }, { label: "Raw log streams", note: "Raw stdout/stderr streams stay in the host log store and are not reconstructed here." }], h),
     RouterCandidates: () => routerCandidatesPage(readbacks, h),
-    Requests: () => telemetryRequestsRoute(readbacks.requests, requestsRanking, requestsRankingMetricListbox, requestsRankingTargetListbox, h),
+    Requests: () => telemetryRequestsRoute(readbacks.requests, requestsRanking, requestsRankingMetricListbox, requestsRankingTargetListbox, h, requestsFilters),
     RequestDetail: () => renderReadbackPage(READBACK_SPECS.requestDetail, readbacks.requestDetail, h),
     RouterDecisions: () => routerDecisionsPage(readbacks, h),
     RouterDecisionDetail: () =>
@@ -1331,7 +1335,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     LocalSwap: () => familyPage("Llama-swap swap history", "local-swap", "Most recent swap events first.", [{ label: "Event ledger", spec: READBACK_SPECS.localSwap, readback: readbacks.localSwap, columns: ["Time", "Event", "Model", "Reason"], rows: (row) => [row.label, row.value, row.meta, "—"] }, { label: "Ledger semantics", note: "Initial load · Swap reason · Timeline order: events appear when the managed host loads a first model, swaps to a new one, or records the operator-visible reason." }], h),
     ObserveActivity: () => observeActivityRoute(readbacks.observeActivity, h),
     ObserveLogs: () => observeLogsRoute(readbacks.observeLogs, h),
-    ObserveRouting: () => observeRoutingRoute(readbacks.observeRouting, h),
+    ObserveRouting: () => observeRoutingRoute(readbacks.observeRouting, h, observeRoutingFilters),
     Router: () => routerOverviewPage(readbacks, h),
     Providers: () => providersPage({ controls, deviceAuth, deviceAuthDialog, h, providerAccount, readbacks }),
     Endpoints: () => endpointsPage({ controls, endpointAdmission, h, readbacks }),
@@ -1513,6 +1517,8 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
                     learningReplayAutoQueue: model.learningReplayAutoQueue,
     modelsView: model.modelsView,
     learningOperatorToken: model.learningOperatorToken,
+    requestsFilters: model.requestsFilters,
+    observeRoutingFilters: model.observeRoutingFilters,
     learningPackAction: model.learningPackAction,
     learningDecisionFilters: model.learningDecisionFilters,
                     diagnostics: model.diagnostics,
