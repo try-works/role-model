@@ -1,0 +1,98 @@
+# S624 benchmark remaining gaps — RED
+date: 2026-11-04T05:34:33.2788143+08:00
+basis: benchmark route restored from 1132911f while current command/message plumbing is present
+expectation: subject selection/count, per-model clear, prefs persistence, polling, taxonomy filters and latency columns are absent
+exit: 1
+--- output ---
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s624-benchmark-gaps.test.ts (7 tests | 4 failed) 2075ms
+   ✓ S624 benchmark remaining gaps > hydrates judge preferences and resumes polling an active run from their readbacks 52ms
+   × S624 benchmark remaining gaps > renders subject checkboxes, N of M selected, and >=2-selected Run gating 259ms
+     → expected  to have a length of 3 but got +0
+   ✓ S624 benchmark remaining gaps > dispatches the exact selected-subject run body and persists judge preferences 17ms
+   × S624 benchmark remaining gaps > confirms and clears one endpoint with the exact DELETE path 80ms
+     → expected 'Capability benchmarkRun capability be…' to contain 'Confirm clear'
+   ✓ S624 benchmark remaining gaps > polls the active run and stops on completion  1522ms
+   × S624 benchmark remaining gaps > filters the taxonomy table by role/task/capability 78ms
+     → expected 'DIMENSIONVALUESCOREbyCapabilitytools8…' not to contain 'web_research'
+   × S624 benchmark remaining gaps > renders real p50/p95 from summary case audits and em dashes when absent 61ms
+     → expected 'Capability benchmarkRun capability be…' to contain '120 ms'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s624-benchmark-gaps.test.ts > S624 benchmark remaining gaps > renders subject checkboxes, N of M selected, and >=2-selected Run gating
+AssertionError: expected  to have a length of 3 but got +0
+
+- Expected
++ Received
+
+- 3
++ 0
+
+ ❯ test/s624-benchmark-gaps.test.ts:94:60
+     92|   it("renders subject checkboxes, N of M selected, and >=2-selected Ru…
+     93|     const all = await renderRoute();
+     94|     expect(all.querySelectorAll("input[type='checkbox']")).toHaveLengt…
+       |                                                            ^
+     95|     expect(all.textContent).toContain("3 of 3 selected");
+     96|     const one = await renderRoute({ benchmarkSelectedEndpointIds: ["ep…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/s624-benchmark-gaps.test.ts > S624 benchmark remaining gaps > confirms and clears one endpoint with the exact DELETE path
+AssertionError: expected 'Capability benchmarkRun capability be…' to contain 'Confirm clear'
+
+Expected: "Confirm clear"
+Received: "Capability benchmarkRun capability benchmarkSelect mode and judge, then grade runnable endpoints.Benchmark modeQuick (2 hard cases)Full (all eligible cases)Judge endpointmodel-a (remote)model-b (local)model-c (local)Run quick benchmark (3 models, 2 cases)Clear all benchmark dataModelPathScopeStatusmodel-aep-aremoteunknownmodel-bep-blocalunknownmodel-cep-clocalunknownBenchmark scoresScores are normalized 0–1 fractions shown as percentages.Last run: 2023-11-14 · Suite: quick · Judge: model-bModelOverallProfileEasyMediumHardp50p95ScopeModel A66%—100% · 10% · 050% · 1——remoteMODELSCOPESTATUSModel AremotegradedTaxonomy dimensionsPer-model scores by taxonomy dimension.DIMENSIONVALUESCOREbyCapabilitytools80%byRoleresearcher75%byTaskweb_research50%Run historyCompleted capability benchmark runs.RUNMODECASESMODELSCOMPLETEDSUITErun-9quick222023-11-14suite-1"
+
+ ❯ test/s624-benchmark-gaps.test.ts:130:33
+    128|   it("confirms and clears one endpoint with the exact DELETE path", as…
+    129|     const pending = await renderRoute({ benchmarkClearEndpointId: "ep-…
+    130|     expect(pending.textContent).toContain("Confirm clear");
+       |                                 ^
+    131|     expect(pending.textContent).toContain("Cancel");
+    132|     const calls: Array<{ body: unknown; method: string; path: string }…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/s624-benchmark-gaps.test.ts > S624 benchmark remaining gaps > filters the taxonomy table by role/task/capability
+AssertionError: expected 'DIMENSIONVALUESCOREbyCapabilitytools8…' not to contain 'web_research'
+
+Expected: "web_research"
+Received: "DIMENSIONVALUESCOREbyCapabilitytools80%byRoleresearcher75%byTaskweb_research50%"
+
+ ❯ test/s624-benchmark-gaps.test.ts:177:44
+    175|     expect(role.textContent).toContain("75%");
+    176|     const taxonomyTable = [...role.querySelectorAll("table")].find((ta…
+    177|     expect(taxonomyTable?.textContent).not.toContain("web_research");
+       |                                            ^
+    178|     const capability = await renderRoute({ benchmarkTaxonomyFilters: {…
+    179|     expect(capability.textContent).toContain("Capability");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/s624-benchmark-gaps.test.ts > S624 benchmark remaining gaps > renders real p50/p95 from summary case audits and em dashes when absent
+AssertionError: expected 'Capability benchmarkRun capability be…' to contain '120 ms'
+
+Expected: "120 ms"
+Received: "Capability benchmarkRun capability benchmarkSelect mode and judge, then grade runnable endpoints.Benchmark modeQuick (2 hard cases)Full (all eligible cases)Judge endpointmodel-a (remote)model-b (local)model-c (local)Run quick benchmark (3 models, 2 cases)Clear all benchmark dataModelPathScopeStatusmodel-aep-aremoteunknownmodel-bep-blocalunknownmodel-cep-clocalunknownBenchmark scoresScores are normalized 0–1 fractions shown as percentages.Last run: 2023-11-14 · Suite: quick · Judge: model-bModelOverallProfileEasyMediumHardp50p95ScopeModel A66%—100% · 10% · 050% · 1——remoteMODELSCOPESTATUSModel AremotegradedTaxonomy dimensionsPer-model scores by taxonomy dimension.DIMENSIONVALUESCOREbyCapabilitytools80%byRoleresearcher75%byTaskweb_research50%Run historyCompleted capability benchmark runs.RUNMODECASESMODELSCOMPLETEDSUITErun-9quick222023-11-14suite-1"
+
+ ❯ test/s624-benchmark-gaps.test.ts:188:37
+    186|   it("renders real p50/p95 from summary case audits and em dashes when…
+    187|     const withLatency = await renderRoute();
+    188|     expect(withLatency.textContent).toContain("120 ms");
+       |                                     ^
+    189|     expect(withLatency.textContent).toContain("200 ms");
+    190|     const noAudits = { ...summaryBody, caseAudits: [] };
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 3 passed (7)
+   Start at  05:34:05
+   Duration  26.32s (transform 10.91s, setup 0ms, collect 18.41s, tests 2.07s, environment 3.84s, prepare 849ms)
+
+

@@ -89,7 +89,9 @@
       "hostEndpoints": [
         "/api/role-model/benchmark/suite",
         "/api/role-model/benchmark/summary",
-        "/api/role-model/benchmark/runs"
+        "/api/role-model/benchmark/runs",
+        "/api/role-model/benchmark/preferences",
+        "/api/role-model/benchmark/runs/active"
       ],
       "requiresHostEndpoint": false,
       "proofTest": "role-model-router/apps/runtime-ui-next/test/s26e-readback-routes.test.ts",

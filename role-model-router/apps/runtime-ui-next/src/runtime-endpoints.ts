@@ -19,6 +19,8 @@ export const READBACK_PATHS = {
   benchmarkRuns: "/api/role-model/benchmark/runs",
   benchmarkSuite: "/api/role-model/benchmark/suite",
   benchmarkSummary: "/api/role-model/benchmark/summary",
+  benchmarkPreferences: "/api/role-model/benchmark/preferences",
+  benchmarkActiveRun: "/api/role-model/benchmark/runs/active",
   storageRetention: "/api/role-model/storage-retention",
   models: "/api/role-model/models",
   runtimeSummary: "/api/role-model/runtime/summary",

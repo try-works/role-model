@@ -758,10 +758,13 @@ export const localPolicyCommands = defineLocalPolicyCommands(
 
 export interface ModelsClient {
   readonly clearBenchmark: () => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly clearEndpointData: (endpointId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly pollBenchmarkRun: (runId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly savePreferences: (body: Readonly<Record<string, unknown>>) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly createRole: (draft: Readonly<Record<string, unknown>>) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly updateRole: (roleId: string, draft: Readonly<Record<string, unknown>>) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly updateTasks: (tasks: readonly Readonly<Record<string, unknown>>[]) => Promise<{ readonly body: unknown; readonly status: number }>;
-  readonly runBenchmark: (mode: string, judge: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly runBenchmark: (mode: string, judge: string, endpointIds: ReadonlyArray<string>) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly removeAccountModel: (providerAccountId: string, modelId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly removeEndpoint: (endpointId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly removePeerModel: (modelId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
@@ -777,10 +780,16 @@ export const createModelsClient = (options: { readonly fetchImpl?: typeof fetch 
   };
   return {
     clearBenchmark: () => send("/api/role-model/benchmark/data", "DELETE", "{}"),
+    clearEndpointData: (endpointId) => send("/api/role-model/benchmark/endpoints/" + encodeURIComponent(endpointId) + "/data", "DELETE", "{}"),
+    pollBenchmarkRun: async (runId) => {
+      const response = await fetchImpl("/api/role-model/benchmark/runs/" + encodeURIComponent(runId), { headers: { accept: "application/json" }, method: "GET" });
+      return { body: await response.json(), status: response.status };
+    },
+    savePreferences: (body) => send("/api/role-model/benchmark/preferences", "PUT", JSON.stringify(body)),
     createRole: (draft) => send("/api/role-model/roles", "POST", JSON.stringify(draft)),
     updateRole: (roleId, draft) => send("/api/role-model/roles/" + encodeURIComponent(roleId), "PUT", JSON.stringify(draft)),
     updateTasks: (tasks) => send("/api/role-model/tasks", "PUT", JSON.stringify(tasks)),
-    runBenchmark: (mode, judge) => send("/api/role-model/benchmark/runs", "POST", JSON.stringify({ judgeEndpointId: judge, mode })),
+    runBenchmark: (mode, judge, endpointIds) => send("/api/role-model/benchmark/runs", "POST", JSON.stringify({ endpointIds: [...endpointIds], judgeEndpointId: judge, mode })),
     removeAccountModel: (providerAccountId, modelId) => send("/api/role-model/accounts/" + encodeURIComponent(providerAccountId) + "/models/" + encodeURIComponent(modelId), "DELETE", "{}"),
     removeEndpoint: (endpointId) => send("/api/role-model/endpoints/" + encodeURIComponent(endpointId), "DELETE", "{}"),
     removePeerModel: (modelId) => send("/api/role-model/local/peer/models/" + encodeURIComponent(modelId) + "/unload", "POST", "{}"),
@@ -803,6 +812,34 @@ export const defineModelsCommands = (client: ModelsClient) => ({
           ? Message.ModelsActionSucceeded({ message: "Benchmark data cleared.", token })
           : Message.ModelsActionFailed({ message: "Clear benchmark failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
     messages: [Message.ModelsActionSucceeded, Message.ModelsActionFailed],
+  }),
+  clearEndpointData: Command.define("ClearBenchmarkEndpointData", {
+    args: { endpointId: Schema.String, token: Schema.Number },
+    execute: ({ endpointId, token }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.clearEndpointData(endpointId) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.BenchmarkEndpointCleared({ endpointId, token })
+          : Message.BenchmarkEndpointClearFailed({ message: "Clear endpoint benchmark data failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
+    messages: [Message.BenchmarkEndpointCleared, Message.BenchmarkEndpointClearFailed],
+  }),
+  pollBenchmarkRun: Command.define("PollBenchmarkRun", {
+    args: { runId: Schema.String, token: Schema.Number },
+    execute: ({ runId, token }) =>
+      Effect.flatMap(Effect.sleep(1500), () =>
+        Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.pollBenchmarkRun(runId) })), (exit) =>
+          Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+            ? Message.BenchmarkRunPolled({ progressJson: JSON.stringify(exit.value.body), token })
+            : Message.BenchmarkRunPollFailed({ message: "Benchmark run poll failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token })))),
+    messages: [Message.BenchmarkRunPolled, Message.BenchmarkRunPollFailed],
+  }),
+  savePreferences: Command.define("SaveBenchmarkPreferences", {
+    args: { judgeEndpointId: Schema.String, token: Schema.Number },
+    execute: ({ judgeEndpointId, token }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.savePreferences({ judgeEndpointId }) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.BenchmarkPreferencesSaved({ judgeEndpointId, token })
+          : Message.BenchmarkPreferencesSaveFailed({ message: "Save benchmark preferences failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
+    messages: [Message.BenchmarkPreferencesSaved, Message.BenchmarkPreferencesSaveFailed],
   }),
   createRole: Command.define("CreateRole", {
     args: { draftJson: Schema.String, token: Schema.Number },
@@ -841,13 +878,22 @@ export const defineModelsCommands = (client: ModelsClient) => ({
     messages: [Message.RolePolicyWriteSucceeded, Message.RolePolicyWriteFailed],
   }),
   runBenchmark: Command.define("RunBenchmark", {
-    args: { judgeEndpointId: Schema.String, mode: Schema.Literals(["full", "quick"]), token: Schema.Number },
-    execute: ({ judgeEndpointId, mode, token }) =>
-      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.runBenchmark(mode, judgeEndpointId) })), (exit) =>
-        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
-          ? Message.ModelsActionSucceeded({ message: "Benchmark run requested.", token })
-          : Message.ModelsActionFailed({ message: "Benchmark run failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
-    messages: [Message.ModelsActionSucceeded, Message.ModelsActionFailed],
+    args: { endpointIdsJson: Schema.String, judgeEndpointId: Schema.String, mode: Schema.Literals(["full", "quick"]), token: Schema.Number },
+    execute: ({ endpointIdsJson, judgeEndpointId, mode, token }) => {
+      // SAFETY: endpointIdsJson is JSON.stringify of the selected endpoint ids built by update.
+      const endpointIds = JSON.parse(endpointIdsJson) as ReadonlyArray<string>;
+      return Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.runBenchmark(mode, judgeEndpointId, endpointIds) })), (exit) => {
+        if (!Exit.isSuccess(exit) || exit.value.status < 200 || exit.value.status >= 300) {
+          return Effect.succeed(Message.BenchmarkRunStartFailed({ message: "Benchmark run failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }));
+        }
+        const body = exit.value.body as { readonly runId?: unknown };
+        const runId = typeof body.runId === "string" ? body.runId : "";
+        return Effect.succeed(runId.length === 0
+          ? Message.BenchmarkRunStartFailed({ message: "Benchmark run started without a run id.", token })
+          : Message.BenchmarkRunStarted({ runId, token }));
+      });
+    },
+    messages: [Message.BenchmarkRunStarted, Message.BenchmarkRunStartFailed],
   }),
   removeModel: Command.define("RemoveModel", {
     args: { accountId: Schema.String, endpointId: Schema.String, kind: Schema.Literals(["account-model", "endpoint", "llama-swap", "peer"]), modelId: Schema.String, token: Schema.Number },
@@ -903,6 +949,9 @@ export const defineModelsCommands = (client: ModelsClient) => ({
 export type ModelsCommands = ReturnType<typeof defineModelsCommands>;
 export const noopModelsCommands = defineModelsCommands({
   clearBenchmark: async () => ({ body: {}, status: 200 }),
+  clearEndpointData: async () => ({ body: {}, status: 200 }),
+  pollBenchmarkRun: async () => ({ body: {}, status: 200 }),
+  savePreferences: async () => ({ body: {}, status: 200 }),
   createRole: async () => ({ body: {}, status: 200 }),
   updateRole: async () => ({ body: {}, status: 200 }),
   updateTasks: async () => ({ body: {}, status: 200 }),

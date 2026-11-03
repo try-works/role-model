@@ -151,7 +151,7 @@ describe("S618 models route wiring", () => {
       },
     }));
     await Effect.runPromise(commands.clearBenchmark({ token: 1 }).effect);
-    await Effect.runPromise(commands.runBenchmark({ judgeEndpointId: "judge-1", mode: "quick", token: 1 }).effect);
+    await Effect.runPromise(commands.runBenchmark({ endpointIdsJson: JSON.stringify(["ep-a", "ep-b"]), judgeEndpointId: "judge-1", mode: "quick", token: 1 }).effect);
     await Effect.runPromise(commands.setRoles({ kind: "peer", modelId: "model-1", roleIdsJson: JSON.stringify(["coder"]), token: 1 }).effect);
     await Effect.runPromise(commands.setRoles({ kind: "llama-swap", modelId: "model-2", roleIdsJson: JSON.stringify(["writer"]), token: 1 }).effect);
     await Effect.runPromise(commands.createRole({ draftJson: JSON.stringify({
@@ -160,7 +160,7 @@ describe("S618 models route wiring", () => {
       routing_policy_overrides: {}, safety_policy_refs: [], task_types_supported: [], tool_policy: { mode: "allowed" },
     }), token: 1 }).effect);
     expect(calls[0]).toEqual({ body: {}, method: "DELETE", path: "/api/role-model/benchmark/data" });
-    expect(calls[1]).toEqual({ body: { judgeEndpointId: "judge-1", mode: "quick" }, method: "POST", path: "/api/role-model/benchmark/runs" });
+    expect(calls[1]).toEqual({ body: { endpointIds: ["ep-a", "ep-b"], judgeEndpointId: "judge-1", mode: "quick" }, method: "POST", path: "/api/role-model/benchmark/runs" });
     expect(calls[2]).toEqual({
       body: { disabledRoleIds: [], enabledRoleIds: ["coder"], roleAssignmentMode: "include", roleIds: ["coder"] },
       method: "PUT",
@@ -279,7 +279,12 @@ describe("S618 models route wiring", () => {
   });
 
   it("wires benchmark mode/judge/run/clear", () => {
-    const model = shellModel({ route: { _tag: "Benchmark" } });
+    const base = shellModel({ route: { _tag: "Benchmark" } });
+    const endpointsReadback = { ...base.readbacks.modelEndpoints, rows: [
+      { id: "e1", label: "e1", meta: JSON.stringify({ endpointId: "e1" }), value: "local" },
+      { id: "e2", label: "e2", meta: JSON.stringify({ endpointId: "e2" }), value: "local" },
+    ], status: "ok" as const };
+    const model = { ...base, readbacks: { ...base.readbacks, modelEndpoints: endpointsReadback } };
     const mode = update(model, Message.BenchmarkModeChanged({ value: "full" }));
     expect(mode.model.modelsView?.benchmarkMode).toBe("full");
     const judge = update(mode.model, Message.BenchmarkJudgeChanged({ value: "e1" }));

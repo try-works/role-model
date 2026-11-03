@@ -220,14 +220,14 @@ const initRoute =
         // The Requests and Observe-routing volume charts read the same metrics page as the overview.
         const observeVolume = route._tag === "Requests" || route._tag === "ObserveRouting";
         const readbacks = route._tag === "Benchmark"
-          ? { ...emptyReadbacks(), benchmarkRuns: loadingReadback(token), benchmarkSummary: loadingReadback(token), benchmarkSuite: loadingReadback(token) }
+          ? { ...emptyReadbacks(), benchmarkRuns: loadingReadback(token), benchmarkSummary: loadingReadback(token), benchmarkSuite: loadingReadback(token), benchmarkPreferences: loadingReadback(token), benchmarkActiveRun: loadingReadback(token) }
           : observeVolume
             ? { ...emptyReadbacks(), [readbackKey]: loadingReadback(token), overviewMetrics: loadingReadback(token) }
             : { ...emptyReadbacks(), [readbackKey]: loadingReadback(token) };
         return {
           commands: [
             readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : route._tag === "Index" || route._tag === "Dashboard" ? "86400000" : undefined, key: readbackKey as ReadbackKey, token }),
-            ...(route._tag === "Benchmark" ? [readReadback({ key: "benchmarkSummary" as const, token }), readReadback({ key: "benchmarkRuns" as const, token })] : []),
+            ...(route._tag === "Benchmark" ? [readReadback({ key: "benchmarkSummary" as const, token }), readReadback({ key: "benchmarkRuns" as const, token }), readReadback({ key: "benchmarkPreferences" as const, token }), readReadback({ key: "benchmarkActiveRun" as const, token })] : []),
             ...(observeVolume ? [readReadback({ key: "overviewMetrics", query: "?windowMs=86400000", token })] : []),
           ],
           model: {

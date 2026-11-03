@@ -113,9 +113,27 @@ const modelsFields = {
   modelsView: Schema.optional(Schema.Struct({
     actionMessage: Schema.optional(Schema.String),
     advancedPolicy: Schema.optional(Schema.Boolean),
+    benchmarkAction: Schema.optional(Schema.Struct({
+      message: Schema.optional(Schema.String),
+      status: Schema.Literals(["idle", "saving", "saved", "error"]),
+    })),
+    benchmarkClearEndpointId: Schema.optional(Schema.String),
     benchmarkClearPending: Schema.optional(Schema.Boolean),
     benchmarkJudge: Schema.optional(Schema.String),
     benchmarkMode: Schema.optional(Schema.String),
+    benchmarkProgress: Schema.optional(Schema.Struct({
+      completedSteps: Schema.optional(Schema.Number),
+      message: Schema.optional(Schema.String),
+      runId: Schema.String,
+      status: Schema.Literals(["running", "completed", "failed"]),
+      totalSteps: Schema.optional(Schema.Number),
+    })),
+    benchmarkSelectedEndpointIds: Schema.optional(Schema.Array(Schema.String)),
+    benchmarkTaxonomyFilters: Schema.optional(Schema.Struct({
+      capability: Schema.optional(Schema.String),
+      role: Schema.optional(Schema.String),
+      task: Schema.optional(Schema.String),
+    })),
     expandedRoleId: Schema.optional(Schema.String),
     roleAction: Schema.optional(Schema.Struct({
       kind: Schema.Literals(["create", "edit", "tasks"]),

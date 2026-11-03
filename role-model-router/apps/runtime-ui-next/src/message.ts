@@ -119,6 +119,21 @@ export const Message: MessageUnion<{
   readonly BenchmarkClearRequested: EmptyFields;
   readonly BenchmarkClearConfirmed: EmptyFields;
   readonly BenchmarkClearCancelled: EmptyFields;
+  readonly BenchmarkEndpointSelected: { readonly endpointId: typeof Schema.String; readonly selected: typeof Schema.Boolean };
+  readonly BenchmarkEndpointClearRequested: { readonly endpointId: typeof Schema.String };
+  readonly BenchmarkEndpointClearConfirmed: { readonly endpointId: typeof Schema.String };
+  readonly BenchmarkEndpointClearCancelled: EmptyFields;
+  readonly BenchmarkEndpointCleared: { readonly endpointId: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly BenchmarkEndpointClearFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly BenchmarkPreferencesSaveRequested: { readonly judgeEndpointId: typeof Schema.String };
+  readonly BenchmarkPreferencesSaved: { readonly judgeEndpointId: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly BenchmarkPreferencesSaveFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly BenchmarkRunStarted: { readonly runId: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly BenchmarkRunStartFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly BenchmarkRunPollRequested: { readonly runId: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly BenchmarkRunPolled: { readonly progressJson: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly BenchmarkRunPollFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly BenchmarkTaxonomyFilterChanged: { readonly filter: typeof Schema.String; readonly value: typeof Schema.String };
   readonly ModelsRemoveRequested: { readonly modelId: typeof Schema.String };
   readonly ModelsControllerSetRequested: { readonly modelId: typeof Schema.String };
   readonly ModelsControllerEjectRequested: { readonly modelId: typeof Schema.String };
@@ -336,6 +351,21 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   BenchmarkClearRequested: {},
   BenchmarkClearConfirmed: {},
   BenchmarkClearCancelled: {},
+  BenchmarkEndpointSelected: { endpointId: Schema.String, selected: Schema.Boolean },
+  BenchmarkEndpointClearRequested: { endpointId: Schema.String },
+  BenchmarkEndpointClearConfirmed: { endpointId: Schema.String },
+  BenchmarkEndpointClearCancelled: {},
+  BenchmarkEndpointCleared: { endpointId: Schema.String, token: Schema.Number },
+  BenchmarkEndpointClearFailed: { message: Schema.String, token: Schema.Number },
+  BenchmarkPreferencesSaveRequested: { judgeEndpointId: Schema.String },
+  BenchmarkPreferencesSaved: { judgeEndpointId: Schema.String, token: Schema.Number },
+  BenchmarkPreferencesSaveFailed: { message: Schema.String, token: Schema.Number },
+  BenchmarkRunStarted: { runId: Schema.String, token: Schema.Number },
+  BenchmarkRunStartFailed: { message: Schema.String, token: Schema.Number },
+  BenchmarkRunPollRequested: { runId: Schema.String, token: Schema.Number },
+  BenchmarkRunPolled: { progressJson: Schema.String, token: Schema.Number },
+  BenchmarkRunPollFailed: { message: Schema.String, token: Schema.Number },
+  BenchmarkTaxonomyFilterChanged: { filter: Schema.String, value: Schema.String },
   ModelsRemoveRequested: { modelId: Schema.String },
   ModelsControllerSetRequested: { modelId: Schema.String },
   ModelsControllerEjectRequested: { modelId: Schema.String },

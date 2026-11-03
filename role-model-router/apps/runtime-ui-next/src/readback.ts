@@ -37,6 +37,8 @@ export type ReadbackKey =
   | "benchmarkSuite"
   | "benchmarkSummary"
   | "benchmarkRuns"
+  | "benchmarkPreferences"
+  | "benchmarkActiveRun"
   | "storageRetention"
   | "models"
   | "runtimeSummary"
@@ -90,6 +92,8 @@ export const ReadbackKeySchema = Schema.Literals([
   "benchmarkSuite",
   "benchmarkSummary",
   "benchmarkRuns",
+  "benchmarkPreferences",
+  "benchmarkActiveRun",
   "storageRetention",
   "models",
   "runtimeSummary",
@@ -165,6 +169,8 @@ export const ReadbacksState = Schema.Struct({
   benchmarkSuite: ReadbackState,
   benchmarkSummary: ReadbackState,
   benchmarkRuns: ReadbackState,
+  benchmarkPreferences: ReadbackState,
+  benchmarkActiveRun: ReadbackState,
   storageRetention: ReadbackState,
   models: ReadbackState,
   runtimeSummary: ReadbackState,
@@ -233,6 +239,8 @@ export const emptyReadbacks = (): ReadbacksState => ({
   benchmarkSuite: idleReadback(),
   benchmarkSummary: idleReadback(),
   benchmarkRuns: idleReadback(),
+  benchmarkPreferences: idleReadback(),
+  benchmarkActiveRun: idleReadback(),
   storageRetention: idleReadback(),
   models: idleReadback(),
   runtimeSummary: idleReadback(),
@@ -921,6 +929,7 @@ const parseBenchmarkSummary = (body: unknown, token: number): ReadbackState => {
     judgeEndpointId: record.judgeEndpointId ?? null,
     judgeModelId: record.judgeModelId ?? null,
     mode: record.mode ?? null,
+    caseAudits: record.caseAudits ?? [],
     runId: record.runId ?? null,
     suiteId: record.suiteId ?? null,
   }));
@@ -931,6 +940,18 @@ const parseBenchmarkSummary = (body: unknown, token: number): ReadbackState => {
   });
   return okRows([header, ...subjects], token);
 };
+const parseBenchmarkPreferences = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  if (record === undefined) return failedReadback("Benchmark preferences read failed: invalid response", token);
+  return { rows: [row("preferences", "Benchmark preferences", String(record.judgeEndpointId ?? ""), JSON.stringify(record))], status: "ok", token };
+};
+
+const parseBenchmarkActiveRun = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  if (record === undefined || record.status !== "running") return { rows: [], status: "empty", token };
+  return { rows: [row("active-run", "Active benchmark run", String(record.runId ?? ""), JSON.stringify(record))], status: "ok", token };
+};
+
 const parseBenchmarkRuns = (body: unknown, token: number): ReadbackState => {
   const list = Array.isArray(body) ? body : asArray(asRecord(body)?.runs);
   const rows = list.flatMap((value, index) => {
@@ -1192,6 +1213,20 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     parse: parseBenchmarkRuns,
     path: READBACK_PATHS.benchmarkRuns,
   },
+  benchmarkPreferences: {
+    emptyText: "No benchmark preferences stored yet.",
+    key: "benchmarkPreferences",
+    label: "Benchmark preferences",
+    parse: parseBenchmarkPreferences,
+    path: READBACK_PATHS.benchmarkPreferences,
+  },
+  benchmarkActiveRun: {
+    emptyText: "No active benchmark run.",
+    key: "benchmarkActiveRun",
+    label: "Active benchmark run",
+    parse: parseBenchmarkActiveRun,
+    path: READBACK_PATHS.benchmarkActiveRun,
+  },
   storageRetention: {
     emptyText: "No storage retention records available.",
     key: "storageRetention",
@@ -1413,6 +1448,8 @@ export const createReadbackClients = (
   roles: client(READBACK_SPECS.roles),
   rolePolicy: client(READBACK_SPECS.rolePolicy),
     benchmarkSuite: client(READBACK_SPECS.benchmarkSuite),
+  benchmarkPreferences: client(READBACK_SPECS.benchmarkPreferences),
+  benchmarkActiveRun: client(READBACK_SPECS.benchmarkActiveRun),
     benchmarkSummary: client(READBACK_SPECS.benchmarkSummary),
     benchmarkRuns: client(READBACK_SPECS.benchmarkRuns),
     storageRetention: client(READBACK_SPECS.storageRetention),

@@ -118,8 +118,9 @@ describe("S622 benchmark parity", () => {
   it("renders the Run label with the selected model, case counts and the clear-all control", async () => {
     const container = await render();
     const run = [...container.querySelectorAll("button")].find((button) => button.textContent?.startsWith("Run "));
-    expect(run?.textContent).toBe("Run quick benchmark (2 models, 3 cases)");
+    expect(run?.textContent).toBe("Run quick benchmark (2 of 2 selected, 3 cases)");
     expect(run?.hasAttribute("disabled")).toBe(false);
+    expect(container.textContent).toContain("2 of 2 selected");
     // Reference gating: fewer than two selected subjects cannot compare head to head. The subject-selection
     // UI is not built yet, so "selected" is all runnable endpoints for now; the running-state condition is
     // still recorded as a difference until active-run state exists.
@@ -179,7 +180,7 @@ describe("S622 benchmark parity", () => {
     expect(text).toContain("Last run: 2023-11-14");
     expect(text).toContain("Suite: quick");
     expect(text).toContain("Judge: model-b");
-    for (const taxonomy of ["byRole", "researcher", "75%", "byTask", "web_research", "50%"]) expect(text).toContain(taxonomy);
+    for (const taxonomy of ["Role", "researcher", "75%", "Task", "web_research", "50%"]) expect(text).toContain(taxonomy);
     for (const history of ["run-9", "quick", "4", "2", "2023-11-14", "suite-1"]) expect(text).toContain(history);
   });
 
@@ -209,9 +210,9 @@ describe("S622 benchmark parity", () => {
         return new Response("{}", { status: 200 });
       },
     }));
-    await Effect.runPromise(commands.runBenchmark({ judgeEndpointId: "ep-a", mode: "full", token: 1 }).effect);
+    await Effect.runPromise(commands.runBenchmark({ endpointIdsJson: JSON.stringify(["ep-a", "ep-b"]), judgeEndpointId: "ep-a", mode: "full", token: 1 }).effect);
     await Effect.runPromise(commands.clearBenchmark({ token: 1 }).effect);
-    expect(calls[0]).toEqual({ body: { judgeEndpointId: "ep-a", mode: "full" }, method: "POST", path: "/api/role-model/benchmark/runs" });
+    expect(calls[0]).toEqual({ body: { endpointIds: ["ep-a", "ep-b"], judgeEndpointId: "ep-a", mode: "full" }, method: "POST", path: "/api/role-model/benchmark/runs" });
     expect(calls[1]).toEqual({ body: {}, method: "DELETE", path: "/api/role-model/benchmark/data" });
   });
 
@@ -224,6 +225,8 @@ describe("S622 benchmark parity", () => {
     expect(keys).toContain("benchmarkSuite");
     expect(keys).toContain("benchmarkSummary");
     expect(keys).toContain("benchmarkRuns");
+    expect(keys).toContain("benchmarkPreferences");
+    expect(keys).toContain("benchmarkActiveRun");
   });
 
   it("parses the three benchmark readbacks with their host paths", () => {

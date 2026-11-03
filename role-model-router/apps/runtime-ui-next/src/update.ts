@@ -200,6 +200,8 @@ const noopReadback = defineReadReadback({
   benchmarkSuite: async () => ({ body: emptyBody, status: 200 }),
   benchmarkSummary: async () => ({ body: {}, status: 200 }),
   benchmarkRuns: async () => ({ body: [], status: 200 }),
+  benchmarkPreferences: async () => ({ body: {}, status: 200 }),
+  benchmarkActiveRun: async () => ({ body: null, status: 200 }),
   storageRetention: async () => ({ body: emptyBody, status: 200 }),
   models: async () => ({ body: emptyBody, status: 200 }),
   runtimeSummary: async () => ({ body: emptyBody, status: 200 }),
@@ -290,6 +292,17 @@ const roleDraftState = (draft: ReturnType<typeof blankRoleDraft>): RoleDraftStat
   kind: draft.roleKind,
   toolPolicy: draft.toolPolicyMode,
 });
+
+const benchmarkEndpointIds = (model: Model): ReadonlyArray<string> =>
+  model.readbacks.modelEndpoints.rows.flatMap((row) => {
+    try {
+      // SAFETY: modelEndpoints rows carry this JSON record in meta.
+      const meta = JSON.parse(row.meta) as { readonly endpointId?: unknown };
+      return typeof meta.endpointId === "string" && meta.endpointId.length > 0 ? [meta.endpointId] : [];
+    } catch {
+      return [];
+    }
+  });
 
 const roleAction = (kind: RoleActionKind, status: "idle" | "saving" | "saved" | "error", message?: string, token?: number) =>
   ({ kind, status, ...(message === undefined ? {} : { message }), ...(token === undefined ? {} : { token }) });
@@ -571,7 +584,7 @@ const endpointAdmissionCompletion = (
           commands: [
             readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : undefined, key: readbackKey, token }),
             ...(learningPacks ? [readReadback({ key: "learningPacks", token })] : []),
-            ...(benchmark ? [readReadback({ key: "benchmarkSummary" as const, token }), readReadback({ key: "benchmarkRuns" as const, token })] : []),
+            ...(benchmark ? [readReadback({ key: "benchmarkSummary" as const, token }), readReadback({ key: "benchmarkRuns" as const, token }), readReadback({ key: "benchmarkPreferences" as const, token }), readReadback({ key: "benchmarkActiveRun" as const, token })] : []),
             ...(observeVolume
               ? [readReadback({ key: "overviewMetrics", query: overviewQuery(DEFAULT_OVERVIEW_FILTERS, windowForRange(observeRange)), token: model.readbacks.overviewMetrics.token + 1 })]
               : []),
@@ -584,7 +597,7 @@ const endpointAdmissionCompletion = (
             readbacks: learningPacks
               ? { ...withVolume, learningPacks: loadingReadback(token) }
               : benchmark
-                ? { ...withVolume, benchmarkRuns: loadingReadback(token), benchmarkSummary: loadingReadback(token) }
+                ? { ...withVolume, benchmarkRuns: loadingReadback(token), benchmarkSummary: loadingReadback(token), benchmarkPreferences: loadingReadback(token), benchmarkActiveRun: loadingReadback(token) }
                 : withVolume,
             refresh: {
               ...model.refresh,
@@ -652,7 +665,7 @@ const updateLocalPolicyDraft = (
       if (model.route._tag === "IntegrationsUpstream") return [{ key: "integrationProviders" }, { key: "configuredModels" }];
       if (model.route._tag === "SystemOperator") return [{ key: "operatorStatus" }, { key: "operatorTraceRoots" }];
       if (model.route._tag === "RuntimeConfig") return [{ key: "runtimeConfig" }];
-      if (model.route._tag === "Benchmark") return [{ key: "benchmarkSuite" }, { key: "benchmarkSummary" }, { key: "benchmarkRuns" }];
+      if (model.route._tag === "Benchmark") return [{ key: "benchmarkSuite" }, { key: "benchmarkSummary" }, { key: "benchmarkRuns" }, { key: "benchmarkPreferences" }, { key: "benchmarkActiveRun" }];
       if (model.route._tag === "Requests") return [{ key: "requests" }, { key: "overviewMetrics", query: overviewQuery(DEFAULT_OVERVIEW_FILTERS, windowForRange(model.requestsFilters?.range)) }];
       if (model.route._tag === "ObserveRouting") return [{ key: "observeRouting" }, { key: "overviewMetrics", query: overviewQuery(DEFAULT_OVERVIEW_FILTERS, windowForRange(model.observeRoutingFilters?.range)) }];
       if (model.route._tag === "Router") return [{ key: "router" }, { key: "routerConfig" }, { key: "routerCandidates" }, { key: "runtimeConfig" }, { key: "health" }];
@@ -1211,12 +1224,138 @@ const updateLocalPolicyDraft = (
         },
         BenchmarkJudgeChanged: ({ value }: Extract<Message, { readonly _tag: "BenchmarkJudgeChanged" }>): UpdateReturn<Model, Message> => {
           const state = model.modelsView ?? {};
-          return { model: { ...model, modelsView: { ...state, benchmarkJudge: value } } };
+          return {
+            commands: [modelsCommands.savePreferences({ judgeEndpointId: value, token: model.readbacks.benchmarkPreferences.token + 1 })],
+            model: { ...model, modelsView: { ...state, benchmarkAction: { status: "saving" }, benchmarkJudge: value } },
+          };
+        },
+        BenchmarkPreferencesSaved: ({ judgeEndpointId, token }: Extract<Message, { readonly _tag: "BenchmarkPreferencesSaved" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          if (token !== model.readbacks.benchmarkPreferences.token + 1) return { model };
+          return { model: { ...model, modelsView: { ...state, benchmarkAction: { message: "Judge preference saved.", status: "saved" }, benchmarkJudge: judgeEndpointId } } };
+        },
+        BenchmarkPreferencesSaveFailed: ({ message }: Extract<Message, { readonly _tag: "BenchmarkPreferencesSaveFailed" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { model: { ...model, modelsView: { ...state, benchmarkAction: { message, status: "error" } } } };
+        },
+        BenchmarkPreferencesSaveRequested: ({ judgeEndpointId }: Extract<Message, { readonly _tag: "BenchmarkPreferencesSaveRequested" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return {
+            commands: [modelsCommands.savePreferences({ judgeEndpointId, token: model.readbacks.benchmarkPreferences.token + 1 })],
+            model: { ...model, modelsView: { ...state, benchmarkAction: { status: "saving" }, benchmarkJudge: judgeEndpointId } },
+          };
+        },
+        BenchmarkRunPollRequested: ({ runId, token }: Extract<Message, { readonly _tag: "BenchmarkRunPollRequested" }>): UpdateReturn<Model, Message> => ({
+          commands: [modelsCommands.pollBenchmarkRun({ runId, token })],
+          model,
+        }),
+        BenchmarkEndpointSelected: ({ endpointId, selected }: Extract<Message, { readonly _tag: "BenchmarkEndpointSelected" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          const current = new Set(state.benchmarkSelectedEndpointIds ?? benchmarkEndpointIds(model));
+          if (selected) current.add(endpointId); else current.delete(endpointId);
+          return { model: { ...model, modelsView: { ...state, benchmarkSelectedEndpointIds: [...current].sort() } } };
+        },
+        BenchmarkEndpointClearRequested: ({ endpointId }: Extract<Message, { readonly _tag: "BenchmarkEndpointClearRequested" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { model: { ...model, modelsView: { ...state, benchmarkClearEndpointId: endpointId } } };
+        },
+        BenchmarkEndpointClearCancelled: (): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { model: { ...model, modelsView: { ...state, benchmarkClearEndpointId: undefined } } };
+        },
+        BenchmarkEndpointClearConfirmed: ({ endpointId }: Extract<Message, { readonly _tag: "BenchmarkEndpointClearConfirmed" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return {
+            commands: [modelsCommands.clearEndpointData({ endpointId, token: model.readbacks.benchmarkSummary.token + 1 })],
+            model: { ...model, modelsView: { ...state, benchmarkAction: { status: "saving" }, benchmarkClearEndpointId: undefined } },
+          };
+        },
+        BenchmarkEndpointCleared: ({ endpointId, token }: Extract<Message, { readonly _tag: "BenchmarkEndpointCleared" }>): UpdateReturn<Model, Message> => {
+          if (token !== model.readbacks.benchmarkSummary.token + 1) return { model };
+          const state = model.modelsView ?? {};
+          return {
+            commands: [readReadback({ key: "benchmarkSummary", token: token + 1 })],
+            model: {
+              ...model,
+              readbacks: { ...model.readbacks, benchmarkSummary: loadingReadback(token + 1) },
+              modelsView: { ...state, benchmarkAction: { message: "Cleared benchmark data for " + endpointId + ".", status: "saved" } },
+            },
+          };
+        },
+        BenchmarkEndpointClearFailed: ({ message }: Extract<Message, { readonly _tag: "BenchmarkEndpointClearFailed" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { model: { ...model, modelsView: { ...state, benchmarkAction: { message, status: "error" } } } };
+        },
+        BenchmarkTaxonomyFilterChanged: ({ filter, value }: Extract<Message, { readonly _tag: "BenchmarkTaxonomyFilterChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { model: { ...model, modelsView: { ...state, benchmarkTaxonomyFilters: { ...(state.benchmarkTaxonomyFilters ?? {}), [filter]: value } } } };
         },
         BenchmarkRunRequested: (): UpdateReturn<Model, Message> => {
           const state = model.modelsView ?? {};
+          const selected = state.benchmarkSelectedEndpointIds ?? benchmarkEndpointIds(model);
+          const judge = state.benchmarkJudge ?? "";
+          if (selected.length < 2 || judge.length === 0 || !selected.includes(judge)) {
+            return { model: { ...model, modelsView: { ...state, benchmarkAction: { message: "Select at least two subjects and a selected judge.", status: "error" } } } };
+          }
           const rawMode = (state.benchmarkMode ?? "quick").toLowerCase().includes("full") ? "full" : "quick";
-          return { commands: [modelsCommands.runBenchmark({ judgeEndpointId: state.benchmarkJudge ?? "", mode: rawMode, token: model.readbacks.modelEndpoints.token + 1 })], model };
+          return {
+            commands: [modelsCommands.runBenchmark({ endpointIdsJson: JSON.stringify(selected), judgeEndpointId: judge, mode: rawMode, token: model.readbacks.benchmarkSummary.token + 1 })],
+            model: { ...model, modelsView: { ...state, benchmarkAction: { status: "saving" } } },
+          };
+        },
+        BenchmarkRunStarted: ({ runId, token }: Extract<Message, { readonly _tag: "BenchmarkRunStarted" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          if (token !== model.readbacks.benchmarkSummary.token + 1) return { model };
+          return {
+            commands: [modelsCommands.pollBenchmarkRun({ runId, token: token + 1 })],
+            model: { ...model, modelsView: { ...state, benchmarkAction: { message: "Benchmark running…", status: "saving" }, benchmarkProgress: { runId, status: "running" } } },
+          };
+        },
+        BenchmarkRunStartFailed: ({ message }: Extract<Message, { readonly _tag: "BenchmarkRunStartFailed" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { model: { ...model, modelsView: { ...state, benchmarkAction: { message, status: "error" }, benchmarkProgress: undefined } } };
+        },
+        BenchmarkRunPolled: ({ progressJson, token }: Extract<Message, { readonly _tag: "BenchmarkRunPolled" }>): UpdateReturn<Model, Message> => {
+          let progress: { readonly completedSteps?: number; readonly errorMessage?: string; readonly runId?: string; readonly status?: string; readonly totalSteps?: number } = {};
+          try { progress = JSON.parse(progressJson) as typeof progress; } catch { progress = {}; }
+          const runId = typeof progress.runId === "string" ? progress.runId : "";
+          const status = progress.status === "completed" ? "completed" : progress.status === "failed" ? "failed" : "running";
+          const state = model.modelsView ?? {};
+          if (runId.length === 0) return { model };
+          if (status === "running") {
+            return {
+              commands: [modelsCommands.pollBenchmarkRun({ runId, token: token + 1 })],
+              model: {
+                ...model,
+                modelsView: { ...state, benchmarkAction: { message: "Benchmark running…", status: "saving" }, benchmarkProgress: { completedSteps: progress.completedSteps, message: progress.errorMessage, runId, status, totalSteps: progress.totalSteps } },
+              },
+            };
+          }
+          return {
+            commands: [
+              readReadback({ key: "benchmarkSummary", token: model.readbacks.benchmarkSummary.token + 1 }),
+              readReadback({ key: "benchmarkRuns", token: model.readbacks.benchmarkRuns.token + 1 }),
+              readReadback({ key: "benchmarkActiveRun", token: model.readbacks.benchmarkActiveRun.token + 1 }),
+            ],
+            model: {
+              ...model,
+              readbacks: {
+                ...model.readbacks,
+                benchmarkSummary: loadingReadback(model.readbacks.benchmarkSummary.token + 1),
+                benchmarkRuns: loadingReadback(model.readbacks.benchmarkRuns.token + 1),
+                benchmarkActiveRun: loadingReadback(model.readbacks.benchmarkActiveRun.token + 1),
+              },
+              modelsView: {
+                ...state,
+                benchmarkAction: status === "completed" ? { message: "Benchmark completed.", status: "saved" } : { message: progress.errorMessage ?? "Benchmark failed.", status: "error" },
+                benchmarkProgress: { completedSteps: progress.completedSteps, message: progress.errorMessage, runId, status, totalSteps: progress.totalSteps },
+              },
+            },
+          };
+        },
+        BenchmarkRunPollFailed: ({ message }: Extract<Message, { readonly _tag: "BenchmarkRunPollFailed" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { model: { ...model, modelsView: { ...state, benchmarkAction: { message, status: "error" } } } };
         },
         BenchmarkClearRequested: (): UpdateReturn<Model, Message> => {
           const state = model.modelsView ?? {};
@@ -1801,6 +1940,45 @@ const updateLocalPolicyDraft = (
                   },
                 };
               }
+            }
+          }
+          if (key === "benchmarkPreferences") {
+            const state = model.modelsView ?? {};
+            let judge: string | undefined;
+            try {
+              const meta = snapshot.rows.find((entry) => entry.id === "preferences")?.meta;
+              const parsed = meta === undefined ? undefined : JSON.parse(meta) as { readonly judgeEndpointId?: unknown };
+              judge = typeof parsed?.judgeEndpointId === "string" && parsed.judgeEndpointId.length > 0 ? parsed.judgeEndpointId : undefined;
+            } catch {
+              judge = undefined;
+            }
+            return {
+              model: {
+                ...model,
+                readbacks: { ...model.readbacks, [key]: { ...snapshot, token } },
+                modelsView: judge === undefined ? state : { ...state, benchmarkJudge: judge },
+              },
+            };
+          }
+          if (key === "benchmarkActiveRun" && snapshot.status === "ok") {
+            let active: { readonly completedSteps?: number; readonly runId?: string; readonly status?: string; readonly totalSteps?: number } | undefined;
+            try {
+              const meta = snapshot.rows.find((entry) => entry.id === "active-run")?.meta;
+              active = meta === undefined ? undefined : JSON.parse(meta) as typeof active;
+            } catch {
+              active = undefined;
+            }
+            const runId = active?.runId;
+            if (typeof runId === "string" && runId.length > 0 && active?.status === "running") {
+              const state = model.modelsView ?? {};
+              return {
+                commands: [modelsCommands.pollBenchmarkRun({ runId, token: token + 1 })],
+                model: {
+                  ...model,
+                  readbacks: { ...model.readbacks, [key]: { ...snapshot, token } },
+                  modelsView: { ...state, benchmarkAction: { message: "Benchmark running…", status: "saving" }, benchmarkProgress: { completedSteps: active.completedSteps, runId, status: "running", totalSteps: active.totalSteps } },
+                },
+              };
             }
           }
           if (key === "runtimeConfig") {

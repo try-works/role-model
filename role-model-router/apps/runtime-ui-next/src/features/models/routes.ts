@@ -375,7 +375,7 @@ export const modelsRolesRoute = (models: ReadbackState, endpoints: ReadbackState
   ], h, "models-roles-state");
 };
 
-export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, runs: ReadbackState, h: HtmlBuilder<Message>, modelsView?: Model["modelsView"], endpoints?: ReadbackState): Html => {
+export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, runs: ReadbackState, h: HtmlBuilder<Message>, modelsView?: Model["modelsView"], endpoints?: ReadbackState, preferences?: ReadbackState, activeRun?: ReadbackState): Html => {
   const suiteCases = suite.rows.flatMap((entry) => {
     try {
       // SAFETY: benchmarkSuite rows carry this JSON record in meta.
@@ -387,10 +387,6 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
   });
   const quickCases = suiteCases.filter((entry) => entry.eligible && entry.quick).length;
   const eligibleCases = suiteCases.filter((entry) => entry.eligible).length;
-  // Reference runnable-candidate rule (apps/runtime-ui/app/lib/benchmark-model-cards.ts):
-  // benchmarkEligible !== false when present, else executionModeEligible !== false. The host endpoint
-  // readback does not currently emit either flag, so today this admits everything (the difference is
-  // named in evidence/logs/s622-benchmark-resume-summary.log); the rule engages as soon as they appear.
   const isRunnable = (meta: { readonly benchmarkEligible?: boolean | null; readonly executionModeEligible?: boolean | null }): boolean => {
     if (meta.benchmarkEligible !== undefined && meta.benchmarkEligible !== null) return meta.benchmarkEligible !== false;
     if (meta.executionModeEligible !== undefined && meta.executionModeEligible !== null) return meta.executionModeEligible !== false;
@@ -417,21 +413,49 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
     label: (meta.modelId ?? endpointId) + " (" + (meta.sourceType ?? "unknown") + ")",
     value: endpointId,
   }));
-  const endpointRows = runnableEntries.map(({ endpointId, meta }) => [meta.modelId ?? endpointId, endpointId, meta.sourceType ?? "—", meta.healthStatus ?? "unknown"]);
+  const allEndpointIds = runnableEntries.map((entry) => entry.endpointId);
+  const selectedEndpointIds = modelsView?.benchmarkSelectedEndpointIds ?? allEndpointIds;
+  const selected = new Set(selectedEndpointIds);
+  const selectedCount = allEndpointIds.filter((endpointId) => selected.has(endpointId)).length;
   const mode: "quick" | "full" = modelsView?.benchmarkMode !== undefined && modelsView.benchmarkMode.toLowerCase().includes("full") ? "full" : "quick";
-  const requestedJudge = modelsView?.benchmarkJudge;
+  let preferredJudge: string | undefined;
+  try {
+    const meta = preferences?.rows.find((entry) => entry.id === "preferences")?.meta;
+    const parsed = meta === undefined ? undefined : JSON.parse(meta) as { readonly judgeEndpointId?: unknown };
+    preferredJudge = typeof parsed?.judgeEndpointId === "string" && parsed.judgeEndpointId.length > 0 ? parsed.judgeEndpointId : undefined;
+  } catch {
+    preferredJudge = undefined;
+  }
+  const requestedJudge = modelsView?.benchmarkJudge ?? preferredJudge;
   const judge = requestedJudge !== undefined && endpointOptions.some((option) => option.value === requestedJudge)
     ? requestedJudge
     : endpointOptions[0]?.value ?? "";
   const caseCount = mode === "quick" ? quickCases : eligibleCases;
-  const modelCount = endpointOptions.length;
-  let summaryHeader: { readonly completedAtMs?: number | null; readonly judgeEndpointId?: string | null; readonly judgeModelId?: string | null; readonly mode?: string | null } | undefined;
+  let summaryHeader: {
+    readonly caseAudits?: ReadonlyArray<{ readonly endpointId?: string; readonly latencyMs?: number }>;
+    readonly completedAtMs?: number | null;
+    readonly judgeEndpointId?: string | null;
+    readonly judgeModelId?: string | null;
+    readonly mode?: string | null;
+  } | undefined;
   try {
     const headerRow = summary.rows.find((entry) => entry.id === "summary");
     if (headerRow !== undefined) summaryHeader = JSON.parse(headerRow.meta) as typeof summaryHeader;
   } catch {
     summaryHeader = undefined;
   }
+  const percentile = (values: ReadonlyArray<number>, probability: number): number | null => {
+    const sorted = values.filter((value) => Number.isFinite(value)).sort((left, right) => left - right);
+    if (sorted.length === 0) return null;
+    const index = Math.max(0, Math.min(sorted.length - 1, Math.ceil(probability * sorted.length) - 1));
+    return sorted[index] ?? null;
+  };
+  const latencies = new Map<string, { readonly p50: number | null; readonly p95: number | null }>();
+  for (const endpointId of allEndpointIds) {
+    const values = (summaryHeader?.caseAudits ?? []).flatMap((audit) => audit.endpointId === endpointId && typeof audit.latencyMs === "number" ? [audit.latencyMs] : []);
+    latencies.set(endpointId, { p50: percentile(values, 0.5), p95: percentile(values, 0.95) });
+  }
+  const latencyText = (value: number | null): string => value === null ? "—" : String(Math.round(value)) + " ms";
   const subjects = summary.rows.filter((entry) => entry.id !== "summary").flatMap((entry) => {
     try {
       // SAFETY: benchmarkSummary subject rows carry the BenchmarkSummarySubject record in meta.
@@ -442,7 +466,11 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
         readonly overallScore?: number;
         readonly scoresByBucket?: Readonly<Record<"easy" | "medium" | "hard", { readonly score?: unknown; readonly cases?: unknown }>>;
         readonly sourceType?: string | null;
-        readonly taxonomyScores?: Readonly<Record<string, Readonly<Record<string, number>>>>;
+        readonly taxonomyScores?: {
+          readonly byCapability?: Record<string, number>;
+          readonly byRole?: Record<string, number>;
+          readonly byTask?: Record<string, number>;
+        };
       };
       return [{ meta }];
     } catch {
@@ -459,22 +487,37 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
     const cases = Number(record.cases);
     return percent(record.score) + (Number.isFinite(cases) ? " · " + String(cases) : "");
   };
-  const scoreRows = subjects.map(({ meta }) => [
-    meta.displayName ?? meta.modelId ?? meta.endpointId ?? "—",
-    percent(meta.overallScore),
-    "—",
-    bucket(meta.scoresByBucket?.easy),
-    bucket(meta.scoresByBucket?.medium),
-    bucket(meta.scoresByBucket?.hard),
-    "—",
-    "—",
-    meta.sourceType ?? "—",
-  ]);
-  const taxonomyRows = subjects.flatMap(({ meta }) =>
-    Object.entries(meta.taxonomyScores ?? {}).flatMap(([dimension, values]) =>
-      Object.entries(values).map(([value, score]) => [dimension, value, percent(score)]),
-    ),
-  );
+  const scoreRows = subjects.map(({ meta }) => {
+    const latency = latencies.get(meta.endpointId ?? "") ?? { p50: null, p95: null };
+    return [
+      meta.displayName ?? meta.modelId ?? meta.endpointId ?? "—",
+      percent(meta.overallScore),
+      "—",
+      bucket(meta.scoresByBucket?.easy),
+      bucket(meta.scoresByBucket?.medium),
+      bucket(meta.scoresByBucket?.hard),
+      latencyText(latency.p50),
+      latencyText(latency.p95),
+      meta.sourceType ?? "—",
+    ];
+  });
+  const taxonomyFilters = modelsView?.benchmarkTaxonomyFilters ?? {};
+  const taxonomyInventory = (dimension: "byCapability" | "byRole" | "byTask"): ReadonlyArray<string> =>
+    [...new Set(subjects.flatMap(({ meta }) => Object.keys(meta.taxonomyScores?.[dimension] ?? {})))].sort((left, right) => left.localeCompare(right, "en"));
+  const roleIds = taxonomyInventory("byRole");
+  const taskIds = taxonomyInventory("byTask");
+  const capabilityIds = taxonomyInventory("byCapability");
+  const taxonomyRows = subjects.flatMap(({ meta }) => {
+    const scores = meta.taxonomyScores ?? {};
+    if (taxonomyFilters.role !== undefined && taxonomyFilters.role.length > 0) return scores.byRole?.[taxonomyFilters.role] === undefined ? [] : [["Role", taxonomyFilters.role, percent(scores.byRole[taxonomyFilters.role]), meta.displayName ?? meta.modelId ?? meta.endpointId ?? "—"]];
+    if (taxonomyFilters.task !== undefined && taxonomyFilters.task.length > 0) return scores.byTask?.[taxonomyFilters.task] === undefined ? [] : [["Task", taxonomyFilters.task, percent(scores.byTask[taxonomyFilters.task]), meta.displayName ?? meta.modelId ?? meta.endpointId ?? "—"]];
+    if (taxonomyFilters.capability !== undefined && taxonomyFilters.capability.length > 0) return scores.byCapability?.[taxonomyFilters.capability] === undefined ? [] : [["Capability", taxonomyFilters.capability, percent(scores.byCapability[taxonomyFilters.capability]), meta.displayName ?? meta.modelId ?? meta.endpointId ?? "—"]];
+    return [
+      ...Object.entries(scores.byRole ?? {}).map(([value, score]) => ["Role", value, percent(score), meta.displayName ?? meta.modelId ?? meta.endpointId ?? "—"]),
+      ...Object.entries(scores.byTask ?? {}).map(([value, score]) => ["Task", value, percent(score), meta.displayName ?? meta.modelId ?? meta.endpointId ?? "—"]),
+      ...Object.entries(scores.byCapability ?? {}).map(([value, score]) => ["Capability", value, percent(score), meta.displayName ?? meta.modelId ?? meta.endpointId ?? "—"]),
+    ];
+  });
   const runRows = runs.rows.flatMap((entry) => {
     try {
       // SAFETY: benchmarkRuns rows carry the BenchmarkRunListEntry record in meta.
@@ -494,6 +537,8 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
         h.OnChange((next) => onChange(next)),
       ], options.map((option) => h.option([h.Value(option.value), ...(option.value === value ? [h.Selected(true)] : [])], [option.label]))),
     ]);
+  const progress = modelsView?.benchmarkProgress;
+  const running = progress?.status === "running";
   return referenceSection("models", "ok", [
     h.h2([h.Class("rm3-next-route-title text-sm font-medium leading-5 tracking-tight")], ["Capability benchmark"]),
     referenceCard("Run capability benchmark", "Select mode and judge, then grade runnable endpoints.", [
@@ -504,15 +549,21 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
         ], mode, (next) => Message.BenchmarkModeChanged({ value: next })),
         select("Judge endpoint", endpointOptions.length === 0 ? [{ label: "No runnable endpoints", value: "" }] : endpointOptions, judge, (next) => Message.BenchmarkJudgeChanged({ value: next })),
       ]),
-      h.div([h.Class("mt-4 flex flex-wrap gap-2")], [
+      h.div([h.Class("mt-4 flex flex-wrap items-center gap-2")], [
         h.button([
           h.Type("button"),
-          ...(modelCount < 2 || judge === "" ? [h.Disabled(true)] : []),
+          h.DataAttribute("benchmark-run", ""),
+          ...(selectedCount < 2 || judge === "" || !selected.has(judge) || running ? [h.Disabled(true)] : []),
           h.OnClick(Message.BenchmarkRunRequested({})),
           h.Class("inline-flex h-[34px] items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground"),
-        ], ["Run " + mode + " benchmark (" + String(modelCount) + " model" + (modelCount === 1 ? "" : "s") + ", " + String(caseCount) + " cases)"]),
+        ], ["Run " + mode + " benchmark (" + String(selectedCount) + " of " + String(allEndpointIds.length) + " selected, " + String(caseCount) + " cases)"]),
+        h.span([h.DataAttribute("benchmark-selected-count", ""), h.Class("font-mono text-xs text-muted-foreground")], [String(selectedCount) + " of " + String(allEndpointIds.length) + " selected"]),
         ...(modelsView?.benchmarkClearPending === true ? [] : [h.button([h.Type("button"), h.OnClick(Message.BenchmarkClearRequested({})), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium")], ["Clear all benchmark data"])]),
       ]),
+      modelsView?.benchmarkAction?.message === undefined ? null : h.p([h.DataAttribute("benchmark-action-status", modelsView.benchmarkAction.status), h.Role(modelsView.benchmarkAction.status === "error" ? "alert" : "status"), h.Class("mt-2 text-xs text-muted-foreground")], [modelsView.benchmarkAction.message]),
+      running ? h.div([h.DataAttribute("benchmark-progress", ""), h.Class("mt-3 rounded-md border border-dashed border-border p-3 text-xs text-muted-foreground")], [
+        h.p([h.Role("status")], ["Benchmark " + (progress?.runId ?? "") + " running: " + String(progress?.completedSteps ?? 0) + " / " + String(progress?.totalSteps ?? 0) + " steps"]),
+      ]) : null,
       ...(modelsView?.benchmarkClearPending === true
         ? [h.div([h.DataAttribute("benchmark-clear-confirmation", ""), h.Class("mt-4 rounded-md border border-destructive/40 bg-background p-3")], [
             h.p([h.Class("text-sm leading-5 text-foreground")], ["Clear all benchmark data? This removes every benchmark run, artifact, and routing profile sample. This cannot be undone."]),
@@ -522,8 +573,26 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
             ]),
           ])]
         : []),
-      h.div([h.Class("mt-4")], [
-        referenceTable(["Model", "Path", "Scope", "Status"], endpointRows, "No runnable endpoints are configured.", h, "models"),
+      h.div([h.Class("mt-4 overflow-x-auto")], [
+        h.table([h.Class("w-full min-w-[640px] border-collapse text-left text-sm")], [
+          h.thead([], [h.tr([h.Class("border-b border-border")], ["", "Model", "Path", "Scope", "Status", "Actions"].map((heading) => h.th([h.Class("px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground")], [heading])))]),
+          h.tbody([], runnableEntries.length === 0
+            ? [h.tr([], [h.td([h.Attribute("colspan", "6"), h.Class("px-3 py-3 text-xs text-muted-foreground")], ["No runnable endpoints are configured."])])]
+            : runnableEntries.map(({ endpointId, meta }) => {
+                const isSelected = selected.has(endpointId);
+                const pending = modelsView?.benchmarkClearEndpointId === endpointId;
+                return h.tr([h.Class("border-b border-border last:border-b-0")], [
+                  h.td([h.Class("px-3 py-2")], [h.input([h.Type("checkbox"), h.Checked(isSelected), h.AriaLabel("Select " + (meta.modelId ?? endpointId)), h.OnChange(() => Message.BenchmarkEndpointSelected({ endpointId, selected: !isSelected }))])]),
+                  h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [meta.modelId ?? endpointId]),
+                  h.td([h.Class("px-3 py-2 font-mono text-[12px] text-muted-foreground")], [endpointId]),
+                  h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [meta.sourceType ?? "—"]),
+                  h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [meta.healthStatus ?? "unknown"]),
+                  h.td([h.Class("px-3 py-2")], [pending
+                    ? h.div([h.Class("flex gap-1")], [h.button([h.Type("button"), h.OnClick(Message.BenchmarkEndpointClearConfirmed({ endpointId })), h.Class("text-xs underline")], ["Confirm clear"]), h.button([h.Type("button"), h.OnClick(Message.BenchmarkEndpointClearCancelled({})), h.Class("text-xs underline")], ["Cancel"])])
+                    : h.button([h.Type("button"), h.AriaDisabled(running), h.OnClick(Message.BenchmarkEndpointClearRequested({ endpointId })), h.Class("text-xs underline")], ["Clear"])]),
+                ]);
+              })),
+        ]),
       ]),
     ], h),
     referenceCard("Benchmark scores", "Scores are normalized 0–1 fractions shown as percentages.", [
@@ -532,7 +601,12 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
       referenceTable(["MODEL", "SCOPE", "STATUS"], subjects.map(({ meta }) => [meta.displayName ?? meta.modelId ?? meta.endpointId ?? "—", meta.sourceType ?? "—", "graded"]), "No benchmark scores are in routing profiles yet.", h, "models"),
     ], h),
     referenceCard("Taxonomy dimensions", "Per-model scores by taxonomy dimension.", [
-      referenceTable(["DIMENSION", "VALUE", "SCORE"], taxonomyRows, "No taxonomy dimension data is available yet.", h, "models"),
+      h.div([h.Class("grid gap-3 md:grid-cols-3")], [
+        select("Role", [{ label: "All roles", value: "" }, ...roleIds.map((value) => ({ label: value, value }))], taxonomyFilters.role ?? "", (next) => Message.BenchmarkTaxonomyFilterChanged({ filter: "role", value: next })),
+        select("Task", [{ label: "All tasks", value: "" }, ...taskIds.map((value) => ({ label: value, value }))], taxonomyFilters.task ?? "", (next) => Message.BenchmarkTaxonomyFilterChanged({ filter: "task", value: next })),
+        select("Capability", [{ label: "All capabilities", value: "" }, ...capabilityIds.map((value) => ({ label: value, value }))], taxonomyFilters.capability ?? "", (next) => Message.BenchmarkTaxonomyFilterChanged({ filter: "capability", value: next })),
+      ]),
+      referenceTable(["DIMENSION", "VALUE", "SCORE", "MODEL"], taxonomyRows, "No taxonomy dimension data is available yet.", h, "models"),
     ], h),
     referenceCard("Run history", "Completed capability benchmark runs.", [
       referenceTable(["RUN", "MODE", "CASES", "MODELS", "COMPLETED", "SUITE"], runRows, "No completed benchmark runs yet.", h, "models"),
