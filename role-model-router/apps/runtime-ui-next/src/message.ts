@@ -134,6 +134,11 @@ export const Message: MessageUnion<{
   readonly LocalPeerAddRequested: EmptyFields;
   readonly LocalPeerHealthRequested: { readonly peerId: typeof Schema.String };
   readonly LocalPeerRemoveRequested: { readonly peerId: typeof Schema.String };
+  readonly LocalLlamaSwapModelIdChanged: { readonly value: typeof Schema.String };
+  readonly LocalLlamaSwapModelLoadRequested: EmptyFields;
+  readonly LocalLlamaSwapAllRolesRequested: EmptyFields;
+  readonly LocalLlamaSwapActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly LocalLlamaSwapActionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LocalPeerModelIdChanged: { readonly value: typeof Schema.String };
   readonly LocalPeerModelLoadRequested: EmptyFields;
   readonly LocalPeerModelActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
@@ -337,6 +342,11 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   LocalPeerAddRequested: {},
   LocalPeerHealthRequested: { peerId: Schema.String },
   LocalPeerRemoveRequested: { peerId: Schema.String },
+  LocalLlamaSwapModelIdChanged: { value: Schema.String },
+  LocalLlamaSwapModelLoadRequested: {},
+  LocalLlamaSwapAllRolesRequested: {},
+  LocalLlamaSwapActionSucceeded: { message: Schema.String, token: Schema.Number },
+  LocalLlamaSwapActionFailed: { message: Schema.String, token: Schema.Number },
   LocalPeerModelIdChanged: { value: Schema.String },
   LocalPeerModelLoadRequested: {},
   LocalPeerModelActionSucceeded: { message: Schema.String, token: Schema.Number },

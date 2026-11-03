@@ -149,6 +149,8 @@ const modelFields = {
   observeRoutingFilters: observeFields.observeRoutingFilters,
   observeLogsSource: Schema.optional(Schema.String),
   localLogsAutoRefresh: Schema.optional(Schema.Boolean),
+  localLlamaSwapModelId: Schema.optional(Schema.String),
+  localLlamaSwapMessage: Schema.optional(Schema.String),
   localPeerModelId: Schema.optional(Schema.String),
   localPeerModelMessage: Schema.optional(Schema.String),
   localPeersDraft: Schema.optional(Schema.Struct({ token: Schema.String, url: Schema.String })),

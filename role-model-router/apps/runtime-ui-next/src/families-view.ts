@@ -8,6 +8,7 @@ import { type EndpointsRouteContext, type ProvidersRouteContext, providersRoute 
 import { card, filterBar, table } from "./features/s563-layout";
 import { localPeersPage as localPeersFeaturePage } from "./features/local/peers";
 import { localPeerModelsPage as localPeerModelsFeaturePage } from "./features/local/peer-models";
+import { localLlamaModelsPage as localLlamaModelsFeaturePage } from "./features/local/llama-swap-models";
 import { Message } from "./message";
 import { READBACK_SPECS, type ReadbackRouteSpec, type ReadbackState, type ReadbacksState, renderReadbackPage } from "./readback";
 
@@ -54,7 +55,7 @@ export const familyPage = (
   const pageReadback = first?.readback;
   if (pageReadback !== undefined) {
     if (routeName === "local-peer-models") return localPeerModelsFeaturePage(pageReadback, h);
-    if (routeName === "local-llama-swap-models") return localLlamaModelsPage(pageReadback, h);
+    if (routeName === "local-llama-swap-models") return localLlamaModelsFeaturePage(pageReadback, h);
     if (routeName === "local-swap") return localSwapPage(pageReadback, h);
     if (routeName === "local-logs") return localLogsPage(pageReadback, h);
     if (routeName === "local-peers") return localPeersFeaturePage(pageReadback, h);

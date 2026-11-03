@@ -1308,6 +1308,21 @@ const updateLocalPolicyDraft = (
           const draft = model.localPeersDraft ?? { token: "", url: "" };
           return { model: { ...model, localPeersDraft: { ...draft, token: value } } };
         },
+        LocalLlamaSwapModelIdChanged: ({ value }: Extract<Message, { readonly _tag: "LocalLlamaSwapModelIdChanged" }>): UpdateReturn<Model, Message> => ({ model: { ...model, localLlamaSwapModelId: value } }),
+        LocalLlamaSwapModelLoadRequested: (): UpdateReturn<Model, Message> => {
+          const modelId = (model.localLlamaSwapModelId ?? "").trim();
+          return modelId.length === 0
+            ? { model: { ...model, localLlamaSwapMessage: "Model id is required." } }
+            : { commands: [localPeersCommands.loadLlamaSwapModel({ allRoles: false, modelId, token: model.readbacks.localLlamaSwapModels.token + 1 })], model: { ...model, localLlamaSwapMessage: undefined } };
+        },
+        LocalLlamaSwapAllRolesRequested: (): UpdateReturn<Model, Message> => {
+          const modelId = (model.localLlamaSwapModelId ?? "").trim();
+          return modelId.length === 0
+            ? { model: { ...model, localLlamaSwapMessage: "Model id is required." } }
+            : { commands: [localPeersCommands.loadLlamaSwapModel({ allRoles: true, modelId, token: model.readbacks.localLlamaSwapModels.token + 1 })], model: { ...model, localLlamaSwapMessage: undefined } };
+        },
+        LocalLlamaSwapActionSucceeded: ({ message }: Extract<Message, { readonly _tag: "LocalLlamaSwapActionSucceeded" }>): UpdateReturn<Model, Message> => ({ model: { ...model, localLlamaSwapMessage: message } }),
+        LocalLlamaSwapActionFailed: ({ message }: Extract<Message, { readonly _tag: "LocalLlamaSwapActionFailed" }>): UpdateReturn<Model, Message> => ({ model: { ...model, localLlamaSwapMessage: message } }),
         LocalPeerModelIdChanged: ({ value }: Extract<Message, { readonly _tag: "LocalPeerModelIdChanged" }>): UpdateReturn<Model, Message> => ({ model: { ...model, localPeerModelId: value } }),
         LocalPeerModelLoadRequested: (): UpdateReturn<Model, Message> => {
           const modelId = (model.localPeerModelId ?? "").trim();
