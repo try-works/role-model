@@ -33,6 +33,11 @@ const ROLE_TASK_COUNTS = {
 export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: HtmlBuilder<Message>, modelsView?: Model["modelsView"], rolePolicy?: ReadbackState): Html => {
   const rolePolicyValue = rolePolicyFromReadback(rolePolicy);
   const roleCatalog = rolePolicyValue?.roleDefinitions.map((role) => role.role_id) ?? (Object.keys(ROLE_TASK_COUNTS) as Array<keyof typeof ROLE_TASK_COUNTS>);
+  const taskCount = (roleId: string): number => {
+    if (rolePolicyValue === null || rolePolicyValue === undefined) return Number(ROLE_TASK_COUNTS[roleId as keyof typeof ROLE_TASK_COUNTS] ?? 0);
+    const definition = rolePolicyValue.roleDefinitions.find((role) => role.role_id === roleId);
+    return definition === undefined ? Number(ROLE_TASK_COUNTS[roleId as keyof typeof ROLE_TASK_COUNTS] ?? 0) : tasksForRole(rolePolicyValue, definition).length;
+  };
   const endpointMeta = endpoints.rows.flatMap((row) => {
     try {
       // SAFETY: modelEndpoints writes this JSON object; fields are read defensively.
@@ -182,11 +187,13 @@ export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: 
                       h.DataAttribute("models-role-toggle", String(role)),
                       h.AriaPressed(enabled ? "true" : "false"),
                       h.Class("flex w-full items-center gap-3 py-2 text-left"),
+                      // KNOWN GAP(S620): remote/account-managed role toggles still target the local model-role route;
+                      // the account-model binding path needs the account readback + upsert payload.
                       h.OnClick(Message.ModelsRoleToggled({ enabled: !enabled, modelId: selected?.id ?? "", roleId: String(role) })),
                     ], [
                       h.span([h.Attribute("aria-hidden", "true"), h.Class("flex size-4 shrink-0 items-center justify-center rounded-[4px] " + (enabled ? "bg-[var(--rm-fg)] text-[10px] text-[var(--rm-bg)]" : "border border-[var(--rm-border)]"))], [enabled ? "✓" : ""]),
                       h.span([h.Class("min-w-0 flex-1 truncate font-sans text-[13px] font-semibold leading-4 text-foreground")], [String(role)]),
-                      h.span([h.Class("shrink-0 font-sans text-[12px] tabular-nums text-muted-foreground")], [String(ROLE_TASK_COUNTS[role as keyof typeof ROLE_TASK_COUNTS] ?? 0) + " tasks"]),
+                      h.span([h.Class("shrink-0 font-sans text-[12px] tabular-nums text-muted-foreground")], [String(taskCount(String(role))) + " tasks"]),
                     ]),
                   ]);
                 }),
