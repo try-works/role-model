@@ -1155,6 +1155,16 @@ const updateLocalPolicyDraft = (
                 model: { ...model, modelsView: { ...state, roleOverrides: overrides } },
               };
             }
+            return {
+              model: {
+                ...model,
+                modelsView: {
+                  ...state,
+                  actionMessage: "Provider account " + remote.providerAccountId + " was not found in the account readback; role eligibility was not saved.",
+                  roleOverrides: overrides,
+                },
+              },
+            };
           }
           let kind: "llama-swap" | "peer" = "peer";
           for (const row of model.readbacks.modelEndpoints.rows) {

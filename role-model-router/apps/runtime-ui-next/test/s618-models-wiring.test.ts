@@ -197,7 +197,7 @@ describe("S618 models route wiring", () => {
     expect(container.textContent).toContain("Open Benchmark");
   });
 
-  it("documents the remote role-toggle known gap and selects peer/llama kinds", () => {
+  it("upserts the provider account for remote role toggles and keeps peer/llama kinds local", () => {
     const fixtureEndpoints = {
       rows: [
         { id: "p", label: "p", meta: JSON.stringify({ endpointId: "p", modelId: "peer-model", providerId: "peer", sourceType: "local" }), value: "local" },
@@ -213,15 +213,53 @@ describe("S618 models route wiring", () => {
     };
     expect(kindOf("peer-model").args.kind).toBe("peer");
     expect(kindOf("llama-model").args.kind).toBe("llama-swap");
-    const roles = { rows: [{ id: "role-policy", label: "policy", meta: JSON.stringify({ roleDefinitions: [{ role_id: "coder" }, { role_id: "architect" }], taskDefinitions: [] }), value: "" }], status: "ok" as const, token: 0 };
-    const accounts = { rows: [{ id: "account:0", label: "acct-1", meta: JSON.stringify({ accountScope: "workspace-default", allowedModels: ["remote-model"], authMode: "api-key", credentialRef: "vault:acct-1", deniedModels: [], modelRoleBindings: [{ modelId: "remote-model", endpointId: "r", roleAssignmentMode: "include", enabledRoleIds: ["coder"], roleIds: ["coder"], disabledRoleIds: [] }], orgScope: "personal", providerAccountId: "acct-1", providerId: "openai", providerKind: "openai" }), value: "openai" }], status: "ok" as const, token: 0 };
-    const remote = { ...base, readbacks: { ...base.readbacks, modelEndpoints: fixtureEndpoints, providerAccounts: accounts, rolePolicy: roles } };
-    const next = update(remote, Message.ModelsRoleToggled({ enabled: true, modelId: "remote-model", roleId: "architect" }));
-    const command = (next.commands ?? [])[0] as unknown as { readonly args: { readonly accountJson: string }; readonly name: string };
-    expect(command.name).toBe("UpsertProviderAccount");
-    const body = JSON.parse(command.args.accountJson) as Record<string, unknown>;
-    expect(body.providerAccountId).toBe("acct-1");
-    expect(body.modelRoleBindings).toEqual([{ disabledRoleIds: [], enabledRoleIds: [], modelId: "remote-model", endpointId: "r", roleAssignmentMode: "all", roleIds: [] }]);
+
+    const roles = { rows: [{ id: "role-policy", label: "policy", meta: JSON.stringify({ roleDefinitions: [{ role_id: "architect" }, { role_id: "coder" }, { role_id: "security" }], taskDefinitions: [] }), value: "" }], status: "ok" as const, token: 0 };
+    const sourceAccount = {
+      accountScope: "workspace-default",
+      allowedModels: ["remote-model"],
+      authMode: "api-key",
+      baseUrlOverride: null,
+      budgetPolicyRef: "budget.default",
+      credentialRef: "vault:acct-1",
+      deniedModels: [],
+      entitlementTags: ["tier-a"],
+      healthStatus: "healthy",
+      modelRoleBindings: [{ disabledRoleIds: [], enabledRoleIds: ["coder"], endpointId: "r", modelId: "remote-model", roleAssignmentMode: "include", roleIds: ["coder"] }],
+      orgScope: "personal",
+      providerAccountId: "acct-1",
+      providerId: "openai",
+      providerKind: "openai",
+      quotaPolicyRef: "quota.default",
+      regionPolicy: { mode: "prefer", regions: ["global"] },
+      rotationState: "stable",
+      status: "active",
+    };
+    const accountsFor = (roleAssignmentMode: string, enabledRoleIds: readonly string[], disabledRoleIds: readonly string[]) => ({
+      rows: [{ id: "account:0", label: "acct-1", meta: JSON.stringify({ ...sourceAccount, modelRoleBindings: [{ disabledRoleIds: [...disabledRoleIds], enabledRoleIds: [...enabledRoleIds], endpointId: "r", modelId: "remote-model", roleAssignmentMode, roleIds: [...enabledRoleIds] }] }), value: "openai" }], status: "ok" as const, token: 0,
+    });
+    const posted = (accounts: ReturnType<typeof accountsFor>, enabled: boolean, roleId: string) => {
+      const remote = { ...base, readbacks: { ...base.readbacks, modelEndpoints: fixtureEndpoints, providerAccounts: accounts, rolePolicy: roles } };
+      const next = update(remote, Message.ModelsRoleToggled({ enabled, modelId: "remote-model", roleId }));
+      const command = (next.commands ?? [])[0] as unknown as { readonly args: { readonly accountJson: string }; readonly name: string };
+      expect(command.name).toBe("UpsertProviderAccount");
+      return JSON.parse(command.args.accountJson) as Record<string, unknown>;
+    };
+
+    const allBody = posted(accountsFor("include", ["architect", "coder"], []), true, "security");
+    expect(allBody).toEqual({ ...sourceAccount, modelRoleBindings: [{ disabledRoleIds: [], enabledRoleIds: [], endpointId: "r", modelId: "remote-model", roleAssignmentMode: "all", roleIds: [] }] });
+    const includeBody = posted(accountsFor("include", [], []), false, "coder");
+    expect(includeBody).toEqual({ ...sourceAccount, modelRoleBindings: [{ disabledRoleIds: [], enabledRoleIds: [], endpointId: "r", modelId: "remote-model", roleAssignmentMode: "include", roleIds: [] }] });
+    const excludeBody = posted(accountsFor("include", ["architect", "coder"], []), false, "coder");
+    expect((excludeBody.modelRoleBindings as readonly Record<string, unknown>[])[0]).toEqual({ disabledRoleIds: ["coder", "security"], enabledRoleIds: [], endpointId: "r", modelId: "remote-model", roleAssignmentMode: "exclude", roleIds: [] });
+  });
+
+  it("does not silently fall back to the local role route when the account row is missing", () => {
+    const base = shellModel({ route: { _tag: "Models" } });
+    const endpoints = { rows: [{ id: "r", label: "r", meta: JSON.stringify({ endpointId: "r", modelId: "remote-model", providerAccountId: "acct-missing", providerId: "openai", sourceType: "remote" }), value: "remote" }], status: "ok" as const, token: 0 };
+    const next = update({ ...base, readbacks: { ...base.readbacks, modelEndpoints: endpoints } }, Message.ModelsRoleToggled({ enabled: true, modelId: "remote-model", roleId: "coder" }));
+    expect(next.commands ?? []).toHaveLength(0);
+    expect(next.model.modelsView?.actionMessage).toBe("Provider account acct-missing was not found in the account readback; role eligibility was not saved.");
   });
 
   it("renders the disabled eject reason, confirm transition, and zero-endpoint guard", async () => {
