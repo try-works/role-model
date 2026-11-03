@@ -88,7 +88,7 @@ describe("S595 storage retention and control wiring", () => {
   it("renders the previously handler-less controls as wired, enabled actions", async () => {
     const cases: Array<{ path: string; marker: string; labels: ReadonlyArray<string> }> = [
       { path: "/local/peers", marker: "local-peers", labels: ["Add endpoint"] },
-      { path: "/local/peer-models", marker: "local-peer-models", labels: ["Load model"] },
+      { path: "/local/peer-models", marker: "local-peer-models", labels: ["Register model"] },
       { path: "/local/llama-swap/models", marker: "local-llama-swap-models", labels: ["Load model", "All roles"] },
       { path: "/system/operator", marker: "system-operator", labels: ["Create Replay", "Load Operator State"] },
       { path: "/system/extensions", marker: "system-extensions", labels: ["Download & validate latest"] },
