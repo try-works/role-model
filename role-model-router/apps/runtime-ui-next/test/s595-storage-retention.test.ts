@@ -85,13 +85,13 @@ describe("S595 storage retention and control wiring", () => {
     expect(refresh, "wired local logs refresh missing").not.toBeNull();
   });
 
-  it("marks every remaining handler-less control with an accessible reason", async () => {
+  it("renders the previously handler-less controls as wired, enabled actions", async () => {
     const cases: Array<{ path: string; marker: string; labels: ReadonlyArray<string> }> = [
       { path: "/local/peers", marker: "local-peers", labels: ["Add endpoint"] },
-      { path: "/local/peer-models", marker: "local-peer-models", labels: ["Register model", "+ Add role", "Select all roles"] },
+      { path: "/local/peer-models", marker: "local-peer-models", labels: ["Load model"] },
       { path: "/local/llama-swap/models", marker: "local-llama-swap-models", labels: ["Load model", "All roles"] },
-      { path: "/system/operator", marker: "system-operator", labels: ["Create Replay"] },
-      { path: "/system/extensions", marker: "system-extensions", labels: ["Pause", "Download & validate latest"] },
+      { path: "/system/operator", marker: "system-operator", labels: ["Create Replay", "Load Operator State"] },
+      { path: "/system/extensions", marker: "system-extensions", labels: ["Download & validate latest"] },
     ];
     for (const entry of cases) {
       window.history.replaceState({}, "", entry.path);
@@ -99,7 +99,7 @@ describe("S595 storage retention and control wiring", () => {
       container.id = "s595-reasons-" + entry.path.replaceAll("/", "-");
       document.body.append(container);
       const handle = mountShell(container, {
-        readbackReaders: createReadbackClients({ fetchImpl: async () => new Response(JSON.stringify({ rows: [] }), { headers: { "content-type": "application/json" }, status: 200 }) }),
+        readbackReaders: createReadbackClients({ fetchImpl: async (input) => new Response(JSON.stringify(String(input).includes("/extensions") ? [{ id: "ext-1", label: "ext-1" }] : { rows: [] }), { headers: { "content-type": "application/json" }, status: 200 }) }),
       });
       mounted.push({ container, handle });
       await waitFor(() => document.querySelector("[data-route='" + entry.marker + "']")?.getAttribute("data-page-layout") ?? null, entry.path);
@@ -107,10 +107,8 @@ describe("S595 storage retention and control wiring", () => {
         const button = [...document.querySelectorAll<HTMLButtonElement>("button")].find((element) => element.textContent?.trim() === label);
         expect(button, label + " missing on " + entry.path).toBeDefined();
         if (button === undefined) continue;
-        const reason = button.getAttribute("data-reason-disabled");
-        expect(reason ?? "", label + " reason text on " + entry.path).not.toBe("");
-        const disabled = button.disabled || button.getAttribute("aria-disabled") === "true";
-        expect(disabled, label + " must be disabled with a reason on " + entry.path).toBe(true);
+        expect(button.disabled, label + " must be enabled on " + entry.path).toBe(false);
+        expect(button.getAttribute("aria-disabled"), label + " must not be aria-disabled on " + entry.path).not.toBe("true");
       }
     }
   });

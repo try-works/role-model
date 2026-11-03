@@ -14,6 +14,7 @@ export interface LocalLogsState {
 export const localLogsPage = (readback: ReadbackState, h: HtmlBuilder<Message>, state?: LocalLogsState): Html => {
   const autoRefresh = state?.localLogsAutoRefresh === true;
   return h.div([h.Class("space-y-8"), h.DataAttribute("route", "local-logs"), h.DataAttribute("page-layout", "reference"), h.DataAttribute("readback-route", "localLogs"), h.DataAttribute("readback-state", readback.status === "idle" ? "loading" : readback.status)], [
+    h.svg([h.Class("mt-3 h-10 w-full text-[var(--rm-accent)]")], [h.rect([], []), h.rect([], [])]),
     card("Structured local log history", "Rows are parsed into Timestamp, Source, Severity, Request, and message fields so local runtime behavior can be inspected without raw console noise.", [
       h.div([h.Class(mutedPanel + " mb-4 flex flex-wrap items-center gap-4 p-4")], [
         h.button([h.Type("button"), h.DataAttribute("local-logs-refresh", ""), h.OnClick(Message.LocalLogsRefreshRequested({})), h.Class(secondaryButton)], ["Refresh"]),

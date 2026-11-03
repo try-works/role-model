@@ -157,15 +157,7 @@ describe("S623 per-route verification matrix", () => {
       if (scan.unwired.length > 0) errors.push(entry.tag + ": " + scan.unwired.map((element) => element.label).join(", "));
     }
     // The known dead controls are reported in evidence/logs/route-verification-matrix.md, not fixed here.
-    expect(errors).toEqual([
-      "LocalLogs: (unlabelled input)",
-      "LocalPeers: http://127.0.0.1:1234, Bearer token (optional)",
-      "LocalPeerModels: openai/gpt-4.1",
-      "LocalLlamaSwapModels: lfm2.5-8b-a1b, All roles",
-      "SystemOperator: Paste a local operator token…, Load Operator State, trace-root…, 25, Create Replay",
-      "SystemExtensions: Pause, Download & validate latest",
-      "ObserveLogs: All sources, combined",
-    ]);
+    expect(errors).toEqual([]);
   });
 
   it("fails any route that regresses to zero wired controls", () => {

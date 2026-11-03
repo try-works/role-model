@@ -46,6 +46,7 @@ export interface FamilySection {
 
 export interface FamilyRouteState {
   readonly learningOperatorToken?: string;
+  readonly operatorLearningMode?: string;
   readonly localLlamaSwapMessage?: string;
   readonly localLlamaSwapModelId?: string;
   readonly localLogsAutoRefresh?: boolean;

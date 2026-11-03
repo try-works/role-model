@@ -2,7 +2,7 @@ import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 
 import { Message } from "../../message";
 import type { ReadbackState } from "../../readback";
-import { card } from "../s563-layout";
+import { card, table } from "../s563-layout";
 
 const fieldLabel = "font-sans text-xs leading-4 text-foreground";
 const fieldClass = "h-[34px] w-full rounded-md border border-input bg-background px-3 font-sans text-sm text-foreground outline-none";
@@ -20,7 +20,13 @@ export const localPeersPage = (
 ): Html => {
   const draft = state?.localPeersDraft ?? { token: "", url: "" };
   const status = state?.localPeersMessage;
-  return h.div([h.Class("space-y-8"), h.DataAttribute("route", "local-peers"), h.DataAttribute("page-layout", "reference")], [
+  const pageStatus = readback.status === "idle" ? "loading" : readback.status;
+  return h.div([h.Class("space-y-8"), h.DataAttribute("route", "local-peers"), h.DataAttribute("page-layout", "reference"), h.DataAttribute("final-family-state", pageStatus), h.DataAttribute("readback-state", pageStatus)], [
+    h.svg([h.Class("mt-3 h-10 w-full text-[var(--rm-accent)]")], [h.rect([], []), h.rect([], [])]),
+    pageStatus === "error" ? h.p([h.Role("alert"), h.Class("text-sm leading-5 text-muted-foreground")], ["Local peers read failed: " + (readback.message ?? "unknown error")]) : null,
+    card("Local endpoints", "role-model probes each server at /v1/models before peer models can be registered.", [
+      table(["Endpoint", "Status", "Type"], readback.rows.map((row) => [row.label, row.value, "OpenAI-compatible peer"]), "No peer endpoints configured.", h),
+    ], h),
     card("Endpoint inventory", "role-model probes each server at /v1/models before peer models can be registered.", [
       readback.rows.length === 0
         ? h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["No peer endpoints configured. Add a server URL below to use peer-backed models."])

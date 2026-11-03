@@ -69,6 +69,13 @@ const AFFORDANCE = /clickable model row|detail selection|table rows|table row ac
 /** Which task wired the human item away; the classifier only uses this for routes proven wired in the current tree. */
 const WIRED_EVIDENCE: Readonly<Record<string, string>> = {
   Benchmark: "S618 models wiring",
+  LocalLlamaSwapModels: "S628 task-102 wiring",
+  LocalLogs: "S625 task-102 wiring",
+  LocalPeerModels: "S627 task-102 wiring",
+  LocalPeers: "S626 task-102 wiring",
+  ObserveLogs: "S624 task-102 wiring",
+  SystemExtensions: "S630 task-102 wiring",
+  SystemOperator: "S629 task-102 wiring",
   Learning: "S619 learning wiring",
   LearningConfiguration: "S619 learning wiring",
   LearningDecisions: "S619 learning wiring",

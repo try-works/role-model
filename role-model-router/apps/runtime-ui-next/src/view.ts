@@ -1527,7 +1527,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
     observeRoutingFilters: model.observeRoutingFilters,
     observeLogsSource: model.observeLogsSource,
     localLogsAutoRefresh: model.localLogsAutoRefresh,
-    familyState: { localLlamaSwapMessage: model.localLlamaSwapMessage, localLlamaSwapModelId: model.localLlamaSwapModelId, localLogsAutoRefresh: model.localLogsAutoRefresh, localPeerModelId: model.localPeerModelId, localPeerModelMessage: model.localPeerModelMessage, localPeersDraft: model.localPeersDraft, localPeersMessage: model.localPeersMessage, learningOperatorToken: model.learningOperatorToken, systemExtensionsMessage: model.systemExtensionsMessage, systemOperatorMessage: model.systemOperatorMessage, systemOperatorReplayCount: model.systemOperatorReplayCount, systemOperatorTraceRoot: model.systemOperatorTraceRoot },
+    familyState: { localLlamaSwapMessage: model.localLlamaSwapMessage, localLlamaSwapModelId: model.localLlamaSwapModelId, localLogsAutoRefresh: model.localLogsAutoRefresh, localPeerModelId: model.localPeerModelId, localPeerModelMessage: model.localPeerModelMessage, localPeersDraft: model.localPeersDraft, localPeersMessage: model.localPeersMessage, learningOperatorToken: model.learningOperatorToken, operatorLearningMode: model.operatorLearningMode, systemExtensionsMessage: model.systemExtensionsMessage, systemOperatorMessage: model.systemOperatorMessage, systemOperatorReplayCount: model.systemOperatorReplayCount, systemOperatorTraceRoot: model.systemOperatorTraceRoot },
     learningPackAction: model.learningPackAction,
     learningDecisionFilters: model.learningDecisionFilters,
                     diagnostics: model.diagnostics,

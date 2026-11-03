@@ -1,10 +1,10 @@
 {
   "buckets": {
-    "matched_walker": 10,
+    "matched_walker": 0,
     "non_native_affordance": 8,
     "scanner_gap": 8,
     "unmatched": 0,
-    "wired_after_inventory": 35
+    "wired_after_inventory": 45
   },
   "humanTotal": 61,
   "identities": {
@@ -400,9 +400,9 @@
       "label": "All sources",
       "route": "/observe/logs",
       "routeTag": "ObserveLogs",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[2]>div[1]>button[1]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S624 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "segmented button ×2",
@@ -410,9 +410,9 @@
       "label": "combined",
       "route": "/observe/logs",
       "routeTag": "ObserveLogs",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>section[1]>div[2]>div[1]>button[2]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S624 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "button ×4",
@@ -530,9 +530,9 @@
       "label": "Endpoint URL",
       "route": "/local/peers",
       "routeTag": "LocalPeers",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>div[1]>section[2]>div[2]>div[1]>div[1]>input[1]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S626 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "password input",
@@ -540,9 +540,9 @@
       "label": "Auth token (optional)",
       "route": "/local/peers",
       "routeTag": "LocalPeers",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>div[1]>section[2]>div[2]>div[1]>div[2]>input[1]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S626 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "table row actions",
@@ -560,9 +560,9 @@
       "label": "Model ID",
       "route": "/local/peer-models",
       "routeTag": "LocalPeerModels",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>div[1]>section[1]>div[2]>div[1]>div[1]>input[1]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S627 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "input",
@@ -570,9 +570,9 @@
       "label": "Model ID",
       "route": "/local/llama-swap/models",
       "routeTag": "LocalLlamaSwapModels",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>div[1]>section[1]>div[2]>div[1]>div[1]>input[1]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S628 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "static text",
@@ -590,9 +590,9 @@
       "label": "Operator access token",
       "route": "/system/operator",
       "routeTag": "SystemOperator",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>div[1]>section[2]>div[2]>div[1]>input[1]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S629 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "button",
@@ -600,9 +600,9 @@
       "label": "Load Operator State",
       "route": "/system/operator",
       "routeTag": "SystemOperator",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>div[1]>section[2]>div[2]>div[1]>button[1]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S629 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "input",
@@ -610,9 +610,9 @@
       "label": "Trace root id",
       "route": "/system/operator",
       "routeTag": "SystemOperator",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>div[1]>div[1]>section[1]>div[2]>div[1]>div[1]>input[1]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S629 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     },
     {
       "control": "number input",
@@ -620,9 +620,9 @@
       "label": "Max requests",
       "route": "/system/operator",
       "routeTag": "SystemOperator",
-      "wiredEvidence": null,
-      "walkerPath": "div[1]>div[1]>main[1]>div[1]>div[1]>div[1]>section[1]>div[2]>div[1]>div[2]>input[1]",
-      "bucket": "matched_walker"
+      "wiredEvidence": "S629 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
     }
   ],
   "modelsFamily": {
@@ -632,37 +632,6 @@
   },
   "nativeTotal": 53,
   "unmatched": [],
-  "walkerOnly": [
-    {
-      "label": "(unlabelled input)",
-      "path": "div[1]>div[1]>main[1]>div[1]>div[1]>section[1]>div[2]>div[1]>label[1]>input[1]",
-      "route": "LocalLogs",
-      "tag": "input"
-    },
-    {
-      "label": "All roles",
-      "path": "div[1]>div[1]>main[1]>div[1]>div[1]>section[1]>div[2]>div[2]>button[1]",
-      "route": "LocalLlamaSwapModels",
-      "tag": "button"
-    },
-    {
-      "label": "Create Replay",
-      "path": "div[1]>div[1]>main[1]>div[1]>div[1]>div[1]>section[1]>div[2]>div[1]>button[1]",
-      "route": "SystemOperator",
-      "tag": "button"
-    },
-    {
-      "label": "Pause",
-      "path": "div[1]>div[1]>main[1]>div[1]>div[1]>section[1]>div[2]>div[1]>button[1]",
-      "route": "SystemExtensions",
-      "tag": "button"
-    },
-    {
-      "label": "Download & validate latest",
-      "path": "div[1]>div[1]>main[1]>div[1]>div[1]>div[2]>section[2]>div[2]>button[1]",
-      "route": "SystemExtensions",
-      "tag": "button"
-    }
-  ],
-  "walkerTotal": 15
+  "walkerOnly": [],
+  "walkerTotal": 0
 }

@@ -77,8 +77,11 @@ describe("S617 reconciliation guard", () => {
     const mapping = loadCommitted();
     expect(validateMappingShape(mapping)).toEqual([]);
     const missingPath = clone(mapping);
-    const matched = missingPath.items.find((entry) => entry.bucket === "matched_walker");
-    if (matched !== undefined) matched.walkerPath = null;
+    const matched = missingPath.items.find((entry) => entry.bucket === "wired_after_inventory");
+    if (matched !== undefined) {
+      matched.bucket = "matched_walker";
+      matched.walkerPath = null;
+    }
     expect(validateMappingShape(missingPath).join("\n")).toContain("walkerPath");
     const strayPath = clone(mapping);
     const wired = strayPath.items.find((entry) => entry.bucket !== "matched_walker");
@@ -111,8 +114,11 @@ describe("S617 reconciliation guard", () => {
 
   it("planReconcile reports invalid (not changed) for a committed convention violation", () => {
     const { dir, mappingPath } = withTempMapping((mapping) => {
-      const matched = mapping.items.find((entry) => entry.bucket === "matched_walker");
-      if (matched !== undefined) matched.walkerPath = null;
+      const matched = mapping.items.find((entry) => entry.bucket === "wired_after_inventory");
+      if (matched !== undefined) {
+        matched.bucket = "matched_walker";
+        matched.walkerPath = null;
+      }
     });
     const before = readFileSync(mappingPath, "utf8");
     const plan = planReconcile({ baselineDir: baselineRoot, humanMarkdownPath, mappingPath });
