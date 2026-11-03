@@ -1,0 +1,4 @@
+task-102 repair caveat
+SystemOperator (features/system/operator.ts) and SystemExtensions (features/system/extensions.ts) preserve the
+readbacks, controls, and exact host contracts, but compress the reference cards from families-view. Visual parity
+with :3456 is intentionally deferred and recorded in route-verification-matrix.md rows 45-46.

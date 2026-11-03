@@ -42,8 +42,8 @@ Known scanner gap: **Requests** renders through the real view, but `test/support
 | LearningHistory | yes | 29 | 29 | none | s619-learning-controls.test.ts | learningHistory |
 | LocalLlamaSwapModels | yes | 32 | 29 | none | s534-families.test.ts | localLlamaSwapModels |
 | LocalPolicy | yes | 28 | 28 | none | s589-local-policy-wired.test.ts | localPolicy |
-| SystemOperator | yes | 30 | 25 | none | s534-families.test.ts | operatorStatus, operatorTraceRoots |
-| SystemExtensions | yes | 30 | 28 | none | s534-families.test.ts | extensions |
+| SystemOperator | yes | 30 | 25 | none | s534-families.test.ts | operatorStatus, operatorTraceRoots — CAVEAT: feature body compresses the reference cards; controls/readbacks preserved, visual parity tracked as follow-up |
+| SystemExtensions | yes | 30 | 28 | none | s534-families.test.ts | extensions — CAVEAT: feature body compresses the reference cards; controls/readbacks preserved, visual parity tracked as follow-up |
 | Models | yes | 28 | 28 | none | s618-models-wiring.test.ts | configuredModels, modelEndpoints, rolePolicy |
 | ModelsRoles | yes | 41 | 41 | none | s620-roles-parity.test.ts | configuredModels, modelEndpoints, rolePolicy |
 | Benchmark | yes | 29 | 29 | none | s622-benchmark-parity.test.ts | benchmarkSuite, benchmarkSummary, benchmarkRuns |

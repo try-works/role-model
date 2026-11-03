@@ -134,7 +134,7 @@ export const Message: MessageUnion<{
   readonly LocalPeerAddRequested: EmptyFields;
   readonly LocalPeerHealthRequested: { readonly peerId: typeof Schema.String };
   readonly LocalPeerRemoveRequested: { readonly peerId: typeof Schema.String };
-  readonly SystemExtensionsPauseRequested: EmptyFields;
+  readonly SystemExtensionsPauseRequested: { readonly extensionId: typeof Schema.String };
   readonly SystemExtensionsDownloadRequested: EmptyFields;
   readonly SystemExtensionsActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly SystemExtensionsActionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
@@ -352,7 +352,7 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   LocalPeerAddRequested: {},
   LocalPeerHealthRequested: { peerId: Schema.String },
   LocalPeerRemoveRequested: { peerId: Schema.String },
-  SystemExtensionsPauseRequested: {},
+  SystemExtensionsPauseRequested: { extensionId: Schema.String },
   SystemExtensionsDownloadRequested: {},
   SystemExtensionsActionSucceeded: { message: Schema.String, token: Schema.Number },
   SystemExtensionsActionFailed: { message: Schema.String, token: Schema.Number },

@@ -1314,12 +1314,10 @@ const updateLocalPolicyDraft = (
           const draft = model.localPeersDraft ?? { token: "", url: "" };
           return { model: { ...model, localPeersDraft: { ...draft, token: value } } };
         },
-        SystemExtensionsPauseRequested: (): UpdateReturn<Model, Message> => {
-          const first = model.readbacks.extensions.rows[0];
-          return first === undefined
-            ? { model: { ...model, systemExtensionsMessage: "No extension available to pause." } }
-            : { commands: [systemExtensionsCommands.pause({ id: first.id, token: model.readbacks.extensions.token + 1 })], model: { ...model, systemExtensionsMessage: undefined } };
-        },
+        SystemExtensionsPauseRequested: ({ extensionId }: Extract<Message, { readonly _tag: "SystemExtensionsPauseRequested" }>): UpdateReturn<Model, Message> => ({
+          commands: [systemExtensionsCommands.pause({ id: extensionId, token: model.readbacks.extensions.token + 1 })],
+          model: { ...model, systemExtensionsMessage: undefined },
+        }),
         SystemExtensionsDownloadRequested: (): UpdateReturn<Model, Message> => ({ commands: [systemExtensionsCommands.download({ token: model.readbacks.extensions.token + 1 })], model: { ...model, systemExtensionsMessage: undefined } }),
         SystemExtensionsActionSucceeded: ({ message }: Extract<Message, { readonly _tag: "SystemExtensionsActionSucceeded" }>): UpdateReturn<Model, Message> => ({ model: { ...model, systemExtensionsMessage: message } }),
         SystemExtensionsActionFailed: ({ message }: Extract<Message, { readonly _tag: "SystemExtensionsActionFailed" }>): UpdateReturn<Model, Message> => ({ model: { ...model, systemExtensionsMessage: message } }),

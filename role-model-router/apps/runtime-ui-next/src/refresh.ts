@@ -1,6 +1,6 @@
 import { Subscription } from "@role-model-router/foldkit";
 import type { Subscriptions } from "@role-model-router/foldkit/subscription";
-import { Effect, Option, Queue, Schema, Stream } from "effect";
+import { Effect, Option, Queue, Schedule, Schema, Stream } from "effect";
 
 import { Message } from "./message";
 import type { Model } from "./model";
@@ -216,6 +216,16 @@ export const refreshRevisionStream = (
 export const makeRefreshSubscriptions = (
   factory: RuntimeEventSourceFactory,
 ): Subscriptions<Model, Message> =>
-  Subscription.make<Model, Message>()(() => ({
+  Subscription.make<Model, Message>()((entry) => ({
+    localLogsAutoRefresh: entry(
+      { enabled: Schema.Boolean },
+      {
+        modelToDependencies: (model: Model) => ({ enabled: model.localLogsAutoRefresh === true }),
+        dependenciesToStream: ({ enabled }) =>
+          enabled
+            ? Stream.fromEffectSchedule(Effect.succeed(Message.LocalLogsRefreshRequested({})), Schedule.spaced("3 seconds"))
+            : Stream.empty,
+      },
+    ),
     refresh: Subscription.persistentEntry(refreshRevisionStream(factory)),
   }));

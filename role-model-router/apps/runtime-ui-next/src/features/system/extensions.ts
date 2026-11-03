@@ -16,12 +16,13 @@ export const systemExtensionsPage = (readback: ReadbackState, h: HtmlBuilder<Mes
     card("Installed extensions", "Extension lifecycle is host-managed; the runtime remains the source of truth.", [
       readback.rows.length === 0
         ? h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["No extensions recorded."])
-        : table(["Extension", "Mode", "Detail"], readback.rows.map((row) => [row.label, row.value, row.meta]), "No extensions recorded.", h),
+        : h.div([h.Class("flex flex-col divide-y divide-border")], readback.rows.map((row) => h.div([h.Class("flex flex-wrap items-center justify-between gap-3 py-3")], [
+            h.div([h.Class("min-w-0")], [h.p([h.Class("font-mono text-[13px] font-semibold text-foreground")], [row.label]), h.p([h.Class("text-xs text-muted-foreground")], [row.value + " · " + row.meta])]),
+            h.button([h.Type("button"), h.DataAttribute("system-extensions-pause", row.id), h.OnClick(Message.SystemExtensionsPauseRequested({ extensionId: row.id })), h.Class(secondaryButton)], ["Pause"]),
+          ]))),
     ], h),
     card("Replay automation", "Replay automation is configured per extension and reported by the host.", [
-      h.div([h.Class("flex flex-wrap items-center gap-2")], [
-        h.button([h.Type("button"), h.DataAttribute("system-extensions-pause", ""), h.OnClick(Message.SystemExtensionsPauseRequested({})), h.Class(secondaryButton)], ["Pause"]),
-      ]),
+      h.p([h.Class("text-sm leading-5 text-muted-foreground")], ["Pause acts on the extension row you choose above."]),
     ], h),
     card("Recommendation ledger", "Signed bundles validated locally before apply.", [
       h.button([h.Type("button"), h.DataAttribute("system-extensions-download", ""), h.OnClick(Message.SystemExtensionsDownloadRequested({})), h.Class(primaryButton + " mb-4")], ["Download & validate latest"]),

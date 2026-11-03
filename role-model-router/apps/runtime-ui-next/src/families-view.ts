@@ -9,6 +9,7 @@ import { card, filterBar, table } from "./features/s563-layout";
 import { localPeersPage as localPeersFeaturePage } from "./features/local/peers";
 import { localPeerModelsPage as localPeerModelsFeaturePage } from "./features/local/peer-models";
 import { localLlamaModelsPage as localLlamaModelsFeaturePage } from "./features/local/llama-swap-models";
+import { localLogsPage as localLogsFeaturePage } from "./features/local/logs";
 import { systemOperatorPage as systemOperatorFeaturePage } from "./features/system/operator";
 import { systemExtensionsPage as systemExtensionsFeaturePage } from "./features/system/extensions";
 import { Message } from "./message";
@@ -43,6 +44,21 @@ export interface FamilySection {
   readonly children?: readonly Html[];
 }
 
+export interface FamilyRouteState {
+  readonly learningOperatorToken?: string;
+  readonly localLlamaSwapMessage?: string;
+  readonly localLlamaSwapModelId?: string;
+  readonly localLogsAutoRefresh?: boolean;
+  readonly localPeerModelId?: string;
+  readonly localPeerModelMessage?: string;
+  readonly localPeersDraft?: { readonly token: string; readonly url: string };
+  readonly localPeersMessage?: string;
+  readonly systemExtensionsMessage?: string;
+  readonly systemOperatorMessage?: string;
+  readonly systemOperatorReplayCount?: string;
+  readonly systemOperatorTraceRoot?: string;
+}
+
 export const familyPage = (
   label: string,
   routeName: string,
@@ -51,22 +67,23 @@ export const familyPage = (
   h: H,
   retention?: RetentionState,
   operatorLearningMode?: string,
+  viewState?: FamilyRouteState,
 ): Html => {
   const first = sections.find((section) => section.readback !== undefined);
   const state = first?.readback === undefined ? "empty" : statusOf(first.readback);
   const pageReadback = first?.readback;
   if (pageReadback !== undefined) {
-    if (routeName === "local-peer-models") return localPeerModelsFeaturePage(pageReadback, h);
-    if (routeName === "local-llama-swap-models") return localLlamaModelsFeaturePage(pageReadback, h);
+    if (routeName === "local-peer-models") return localPeerModelsFeaturePage(pageReadback, h, viewState);
+    if (routeName === "local-llama-swap-models") return localLlamaModelsFeaturePage(pageReadback, h, viewState);
     if (routeName === "local-swap") return localSwapPage(pageReadback, h);
-    if (routeName === "local-logs") return localLogsPage(pageReadback, h);
-    if (routeName === "local-peers") return localPeersFeaturePage(pageReadback, h);
+    if (routeName === "local-logs") return localLogsFeaturePage(pageReadback, h, viewState);
+    if (routeName === "local-peers") return localPeersFeaturePage(pageReadback, h, viewState);
     if (routeName === "system-peers") return systemPeersPage(pageReadback, h);
-    if (routeName === "system-extensions") return systemExtensionsFeaturePage(pageReadback, h);
+    if (routeName === "system-extensions") return systemExtensionsFeaturePage(pageReadback, h, viewState);
     if (routeName === "session-readiness") return systemSessionPage(pageReadback, h);
     if (routeName === "storage-retention") return systemStoragePage(pageReadback, retention, h);
   }
-  if (routeName === "system-operator") return systemOperatorFeaturePage(sections.find((section) => section.readback !== undefined)?.readback, h);
+  if (routeName === "system-operator") return systemOperatorFeaturePage(sections.find((section) => section.readback !== undefined)?.readback, h, viewState);
   return h.section(
     [h.Class("rm3-next-route mt-4 space-y-6"), h.DataAttribute("route", routeName), h.DataAttribute("final-family-state", state), h.DataAttribute("page-layout", "reference"), h.DataAttribute("page-state", state)],
     [h.h2([h.Class("rm3-next-route-title text-sm font-medium leading-5 tracking-tight")], [label]), ...sections.map((section, index) =>
