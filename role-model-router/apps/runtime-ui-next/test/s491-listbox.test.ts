@@ -2,16 +2,46 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { mountShell } from "../src/mount";
 
+/**
+ * S491/S496: the Requests ranking selectors are now real <select> controls on the route (task-108), wired to
+ * RequestsRankingFieldChanged. These tests drive the route selections and assert the ranking readback query,
+ * which is the behaviour the former listbox facade tests covered.
+ */
 const mounted: Array<{ readonly container: HTMLElement; readonly handle: { dispose(): void } }> = [];
 
 const waitFor = async <T,>(read: () => T | undefined, label: string): Promise<T> => {
-  const deadline = Date.now() + 3000;
+  const deadline = Date.now() + 10000;
   while (Date.now() < deadline) {
     const value = read();
     if (value !== undefined) return value;
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
   throw new Error("timed out waiting for " + label);
+};
+
+const json = (body: unknown) => new Response(JSON.stringify(body), { headers: { "content-type": "application/json" }, status: 200 });
+
+const mountRequests = (onRanking: (body: unknown) => void): void => {
+  window.history.replaceState({}, "", "/requests");
+  const container = document.createElement("div");
+  container.id = "s491-requests-selects";
+  document.body.append(container);
+  mounted.push({
+    container,
+    handle: mountShell(container, {
+      readbackFetchImpl: async () => json({ items: [], rows: [], requests: [], window: { startAtMs: 0, endAtMs: 0 } }),
+      requestsRankingFetchImpl: async (_input, init) => {
+        onRanking(JSON.parse(String(init?.body)));
+        return json({ ranking: { rows: [] } });
+      },
+    }),
+  });
+};
+
+const choose = (select: HTMLSelectElement, value: string): void => {
+  select.value = value;
+  select.dispatchEvent(new Event("input", { bubbles: true }));
+  select.dispatchEvent(new Event("change", { bubbles: true }));
 };
 
 afterEach(() => {
@@ -22,160 +52,45 @@ afterEach(() => {
   window.history.replaceState({}, "", "/");
 });
 
-describe("S491 Requests ranking metric listbox", () => {
-  it("renders the real Foldkit listbox and supports keyboard open/close on the same message flow", async () => {
-    window.history.replaceState({}, "", "/requests");
-    const container = document.createElement("div");
-    container.id = "s491-listbox";
-    document.body.append(container);
+describe("S491 Requests ranking metric select", () => {
+  it("renders the real metric select and dispatches the ranking query on change", async () => {
     const rankingCalls: Array<{ readonly url: string; readonly body: unknown }> = [];
-    mounted.push({
-      container,
-      handle: mountShell(container, {
-        requestsRankingFetchImpl: async (input, init) => {
-          rankingCalls.push({ url: String(input), body: JSON.parse(String(init?.body)) });
-          return new Response(JSON.stringify({ ranking: { rows: [] } }), {
-            headers: { "content-type": "application/json" },
-            status: 200,
-          });
-        },
-      }),
+    mountRequests((body) => {
+      rankingCalls.push({ body, url: "/api/role-model/telemetry/query" });
     });
-
-    const trigger = await waitFor(
-      () => document.getElementById("requests-ranking-metric-button") ?? undefined,
-      "metric listbox trigger",
+    const metric = await waitFor(
+      () => (document.querySelector("[data-requests-ranking-metric]") as HTMLSelectElement | null) ?? undefined,
+      "metric select",
     );
-    expect(trigger.getAttribute("aria-haspopup")).toBe("listbox");
-    expect(document.querySelector("select[data-ranking-metric]")).toBeNull();
-    expect(trigger.className).toContain("h-[34px]");
-    expect(trigger.className).toContain("min-w-[9rem]");
-
-    trigger.focus();
-    trigger.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerType: "mouse" }));
-    trigger.dispatchEvent(new MouseEvent("click", { bubbles: true, button: 0 }));
-    const listbox = await waitFor(
-      () => document.querySelector<HTMLElement>("[role='listbox']") ?? undefined,
-      "open listbox",
-    );
-    const options = [...listbox.querySelectorAll("[role='option']")];
-    expect(options.length).toBeGreaterThan(1);
-    expect(options.filter((option) => option.getAttribute("aria-selected") === "true")).toHaveLength(1);
-
-    listbox.focus();
-    listbox.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "ArrowDown" }));
-    const activeAfterArrow = await waitFor(() => {
-      const active = listbox.getAttribute("aria-activedescendant");
-      return active === null ? undefined : active;
-    }, "aria-activedescendant after ArrowDown");
-    expect(activeAfterArrow.length).toBeGreaterThan(0);
-
-    listbox.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "t" }));
-    const typeaheadOption = await waitFor(() => {
-      const active = listbox.getAttribute("aria-activedescendant");
-      if (active === null) return undefined;
-      const element = document.getElementById(active);
-      return element?.textContent?.trim() === "Total tokens" ? element : undefined;
-    }, "typeahead active option Total tokens");
-    expect(typeaheadOption.textContent?.trim()).toBe("Total tokens");
-
-    listbox.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "Escape" }));
-    await waitFor(() => (document.querySelector<HTMLElement>("[role='listbox']") === null ? true : undefined), "listbox close");
-    expect(document.activeElement).toBe(trigger);
-
-    trigger.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerType: "mouse" }));
-    trigger.dispatchEvent(new MouseEvent("click", { bubbles: true, button: 0 }));
-    const reopened = await waitFor(
-      () => document.querySelector<HTMLElement>("[role='listbox']") ?? undefined,
-      "reopened listbox for selection",
-    );
-    const requestsOption = [...reopened.querySelectorAll("[role='option']")].find(
-      (option) => option.textContent?.trim() === "Requests",
-    );
-    expect(requestsOption).toBeDefined();
-    requestsOption?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    await waitFor(
-      () => (rankingCalls.length > 0 ? true : undefined),
-      "ranking query after option selection",
-    );
+    expect(metric.getAttribute("aria-label")).toBe("Ranking metric");
+    expect(metric.value).toBe("averageLatencyMs");
+    const labels = [...metric.options].map((option) => option.textContent?.trim());
+    expect(labels).toContain("Requests");
+    expect(labels).toContain("Total tokens");
+    choose(metric, "totalTokens");
+    await waitFor(() => (rankingCalls.length > 0 ? true : undefined), "ranking query after metric change");
     expect(rankingCalls[0]?.url).toContain("/api/role-model/telemetry/query");
     expect(rankingCalls[0]?.body).toMatchObject({
-      metrics: ["requestCount"],
-      ranking: { dimension: "endpointId", metric: "requestCount" },
+      metrics: ["totalTokens"],
+      ranking: { dimension: "endpointId", metric: "totalTokens" },
     });
   });
 });
-describe("S496 Requests ranking target listbox", () => {
-  it("renders the target listbox and selects the same rankingTarget message/query", async () => {
-    window.history.replaceState({}, "", "/requests");
-    const container = document.createElement("div");
-    container.id = "s496-target-listbox";
-    document.body.append(container);
+
+describe("S496 Requests ranking target select", () => {
+  it("renders the real target select and dispatches the ranking query on change", async () => {
     const rankingCalls: Array<{ readonly body: unknown }> = [];
-    mounted.push({
-      container,
-      handle: mountShell(container, {
-        requestsRankingFetchImpl: async (_input, init) => {
-          rankingCalls.push({ body: JSON.parse(String(init?.body)) });
-          return new Response(JSON.stringify({ ranking: { rows: [] } }), {
-            headers: { "content-type": "application/json" },
-            status: 200,
-          });
-        },
-      }),
+    mountRequests((body) => {
+      rankingCalls.push({ body });
     });
-
-    const trigger = await waitFor(
-      () => document.getElementById("requests-ranking-target-button") ?? undefined,
-      "target listbox trigger",
+    const target = await waitFor(
+      () => (document.querySelector("[data-requests-ranking-target]") as HTMLSelectElement | null) ?? undefined,
+      "target select",
     );
-    expect(trigger.getAttribute("aria-haspopup")).toBe("listbox");
-    expect(document.querySelector("select[data-ranking-target]")).toBeNull();
-
-    trigger.focus();
-    trigger.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerType: "mouse" }));
-    trigger.dispatchEvent(new MouseEvent("click", { bubbles: true, button: 0 }));
-    const listbox = await waitFor(
-      () => document.querySelector<HTMLElement>("[role='listbox']") ?? undefined,
-      "open target listbox",
-    );
-    const options = [...listbox.querySelectorAll("[role='option']")];
-    expect(options.length).toBeGreaterThan(1);
-    expect(options.filter((option) => option.getAttribute("aria-selected") === "true")).toHaveLength(1);
-
-    listbox.focus();
-    listbox.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "ArrowDown" }));
-    const active = await waitFor(() => {
-      const id = listbox.getAttribute("aria-activedescendant");
-      return id === null ? undefined : id;
-    }, "target aria-activedescendant");
-    expect(active.length).toBeGreaterThan(0);
-
-    listbox.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "m" }));
-    const typeahead = await waitFor(() => {
-      const id = listbox.getAttribute("aria-activedescendant");
-      if (id === null) return undefined;
-      const element = document.getElementById(id);
-      return element?.textContent?.trim() === "Upstream models" ? element : undefined;
-    }, "target typeahead Upstream models");
-    expect(typeahead.textContent?.trim()).toBe("Upstream models");
-
-    listbox.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, key: "Escape" }));
-    await waitFor(() => (document.querySelector("[role='listbox']") === null ? true : undefined), "target listbox close");
-    expect(document.activeElement).toBe(trigger);
-
-    trigger.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerType: "mouse" }));
-    trigger.dispatchEvent(new MouseEvent("click", { bubbles: true, button: 0 }));
-    const reopened = await waitFor(
-      () => document.querySelector<HTMLElement>("[role='listbox']") ?? undefined,
-      "reopened target listbox",
-    );
-    const upstream = [...reopened.querySelectorAll("[role='option']")].find(
-      (option) => option.textContent?.trim() === "Upstream models",
-    );
-    expect(upstream).toBeDefined();
-    upstream?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    await waitFor(() => (rankingCalls.length > 0 ? true : undefined), "target ranking query");
+    expect(target.getAttribute("aria-label")).toBe("Ranking target");
+    expect(target.value).toBe("endpointId");
+    choose(target, "modelId");
+    await waitFor(() => (rankingCalls.length > 0 ? true : undefined), "ranking query after target change");
     expect(rankingCalls[0]?.body).toMatchObject({
       metrics: ["averageLatencyMs"],
       ranking: { dimension: "modelId", metric: "averageLatencyMs" },

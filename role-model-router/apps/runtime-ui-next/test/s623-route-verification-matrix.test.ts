@@ -19,9 +19,8 @@ import { shellModel } from "./support/runtime-shell";
  * dispatch/request. The zero-wired guard below is the regression alarm: a route that renders controls
  * with none of them wired fails this suite.
  *
- * Requests is the one known handler-recorder gap: its listbox needs a Foldkit runtime render frame,
- * so the recorder reports an error while the real renderToString path still renders it. That is
- * recorded explicitly, not hidden.
+ * Every route, including Requests, is scanned with no recorder error: the Requests ranking selectors are
+ * real wired <select> controls (task-108), so this matrix asserts zero unwired controls route-wide.
  */
 interface MatrixEntry {
   readonly behavior: string;
@@ -142,15 +141,11 @@ describe("S623 per-route verification matrix", () => {
     }
   });
 
-  it("scans every route and pins the one known recorder gap", () => {
+  it("scans every route with no recorder gaps", () => {
     const errors: string[] = [];
     for (const entry of MATRIX) {
       const scan = scanRouteTag(entry.tag);
-      if (entry.tag === "Requests") {
-        expect(scan.error, "Requests recorder gap must stay explicit").toBeDefined();
-        expect(scan.elements).toHaveLength(0);
-        continue;
-      }
+      // task-108 closed the Requests listbox recorder gap: its selectors are real wired <select> controls.
       expect(scan.error, entry.tag + " scan error").toBeUndefined();
       expect(scan.elements.length, entry.tag + " has no interactive elements").toBeGreaterThan(0);
       expect(scan.wired.length, entry.tag + " has zero wired controls").toBeGreaterThan(0);

@@ -1274,7 +1274,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     Queues: () => h.div([h.DataAttribute("page-layout", "reference")], [observeQueuesRoute(readbacks.queues, h)]),
     LocalLogs: () => familyPage("Llama-swap logs", "local-logs", "Rows are parsed into Timestamp, Source, Severity, Request, and message fields so local runtime behavior can be inspected without raw console noise.", [{ label: "Structured local log history", spec: READBACK_SPECS.localLogs, readback: readbacks.localLogs, note: "The ledger is bounded for scanability; parsed rows carry request correlation.", columns: ["Time", "Source", "Level", "Message", "Request"], rows: (row) => [row.label, row.value, row.meta, "—", "—"] }, { label: "Raw log streams", note: "Raw stdout/stderr streams stay in the host log store and are not reconstructed here." }], h, undefined, undefined, familyState),
     RouterCandidates: () => routerCandidatesPage(readbacks, h),
-    Requests: () => telemetryRequestsRoute(readbacks.requests, readbacks.overviewMetrics, windowForRange(requestsFilters?.range), requestsRanking, requestsRankingMetricListbox, requestsRankingTargetListbox, h, requestsFilters),
+    Requests: () => telemetryRequestsRoute(readbacks.requests, readbacks.overviewMetrics, windowForRange(requestsFilters?.range), requestsRanking, h, requestsFilters),
     RequestDetail: () => renderReadbackPage(READBACK_SPECS.requestDetail, readbacks.requestDetail, h),
     RouterDecisions: () => routerDecisionsPage(readbacks, h),
     RouterDecisionDetail: () =>

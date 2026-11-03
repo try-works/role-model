@@ -8,7 +8,7 @@ import { REQUESTS_RANKING_METRIC_OPTIONS, REQUESTS_RANKING_TARGET_OPTIONS, type 
 import { renderRequestsRanking } from "../requests-ranking/view";
 import { telemetryChartCard } from "../overview/charts";
 import { seriesHasValues, volumeSeriesFor } from "../overview/chart-data";
-import { initRequestsMetricListbox, initRequestsTargetListbox, requestsMetricListboxView, requestsTargetListboxView } from "../../ui/listbox";
+
 import { card, chartGrid, filterBar, metrics, segmented, table } from "../s563-layout";
 import type { ChartSeries } from "@role-model/ui/foldkit-chart";
 
@@ -121,8 +121,6 @@ export const telemetryRequestsRoute = (
   metrics: ReadbackState,
   windowMs: number,
   ranking: RequestsRankingState | undefined,
-  metricListbox: Model["requestsRankingMetricListbox"],
-  targetListbox: Model["requestsRankingTargetListbox"],
   h: HtmlBuilder<Message>,
   filters?: Model["requestsFilters"],
 ): Html => {
@@ -143,8 +141,6 @@ export const telemetryRequestsRoute = (
         options.map((option) => h.option([h.Value(option), ...(option === value ? [h.Selected(true)] : [])], [option])),
       ),
     ]);
-  const listboxField = (label: string, control: Html) =>
-    h.label([h.Class(fieldClass)], [h.span([h.Class(labelClass)], [label]), control]);
   const runRanking = h.button(
     [
       h.Type("button"),
@@ -195,30 +191,32 @@ export const telemetryRequestsRoute = (
             [
               fieldSelect("Breakdown", filters?.breakdown ?? "Total", ["Total", "By endpoint variant", "By upstream model", "By provider"], "breakdown"),
               fieldSelect("Source", filters?.source ?? "All sources", ["All sources", "Local only", "Remote only"], "source"),
-              listboxField(
-                "Ranking metric",
-                requestsMetricListboxView(
-                  {
-                    model: metricListbox ?? initRequestsMetricListbox(),
-                    selected: current.metric,
-                    options: REQUESTS_RANKING_METRIC_OPTIONS,
-                    toParentMessage: (message: unknown) => Message.GotRequestsRankingMetricListboxMessage({ message }),
-                  },
-                  h,
+              h.label([h.Class(fieldClass)], [
+                h.span([h.Class(labelClass)], ["Ranking metric"]),
+                h.select(
+                  [
+                    h.AriaLabel("Ranking metric"),
+                    h.DataAttribute("requests-ranking-metric", ""),
+                    h.Class(selectClass),
+                    h.Value(current.metric),
+                    h.OnInput((value) => Message.RequestsRankingFieldChanged({ field: "metric", value })),
+                  ],
+                  REQUESTS_RANKING_METRIC_OPTIONS.map((option) => h.option([h.Value(option.value), ...(option.value === current.metric ? [h.Selected(true)] : [])], [option.label])),
                 ),
-              ),
-              listboxField(
-                "Ranking target",
-                requestsTargetListboxView(
-                  {
-                    model: targetListbox ?? initRequestsTargetListbox(),
-                    selected: current.rankingTarget,
-                    options: REQUESTS_RANKING_TARGET_OPTIONS,
-                    toParentMessage: (message: unknown) => Message.GotRequestsRankingTargetListboxMessage({ message }),
-                  },
-                  h,
+              ]),
+              h.label([h.Class(fieldClass)], [
+                h.span([h.Class(labelClass)], ["Ranking target"]),
+                h.select(
+                  [
+                    h.AriaLabel("Ranking target"),
+                    h.DataAttribute("requests-ranking-target", ""),
+                    h.Class(selectClass),
+                    h.Value(current.rankingTarget),
+                    h.OnInput((value) => Message.RequestsRankingFieldChanged({ field: "rankingTarget", value })),
+                  ],
+                  REQUESTS_RANKING_TARGET_OPTIONS.map((option) => h.option([h.Value(option.value), ...(option.value === current.rankingTarget ? [h.Selected(true)] : [])], [option.label])),
                 ),
-              ),
+              ]),
             ],
           ),
         ],

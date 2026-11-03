@@ -129,17 +129,18 @@ describe("S617 handler-presence: structural walker", () => {
 });
 
 describe("S617 handler-presence: routed inventory", () => {
-  it("scans every routed tag; the one known recorder gap is documented, not hidden", () => {
+  it("scans every routed tag with no recorder gaps", () => {
     const scans = scanAllRoutes();
     expect(scans.length).toBeGreaterThanOrEqual(47);
-    // Requests renders its listbox through foldkit's real childAttributes(), which requires a runtime
-    // render frame (src/ui/listbox.ts:54). The recorder cannot enter that frame, so the route is reported
-    // as a scanner ERROR in the baseline instead of silently pretending it has no controls.
+    // task-108 closed the last recorder gap: the Requests ranking selectors are real wired <select> controls,
+    // so no route reports a scanner error anymore.
     const failed = scans.filter((scan) => scan.error !== undefined).map((scan) => scan.route);
-    expect(failed).toEqual(["Requests"]);
+    expect(failed).toEqual([]);
     const scanned = scans.filter((scan) => scan.error === undefined);
-    expect(scanned.length).toBeGreaterThanOrEqual(46);
+    expect(scanned.length).toBeGreaterThanOrEqual(47);
     expect(scanned.every((scan) => scan.elements.length > 0)).toBe(true);
+    const requests = scans.find((scan) => scan.route === "Requests");
+    expect(requests?.unwired).toEqual([]);
   });
 
   it("finds today's known dead controls from evidence/logs/ui-dead-controls-inventory.md", () => {
