@@ -67,3 +67,22 @@ final commit after that repair lands, and committed raw - not just summarised.
   build cache to finish inside its 20s timeout; S26f/S40b then passed.
 - The suite is now 93 files / 910 tests (not 92/901) because the models repair added the S623 per-route
   verification matrix (1 file, 9 tests).
+
+
+## HOLD 2 (benchmark review - shared plumbing released 24261ebb)
+
+(a) CLEAR-ALL CONFIRMATION GUARD IMPLEMENTED (replaces :3456 window.confirm): BenchmarkClearRequested no longer
+dispatches DELETE; it arms modelsView.benchmarkClearPending. The route then renders the reference warning
+("Clear all benchmark data? This removes every benchmark run, artifact, and routing profile sample. This cannot
+be undone.") with "Confirm clear" (BenchmarkClearConfirmed -> ClearBenchmark DELETE) and "Cancel"
+(BenchmarkClearCancelled -> no command). s622 asserts both rendered states plus the arm/confirm/cancel update
+semantics; s618 updated for the two-step flow. Targeted s622+s618+s620+s617 = 36/36, tsc 0.
+
+(b) RUNNABLE-CANDIDATE FILTER IMPLEMENTED WITH THE REFERENCE RULE: endpoints and judge options are filtered by
+isBenchmarkRunnableCandidate semantics (benchmarkEligible !== false when present, else
+executionModeEligible !== false), and a judge saved against a now-non-runnable endpoint falls back to the first
+runnable one. DATA LIMITATION NAMED EXPLICITLY (not hidden): the host /api/role-model/endpoints readback does
+not currently emit benchmarkEligible/executionModeEligible (the parser now passes both through if added), and
+the router-candidates readback parser exposes routingEligible but not benchmark eligibility. Until the host
+surfaces those flags, the filter is a no-op and non-runnable endpoints can still appear; the route rule engages
+automatically once the flags exist. Unit coverage synthesises both flags to prove the rule and the exclusion.

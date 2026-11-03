@@ -285,6 +285,13 @@ describe("S618 models route wiring", () => {
     const judge = update(mode.model, Message.BenchmarkJudgeChanged({ value: "e1" }));
     expect(judge.model.modelsView?.benchmarkJudge).toBe("e1");
     expect((update(judge.model, Message.BenchmarkRunRequested()).commands ?? [])).toHaveLength(1);
-    expect((update(judge.model, Message.BenchmarkClearRequested()).commands ?? [])).toHaveLength(1);
+    // The destructive clear is armed first (:3456 confirm guard), never dispatched by the first click.
+    const armed = update(judge.model, Message.BenchmarkClearRequested());
+    expect(armed.commands ?? []).toHaveLength(0);
+    expect(armed.model.modelsView?.benchmarkClearPending).toBe(true);
+    expect((update(armed.model, Message.BenchmarkClearConfirmed()).commands ?? [])).toHaveLength(1);
+    const cancelled = update(armed.model, Message.BenchmarkClearCancelled());
+    expect(cancelled.commands ?? []).toHaveLength(0);
+    expect(cancelled.model.modelsView?.benchmarkClearPending).toBe(false);
   });
 });

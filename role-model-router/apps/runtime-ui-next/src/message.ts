@@ -129,6 +129,13 @@ export const Message: MessageUnion<{
   readonly ObserveRangeChanged: { readonly value: typeof Schema.String };
   readonly ObserveFilterChanged: { readonly field: typeof ObserveFilterFieldSchema; readonly value: typeof Schema.String };
   readonly ObserveAdvancedToggled: EmptyFields;
+  readonly LocalPeerUrlChanged: { readonly value: typeof Schema.String };
+  readonly LocalPeerTokenChanged: { readonly value: typeof Schema.String };
+  readonly LocalPeerAddRequested: EmptyFields;
+  readonly LocalPeerHealthRequested: { readonly peerId: typeof Schema.String };
+  readonly LocalPeerRemoveRequested: { readonly peerId: typeof Schema.String };
+  readonly LocalPeersActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly LocalPeersActionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LocalLogsAutoRefreshToggled: { readonly value: typeof Schema.Boolean };
   readonly ObserveLogsSourceChanged: { readonly value: typeof Schema.String };
   readonly ObservabilityRefreshRequested: EmptyFields;
@@ -321,6 +328,13 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   ObserveRangeChanged: { value: Schema.String },
   ObserveFilterChanged: { field: ObserveFilterFieldSchema, value: Schema.String },
   ObserveAdvancedToggled: {},
+  LocalPeerUrlChanged: { value: Schema.String },
+  LocalPeerTokenChanged: { value: Schema.String },
+  LocalPeerAddRequested: {},
+  LocalPeerHealthRequested: { peerId: Schema.String },
+  LocalPeerRemoveRequested: { peerId: Schema.String },
+  LocalPeersActionSucceeded: { message: Schema.String, token: Schema.Number },
+  LocalPeersActionFailed: { message: Schema.String, token: Schema.Number },
   LocalLogsAutoRefreshToggled: { value: Schema.Boolean },
   ObserveLogsSourceChanged: { value: Schema.String },
   ObservabilityRefreshRequested: {},

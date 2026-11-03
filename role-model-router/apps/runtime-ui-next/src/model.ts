@@ -149,6 +149,8 @@ const modelFields = {
   observeRoutingFilters: observeFields.observeRoutingFilters,
   observeLogsSource: Schema.optional(Schema.String),
   localLogsAutoRefresh: Schema.optional(Schema.Boolean),
+  localPeersDraft: Schema.optional(Schema.Struct({ token: Schema.String, url: Schema.String })),
+  localPeersMessage: Schema.optional(Schema.String),
   deviceAuthDialog: deviceAuthFields.deviceAuthDialog,
   deviceAuthModalKey: deviceAuthFields.deviceAuthModalKey,
   chartInteraction: shellFields.chartInteraction,

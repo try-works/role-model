@@ -60,6 +60,8 @@ import {
   type ReplayAutoQueueCommands,
   noopReplayAutoQueueCommands,
   type ModelsCommands,
+  type LocalPeersCommands,
+  noopLocalPeersCommands,
   noopModelsCommands,
 } from "./commands";
 import {
@@ -308,6 +310,7 @@ export const createUpdate =
     operatorLearningCommands: OperatorLearningCommands = noopOperatorLearningCommands,
     replayAutoQueueCommands: ReplayAutoQueueCommands = noopReplayAutoQueueCommands,
     modelsCommands: ModelsCommands = noopModelsCommands,
+    localPeersCommands: LocalPeersCommands = noopLocalPeersCommands,
   ) => {
 
 
@@ -1286,6 +1289,57 @@ const updateLocalPolicyDraft = (
           const state = model.observeRoutingFilters ?? { breakdown: "Total", difficulty: "All buckets", expanded: false, range: "Day", source: "All sources" };
           return { model: { ...model, observeRoutingFilters: { ...state, expanded: !state.expanded } } };
         },
+        LocalPeerUrlChanged: ({ value }: Extract<Message, { readonly _tag: "LocalPeerUrlChanged" }>): UpdateReturn<Model, Message> => {
+          const draft = model.localPeersDraft ?? { token: "", url: "" };
+          return { model: { ...model, localPeersDraft: { ...draft, url: value } } };
+        },
+        LocalPeerTokenChanged: ({ value }: Extract<Message, { readonly _tag: "LocalPeerTokenChanged" }>): UpdateReturn<Model, Message> => {
+          const draft = model.localPeersDraft ?? { token: "", url: "" };
+          return { model: { ...model, localPeersDraft: { ...draft, token: value } } };
+        },
+        LocalPeerAddRequested: (): UpdateReturn<Model, Message> => {
+          const draft = model.localPeersDraft ?? { token: "", url: "" };
+          const existing = model.readbacks.localPeers.rows.flatMap((row) => {
+            try {
+              // SAFETY: localPeers rows carry this JSON record in meta.
+              const meta = JSON.parse(row.meta) as { readonly authToken?: string | null; readonly id: string; readonly url: string };
+              return [{ id: meta.id, url: meta.url, ...(typeof meta.authToken === "string" ? { authToken: meta.authToken } : {}) }];
+            } catch {
+              return [];
+            }
+          });
+          if (draft.url.trim().length === 0) return { model: { ...model, localPeersMessage: "Endpoint URL is required." } };
+          const next = [...existing, { id: draft.url.trim(), url: draft.url.trim(), ...(draft.token.length === 0 ? {} : { authToken: draft.token }) }];
+          const token = model.readbacks.localPeers.token + 1;
+          return { commands: [localPeersCommands.save({ peersJson: JSON.stringify(next), token })], model: { ...model, localPeersMessage: undefined } };
+        },
+        LocalPeerRemoveRequested: ({ peerId }: Extract<Message, { readonly _tag: "LocalPeerRemoveRequested" }>): UpdateReturn<Model, Message> => {
+          const next = model.readbacks.localPeers.rows.flatMap((row) => {
+            try {
+              // SAFETY: localPeers rows carry this JSON record in meta.
+              const meta = JSON.parse(row.meta) as { readonly authToken?: string | null; readonly id: string; readonly url: string };
+              if (meta.id === peerId) return [];
+              return [{ id: meta.id, url: meta.url, ...(typeof meta.authToken === "string" ? { authToken: meta.authToken } : {}) }];
+            } catch {
+              return [];
+            }
+          });
+          return { commands: [localPeersCommands.save({ peersJson: JSON.stringify(next), token: model.readbacks.localPeers.token + 1 })], model };
+        },
+        LocalPeerHealthRequested: ({ peerId }: Extract<Message, { readonly _tag: "LocalPeerHealthRequested" }>): UpdateReturn<Model, Message> => {
+          const peer = model.readbacks.localPeers.rows.flatMap((row) => {
+            try {
+              // SAFETY: localPeers rows carry this JSON record in meta.
+              const meta = JSON.parse(row.meta) as { readonly id: string; readonly url: string };
+              return meta.id === peerId ? [meta.url] : [];
+            } catch {
+              return [];
+            }
+          })[0];
+          return peer === undefined ? { model } : { commands: [localPeersCommands.health({ token: model.readbacks.localPeers.token + 1, url: peer })], model };
+        },
+        LocalPeersActionSucceeded: ({ message }: Extract<Message, { readonly _tag: "LocalPeersActionSucceeded" }>): UpdateReturn<Model, Message> => ({ model: { ...model, localPeersMessage: message } }),
+        LocalPeersActionFailed: ({ message }: Extract<Message, { readonly _tag: "LocalPeersActionFailed" }>): UpdateReturn<Model, Message> => ({ model: { ...model, localPeersMessage: message } }),
         LocalLogsAutoRefreshToggled: ({ value }: Extract<Message, { readonly _tag: "LocalLogsAutoRefreshToggled" }>): UpdateReturn<Model, Message> => ({ model: { ...model, localLogsAutoRefresh: value } }),
         ObserveLogsSourceChanged: ({ value }: Extract<Message, { readonly _tag: "ObserveLogsSourceChanged" }>): UpdateReturn<Model, Message> => ({ model: { ...model, observeLogsSource: value } }),
         ObservabilityRefreshRequested: (): UpdateReturn<Model, Message> => {

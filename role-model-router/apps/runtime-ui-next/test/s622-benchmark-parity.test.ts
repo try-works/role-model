@@ -90,6 +90,16 @@ const render = async (
   return container;
 };
 
+const renderModel = async (model: Model): Promise<HTMLElement> => {
+  const rendered = await Effect.runPromise(renderToString({
+    init: () => ({ commands: [], model }),
+    view,
+  }, { isHydratable: false }));
+  const container = document.createElement("div");
+  container.innerHTML = rendered.html;
+  return container;
+};
+
 const urlOf = (href: string) => Option.getOrThrow(urlFromString("http://localhost" + href));
 
 describe("S622 benchmark parity", () => {
@@ -119,6 +129,44 @@ describe("S622 benchmark parity", () => {
     expect(container.textContent).toContain("Clear all benchmark data");
   });
 
+  it("guards Clear all benchmark data behind an explicit confirmation", async () => {
+    const base = benchmarkModel();
+    const initial = await render();
+    expect(initial.textContent).toContain("Clear all benchmark data");
+    expect(initial.textContent).not.toContain("This cannot be undone.");
+
+    const armed = shellUpdate(base, Message.BenchmarkClearRequested());
+    expect(armed.commands ?? []).toHaveLength(0);
+    expect(armed.model.modelsView?.benchmarkClearPending).toBe(true);
+    const pendingModel = { ...armed.model, readbacks: base.readbacks };
+    const pending = await renderModel(pendingModel);
+    expect(pending.textContent).toContain("This cannot be undone.");
+    expect(pending.textContent).toContain("Confirm clear");
+    expect(pending.textContent).toContain("Cancel");
+    expect([...pending.querySelectorAll("button")].some((button) => button.textContent === "Clear all benchmark data")).toBe(false);
+
+    const confirmed = shellUpdate(pendingModel, Message.BenchmarkClearConfirmed());
+    expect(((confirmed.commands ?? [])[0] as unknown as { readonly name: string }).name).toBe("ClearBenchmark");
+    expect(confirmed.model.modelsView?.benchmarkClearPending).toBe(false);
+    const cancelled = shellUpdate(pendingModel, Message.BenchmarkClearCancelled());
+    expect(cancelled.commands ?? []).toHaveLength(0);
+    expect(cancelled.model.modelsView?.benchmarkClearPending).toBe(false);
+  });
+
+  it("applies the reference runnable-candidate filter to endpoints and the judge select", async () => {
+    const endpoints = parseReadbackFixture("modelEndpoints", [
+      { benchmarkEligible: true, endpointId: "ep-a", modelId: "model-a", sourceType: "remote" },
+      { benchmarkEligible: false, endpointId: "ep-b", modelId: "model-b", sourceType: "remote" },
+      { endpointId: "ep-c", executionModeEligible: false, modelId: "model-c", sourceType: "remote" },
+      { endpointId: "ep-d", executionModeEligible: true, modelId: "model-d", sourceType: "remote" },
+    ]);
+    const container = await render({}, { modelEndpoints: endpoints });
+    const values = [...container.querySelectorAll("select[aria-label='Judge endpoint'] option")].map((option) => option.getAttribute("value"));
+    expect(values).toEqual(["ep-a", "ep-d"]);
+    expect(container.textContent).not.toContain("ep-b");
+    expect(container.textContent).not.toContain("ep-c");
+  });
+
   it("renders the scores, taxonomy and run-history tables from the readbacks", async () => {
     const container = await render();
     const text = container.textContent ?? "";
@@ -146,7 +194,10 @@ describe("S622 benchmark parity", () => {
     expect(runCommand.name).toBe("RunBenchmark");
     expect(runCommand.args.judgeEndpointId).toBe("ep-a");
     expect(runCommand.args.mode).toBe("full");
-    const clear = shellUpdate(base, Message.BenchmarkClearRequested());
+    const armed = shellUpdate(base, Message.BenchmarkClearRequested());
+    expect(armed.commands ?? []).toHaveLength(0);
+    expect(armed.model.modelsView?.benchmarkClearPending).toBe(true);
+    const clear = shellUpdate({ ...armed.model, readbacks: base.readbacks }, Message.BenchmarkClearConfirmed());
     expect(((clear.commands ?? [])[0] as unknown as { readonly name: string }).name).toBe("ClearBenchmark");
   });
 

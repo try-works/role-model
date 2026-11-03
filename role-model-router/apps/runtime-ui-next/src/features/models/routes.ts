@@ -387,28 +387,42 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
   });
   const quickCases = suiteCases.filter((entry) => entry.eligible && entry.quick).length;
   const eligibleCases = suiteCases.filter((entry) => entry.eligible).length;
-  const endpointOptions = (endpoints?.rows ?? []).flatMap((entry) => {
+  // Reference runnable-candidate rule (apps/runtime-ui/app/lib/benchmark-model-cards.ts):
+  // benchmarkEligible !== false when present, else executionModeEligible !== false. The host endpoint
+  // readback does not currently emit either flag, so today this admits everything (the difference is
+  // named in evidence/logs/s622-benchmark-resume-summary.log); the rule engages as soon as they appear.
+  const isRunnable = (meta: { readonly benchmarkEligible?: boolean | null; readonly executionModeEligible?: boolean | null }): boolean => {
+    if (meta.benchmarkEligible !== undefined && meta.benchmarkEligible !== null) return meta.benchmarkEligible !== false;
+    if (meta.executionModeEligible !== undefined && meta.executionModeEligible !== null) return meta.executionModeEligible !== false;
+    return true;
+  };
+  const endpointEntries = (endpoints?.rows ?? []).flatMap((entry) => {
     try {
       // SAFETY: modelEndpoints rows carry this JSON record in meta.
-      const meta = JSON.parse(entry.meta) as { readonly endpointId?: string; readonly modelId?: string; readonly sourceType?: string };
-      if (meta.endpointId === undefined) return [];
-      return [{ label: (meta.modelId ?? meta.endpointId) + " (" + (meta.sourceType ?? "unknown") + ")", value: meta.endpointId }];
+      const meta = JSON.parse(entry.meta) as {
+        readonly benchmarkEligible?: boolean | null;
+        readonly endpointId?: string;
+        readonly executionModeEligible?: boolean | null;
+        readonly healthStatus?: string | null;
+        readonly modelId?: string | null;
+        readonly sourceType?: string | null;
+      };
+      return meta.endpointId === undefined ? [] : [{ meta, endpointId: meta.endpointId }];
     } catch {
       return [];
     }
   });
-  const endpointRows = (endpoints?.rows ?? []).flatMap((entry) => {
-    try {
-      // SAFETY: modelEndpoints rows carry this JSON record in meta.
-      const meta = JSON.parse(entry.meta) as { readonly endpointId?: string; readonly healthStatus?: string | null; readonly modelId?: string | null; readonly sourceType?: string | null };
-      if (meta.endpointId === undefined) return [];
-      return [[meta.modelId ?? meta.endpointId, meta.endpointId, meta.sourceType ?? "—", meta.healthStatus ?? "unknown"]];
-    } catch {
-      return [];
-    }
-  });
+  const runnableEntries = endpointEntries.filter((entry) => isRunnable(entry.meta));
+  const endpointOptions = runnableEntries.map(({ endpointId, meta }) => ({
+    label: (meta.modelId ?? endpointId) + " (" + (meta.sourceType ?? "unknown") + ")",
+    value: endpointId,
+  }));
+  const endpointRows = runnableEntries.map(({ endpointId, meta }) => [meta.modelId ?? endpointId, endpointId, meta.sourceType ?? "—", meta.healthStatus ?? "unknown"]);
   const mode: "quick" | "full" = modelsView?.benchmarkMode !== undefined && modelsView.benchmarkMode.toLowerCase().includes("full") ? "full" : "quick";
-  const judge = modelsView?.benchmarkJudge ?? endpointOptions[0]?.value ?? "";
+  const requestedJudge = modelsView?.benchmarkJudge;
+  const judge = requestedJudge !== undefined && endpointOptions.some((option) => option.value === requestedJudge)
+    ? requestedJudge
+    : endpointOptions[0]?.value ?? "";
   const caseCount = mode === "quick" ? quickCases : eligibleCases;
   const modelCount = endpointOptions.length;
   let summaryHeader: { readonly completedAtMs?: number | null; readonly judgeEndpointId?: string | null; readonly judgeModelId?: string | null; readonly mode?: string | null } | undefined;
@@ -497,8 +511,17 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
           h.OnClick(Message.BenchmarkRunRequested({})),
           h.Class("inline-flex h-[34px] items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground"),
         ], ["Run " + mode + " benchmark (" + String(modelCount) + " model" + (modelCount === 1 ? "" : "s") + ", " + String(caseCount) + " cases)"]),
-        h.button([h.Type("button"), h.OnClick(Message.BenchmarkClearRequested({})), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium")], ["Clear all benchmark data"]),
+        ...(modelsView?.benchmarkClearPending === true ? [] : [h.button([h.Type("button"), h.OnClick(Message.BenchmarkClearRequested({})), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium")], ["Clear all benchmark data"])]),
       ]),
+      ...(modelsView?.benchmarkClearPending === true
+        ? [h.div([h.DataAttribute("benchmark-clear-confirmation", ""), h.Class("mt-4 rounded-md border border-destructive/40 bg-background p-3")], [
+            h.p([h.Class("text-sm leading-5 text-foreground")], ["Clear all benchmark data? This removes every benchmark run, artifact, and routing profile sample. This cannot be undone."]),
+            h.div([h.Class("mt-3 flex flex-wrap gap-2")], [
+              h.button([h.Type("button"), h.OnClick(Message.BenchmarkClearConfirmed({})), h.Class("inline-flex h-[34px] items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Confirm clear"]),
+              h.button([h.Type("button"), h.OnClick(Message.BenchmarkClearCancelled({})), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium")], ["Cancel"]),
+            ]),
+          ])]
+        : []),
       h.div([h.Class("mt-4")], [
         referenceTable(["Model", "Path", "Scope", "Status"], endpointRows, "No runnable endpoints are configured.", h, "models"),
       ]),
