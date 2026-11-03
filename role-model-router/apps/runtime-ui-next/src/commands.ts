@@ -765,6 +765,7 @@ export interface ModelsClient {
   readonly removeAccountModel: (providerAccountId: string, modelId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly removeEndpoint: (endpointId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly removePeerModel: (modelId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly removeLlamaSwapModel: (modelId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly setController: (endpointId: string | null) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly setRoles: (modelId: string, kind: "llama-swap" | "peer", roleIds: ReadonlyArray<string>) => Promise<{ readonly body: unknown; readonly status: number }>;
 }
@@ -783,6 +784,7 @@ export const createModelsClient = (options: { readonly fetchImpl?: typeof fetch 
     removeAccountModel: (providerAccountId, modelId) => send("/api/role-model/accounts/" + encodeURIComponent(providerAccountId) + "/models/" + encodeURIComponent(modelId), "DELETE", "{}"),
     removeEndpoint: (endpointId) => send("/api/role-model/endpoints/" + encodeURIComponent(endpointId), "DELETE", "{}"),
     removePeerModel: (modelId) => send("/api/role-model/local/peer/models/" + encodeURIComponent(modelId) + "/unload", "POST", "{}"),
+    removeLlamaSwapModel: (modelId) => send("/api/role-model/local/llama-swap/models/" + encodeURIComponent(modelId) + "/unload", "POST", "{}"),
     setController: (endpointId) => send("/api/role-model/controller", "PATCH", JSON.stringify({ endpointId })),
     setRoles: (modelId, kind, roleIds) => send("/api/role-model/local/" + kind + "/models/" + encodeURIComponent(modelId) + "/roles", "PUT", JSON.stringify({
       disabledRoleIds: [],
@@ -848,10 +850,12 @@ export const defineModelsCommands = (client: ModelsClient) => ({
     messages: [Message.ModelsActionSucceeded, Message.ModelsActionFailed],
   }),
   removeModel: Command.define("RemoveModel", {
-    args: { accountId: Schema.String, endpointId: Schema.String, kind: Schema.Literals(["account-model", "endpoint", "peer"]), modelId: Schema.String, token: Schema.Number },
+    args: { accountId: Schema.String, endpointId: Schema.String, kind: Schema.Literals(["account-model", "endpoint", "llama-swap", "peer"]), modelId: Schema.String, token: Schema.Number },
     execute: ({ accountId, endpointId, kind, modelId, token }): Effect.Effect<ReturnType<typeof Message.ModelsActionSucceeded> | ReturnType<typeof Message.ModelsActionFailed>> => {
       const request = kind === "peer"
         ? Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.removePeerModel(modelId) })
+        : kind === "llama-swap"
+          ? Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.removeLlamaSwapModel(modelId) })
         : kind === "endpoint"
           ? Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.removeEndpoint(endpointId) })
           : Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.removeAccountModel(accountId, modelId) });
@@ -860,6 +864,7 @@ export const defineModelsCommands = (client: ModelsClient) => ({
           return Effect.succeed(Message.ModelsActionFailed({ message: "Remove model failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }));
         }
         if (kind === "peer") return Effect.succeed(Message.ModelsActionSucceeded({ message: "Removed " + modelId + " from the peer-backed router pool.", token }));
+        if (kind === "llama-swap") return Effect.succeed(Message.ModelsActionSucceeded({ message: "Unloaded " + modelId + " from llama-swap.", token }));
         if (kind === "endpoint") return Effect.succeed(Message.ModelsActionSucceeded({ message: "Removed " + modelId + "; sibling instances are unchanged.", token }));
         // SAFETY: removeRuntimeAccountModel responds with removedAccount/alreadyAbsent flags.
         const body = exit.value.body as { readonly alreadyAbsent?: boolean; readonly removedAccount?: boolean };
@@ -906,6 +911,7 @@ export const noopModelsCommands = defineModelsCommands({
   removeAccountModel: async () => ({ body: {}, status: 200 }),
   removeEndpoint: async () => ({ body: {}, status: 200 }),
   removePeerModel: async () => ({ body: {}, status: 200 }),
+  removeLlamaSwapModel: async () => ({ body: {}, status: 200 }),
   setController: async () => ({ body: {}, status: 200 }),
 });
 

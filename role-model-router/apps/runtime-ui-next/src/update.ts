@@ -1191,25 +1191,30 @@ const updateLocalPolicyDraft = (
           model,
         }),
         ModelsRemoveRequested: ({ modelId }: Extract<Message, { readonly _tag: "ModelsRemoveRequested" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          if (state.removeConfirmation !== modelId) {
+            return { model: { ...model, modelsView: { ...state, removeConfirmation: modelId, selectedModelId: modelId } } };
+          }
           const endpoints = model.readbacks.modelEndpoints.rows.flatMap((row) => {
             try {
               // SAFETY: modelEndpoints rows carry this JSON record in meta.
-              const meta = JSON.parse(row.meta) as { readonly endpointId?: string; readonly modelId?: string; readonly providerAccountId?: string; readonly sourceType?: string };
+              const meta = JSON.parse(row.meta) as { readonly endpointId?: string; readonly modelId?: string; readonly providerAccountId?: string; readonly providerId?: string; readonly sourceType?: string };
               return meta.modelId === modelId ? [meta] : [];
             } catch {
               return [];
             }
           });
           const first = endpoints[0];
-          const kind: "account-model" | "endpoint" | "peer" = endpoints.some((entry) => entry.sourceType === "local")
-            ? "peer"
+          const providerText = (first?.providerId ?? "") + " " + modelId;
+          const kind: "account-model" | "endpoint" | "llama-swap" | "peer" = endpoints.some((entry) => entry.sourceType === "local")
+            ? providerText.toLowerCase().includes("llama") ? "llama-swap" : "peer"
             : first?.endpointId === undefined
               ? "account-model"
               : "endpoint";
           const token = model.readbacks.modelEndpoints.token + 1;
           return {
             commands: [modelsCommands.removeModel({ accountId: first?.providerAccountId ?? "", endpointId: first?.endpointId ?? "", kind, modelId, token })],
-            model,
+            model: { ...model, modelsView: { ...state, removeConfirmation: undefined } },
           };
         },
         ModelsControllerSetRequested: ({ modelId }: Extract<Message, { readonly _tag: "ModelsControllerSetRequested" }>): UpdateReturn<Model, Message> => {

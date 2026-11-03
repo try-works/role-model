@@ -30,7 +30,9 @@ const ROLE_TASK_COUNTS = {
   writer: 85,
 } as const;
 
-export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: HtmlBuilder<Message>, modelsView?: Model["modelsView"]): Html => {
+export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: HtmlBuilder<Message>, modelsView?: Model["modelsView"], rolePolicy?: ReadbackState): Html => {
+  const rolePolicyValue = rolePolicyFromReadback(rolePolicy);
+  const roleCatalog = rolePolicyValue?.roleDefinitions.map((role) => role.role_id) ?? (Object.keys(ROLE_TASK_COUNTS) as Array<keyof typeof ROLE_TASK_COUNTS>);
   const endpointMeta = endpoints.rows.flatMap((row) => {
     try {
       // SAFETY: modelEndpoints writes this JSON object; fields are read defensively.
@@ -172,8 +174,7 @@ export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: 
               ]),
               h.ul(
                 [h.Class("space-y-2 pr-1"), h.DataAttribute("models-role-list", "")],
-                // SAFETY: ROLE_TASK_COUNTS is a literal record; Object.keys yields its role labels.
-                (selected === undefined ? [] : (Object.keys(ROLE_TASK_COUNTS) as Array<keyof typeof ROLE_TASK_COUNTS>)).map((role) => {
+                (selected === undefined ? [] : roleCatalog).map((role) => {
                   const enabled = selectedRoles.includes(role);
                   return h.li([h.Class("border-b border-[var(--rm-border)] last:border-b-0")], [
                     h.button([
@@ -185,7 +186,7 @@ export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: 
                     ], [
                       h.span([h.Attribute("aria-hidden", "true"), h.Class("flex size-4 shrink-0 items-center justify-center rounded-[4px] " + (enabled ? "bg-[var(--rm-fg)] text-[10px] text-[var(--rm-bg)]" : "border border-[var(--rm-border)]"))], [enabled ? "✓" : ""]),
                       h.span([h.Class("min-w-0 flex-1 truncate font-sans text-[13px] font-semibold leading-4 text-foreground")], [String(role)]),
-                      h.span([h.Class("shrink-0 font-sans text-[12px] tabular-nums text-muted-foreground")], [String(ROLE_TASK_COUNTS[role] ?? 0) + " tasks"]),
+                      h.span([h.Class("shrink-0 font-sans text-[12px] tabular-nums text-muted-foreground")], [String(ROLE_TASK_COUNTS[role as keyof typeof ROLE_TASK_COUNTS] ?? 0) + " tasks"]),
                     ]),
                   ]);
                 }),
@@ -194,8 +195,8 @@ export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: 
                 h.button([h.Type("button"), h.AriaDisabled(selected === undefined || selected.endpointCount === 0), h.OnClick(Message.ModelsControllerSetRequested({ modelId: selected?.id ?? "" })), h.Class("inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground")], ["Make primary controller"]),
                 h.a([h.Href("/models/roles"), h.Class("inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground")], ["Open Roles"]),
                 h.a([h.Href("/system/benchmark"), h.Class("inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground")], ["Open Benchmark"]),
-                h.button([h.Type("button"), h.DataAttribute("model-eject-controller", ""), h.OnClick(Message.ModelsControllerEjectRequested({ modelId: selected?.id ?? "" })), h.Class("inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground")], ["Eject controller"]),
-                h.button([h.Type("button"), h.DataAttribute("model-remove", ""), h.AriaLabel("Remove selected model " + (selected?.displayName ?? "")), h.OnClick(Message.ModelsRemoveRequested({ modelId: selected?.id ?? "" })), h.Class("inline-flex h-[34px] items-center rounded-md border border-[var(--rm-error)] bg-background px-3 font-sans text-sm font-medium text-[var(--rm-error)]")], ["Remove model"]),
+                h.button([h.Type("button"), h.DataAttribute("model-eject-controller", ""), h.Disabled(true), h.AriaDisabled(true), h.Attribute("title", "Controller ejection is not supported by the host API; remove the controller model instead."), h.Class("inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground opacity-50")], ["Eject controller"]),
+                h.button([h.Type("button"), h.DataAttribute("model-remove", ""), h.AriaLabel("Remove selected model " + (selected?.displayName ?? "")), h.OnClick(Message.ModelsRemoveRequested({ modelId: selected?.id ?? "" })), h.Class("inline-flex h-[34px] items-center rounded-md border border-[var(--rm-error)] bg-background px-3 font-sans text-sm font-medium text-[var(--rm-error)]")], [modelsView?.removeConfirmation === selected?.id ? "Confirm remove model" : "Remove model"]),
               ]),
               modelsView?.actionMessage === undefined ? null : h.p([h.Role("status"), h.DataAttribute("models-action-message", ""), h.Class("text-xs text-muted-foreground")], [modelsView.actionMessage]),
             ]),

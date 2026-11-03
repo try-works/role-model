@@ -666,7 +666,7 @@ const parseModelEndpoints = (body: unknown, token: number): ReadbackState => {
     if (endpoint === undefined) return [];
     const id = typeof endpoint.endpointId === "string" ? endpoint.endpointId : typeof endpoint.id === "string" ? endpoint.id : undefined;
     if (id === undefined) return [];
-    return [row(id, id, String(endpoint.modelId ?? "—"), JSON.stringify({ endpointId: id, healthStatus: endpoint.healthStatus ?? null, modelId: endpoint.modelId ?? null, providerAccountId: endpoint.providerAccountId ?? null, reasoningEffort: endpoint.reasoningEffort ?? null, reasoningEffortLevels: endpoint.reasoningEffortLevels ?? [], roleIds: endpoint.roleIds ?? [], sourceType: endpoint.sourceType ?? null, status: endpoint.status ?? null }))];
+    return [row(id, id, String(endpoint.modelId ?? "—"), JSON.stringify({ endpointId: id, healthStatus: endpoint.healthStatus ?? null, modelId: endpoint.modelId ?? null, providerAccountId: endpoint.providerAccountId ?? null, providerId: endpoint.providerId ?? null, reasoningEffort: endpoint.reasoningEffort ?? null, reasoningEffortLevels: endpoint.reasoningEffortLevels ?? [], roleIds: endpoint.roleIds ?? [], sourceType: endpoint.sourceType ?? null, status: endpoint.status ?? null }))];
   });
   if (list.length > 0 && rows.length === 0) return failedReadback("Model endpoints read failed: invalid response", token);
   return okRows(rows, token);

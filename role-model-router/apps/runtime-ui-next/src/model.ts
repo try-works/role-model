@@ -124,6 +124,7 @@ const modelsFields = {
     })),
     roleDraft: Schema.optional(RoleDraftStateSchema),
     roleEditDraft: Schema.optional(RoleDraftStateSchema),
+    removeConfirmation: Schema.optional(Schema.String),
     roleOverrides: Schema.optional(Schema.Array(Schema.Struct({ enabled: Schema.Boolean, modelId: Schema.String, roleId: Schema.String }))),
     roleTaskSelections: Schema.optional(Schema.Array(Schema.Struct({ roleIds: Schema.Array(Schema.String), taskType: Schema.String }))),
     selectedModelId: Schema.optional(Schema.String),

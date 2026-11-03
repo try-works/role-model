@@ -130,11 +130,15 @@ describe("S618 models route wiring", () => {
         return new Response("{}", { status: 200 });
       },
     }));
-    const model = shellModel({ route: { _tag: "ModelsRoles" }, modelsView: { roleDraft: { description: "d", instructions: "i", kind: "tool", name: "n", roleId: "legal", toolPolicy: "limited" } } });
+    const model = shellModel({ route: { _tag: "ModelsRoles" }, modelsView: { roleDraft: { allowedTools: "", defaultSystemInstructions: "i", description: "d", forbiddenCapabilities: "", instructions: "i", kind: "capability", name: "n", outputContracts: "", preferredCapabilities: "", requiredCapabilities: "", roleId: "legal", roleKind: "capability", routingOverridesText: "{}", safetyPolicyRefs: "", taskTypesSupported: "", toolPolicy: "limited", toolPolicyMode: "limited" } } });
     const queued = update(model, Message.RoleCreateRequested());
     const args = (queued.commands ?? [])[0] as unknown as { readonly args: { readonly draftJson: string; readonly token: number } };
     await Effect.runPromise(commands.createRole(args.args).effect);
-    expect(calls[0]?.body).toMatchObject({ role_kind: "tool", tool_policy: { mode: "limited" } });
+    expect(calls[0]?.body).toEqual({
+      default_system_instructions: "i", description: "d", forbidden_capabilities: [], name: "n", output_contracts: [],
+      preferred_capabilities: [], required_capabilities: [], role_id: "legal", role_kind: "capability",
+      routing_policy_overrides: {}, safety_policy_refs: [], task_types_supported: [], tool_policy: { allowed_tools: [], mode: "limited" },
+    });
   });
 
   it("sends the exact host contracts for all four model commands", async () => {
@@ -188,14 +192,12 @@ describe("S618 models route wiring", () => {
     }));
     await Effect.runPromise(commands.removeModel({ accountId: "acct-1", endpointId: "", kind: "peer", modelId: "model-1", token: 1 }).effect);
     await Effect.runPromise(commands.removeModel({ accountId: "acct-1", endpointId: "ep-1", kind: "endpoint", modelId: "model-1", token: 1 }).effect);
+    await Effect.runPromise(commands.removeModel({ accountId: "acct-1", endpointId: "", kind: "llama-swap", modelId: "model-1", token: 1 }).effect);
     await Effect.runPromise(commands.removeModel({ accountId: "acct-1", endpointId: "", kind: "account-model", modelId: "model-1", token: 1 }).effect);
-    await Effect.runPromise(commands.setController({ endpointId: "ep-1", token: 1 }).effect);
-    await Effect.runPromise(commands.setController({ endpointId: null, token: 1 }).effect);
-    expect(calls[0]).toMatchObject({ method: "POST", path: "/api/role-model/local/peer/models/model-1/unload" });
-    expect(calls[1]).toMatchObject({ method: "DELETE", path: "/api/role-model/endpoints/ep-1" });
-    expect(calls[2]).toMatchObject({ method: "DELETE", path: "/api/role-model/accounts/acct-1/models/model-1" });
-    expect(calls[3]).toEqual({ body: { endpointId: "ep-1" }, method: "PATCH", path: "/api/role-model/controller" });
-    expect(calls[4]).toEqual({ body: { endpointId: null }, method: "PATCH", path: "/api/role-model/controller" });
+    expect(calls[0]).toEqual({ body: {}, method: "POST", path: "/api/role-model/local/peer/models/model-1/unload" });
+    expect(calls[1]).toEqual({ body: {}, method: "DELETE", path: "/api/role-model/endpoints/ep-1" });
+    expect(calls[2]).toEqual({ body: {}, method: "POST", path: "/api/role-model/local/llama-swap/models/model-1/unload" });
+    expect(calls[3]).toEqual({ body: {}, method: "DELETE", path: "/api/role-model/accounts/acct-1/models/model-1" });
   });
 
   it("deletes the account only in the account-model path and reports the exact message", async () => {
