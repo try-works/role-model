@@ -104,7 +104,7 @@ describe("S628 chart data binding", () => {
     expect(card(routing, "Routing analytics volume")?.querySelector("[data-chart-plot] [data-chart-empty-message]")).toBeNull();
   });
 
-  it("requests the metrics page with the exact window on Requests and ObserveRouting entry", async () => {
+  it("re-reads metrics and the route with the exact Day and Week windows on Requests and ObserveRouting", async () => {
     const waitFor = async <T>(read: () => T | undefined, label: string): Promise<T> => {
       const end = Date.now() + 10000;
       while (Date.now() < end) {
@@ -114,7 +114,11 @@ describe("S628 chart data binding", () => {
       }
       throw new Error("Timed out waiting for " + label);
     };
-    const metricsUrlFor = async (path: string): Promise<string> => {
+    const primaryPath: Readonly<Record<string, string>> = {
+      "/observe/routing": "/api/role-model/telemetry/rows",
+      "/requests": "/api/role-model/telemetry/requests",
+    };
+    const mountedReads = async (path: string): Promise<{ dayMetrics: string; weekMetrics: string; weekPrimary: string }> => {
       const urls: string[] = [];
       window.history.replaceState({}, "", path);
       const container = document.createElement("div");
@@ -122,19 +126,38 @@ describe("S628 chart data binding", () => {
       document.body.append(container);
       const handle = mountShell(container, {
         readbackFetchImpl: async (input) => {
-          urls.push(new URL(String(input), "http://localhost").pathname + new URL(String(input), "http://localhost").search);
+          const url = new URL(String(input), "http://localhost");
+          urls.push(url.pathname + url.search);
           return new Response(JSON.stringify(metricsBody), { status: 200, headers: { "content-type": "application/json" } });
         },
       });
       try {
-        return await waitFor(() => urls.find((url) => url.startsWith("/api/metrics/page")), path + " metrics fetch");
+        const dayMetrics = await waitFor(() => urls.find((url) => url.startsWith("/api/metrics/page")), path + " Day metrics fetch");
+        const weekButton = await waitFor(
+          () => (document.querySelector("[data-requests-range='Week']") as HTMLButtonElement | null) ?? undefined,
+          path + " Week range button",
+        );
+        weekButton.click();
+        const weekMetrics = await waitFor(() => urls.find((url) => url.startsWith("/api/metrics/page") && url.includes("windowMs=604800000")), path + " Week metrics fetch");
+        const expectedPrimary = primaryPath[path] ?? "";
+        const weekPrimary = await waitFor(
+          () => urls.find((url) => expectedPrimary.length > 0 && url.startsWith(expectedPrimary) && url.includes("range=Week")),
+          path + " Week route re-read",
+        );
+        return { dayMetrics, weekMetrics, weekPrimary };
       } finally {
         handle.dispose();
         container.remove();
       }
     };
-    expect(await metricsUrlFor("/requests")).toBe("/api/metrics/page?windowMs=86400000");
-    expect(await metricsUrlFor("/observe/routing")).toBe("/api/metrics/page?windowMs=86400000");
+    const requests = await mountedReads("/requests");
+    expect(requests.dayMetrics).toBe("/api/metrics/page?windowMs=86400000");
+    expect(requests.weekMetrics).toBe("/api/metrics/page?windowMs=604800000");
+    expect(requests.weekPrimary).toContain("range=Week");
+    const routing = await mountedReads("/observe/routing");
+    expect(routing.dayMetrics).toBe("/api/metrics/page?windowMs=86400000");
+    expect(routing.weekMetrics).toBe("/api/metrics/page?windowMs=604800000");
+    expect(routing.weekPrimary).toContain("range=Week");
   });
 
   it("never builds the malformed empty windowMs query for the dashboard or metrics readbacks", () => {

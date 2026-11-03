@@ -1,0 +1,300 @@
+
+ RUN  v3.2.4 D:/DEV/rm-clean/week-red/role-model-router/apps/runtime-ui-next
+
+stderr | test/s628-charts-data-binding.test.ts > S628 chart data binding > re-reads metrics and the route with the exact Day and Week windows on Requests and ObserveRouting
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 114.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Requests' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 114.1273000000001,
+  thresholdMs: 8
+}
+
+stderr | test/s628-charts-data-binding.test.ts > S628 chart data binding > re-reads metrics and the route with the exact Day and Week windows on Requests and ObserveRouting
+[foldkit] Slow update: 12.5ms (budget: 4ms), triggered by ReadbackLoaded. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Update',
+  previousModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Requests' },
+    theme: 'dark'
+  },
+  nextModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Requests' },
+    theme: 'dark'
+  },
+  message: {
+    _tag: 'ReadbackLoaded',
+    key: 'requests',
+    snapshot: {
+      message: 'Requests read failed: invalid response',
+      rows: [],
+      status: 'error',
+      token: 1
+    },
+    token: 1
+  },
+  durationMs: 12.4958000000006,
+  thresholdMs: 4
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'requests',
+  snapshot: {
+    message: 'Requests read failed: invalid response',
+    rows: [],
+    status: 'error',
+    token: 1
+  },
+  token: 1
+}
+
+ ❯ test/s628-charts-data-binding.test.ts (7 tests | 2 failed) 12545ms
+   ✓ S628 chart data binding > draws the real token, cache, latency and volume series from metrics items  830ms
+   ✓ S628 chart data binding > renders the honest empty state INSIDE the plot when the payload has no cost facts  385ms
+   ✓ S628 chart data binding > renders in-plot empty states for every chart when the window has no requests 95ms
+   ✓ S628 chart data binding > renders an in-plot honest empty state on the observe volume card when there are no metrics 88ms
+   × S628 chart data binding > draws the real requests and routing volume series from the metrics readback 181ms
+     → expected 0 to be greater than 0
+   × S628 chart data binding > re-reads metrics and the route with the exact Day and Week windows on Requests and ObserveRouting 10958ms
+     → Timed out waiting for /requests Week metrics fetch
+   ✓ S628 chart data binding > never builds the malformed empty windowMs query for the dashboard or metrics readbacks 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s628-charts-data-binding.test.ts > S628 chart data binding > draws the real requests and routing volume series from the metrics readback
+AssertionError: expected 0 to be greater than 0
+ ❯ test/s628-charts-data-binding.test.ts:97:53
+     95|       requests: parseReadbackFixture("requests", []),
+     96|     });
+     97|     expect(drawnShapes(requests, "Request volume")).toBeGreaterThan(0);
+       |                                                     ^
+     98|     expect(card(requests, "Request volume")?.textContent).toContain("R…
+     99|     const routing = await render({ _tag: "ObserveRouting" }, {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s628-charts-data-binding.test.ts > S628 chart data binding > re-reads metrics and the route with the exact Day and Week windows on Requests and ObserveRouting
+Error: Timed out waiting for /requests Week metrics fetch
+ ❯ waitFor test/s628-charts-data-binding.test.ts:115:13
+    113|         await new Promise((resolve) => setTimeout(resolve, 20));
+    114|       }
+    115|       throw new Error("Timed out waiting for " + label);
+       |             ^
+    116|     };
+    117|     const primaryPath: Readonly<Record<string, string>> = {
+ ❯ mountedReads test/s628-charts-data-binding.test.ts:141:29
+ ❯ test/s628-charts-data-binding.test.ts:153:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 5 passed (7)
+   Start at  05:02:41
+   Duration  36.45s (transform 11.55s, setup 0ms, collect 19.02s, tests 12.54s, environment 3.22s, prepare 566ms)
+
+
+
+# Provenance footer (added after the raw transcript above)
+# Command: corepack pnpm exec vitest run test/s628-charts-data-binding.test.ts
+# CWD: D:/DEV/rm-clean/week-red/role-model-router/apps/runtime-ui-next
+# Worktree: clean detached worktree at 1132911f^ = 02bbb285 (before the task-109 observe volume binding)
+# Test provenance: the updated s628 (with the Day+Week mounted-route assertions) was copied from the working tree
+#   into this pre-fix worktree; product sources stayed at 02bbb285.
+# Exit code: 1. Result: 2 failed | 5 passed. The Week assertion fails as required:
+#   "Timed out waiting for /requests Week metrics fetch" - pre-fix there is no metrics re-read on range change.
+#   The volume-series test also fails (0 paths) because the routes never bind metrics there.

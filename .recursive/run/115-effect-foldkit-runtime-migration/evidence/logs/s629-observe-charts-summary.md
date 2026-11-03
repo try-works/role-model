@@ -44,3 +44,11 @@ so the owner-visible cards stayed empty even when request data existed. Only the
   "4/5" wording in the earlier commit message was the interim local harness state, not the committed evidence; the
   canonical RED is this 5/5 transcript. s628-charts-summary.md was updated to cite it.
 - GREEN: evidence/logs/s629-observe-charts-red-green.log (7/7 after the observe binding).
+
+## Post-review HOLD: Week assertions (closed)
+- s628 now mounts /requests and /observe/routing, asserts the Day entry reads (/api/metrics/page?windowMs=86400000), clicks the Week range button and asserts the metrics re-read (/api/metrics/page?windowMs=604800000) AND the route's own re-read with range=Week
+  (/api/role-model/telemetry/requests for requests, /api/role-model/telemetry/rows for routing).
+- TDD RED for the Week assertion: evidence/logs/s629-week-red.log is the updated test run in a clean detached worktree at
+  1132911f^ = 02bbb285 (before the observe binding); it fails with "Timed out waiting for /requests Week metrics fetch" plus the
+  volume-series path assertion, proving the Week assertion is meaningful. GREEN after the fix: evidence/logs/s629-week-green.log
+  (7/7).
