@@ -150,8 +150,8 @@ const initRoute =
       if (route._tag === "Models" || route._tag === "ModelsRoles") {
         const token = 1;
         return {
-          commands: [readReadback({ key: "configuredModels", token }), readReadback({ key: "modelEndpoints", token })],
-          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), configuredModels: loadingReadback(token), modelEndpoints: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
+          commands: [readReadback({ key: "configuredModels", token }), readReadback({ key: "modelEndpoints", token }), readReadback({ key: "rolePolicy", token })],
+          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), configuredModels: loadingReadback(token), modelEndpoints: loadingReadback(token), rolePolicy: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
         };
       }
       if (route._tag === "Studio") {

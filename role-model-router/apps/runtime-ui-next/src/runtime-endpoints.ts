@@ -15,6 +15,7 @@ export const READBACK_PATHS = {
   providerCatalog: "/api/role-model/providers",
   providerAccounts: "/api/role-model/accounts",
   roles: "/api/role-model/roles",
+  rolePolicy: "/api/role-model/role-policy",
   benchmarkSuite: "/api/role-model/benchmark/suite",
   storageRetention: "/api/role-model/storage-retention",
   models: "/api/role-model/models",

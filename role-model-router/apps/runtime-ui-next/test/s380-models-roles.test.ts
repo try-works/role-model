@@ -116,7 +116,7 @@ describe("S381 Models/roles page state (read-only)", () => {
     const state = await waitForState("loading", "models-roles loading");
     expect(state).toBe("loading");
     expect(document.querySelector('[data-route="models"]')?.textContent).toContain("Runtime roles");
-    expect(document.querySelector('[data-route="models"]')?.textContent).toContain("Loading model roles");
+    expect(document.querySelector('[data-route="models"]')?.textContent).toContain("Loading runtime role policy");
   });
 
   it("renders error with the readback message when either readback errors", async () => {
@@ -129,11 +129,15 @@ describe("S381 Models/roles page state (read-only)", () => {
   it("renders empty when both readbacks are empty", async () => {
     mountRoles("s381-empty", async (input) => {
       const url = String(input);
-      const body = url.includes("endpoint") ? { endpoints: [] } : [];
+      const body = url.includes("role-policy")
+        ? { roleDefinitions: [], taskDefinitions: [] }
+        : url.includes("endpoint")
+          ? { endpoints: [] }
+          : [];
       return new Response(JSON.stringify(body), { headers: { "content-type": "application/json" }, status: 200 });
     });
     const state = await waitForState("empty", "models-roles empty");
     expect(state).toBe("empty");
-    expect(document.querySelector('[data-route="models"]')?.textContent).toContain("No configured models");
+    expect(document.querySelector('[data-route="models"]')?.textContent).toContain("No runtime role policy is available yet.");
   });
 });

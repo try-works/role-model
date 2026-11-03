@@ -118,8 +118,7 @@ describe("S563 learning/models/studio/local reference layout", () => {
   it("models roles", async () => {
     const page = await renderPage("ModelsRoles", { configuredModels: readback(), modelEndpoints: readback() });
     expectOrder(page, ["Create role", "Role catalog", "Role task allowlists", "Edit selected role"]);
-    expectColumns(page, ["ROLE", "PROVIDER", "MODEL ID", "TASKS", "TOOL POLICY", "FIELD", "VALUE"]);
-    expectControls(page, ["Role id", "Name", "Description", "Default system instructions", "Create role", "Reset"]);
+    expectControls(page, ["Role id", "Name", "Description", "Default system instructions", "Kind", "Tool policy mode", "Create role", "Reset"]);
   });
 
   it("benchmark", async () => {

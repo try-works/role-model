@@ -33,6 +33,7 @@ export type ReadbackKey =
   | "providerCatalog"
   | "providerAccounts"
   | "roles"
+  | "rolePolicy"
   | "benchmarkSuite"
   | "storageRetention"
   | "models"
@@ -83,6 +84,7 @@ export const ReadbackKeySchema = Schema.Literals([
   "providerCatalog",
   "providerAccounts",
   "roles",
+  "rolePolicy",
   "benchmarkSuite",
   "storageRetention",
   "models",
@@ -155,6 +157,7 @@ export const ReadbacksState = Schema.Struct({
   providerCatalog: ReadbackState,
   providerAccounts: ReadbackState,
   roles: ReadbackState,
+  rolePolicy: ReadbackState,
   benchmarkSuite: ReadbackState,
   storageRetention: ReadbackState,
   models: ReadbackState,
@@ -220,6 +223,7 @@ export const emptyReadbacks = (): ReadbacksState => ({
   providerCatalog: idleReadback(),
   providerAccounts: idleReadback(),
   roles: idleReadback(),
+  rolePolicy: idleReadback(),
   benchmarkSuite: idleReadback(),
   storageRetention: idleReadback(),
   models: idleReadback(),
@@ -944,6 +948,26 @@ const parseProviderAccounts = (body: unknown, token: number): ReadbackState => {
   return okRows(rows, token);
 };
 
+const parseRolePolicy = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  const roles = record?.roleDefinitions;
+  const tasks = record?.taskDefinitions;
+  if (!Array.isArray(roles) || !Array.isArray(tasks)) {
+    return failedReadback("Role policy read failed: invalid response", token);
+  }
+  if (roles.length === 0 && tasks.length === 0) return { rows: [], status: "empty", token };
+  return {
+    rows: [row(
+      "role-policy",
+      "Runtime role policy",
+      String(roles.length) + " roles · " + String(tasks.length) + " tasks",
+      JSON.stringify({ roleDefinitions: roles, taskDefinitions: tasks }),
+    )],
+    status: "ok",
+    token,
+  };
+};
+
 const parseRoles = (body: unknown, token: number): ReadbackState => {
   const list = Array.isArray(body) ? body : [];
   const rows = list.flatMap((value, index) => {
@@ -1083,6 +1107,13 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     label: "Roles",
     parse: parseRoles,
     path: READBACK_PATHS.roles,
+  },
+  rolePolicy: {
+    emptyText: "No runtime role policy configured.",
+    key: "rolePolicy",
+    label: "Runtime role policy",
+    parse: parseRolePolicy,
+    path: READBACK_PATHS.rolePolicy,
   },
   providerAccounts: {
     emptyText: "No provider accounts configured yet.",
@@ -1324,6 +1355,7 @@ export const createReadbackClients = (
   providerCatalog: client(READBACK_SPECS.providerCatalog),
   providerAccounts: client(READBACK_SPECS.providerAccounts),
   roles: client(READBACK_SPECS.roles),
+  rolePolicy: client(READBACK_SPECS.rolePolicy),
     benchmarkSuite: client(READBACK_SPECS.benchmarkSuite),
     storageRetention: client(READBACK_SPECS.storageRetention),
     models: client(READBACK_SPECS.models),

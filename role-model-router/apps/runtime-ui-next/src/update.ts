@@ -19,6 +19,7 @@ import {
   endpointAdmissionResetState,
 } from "./features/endpoint-activation/update";
 
+import { blankRoleDraft, draftFromRole, draftToRolePayload, rolePolicyFromReadback } from "./features/models/role-policy";
 import { writeStoredOperatorToken } from "./operator-token";
 import { DEFAULT_OVERVIEW_FILTERS, overviewQuery, type OverviewFilters } from "./overview-filters";
 import { parseRuntimeConfigRecord, parseRuntimeConfigText, runtimeConfigDiff, runtimeConfigText } from "./runtime-config";
@@ -188,6 +189,7 @@ const noopReadback = defineReadReadback({
   providerCatalog: async () => ({ body: [], status: 200 }),
   providerAccounts: async () => ({ body: [], status: 200 }),
   roles: async () => ({ body: [], status: 200 }),
+  rolePolicy: async () => ({ body: { roleDefinitions: [], taskDefinitions: [] }, status: 200 }),
   benchmarkSuite: async () => ({ body: emptyBody, status: 200 }),
   storageRetention: async () => ({ body: emptyBody, status: 200 }),
   models: async () => ({ body: emptyBody, status: 200 }),
@@ -261,6 +263,27 @@ const observeQuery = (state: NonNullable<Model["observeRoutingFilters"]>): strin
   });
   return "?" + params.toString();
 };
+
+type RoleDraftState = NonNullable<NonNullable<Model["modelsView"]>["roleDraft"]>;
+type RoleActionKind = "create" | "edit" | "tasks";
+
+const roleDraftFromState = (state: RoleDraftState | undefined): ReturnType<typeof blankRoleDraft> => ({
+  ...blankRoleDraft(),
+  ...(state ?? {}),
+  defaultSystemInstructions: state?.defaultSystemInstructions ?? state?.instructions ?? "",
+  roleKind: state?.roleKind ?? state?.kind ?? "assistant",
+  toolPolicyMode: state?.toolPolicyMode ?? state?.toolPolicy ?? "allowed",
+});
+
+const roleDraftState = (draft: ReturnType<typeof blankRoleDraft>): RoleDraftState => ({
+  ...draft,
+  instructions: draft.defaultSystemInstructions,
+  kind: draft.roleKind,
+  toolPolicy: draft.toolPolicyMode,
+});
+
+const roleAction = (kind: RoleActionKind, status: "idle" | "saving" | "saved" | "error", message?: string, token?: number) =>
+  ({ kind, status, ...(message === undefined ? {} : { message }), ...(token === undefined ? {} : { token }) });
 
 export const createUpdate =
   (
@@ -584,7 +607,7 @@ const updateLocalPolicyDraft = (
 
     const readPlanForRoute = (model: Model): ReadonlyArray<{ readonly key: ReadbackKey; readonly id?: string; readonly query?: string }> => {
       if (model.route._tag === "Learning") return [{ key: "learning" }, { key: "learningPacks" }];
-      if (model.route._tag === "ModelsRoles") return [{ key: "configuredModels" }, { key: "modelEndpoints" }];
+      if (model.route._tag === "ModelsRoles") return [{ key: "configuredModels" }, { key: "modelEndpoints" }, { key: "rolePolicy" }];
       if (model.route._tag === "Providers") return [{ key: "integrationProviders" }, { key: "configuredModels" }, { key: "modelEndpoints" }];
       if (model.route._tag === "Endpoints") return [{ key: "modelEndpoints" }, { key: "configuredModels" }, { key: "integrationProviders" }];
       if (model.route._tag === "IntegrationsDownstream") return [{ key: "downstreamOpenAI" }, { key: "configuredModels" }];
@@ -1020,8 +1043,8 @@ const updateLocalPolicyDraft = (
         },
         RoleDraftChanged: ({ field, value }: Extract<Message, { readonly _tag: "RoleDraftChanged" }>): UpdateReturn<Model, Message> => {
           const state = model.modelsView ?? {};
-          const draft = state.roleDraft ?? { description: "", instructions: "", kind: "assistant", name: "", roleId: "", toolPolicy: "allowed" };
-          return { model: { ...model, modelsView: { ...state, roleDraft: { ...draft, [field]: value } } } };
+          const draft = roleDraftFromState(state.roleDraft);
+          return { model: { ...model, modelsView: { ...state, roleDraft: roleDraftState({ ...draft, [field]: value }) } } };
         },
         RoleDraftReset: (): UpdateReturn<Model, Message> => {
           const state = model.modelsView ?? {};
@@ -1031,28 +1054,115 @@ const updateLocalPolicyDraft = (
           const state = model.modelsView ?? {};
           return { model: { ...model, modelsView: { ...state, advancedPolicy: state.advancedPolicy !== true } } };
         },
+        RoleEditDraftChanged: ({ field, value }: Extract<Message, { readonly _tag: "RoleEditDraftChanged" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          const policy = rolePolicyFromReadback(model.readbacks.rolePolicy);
+          const selected = policy?.roleDefinitions.find((role) => role.role_id === state.selectedRoleId) ?? policy?.roleDefinitions[0];
+          const draft = state.roleEditDraft === undefined && selected !== undefined ? draftFromRole(selected) : roleDraftFromState(state.roleEditDraft);
+          return { model: { ...model, modelsView: { ...state, roleEditDraft: roleDraftState({ ...draft, [field]: value }) } } };
+        },
+        RoleSelected: ({ roleId }: Extract<Message, { readonly _tag: "RoleSelected" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { model: { ...model, modelsView: { ...state, selectedRoleId: roleId, roleEditDraft: undefined } } };
+        },
+        RoleTaskDetailToggled: ({ roleId }: Extract<Message, { readonly _tag: "RoleTaskDetailToggled" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { model: { ...model, modelsView: { ...state, expandedRoleId: state.expandedRoleId === roleId ? undefined : roleId } } };
+        },
+        RoleEditReset: (): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { model: { ...model, modelsView: { ...state, roleEditDraft: undefined } } };
+        },
+        RoleTaskRoleToggled: ({ roleId, taskType }: Extract<Message, { readonly _tag: "RoleTaskRoleToggled" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          const policy = rolePolicyFromReadback(model.readbacks.rolePolicy);
+          if (policy === null) return { model };
+          const selections = state.roleTaskSelections ?? policy.taskDefinitions.map((task) => ({ roleIds: [...task.allowed_roles], taskType: task.task_type }));
+          const updated = selections.map((entry) => {
+            if (entry.taskType !== taskType) return entry;
+            const roleIds = new Set(entry.roleIds);
+            if (roleIds.has(roleId)) roleIds.delete(roleId); else roleIds.add(roleId);
+            return { roleIds: [...roleIds].sort((left, right) => left.localeCompare(right, "en")), taskType: entry.taskType };
+          });
+          return { model: { ...model, modelsView: { ...state, roleTaskSelections: updated } } };
+        },
         RoleCreateRequested: (): UpdateReturn<Model, Message> => {
           const state = model.modelsView ?? {};
-          const draft = state.roleDraft ?? { description: "", instructions: "", kind: "assistant", name: "", roleId: "", toolPolicy: "allowed" };
-          const token = model.readbacks.modelEndpoints.token + 1;
+          const draft = roleDraftFromState(state.roleDraft);
+          if (draft.roleId.trim().length === 0 || draft.name.trim().length === 0) {
+            return { model: { ...model, modelsView: { ...state, roleAction: roleAction("create", "error", "Role id and name are required.") } } };
+          }
+          let payload: Record<string, unknown>;
+          try {
+            payload = draftToRolePayload(draft);
+          } catch {
+            return { model: { ...model, modelsView: { ...state, roleAction: roleAction("create", "error", "Routing overrides must be valid JSON.") } } };
+          }
+          const token = model.readbacks.rolePolicy.token + 1;
           return {
-            commands: [modelsCommands.createRole({ draftJson: JSON.stringify({
-              default_system_instructions: draft.instructions,
-              description: draft.description,
-              forbidden_capabilities: [],
-              name: draft.name,
-              output_contracts: [],
-              preferred_capabilities: [],
-              required_capabilities: [],
-              role_id: draft.roleId,
-              role_kind: draft.kind,
-              routing_policy_overrides: {},
-              safety_policy_refs: [],
-              task_types_supported: [],
-              tool_policy: { mode: draft.toolPolicy },
-            }), token })],
-            model: { ...model, modelsView: { ...state, roleDraft: draft } },
+            commands: [modelsCommands.createRole({ draftJson: JSON.stringify(payload), token })],
+            model: { ...model, modelsView: { ...state, roleAction: roleAction("create", "saving", undefined, token) } },
           };
+        },
+        RoleEditSaveRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          const policy = rolePolicyFromReadback(model.readbacks.rolePolicy);
+          const selected = policy?.roleDefinitions.find((role) => role.role_id === state.selectedRoleId) ?? policy?.roleDefinitions[0];
+          if (selected === undefined) {
+            return { model: { ...model, modelsView: { ...state, roleAction: roleAction("edit", "error", "Select a role before saving.") } } };
+          }
+          const draft = state.roleEditDraft === undefined ? draftFromRole(selected) : roleDraftFromState(state.roleEditDraft);
+          let payload: Record<string, unknown>;
+          try {
+            payload = draftToRolePayload(draft);
+          } catch {
+            return { model: { ...model, modelsView: { ...state, roleAction: roleAction("edit", "error", "Routing overrides must be valid JSON.") } } };
+          }
+          const token = model.readbacks.rolePolicy.token + 1;
+          return {
+            commands: [modelsCommands.updateRole({ draftJson: JSON.stringify(payload), roleId: selected.role_id, token })],
+            model: { ...model, modelsView: { ...state, roleAction: roleAction("edit", "saving", undefined, token) } },
+          };
+        },
+        RoleTaskAllowlistsSaveRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          const policy = rolePolicyFromReadback(model.readbacks.rolePolicy);
+          if (policy === null) {
+            return { model: { ...model, modelsView: { ...state, roleAction: roleAction("tasks", "error", "Role policy is not loaded.") } } };
+          }
+          const selections = state.roleTaskSelections ?? policy.taskDefinitions.map((task) => ({ roleIds: [...task.allowed_roles], taskType: task.task_type }));
+          const tasks = policy.taskDefinitions.map((task) => ({
+            ...task,
+            allowed_roles: selections.find((entry) => entry.taskType === task.task_type)?.roleIds ?? task.allowed_roles,
+          }));
+          const token = model.readbacks.rolePolicy.token + 1;
+          return {
+            commands: [modelsCommands.updateTasks({ tasksJson: JSON.stringify(tasks), token })],
+            model: { ...model, modelsView: { ...state, roleAction: roleAction("tasks", "saving", undefined, token) } },
+          };
+        },
+        RolePolicyWriteSucceeded: ({ kind, message, token }: Extract<Message, { readonly _tag: "RolePolicyWriteSucceeded" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          if (token !== state.roleAction?.token) return { model };
+          const nextToken = token + 1;
+          return {
+            commands: [readReadback({ key: "rolePolicy", token: nextToken })],
+            model: {
+              ...model,
+              readbacks: { ...model.readbacks, rolePolicy: loadingReadback(nextToken) },
+              modelsView: {
+                ...state,
+                roleAction: roleAction(kind, "saved", message),
+                ...(kind === "create" ? { roleDraft: undefined } : {}),
+                ...(kind === "edit" ? { roleEditDraft: undefined } : {}),
+              },
+            },
+          };
+        },
+        RolePolicyWriteFailed: ({ kind, message, token }: Extract<Message, { readonly _tag: "RolePolicyWriteFailed" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          if (token !== state.roleAction?.token) return { model };
+          return { model: { ...model, modelsView: { ...state, roleAction: roleAction(kind, "error", message, token) } } };
         },
         BenchmarkModeChanged: ({ value }: Extract<Message, { readonly _tag: "BenchmarkModeChanged" }>): UpdateReturn<Model, Message> => {
           const state = model.modelsView ?? {};

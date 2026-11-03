@@ -91,8 +91,10 @@ describe("S618 models route wiring", () => {
     const base = shellModel({ route: { _tag: "ModelsRoles" } });
     const model = { ...base, readbacks: { ...base.readbacks, modelEndpoints: endpoints } };
     const typed = update(model, Message.RoleDraftChanged({ field: "roleId", value: "legal" }));
-    expect(typed.model.modelsView?.roleDraft?.roleId).toBe("legal");
-    const created = update(typed.model, Message.RoleCreateRequested());
+    const named = update(typed.model, Message.RoleDraftChanged({ field: "name", value: "Legal" }));
+    expect(named.model.modelsView?.roleDraft?.roleId).toBe("legal");
+    expect(named.model.modelsView?.roleDraft?.name).toBe("Legal");
+    const created = update(named.model, Message.RoleCreateRequested());
     expect(created.commands ?? []).toHaveLength(1);
   });
 
@@ -119,8 +121,8 @@ describe("S618 models route wiring", () => {
 
   it("renders the host role_kind and tool-policy option values and routes a non-default selection", async () => {
     const container = await renderRoles({ roleDraft: { description: "", instructions: "", kind: "assistant", name: "", roleId: "", toolPolicy: "allowed" } });
-    expect([...container.querySelectorAll("select[aria-label='Kind'] option")].map((option) => option.getAttribute("value"))).toEqual(["assistant", "tool", "system"]);
-    expect([...container.querySelectorAll("select[aria-label='Tool policy mode'] option")].map((option) => option.getAttribute("value"))).toEqual(["disabled", "limited", "allowed"]);
+    expect([...container.querySelectorAll("select[aria-label='Kind'] option")].map((option) => option.getAttribute("value"))).toEqual(["assistant", "capability"]);
+    expect([...container.querySelectorAll("select[aria-label='Tool policy mode'] option")].map((option) => option.getAttribute("value"))).toEqual(["allowed", "limited", "disabled"]);
     const calls: Array<{ readonly body: unknown; readonly method: string; readonly path: string }> = [];
     const commands = defineModelsCommands(createModelsClient({
       fetchImpl: async (input, init) => {

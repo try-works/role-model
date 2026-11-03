@@ -33,7 +33,9 @@ const BUDGET = {
   // S595: Save retention, dry-run, execute, learning mode update, and rollback through real controls.
   "s595-storage-retention.test.ts": 5,
   // S619: scope-wide rollback, engage kill switch, release kill switch through the wired LearningPacks controls.
-  "s619-learning-controls.test.ts": 3
+  "s619-learning-controls.test.ts": 3,
+  // S620: expand Task detail through the rendered role catalog control.
+  "s620-roles-parity.test.ts": 1
 };
 
 /** S247 policy: every budgeted click site names the user path it proves. */
@@ -52,7 +54,8 @@ const RATIONALE = {
   "s589-local-policy-wired.test.ts": "Save local policy (ttl 900)",
   "s591-router-weights-editor.test.ts": "Save routing strategy from three weight drafts",
   "s595-storage-retention.test.ts": "Save retention, dry-run, execute, mode update, rollback",
-  "s619-learning-controls.test.ts": "Scope-wide pack rollback with operator token; engage then release the learning kill switch"
+  "s619-learning-controls.test.ts": "Scope-wide pack rollback with operator token; engage then release the learning kill switch",
+  "s620-roles-parity.test.ts": "Expand Task detail in the role catalog"
 };
 
 const testDirectory = path.join(import.meta.dirname);

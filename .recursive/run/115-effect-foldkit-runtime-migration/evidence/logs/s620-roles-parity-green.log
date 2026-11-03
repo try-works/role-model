@@ -1,0 +1,31 @@
+# S620 roles page parity — GREEN evidence
+
+date: 2026-11-03
+base after models parity: b36c123c
+
+## Structure ported from control-roles.tsx
+- Runtime roles heading.
+- Create role: Role id, Name, Description, Default system instructions, Kind (assistant/capability), Tool policy mode (allowed/limited/disabled), advanced policy fields (supported task types, allowed tools, required/preferred/forbidden capabilities, output contracts, safety refs, routing overrides JSON), Create role + Reset.
+- Role catalog: sorted roles with high-risk badge, group + tool-policy line, description, task count; role row selects the role; Task detail expands the role's tasks and toggles to Hide task detail.
+- Role task allowlists: exact empty copy, role-first header (role id, tasks in allowlist), per-task capability badges and role membership toggle, Save task allowlists.
+- Edit selected role: exact empty copy, tool-policy/supported-task summary, identity fields, kind, description, instructions, tool policy, routing overrides JSON, Save role + Reset.
+
+## Exact host contracts
+- GET /api/role-model/role-policy -> roleDefinitions + taskDefinitions readback (new rolePolicy readback key).
+- POST /api/role-model/roles body from draftToRolePayload: role_id, name, description, role_kind, default_system_instructions, task_types_supported[], required_capabilities[], preferred_capabilities[], forbidden_capabilities[], tool_policy {mode, allowed_tools[]}, routing_policy_overrides, output_contracts[], safety_policy_refs[].
+- PUT /api/role-model/roles/:roleId with the same full body.
+- PUT /api/role-model/tasks with the complete task definition array, replacing allowed_roles per task.
+
+## RED
+s620-roles-parity-red.log: routes.ts restored from b36c123c against the current test/plumbing; the rendered catalog/task-detail/edit-value assertions fail (1 failed, exit 1).
+
+## GREEN
+- s620-roles-parity: 4/4 (rendered catalog/task detail/create options/edit values; exact POST/PUT/PUT bodies; edit draft seeded from selected role; Task detail click through the mounted shell).
+- s618-models-wiring: 11/11 (kind/tool-policy option contracts updated to the reference enums).
+- S381/S392/S533/S563/S26a/S26f role tests updated and passing.
+- Full UI suite: 91 files, 894 tests passed.
+- UI tsc --noEmit: 0.
+- S247: adds s620-roles-parity.test.ts:1, rationale "Expand Task detail in the role catalog"; total budget 36 (35 -> 36); lane 4/4.
+
+## Shared-file note
+Needed readback support: added rolePolicy key in readback.ts/runtime-endpoints.ts and init reads it for ModelsRoles; view.ts now passes readbacks.rolePolicy as the fifth modelsRolesRoute argument. If view remains lead-owned, this is the one-line integration to review.

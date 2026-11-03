@@ -758,7 +758,9 @@ export const localPolicyCommands = defineLocalPolicyCommands(
 
 export interface ModelsClient {
   readonly clearBenchmark: () => Promise<{ readonly body: unknown; readonly status: number }>;
-  readonly createRole: (draft: Readonly<Record<string, string>>) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly createRole: (draft: Readonly<Record<string, unknown>>) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly updateRole: (roleId: string, draft: Readonly<Record<string, unknown>>) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly updateTasks: (tasks: readonly Readonly<Record<string, unknown>>[]) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly runBenchmark: (mode: string, judge: string) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly removeAccountModel: (providerAccountId: string, modelId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly removeEndpoint: (endpointId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
@@ -775,6 +777,8 @@ export const createModelsClient = (options: { readonly fetchImpl?: typeof fetch 
   return {
     clearBenchmark: () => send("/api/role-model/benchmark/data", "DELETE", "{}"),
     createRole: (draft) => send("/api/role-model/roles", "POST", JSON.stringify(draft)),
+    updateRole: (roleId, draft) => send("/api/role-model/roles/" + encodeURIComponent(roleId), "PUT", JSON.stringify(draft)),
+    updateTasks: (tasks) => send("/api/role-model/tasks", "PUT", JSON.stringify(tasks)),
     runBenchmark: (mode, judge) => send("/api/role-model/benchmark/runs", "POST", JSON.stringify({ judgeEndpointId: judge, mode })),
     removeAccountModel: (providerAccountId, modelId) => send("/api/role-model/accounts/" + encodeURIComponent(providerAccountId) + "/models/" + encodeURIComponent(modelId), "DELETE", "{}"),
     removeEndpoint: (endpointId) => send("/api/role-model/endpoints/" + encodeURIComponent(endpointId), "DELETE", "{}"),
@@ -802,13 +806,37 @@ export const defineModelsCommands = (client: ModelsClient) => ({
     args: { draftJson: Schema.String, token: Schema.Number },
     execute: ({ draftJson, token }) => {
       // SAFETY: draftJson is JSON.stringify of the validated role draft built by update.
-      const draft = JSON.parse(draftJson) as Readonly<Record<string, string>>;
+      const draft = JSON.parse(draftJson) as Readonly<Record<string, unknown>>;
       return Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.createRole(draft) })), (exit) =>
         Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
-          ? Message.ModelsActionSucceeded({ message: "Role created.", token })
-          : Message.ModelsActionFailed({ message: "Create role failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token })));
+          ? Message.RolePolicyWriteSucceeded({ kind: "create", message: "Role created.", token })
+          : Message.RolePolicyWriteFailed({ kind: "create", message: "Create role failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token })));
     },
-    messages: [Message.ModelsActionSucceeded, Message.ModelsActionFailed],
+    messages: [Message.RolePolicyWriteSucceeded, Message.RolePolicyWriteFailed],
+  }),
+  updateRole: Command.define("UpdateRole", {
+    args: { draftJson: Schema.String, roleId: Schema.String, token: Schema.Number },
+    execute: ({ draftJson, roleId, token }) => {
+      // SAFETY: draftJson is JSON.stringify of the validated role draft built by update.
+      const draft = JSON.parse(draftJson) as Readonly<Record<string, unknown>>;
+      return Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.updateRole(roleId, draft) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.RolePolicyWriteSucceeded({ kind: "edit", message: "Role updated.", token })
+          : Message.RolePolicyWriteFailed({ kind: "edit", message: "Update role failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token })));
+    },
+    messages: [Message.RolePolicyWriteSucceeded, Message.RolePolicyWriteFailed],
+  }),
+  updateTasks: Command.define("UpdateRoleTaskAllowlists", {
+    args: { tasksJson: Schema.String, token: Schema.Number },
+    execute: ({ tasksJson, token }) => {
+      // SAFETY: tasksJson is JSON.stringify of the parsed task definitions built by update.
+      const tasks = JSON.parse(tasksJson) as ReadonlyArray<Readonly<Record<string, unknown>>>;
+      return Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.updateTasks(tasks) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.RolePolicyWriteSucceeded({ kind: "tasks", message: "Task allowlists updated.", token })
+          : Message.RolePolicyWriteFailed({ kind: "tasks", message: "Update task allowlists failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token })));
+    },
+    messages: [Message.RolePolicyWriteSucceeded, Message.RolePolicyWriteFailed],
   }),
   runBenchmark: Command.define("RunBenchmark", {
     args: { judgeEndpointId: Schema.String, mode: Schema.Literals(["full", "quick"]), token: Schema.Number },
@@ -827,7 +855,7 @@ export const defineModelsCommands = (client: ModelsClient) => ({
         : kind === "endpoint"
           ? Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.removeEndpoint(endpointId) })
           : Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.removeAccountModel(accountId, modelId) });
-      return Effect.flatMap(Effect.exit(request), (exit) => {
+      return Effect.flatMap(Effect.exit(request), (exit): Effect.Effect<ReturnType<typeof Message.ModelsActionSucceeded> | ReturnType<typeof Message.ModelsActionFailed>> => {
         if (!Exit.isSuccess(exit) || exit.value.status < 200 || exit.value.status >= 300) {
           return Effect.succeed(Message.ModelsActionFailed({ message: "Remove model failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }));
         }
@@ -856,10 +884,10 @@ export const defineModelsCommands = (client: ModelsClient) => ({
   }),
   setRoles: Command.define("SetModelRoles", {
     args: { kind: Schema.Literals(["llama-swap", "peer"]), modelId: Schema.String, roleIdsJson: Schema.String, token: Schema.Number },
-    execute: ({ kind, modelId, roleIdsJson, token }) => {
+    execute: ({ kind, modelId, roleIdsJson, token }): Effect.Effect<ReturnType<typeof Message.ModelsActionSucceeded> | ReturnType<typeof Message.ModelsActionFailed>> => {
       // SAFETY: roleIdsJson is JSON.stringify of the string array computed by the update handler.
       const roleIds = JSON.parse(roleIdsJson) as ReadonlyArray<string>;
-      return Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.setRoles(modelId, kind, roleIds) })), (exit) =>
+      return Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.setRoles(modelId, kind, roleIds) })), (exit): Effect.Effect<ReturnType<typeof Message.ModelsActionSucceeded> | ReturnType<typeof Message.ModelsActionFailed>> =>
         Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
           ? Message.ModelsActionSucceeded({ message: "Model roles saved.", token })
           : Message.ModelsActionFailed({ message: "Save model roles failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token })));
@@ -871,6 +899,8 @@ export type ModelsCommands = ReturnType<typeof defineModelsCommands>;
 export const noopModelsCommands = defineModelsCommands({
   clearBenchmark: async () => ({ body: {}, status: 200 }),
   createRole: async () => ({ body: {}, status: 200 }),
+  updateRole: async () => ({ body: {}, status: 200 }),
+  updateTasks: async () => ({ body: {}, status: 200 }),
   runBenchmark: async () => ({ body: {}, status: 200 }),
   setRoles: async () => ({ body: {}, status: 200 }),
   removeAccountModel: async () => ({ body: {}, status: 200 }),

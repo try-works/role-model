@@ -19,7 +19,8 @@ type EmptyFields = Record<never, never>;
 const RouterPostureFieldSchema = Schema.Literals(["mode", "scoringStrategy", "executionMode", "pinWeights", "weightQuality", "weightLatency", "weightThroughput", "weightCost", "weightReliability", "weightPreference"]);
 const RouterEntryFieldSchema = Schema.Literals(["name", "role", "model", "description"]);
 const RouterBlockSchema = Schema.Literals(["agent_strategies", "workloads"]);
-const RoleDraftFieldSchema = Schema.Literals(["roleId", "name", "description", "instructions", "kind", "toolPolicy"]);
+const RoleActionKindSchema = Schema.Literals(["create", "edit", "tasks"] as const);
+const RoleDraftFieldSchema = Schema.Literals(["roleId", "name", "description", "instructions", "kind", "toolPolicy", "allowedTools", "defaultSystemInstructions", "forbiddenCapabilities", "outputContracts", "preferredCapabilities", "requiredCapabilities", "roleKind", "routingOverridesText", "safetyPolicyRefs", "taskTypesSupported", "toolPolicyMode"]);
 const RequestsFilterFieldSchema = Schema.Literals(["breakdown", "difficulty", "source", "statusFamily"]);
 const ObserveFilterFieldSchema = Schema.Literals(["breakdown", "difficulty", "source"]);
 
@@ -103,6 +104,15 @@ export const Message: MessageUnion<{
   readonly RoleDraftReset: EmptyFields;
   readonly RoleCreateRequested: EmptyFields;
   readonly RoleAdvancedPolicyToggled: EmptyFields;
+  readonly RoleEditDraftChanged: { readonly field: typeof RoleDraftFieldSchema; readonly value: typeof Schema.String };
+  readonly RoleSelected: { readonly roleId: typeof Schema.String };
+  readonly RoleTaskDetailToggled: { readonly roleId: typeof Schema.String };
+  readonly RoleTaskRoleToggled: { readonly roleId: typeof Schema.String; readonly taskType: typeof Schema.String };
+  readonly RoleTaskAllowlistsSaveRequested: EmptyFields;
+  readonly RoleEditReset: EmptyFields;
+  readonly RoleEditSaveRequested: EmptyFields;
+  readonly RolePolicyWriteSucceeded: { readonly kind: typeof RoleActionKindSchema; readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly RolePolicyWriteFailed: { readonly kind: typeof RoleActionKindSchema; readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly BenchmarkModeChanged: { readonly value: typeof Schema.String };
   readonly BenchmarkJudgeChanged: { readonly value: typeof Schema.String };
   readonly BenchmarkRunRequested: EmptyFields;
@@ -281,6 +291,15 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   RoleDraftReset: {},
   RoleCreateRequested: {},
   RoleAdvancedPolicyToggled: {},
+  RoleEditDraftChanged: { field: RoleDraftFieldSchema, value: Schema.String },
+  RoleSelected: { roleId: Schema.String },
+  RoleTaskDetailToggled: { roleId: Schema.String },
+  RoleTaskRoleToggled: { roleId: Schema.String, taskType: Schema.String },
+  RoleTaskAllowlistsSaveRequested: {},
+  RoleEditReset: {},
+  RoleEditSaveRequested: {},
+  RolePolicyWriteSucceeded: { kind: RoleActionKindSchema, message: Schema.String, token: Schema.Number },
+  RolePolicyWriteFailed: { kind: RoleActionKindSchema, message: Schema.String, token: Schema.Number },
   BenchmarkModeChanged: { value: Schema.String },
   BenchmarkJudgeChanged: { value: Schema.String },
   BenchmarkRunRequested: {},

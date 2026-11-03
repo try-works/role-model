@@ -136,9 +136,13 @@
       ],
       "source": "role-model-router/apps/runtime-ui/app/routes/control-roles.tsx",
       "status": "absent",
-      "hostEndpoints": [],
-      "requiresHostEndpoint": false,
-      "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
+      "hostEndpoints": [
+        "/api/role-model/role-policy",
+        "/api/role-model/roles",
+        "/api/role-model/tasks"
+      ],
+      "requiresHostEndpoint": true,
+      "absenceReason": "Wired in S620 on /models/roles; this row preserves the pre-S620 slice absence record while declaring the role-policy/roles/tasks endpoints."
     },
     {
       "category": "control",

@@ -38,6 +38,6 @@ describe("S533 learning/models structural parity", () => {
   it("learning history", async () => { await check("LearningHistory", ["Learning history"]); });
   it("learning packs", async () => { await check("LearningPacks", ["Learned packs", "ENDPOINT LADDER INDEX", "TASK-SCOPED LEARNED PACKS"]); });
   it("models inventory", async () => { await check("Models", ["Model inventory", "Select a model to inspect and configure", "No configured models are available yet.", "Open Local Models", "Open Local Endpoints", "Open Providers"], { table: false }); });
-  it("models roles", async () => { await check("ModelsRoles", ["Create role", "Role catalog", "Role task allowlists", "Edit selected role"]); });
+  it("models roles", async () => { await check("ModelsRoles", ["Create role", "Role catalog", "Role task allowlists", "Edit selected role"], { table: false }); });
   it("models benchmark", async () => { await check("Benchmark", ["Capability benchmark", "Run capability benchmark", "Benchmark scores", "Taxonomy dimensions", "Run history"]); });
 });

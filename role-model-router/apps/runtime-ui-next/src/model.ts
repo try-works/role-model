@@ -89,22 +89,45 @@ const observeFields = {
     source: Schema.String,
   })),
 };
+const RoleDraftStateSchema = Schema.Struct({
+  allowedTools: Schema.optional(Schema.String),
+  defaultSystemInstructions: Schema.optional(Schema.String),
+  description: Schema.String,
+  forbiddenCapabilities: Schema.optional(Schema.String),
+  instructions: Schema.String,
+  kind: Schema.String,
+  name: Schema.String,
+  outputContracts: Schema.optional(Schema.String),
+  preferredCapabilities: Schema.optional(Schema.String),
+  requiredCapabilities: Schema.optional(Schema.String),
+  roleId: Schema.String,
+  roleKind: Schema.optional(Schema.String),
+  routingOverridesText: Schema.optional(Schema.String),
+  safetyPolicyRefs: Schema.optional(Schema.String),
+  taskTypesSupported: Schema.optional(Schema.String),
+  toolPolicy: Schema.String,
+  toolPolicyMode: Schema.optional(Schema.String),
+});
+
 const modelsFields = {
   modelsView: Schema.optional(Schema.Struct({
     actionMessage: Schema.optional(Schema.String),
     advancedPolicy: Schema.optional(Schema.Boolean),
     benchmarkJudge: Schema.optional(Schema.String),
     benchmarkMode: Schema.optional(Schema.String),
-    roleDraft: Schema.optional(Schema.Struct({
-      description: Schema.String,
-      instructions: Schema.String,
-      kind: Schema.String,
-      name: Schema.String,
-      roleId: Schema.String,
-      toolPolicy: Schema.String,
+    expandedRoleId: Schema.optional(Schema.String),
+    roleAction: Schema.optional(Schema.Struct({
+      kind: Schema.Literals(["create", "edit", "tasks"]),
+      message: Schema.optional(Schema.String),
+      status: Schema.Literals(["idle", "saving", "saved", "error"]),
+      token: Schema.optional(Schema.Number),
     })),
+    roleDraft: Schema.optional(RoleDraftStateSchema),
+    roleEditDraft: Schema.optional(RoleDraftStateSchema),
     roleOverrides: Schema.optional(Schema.Array(Schema.Struct({ enabled: Schema.Boolean, modelId: Schema.String, roleId: Schema.String }))),
+    roleTaskSelections: Schema.optional(Schema.Array(Schema.Struct({ roleIds: Schema.Array(Schema.String), taskType: Schema.String }))),
     selectedModelId: Schema.optional(Schema.String),
+    selectedRoleId: Schema.optional(Schema.String),
   })),
 };
 const deviceAuthFields = {

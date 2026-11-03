@@ -84,11 +84,11 @@ describe("S392a telemetry read plan (R12 exact multiplicity)", () => {
     const model = shellModel({ route: { _tag: "ModelsRoles" } });
     const result = shellUpdate(model, telemetry());
     const reads = readsOf(result, "ReadReadback");
-    expect(reads.map((command) => String(command.args?.key)).sort()).toEqual(["configuredModels", "modelEndpoints"]);
+    expect(reads.map((command) => String(command.args?.key)).sort()).toEqual(["configuredModels", "modelEndpoints", "rolePolicy"]);
     for (const command of reads) {
       const key = String(command.args?.key);
       // SAFETY: the two plan keys were asserted above; indexing only those readback keys.
-      const readbackKey = key as "configuredModels" | "modelEndpoints";
+      const readbackKey = key as "configuredModels" | "modelEndpoints" | "rolePolicy";
       expect(Number(command.args?.token)).toBe(model.readbacks[readbackKey].token + 1);
       expect(result.model.readbacks[readbackKey].status).toBe("loading");
     }
