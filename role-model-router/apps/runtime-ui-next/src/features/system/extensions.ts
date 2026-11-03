@@ -34,10 +34,10 @@ export const systemExtensionsPage = (readback: ReadbackState, h: HtmlBuilder<Mes
     card("Extension inventory", "Canonical packages on this host. Modes change the extension boundary without becoming contribution policy.", [
       readback.rows.length === 0
         ? h.p([h.Class(supporting)], ["No extension packages are installed."])
-        : h.div([h.Class("flex flex-col divide-y divide-border")], readback.rows.map((row) => h.div([h.Class("flex flex-wrap items-center justify-between gap-3 py-3")], [
-            h.div([h.Class("min-w-0")], [h.p([h.Class("font-mono text-[13px] font-semibold text-foreground")], [row.label]), h.p([h.Class("text-xs text-muted-foreground")], [row.value + " · " + row.meta])]),
-            h.button([h.Type("button"), h.DataAttribute("system-extensions-pause", row.id), h.OnClick(Message.SystemExtensionsPauseRequested({ extensionId: row.id })), h.Class(secondaryButton)], ["Pause"]),
-          ]))),
+        : h.div([h.Class("overflow-x-auto"), h.DataAttribute("extension-inventory-table", "")], [h.table([h.Class("min-w-full text-left text-sm")], [
+            h.thead([], [h.tr([], ["Extension", "Lifecycle", "Mode", "Health", "Actions"].map((title) => h.th([h.Class("pb-3 font-mono text-[11px] font-normal uppercase tracking-[0.08em] text-muted-foreground")], [title])))]),
+            h.tbody([], readback.rows.map((row) => h.tr([], [h.td([h.Class("py-3 pr-4 font-mono text-[13px] text-foreground")], [row.label]), h.td([h.Class("py-3 pr-4 text-muted-foreground")], [row.meta.length === 0 ? "—" : row.meta]), h.td([h.Class("py-3 pr-4 text-foreground")], [row.value]), h.td([h.Class("py-3 pr-4 text-muted-foreground")], ["reported"]), h.td([h.Class("py-3")], [h.button([h.Type("button"), h.DataAttribute("system-extensions-pause", row.id), h.OnClick(Message.SystemExtensionsPauseRequested({ extensionId: row.id })), h.Class(secondaryButton)], ["Pause"])])]))),
+          ])]),
     ], h),
   ]);
 };

@@ -27,6 +27,8 @@ describe("S632 system visual parity", () => {
     expect(headings(page).slice(0, 6)).toEqual(["Operator Controls", "Operator Capability Status", "Trace lineage", "Replay Jobs", "Evaluation Jobs", "Shadow Learning"]);
     expect(page.textContent).toContain("This page does not enable production learning. Learning actions remain shadow-only and the runtime is the source of truth.");
     expect(page.textContent).toContain("Replay and evaluation operations below preserve the trace root identity instead of inferring lineage from a job label.");
+    expect(page.querySelectorAll("[data-operator-capability-grid] > div")).toHaveLength(1);
+    expect(page.querySelector("[data-operator-capability-grid]")?.textContent).toContain("capability");
     expect(page.querySelector("#operator-access-token")?.getAttribute("value")).toBe("tok");
     expect(page.querySelector("#replay-trace-root")?.getAttribute("value")).toBe("trace-1");
     expect(page.querySelector("#replay-budget")?.getAttribute("value")).toBe("25");
@@ -51,5 +53,8 @@ describe("S632 system visual parity", () => {
     expect(page.textContent).toContain("Canonical packages on this host. Modes change the extension boundary without becoming contribution policy.");
     expect(page.querySelector("[data-system-extensions-download]")?.textContent).toBe("Download & validate latest");
     expect(page.querySelectorAll("[data-system-extensions-pause]")).toHaveLength(2);
+    const headers = [...page.querySelectorAll("[data-extension-inventory-table] th")].map((node) => node.textContent);
+    expect(headers).toEqual(["Extension", "Lifecycle", "Mode", "Health", "Actions"]);
+    expect(page.querySelector("[data-extension-inventory-table]")?.textContent).toContain("ext-1");
   });
 });

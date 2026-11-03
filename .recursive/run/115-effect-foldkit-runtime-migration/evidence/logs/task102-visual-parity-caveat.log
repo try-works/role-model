@@ -1,12 +1,21 @@
-task-105 closure: SystemOperator/SystemExtensions visual parity
+task-105 closure: SystemOperator/SystemExtensions STRUCTURAL parity
 
-The task-102 caveat (compressed reference cards) is CLOSED for SystemOperator and SystemExtensions.
-Both extracted feature pages now follow the :3456 React sources:
-- operator-controls.tsx: Operator Controls -> Operator Capability Status -> Trace lineage ->
-  Replay Jobs -> Evaluation Jobs -> Shadow Learning, with the reference copy, token/trace-root/
-  budget layout, Disabled/Shadow/Advisory mode select, Update Mode / Roll Back Shadow State and
-  the Storage & Retention link.
-- extensions.tsx: Contribution posture -> Recommendation ledger -> Extension inventory, with the
-  reference descriptions, Download & validate latest, and per-row Pause.
-No visual-parity remainder remains for these two routes; other compressed family pages are out of
-this task's scope.
+Closed in 5c74ed01 + this repair:
+- SystemOperator card order/copy: Operator Controls -> Operator Capability Status -> Trace lineage ->
+  Replay Jobs -> Evaluation Jobs -> Shadow Learning.
+- Capability badges restored as the reference grid (one bordered badge row per capability, value + reason).
+- SystemExtensions card order/copy: Contribution posture -> Recommendation ledger -> Replay automation
+  -> Extension inventory; inventory restored as Extension/Lifecycle/Mode/Health/Actions columns with
+  a per-row Pause.
+
+Explicit visual-parity REMAINDER (not claimed closed):
+- SystemOperator: Trace lineage, Replay Jobs and Evaluation Jobs still show static empty copy instead of
+  the reference evidence panels/job tables fed by trace-root/replay/evaluation payloads.
+- SystemOperator: Shadow Learning lacks the reference learning-state definition list plus the
+  Profile confidence and Advisory confidence/reason EvidencePanels; only the mode/actions and empty copy render.
+- SystemOperator: capability reasons are projected from the readback row meta, not the host's separate
+  reasons map; the Last operator receipt card is not rendered.
+- SystemExtensions: Contribution posture and Replay automation still show static loading/unavailable copy
+  instead of live contribution/replay records; recommendation bundle list lacks apply/dismiss actions.
+- SystemExtensions: inventory Health is a constant "reported" projection, not a host health field; the
+  table has no mode-change controls beyond Pause.

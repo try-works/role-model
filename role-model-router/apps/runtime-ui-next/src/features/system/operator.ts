@@ -2,7 +2,7 @@ import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 
 import { Message } from "../../message";
 import type { ReadbackState } from "../../readback";
-import { card, table } from "../s563-layout";
+import { card } from "../s563-layout";
 
 const fieldLabel = "font-sans text-xs leading-4 text-foreground";
 const fieldClass = "h-[34px] w-full rounded-md border border-input bg-background px-3 font-sans text-sm text-foreground outline-none";
@@ -38,7 +38,13 @@ export const systemOperatorPage = (readback: ReadbackState | undefined, h: HtmlB
     card("Operator Capability Status", "Availability is reported separately for each control-plane capability.", [
       readback === undefined || readback.rows.length === 0
         ? h.p([h.Class(supporting)], ["No operator status rows recorded yet."])
-        : table(["Name", "Value", "Detail"], readback.rows.map((row) => [row.label, row.value, row.meta]), "No operator status rows recorded yet.", h),
+        : h.div([h.Class("grid gap-3 sm:grid-cols-2 xl:grid-cols-3"), h.DataAttribute("operator-capability-grid", "")], readback.rows.map((row) => h.div([h.Class("flex min-w-0 items-center justify-between gap-3 rounded-md border border-[var(--rm-border)] px-3 py-2")], [
+            h.span([h.Class("min-w-0 truncate font-mono text-xs text-foreground")], [row.label]),
+            h.div([h.Class("flex min-w-0 flex-col items-end gap-1")], [
+              h.span([h.Class("rounded-full border border-border bg-secondary px-2 py-0.5 text-[11px] font-medium text-foreground")], [row.value.length === 0 ? "unobserved" : row.value]),
+              row.meta.length === 0 ? null : h.span([h.Class("max-w-48 truncate text-[10px] text-muted-foreground")], [row.meta]),
+            ]),
+          ]))),
     ], h),
     card("Trace lineage", "Trace roots, generations, branches, and completeness are read from the runtime authority; missing evidence remains visibly unavailable.", [
       h.p([h.Class(supporting)], ["Trace-root inspection is unavailable or has not been observed yet."]),
