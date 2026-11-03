@@ -61,6 +61,8 @@ import {
   noopReplayAutoQueueCommands,
   type ModelsCommands,
   type LocalPeersCommands,
+  type SystemOperatorCommands,
+  noopSystemOperatorCommands,
   noopLocalPeersCommands,
   noopModelsCommands,
 } from "./commands";
@@ -322,6 +324,7 @@ export const createUpdate =
     replayAutoQueueCommands: ReplayAutoQueueCommands = noopReplayAutoQueueCommands,
     modelsCommands: ModelsCommands = noopModelsCommands,
     localPeersCommands: LocalPeersCommands = noopLocalPeersCommands,
+    systemOperatorCommands: SystemOperatorCommands = noopSystemOperatorCommands,
   ) => {
 
 
@@ -1308,6 +1311,24 @@ const updateLocalPolicyDraft = (
           const draft = model.localPeersDraft ?? { token: "", url: "" };
           return { model: { ...model, localPeersDraft: { ...draft, token: value } } };
         },
+        SystemOperatorTraceRootChanged: ({ value }: Extract<Message, { readonly _tag: "SystemOperatorTraceRootChanged" }>): UpdateReturn<Model, Message> => ({ model: { ...model, systemOperatorTraceRoot: value } }),
+        SystemOperatorReplayCountChanged: ({ value }: Extract<Message, { readonly _tag: "SystemOperatorReplayCountChanged" }>): UpdateReturn<Model, Message> => ({ model: { ...model, systemOperatorReplayCount: value } }),
+        SystemOperatorLoadRequested: (): UpdateReturn<Model, Message> => {
+          const token = model.learningOperatorToken ?? "";
+          return token.length === 0
+            ? { model: { ...model, systemOperatorMessage: "Operator access token is required." } }
+            : { commands: [systemOperatorCommands.loadState({ token, tokenId: 1 })], model: { ...model, systemOperatorMessage: undefined } };
+        },
+        SystemOperatorCreateReplayRequested: (): UpdateReturn<Model, Message> => {
+          const token = model.learningOperatorToken ?? "";
+          const traceRootId = (model.systemOperatorTraceRoot ?? "").trim();
+          const maxRequests = Math.max(1, Number(model.systemOperatorReplayCount ?? "25") || 25);
+          return token.length === 0 || traceRootId.length === 0
+            ? { model: { ...model, systemOperatorMessage: "Token and trace root are required." } }
+            : { commands: [systemOperatorCommands.createReplay({ maxRequests, token, tokenId: 1, traceRootId })], model: { ...model, systemOperatorMessage: undefined } };
+        },
+        SystemOperatorActionSucceeded: ({ message }: Extract<Message, { readonly _tag: "SystemOperatorActionSucceeded" }>): UpdateReturn<Model, Message> => ({ model: { ...model, systemOperatorMessage: message } }),
+        SystemOperatorActionFailed: ({ message }: Extract<Message, { readonly _tag: "SystemOperatorActionFailed" }>): UpdateReturn<Model, Message> => ({ model: { ...model, systemOperatorMessage: message } }),
         LocalLlamaSwapModelIdChanged: ({ value }: Extract<Message, { readonly _tag: "LocalLlamaSwapModelIdChanged" }>): UpdateReturn<Model, Message> => ({ model: { ...model, localLlamaSwapModelId: value } }),
         LocalLlamaSwapModelLoadRequested: (): UpdateReturn<Model, Message> => {
           const modelId = (model.localLlamaSwapModelId ?? "").trim();

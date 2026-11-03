@@ -9,6 +9,7 @@ import { card, filterBar, table } from "./features/s563-layout";
 import { localPeersPage as localPeersFeaturePage } from "./features/local/peers";
 import { localPeerModelsPage as localPeerModelsFeaturePage } from "./features/local/peer-models";
 import { localLlamaModelsPage as localLlamaModelsFeaturePage } from "./features/local/llama-swap-models";
+import { systemOperatorPage as systemOperatorFeaturePage } from "./features/system/operator";
 import { Message } from "./message";
 import { READBACK_SPECS, type ReadbackRouteSpec, type ReadbackState, type ReadbacksState, renderReadbackPage } from "./readback";
 
@@ -64,7 +65,7 @@ export const familyPage = (
     if (routeName === "session-readiness") return systemSessionPage(pageReadback, h);
     if (routeName === "storage-retention") return systemStoragePage(pageReadback, retention, h);
   }
-  if (routeName === "system-operator") return systemOperatorPage(sections, operatorLearningMode, h);
+  if (routeName === "system-operator") return systemOperatorFeaturePage(sections.find((section) => section.readback !== undefined)?.readback, h);
   return h.section(
     [h.Class("rm3-next-route mt-4 space-y-6"), h.DataAttribute("route", routeName), h.DataAttribute("final-family-state", state), h.DataAttribute("page-layout", "reference"), h.DataAttribute("page-state", state)],
     [h.h2([h.Class("rm3-next-route-title text-sm font-medium leading-5 tracking-tight")], [label]), ...sections.map((section, index) =>

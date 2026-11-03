@@ -915,6 +915,43 @@ export const noopModelsCommands = defineModelsCommands({
   setController: async () => ({ body: {}, status: 200 }),
 });
 
+export interface SystemOperatorClient {
+  readonly loadState: (token: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly createReplay: (traceRootId: string, maxRequests: number, token: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+}
+export const createSystemOperatorClient = (fetchImpl: typeof fetch = fetch): SystemOperatorClient => ({
+  createReplay: async (traceRootId, maxRequests, token) => {
+    const response = await fetchImpl("/api/role-model/operator/replay/jobs", { body: JSON.stringify({ budget: { maxRequests }, traceRootId }), headers: { authorization: "Bearer " + token, "content-type": "application/json" }, method: "POST" });
+    return { body: await response.json(), status: response.status };
+  },
+  loadState: async (token) => {
+    const response = await fetchImpl("/api/role-model/operator/status", { headers: { authorization: "Bearer " + token } });
+    return { body: await response.json(), status: response.status };
+  },
+});
+export const defineSystemOperatorCommands = (client: SystemOperatorClient) => ({
+  loadState: Command.define("LoadSystemOperatorState", {
+    args: { token: Schema.String, tokenId: Schema.Number },
+    execute: ({ token, tokenId }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.loadState(token) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.SystemOperatorActionSucceeded({ message: "Operator state loaded.", token: tokenId })
+          : Message.SystemOperatorActionFailed({ message: "Load operator state failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token: tokenId }))),
+    messages: [Message.SystemOperatorActionSucceeded, Message.SystemOperatorActionFailed],
+  }),
+  createReplay: Command.define("CreateSystemOperatorReplay", {
+    args: { maxRequests: Schema.Number, token: Schema.String, tokenId: Schema.Number, traceRootId: Schema.String },
+    execute: ({ maxRequests, token, tokenId, traceRootId }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.createReplay(traceRootId, maxRequests, token) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.SystemOperatorActionSucceeded({ message: "Replay job created for " + traceRootId + ".", token: tokenId })
+          : Message.SystemOperatorActionFailed({ message: "Create replay failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token: tokenId }))),
+    messages: [Message.SystemOperatorActionSucceeded, Message.SystemOperatorActionFailed],
+  }),
+});
+export type SystemOperatorCommands = ReturnType<typeof defineSystemOperatorCommands>;
+export const noopSystemOperatorCommands = defineSystemOperatorCommands({ createReplay: async () => ({ body: {}, status: 200 }), loadState: async () => ({ body: {}, status: 200 }) });
+
 export interface LocalPeersClient {
   readonly save: (peers: ReadonlyArray<{ readonly authToken?: string; readonly id: string; readonly url: string }>) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly health: (url: string) => Promise<{ readonly body: unknown; readonly status: number }>;

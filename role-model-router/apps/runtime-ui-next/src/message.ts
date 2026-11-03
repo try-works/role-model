@@ -134,6 +134,12 @@ export const Message: MessageUnion<{
   readonly LocalPeerAddRequested: EmptyFields;
   readonly LocalPeerHealthRequested: { readonly peerId: typeof Schema.String };
   readonly LocalPeerRemoveRequested: { readonly peerId: typeof Schema.String };
+  readonly SystemOperatorTraceRootChanged: { readonly value: typeof Schema.String };
+  readonly SystemOperatorReplayCountChanged: { readonly value: typeof Schema.String };
+  readonly SystemOperatorLoadRequested: EmptyFields;
+  readonly SystemOperatorCreateReplayRequested: EmptyFields;
+  readonly SystemOperatorActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly SystemOperatorActionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LocalLlamaSwapModelIdChanged: { readonly value: typeof Schema.String };
   readonly LocalLlamaSwapModelLoadRequested: EmptyFields;
   readonly LocalLlamaSwapAllRolesRequested: EmptyFields;
@@ -342,6 +348,12 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   LocalPeerAddRequested: {},
   LocalPeerHealthRequested: { peerId: Schema.String },
   LocalPeerRemoveRequested: { peerId: Schema.String },
+  SystemOperatorTraceRootChanged: { value: Schema.String },
+  SystemOperatorReplayCountChanged: { value: Schema.String },
+  SystemOperatorLoadRequested: {},
+  SystemOperatorCreateReplayRequested: {},
+  SystemOperatorActionSucceeded: { message: Schema.String, token: Schema.Number },
+  SystemOperatorActionFailed: { message: Schema.String, token: Schema.Number },
   LocalLlamaSwapModelIdChanged: { value: Schema.String },
   LocalLlamaSwapModelLoadRequested: {},
   LocalLlamaSwapAllRolesRequested: {},

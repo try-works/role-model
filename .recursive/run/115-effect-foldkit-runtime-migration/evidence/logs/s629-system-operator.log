@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s629-system-operator-wiring.test.ts (2 tests) 190ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  19:18:06
+   Duration  23.87s (transform 12.00s, setup 0ms, collect 18.59s, tests 190ms, environment 3.43s, prepare 567ms)
+
