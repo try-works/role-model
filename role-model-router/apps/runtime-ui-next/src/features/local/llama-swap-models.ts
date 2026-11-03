@@ -20,7 +20,7 @@ export const localLlamaModelsPage = (readback: ReadbackState, h: HtmlBuilder<Mes
   return h.div([h.Class("space-y-8"), h.DataAttribute("route", "local-llama-swap-models"), h.DataAttribute("page-layout", "reference"), h.DataAttribute("final-family-state", status), h.DataAttribute("readback-state", status)], [
     h.svg([h.Class("mt-3 h-10 w-full text-[var(--rm-accent)]")], [h.rect([], []), h.rect([], [])]),
     status === "error" ? h.p([h.Role("alert"), h.Class("text-sm leading-5 text-muted-foreground")], ["llama-swap models read failed: " + (readback.message ?? "unknown error")]) : null,
-    card("Load llama-swap model", "Model must already be declared in runtime config. Loading triggers llama-swap to start or swap to this model instead of inventing a separate registration flow.", [
+    card("Load model", "Model must already be declared in runtime config. Loading triggers llama-swap to start or swap to this model instead of inventing a separate registration flow.", [
       h.label([h.Class("space-y-2 font-sans text-xs leading-4 text-foreground")], ["Model ID", h.input([h.Id("llama-swap-model-id"), h.Value(modelId), h.Placeholder("lfm2.5-8b-a1b"), h.Class(fieldClass), h.OnInput((next) => Message.LocalLlamaSwapModelIdChanged({ value: next }))])]),
       h.div([h.Class("mt-4 flex flex-wrap items-center gap-3")], [
         h.button([h.Type("button"), h.DataAttribute("llama-swap-load", ""), h.OnClick(Message.LocalLlamaSwapModelLoadRequested({})), h.Class(primaryButton)], ["Load model"]),

@@ -78,9 +78,9 @@ describe("S617 reconciliation CLI guard", () => {
     const { dir, env, mappingPath } = fixture();
     expect((await run(env, ["--refresh"])).status).toBe(0);
     const mapping = JSON.parse(readFileSync(mappingPath, "utf8"));
-    const matched = mapping.items.find((entry: { bucket: string; walkerPath: string | null }) => entry.bucket === "matched_walker");
+    const matched = mapping.items.find((entry: { bucket: string; walkerPath: string | null }) => entry.bucket === "wired_after_inventory");
     expect(matched).toBeDefined();
-    matched.walkerPath = null; // convention violation: matched_walker must carry walkerPath
+    matched.walkerPath = "div[1]>button[1]"; // convention violation: non-matched rows must carry a null walkerPath
     writeFileSync(mappingPath, JSON.stringify(mapping, null, 2) + "\n");
     const before = sha256(mappingPath);
     const humanBefore = sha256(join(dir, "ui-dead-controls-inventory.md"));

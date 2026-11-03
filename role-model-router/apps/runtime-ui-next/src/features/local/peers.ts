@@ -25,7 +25,7 @@ export const localPeersPage = (
     h.svg([h.Class("mt-3 h-10 w-full text-[var(--rm-accent)]")], [h.rect([], []), h.rect([], [])]),
     pageStatus === "error" ? h.p([h.Role("alert"), h.Class("text-sm leading-5 text-muted-foreground")], ["Local peers read failed: " + (readback.message ?? "unknown error")]) : null,
     card("Local endpoints", "role-model probes each server at /v1/models before peer models can be registered.", [
-      table(["Endpoint", "Status", "Type"], readback.rows.map((row) => [row.label, row.value, "OpenAI-compatible peer"]), "No peer endpoints configured.", h),
+      table(["Endpoint", "Status", "Type", "Actions"], readback.rows.map((row) => [row.label, row.value, "OpenAI-compatible peer", "Check health  Remove"]), "No peer endpoints configured.", h),
     ], h),
     card("Endpoint inventory", "role-model probes each server at /v1/models before peer models can be registered.", [
       readback.rows.length === 0

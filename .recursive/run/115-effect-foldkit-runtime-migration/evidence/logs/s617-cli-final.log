@@ -1,0 +1,14 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/tools/handler-presence-reconcile-cli.test.ts (4 tests) 83752ms
+   ✓ S617 reconciliation CLI guard > missing mapping fails closed: non-zero, no files written  10827ms
+   ✓ S617 reconciliation CLI guard > --refresh bootstraps, and the next run is unchanged with no write  24022ms
+   ✓ S617 reconciliation CLI guard > invalid mapping fails with exit 1, names the violation and writes nothing  24475ms
+   ✓ S617 reconciliation CLI guard > changed mapping fails with exit 2 and no write  24414ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  21:48:16
+   Duration  92.84s (transform 305ms, setup 0ms, collect 316ms, tests 83.75s, environment 6.22s, prepare 1.06s)
+
