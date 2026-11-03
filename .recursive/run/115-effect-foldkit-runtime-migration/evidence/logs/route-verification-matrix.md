@@ -97,3 +97,8 @@ No route has zero interactive controls by design; every route outside the Reques
 
 Full UI suite: **936/936 passed** (2026-11-03, raw log s617-task102-final-full.log).
 S48a styled-client build passed in this final run; earlier 41-55s timeouts occurred only under parallel load against its 20s budget and are environmental, not a code regression.
+
+## task-105 visual parity verification
+
+SystemOperator/SystemExtensions reference-card parity restored; caveat closed.
+Full UI suite: **945/945 passed** (raw log task105-final-full.log).
