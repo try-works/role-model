@@ -1054,7 +1054,8 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     label: "Dashboard",
     parse: parseDashboard,
     path: READBACK_PATHS.dashboard,
-    pathFor: (windowMs) => `${READBACK_PATHS.dashboard}?windowMs=${encodeURIComponent(windowMs)}`,
+    // An empty id used to produce "?windowMs=" (owner-reported malformed query). Default to one day.
+    pathFor: (windowMs) => `${READBACK_PATHS.dashboard}?windowMs=${encodeURIComponent(windowMs.length > 0 ? windowMs : "86400000")}`,
   },
   localSwap: {
     emptyText: "No local swap events recorded yet.",
@@ -1277,7 +1278,7 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     label: "Overview metrics",
     parse: parseOverviewMetrics,
     path: READBACK_PATHS.overviewMetrics,
-    pathFor: (windowMs) => `${READBACK_PATHS.overviewMetrics}?windowMs=${encodeURIComponent(windowMs)}`,
+    pathFor: (windowMs) => `${READBACK_PATHS.overviewMetrics}?windowMs=${encodeURIComponent(windowMs.length > 0 ? windowMs : "86400000")}`,
   },
   requests: {
     emptyText: "No telemetry requests recorded yet.",

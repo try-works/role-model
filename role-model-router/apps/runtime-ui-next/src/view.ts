@@ -24,7 +24,7 @@ import { Message } from "./message";
 import { DEFAULT_OVERVIEW_FILTERS, OVERVIEW_BREAKDOWNS, OVERVIEW_DIFFICULTIES, OVERVIEW_SOURCES, OVERVIEW_STATUSES, overviewSummary, type OverviewFilters } from "./overview-filters";
 import type { Model } from "./model";
 import type { ObservabilityState } from "./observability";
-import { chartPointKeyAction, view as chartView } from "@role-model/ui/foldkit-chart";
+import { chartPointKeyAction, type ChartSeries, view as chartView } from "@role-model/ui/foldkit-chart";
 
 import { READBACK_SPECS, type ReadbacksState, localPolicyControls, localPolicyDraftFromReadback, localPolicyFromReadback, renderReadbackPage } from "./readback";
 import { endpointsRoute, providersRoute } from "./features/control/routes";
@@ -835,7 +835,7 @@ const WINDOW_OPTIONS = [
 const windowLabel = (windowMs: number): string =>
   WINDOW_OPTIONS.find((option) => option.windowMs === windowMs)?.label ?? "Day";
 interface OverviewItem { readonly timestamp?: unknown; readonly duration_ms?: unknown; readonly resp_status_code?: unknown; readonly modelId?: unknown; readonly tokens?: unknown; }
-interface Bucket { readonly label: string; readonly avg: number; readonly p95: number; readonly success: number; readonly failure: number; readonly tokens: number; readonly empty: boolean; }
+interface Bucket { readonly cacheTokens: number; readonly inputTokens: number; readonly outputTokens: number; readonly label: string; readonly avg: number; readonly p95: number; readonly success: number; readonly failure: number; readonly tokens: number; readonly empty: boolean; }
 export const percentile = (values: readonly number[], p: number): number => {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -855,20 +855,22 @@ const bucketsFor = (state: ReadbacksState["overviewMetrics"], windowMs: number):
   const start = parsed.window.startAtMs;
   const end = parsed.window.endAtMs;
   const count = Math.max(1, Math.ceil((end - start) / rule.bucketMs));
-  const grouped = new Map<number, { durations: number[]; success: number; failure: number; tokens: number }>();
+  const grouped = new Map<number, { cacheTokens: number; durations: number[]; inputTokens: number; outputTokens: number; success: number; failure: number; tokens: number }>();
   const models = new Map<string, number>();
   for (const item of parsed.items) {
     const raw = typeof item.timestamp === "string" ? Date.parse(item.timestamp) : Number.NaN;
     if (!Number.isFinite(raw)) continue;
     const index = Math.min(count - 1, Math.max(0, Math.floor((raw - start) / rule.bucketMs)));
-    const bucket = grouped.get(index) ?? { durations: [], success: 0, failure: 0, tokens: 0 };
+    const bucket = grouped.get(index) ?? { cacheTokens: 0, durations: [], inputTokens: 0, outputTokens: 0, success: 0, failure: 0, tokens: 0 };
     const duration = Number(item.duration_ms);
-    const tokenShape = item.tokens as { input_tokens?: unknown; output_tokens?: unknown } | undefined;
+    const tokenShape = item.tokens as { cache_tokens?: unknown; input_tokens?: unknown; output_tokens?: unknown } | undefined;
     if (typeof tokenShape === "object" && tokenShape !== null) {
       const inputTokens = Number(tokenShape.input_tokens);
       const outputTokens = Number(tokenShape.output_tokens);
-      if (Number.isFinite(inputTokens)) bucket.tokens += inputTokens;
-      if (Number.isFinite(outputTokens)) bucket.tokens += outputTokens;
+      const cacheTokens = Number(tokenShape.cache_tokens);
+      if (Number.isFinite(inputTokens)) { bucket.inputTokens += inputTokens; bucket.tokens += inputTokens; }
+      if (Number.isFinite(outputTokens)) { bucket.outputTokens += outputTokens; bucket.tokens += outputTokens; }
+      if (Number.isFinite(cacheTokens)) bucket.cacheTokens += cacheTokens;
     }
     if (Number.isFinite(duration)) bucket.durations.push(duration);
     const status = Number(item.resp_status_code);
@@ -881,12 +883,15 @@ const bucketsFor = (state: ReadbacksState["overviewMetrics"], windowMs: number):
   const buckets = Array.from({ length: count }, (_, index) => {
     const bucket = grouped.get(index);
     return {
-      empty: bucket === undefined,
-      label: rule.label(start + index * rule.bucketMs),
       avg: bucket === undefined || bucket.durations.length === 0 ? 0 : bucket.durations.reduce((sum, value) => sum + value, 0) / bucket.durations.length,
+      cacheTokens: bucket?.cacheTokens ?? 0,
+      empty: bucket === undefined,
+      failure: bucket?.failure ?? 0,
+      inputTokens: bucket?.inputTokens ?? 0,
+      label: rule.label(start + index * rule.bucketMs),
+      outputTokens: bucket?.outputTokens ?? 0,
       p95: bucket === undefined ? 0 : percentile(bucket.durations, 95),
       success: bucket?.success ?? 0,
-      failure: bucket?.failure ?? 0,
       tokens: bucket?.tokens ?? 0,
     };
   });
@@ -968,38 +973,79 @@ const overviewPage = (
   const itemCount = state.rows.reduce((sum, entry) => { try { const meta = JSON.parse(entry.meta) as { items?: unknown }; return sum + (Array.isArray(meta.items) ? meta.items.length : 0); } catch { return sum; } }, 0);
   const chartState: "empty" | "error" | "loading" | "ready" =
     state.status === "loading" ? "loading" : state.status === "error" ? "error" : state.status === "ok" && buckets.some((bucket) => !bucket.empty) ? "ready" : "empty";
-  const hasData = chartState === "ready";
   const labels = buckets.length === 0 ? ["No data"] : buckets.map((bucket) => bucket.label);
+  const point = (bucket: Bucket, value: number): number | null => (bucket.empty ? null : value);
+  const seriesValues = (series: ReadonlyArray<ChartSeries>): ReadonlyArray<number | null> =>
+    series.flatMap((entry) => entry.points.map((entryPoint) => entryPoint.value));
+  const hasSeriesData = (series: ReadonlyArray<ChartSeries>): boolean =>
+    seriesValues(series).some((value) => value !== null && Number.isFinite(value));
+  const chartStatus = (hasData: boolean): "empty" | "error" | "loading" | "ready" =>
+    state.status === "loading" ? "loading" : state.status === "error" ? "error" : hasData ? "ready" : "empty";
   const emptyPoints = (): ReadonlyArray<{ readonly label: string; readonly value: null }> => labels.map((label) => ({ label, value: null }));
-  const charts = h.div([h.Class("grid w-full grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border md:grid-cols-2"), h.DataAttribute("overview-charts", ""), h.DataAttribute("overview-window", period), h.DataAttribute("overview-buckets", String(buckets.filter((bucket) => !bucket.empty).length)), h.DataAttribute("overview-items", String(itemCount)), h.DataAttribute("overview-labels", String(buckets.length))], [
+  // Data binding (owner-reported blank-chart regression): tokens/cache/latency/volume are derived from the
+  // per-request metrics items. The metrics payload carries no cost facts, so the two cost charts keep an
+  // honest empty state INSIDE the plot instead of drawing a measured-looking blank axis.
+  const tokenSeries: ReadonlyArray<ChartSeries> = [
+    { id: "inputTokens", label: "Input tokens", points: buckets.map((bucket) => ({ label: bucket.label, value: point(bucket, bucket.inputTokens) })) },
+    { id: "outputTokens", label: "Output tokens", points: buckets.map((bucket) => ({ label: bucket.label, value: point(bucket, bucket.outputTokens) })) },
+    { id: "totalTokens", label: "Total tokens", points: buckets.map((bucket) => ({ label: bucket.label, value: point(bucket, bucket.tokens) })) },
+  ];
+  const cacheSeries: ReadonlyArray<ChartSeries> = [
+    { id: "cacheHitTokens", label: "Cache hit tokens", points: buckets.map((bucket) => ({ label: bucket.label, value: point(bucket, bucket.cacheTokens) })) },
+    {
+      id: "cacheHitTokenRate",
+      label: "Cache hit token rate",
+      points: buckets.map((bucket) => ({
+        label: bucket.label,
+        value: bucket.empty || bucket.inputTokens + bucket.cacheTokens === 0
+          ? null
+          : Math.round((bucket.cacheTokens / (bucket.inputTokens + bucket.cacheTokens)) * 100),
+      })),
+    },
+  ];
+  const latencySeries: ReadonlyArray<ChartSeries> = [
+    { id: "averageLatencyMs", label: "Average latency", points: buckets.map((bucket) => ({ label: bucket.label, value: point(bucket, bucket.avg) })) },
+    { id: "p95LatencyMs", label: "p95 latency", points: buckets.map((bucket) => ({ label: bucket.label, value: point(bucket, bucket.p95) })) },
+  ];
+  const volumeSeries: ReadonlyArray<ChartSeries> = [
+    { id: "successCount", label: "Success", points: buckets.map((bucket) => ({ label: bucket.label, value: point(bucket, bucket.success) })) },
+    { id: "failureCount", label: "Failures", points: buckets.map((bucket) => ({ label: bucket.label, value: point(bucket, bucket.failure) })) },
+  ];
+  const costSeries: ReadonlyArray<ChartSeries> = [
+    { id: "actualCostUsd", label: "Actual cost", points: emptyPoints() },
+    { id: "estimatedCostUsd", label: "Estimated cost", points: emptyPoints() },
+    { id: "effectiveCostUsd", label: "Effective cost", points: emptyPoints() },
+  ];
+  const avoidedSeries: ReadonlyArray<ChartSeries> = [
+    { id: "routingCostSavingsUsd", label: "Routing avoided cost", points: emptyPoints() },
+    { id: "cacheCostSavingsUsd", label: "Cache avoided cost", points: emptyPoints() },
+    { id: "totalAvoidedCostUsd", label: "Total avoided cost", points: emptyPoints() },
+  ];
+  const chartInput = (input: {
+    readonly description: string;
+    readonly emptyMessage: string;
+    readonly kind: "area" | "bar" | "line";
+    readonly series: ReadonlyArray<ChartSeries>;
+    readonly title: string;
+  }): Html => {
+    const hasData = hasSeriesData(input.series);
+    return telemetryChartCard({ ...input, hasData, h, state: chartStatus(hasData) });
+  };
+  const charts = h.div([
+    h.Class("grid w-full grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border md:grid-cols-2"),
+    h.DataAttribute("overview-charts", ""),
+    h.DataAttribute("overview-buckets", String(buckets.filter((bucket) => !bucket.empty).length)),
+    h.DataAttribute("overview-items", String(itemCount)),
+    h.DataAttribute("overview-labels", String(labels.length)),
+    h.DataAttribute("overview-window", period),
+  ], [
     h.div([h.Class("min-w-0 bg-card col-span-1 md:col-span-2")], [candidateSpaceCard(candidates, h)]),
-    h.div([h.Class("min-w-0 bg-card col-span-1 md:col-span-2")], [telemetryChartCard({ description: "Input, output, and total token flow across the selected telemetry window.", emptyMessage: "No token-bearing requests have been recorded yet.", hasData, h, kind: "area", series: [
-      { id: "inputTokens", label: "Input tokens", points: emptyPoints() },
-      { id: "outputTokens", label: "Output tokens", points: emptyPoints() },
-      { id: "totalTokens", label: "Total tokens", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.tokens })) },
-    ], state: chartState, title: "Token usage over time" })]),
-    h.div([h.Class("min-w-0 bg-card col-span-1 md:col-span-2")], [telemetryChartCard({ description: "Cache-hit token volume and cache-hit rate.", emptyMessage: "No cache activity has been recorded for this slice yet.", hasData, h, kind: "line", series: [
-      { id: "cacheHitTokens", label: "Cache hit tokens", points: emptyPoints() },
-      { id: "cacheHitTokenRate", label: "Cache hit token rate", points: emptyPoints() },
-    ], state: chartState, title: "Cache efficiency trend" })]),
-    h.div([h.Class("min-w-0 bg-card col-span-1")], [telemetryChartCard({ description: "Authoritative effective cost based on stored request-time pricing facts.", emptyMessage: "No request costs have been recorded for this slice yet.", hasData, h, kind: "line", series: [
-      { id: "actualCostUsd", label: "Actual cost", points: emptyPoints() },
-      { id: "estimatedCostUsd", label: "Estimated cost", points: emptyPoints() },
-      { id: "effectiveCostUsd", label: "Effective cost", points: emptyPoints() },
-    ], state: chartState, title: "Effective cost over time" })]),
-    h.div([h.Class("min-w-0 bg-card col-span-1")], [telemetryChartCard({ description: "Routing-avoided cost, cache-avoided cost, and total avoided spend.", emptyMessage: "No routing or cache savings have been recorded yet.", hasData, h, kind: "area", series: [
-      { id: "routingCostSavingsUsd", label: "Routing avoided cost", points: emptyPoints() },
-      { id: "cacheCostSavingsUsd", label: "Cache avoided cost", points: emptyPoints() },
-      { id: "totalAvoidedCostUsd", label: "Total avoided cost", points: emptyPoints() },
-    ], state: chartState, title: "Cost avoided over time" })]),
-    h.div([h.Class("min-w-0 bg-card col-span-1")], [telemetryChartCard({ description: "Average and p95 latency across the selected window.", emptyMessage: "Latency telemetry has not been recorded for this slice yet.", hasData, h, kind: "line", series: [
-      { id: "averageLatencyMs", label: "Average latency", points: buckets.length === 0 ? emptyPoints() : buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.avg })) },
-      { id: "p95LatencyMs", label: "p95 latency", points: buckets.length === 0 ? emptyPoints() : buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.p95 })) },
-    ], state: chartState, title: "Latency trend" })]),
-    h.div([h.Class("min-w-0 bg-card col-span-1")], [telemetryChartCard({ description: "Successful and failed request volume by time bucket.", emptyMessage: "No successful or failed requests have been recorded yet.", hasData, h, kind: "bar", series: [
-      { id: "successCount", label: "Success", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.success })) },
-      { id: "failureCount", label: "Failures", points: buckets.map((bucket) => ({ label: bucket.label, value: bucket.empty ? null : bucket.failure })) },
-    ], state: chartState, title: "Success vs failure volume" })]),
+    h.div([h.Class("min-w-0 bg-card col-span-1 md:col-span-2")], [chartInput({ description: "Input, output, and total token flow across the selected telemetry window.", emptyMessage: "No token-bearing requests have been recorded yet.", kind: "area", series: tokenSeries, title: "Token usage over time" })]),
+    h.div([h.Class("min-w-0 bg-card col-span-1 md:col-span-2")], [chartInput({ description: "Cache-hit token volume and cache-hit rate.", emptyMessage: "No cache activity has been recorded for this slice yet.", kind: "line", series: cacheSeries, title: "Cache efficiency trend" })]),
+    h.div([h.Class("min-w-0 bg-card col-span-1")], [chartInput({ description: "Authoritative effective cost based on stored request-time pricing facts.", emptyMessage: "No request costs have been recorded for this slice yet.", kind: "line", series: costSeries, title: "Effective cost over time" })]),
+    h.div([h.Class("min-w-0 bg-card col-span-1")], [chartInput({ description: "Routing-avoided cost, cache-avoided cost, and total avoided spend.", emptyMessage: "No routing or cache savings have been recorded yet.", kind: "area", series: avoidedSeries, title: "Cost avoided over time" })]),
+    h.div([h.Class("min-w-0 bg-card col-span-1")], [chartInput({ description: "Average and p95 latency across the selected window.", emptyMessage: "Latency telemetry has not been recorded for this slice yet.", kind: "line", series: latencySeries, title: "Latency trend" })]),
+    h.div([h.Class("min-w-0 bg-card col-span-1")], [chartInput({ description: "Successful and failed request volume by time bucket.", emptyMessage: "No successful or failed requests have been recorded yet.", kind: "bar", series: volumeSeries, title: "Success vs failure volume" })]),
   ]);
   return h.section([h.Class("rm3-next-route"), h.DataAttribute("route", "index"), h.DataAttribute("readback-route", "dashboard"), h.DataAttribute("overview-state", chartState === "ready" ? "success" : chartState), h.DataAttribute("readback-state", state.status === "ok" ? "ok" : state.status)], [
     header,

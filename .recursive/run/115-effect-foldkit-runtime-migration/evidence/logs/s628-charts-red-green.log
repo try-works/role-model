@@ -1,0 +1,12 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s628-charts-data-binding.test.ts (5 tests) 1237ms
+   ✓ S628 chart data binding > draws the real token, cache, latency and volume series from metrics items  748ms
+   ✓ S628 chart data binding > renders the honest empty state INSIDE the plot when the payload has no cost facts  333ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  03:21:18
+   Duration  27.43s (transform 12.19s, setup 0ms, collect 20.58s, tests 1.24s, environment 3.35s, prepare 1.01s)
+

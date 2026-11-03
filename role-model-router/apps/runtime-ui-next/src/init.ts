@@ -276,10 +276,8 @@ export const createInit =
     for (const key of railKeys) {
       if (readbacks[key].status !== "idle") continue;
       readbacks[key] = loadingReadback(token);
-      const id =
-        (key === "dashboard" && result.model.route._tag === "Dashboard") || key === "overviewMetrics"
-          ? "86400000"
-          : undefined;
+      // The rail's dashboard read is windowed; an undefined id produced the malformed "?windowMs=" query.
+      const id = key === "dashboard" || key === "overviewMetrics" ? "86400000" : undefined;
       commands.push(readReadback({ ...(id === undefined ? {} : { id }), key, token }));
     }
     return { ...result, commands, model: { ...result.model, readbacks } };

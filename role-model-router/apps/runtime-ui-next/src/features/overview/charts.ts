@@ -197,24 +197,30 @@ export const telemetryChartCard = (input: {
   readonly title: string;
 }): Html => {
   const chartSeries = input.hasData ? input.series : [];
+  const emptyMessage = input.state === "error" ? "Telemetry read failed" : input.state === "loading" ? "Loading chart data…" : input.emptyMessage;
+  // A blank axis area reads as measured data. When a chart has no series, the honest empty state is
+  // rendered INSIDE the plot box (owner-reported blank-chart failure), so the plot never looks empty-but-real.
   const chart = input.h.div([input.h.Class("flex w-full flex-col gap-2")], [
     input.h.div([
-      input.h.Class("rm3-tanstack-chart block h-[220px] w-full"),
-      input.h.InnerHTML(tanstackChartSvg(chartSeries, {
+      input.h.DataAttribute("chart-plot", input.title),
+      input.h.Class("relative rm3-tanstack-chart block h-[220px] w-full"),
+    ], [
+      input.h.div([input.h.Class("absolute inset-0"), input.h.InnerHTML(tanstackChartSvg(chartSeries, {
         ariaLabel: input.title,
         height: 220,
         kind: input.kind,
         width: 640,
-      })),
-    ], []),
+      }))], []),
+      ...(input.hasData
+        ? []
+        : [input.h.div([
+            input.h.DataAttribute("chart-empty-message", input.title),
+            input.h.Role("status"),
+            input.h.Class("absolute inset-0 flex items-center justify-center bg-card/80 px-4 text-center text-xs leading-4 text-muted-foreground"),
+          ], [emptyMessage])]),
+    ]),
     chartTable(chartSeries, input.title, input.h),
   ]);
-  const empty = input.hasData
-    ? null
-    : input.h.p(
-        [input.h.DataAttribute("chart-empty-message", input.title), input.h.Role("status"), input.h.Class("text-xs leading-4 text-muted-foreground")],
-        [input.state === "error" ? "Telemetry read failed" : input.state === "loading" ? "Loading chart data…" : input.emptyMessage],
-      );
   return input.h.section(
     [input.h.Class("flex h-auto w-full flex-col gap-3 bg-card p-4 text-card-foreground"), input.h.DataAttribute("overview-card", input.title)],
     [
@@ -223,7 +229,6 @@ export const telemetryChartCard = (input: {
         input.h.p([input.h.Class("text-xs leading-4 text-muted-foreground")], [input.description]),
       ]),
       chart,
-      ...(empty === null ? [] : [empty]),
     ],
   );
 };
