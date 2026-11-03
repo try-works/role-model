@@ -1296,7 +1296,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     QueuesConfiguration: () => renderReadbackPage(READBACK_SPECS.queueConfig, readbacks.queueConfig, h),
     IntegrationsDownstream: () => integrationsDownstreamRoute(readbacks.downstreamOpenAI, readbacks.configuredModels, h),
     IntegrationsUpstream: () => integrationsUpstreamRoute(readbacks.integrationProviders, readbacks.configuredModels, h),
-    Benchmark: () => benchmarkRoute(readbacks.benchmarkSuite, readbacks.benchmarkSummary, readbacks.benchmarkRuns, h, modelsView, readbacks.modelEndpoints),
+    Benchmark: () => benchmarkRoute(readbacks.benchmarkSuite, readbacks.benchmarkSummary, readbacks.benchmarkRuns, h, modelsView, readbacks.modelEndpoints, readbacks.benchmarkPreferences, readbacks.benchmarkActiveRun),
     StorageRetention: () => familyPage("Storage & retention", "storage-retention", "Physical and logical storage, retention classes and manual pruning.", [{ label: "Logical classes", note: "Logical classes group rows by retention policy." }, { label: "Retention policy", note: "Category totals, receipts and byte counts are reported by the retention readback." }, { label: "Manual pruning", note: "Prune is manual; the host enforces retention records before deletion." }, { label: "Retention transactions", spec: READBACK_SPECS.storageRetention, readback: readbacks.storageRetention }], h, retention),
     Studio: () => studioRoute({ h, readbacks, studio, studioPage }),
     Learning: () => learningOverviewRoute(readbacks.learning, readbacks.replayJobs, readbacks.evaluationJobs, learningRanking, learningReplayAutoQueue, h, learningOperatorToken),
