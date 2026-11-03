@@ -8,7 +8,7 @@ import { chartInteractionForRoute, chartStateForReadback, type ChartInteractionS
 import { type LearningRankingState } from "./learning-ranking";
 import { renderLearningRanking } from "./learning-ranking-view";
 import { controlControllerPage, routerAgentStrategyPage, routerCandidatesPage, routerConfigPage, routerDecisionsPage, routerOverviewPage, routerStrategyPage, routerWorkloadsPage } from "./router-family-view";
-import { endpointsPage, familyPage, familySvg, localChoosePage, providersPage, studioWorkspaceLabels, studioWorkspaceTitle } from "./families-view";
+import { endpointsPage, familyPage, familySvg, localChoosePage, providersPage, studioWorkspaceLabels, studioWorkspaceTitle, type FamilyRouteState } from "./families-view";
 import type { RequestsRankingState } from "./requests-ranking";
 import { initialDeviceAuthState, type DeviceAuthState } from "./device-auth";
 import { initialProviderAccountState, type ProviderAccountState } from "./provider-account";
@@ -1227,6 +1227,9 @@ interface RouteViewContext {
   readonly learningOperatorToken: Model["learningOperatorToken"];
   readonly requestsFilters: Model["requestsFilters"];
   readonly observeRoutingFilters: Model["observeRoutingFilters"];
+  readonly observeLogsSource: Model["observeLogsSource"];
+  readonly localLogsAutoRefresh: Model["localLogsAutoRefresh"];
+  readonly familyState: FamilyRouteState;
   readonly learningPackAction: Model["learningPackAction"];
   readonly learningDecisionFilters: Model["learningDecisionFilters"];
   readonly requestsRanking: RequestsRankingState | undefined;
@@ -1260,6 +1263,9 @@ const routeContent = (ctx: RouteViewContext): Html => {
     learningOperatorToken,
     requestsFilters,
     observeRoutingFilters,
+    observeLogsSource,
+    localLogsAutoRefresh,
+    familyState,
     learningPackAction,
     learningDecisionFilters,
     requestsRanking,
@@ -1281,7 +1287,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     Observability: () => observabilitySnapshotRoute(observability, h),
     StoreReceipts: () => storeDegradationReceiptsRoute(readbacks.storeReceipts, h),
     Queues: () => h.div([h.DataAttribute("page-layout", "reference")], [observeQueuesRoute(readbacks.queues, h)]),
-    LocalLogs: () => familyPage("Llama-swap logs", "local-logs", "Rows are parsed into Timestamp, Source, Severity, Request, and message fields so local runtime behavior can be inspected without raw console noise.", [{ label: "Structured local log history", spec: READBACK_SPECS.localLogs, readback: readbacks.localLogs, note: "The ledger is bounded for scanability; parsed rows carry request correlation.", columns: ["Time", "Source", "Level", "Message", "Request"], rows: (row) => [row.label, row.value, row.meta, "—", "—"] }, { label: "Raw log streams", note: "Raw stdout/stderr streams stay in the host log store and are not reconstructed here." }], h),
+    LocalLogs: () => familyPage("Llama-swap logs", "local-logs", "Rows are parsed into Timestamp, Source, Severity, Request, and message fields so local runtime behavior can be inspected without raw console noise.", [{ label: "Structured local log history", spec: READBACK_SPECS.localLogs, readback: readbacks.localLogs, note: "The ledger is bounded for scanability; parsed rows carry request correlation.", columns: ["Time", "Source", "Level", "Message", "Request"], rows: (row) => [row.label, row.value, row.meta, "—", "—"] }, { label: "Raw log streams", note: "Raw stdout/stderr streams stay in the host log store and are not reconstructed here." }], h, undefined, undefined, familyState),
     RouterCandidates: () => routerCandidatesPage(readbacks, h),
     Requests: () => telemetryRequestsRoute(readbacks.requests, requestsRanking, requestsRankingMetricListbox, requestsRankingTargetListbox, h, requestsFilters),
     RequestDetail: () => renderReadbackPage(READBACK_SPECS.requestDetail, readbacks.requestDetail, h),
@@ -1299,9 +1305,9 @@ const routeContent = (ctx: RouteViewContext): Html => {
         ]),
         h.button([h.Type("button"), h.Class("mt-4 inline-flex h-[34px] items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Add endpoint"]),
       ] },
-    ], h),
+    ], h, undefined, undefined, familyState),
     SystemPeers: () => peersSupplement(familyPage("Peer topology", "system-peers", "Peer-backed model groups observed in the current runtime listing.", [{ label: "Peer inventory", spec: READBACK_SPECS.systemPeers, readback: readbacks.systemPeers }, { label: "Peer config", note: "Proxy targets and auth posture are configured on the host." }, { label: "Contract fields", note: "Peer readback fields: id, url, auth and readiness." }], h), readbacks.systemPeers, h),
-    LocalPeerModels: () => familyPage("Peer models", "local-peer-models", "Models registered behind the local peers.", [{ label: "Register model", note: "Register a model from a peer endpoint and assign runtime roles." , children: [h.div([h.Class("grid gap-4 md:grid-cols-2")], [h.label([h.Class("flex flex-col gap-1 font-sans text-xs text-muted-foreground")], [h.span([], ["Model ID"]), h.input([h.Id("peer-model-id"), h.AriaLabel("Model ID"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm")])]), h.label([h.Class("flex flex-col gap-1 font-sans text-xs text-muted-foreground")], [h.span([], ["Endpoint"]), h.input([h.Id("peer-model-endpoint"), h.AriaLabel("Endpoint"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm")])])]), h.button([h.Type("button"), h.Class("mt-4 inline-flex h-[34px] items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Register model"])] }, { label: "Registered models", spec: READBACK_SPECS.localPeerModels, readback: readbacks.localPeerModels, columns: ["Model", "Endpoint", "Roles", "Actions"], rows: (row) => [row.label, row.value, row.meta, "—"] }], h),
+    LocalPeerModels: () => familyPage("Peer models", "local-peer-models", "Models registered behind the local peers.", [{ label: "Register model", note: "Register a model from a peer endpoint and assign runtime roles." , children: [h.div([h.Class("grid gap-4 md:grid-cols-2")], [h.label([h.Class("flex flex-col gap-1 font-sans text-xs text-muted-foreground")], [h.span([], ["Model ID"]), h.input([h.Id("peer-model-id"), h.AriaLabel("Model ID"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm")])]), h.label([h.Class("flex flex-col gap-1 font-sans text-xs text-muted-foreground")], [h.span([], ["Endpoint"]), h.input([h.Id("peer-model-endpoint"), h.AriaLabel("Endpoint"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm")])])]), h.button([h.Type("button"), h.Class("mt-4 inline-flex h-[34px] items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Register model"])] }, { label: "Registered models", spec: READBACK_SPECS.localPeerModels, readback: readbacks.localPeerModels, columns: ["Model", "Endpoint", "Roles", "Actions"], rows: (row) => [row.label, row.value, row.meta, "—"] }], h, undefined, undefined, familyState),
     QueuesConfiguration: () => renderReadbackPage(READBACK_SPECS.queueConfig, readbacks.queueConfig, h),
     IntegrationsDownstream: () => integrationsDownstreamRoute(readbacks.downstreamOpenAI, readbacks.configuredModels, h),
     IntegrationsUpstream: () => integrationsUpstreamRoute(readbacks.integrationProviders, readbacks.configuredModels, h),
@@ -1318,9 +1324,9 @@ const routeContent = (ctx: RouteViewContext): Html => {
     LocalLlamaSwapModels: () => llamaModelsSupplement(familyPage("Llama-swap models", "local-llama-swap-models", "Load a runtime-config-declared model, assign route roles, and manage the in-memory llama-swap inventory. Role summary: loaded models and assigned roles.", [
       { label: "Load model", note: "Model must already be declared in runtime config. Loading triggers the managed swap.", children: [h.div([h.Class("flex flex-wrap items-end gap-3")], [h.label([h.Class("flex flex-col gap-1 font-sans text-xs text-muted-foreground")], [h.span([], ["Model ID"]), h.input([h.Id("llama-model-id"), h.AriaLabel("Model ID"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm")])]), h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Load model"])])] },
       { label: "Loaded models", spec: READBACK_SPECS.localLlamaSwapModels, readback: readbacks.localLlamaSwapModels, columns: ["Model", "Status", "Roles", "Actions"], rows: (row) => [row.label, row.value, row.meta, "—"] },
-    ], h), readbacks.localLlamaSwapModels, h),
-    SystemOperator: () => familyPage("Operator Controls", "system-operator", "Inspect bounded replay, evaluation, and shadow-learning state. The access token stays only in this browser component and is never stored.", [{ label: "Operator status", spec: READBACK_SPECS.operatorStatus, readback: readbacks.operatorStatus }, { label: "Trace lineage", spec: READBACK_SPECS.operatorTraceRoots, readback: readbacks.operatorTraceRoots }, { label: "Replay Jobs", spec: READBACK_SPECS.replayJobs, readback: readbacks.replayJobs }, { label: "Evaluation Jobs", spec: READBACK_SPECS.evaluationJobs, readback: readbacks.evaluationJobs }, { label: "Shadow Learning", note: "This page does not enable production learning; shadow-learning actions stay bounded to the readback." }], h, retention, operatorLearningMode),
-    SystemExtensions: () => familyPage("Extensions", "system-extensions", "Extension boundary, replay automation, contribution posture and the extension inventory.", [{ label: "Extension boundary", note: "The host enforces the extension boundary before any extension code runs." }, { label: "Replay automation", note: "Replay automation is configured per extension and reported by the host." }, { label: "Contribution posture", note: "Contribution posture records whether an extension may contribute runtime behavior." }, { label: "Recommendation ledger", note: "Recommendation receipts are recorded in the ledger when an extension produces one." }, { label: "Extension inventory", spec: READBACK_SPECS.extensions, readback: readbacks.extensions }], h),
+    ], h, undefined, undefined, familyState), readbacks.localLlamaSwapModels, h),
+    SystemOperator: () => familyPage("Operator Controls", "system-operator", "Inspect bounded replay, evaluation, and shadow-learning state. The access token stays only in this browser component and is never stored.", [{ label: "Operator status", spec: READBACK_SPECS.operatorStatus, readback: readbacks.operatorStatus }, { label: "Trace lineage", spec: READBACK_SPECS.operatorTraceRoots, readback: readbacks.operatorTraceRoots }, { label: "Replay Jobs", spec: READBACK_SPECS.replayJobs, readback: readbacks.replayJobs }, { label: "Evaluation Jobs", spec: READBACK_SPECS.evaluationJobs, readback: readbacks.evaluationJobs }, { label: "Shadow Learning", note: "This page does not enable production learning; shadow-learning actions stay bounded to the readback." }], h, retention, operatorLearningMode, familyState),
+    SystemExtensions: () => familyPage("Extensions", "system-extensions", "Extension boundary, replay automation, contribution posture and the extension inventory.", [{ label: "Extension boundary", note: "The host enforces the extension boundary before any extension code runs." }, { label: "Replay automation", note: "Replay automation is configured per extension and reported by the host." }, { label: "Contribution posture", note: "Contribution posture records whether an extension may contribute runtime behavior." }, { label: "Recommendation ledger", note: "Recommendation receipts are recorded in the ledger when an extension produces one." }, { label: "Extension inventory", spec: READBACK_SPECS.extensions, readback: readbacks.extensions }], h, undefined, undefined, familyState),
     Models: () => modelsRoute(readbacks.configuredModels, readbacks.modelEndpoints, h, modelsView, readbacks.rolePolicy),
     ModelsRoles: () => modelsRolesRoute(readbacks.configuredModels, readbacks.modelEndpoints, h, modelsView, readbacks.rolePolicy),
     RouterStrategy: () => routerStrategyPage("router-strategy", readbacks, routerPosture, h),
@@ -1334,7 +1340,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     Dashboard: () => renderReadbackPage(READBACK_SPECS.dashboard, readbacks.dashboard, h),
     LocalSwap: () => familyPage("Llama-swap swap history", "local-swap", "Most recent swap events first.", [{ label: "Event ledger", spec: READBACK_SPECS.localSwap, readback: readbacks.localSwap, columns: ["Time", "Event", "Model", "Reason"], rows: (row) => [row.label, row.value, row.meta, "—"] }, { label: "Ledger semantics", note: "Initial load · Swap reason · Timeline order: events appear when the managed host loads a first model, swaps to a new one, or records the operator-visible reason." }], h),
     ObserveActivity: () => observeActivityRoute(readbacks.observeActivity, h),
-    ObserveLogs: () => observeLogsRoute(readbacks.observeLogs, h),
+    ObserveLogs: () => observeLogsRoute(readbacks.observeLogs, h, observeLogsSource ?? "All sources"),
     ObserveRouting: () => observeRoutingRoute(readbacks.observeRouting, h, observeRoutingFilters),
     Router: () => routerOverviewPage(readbacks, h),
     Providers: () => providersPage({ controls, deviceAuth, deviceAuthDialog, h, providerAccount, readbacks }),
@@ -1519,6 +1525,9 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
     learningOperatorToken: model.learningOperatorToken,
     requestsFilters: model.requestsFilters,
     observeRoutingFilters: model.observeRoutingFilters,
+    observeLogsSource: model.observeLogsSource,
+    localLogsAutoRefresh: model.localLogsAutoRefresh,
+    familyState: { localLlamaSwapMessage: model.localLlamaSwapMessage, localLlamaSwapModelId: model.localLlamaSwapModelId, localLogsAutoRefresh: model.localLogsAutoRefresh, localPeerModelId: model.localPeerModelId, localPeerModelMessage: model.localPeerModelMessage, localPeersDraft: model.localPeersDraft, localPeersMessage: model.localPeersMessage, learningOperatorToken: model.learningOperatorToken, systemExtensionsMessage: model.systemExtensionsMessage, systemOperatorMessage: model.systemOperatorMessage, systemOperatorReplayCount: model.systemOperatorReplayCount, systemOperatorTraceRoot: model.systemOperatorTraceRoot },
     learningPackAction: model.learningPackAction,
     learningDecisionFilters: model.learningDecisionFilters,
                     diagnostics: model.diagnostics,
