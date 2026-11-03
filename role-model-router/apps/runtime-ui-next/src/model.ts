@@ -113,6 +113,7 @@ const modelsFields = {
   modelsView: Schema.optional(Schema.Struct({
     actionMessage: Schema.optional(Schema.String),
     advancedPolicy: Schema.optional(Schema.Boolean),
+    benchmarkClearPending: Schema.optional(Schema.Boolean),
     benchmarkJudge: Schema.optional(Schema.String),
     benchmarkMode: Schema.optional(Schema.String),
     expandedRoleId: Schema.optional(Schema.String),
@@ -147,6 +148,7 @@ const modelFields = {
   requestsFilters: requestsFieldsExtra.requestsFilters,
   observeRoutingFilters: observeFields.observeRoutingFilters,
   observeLogsSource: Schema.optional(Schema.String),
+  localLogsAutoRefresh: Schema.optional(Schema.Boolean),
   deviceAuthDialog: deviceAuthFields.deviceAuthDialog,
   deviceAuthModalKey: deviceAuthFields.deviceAuthModalKey,
   chartInteraction: shellFields.chartInteraction,

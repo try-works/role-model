@@ -117,6 +117,8 @@ export const Message: MessageUnion<{
   readonly BenchmarkJudgeChanged: { readonly value: typeof Schema.String };
   readonly BenchmarkRunRequested: EmptyFields;
   readonly BenchmarkClearRequested: EmptyFields;
+  readonly BenchmarkClearConfirmed: EmptyFields;
+  readonly BenchmarkClearCancelled: EmptyFields;
   readonly ModelsRemoveRequested: { readonly modelId: typeof Schema.String };
   readonly ModelsControllerSetRequested: { readonly modelId: typeof Schema.String };
   readonly ModelsControllerEjectRequested: { readonly modelId: typeof Schema.String };
@@ -127,6 +129,7 @@ export const Message: MessageUnion<{
   readonly ObserveRangeChanged: { readonly value: typeof Schema.String };
   readonly ObserveFilterChanged: { readonly field: typeof ObserveFilterFieldSchema; readonly value: typeof Schema.String };
   readonly ObserveAdvancedToggled: EmptyFields;
+  readonly LocalLogsAutoRefreshToggled: { readonly value: typeof Schema.Boolean };
   readonly ObserveLogsSourceChanged: { readonly value: typeof Schema.String };
   readonly ObservabilityRefreshRequested: EmptyFields;
   readonly StoreReceiptsRefreshRequested: EmptyFields;
@@ -305,6 +308,8 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   BenchmarkJudgeChanged: { value: Schema.String },
   BenchmarkRunRequested: {},
   BenchmarkClearRequested: {},
+  BenchmarkClearConfirmed: {},
+  BenchmarkClearCancelled: {},
   ModelsRemoveRequested: { modelId: Schema.String },
   ModelsControllerSetRequested: { modelId: Schema.String },
   ModelsControllerEjectRequested: { modelId: Schema.String },
@@ -316,6 +321,7 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   ObserveRangeChanged: { value: Schema.String },
   ObserveFilterChanged: { field: ObserveFilterFieldSchema, value: Schema.String },
   ObserveAdvancedToggled: {},
+  LocalLogsAutoRefreshToggled: { value: Schema.Boolean },
   ObserveLogsSourceChanged: { value: Schema.String },
   ObservabilityRefreshRequested: {},
   StoreReceiptsRefreshRequested: {},

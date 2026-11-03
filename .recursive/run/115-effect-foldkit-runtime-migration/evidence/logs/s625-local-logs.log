@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s625-local-logs-wiring.test.ts (2 tests) 312ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  15:57:05
+   Duration  37.53s (transform 17.44s, setup 0ms, collect 27.03s, tests 312ms, environment 6.18s, prepare 1.66s)
+

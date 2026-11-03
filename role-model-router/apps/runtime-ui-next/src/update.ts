@@ -1186,10 +1186,23 @@ const updateLocalPolicyDraft = (
           const rawMode = (state.benchmarkMode ?? "quick").toLowerCase().includes("full") ? "full" : "quick";
           return { commands: [modelsCommands.runBenchmark({ judgeEndpointId: state.benchmarkJudge ?? "", mode: rawMode, token: model.readbacks.modelEndpoints.token + 1 })], model };
         },
-        BenchmarkClearRequested: (): UpdateReturn<Model, Message> => ({
-          commands: [modelsCommands.clearBenchmark({ token: model.readbacks.modelEndpoints.token + 1 })],
-          model,
-        }),
+        BenchmarkClearRequested: (): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          // :3456 guards the destructive clear behind window.confirm; the Foldkit equivalent is an explicit
+          // armed state: the first click only opens the confirmation, never dispatching DELETE by itself.
+          return { model: { ...model, modelsView: { ...state, benchmarkClearPending: true } } };
+        },
+        BenchmarkClearConfirmed: (): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return {
+            commands: [modelsCommands.clearBenchmark({ token: model.readbacks.modelEndpoints.token + 1 })],
+            model: { ...model, modelsView: { ...state, benchmarkClearPending: false } },
+          };
+        },
+        BenchmarkClearCancelled: (): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          return { model: { ...model, modelsView: { ...state, benchmarkClearPending: false } } };
+        },
         ModelsRemoveRequested: ({ modelId }: Extract<Message, { readonly _tag: "ModelsRemoveRequested" }>): UpdateReturn<Model, Message> => {
           const state = model.modelsView ?? {};
           if (state.removeConfirmation !== modelId) {
@@ -1273,6 +1286,7 @@ const updateLocalPolicyDraft = (
           const state = model.observeRoutingFilters ?? { breakdown: "Total", difficulty: "All buckets", expanded: false, range: "Day", source: "All sources" };
           return { model: { ...model, observeRoutingFilters: { ...state, expanded: !state.expanded } } };
         },
+        LocalLogsAutoRefreshToggled: ({ value }: Extract<Message, { readonly _tag: "LocalLogsAutoRefreshToggled" }>): UpdateReturn<Model, Message> => ({ model: { ...model, localLogsAutoRefresh: value } }),
         ObserveLogsSourceChanged: ({ value }: Extract<Message, { readonly _tag: "ObserveLogsSourceChanged" }>): UpdateReturn<Model, Message> => ({ model: { ...model, observeLogsSource: value } }),
         ObservabilityRefreshRequested: (): UpdateReturn<Model, Message> => {
           const token = model.observability.token + 1;
