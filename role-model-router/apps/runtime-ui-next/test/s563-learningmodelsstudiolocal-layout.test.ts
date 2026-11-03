@@ -122,10 +122,20 @@ describe("S563 learning/models/studio/local reference layout", () => {
   });
 
   it("benchmark", async () => {
-    const page = await renderPage("Benchmark", { benchmarkSuite: readback() });
+    const cases = [1, 2, 3].map((index) => ({
+      id: "case-" + String(index),
+      label: "case-" + String(index),
+      meta: JSON.stringify({ benchmarkEligible: true, quickBenchmark: true }),
+      value: "hard",
+    }));
+    const endpoints = readback([
+      { id: "ep-a", label: "ep-a", meta: JSON.stringify({ endpointId: "ep-a", healthStatus: "healthy", modelId: "model-a", sourceType: "remote" }), value: "remote" },
+      { id: "ep-b", label: "ep-b", meta: JSON.stringify({ endpointId: "ep-b", healthStatus: "healthy", modelId: "model-b", sourceType: "local" }), value: "local" },
+    ]);
+    const page = await renderPage("Benchmark", { benchmarkSuite: readback(cases), modelEndpoints: endpoints });
     expectOrder(page, ["Capability benchmark", "Run capability benchmark", "Benchmark scores", "Taxonomy dimensions", "Run history"]);
-    expectColumns(page, ["MODEL", "SCOPE", "STATUS", "DIMENSION", "VALUE", "SCORE", "RUN"]);
-    expectControls(page, ["Benchmark mode", "Judge endpoint", "Run quick benchmark (3 models, 12 cases)", "Clear all benchmark data"]);
+    expectColumns(page, ["Model", "Path", "Scope", "Status", "MODEL", "SCOPE", "STATUS", "DIMENSION", "VALUE", "SCORE", "RUN"]);
+    expectControls(page, ["Benchmark mode", "Judge endpoint", "Run quick benchmark (2 models, 3 cases)", "Clear all benchmark data"]);
   });
 
   for (const [tab, titles, controls] of [

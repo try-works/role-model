@@ -240,12 +240,15 @@ const routes: readonly RouteCase[] = [
   {
     emptyBody: { cases: [] },
     emptyText: "No benchmark suite available.",
+    initialReads: 3,
     key: "benchmarkSuite",
     label: "Benchmark suite",
     path: "/system/benchmark",
     stateTestName: "Benchmark suite renders success, empty, loading and error on the DOM",
     successBody: fixture("benchmarkSuite"),
-    successText: "e01-yes-no",
+    // The parity page no longer lists raw case ids; it renders the suite-derived mode count. The route
+    // plans three readbacks (suite + summary + runs), hence initialReads above.
+    successText: "Quick (12 hard cases)",
   },
   {
     emptyBody: { categories: [], receipts: [], totalBytes: 0, totalCount: 0 },

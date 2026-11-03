@@ -1,0 +1,26 @@
+# S622 benchmark parity - resume completion
+
+Date: 2026-11-03. HEAD at completion: b9d3a838 (models repairs 5e33bd7c + lead rolePolicy wiring b9d3a838), worktree branch recursive/115-effect-foldkit-runtime-migration.
+
+## What changed in this resume
+- benchmarkRoute now also renders the runnable-endpoint table with the reference's title-case headers (Model, Path, Scope, Status) from the endpoint readback, because the :3456 capture (S565 Benchmark story) requires that table.
+- Kept the legacy uppercase inventory tables the reference layout contract expects while the parity tables stay title-case: Benchmark scores adds MODEL/SCOPE/STATUS, Taxonomy dimensions is DIMENSION/VALUE/SCORE, Run history is RUN/MODE/CASES/MODELS/COMPLETED/SUITE.
+- Run is disabled (not dead: it carries an explicit Disabled state) when there is no judge or no runnable endpoint.
+- Endpoint inventory evidence (s26a-route-inventory.json) now declares /api/role-model/benchmark/summary in addition to suite and runs, satisfying the S26f client/host tie.
+- s26e Benchmark case: successText now "Quick (12 hard cases)" (the parity page no longer lists raw case ids) and initialReads: 3 (suite + summary + runs).
+- s563 benchmark fixture now supplies three quick cases and two endpoints and asserts the dynamic label "Run quick benchmark (2 models, 3 cases)".
+
+## Run history
+- Run 1 (before these fixes): vitest 92 files / 901 tests with 5 failures: s26e Benchmark success text + single-subscription count, s26f inventory row for /summary, s563 old uppercase/columns expectations, s565 Benchmark story missing [Model,Path,Scope,Status].
+- Affected suites after fixes: s26e-readback-routes, s26f-client-host-tie, s563 layout, s565 page stories, s617 handler presence, s618 models wiring, s622 benchmark parity -> all PASS.
+- Run 2 (final): corepack pnpm test -> tsc 0, vitest 92 files / 901 tests PASS, node --test invariants PASS; SUITE_EXIT=0.
+
+## S247 click budget
+No synthetic clicks were added by this task (the new s622 tests render SSR HTML and call update/client functions directly; they never click a mounted DOM). The S247 invariant lane passed in the final suite run and its budget file was not modified.
+
+## Handler-presence ratchet
+s617-handler-presence 9/9 green in the final run; the benchmark route adds only wired controls (selects, Run, Clear) and the Run disabled state, so the dead-control ratchet has no new entries and the baseline was not regenerated.
+
+## Final parity review against apps/runtime-ui/app/routes/control-benchmark.tsx
+Delivered: mode options with suite-derived counts, judge endpoint select from the endpoint readback (endpointId values, model + source labels), Run label with model/case counts, Run disabled without judge/endpoints, Clear all benchmark data (DELETE /api/role-model/benchmark/data), Benchmark scores (Model/Overall/Profile/Easy/Medium/Hard/p50/p95/Scope + Last run/Suite/Judge), Taxonomy dimensions, Run history (Run/Mode/Cases/Models/Completed/Suite), runnable endpoint table (Model/Path/Scope/Status), and the three readbacks (suite/summary/runs) planned on route entry.
+Not ported (honest remaining gaps if full :3456 parity is required later): per-endpoint selection checkboxes and "N of M selected" gating; the per-model Clear action (DELETE /api/role-model/benchmark/endpoints/{id}/data); judge preference persistence (PUT /api/role-model/benchmark/preferences); active-run progress polling (runs/active, runs/{id}); taxonomy role/task/capability filter selects; real p50/p95 latencies (the summary readback does not carry them, so the columns honestly render "—").

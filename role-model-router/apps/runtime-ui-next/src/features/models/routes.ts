@@ -388,6 +388,16 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
       return [];
     }
   });
+  const endpointRows = (endpoints?.rows ?? []).flatMap((entry) => {
+    try {
+      // SAFETY: modelEndpoints rows carry this JSON record in meta.
+      const meta = JSON.parse(entry.meta) as { readonly endpointId?: string; readonly healthStatus?: string | null; readonly modelId?: string | null; readonly sourceType?: string | null };
+      if (meta.endpointId === undefined) return [];
+      return [[meta.modelId ?? meta.endpointId, meta.endpointId, meta.sourceType ?? "—", meta.healthStatus ?? "unknown"]];
+    } catch {
+      return [];
+    }
+  });
   const mode: "quick" | "full" = modelsView?.benchmarkMode !== undefined && modelsView.benchmarkMode.toLowerCase().includes("full") ? "full" : "quick";
   const judge = modelsView?.benchmarkJudge ?? endpointOptions[0]?.value ?? "";
   const caseCount = mode === "quick" ? quickCases : eligibleCases;
@@ -472,19 +482,28 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
         select("Judge endpoint", endpointOptions.length === 0 ? [{ label: "No runnable endpoints", value: "" }] : endpointOptions, judge, (next) => Message.BenchmarkJudgeChanged({ value: next })),
       ]),
       h.div([h.Class("mt-4 flex flex-wrap gap-2")], [
-        h.button([h.Type("button"), h.OnClick(Message.BenchmarkRunRequested({})), h.Class("inline-flex h-[34px] items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Run " + mode + " benchmark (" + String(modelCount) + " model" + (modelCount === 1 ? "" : "s") + ", " + String(caseCount) + " cases)"]),
+        h.button([
+          h.Type("button"),
+          ...(modelCount === 0 || judge === "" ? [h.Disabled(true)] : []),
+          h.OnClick(Message.BenchmarkRunRequested({})),
+          h.Class("inline-flex h-[34px] items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground"),
+        ], ["Run " + mode + " benchmark (" + String(modelCount) + " model" + (modelCount === 1 ? "" : "s") + ", " + String(caseCount) + " cases)"]),
         h.button([h.Type("button"), h.OnClick(Message.BenchmarkClearRequested({})), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium")], ["Clear all benchmark data"]),
+      ]),
+      h.div([h.Class("mt-4")], [
+        referenceTable(["Model", "Path", "Scope", "Status"], endpointRows, "No runnable endpoints are configured.", h, "models"),
       ]),
     ], h),
     referenceCard("Benchmark scores", "Scores are normalized 0–1 fractions shown as percentages.", [
       h.p([h.DataAttribute("benchmark-last-run", ""), h.Class("font-mono text-xs")], ["Last run: " + (typeof summaryHeader?.completedAtMs === "number" ? new Date(summaryHeader.completedAtMs).toISOString().slice(0, 10) : "—") + " · Suite: " + (summaryHeader?.mode ?? "—") + " · Judge: " + (summaryHeader?.judgeModelId ?? summaryHeader?.judgeEndpointId ?? "—")]),
       referenceTable(["Model", "Overall", "Profile", "Easy", "Medium", "Hard", "p50", "p95", "Scope"], scoreRows, "No benchmark scores are in routing profiles yet.", h, "models"),
+      referenceTable(["MODEL", "SCOPE", "STATUS"], subjects.map(({ meta }) => [meta.displayName ?? meta.modelId ?? meta.endpointId ?? "—", meta.sourceType ?? "—", "graded"]), "No benchmark scores are in routing profiles yet.", h, "models"),
     ], h),
     referenceCard("Taxonomy dimensions", "Per-model scores by taxonomy dimension.", [
-      referenceTable(["Dimension", "Value", "Score"], taxonomyRows, "No taxonomy dimension data is available yet.", h, "models"),
+      referenceTable(["DIMENSION", "VALUE", "SCORE"], taxonomyRows, "No taxonomy dimension data is available yet.", h, "models"),
     ], h),
     referenceCard("Run history", "Completed capability benchmark runs.", [
-      referenceTable(["Run", "Mode", "Cases", "Models", "Completed", "Suite"], runRows, "No completed benchmark runs yet.", h, "models"),
+      referenceTable(["RUN", "MODE", "CASES", "MODELS", "COMPLETED", "SUITE"], runRows, "No completed benchmark runs yet.", h, "models"),
     ], h),
   ], h);
 };
