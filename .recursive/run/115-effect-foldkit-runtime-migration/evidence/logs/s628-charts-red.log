@@ -1,0 +1,98 @@
+
+ RUN  v3.2.4 D:/DEV/rm-clean/charts-red/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s628-charts-data-binding.test.ts (5 tests | 5 failed) 1607ms
+   × S628 chart data binding > draws the real token, cache, latency and volume series from metrics items 822ms
+     → expected 0 to be greater than 0
+   × S628 chart data binding > renders the honest empty state INSIDE the plot when the payload has no cost facts 570ms
+     → Effective cost over time must show an in-plot empty state: expected null not to be null
+   × S628 chart data binding > renders in-plot empty states for every chart when the window has no requests 84ms
+     → expected null not to be null
+   × S628 chart data binding > renders an in-plot honest empty state on the observe volume card 114ms
+     → expected null not to be null
+   × S628 chart data binding > never builds the malformed empty windowMs query for the dashboard or metrics readbacks 11ms
+     → expected '/api/role-model/telemetry/summary?win…' to be '/api/role-model/telemetry/summary?win…' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s628-charts-data-binding.test.ts > S628 chart data binding > draws the real token, cache, latency and volume series from metrics items
+AssertionError: expected 0 to be greater than 0
+ ❯ test/s628-charts-data-binding.test.ts:52:62
+     50|     const container = await render({ _tag: "Index" }, { overviewMetric…
+     51|     expect(drawnShapes(container, "Token usage over time")).toBeGreate…
+     52|     expect(drawnShapes(container, "Cache efficiency trend")).toBeGreat…
+       |                                                              ^
+     53|     expect(drawnShapes(container, "Latency trend")).toBeGreaterThan(0);
+     54|     expect(drawnShapes(container, "Success vs failure volume")).toBeGr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  test/s628-charts-data-binding.test.ts > S628 chart data binding > renders the honest empty state INSIDE the plot when the payload has no cost facts
+AssertionError: Effective cost over time must show an in-plot empty state: expected null not to be null
+ ❯ test/s628-charts-data-binding.test.ts:68:72
+     66|     for (const [title, text] of expected) {
+     67|       const message = card(container, title)?.querySelector("[data-cha…
+     68|       expect(message, title + " must show an in-plot empty state").not…
+       |                                                                        ^
+     69|       expect(message?.textContent ?? "").toContain(text);
+     70|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  test/s628-charts-data-binding.test.ts > S628 chart data binding > renders in-plot empty states for every chart when the window has no requests
+AssertionError: expected null not to be null
+ ❯ test/s628-charts-data-binding.test.ts:77:28
+     75|     const container = await render({ _tag: "Index" }, { overviewMetric…
+     76|     const tokenEmpty = card(container, "Token usage over time")?.query…
+     77|     expect(tokenEmpty).not.toBeNull();
+       |                            ^
+     78|     expect(drawnShapes(container, "Token usage over time")).toBe(0);
+     79|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  test/s628-charts-data-binding.test.ts > S628 chart data binding > renders an in-plot honest empty state on the observe volume card
+AssertionError: expected null not to be null
+ ❯ test/s628-charts-data-binding.test.ts:86:25
+     84|     });
+     85|     const message = card(container, "Routing analytics volume")?.query…
+     86|     expect(message).not.toBeNull();
+       |                         ^
+     87|     expect(message?.textContent ?? "").toContain("No routing analytics…
+     88|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  test/s628-charts-data-binding.test.ts > S628 chart data binding > never builds the malformed empty windowMs query for the dashboard or metrics readbacks
+AssertionError: expected '/api/role-model/telemetry/summary?win…' to be '/api/role-model/telemetry/summary?win…' // Object.is equality
+
+Expected: "/api/role-model/telemetry/summary?windowMs=86400000"
+Received: "/api/role-model/telemetry/summary?windowMs="
+
+ ❯ test/s628-charts-data-binding.test.ts:91:52
+     89| 
+     90|   it("never builds the malformed empty windowMs query for the dashboar…
+     91|     expect(READBACK_SPECS.dashboard.pathFor?.("")).toBe("/api/role-mod…
+       |                                                    ^
+     92|     expect(READBACK_SPECS.overviewMetrics.pathFor?.("")).toBe("/api/me…
+     93|     expect(READBACK_SPECS.dashboard.pathFor?.("604800000")).toBe("/api…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed (5)
+   Start at  04:10:00
+   Duration  28.35s (transform 13.10s, setup 0ms, collect 21.80s, tests 1.61s, environment 3.43s, prepare 480ms)
+
+
+
+# Provenance footer (added after the raw transcript above; nothing above was edited)
+# Command: corepack pnpm exec vitest run test/s628-charts-data-binding.test.ts
+# CWD: D:/DEV/rm-clean/charts-red/role-model-router/apps/runtime-ui-next
+# Worktree: clean detached worktree at bff0cb9a^ = f7939095 (pre-fix product code)
+# Test provenance: s628-charts-data-binding.test.ts was ADDED in the fix commit bff0cb9a, so it does not exist
+#   at bff0cb9a^. For this RED run the committed test file was copied from bff0cb9a into the pre-fix worktree
+#   (git show bff0cb9a:.../test/s628-charts-data-binding.test.ts); product sources stayed at f7939095.
+# Exit code: 1. Result: 5 tests, 5 failed (data-binding paths, in-plot cost empty state, empty-window in-plot
+#   state, observe volume in-plot state, no-empty-windowMs URL contract). The pre-fix product fails all five.

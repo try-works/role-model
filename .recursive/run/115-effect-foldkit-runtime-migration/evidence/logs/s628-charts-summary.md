@@ -22,10 +22,14 @@
   data-overview-items, data-overview-labels, chart tables and the original empty copy.
 
 ## Verification
-- TDD: s628-charts-data-binding (5 tests) covers real token/cache/latency/volume paths, in-plot cost empty states,
+- TDD: s628-charts-data-binding covers real token/cache/latency/volume paths, in-plot cost empty states,
   empty-window in-plot states, observe routing in-plot empty state, and the no-empty-windowMs URL contract.
-  First run RED: 4/5 failed (charts.ts stale "empty" ref + missing bindings); after fix 5/5 GREEN
-  (evidence/logs/s628-charts-red-green.log).
+  RED transcript: evidence/logs/s628-charts-red.log. The test file was authored in the fix commit bff0cb9a, so it
+  does not exist at bff0cb9a^; the RED run used a clean detached worktree at bff0cb9a^ = f7939095 and copied the
+  committed test from bff0cb9a into it, leaving product sources pre-fix. That run failed 5/5 (the data-binding, in-plot empty-state and empty-windowMs URL assertions all fail pre-fix).
+  The canonical RED is the 5/5 transcript in s628-charts-red.log; the later GREEN run is
+  evidence/logs/s628-charts-red-green.log. Git-history note: the initial commit message described an interim in-place
+  harness run, which is not the committed evidence.
 - Affected suites: s628 + s40b + s75a = 15/15 (evidence/logs/s628-charts-affected.log).
 - Full UI suite: 102 files / 941 tests PASS, tsc 0 (the pnpm test chain runs tsc first);
   evidence/logs/s628-charts-full-ui.log.

@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { renderToString } from "@role-model-router/foldkit/experimental/server";
 
 import { READBACK_SPECS, emptyReadbacks, parseReadbackFixture } from "../src/readback";
+import { mountShell } from "../src/mount";
 import { shellModel } from "./support/runtime-shell";
 import type { Model } from "../src/model";
 import { view } from "../src/view";
@@ -78,13 +79,62 @@ describe("S628 chart data binding", () => {
     expect(drawnShapes(container, "Token usage over time")).toBe(0);
   });
 
-  it("renders an in-plot honest empty state on the observe volume card", async () => {
+  it("renders an in-plot honest empty state on the observe volume card when there are no metrics", async () => {
     const container = await render({ _tag: "ObserveRouting" }, {
       observeRouting: parseReadbackFixture("observeRouting", []),
     });
     const message = card(container, "Routing analytics volume")?.querySelector("[data-chart-plot] [data-chart-empty-message]");
     expect(message).not.toBeNull();
     expect(message?.textContent ?? "").toContain("No routing analytics volume");
+  });
+
+  it("draws the real requests and routing volume series from the metrics readback", async () => {
+    const metrics = parseReadbackFixture("overviewMetrics", metricsBody);
+    const requests = await render({ _tag: "Requests" }, {
+      overviewMetrics: metrics,
+      requests: parseReadbackFixture("requests", []),
+    });
+    expect(drawnShapes(requests, "Request volume")).toBeGreaterThan(0);
+    expect(card(requests, "Request volume")?.textContent).toContain("Requests");
+    const routing = await render({ _tag: "ObserveRouting" }, {
+      observeRouting: parseReadbackFixture("observeRouting", []),
+      overviewMetrics: metrics,
+    });
+    expect(drawnShapes(routing, "Routing analytics volume")).toBeGreaterThan(0);
+    expect(card(routing, "Routing analytics volume")?.querySelector("[data-chart-plot] [data-chart-empty-message]")).toBeNull();
+  });
+
+  it("requests the metrics page with the exact window on Requests and ObserveRouting entry", async () => {
+    const waitFor = async <T>(read: () => T | undefined, label: string): Promise<T> => {
+      const end = Date.now() + 10000;
+      while (Date.now() < end) {
+        const value = read();
+        if (value !== undefined) return value;
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+      throw new Error("Timed out waiting for " + label);
+    };
+    const metricsUrlFor = async (path: string): Promise<string> => {
+      const urls: string[] = [];
+      window.history.replaceState({}, "", path);
+      const container = document.createElement("div");
+      container.id = "s628-" + path.replaceAll("/", "-");
+      document.body.append(container);
+      const handle = mountShell(container, {
+        readbackFetchImpl: async (input) => {
+          urls.push(new URL(String(input), "http://localhost").pathname + new URL(String(input), "http://localhost").search);
+          return new Response(JSON.stringify(metricsBody), { status: 200, headers: { "content-type": "application/json" } });
+        },
+      });
+      try {
+        return await waitFor(() => urls.find((url) => url.startsWith("/api/metrics/page")), path + " metrics fetch");
+      } finally {
+        handle.dispose();
+        container.remove();
+      }
+    };
+    expect(await metricsUrlFor("/requests")).toBe("/api/metrics/page?windowMs=86400000");
+    expect(await metricsUrlFor("/observe/routing")).toBe("/api/metrics/page?windowMs=86400000");
   });
 
   it("never builds the malformed empty windowMs query for the dashboard or metrics readbacks", () => {

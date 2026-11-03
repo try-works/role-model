@@ -42,6 +42,7 @@ import { studioRoute } from "./features/studio/routes";
 import { runtimeConfigRoute, runtimeRoute } from "./features/runtime/routes";
 import { indexRoute } from "./features/overview/routes";
 import { candidateSpaceCard, overviewStats, telemetryChartCard } from "./features/overview/charts";
+import { bucketsFor, percentile, windowForRange, type Bucket } from "./features/overview/chart-data";
 import {
   observeActivityRoute,
   observeLogsRoute,
@@ -834,69 +835,7 @@ const WINDOW_OPTIONS = [
 ] as const;
 const windowLabel = (windowMs: number): string =>
   WINDOW_OPTIONS.find((option) => option.windowMs === windowMs)?.label ?? "Day";
-interface OverviewItem { readonly timestamp?: unknown; readonly duration_ms?: unknown; readonly resp_status_code?: unknown; readonly modelId?: unknown; readonly tokens?: unknown; }
-interface Bucket { readonly cacheTokens: number; readonly inputTokens: number; readonly outputTokens: number; readonly label: string; readonly avg: number; readonly p95: number; readonly success: number; readonly failure: number; readonly tokens: number; readonly empty: boolean; }
-export const percentile = (values: readonly number[], p: number): number => {
-  if (values.length === 0) return 0;
-  const sorted = [...values].sort((a, b) => a - b);
-  return sorted[Math.max(0, Math.ceil((p / 100) * sorted.length) - 1)] ?? 0;
-};
-const bucketRule = (windowMs: number): { bucketMs: number; label: (ms: number) => string } => {
-  if (windowMs <= 86_400_000) return { bucketMs: 3_600_000, label: (ms) => new Date(ms).toISOString().slice(11, 13) + ":00" };
-  if (windowMs <= 604_800_000) return { bucketMs: 86_400_000, label: (ms) => new Date(ms).toISOString().slice(5, 10) };
-  if (windowMs <= 2_592_000_000) return { bucketMs: 86_400_000, label: (ms) => new Date(ms).toISOString().slice(5, 10) };
-  return { bucketMs: 604_800_000, label: (ms) => new Date(ms).toISOString().slice(5, 10) };
-};
-const bucketsFor = (state: ReadbacksState["overviewMetrics"], windowMs: number): { buckets: readonly Bucket[]; models: ReadonlyMap<string, number>; period: number } => {
-  const rowData = state.rows[0];
-  if (rowData === undefined) return { buckets: [], models: new Map(), period: windowMs };
-  const parsed = JSON.parse(rowData.meta) as { items: readonly OverviewItem[]; window: { startAtMs: number; endAtMs: number } };
-  const rule = bucketRule(windowMs);
-  const start = parsed.window.startAtMs;
-  const end = parsed.window.endAtMs;
-  const count = Math.max(1, Math.ceil((end - start) / rule.bucketMs));
-  const grouped = new Map<number, { cacheTokens: number; durations: number[]; inputTokens: number; outputTokens: number; success: number; failure: number; tokens: number }>();
-  const models = new Map<string, number>();
-  for (const item of parsed.items) {
-    const raw = typeof item.timestamp === "string" ? Date.parse(item.timestamp) : Number.NaN;
-    if (!Number.isFinite(raw)) continue;
-    const index = Math.min(count - 1, Math.max(0, Math.floor((raw - start) / rule.bucketMs)));
-    const bucket = grouped.get(index) ?? { cacheTokens: 0, durations: [], inputTokens: 0, outputTokens: 0, success: 0, failure: 0, tokens: 0 };
-    const duration = Number(item.duration_ms);
-    const tokenShape = item.tokens as { cache_tokens?: unknown; input_tokens?: unknown; output_tokens?: unknown } | undefined;
-    if (typeof tokenShape === "object" && tokenShape !== null) {
-      const inputTokens = Number(tokenShape.input_tokens);
-      const outputTokens = Number(tokenShape.output_tokens);
-      const cacheTokens = Number(tokenShape.cache_tokens);
-      if (Number.isFinite(inputTokens)) { bucket.inputTokens += inputTokens; bucket.tokens += inputTokens; }
-      if (Number.isFinite(outputTokens)) { bucket.outputTokens += outputTokens; bucket.tokens += outputTokens; }
-      if (Number.isFinite(cacheTokens)) bucket.cacheTokens += cacheTokens;
-    }
-    if (Number.isFinite(duration)) bucket.durations.push(duration);
-    const status = Number(item.resp_status_code);
-    if (status >= 200 && status < 400) bucket.success += 1;
-    else bucket.failure += 1;
-    grouped.set(index, bucket);
-    const model = typeof item.modelId === "string" && item.modelId.length > 0 ? item.modelId : "unknown";
-    models.set(model, (models.get(model) ?? 0) + 1);
-  }
-  const buckets = Array.from({ length: count }, (_, index) => {
-    const bucket = grouped.get(index);
-    return {
-      avg: bucket === undefined || bucket.durations.length === 0 ? 0 : bucket.durations.reduce((sum, value) => sum + value, 0) / bucket.durations.length,
-      cacheTokens: bucket?.cacheTokens ?? 0,
-      empty: bucket === undefined,
-      failure: bucket?.failure ?? 0,
-      inputTokens: bucket?.inputTokens ?? 0,
-      label: rule.label(start + index * rule.bucketMs),
-      outputTokens: bucket?.outputTokens ?? 0,
-      p95: bucket === undefined ? 0 : percentile(bucket.durations, 95),
-      success: bucket?.success ?? 0,
-      tokens: bucket?.tokens ?? 0,
-    };
-  });
-  return { buckets, models, period: count };
-};
+export { percentile };
 const overviewPage = (
   state: ReadbacksState["overviewMetrics"],
   candidates: ReadbacksState["routerCandidates"],
@@ -1335,7 +1274,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     Queues: () => h.div([h.DataAttribute("page-layout", "reference")], [observeQueuesRoute(readbacks.queues, h)]),
     LocalLogs: () => familyPage("Llama-swap logs", "local-logs", "Rows are parsed into Timestamp, Source, Severity, Request, and message fields so local runtime behavior can be inspected without raw console noise.", [{ label: "Structured local log history", spec: READBACK_SPECS.localLogs, readback: readbacks.localLogs, note: "The ledger is bounded for scanability; parsed rows carry request correlation.", columns: ["Time", "Source", "Level", "Message", "Request"], rows: (row) => [row.label, row.value, row.meta, "—", "—"] }, { label: "Raw log streams", note: "Raw stdout/stderr streams stay in the host log store and are not reconstructed here." }], h, undefined, undefined, familyState),
     RouterCandidates: () => routerCandidatesPage(readbacks, h),
-    Requests: () => telemetryRequestsRoute(readbacks.requests, requestsRanking, requestsRankingMetricListbox, requestsRankingTargetListbox, h, requestsFilters),
+    Requests: () => telemetryRequestsRoute(readbacks.requests, readbacks.overviewMetrics, windowForRange(requestsFilters?.range), requestsRanking, requestsRankingMetricListbox, requestsRankingTargetListbox, h, requestsFilters),
     RequestDetail: () => renderReadbackPage(READBACK_SPECS.requestDetail, readbacks.requestDetail, h),
     RouterDecisions: () => routerDecisionsPage(readbacks, h),
     RouterDecisionDetail: () =>
@@ -1387,7 +1326,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     LocalSwap: () => familyPage("Llama-swap swap history", "local-swap", "Most recent swap events first.", [{ label: "Event ledger", spec: READBACK_SPECS.localSwap, readback: readbacks.localSwap, columns: ["Time", "Event", "Model", "Reason"], rows: (row) => [row.label, row.value, row.meta, "—"] }, { label: "Ledger semantics", note: "Initial load · Swap reason · Timeline order: events appear when the managed host loads a first model, swaps to a new one, or records the operator-visible reason." }], h),
     ObserveActivity: () => observeActivityRoute(readbacks.observeActivity, h),
     ObserveLogs: () => observeLogsRoute(readbacks.observeLogs, h, observeLogsSource ?? "All sources"),
-    ObserveRouting: () => observeRoutingRoute(readbacks.observeRouting, h, observeRoutingFilters),
+    ObserveRouting: () => observeRoutingRoute(readbacks.observeRouting, readbacks.overviewMetrics, windowForRange(observeRoutingFilters?.range), h, observeRoutingFilters),
     Router: () => routerOverviewPage(readbacks, h),
     Providers: () => providersPage({ controls, deviceAuth, deviceAuthDialog, h, providerAccount, readbacks }),
     Endpoints: () => endpointsPage({ controls, endpointAdmission, h, readbacks }),

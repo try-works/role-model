@@ -99,6 +99,7 @@ const routes: readonly RouteCase[] = [
   {
     emptyBody: { requests: [] },
     emptyText: "No telemetry requests recorded yet.",
+    initialReads: 2,
     key: "requests",
     label: "Requests",
     path: "/requests",
@@ -199,6 +200,7 @@ const routes: readonly RouteCase[] = [
   {
     emptyBody: { rows: [] },
     emptyText: "No routing rows recorded yet.",
+    initialReads: 2,
     key: "observeRouting",
     label: "Observe routing",
     path: "/observe/routing",

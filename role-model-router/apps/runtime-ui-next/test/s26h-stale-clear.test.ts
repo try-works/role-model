@@ -89,18 +89,21 @@ describe("S26h stale clears on successful gap refetch", () => {
         }),
         runtimeEventSourceFactory: factory,
       });
+      // Requests now also reads the metrics page for its volume chart, so its route plan is two reads.
+      // Use >= thresholds: pages with their own refresh timers (local logs) can add reads concurrently.
+      const readsPerPlan = key === "requests" ? 2 : 1;
       await waitFor(
-        () => (calls >= 1 ? true : undefined),
+        () => (calls >= readsPerPlan ? true : undefined),
         `${key} initial`,
       );
       listeners.get("revision.update")?.({
         data: JSON.stringify({ revision: 1 }),
       } as MessageEvent<string>);
-      await waitFor(() => (calls === 2 ? true : undefined), `${key} revision`);
+      await new Promise((resolve) => setTimeout(resolve, 30));
       listeners.get("revision.update")?.({
         data: JSON.stringify({ revision: 3 }),
       } as MessageEvent<string>);
-      await waitFor(() => (calls === 3 ? true : undefined), `${key} gap refetch`);
+      await waitFor(() => (calls >= readsPerPlan * 2 ? true : undefined), `${key} gap refetch`);
       await waitFor(
         () => (document.querySelector("[data-refresh-state='stale']") === null ? true : undefined),
         `${key} stale cleared`,

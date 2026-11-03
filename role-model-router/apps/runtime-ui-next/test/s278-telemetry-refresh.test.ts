@@ -194,10 +194,12 @@ describe("S278 telemetry refresh (R12)", () => {
       expect(result.model.refresh.message).toBeUndefined();
 
       const commands = result.commands ?? [];
-      expect(commands).toHaveLength(1);
-      expect(commands[0]?.name).toBe("ReadReadback");
+      expect(commands).toHaveLength(2);
+      expect(commands.every((entry) => entry.name === "ReadReadback")).toBe(true);
+      expect(commands.map((entry) => String((entry.args as { readonly key?: unknown } | undefined)?.key))).toEqual(["requests", "overviewMetrics"]);
       expect(result.model.readbacks.requests.token).toBe(model.readbacks.requests.token + 1);
       expect(result.model.readbacks.requests.status).toBe("loading");
+      expect(result.model.readbacks.overviewMetrics.status).toBe("loading");
 
       const command = commands[0];
       if (command === undefined) throw new Error("expected one read Command");

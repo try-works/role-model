@@ -392,7 +392,7 @@ describe("S269 redirect Commands and exactly-once reads", () => {
     );
     expect(result.model.route).toMatchObject({ _tag: "Requests" });
     expect(result.model.pendingRedirectHref).toBe("/requests");
-    expect(readCommands(result)).toHaveLength(1);
+    expect(readCommands(result)).toHaveLength(2);
     expect(commandNames(result).filter((name) => name === "ReplaceLegacyUrl")).toHaveLength(1);
     expect(replaceCommand(result)?.args?.href).toBe("/requests");
   });
@@ -418,7 +418,7 @@ describe("S269 redirect Commands and exactly-once reads", () => {
       echo.model,
       Message.ChangedUrl({ url: urlOf("/requests") }),
     );
-    expect(readCommands(genuine)).toHaveLength(1);
+    expect(readCommands(genuine)).toHaveLength(2);
     expect(commandNames(genuine)).toContain("ScrollShellToTop");
     expect(genuine.model.refresh.message).toBeUndefined();
     expect(genuine.model.refresh.status).toBe("idle");
@@ -440,13 +440,13 @@ describe("S269 redirect Commands and exactly-once reads", () => {
       echo.model,
       Message.ChangedUrl({ url: urlOf("/requests?status=ok") }),
     );
-    expect(readCommands(changed)).toHaveLength(1);
+    expect(readCommands(changed)).toHaveLength(2);
 
     const repeated = shellUpdate(
       changed.model,
       Message.ChangedUrl({ url: urlOf("/requests?status=error") }),
     );
-    expect(readCommands(repeated)).toHaveLength(1);
+    expect(readCommands(repeated)).toHaveLength(2);
   });
 
   it("does not let a stale detail redirect echo suppress a different detail instance", () => {
@@ -511,7 +511,7 @@ describe("S269 redirect Commands and exactly-once reads", () => {
       Message.ChangedUrl({ url: urlOf("/requests") }),
     );
     expect(lateEcho.model.route).toMatchObject({ _tag: "Requests" });
-    expect(readCommands(lateEcho)).toHaveLength(1);
+    expect(readCommands(lateEcho)).toHaveLength(2);
   });
 
   it("does not silently drop a genuine navigation that matches the pending echo", () => {
@@ -530,7 +530,7 @@ describe("S269 redirect Commands and exactly-once reads", () => {
       ambiguous.model,
       Message.ChangedUrl({ url: urlOf("/requests") }),
     );
-    expect(readCommands(realEcho)).toHaveLength(1);
+    expect(readCommands(realEcho)).toHaveLength(2);
   });
 
   it("resets the Studio tab to chat when navigating from a tabbed URL to the bare /studio alias", () => {
@@ -551,7 +551,7 @@ describe("S269 redirect Commands and exactly-once reads", () => {
   it("does not emit a replace Command for an already-canonical bare URL", () => {
     const result = shellUpdate(shellModel(), Message.ChangedUrl({ url: urlOf("/requests") }));
     expect(commandNames(result)).not.toContain("ReplaceLegacyUrl");
-    expect(readCommands(result)).toHaveLength(1);
+    expect(readCommands(result)).toHaveLength(2);
   });
 
   it("preserves the detail ID in both the read and the replace target", () => {

@@ -22,6 +22,7 @@ import {
 import { blankRoleDraft, draftFromRole, draftToRolePayload, rolePolicyFromReadback } from "./features/models/role-policy";
 import { writeStoredOperatorToken } from "./operator-token";
 import { DEFAULT_OVERVIEW_FILTERS, overviewQuery, type OverviewFilters } from "./overview-filters";
+import { windowForRange } from "./features/overview/chart-data";
 import { parseRuntimeConfigRecord, parseRuntimeConfigText, runtimeConfigDiff, runtimeConfigText } from "./runtime-config";
 
 import {
@@ -558,13 +559,22 @@ const endpointAdmissionCompletion = (
       if (readbackKey !== null) {
         const learningPacks = route._tag === "Learning";
         const benchmark = route._tag === "Benchmark";
+        // The Requests and Observe-routing volume charts read the same metrics page as the overview.
+        const observeVolume = route._tag === "Requests" || route._tag === "ObserveRouting";
+        const observeRange = route._tag === "Requests" ? model.requestsFilters?.range : model.observeRoutingFilters?.range;
         const token = model.readbacks[readbackKey].token + 1;
         const readbacks = { ...model.readbacks, [readbackKey]: loadingReadback(token) };
+        const withVolume = observeVolume
+          ? { ...readbacks, overviewMetrics: loadingReadback(model.readbacks.overviewMetrics.token + 1) }
+          : readbacks;
         return {
           commands: [
             readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : undefined, key: readbackKey, token }),
             ...(learningPacks ? [readReadback({ key: "learningPacks", token })] : []),
             ...(benchmark ? [readReadback({ key: "benchmarkSummary" as const, token }), readReadback({ key: "benchmarkRuns" as const, token })] : []),
+            ...(observeVolume
+              ? [readReadback({ key: "overviewMetrics", query: overviewQuery(DEFAULT_OVERVIEW_FILTERS, windowForRange(observeRange)), token: model.readbacks.overviewMetrics.token + 1 })]
+              : []),
             scrollShellToTopCommand(),
           ],
           model: {
@@ -572,10 +582,10 @@ const endpointAdmissionCompletion = (
             diagnostics: idleDiagnostics(),
             observability: idleObservability(),
             readbacks: learningPacks
-              ? { ...readbacks, learningPacks: loadingReadback(token) }
+              ? { ...withVolume, learningPacks: loadingReadback(token) }
               : benchmark
-                ? { ...readbacks, benchmarkRuns: loadingReadback(token), benchmarkSummary: loadingReadback(token) }
-                : readbacks,
+                ? { ...withVolume, benchmarkRuns: loadingReadback(token), benchmarkSummary: loadingReadback(token) }
+                : withVolume,
             refresh: {
               ...model.refresh,
               message: undefined,
@@ -643,6 +653,8 @@ const updateLocalPolicyDraft = (
       if (model.route._tag === "SystemOperator") return [{ key: "operatorStatus" }, { key: "operatorTraceRoots" }];
       if (model.route._tag === "RuntimeConfig") return [{ key: "runtimeConfig" }];
       if (model.route._tag === "Benchmark") return [{ key: "benchmarkSuite" }, { key: "benchmarkSummary" }, { key: "benchmarkRuns" }];
+      if (model.route._tag === "Requests") return [{ key: "requests" }, { key: "overviewMetrics", query: overviewQuery(DEFAULT_OVERVIEW_FILTERS, windowForRange(model.requestsFilters?.range)) }];
+      if (model.route._tag === "ObserveRouting") return [{ key: "observeRouting" }, { key: "overviewMetrics", query: overviewQuery(DEFAULT_OVERVIEW_FILTERS, windowForRange(model.observeRoutingFilters?.range)) }];
       if (model.route._tag === "Router") return [{ key: "router" }, { key: "routerConfig" }, { key: "routerCandidates" }, { key: "runtimeConfig" }, { key: "health" }];
       if (model.route._tag === "RouterStrategy" || model.route._tag === "RouterWorkloads" || model.route._tag === "RouterConfig" || model.route._tag === "RouterAgentStrategy") return [{ key: "routerConfig" }, { key: "runtimeConfig" }];
       const readbackKey = readbackKeyForRouteTag(model.route._tag);
@@ -1278,7 +1290,14 @@ const updateLocalPolicyDraft = (
           const state = model.requestsFilters ?? { breakdown: "Total", difficulty: "All buckets", expanded: false, range: "Day", source: "All sources", statusFamily: "All statuses" };
           const next = { ...state, range: value };
           const token = model.readbacks.requests.token + 1;
-          return { commands: [readReadback({ key: "requests", query: requestsQuery(next), token })], model: { ...model, readbacks: { ...model.readbacks, requests: loadingReadback(token) }, requestsFilters: next } };
+          const metricsToken = model.readbacks.overviewMetrics.token + 1;
+          return {
+            commands: [
+              readReadback({ key: "requests", query: requestsQuery(next), token }),
+              readReadback({ key: "overviewMetrics", query: overviewQuery(DEFAULT_OVERVIEW_FILTERS, windowForRange(value)), token: metricsToken }),
+            ],
+            model: { ...model, readbacks: { ...model.readbacks, requests: loadingReadback(token), overviewMetrics: loadingReadback(metricsToken) }, requestsFilters: next },
+          };
         },
         RequestsFilterChanged: ({ field, value }: Extract<Message, { readonly _tag: "RequestsFilterChanged" }>): UpdateReturn<Model, Message> => {
           const state = model.requestsFilters ?? { breakdown: "Total", difficulty: "All buckets", expanded: false, range: "Day", source: "All sources", statusFamily: "All statuses" };
@@ -1294,7 +1313,14 @@ const updateLocalPolicyDraft = (
           const state = model.observeRoutingFilters ?? { breakdown: "Total", difficulty: "All buckets", expanded: false, range: "Day", source: "All sources" };
           const next = { ...state, range: value };
           const token = model.readbacks.observeRouting.token + 1;
-          return { commands: [readReadback({ key: "observeRouting", query: observeQuery(next), token })], model: { ...model, readbacks: { ...model.readbacks, observeRouting: loadingReadback(token) }, observeRoutingFilters: next } };
+          const metricsToken = model.readbacks.overviewMetrics.token + 1;
+          return {
+            commands: [
+              readReadback({ key: "observeRouting", query: observeQuery(next), token }),
+              readReadback({ key: "overviewMetrics", query: overviewQuery(DEFAULT_OVERVIEW_FILTERS, windowForRange(value)), token: metricsToken }),
+            ],
+            model: { ...model, readbacks: { ...model.readbacks, observeRouting: loadingReadback(token), overviewMetrics: loadingReadback(metricsToken) }, observeRoutingFilters: next },
+          };
         },
         ObserveFilterChanged: ({ field, value }: Extract<Message, { readonly _tag: "ObserveFilterChanged" }>): UpdateReturn<Model, Message> => {
           const state = model.observeRoutingFilters ?? { breakdown: "Total", difficulty: "All buckets", expanded: false, range: "Day", source: "All sources" };

@@ -1,0 +1,54 @@
+{
+  "capturedAt": "2026-11-03T20:30:00.682Z",
+  "product": "task-109 observe volume charts bound to metrics readback",
+  "ours3484": {
+    "requestsDay": {
+      "series": [
+        "requests",
+        "failures"
+      ],
+      "paths": 2,
+      "metricsUrl": "/api/metrics/page?windowMs=86400000"
+    },
+    "requestsWeek": {
+      "paths": 2,
+      "metricsUrl": "/api/metrics/page?windowMs=604800000"
+    },
+    "routingDay": {
+      "series": [
+        "requests"
+      ],
+      "paths": 1,
+      "metricsUrl": "/api/metrics/page?windowMs=86400000"
+    },
+    "routingWeek": {
+      "url": "http://127.0.0.1:3484/observe/routing",
+      "card": {
+        "paths": 1,
+        "empty": null
+      },
+      "metricsRequest": "http://127.0.0.1:3484/api/metrics/page?windowMs=604800000"
+    },
+    "screenshots": [
+      "s629-observe-requests-3484.png",
+      "s629-observe-requests-week-3484.png",
+      "s629-observe-routing-3484.png",
+      "s629-observe-routing-week-3484.png"
+    ]
+  },
+  "reference3456": {
+    "requestsWeek": {
+      "range": "week",
+      "requestVolumePaths": 4,
+      "buckets": "Oct 27Nov 2",
+      "screenshot": "s629-reference-3456-requests.png"
+    },
+    "routingWeek": {
+      "range": "week",
+      "routingDecisionVolumePaths": 6,
+      "buckets": "Oct 27Nov 2",
+      "screenshot": "s629-reference-3456-routing.png"
+    },
+    "note": "With the Day window the production host has no request rows, so :3456 renders the empty copy on every chart (no series); the same-window comparison therefore uses Week, where :3456 has 469 rows and our copied local state has 1 row. Both draw a real series when data exists and an in-plot empty state when it does not."
+  }
+}

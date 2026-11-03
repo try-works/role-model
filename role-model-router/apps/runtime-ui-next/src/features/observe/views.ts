@@ -7,6 +7,7 @@ import type { ReadbackState } from "../../readback";
 import { REQUESTS_RANKING_METRIC_OPTIONS, REQUESTS_RANKING_TARGET_OPTIONS, type RequestsRankingState } from "../requests-ranking/model";
 import { renderRequestsRanking } from "../requests-ranking/view";
 import { telemetryChartCard } from "../overview/charts";
+import { seriesHasValues, volumeSeriesFor } from "../overview/chart-data";
 import { initRequestsMetricListbox, initRequestsTargetListbox, requestsMetricListboxView, requestsTargetListboxView } from "../../ui/listbox";
 import { card, chartGrid, filterBar, metrics, segmented, table } from "../s563-layout";
 import type { ChartSeries } from "@role-model/ui/foldkit-chart";
@@ -32,17 +33,22 @@ const observeChart = (
   series: ReadonlyArray<ChartSeries>,
   emptyMessage: string,
   h: HtmlBuilder<Message>,
+  hasData = false,
+  state: "empty" | "error" | "loading" | "ready" = "empty",
 ): Html =>
   telemetryChartCard({
     description,
     emptyMessage,
-    hasData: false,
+    hasData,
     h,
     kind: "line",
     series,
-    state: "empty",
+    state,
     title,
   });
+
+const volumeChartState = (state: ReadbackState, series: ReadonlyArray<ChartSeries>): "empty" | "error" | "loading" | "ready" =>
+  state.status === "loading" ? "loading" : state.status === "error" ? "error" : seriesHasValues(series) ? "ready" : "empty";
 
 const observeCharts = (card: Html, h: HtmlBuilder<Message>): Html => chartGrid([{ span: 12, body: card }], h);
 
@@ -112,12 +118,16 @@ const observeFilterBar = (
 
 export const telemetryRequestsRoute = (
   readback: ReadbackState,
+  metrics: ReadbackState,
+  windowMs: number,
   ranking: RequestsRankingState | undefined,
   metricListbox: Model["requestsRankingMetricListbox"],
   targetListbox: Model["requestsRankingTargetListbox"],
   h: HtmlBuilder<Message>,
   filters?: Model["requestsFilters"],
 ): Html => {
+  const volume = volumeSeriesFor(metrics, windowMs, { failures: true });
+  const volumeReady = seriesHasValues(volume.series);
   const rows = readback.rows.map((row) => [row.id, row.label, row.meta, row.value]);
   const current = ranking ?? { metric: "averageLatencyMs", rankingTarget: "endpointId", rows: [], status: "idle" as const, token: 0 };
   const loading = current.status === "loading";
@@ -238,7 +248,7 @@ export const telemetryRequestsRoute = (
       section("Recent telemetry requests", "Explainable request ledger with endpoint, model, status, and direct Observe/Router drill-in.", [
         table(["Request", "Model", "Endpoint", "Status"], rows, "Loading the canonical telemetry ledger…", h),
       ], h),
-      observeCharts(observeChart("Request volume", "Explainable requests by time bucket for the selected window.", emptySeries("requests", "Requests"), "No request volume data recorded yet.", h), h),
+      observeCharts(observeChart("Request volume", "Explainable requests and failures by time bucket for the selected window.", volume.series, "No request volume data recorded yet.", h, volumeReady, volumeChartState(metrics, volume.series)), h),
     ],
   );
 };
@@ -322,18 +332,20 @@ export const observeLogsRoute = (readback: ReadbackState, h: HtmlBuilder<Message
   ], h);
 };
 
-export const observeRoutingRoute = (readback: ReadbackState, h: HtmlBuilder<Message>, filters?: Model["observeRoutingFilters"]): Html => page("Routing analytics", [
-  observeFilterBar(h, ["Difficulty"], filters, {
-    advanced: () => Message.ObserveAdvancedToggled({}),
-    filter: (field, value) => Message.ObserveFilterChanged({ field, value }),
-    range: (value) => Message.ObserveRangeChanged({ value }),
-  }),
-  section("Routing results", "Bounded routing analytics for the selected filters.", [
-    table(["Model", "Endpoint", "Count"], readback.rows.map((row) => [row.label, row.meta, row.value]), "No routing rows recorded yet.", h),
-  ], h),
-  observeCharts(observeChart("Routing analytics volume", "Routing decisions per time bucket for the selected filters.", emptySeries("routing", "Routing rows"), "No routing analytics volume recorded yet.", h), h),
-], h);
-
+export const observeRoutingRoute = (readback: ReadbackState, metrics: ReadbackState, windowMs: number, h: HtmlBuilder<Message>, filters?: Model["observeRoutingFilters"]): Html => {
+  const volume = volumeSeriesFor(metrics, windowMs);
+  return page("Routing analytics", [
+    observeFilterBar(h, ["Difficulty"], filters, {
+      advanced: () => Message.ObserveAdvancedToggled({}),
+      filter: (field, value) => Message.ObserveFilterChanged({ field, value }),
+      range: (value) => Message.ObserveRangeChanged({ value }),
+    }),
+    section("Routing results", "Bounded routing analytics for the selected filters.", [
+      table(["Model", "Endpoint", "Count"], readback.rows.map((row) => [row.label, row.meta, row.value]), "No routing rows recorded yet.", h),
+    ], h),
+    observeCharts(observeChart("Routing analytics volume", "Requests by time bucket for the selected window. The routing analytics readback has no timestamps, so this series comes from the metrics page.", volume.series, "No routing analytics volume recorded yet.", h, seriesHasValues(volume.series), volumeChartState(metrics, volume.series)), h),
+  ], h);
+};
 export const observabilitySnapshotRoute = (state: ObservabilityState, h: HtmlBuilder<Message>): Html =>
   h.section([h.Class("rm3-next-route flex flex-col gap-4"), h.DataAttribute("route", "observe")], [
     section("Observability snapshot", "What this runtime has measured: routing decisions served, captures admitted for replay, evaluation finalise refusals, and learner candidates examined. The readback is the live metric registry of the running host, not a stored projection.", [
