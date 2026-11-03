@@ -54,8 +54,12 @@ final commit after that repair lands, and committed raw - not just summarised.
   running-state condition is STILL a recorded difference (there is no active-run/progress state yet).
 - Targeted verification: tsc 0; s622 + s618 + s620 + s617 = 34/34 (s622-benchmark-final-targeted.log).
 - RAW full-suite evidence committed, not a summary: evidence/logs/s622-benchmark-full-suite-raw-458b787e.log
-  is the complete, unedited output of `corepack pnpm test` (tsc + vitest + node --test invariants) from a
-  clean detached worktree at HEAD 458b787e: 93 test files / 910 tests PASS, SUITE_EXIT=0.
+  is the complete output of `corepack pnpm test` (tsc + vitest + node --test invariants) from a clean
+  detached worktree at HEAD 458b787e: 93 test files / 910 tests PASS.
+  CLAIM NARROWED (HOLD 1): the piped command output ends at the vitest summary; the process exit code was
+  echoed OUTSIDE the Tee pipe and is now ALSO recorded in a clearly-labelled provenance footer appended to
+  the log (SUITE_EXIT=0, job pwsh-0ac1c1121ded40dc). The footer is marked as appended-after-the-run, so the
+  body remains the unedited command output.
 - Method note (honest): the first junction-based clean run produced 93/910 with 3 environment-only failures
   (S48a build resolved the workspace packages through the junction into the main checkout; S26f/S40b timed
   out under load). Replacing junctions with a real offline pnpm install plus copied built workspace dists

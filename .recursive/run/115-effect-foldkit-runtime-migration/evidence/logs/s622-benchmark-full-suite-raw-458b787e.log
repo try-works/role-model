@@ -71591,3 +71591,17 @@ stderr | test/s76a-runtime-config.test.ts > S76a runtime config editor > keeps t
 ℹ skipped 0
 ℹ todo 0
 ℹ duration_ms 4063.1217
+
+
+# ---------------------------------------------------------------------------
+# Provenance footer (appended after the run; NOT part of the piped command output)
+# Exact command and harness:
+#   corepack pnpm test 2>&1 | Tee-Object -FilePath full-suite-raw.log; echo "SUITE_EXIT=$LASTEXITCODE"
+#   cwd: D:/DEV/rm-clean/harness-check/role-model-router/apps/runtime-ui-next
+#   tree: clean detached worktree at HEAD 458b787e
+#   job: pwsh-0ac1c1121ded40dc
+# The piped command's output ends at the vitest summary above. The process exit code was printed by the
+# echo OUTSIDE the Tee pipe and was: SUITE_EXIT=0
+# (tsc 0 && vitest 93 files / 910 tests passed && node --test invariants passed).
+# ---------------------------------------------------------------------------
+SUITE_EXIT=0
