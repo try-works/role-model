@@ -38,12 +38,14 @@ date: 2026-11-04
 - Rendered as "120 ms"/"200 ms" when present and an honest em dash when absent.
 - s624: exact percentile values + no-audits em dash.
 
-## Verification
-- s624: 7/7; s622 8/8; s618 11/11; s26e/s26f/s563/s623 updated and passing.
-- Full UI suite: 104 files, 952 tests passed.
-- UI tsc --noEmit: 0.
+## Verification (raw transcripts committed alongside this summary)
+- Raw full suite at 7a7134ac (detached worktree, junctioned node_modules, clean app cwd): s624-benchmark-full-raw.log.
+  - Test Files 104 passed (104), Tests 952 passed (952) from the vitest stage.
+  - Process exit: 1, because the final node --test test/*.test.mjs stage hits the pre-existing S247 failure from s628-charts-data-binding.test.ts (1 unrecorded click; synthetic clicks 37 > budget 36). That test belongs to another lane and was already present at 7a7134ac; this task added no click sites.
+- UI tsc --noEmit at 7a7134ac: s624-benchmark-tsc-raw.log, exit 0.
+- S247 invariant tail at 7a7134ac: s624-benchmark-invariants-raw.log, exit 1 (same s628 unrecorded click).
+- Targeted s624 7/7; s622 8/8; s618 11/11; s26e/s26f/s563/s623 updated and passing.
 - RED: s624-benchmark-gaps-red.log (benchmark route restored from 1132911f; 4 UI-gap tests fail).
-- S247: no new synthetic .click() call sites; total budget unchanged at 36.
 
-## View wiring note
-benchmarkRoute accepts optional benchmarkPreferences/benchmarkActiveRun readbacks. The live shell works without view changes because ReadbackLoaded hydrates judge preference and starts active-run polling; passing those readbacks as the 8th/9th route args would additionally cover server-side rendering before any update. No product view file was changed.
+## View wiring note (honest)
+benchmarkRoute accepts optional benchmarkPreferences/benchmarkActiveRun readbacks as the 8th/9th args. The live shell works without view changes because ReadbackLoaded hydrates judge preference and starts active-run polling. The SSR initial render does NOT have preferences/active-run until that update arrives; passing the two readbacks in view.ts is what closes that first-render gap. No product view file was changed by this task.

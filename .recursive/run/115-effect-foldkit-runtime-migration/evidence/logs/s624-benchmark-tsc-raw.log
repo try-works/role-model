@@ -1,0 +1,7 @@
+
+--- PROVENANCE ---
+cwd: D:\DEV\rm-clean\wt-7a7134ac\role-model-router\apps\runtime-ui-next
+tree: 7a7134acd11aa3a8d61eb50110958d7ab73be0ca
+commit: 7a7134ac
+exit: 0
+command: corepack pnpm exec tsc --noEmit -p tsconfig.json
