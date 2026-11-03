@@ -61444,3 +61444,18 @@ AssertionError: Requests recorder gap must stay explicit: expected undefined to 
    Start at  06:12:30
    Duration  498.47s (transform 25.82s, setup 0ms, collect 761.75s, tests 386.71s, environment 609.61s, prepare 92.34s)
 
+
+---
+## Provenance / overlap note
+
+- Log commit: 75ab17cb (task-107 HOLD repair).
+- Command: node <repo>/node_modules/vitest/vitest.mjs run
+- CWD: role-model-router/apps/runtime-ui-next
+- Tree: worktree D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration, branch recursive/115-effect-foldkit-runtime-migration
+- Environment: Windows; TMP/TEMP=E:\rm-tmp
+- Result at 75ab17cb: **Test Files 2 failed | 103 passed (105); Tests 2 failed | 954 passed (956)**. This run was NOT green.
+- Failures, both from the concurrent task-108 Requests lane:
+  - test/s491-listbox.test.ts: expected 'averageLatencyMs' to be 'requestCount'
+  - test/s623-route-verification-matrix.test.ts: "Requests recorder gap must stay explicit" (expected undefined to be defined)
+- Later state: at HEAD 8b0c8f40 (current HEAD 8d28c7db) the same two suites were independently rerun: **2 files passed, 8/8 tests**, log s491-s623-task108-rerun.log.
+- The authoritative raw full-suite evidence will be carried by the final build at the later HEAD, not by this 75ab17cb transcript.
