@@ -6,6 +6,7 @@ import { CONTROL_SPECS } from "./control";
 import { renderControlPage, renderDeviceAuthorizationDialog, renderDeviceAuthorizationForm, renderEndpointAdmissionForm, renderProviderAccountForm } from "./control-view";
 import { type EndpointsRouteContext, type ProvidersRouteContext, providersRoute } from "./features/control/routes";
 import { card, filterBar, table } from "./features/s563-layout";
+import { localPeersPage as localPeersFeaturePage } from "./features/local/peers";
 import { Message } from "./message";
 import { READBACK_SPECS, type ReadbackRouteSpec, type ReadbackState, type ReadbacksState, renderReadbackPage } from "./readback";
 
@@ -55,7 +56,7 @@ export const familyPage = (
     if (routeName === "local-llama-swap-models") return localLlamaModelsPage(pageReadback, h);
     if (routeName === "local-swap") return localSwapPage(pageReadback, h);
     if (routeName === "local-logs") return localLogsPage(pageReadback, h);
-    if (routeName === "local-peers") return localPeersPage(pageReadback, h);
+    if (routeName === "local-peers") return localPeersFeaturePage(pageReadback, h);
     if (routeName === "system-peers") return systemPeersPage(pageReadback, h);
     if (routeName === "system-extensions") return systemExtensionsPage(pageReadback, h);
     if (routeName === "session-readiness") return systemSessionPage(pageReadback, h);

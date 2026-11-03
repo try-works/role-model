@@ -915,6 +915,46 @@ export const noopModelsCommands = defineModelsCommands({
   setController: async () => ({ body: {}, status: 200 }),
 });
 
+export interface LocalPeersClient {
+  readonly save: (peers: ReadonlyArray<{ readonly authToken?: string; readonly id: string; readonly url: string }>) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly health: (url: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+}
+export const createLocalPeersClient = (fetchImpl: typeof fetch = fetch): LocalPeersClient => ({
+  health: async (url) => {
+    const response = await fetchImpl("/api/role-model/local/peers/health?url=" + encodeURIComponent(url));
+    return { body: await response.json(), status: response.status };
+  },
+  save: async (peers) => {
+    const response = await fetchImpl("/api/role-model/local/peers", { body: JSON.stringify(peers), headers: { "content-type": "application/json" }, method: "PUT" });
+    return { body: await response.json(), status: response.status };
+  },
+});
+export const defineLocalPeersCommands = (client: LocalPeersClient) => ({
+  health: Command.define("CheckLocalPeerHealth", {
+    args: { token: Schema.Number, url: Schema.String },
+    execute: ({ token, url }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.health(url) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.LocalPeersActionSucceeded({ message: "Peer health checked for " + url + ".", token })
+          : Message.LocalPeersActionFailed({ message: "Peer health check failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
+    messages: [Message.LocalPeersActionSucceeded, Message.LocalPeersActionFailed],
+  }),
+  save: Command.define("SaveLocalPeers", {
+    args: { peersJson: Schema.String, token: Schema.Number },
+    execute: ({ peersJson, token }) => {
+      // SAFETY: peersJson is JSON.stringify of the typed peer array built by update.
+      const peers = JSON.parse(peersJson) as ReadonlyArray<{ readonly authToken?: string; readonly id: string; readonly url: string }>;
+      return Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.save(peers) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.LocalPeersActionSucceeded({ message: "Peer endpoints saved.", token })
+          : Message.LocalPeersActionFailed({ message: "Save peer endpoints failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token })));
+    },
+    messages: [Message.LocalPeersActionSucceeded, Message.LocalPeersActionFailed],
+  }),
+});
+export type LocalPeersCommands = ReturnType<typeof defineLocalPeersCommands>;
+export const noopLocalPeersCommands = defineLocalPeersCommands({ health: async () => ({ body: {}, status: 200 }), save: async () => ({ body: {}, status: 200 }) });
+
 const noopLearningRankingClient: LearningRankingClient = { rollbackLadder: async () => undefined };
 export const noopLearningRankingCommands = defineLearningRankingCommands(noopLearningRankingClient);
 

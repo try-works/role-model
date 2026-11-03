@@ -21,6 +21,8 @@ import {
   defineReplayAutoQueueCommands,
   createModelsClient,
   defineModelsCommands,
+  createLocalPeersClient,
+  defineLocalPeersCommands,
 } from "./commands";
 import { createDeviceAuthClient } from "./device-auth";
 import { createEndpointAdmissionClient } from "./endpoint-admission";
@@ -73,6 +75,7 @@ export interface ShellOptions {
   readonly controlFetchImpl?: typeof fetch;
   readonly runtimeConfigFetchImpl?: typeof fetch;
   readonly modelsFetchImpl?: typeof fetch;
+  readonly localPeersFetchImpl?: typeof fetch;
   readonly deviceAuthFetchImpl?: typeof fetch;
   readonly providerAccountFetchImpl?: typeof fetch;
   readonly endpointAdmissionFetchImpl?: typeof fetch;
@@ -177,7 +180,8 @@ export const createShellApp = (options: ShellOptions = {}) => {
       // oxlint-disable-next-line no-conditional-empty-object-spread -- pre-existing option spread, only the trailing comma changed here.
       defineOperatorLearningCommands(createOperatorLearningClient(createRuntimeHttpClient({ ...(options.operatorLearningFetchImpl === undefined ? {} : { fetchImpl: options.operatorLearningFetchImpl }), tokenProvider: readStoredOperatorToken }))),
       replayAutoQueueCommands,
-      defineModelsCommands(createModelsClient({ fetchImpl: options.modelsFetchImpl }))
+      defineModelsCommands(createModelsClient({ fetchImpl: options.modelsFetchImpl })),
+      defineLocalPeersCommands(createLocalPeersClient(options.localPeersFetchImpl))
     ),
     view,
   };
