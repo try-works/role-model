@@ -34,8 +34,10 @@ export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: 
   const rolePolicyValue = rolePolicyFromReadback(rolePolicy);
   const roleCatalog = rolePolicyValue?.roleDefinitions.map((role) => role.role_id) ?? (Object.keys(ROLE_TASK_COUNTS) as Array<keyof typeof ROLE_TASK_COUNTS>);
   const taskCount = (roleId: string): number => {
+    // SAFETY: the fallback catalog is exactly the ROLE_TASK_COUNTS record keys.
     if (rolePolicyValue === null || rolePolicyValue === undefined) return Number(ROLE_TASK_COUNTS[roleId as keyof typeof ROLE_TASK_COUNTS] ?? 0);
     const definition = rolePolicyValue.roleDefinitions.find((role) => role.role_id === roleId);
+    // SAFETY: the fallback catalog is exactly the ROLE_TASK_COUNTS record keys.
     return definition === undefined ? Number(ROLE_TASK_COUNTS[roleId as keyof typeof ROLE_TASK_COUNTS] ?? 0) : tasksForRole(rolePolicyValue, definition).length;
   };
   const endpointMeta = endpoints.rows.flatMap((row) => {
