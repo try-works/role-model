@@ -21,7 +21,7 @@ const waitFor = async <T,>(read: () => T | undefined, label: string): Promise<T>
 
 const json = (body: unknown) => new Response(JSON.stringify(body), { headers: { "content-type": "application/json" }, status: 200 });
 
-const mountRequests = (onRanking: (body: unknown) => void): void => {
+const mountRequests = (onRanking: (request: { readonly body: unknown; readonly method: string; readonly url: string }) => void): void => {
   window.history.replaceState({}, "", "/requests");
   const container = document.createElement("div");
   container.id = "s491-requests-selects";
@@ -30,8 +30,8 @@ const mountRequests = (onRanking: (body: unknown) => void): void => {
     container,
     handle: mountShell(container, {
       readbackFetchImpl: async () => json({ items: [], rows: [], requests: [], window: { startAtMs: 0, endAtMs: 0 } }),
-      requestsRankingFetchImpl: async (_input, init) => {
-        onRanking(JSON.parse(String(init?.body)));
+      requestsRankingFetchImpl: async (input, init) => {
+        onRanking({ body: JSON.parse(String(init?.body)), method: String(init?.method ?? ""), url: String(input) });
         return json({ ranking: { rows: [] } });
       },
     }),
@@ -54,9 +54,9 @@ afterEach(() => {
 
 describe("S491 Requests ranking metric select", () => {
   it("renders the real metric select and dispatches the ranking query on change", async () => {
-    const rankingCalls: Array<{ readonly url: string; readonly body: unknown }> = [];
-    mountRequests((body) => {
-      rankingCalls.push({ body, url: "/api/role-model/telemetry/query" });
+    const rankingCalls: Array<{ readonly body: unknown; readonly method: string; readonly url: string }> = [];
+    mountRequests((request) => {
+      rankingCalls.push(request);
     });
     const metric = await waitFor(
       () => (document.querySelector("[data-requests-ranking-metric]") as HTMLSelectElement | null) ?? undefined,
@@ -69,7 +69,8 @@ describe("S491 Requests ranking metric select", () => {
     expect(labels).toContain("Total tokens");
     choose(metric, "totalTokens");
     await waitFor(() => (rankingCalls.length > 0 ? true : undefined), "ranking query after metric change");
-    expect(rankingCalls[0]?.url).toContain("/api/role-model/telemetry/query");
+    expect(rankingCalls[0]?.method).toBe("POST");
+    expect(new URL(String(rankingCalls[0]?.url), "http://localhost").pathname).toBe("/api/role-model/telemetry/query");
     expect(rankingCalls[0]?.body).toMatchObject({
       metrics: ["totalTokens"],
       ranking: { dimension: "endpointId", metric: "totalTokens" },
@@ -79,9 +80,9 @@ describe("S491 Requests ranking metric select", () => {
 
 describe("S496 Requests ranking target select", () => {
   it("renders the real target select and dispatches the ranking query on change", async () => {
-    const rankingCalls: Array<{ readonly body: unknown }> = [];
-    mountRequests((body) => {
-      rankingCalls.push({ body });
+    const rankingCalls: Array<{ readonly body: unknown; readonly method: string }> = [];
+    mountRequests((request) => {
+      rankingCalls.push({ body: request.body, method: request.method });
     });
     const target = await waitFor(
       () => (document.querySelector("[data-requests-ranking-target]") as HTMLSelectElement | null) ?? undefined,
@@ -91,6 +92,7 @@ describe("S496 Requests ranking target select", () => {
     expect(target.value).toBe("endpointId");
     choose(target, "modelId");
     await waitFor(() => (rankingCalls.length > 0 ? true : undefined), "ranking query after target change");
+    expect(rankingCalls[0]?.method).toBe("POST");
     expect(rankingCalls[0]?.body).toMatchObject({
       metrics: ["averageLatencyMs"],
       ranking: { dimension: "modelId", metric: "averageLatencyMs" },

@@ -31,3 +31,9 @@ selectors were not machine-visible as controls and selection could not be driven
 ## S247
 No synthetic .click() was added: the new test drives selection with dispatchEvent("input"/"change"), so the
 S247 click budget is untouched (the Week-range click entry from task-109 remains the only s628 click).
+
+## Review HOLD cleanup (closed)
+- Retired the dead ranking feature path that still imported ui/listbox: deleted features/requests-ranking/view.ts (renderRequestsRanking) and features/requests-ranking/routes.ts (requestsRoute + listbox pass-through), removed the src/requests-ranking-view.ts re-export shim and the "./view" export from features/requests-ranking/index.ts, and dropped the now-unused renderRequestsRanking/requestsRoute imports in observe/views.ts and view.ts. ui/listbox.ts itself is untouched as requested.
+- s491-listbox now captures the ranking client's real input/method from the fetch callback and asserts POST /api/role-model/telemetry/query by parsing the captured URL, instead of a hardcoded URL.
+- Renamed the misnamed evidence log s630-requests-listbox-s617-red.log -> s630-requests-s617-green.log (it recorded the green 9/9 s617 run).
+- Re-verified: tsc 0; targeted s491+s630+s617+s623+s619 = 22 tests green; S247 4/4; full UI suite 105 files / 956 tests PASS.

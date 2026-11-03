@@ -28,7 +28,6 @@ import { chartPointKeyAction, type ChartSeries, view as chartView } from "@role-
 
 import { READBACK_SPECS, type ReadbacksState, localPolicyControls, localPolicyDraftFromReadback, localPolicyFromReadback, renderReadbackPage } from "./readback";
 import { endpointsRoute, providersRoute } from "./features/control/routes";
-import { requestsRoute } from "./features/requests-ranking/routes";
 import { integrationsDownstreamRoute, integrationsUpstreamRoute, observeQueuesRoute } from "./features/s563-pages";
 import {
   learningConfigurationRoute,

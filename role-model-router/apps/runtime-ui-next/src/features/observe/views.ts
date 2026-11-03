@@ -5,7 +5,6 @@ import type { Model } from "../../model";
 import type { ObservabilityState } from "../../observability";
 import type { ReadbackState } from "../../readback";
 import { REQUESTS_RANKING_METRIC_OPTIONS, REQUESTS_RANKING_TARGET_OPTIONS, type RequestsRankingState } from "../requests-ranking/model";
-import { renderRequestsRanking } from "../requests-ranking/view";
 import { telemetryChartCard } from "../overview/charts";
 import { seriesHasValues, volumeSeriesFor } from "../overview/chart-data";
 
