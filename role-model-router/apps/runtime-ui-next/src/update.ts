@@ -1071,6 +1071,44 @@ const updateLocalPolicyDraft = (
           commands: [modelsCommands.clearBenchmark({ token: model.readbacks.modelEndpoints.token + 1 })],
           model,
         }),
+        ModelsRemoveRequested: ({ modelId }: Extract<Message, { readonly _tag: "ModelsRemoveRequested" }>): UpdateReturn<Model, Message> => {
+          const endpoints = model.readbacks.modelEndpoints.rows.flatMap((row) => {
+            try {
+              // SAFETY: modelEndpoints rows carry this JSON record in meta.
+              const meta = JSON.parse(row.meta) as { readonly endpointId?: string; readonly modelId?: string; readonly providerAccountId?: string; readonly sourceType?: string };
+              return meta.modelId === modelId ? [meta] : [];
+            } catch {
+              return [];
+            }
+          });
+          const first = endpoints[0];
+          const kind: "account-model" | "endpoint" | "peer" = endpoints.some((entry) => entry.sourceType === "local")
+            ? "peer"
+            : first?.endpointId === undefined
+              ? "account-model"
+              : "endpoint";
+          const token = model.readbacks.modelEndpoints.token + 1;
+          return {
+            commands: [modelsCommands.removeModel({ accountId: first?.providerAccountId ?? "", endpointId: first?.endpointId ?? "", kind, modelId, token })],
+            model,
+          };
+        },
+        ModelsControllerSetRequested: ({ modelId }: Extract<Message, { readonly _tag: "ModelsControllerSetRequested" }>): UpdateReturn<Model, Message> => {
+          const endpoint = model.readbacks.modelEndpoints.rows.flatMap((row) => {
+            try {
+              // SAFETY: modelEndpoints rows carry this JSON record in meta.
+              const meta = JSON.parse(row.meta) as { readonly endpointId?: string; readonly modelId?: string };
+              return meta.modelId === modelId && meta.endpointId !== undefined ? [meta.endpointId] : [];
+            } catch {
+              return [];
+            }
+          })[0];
+          return endpoint === undefined ? { model } : { commands: [modelsCommands.setController({ endpointId: endpoint, token: model.readbacks.modelEndpoints.token + 1 })], model };
+        },
+        ModelsControllerEjectRequested: (): UpdateReturn<Model, Message> => ({
+          commands: [modelsCommands.setController({ endpointId: null, token: model.readbacks.modelEndpoints.token + 1 })],
+          model,
+        }),
         ModelsActionSucceeded: ({ message }: Extract<Message, { readonly _tag: "ModelsActionSucceeded" }>): UpdateReturn<Model, Message> => {
           const state = model.modelsView ?? {};
           return { model: { ...model, modelsView: { ...state, actionMessage: message } } };

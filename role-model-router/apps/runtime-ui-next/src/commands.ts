@@ -760,6 +760,10 @@ export interface ModelsClient {
   readonly clearBenchmark: () => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly createRole: (draft: Readonly<Record<string, string>>) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly runBenchmark: (mode: string, judge: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly removeAccountModel: (providerAccountId: string, modelId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly removeEndpoint: (endpointId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly removePeerModel: (modelId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly setController: (endpointId: string | null) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly setRoles: (modelId: string, kind: "llama-swap" | "peer", roleIds: ReadonlyArray<string>) => Promise<{ readonly body: unknown; readonly status: number }>;
 }
 export const createModelsClient = (options: { readonly fetchImpl?: typeof fetch } = {}): ModelsClient => {
@@ -772,6 +776,10 @@ export const createModelsClient = (options: { readonly fetchImpl?: typeof fetch 
     clearBenchmark: () => send("/api/role-model/benchmark/data", "DELETE", "{}"),
     createRole: (draft) => send("/api/role-model/roles", "POST", JSON.stringify(draft)),
     runBenchmark: (mode, judge) => send("/api/role-model/benchmark/runs", "POST", JSON.stringify({ judgeEndpointId: judge, mode })),
+    removeAccountModel: (providerAccountId, modelId) => send("/api/role-model/accounts/" + encodeURIComponent(providerAccountId) + "/models/" + encodeURIComponent(modelId), "DELETE", "{}"),
+    removeEndpoint: (endpointId) => send("/api/role-model/endpoints/" + encodeURIComponent(endpointId), "DELETE", "{}"),
+    removePeerModel: (modelId) => send("/api/role-model/local/peer/models/" + encodeURIComponent(modelId) + "/unload", "POST", "{}"),
+    setController: (endpointId) => send("/api/role-model/controller", "PATCH", JSON.stringify({ endpointId })),
     setRoles: (modelId, kind, roleIds) => send("/api/role-model/local/" + kind + "/models/" + encodeURIComponent(modelId) + "/roles", "PUT", JSON.stringify({
       disabledRoleIds: [],
       enabledRoleIds: [...roleIds],
@@ -811,6 +819,41 @@ export const defineModelsCommands = (client: ModelsClient) => ({
           : Message.ModelsActionFailed({ message: "Benchmark run failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
     messages: [Message.ModelsActionSucceeded, Message.ModelsActionFailed],
   }),
+  removeModel: Command.define("RemoveModel", {
+    args: { accountId: Schema.String, endpointId: Schema.String, kind: Schema.Literals(["account-model", "endpoint", "peer"]), modelId: Schema.String, token: Schema.Number },
+    execute: ({ accountId, endpointId, kind, modelId, token }): Effect.Effect<ReturnType<typeof Message.ModelsActionSucceeded> | ReturnType<typeof Message.ModelsActionFailed>> => {
+      const request = kind === "peer"
+        ? Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.removePeerModel(modelId) })
+        : kind === "endpoint"
+          ? Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.removeEndpoint(endpointId) })
+          : Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.removeAccountModel(accountId, modelId) });
+      return Effect.flatMap(Effect.exit(request), (exit) => {
+        if (!Exit.isSuccess(exit) || exit.value.status < 200 || exit.value.status >= 300) {
+          return Effect.succeed(Message.ModelsActionFailed({ message: "Remove model failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }));
+        }
+        if (kind === "peer") return Effect.succeed(Message.ModelsActionSucceeded({ message: "Removed " + modelId + " from the peer-backed router pool.", token }));
+        if (kind === "endpoint") return Effect.succeed(Message.ModelsActionSucceeded({ message: "Removed " + modelId + "; sibling instances are unchanged.", token }));
+        // SAFETY: removeRuntimeAccountModel responds with removedAccount/alreadyAbsent flags.
+        const body = exit.value.body as { readonly alreadyAbsent?: boolean; readonly removedAccount?: boolean };
+        const message = body.alreadyAbsent === true
+          ? modelId + " was already absent from " + accountId + "; the pool is converged."
+          : body.removedAccount === true
+            ? "Removed " + modelId + " and deleted " + accountId + " because it was the last configured model on that account."
+            : "Removed " + modelId + " from " + accountId + ".";
+        return Effect.succeed(Message.ModelsActionSucceeded({ message, token }));
+      });
+    },
+    messages: [Message.ModelsActionSucceeded, Message.ModelsActionFailed],
+  }),
+  setController: Command.define("SetController", {
+    args: { endpointId: Schema.Union([Schema.String, Schema.Null]), token: Schema.Number },
+    execute: ({ endpointId, token }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.setController(endpointId) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.ModelsActionSucceeded({ message: endpointId === null ? "Controller ejected." : "Primary controller updated.", token })
+          : Message.ModelsActionFailed({ message: "Controller update failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
+    messages: [Message.ModelsActionSucceeded, Message.ModelsActionFailed],
+  }),
   setRoles: Command.define("SetModelRoles", {
     args: { kind: Schema.Literals(["llama-swap", "peer"]), modelId: Schema.String, roleIdsJson: Schema.String, token: Schema.Number },
     execute: ({ kind, modelId, roleIdsJson, token }) => {
@@ -830,6 +873,10 @@ export const noopModelsCommands = defineModelsCommands({
   createRole: async () => ({ body: {}, status: 200 }),
   runBenchmark: async () => ({ body: {}, status: 200 }),
   setRoles: async () => ({ body: {}, status: 200 }),
+  removeAccountModel: async () => ({ body: {}, status: 200 }),
+  removeEndpoint: async () => ({ body: {}, status: 200 }),
+  removePeerModel: async () => ({ body: {}, status: 200 }),
+  setController: async () => ({ body: {}, status: 200 }),
 });
 
 const noopLearningRankingClient: LearningRankingClient = { rollbackLadder: async () => undefined };

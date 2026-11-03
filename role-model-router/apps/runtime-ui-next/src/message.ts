@@ -107,6 +107,9 @@ export const Message: MessageUnion<{
   readonly BenchmarkJudgeChanged: { readonly value: typeof Schema.String };
   readonly BenchmarkRunRequested: EmptyFields;
   readonly BenchmarkClearRequested: EmptyFields;
+  readonly ModelsRemoveRequested: { readonly modelId: typeof Schema.String };
+  readonly ModelsControllerSetRequested: { readonly modelId: typeof Schema.String };
+  readonly ModelsControllerEjectRequested: { readonly modelId: typeof Schema.String };
   readonly ModelsActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly RequestsRangeChanged: { readonly value: typeof Schema.String };
   readonly RequestsFilterChanged: { readonly field: typeof RequestsFilterFieldSchema; readonly value: typeof Schema.String };
@@ -282,6 +285,9 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   BenchmarkJudgeChanged: { value: Schema.String },
   BenchmarkRunRequested: {},
   BenchmarkClearRequested: {},
+  ModelsRemoveRequested: { modelId: Schema.String },
+  ModelsControllerSetRequested: { modelId: Schema.String },
+  ModelsControllerEjectRequested: { modelId: Schema.String },
   ModelsActionSucceeded: { message: Schema.String, token: Schema.Number },
   ModelsActionFailed: { message: Schema.String, token: Schema.Number },
   RequestsRangeChanged: { value: Schema.String },

@@ -1,0 +1,67 @@
+
+ RUN  v3.2.4 E:/rm-tmp/models-parity-base/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s618-models-wiring.test.ts (11 tests | 3 failed) 1173ms
+   ✓ S618 models route wiring > renders every model as a real selectable control and selects the state model  495ms
+   ✓ S618 models route wiring > stores model selection in state 22ms
+   ✓ S618 models route wiring > dispatches a role-binding command and records the optimistic override 12ms
+   ✓ S618 models route wiring > persists the create-role draft and dispatches creation 6ms
+   ✓ S618 models route wiring > renders benchmark judge options from endpoint ids and stores the selected id 191ms
+   ✓ S618 models route wiring > renders the host role_kind and tool-policy option values and routes a non-default selection 137ms
+   ✓ S618 models route wiring > sends the exact host contracts for all four model commands 13ms
+   × S618 models route wiring > renders the remove flow and controller footer actions for the selected model 252ms
+     → expected 'Model inventorySelect a model to insp…' to contain 'Remove model'
+   × S618 models route wiring > sends the exact host removal and controller requests 14ms
+     → commands.removeModel is not a function
+   × S618 models route wiring > deletes the account only in the account-model path and reports the exact message 7ms
+     → commands.removeModel is not a function
+   ✓ S618 models route wiring > wires benchmark mode/judge/run/clear 10ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s618-models-wiring.test.ts > S618 models route wiring > renders the remove flow and controller footer actions for the selected model
+AssertionError: expected 'Model inventorySelect a model to insp…' to contain 'Remove model'
+
+Expected: "Remove model"
+Received: "Model inventorySelect a model to inspect and configure. Controller is the badge — change it from the footer.Modelsalphacontrollerremote · tools · 1 endpointbetaunknownremote · tools · 0 endpointsRuntime · betaSourceremoteStatusunknownEndpoints0 unknownTool use—Context2000 tokensMode—CostInput— / 1MOutput— / 1MBenchmarkOverallNo evidence yetLive latency p50—Live latency p95—Live failure rate—Rolesbeta· tasks under each roleSaved immediately for this endpoint. Task and group eligibility is derived from these roles for this exact endpoint instance.✓analyst47 tasks✓architect36 tasks✓coder49 tasks✓coordinator24 tasks✓creative14 tasks✓data22 tasks✓designer19 tasks✓educator22 tasksfinance27 taskshealth11 tasksknowledge16 taskslegal22 tasksmarketer28 tasksmathematician13 tasksoperator45 tasksplanner47 tasksprocurement18 tasksproduct56 tasksrecruiter11 tasksresearcher28 tasksscientist15 taskssecurity32 tasksseller18 tasksstrategist24 taskssupport27 taskstester24 taskstranslator11 taskswriter85 tasks"
+
+ ❯ test/s618-models-wiring.test.ts:171:35
+    169|   it("renders the remove flow and controller footer actions for the se…
+    170|     const container = await render({ selectedModelId: "beta" });
+    171|     expect(container.textContent).toContain("Remove model");
+       |                                   ^
+    172|     expect(container.querySelector("[data-model-remove]")?.getAttribut…
+    173|     expect(container.textContent).toContain("Make primary controller");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/s618-models-wiring.test.ts > S618 models route wiring > sends the exact host removal and controller requests
+TypeError: commands.removeModel is not a function
+ ❯ test/s618-models-wiring.test.ts:187:38
+    185|       },
+    186|     }));
+    187|     await Effect.runPromise(commands.removeModel({ accountId: "acct-1"…
+       |                                      ^
+    188|     await Effect.runPromise(commands.removeModel({ accountId: "acct-1"…
+    189|     await Effect.runPromise(commands.removeModel({ accountId: "acct-1"…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/s618-models-wiring.test.ts > S618 models route wiring > deletes the account only in the account-model path and reports the exact message
+TypeError: commands.removeModel is not a function
+ ❯ test/s618-models-wiring.test.ts:207:53
+    205|       },
+    206|     }));
+    207|     const result = await Effect.runPromise(commands.removeModel({ acco…
+       |                                                     ^
+    208|     expect(result).toMatchObject({ _tag: "ModelsActionSucceeded", mess…
+    209|     expect(calls).toEqual(["DELETE /api/role-model/accounts/acct-1/mod…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 8 passed (11)
+   Start at  08:05:14
+   Duration  55.34s (transform 26.59s, setup 0ms, collect 44.48s, tests 1.17s, environment 6.69s, prepare 1.08s)
+

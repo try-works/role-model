@@ -189,6 +189,14 @@ export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: 
                   ]);
                 }),
               ),
+              h.div([h.Class("flex flex-wrap gap-2 pt-2"), h.DataAttribute("models-footer-actions", "")], [
+                h.button([h.Type("button"), h.AriaDisabled(selected === undefined || selected.endpointCount === 0), h.OnClick(Message.ModelsControllerSetRequested({ modelId: selected?.id ?? "" })), h.Class("inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground")], ["Make primary controller"]),
+                h.a([h.Href("/models/roles"), h.Class("inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground")], ["Open Roles"]),
+                h.a([h.Href("/system/benchmark"), h.Class("inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground")], ["Open Benchmark"]),
+                h.button([h.Type("button"), h.DataAttribute("model-eject-controller", ""), h.OnClick(Message.ModelsControllerEjectRequested({ modelId: selected?.id ?? "" })), h.Class("inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground")], ["Eject controller"]),
+                h.button([h.Type("button"), h.DataAttribute("model-remove", ""), h.AriaLabel("Remove selected model " + (selected?.displayName ?? "")), h.OnClick(Message.ModelsRemoveRequested({ modelId: selected?.id ?? "" })), h.Class("inline-flex h-[34px] items-center rounded-md border border-[var(--rm-error)] bg-background px-3 font-sans text-sm font-medium text-[var(--rm-error)]")], ["Remove model"]),
+              ]),
+              modelsView?.actionMessage === undefined ? null : h.p([h.Role("status"), h.DataAttribute("models-action-message", ""), h.Class("text-xs text-muted-foreground")], [modelsView.actionMessage]),
             ]),
           ]),
     ], h),

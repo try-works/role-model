@@ -166,6 +166,49 @@ describe("S618 models route wiring", () => {
     });
   });
 
+  it("renders the remove flow and controller footer actions for the selected model", async () => {
+    const container = await render({ selectedModelId: "beta" });
+    expect(container.textContent).toContain("Remove model");
+    expect(container.querySelector("[data-model-remove]")?.getAttribute("aria-label")).toContain("beta");
+    expect(container.textContent).toContain("Make primary controller");
+    expect(container.textContent).toContain("Eject controller");
+    expect(container.textContent).toContain("Open Roles");
+    expect(container.textContent).toContain("Open Benchmark");
+  });
+
+  it("sends the exact host removal and controller requests", async () => {
+    const calls: Array<{ body: unknown; method: string; path: string }> = [];
+    const commands = defineModelsCommands(createModelsClient({
+      fetchImpl: async (input, init) => {
+        calls.push({ body: init?.body === undefined ? undefined : JSON.parse(String(init.body)), method: String(init?.method), path: new URL(String(input), "http://localhost").pathname });
+        return new Response(JSON.stringify({ removedAccount: true }), { status: 200 });
+      },
+    }));
+    await Effect.runPromise(commands.removeModel({ accountId: "acct-1", endpointId: "", kind: "peer", modelId: "model-1", token: 1 }).effect);
+    await Effect.runPromise(commands.removeModel({ accountId: "acct-1", endpointId: "ep-1", kind: "endpoint", modelId: "model-1", token: 1 }).effect);
+    await Effect.runPromise(commands.removeModel({ accountId: "acct-1", endpointId: "", kind: "account-model", modelId: "model-1", token: 1 }).effect);
+    await Effect.runPromise(commands.setController({ endpointId: "ep-1", token: 1 }).effect);
+    await Effect.runPromise(commands.setController({ endpointId: null, token: 1 }).effect);
+    expect(calls[0]).toMatchObject({ method: "POST", path: "/api/role-model/local/peer/models/model-1/unload" });
+    expect(calls[1]).toMatchObject({ method: "DELETE", path: "/api/role-model/endpoints/ep-1" });
+    expect(calls[2]).toMatchObject({ method: "DELETE", path: "/api/role-model/accounts/acct-1/models/model-1" });
+    expect(calls[3]).toEqual({ body: { endpointId: "ep-1" }, method: "PATCH", path: "/api/role-model/controller" });
+    expect(calls[4]).toEqual({ body: { endpointId: null }, method: "PATCH", path: "/api/role-model/controller" });
+  });
+
+  it("deletes the account only in the account-model path and reports the exact message", async () => {
+    const calls: string[] = [];
+    const commands = defineModelsCommands(createModelsClient({
+      fetchImpl: async (input, init) => {
+        calls.push(String(init?.method) + " " + new URL(String(input), "http://localhost").pathname);
+        return new Response(JSON.stringify({ removedAccount: true }), { status: 200 });
+      },
+    }));
+    const result = await Effect.runPromise(commands.removeModel({ accountId: "acct-1", endpointId: "", kind: "account-model", modelId: "model-1", token: 1 }).effect);
+    expect(result).toMatchObject({ _tag: "ModelsActionSucceeded", message: "Removed model-1 and deleted acct-1 because it was the last configured model on that account." });
+    expect(calls).toEqual(["DELETE /api/role-model/accounts/acct-1/models/model-1"]);
+  });
+
   it("wires benchmark mode/judge/run/clear", () => {
     const model = shellModel({ route: { _tag: "Benchmark" } });
     const mode = update(model, Message.BenchmarkModeChanged({ value: "full" }));
