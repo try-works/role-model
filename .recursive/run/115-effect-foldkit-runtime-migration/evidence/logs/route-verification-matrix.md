@@ -66,17 +66,12 @@ Known scanner gap: **Requests** renders through the real view, but `test/support
 | ControlController | yes | 32 | 32 | none | s73a-controller.test.ts | (none) |
 | NotFound | yes | 23 | 23 | none | s110-nav-links.test.ts | (none) |
 
-## Dead-control findings (not re-wired by this task)
+## Dead-control findings (wired by task-102)
 
-| Route | Finding |
-| --- | --- |
-| LocalLogs | input "(unlabelled input)" |
-| LocalPeers | input "http://127.0.0.1:1234"<br>input "Bearer token (optional)" |
-| LocalPeerModels | input "openai/gpt-4.1" |
-| LocalLlamaSwapModels | input "lfm2.5-8b-a1b"<br>button "All roles" |
-| SystemOperator | input "Paste a local operator token…"<br>button "Load Operator State"<br>input "trace-root…"<br>input "25"<br>button "Create Replay" |
-| SystemExtensions | button "Pause"<br>button "Download & validate latest" |
-| ObserveLogs | button "All sources"<br>button "combined" |
+All previously dead controls in this table are now wired with host contracts and per-route evidence:
+s624 ObserveLogs, s625 LocalLogs, s626 LocalPeers, s627 LocalPeerModels, s628 LocalLlamaSwapModels,
+s629 SystemOperator, s630 SystemExtensions. The s617 handler-presence baseline was refreshed and asserts
+none of these remain dead.
 
 No route has zero interactive controls by design; every route outside the Requests scanner gap renders at least one interactive element and at least one wired control. The only scanner-zero element route is Requests, whose real render is verified separately.
 
