@@ -24,3 +24,24 @@ s617-handler-presence 9/9 green in the final run; the benchmark route adds only 
 ## Final parity review against apps/runtime-ui/app/routes/control-benchmark.tsx
 Delivered: mode options with suite-derived counts, judge endpoint select from the endpoint readback (endpointId values, model + source labels), Run label with model/case counts, Run disabled without judge/endpoints, Clear all benchmark data (DELETE /api/role-model/benchmark/data), Benchmark scores (Model/Overall/Profile/Easy/Medium/Hard/p50/p95/Scope + Last run/Suite/Judge), Taxonomy dimensions, Run history (Run/Mode/Cases/Models/Completed/Suite), runnable endpoint table (Model/Path/Scope/Status), and the three readbacks (suite/summary/runs) planned on route entry.
 Not ported (honest remaining gaps if full :3456 parity is required later): per-endpoint selection checkboxes and "N of M selected" gating; the per-model Clear action (DELETE /api/role-model/benchmark/endpoints/{id}/data); judge preference persistence (PUT /api/role-model/benchmark/preferences); active-run progress polling (runs/active, runs/{id}); taxonomy role/task/capability filter selects; real p50/p95 latencies (the summary readback does not carry them, so the columns honestly render "—").
+
+
+## Lead HOLD items (recorded while the models repair lane holds the shared plumbing)
+
+(1) RUN GATING DIFFERENCE - RECORDED, NOT SILENT: :3456 requires a judge, at least two SELECTED benchmark
+subjects, and not-running before Run is enabled. The Foldkit port currently disables Run only when the judge
+is empty or zero runnable endpoints exist (routes.ts benchmarkRoute). The per-subject selection UI is not
+built yet (so "selected" would mean all runnable endpoints) and there is no active-run/progress state, so the
+>=2-selected and non-running conditions are DEFERRED until the models repair lands. Planned enforcement:
+Disable Run when judge is empty OR runnable endpoints < 2; the running condition follows only with active-run
+state. This is an honest recorded difference, not a claim of parity.
+
+(2) EXACT BODY ASSERTIONS (done): the ClearBenchmark assertions in s618 and s622 now use exact toEqual with
+the DELETE body {} (method DELETE, path /api/role-model/benchmark/data). s620 create/update/task-allowlist
+assertions now compare the exact request body to the command payload (JSON.parse(draftJson)) instead of a
+subset toMatchObject. Targeted suites s622 + s618 + s620: 25/25 pass.
+
+(3) RAW FULL-SUITE LOG: PENDING. The shared main worktree is currently contended by the models-repair lane
+(routes.ts carries their in-flight edits and a transient tsc error in modelsRoute), so the clean 92/901 raw
+run (vitest + node --test invariants, full output) will be produced from a clean detached worktree at the
+final commit after that repair lands, and committed raw - not just summarised.

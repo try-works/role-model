@@ -159,12 +159,27 @@ describe("S618 models route wiring", () => {
       preferred_capabilities: [], required_capabilities: [], role_id: "legal", role_kind: "assistant",
       routing_policy_overrides: {}, safety_policy_refs: [], task_types_supported: [], tool_policy: { mode: "allowed" },
     }), token: 1 }).effect);
-    expect(calls[0]).toMatchObject({ method: "DELETE", path: "/api/role-model/benchmark/data" });
+    expect(calls[0]).toEqual({ body: {}, method: "DELETE", path: "/api/role-model/benchmark/data" });
     expect(calls[1]).toEqual({ body: { judgeEndpointId: "judge-1", mode: "quick" }, method: "POST", path: "/api/role-model/benchmark/runs" });
-    expect(calls[2]).toMatchObject({ method: "PUT", path: "/api/role-model/local/peer/models/model-1/roles" });
-    expect(calls[2]?.body).toEqual({ disabledRoleIds: [], enabledRoleIds: ["coder"], roleAssignmentMode: "include", roleIds: ["coder"] });
-    expect(calls[3]).toMatchObject({ method: "PUT", path: "/api/role-model/local/llama-swap/models/model-2/roles" });
-    expect(calls[4]).toMatchObject({ method: "POST", path: "/api/role-model/roles" });
+    expect(calls[2]).toEqual({
+      body: { disabledRoleIds: [], enabledRoleIds: ["coder"], roleAssignmentMode: "include", roleIds: ["coder"] },
+      method: "PUT",
+      path: "/api/role-model/local/peer/models/model-1/roles",
+    });
+    expect(calls[3]).toEqual({
+      body: { disabledRoleIds: [], enabledRoleIds: ["writer"], roleAssignmentMode: "include", roleIds: ["writer"] },
+      method: "PUT",
+      path: "/api/role-model/local/llama-swap/models/model-2/roles",
+    });
+    expect(calls[4]).toEqual({
+      body: {
+        default_system_instructions: "", description: "", forbidden_capabilities: [], name: "n", output_contracts: [],
+        preferred_capabilities: [], required_capabilities: [], role_id: "legal", role_kind: "assistant",
+        routing_policy_overrides: {}, safety_policy_refs: [], task_types_supported: [], tool_policy: { mode: "allowed" },
+      },
+      method: "POST",
+      path: "/api/role-model/roles",
+    });
     expect(calls[4]?.body).toEqual({
       default_system_instructions: "", description: "", forbidden_capabilities: [], name: "n", output_contracts: [],
       preferred_capabilities: [], required_capabilities: [], role_id: "legal", role_kind: "assistant",
@@ -180,6 +195,56 @@ describe("S618 models route wiring", () => {
     expect(container.textContent).toContain("Eject controller");
     expect(container.textContent).toContain("Open Roles");
     expect(container.textContent).toContain("Open Benchmark");
+  });
+
+  it("documents the remote role-toggle known gap and selects peer/llama kinds", () => {
+    const fixtureEndpoints = {
+      rows: [
+        { id: "p", label: "p", meta: JSON.stringify({ endpointId: "p", modelId: "peer-model", providerId: "peer", sourceType: "local" }), value: "local" },
+        { id: "l", label: "l", meta: JSON.stringify({ endpointId: "l", modelId: "llama-model", providerId: "llama-swap", sourceType: "local" }), value: "local" },
+        { id: "r", label: "r", meta: JSON.stringify({ endpointId: "r", modelId: "remote-model", providerId: "openai", sourceType: "remote" }), value: "remote" },
+      ], status: "ok" as const, token: 0,
+    };
+    const base = shellModel({ route: { _tag: "Models" } });
+    const model = { ...base, readbacks: { ...base.readbacks, modelEndpoints: fixtureEndpoints } };
+    const kindOf = (modelId: string) => {
+      const next = update(model, Message.ModelsRoleToggled({ enabled: true, modelId, roleId: "coder" }));
+      return (next.commands ?? [])[0] as unknown as { readonly args: { readonly kind: string } };
+    };
+    expect(kindOf("peer-model").args.kind).toBe("peer");
+    expect(kindOf("llama-model").args.kind).toBe("llama-swap");
+    // KNOWN GAP(S620): remote/account-managed toggles still use the peer route until the account upsert path exists.
+    expect(kindOf("remote-model").args.kind).toBe("peer");
+  });
+
+  it("renders the disabled eject reason, confirm transition, and zero-endpoint guard", async () => {
+    const plain = await render({ selectedModelId: "beta" });
+    const eject = plain.querySelector("[data-model-eject-controller]");
+    expect(eject?.hasAttribute("disabled")).toBe(true);
+    expect(eject?.getAttribute("title")).toBe("Controller ejection is not supported by the host API; remove the controller model instead.");
+    expect(plain.querySelector("[data-model-remove]")?.textContent).toBe("Remove model");
+    const confirm = await render({ removeConfirmation: "beta", selectedModelId: "beta" });
+    expect(confirm.querySelector("[data-model-remove]")?.textContent).toBe("Confirm remove model");
+    const empty = await render({ selectedModelId: "beta" });
+    const makePrimary = [...empty.querySelectorAll("button")].find((button) => button.textContent === "Make primary controller");
+    expect(makePrimary?.getAttribute("aria-disabled")).toBe("true");
+  });
+
+  it("removes the selected endpoint instance and leaves a sibling untouched", () => {
+    const multi = {
+      rows: [
+        { id: "e1", label: "e1", meta: JSON.stringify({ endpointId: "e1", modelId: "beta", providerAccountId: "acct-a", sourceType: "remote" }), value: "remote" },
+        { id: "e2", label: "e2", meta: JSON.stringify({ endpointId: "e2", modelId: "beta", providerAccountId: "acct-b", sourceType: "remote" }), value: "remote" },
+      ], status: "ok" as const, token: 0,
+    };
+    const base = shellModel({ route: { _tag: "Models" }, modelsView: { selectedModelId: "beta" } });
+    const withEndpoints = { ...base, readbacks: { ...base.readbacks, modelEndpoints: multi } };
+    const armed = update(withEndpoints, Message.ModelsRemoveRequested({ modelId: "beta" }));
+    expect(armed.commands ?? []).toHaveLength(0);
+    const removed = update(armed.model, Message.ModelsRemoveRequested({ modelId: "beta" }));
+    const command = (removed.commands ?? [])[0] as unknown as { readonly args: { readonly endpointId: string; readonly accountId: string } };
+    expect(command.args.endpointId).toBe("e1");
+    expect(command.args.accountId).toBe("acct-a");
   });
 
   it("sends the exact host removal and controller requests", async () => {

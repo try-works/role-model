@@ -171,23 +171,21 @@ describe("S620 roles page parity", () => {
     const createArgs = (created.commands ?? [])[0] as unknown as { args: { draftJson: string; token: number } };
     expect(created.commands?.[0]?.name).toBe("CreateRole");
     await Effect.runPromise(commands.createRole(createArgs.args).effect);
-    expect(calls[0]).toMatchObject({ method: "POST", path: "/api/role-model/roles" });
-    expect(calls[0]?.body).toMatchObject({ name: "New role", role_id: "new-role", role_kind: "assistant", tool_policy: { mode: "allowed" } });
+    expect(calls[0]).toEqual({ body: JSON.parse(createArgs.args.draftJson), method: "POST", path: "/api/role-model/roles" });
 
     const editing = { ...model, modelsView: { selectedRoleId: "coder", roleEditDraft: createDraft({ roleId: "coder", name: "Coder", roleKind: "capability", toolPolicyMode: "limited" }) } };
     const edited = shellUpdate(editing, Message.RoleEditSaveRequested());
     const editArgs = (edited.commands ?? [])[0] as unknown as { args: { draftJson: string; roleId: string; token: number } };
     expect(edited.commands?.[0]?.name).toBe("UpdateRole");
     await Effect.runPromise(commands.updateRole(editArgs.args).effect);
-    expect(calls[1]).toMatchObject({ method: "PUT", path: "/api/role-model/roles/coder" });
-    expect(calls[1]?.body).toMatchObject({ name: "Coder", role_id: "coder", role_kind: "capability", tool_policy: { mode: "limited" } });
+    expect(calls[1]).toEqual({ body: JSON.parse(editArgs.args.draftJson), method: "PUT", path: "/api/role-model/roles/coder" });
 
     const toggled = shellUpdate(editing, Message.RoleTaskRoleToggled({ roleId: "legal", taskType: "code.review" }));
     const saved = shellUpdate(toggled.model, Message.RoleTaskAllowlistsSaveRequested());
     const tasksArgs = (saved.commands ?? [])[0] as unknown as { args: { tasksJson: string; token: number } };
     expect(saved.commands?.[0]?.name).toBe("UpdateRoleTaskAllowlists");
     await Effect.runPromise(commands.updateTasks(tasksArgs.args).effect);
-    expect(calls[2]).toMatchObject({ method: "PUT", path: "/api/role-model/tasks" });
+    expect(calls[2]).toEqual({ body: JSON.parse(tasksArgs.args.tasksJson), method: "PUT", path: "/api/role-model/tasks" });
     expect((calls[2]?.body as readonly { allowed_roles: readonly string[]; task_type: string }[]).find((task) => task.task_type === "code.review")?.allowed_roles).toEqual(["coder", "legal"]);
   });
 });

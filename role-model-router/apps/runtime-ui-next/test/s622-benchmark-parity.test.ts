@@ -8,6 +8,7 @@ import { fromString as urlFromString } from "@role-model-router/foldkit/url";
 import { createModelsClient, defineModelsCommands } from "../src/commands";
 import { Message } from "../src/message";
 import { READBACK_SPECS, emptyReadbacks, parseReadbackFixture } from "../src/readback";
+import type { Model } from "../src/model";
 import { shellModel, shellUpdate } from "./support/runtime-shell";
 import { view } from "../src/view";
 
@@ -58,7 +59,10 @@ const endpointsBody = [
   { endpointId: "ep-b", modelId: "model-b", sourceType: "local" },
 ];
 
-const benchmarkModel = (overrides: { readonly benchmarkJudge?: string; readonly benchmarkMode?: string } = {}) => {
+const benchmarkModel = (
+  overrides: { readonly benchmarkJudge?: string; readonly benchmarkMode?: string } = {},
+  readbackOverrides: Partial<Model["readbacks"]> = {},
+) => {
   const base = shellModel({ route: { _tag: "Benchmark" }, modelsView: { benchmarkJudge: "ep-b", benchmarkMode: "quick", ...overrides } });
   return {
     ...base,
@@ -68,13 +72,17 @@ const benchmarkModel = (overrides: { readonly benchmarkJudge?: string; readonly 
       benchmarkSummary: parseReadbackFixture("benchmarkSummary", summaryBody),
       benchmarkSuite: parseReadbackFixture("benchmarkSuite", suiteBody),
       modelEndpoints: parseReadbackFixture("modelEndpoints", endpointsBody),
+      ...readbackOverrides,
     },
   };
 };
 
-const render = async (overrides: { readonly benchmarkJudge?: string; readonly benchmarkMode?: string } = {}): Promise<HTMLElement> => {
+const render = async (
+  overrides: { readonly benchmarkJudge?: string; readonly benchmarkMode?: string } = {},
+  readbackOverrides: Partial<Model["readbacks"]> = {},
+): Promise<HTMLElement> => {
   const rendered = await Effect.runPromise(renderToString({
-    init: () => ({ commands: [], model: benchmarkModel(overrides) }),
+    init: () => ({ commands: [], model: benchmarkModel(overrides, readbackOverrides) }),
     view,
   }, { isHydratable: false }));
   const container = document.createElement("div");
@@ -101,6 +109,7 @@ describe("S622 benchmark parity", () => {
     const container = await render();
     const run = [...container.querySelectorAll("button")].find((button) => button.textContent?.startsWith("Run "));
     expect(run?.textContent).toBe("Run quick benchmark (2 models, 3 cases)");
+    expect(run?.hasAttribute("disabled")).toBe(false);
     expect(container.textContent).toContain("Clear all benchmark data");
   });
 
@@ -146,7 +155,7 @@ describe("S622 benchmark parity", () => {
     await Effect.runPromise(commands.runBenchmark({ judgeEndpointId: "ep-a", mode: "full", token: 1 }).effect);
     await Effect.runPromise(commands.clearBenchmark({ token: 1 }).effect);
     expect(calls[0]).toEqual({ body: { judgeEndpointId: "ep-a", mode: "full" }, method: "POST", path: "/api/role-model/benchmark/runs" });
-    expect(calls[1]).toMatchObject({ method: "DELETE", path: "/api/role-model/benchmark/data" });
+    expect(calls[1]).toEqual({ body: {}, method: "DELETE", path: "/api/role-model/benchmark/data" });
   });
 
   it("plans the suite, summary and runs readback queries on route entry", () => {
