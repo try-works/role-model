@@ -292,14 +292,15 @@ const parseLog = (value: string): readonly [string, string, string, string, stri
   return [match?.[1] ?? "—", "combined", "—", match?.[2] ?? value, ""];
 };
 
-export const observeLogsRoute = (readback: ReadbackState, h: HtmlBuilder<Message>): Html => {
-  const parsed = readback.rows.map((row) => {
+export const observeLogsRoute = (readback: ReadbackState, h: HtmlBuilder<Message>, activeSource = "All sources"): Html => {
+  const sourceRows = activeSource === "combined" ? readback.rows.filter((row) => row.meta.length > 0) : readback.rows;
+  const parsed = sourceRows.map((row) => {
     const time = row.label.replace(/^\[|\]$/g, "");
     const level = row.meta.includes("error=") ? "error" : row.meta.includes("status=") ? "info" : "—";
     const message = row.meta.replace(/^\[[^\]]*\]\s*\S+\s*/, "");
     return [time.length > 0 ? time : "—", "combined", level, message, row.value] as const;
   });
-  const correlated = new Set(readback.rows.map((row) => row.value).filter((value) => value.length > 0)).size;
+  const correlated = new Set(sourceRows.map((row) => row.value).filter((value) => value.length > 0)).size;
   return page("Host logs", [
     metrics([
       { label: "STRUCTURED ROWS", value: String(parsed.length) },
@@ -308,7 +309,7 @@ export const observeLogsRoute = (readback: ReadbackState, h: HtmlBuilder<Message
     ], h),
     h.div([h.Class("flex flex-col gap-2")], [
       h.span([h.Class("font-sans text-[13px] font-medium leading-5 text-foreground")], ["Source filter"]),
-      segmented("Log source filter", ["All sources", "combined"], "All sources", h),
+      segmented("Log source filter", ["All sources", "combined"], activeSource, h, (value) => Message.ObserveLogsSourceChanged({ value })),
     ]),
     section("Structured log rows", "Rows are parsed into Time, Source, Level, Message, and Request fields so they can be scanned without leaving the shell.", [
       table(["Time", "Source", "Level", "Message", "Request"], parsed, "No structured log rows recorded yet.", h),

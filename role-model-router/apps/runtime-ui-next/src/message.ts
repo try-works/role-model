@@ -127,6 +127,7 @@ export const Message: MessageUnion<{
   readonly ObserveRangeChanged: { readonly value: typeof Schema.String };
   readonly ObserveFilterChanged: { readonly field: typeof ObserveFilterFieldSchema; readonly value: typeof Schema.String };
   readonly ObserveAdvancedToggled: EmptyFields;
+  readonly ObserveLogsSourceChanged: { readonly value: typeof Schema.String };
   readonly ObservabilityRefreshRequested: EmptyFields;
   readonly StoreReceiptsRefreshRequested: EmptyFields;
   readonly ModelsActionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
@@ -315,6 +316,7 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   ObserveRangeChanged: { value: Schema.String },
   ObserveFilterChanged: { field: ObserveFilterFieldSchema, value: Schema.String },
   ObserveAdvancedToggled: {},
+  ObserveLogsSourceChanged: { value: Schema.String },
   ObservabilityRefreshRequested: {},
   StoreReceiptsRefreshRequested: {},
   LearningLadderToggleRequested: { rolledBack: Schema.Boolean, roleId: Schema.String, taskTypeId: Schema.String },

@@ -91,9 +91,10 @@ export const segmented = (
   options: ReadonlyArray<string>,
   active: string,
   h: H,
+  onSelect?: (option: string) => Message,
 ): Html =>
   h.div([h.Role("group"), h.AriaLabel(label), h.Class("flex h-9 w-fit shrink-0 items-center gap-1 rounded-md border border-border bg-secondary p-1"), h.DataAttribute("s563-segmented", label)], options.map((option) =>
-    h.button([h.Type("button"), h.Attribute("aria-pressed", option === active ? "true" : "false"), h.Class(
+    h.button([h.Type("button"), h.Attribute("aria-pressed", option === active ? "true" : "false"), ...(onSelect === undefined ? [] : [h.OnClick(onSelect(option))]), h.Class(
       "flex h-7 items-center justify-center whitespace-nowrap rounded-[5px] px-2.5 font-sans text-sm leading-[18px] " +
         (option === active ? "bg-primary font-semibold text-primary-foreground" : "font-normal text-muted-foreground"),
     )], [option]),

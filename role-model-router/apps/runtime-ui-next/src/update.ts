@@ -1273,6 +1273,7 @@ const updateLocalPolicyDraft = (
           const state = model.observeRoutingFilters ?? { breakdown: "Total", difficulty: "All buckets", expanded: false, range: "Day", source: "All sources" };
           return { model: { ...model, observeRoutingFilters: { ...state, expanded: !state.expanded } } };
         },
+        ObserveLogsSourceChanged: ({ value }: Extract<Message, { readonly _tag: "ObserveLogsSourceChanged" }>): UpdateReturn<Model, Message> => ({ model: { ...model, observeLogsSource: value } }),
         ObservabilityRefreshRequested: (): UpdateReturn<Model, Message> => {
           const token = model.observability.token + 1;
           return { commands: [readObservability({ token })], model: { ...model, observability: { ...model.observability, status: "loading", token } } };

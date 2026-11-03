@@ -146,6 +146,7 @@ const modelFields = {
   modelsView: modelsFields.modelsView,
   requestsFilters: requestsFieldsExtra.requestsFilters,
   observeRoutingFilters: observeFields.observeRoutingFilters,
+  observeLogsSource: Schema.optional(Schema.String),
   deviceAuthDialog: deviceAuthFields.deviceAuthDialog,
   deviceAuthModalKey: deviceAuthFields.deviceAuthModalKey,
   chartInteraction: shellFields.chartInteraction,
