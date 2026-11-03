@@ -7,6 +7,7 @@ import { renderControlPage, renderDeviceAuthorizationDialog, renderDeviceAuthori
 import { type EndpointsRouteContext, type ProvidersRouteContext, providersRoute } from "./features/control/routes";
 import { card, filterBar, table } from "./features/s563-layout";
 import { localPeersPage as localPeersFeaturePage } from "./features/local/peers";
+import { localPeerModelsPage as localPeerModelsFeaturePage } from "./features/local/peer-models";
 import { Message } from "./message";
 import { READBACK_SPECS, type ReadbackRouteSpec, type ReadbackState, type ReadbacksState, renderReadbackPage } from "./readback";
 
@@ -52,7 +53,7 @@ export const familyPage = (
   const state = first?.readback === undefined ? "empty" : statusOf(first.readback);
   const pageReadback = first?.readback;
   if (pageReadback !== undefined) {
-    if (routeName === "local-peer-models") return localPeerModelsPage(pageReadback, h);
+    if (routeName === "local-peer-models") return localPeerModelsFeaturePage(pageReadback, h);
     if (routeName === "local-llama-swap-models") return localLlamaModelsPage(pageReadback, h);
     if (routeName === "local-swap") return localSwapPage(pageReadback, h);
     if (routeName === "local-logs") return localLogsPage(pageReadback, h);

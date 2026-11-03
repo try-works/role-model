@@ -918,10 +918,15 @@ export const noopModelsCommands = defineModelsCommands({
 export interface LocalPeersClient {
   readonly save: (peers: ReadonlyArray<{ readonly authToken?: string; readonly id: string; readonly url: string }>) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly health: (url: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly loadPeerModel: (modelId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
 }
 export const createLocalPeersClient = (fetchImpl: typeof fetch = fetch): LocalPeersClient => ({
   health: async (url) => {
     const response = await fetchImpl("/api/role-model/local/peers/health?url=" + encodeURIComponent(url));
+    return { body: await response.json(), status: response.status };
+  },
+  loadPeerModel: async (modelId) => {
+    const response = await fetchImpl("/api/role-model/local/peer/models/" + encodeURIComponent(modelId) + "/load", { body: "{}", headers: { "content-type": "application/json" }, method: "POST" });
     return { body: await response.json(), status: response.status };
   },
   save: async (peers) => {
@@ -939,6 +944,15 @@ export const defineLocalPeersCommands = (client: LocalPeersClient) => ({
           : Message.LocalPeersActionFailed({ message: "Peer health check failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
     messages: [Message.LocalPeersActionSucceeded, Message.LocalPeersActionFailed],
   }),
+  loadPeerModel: Command.define("LoadLocalPeerModel", {
+    args: { modelId: Schema.String, token: Schema.Number },
+    execute: ({ modelId, token }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.loadPeerModel(modelId) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.LocalPeerModelActionSucceeded({ message: "Peer model " + modelId + " loaded.", token })
+          : Message.LocalPeerModelActionFailed({ message: "Load peer model failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
+    messages: [Message.LocalPeerModelActionSucceeded, Message.LocalPeerModelActionFailed],
+  }),
   save: Command.define("SaveLocalPeers", {
     args: { peersJson: Schema.String, token: Schema.Number },
     execute: ({ peersJson, token }) => {
@@ -953,7 +967,7 @@ export const defineLocalPeersCommands = (client: LocalPeersClient) => ({
   }),
 });
 export type LocalPeersCommands = ReturnType<typeof defineLocalPeersCommands>;
-export const noopLocalPeersCommands = defineLocalPeersCommands({ health: async () => ({ body: {}, status: 200 }), save: async () => ({ body: {}, status: 200 }) });
+export const noopLocalPeersCommands = defineLocalPeersCommands({ health: async () => ({ body: {}, status: 200 }), loadPeerModel: async () => ({ body: {}, status: 200 }), save: async () => ({ body: {}, status: 200 }) });
 
 const noopLearningRankingClient: LearningRankingClient = { rollbackLadder: async () => undefined };
 export const noopLearningRankingCommands = defineLearningRankingCommands(noopLearningRankingClient);

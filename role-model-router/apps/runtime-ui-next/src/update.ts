@@ -1308,6 +1308,15 @@ const updateLocalPolicyDraft = (
           const draft = model.localPeersDraft ?? { token: "", url: "" };
           return { model: { ...model, localPeersDraft: { ...draft, token: value } } };
         },
+        LocalPeerModelIdChanged: ({ value }: Extract<Message, { readonly _tag: "LocalPeerModelIdChanged" }>): UpdateReturn<Model, Message> => ({ model: { ...model, localPeerModelId: value } }),
+        LocalPeerModelLoadRequested: (): UpdateReturn<Model, Message> => {
+          const modelId = (model.localPeerModelId ?? "").trim();
+          return modelId.length === 0
+            ? { model: { ...model, localPeerModelMessage: "Model id is required." } }
+            : { commands: [localPeersCommands.loadPeerModel({ modelId, token: model.readbacks.localPeerModels.token + 1 })], model: { ...model, localPeerModelMessage: undefined } };
+        },
+        LocalPeerModelActionSucceeded: ({ message }: Extract<Message, { readonly _tag: "LocalPeerModelActionSucceeded" }>): UpdateReturn<Model, Message> => ({ model: { ...model, localPeerModelMessage: message } }),
+        LocalPeerModelActionFailed: ({ message }: Extract<Message, { readonly _tag: "LocalPeerModelActionFailed" }>): UpdateReturn<Model, Message> => ({ model: { ...model, localPeerModelMessage: message } }),
         LocalPeerAddRequested: (): UpdateReturn<Model, Message> => {
           const draft = model.localPeersDraft ?? { token: "", url: "" };
           const existing = peerRows(model);

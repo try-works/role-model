@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s627-local-peer-models-wiring.test.ts (3 tests) 171ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  16:51:23
+   Duration  25.82s (transform 11.29s, setup 0ms, collect 17.65s, tests 171ms, environment 5.78s, prepare 813ms)
+

@@ -134,6 +134,10 @@ export const Message: MessageUnion<{
   readonly LocalPeerAddRequested: EmptyFields;
   readonly LocalPeerHealthRequested: { readonly peerId: typeof Schema.String };
   readonly LocalPeerRemoveRequested: { readonly peerId: typeof Schema.String };
+  readonly LocalPeerModelIdChanged: { readonly value: typeof Schema.String };
+  readonly LocalPeerModelLoadRequested: EmptyFields;
+  readonly LocalPeerModelActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly LocalPeerModelActionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LocalPeersActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LocalPeersActionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LocalLogsAutoRefreshToggled: { readonly value: typeof Schema.Boolean };
@@ -333,6 +337,10 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   LocalPeerAddRequested: {},
   LocalPeerHealthRequested: { peerId: Schema.String },
   LocalPeerRemoveRequested: { peerId: Schema.String },
+  LocalPeerModelIdChanged: { value: Schema.String },
+  LocalPeerModelLoadRequested: {},
+  LocalPeerModelActionSucceeded: { message: Schema.String, token: Schema.Number },
+  LocalPeerModelActionFailed: { message: Schema.String, token: Schema.Number },
   LocalPeersActionSucceeded: { message: Schema.String, token: Schema.Number },
   LocalPeersActionFailed: { message: Schema.String, token: Schema.Number },
   LocalLogsAutoRefreshToggled: { value: Schema.Boolean },
