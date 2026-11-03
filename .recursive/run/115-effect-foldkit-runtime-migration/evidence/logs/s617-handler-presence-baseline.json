@@ -39,15 +39,8 @@
       "disabledCount": 0,
       "elementCount": 30,
       "route": "LocalLogs",
-      "unwired": [
-        {
-          "label": "(unlabelled input)",
-          "path": "div[1]>div[1]>main[1]>div[1]>div[1]>section[1]>div[2]>div[1]>label[1]>input[1]",
-          "role": null,
-          "tag": "input"
-        }
-      ],
-      "wiredCount": 29
+      "unwired": [],
+      "wiredCount": 30
     },
     {
       "disabledCount": 0,
@@ -85,24 +78,11 @@
       "wiredCount": 22
     },
     {
-      "disabledCount": 1,
+      "disabledCount": 0,
       "elementCount": 31,
       "route": "LocalPeers",
-      "unwired": [
-        {
-          "label": "http://127.0.0.1:1234",
-          "path": "div[1]>div[1]>main[1]>div[1]>div[1]>section[2]>div[2]>div[1]>div[1]>input[1]",
-          "role": null,
-          "tag": "input"
-        },
-        {
-          "label": "Bearer token (optional)",
-          "path": "div[1]>div[1]>main[1]>div[1]>div[1]>section[2]>div[2]>div[1]>div[2]>input[1]",
-          "role": null,
-          "tag": "input"
-        }
-      ],
-      "wiredCount": 28
+      "unwired": [],
+      "wiredCount": 31
     },
     {
       "disabledCount": 0,
@@ -112,18 +92,11 @@
       "wiredCount": 28
     },
     {
-      "disabledCount": 3,
-      "elementCount": 33,
+      "disabledCount": 0,
+      "elementCount": 30,
       "route": "LocalPeerModels",
-      "unwired": [
-        {
-          "label": "openai/gpt-4.1",
-          "path": "div[1]>div[1]>main[1]>div[1]>div[1]>section[1]>div[2]>div[1]>div[1]>input[1]",
-          "role": null,
-          "tag": "input"
-        }
-      ],
-      "wiredCount": 29
+      "unwired": [],
+      "wiredCount": 30
     },
     {
       "disabledCount": 0,
@@ -203,24 +176,11 @@
       "wiredCount": 29
     },
     {
-      "disabledCount": 1,
+      "disabledCount": 0,
       "elementCount": 32,
       "route": "LocalLlamaSwapModels",
-      "unwired": [
-        {
-          "label": "lfm2.5-8b-a1b",
-          "path": "div[1]>div[1]>main[1]>div[1]>div[1]>section[1]>div[2]>div[1]>div[1]>input[1]",
-          "role": null,
-          "tag": "input"
-        },
-        {
-          "label": "All roles",
-          "path": "div[1]>div[1]>main[1]>div[1]>div[1]>section[1]>div[2]>div[2]>button[1]",
-          "role": null,
-          "tag": "button"
-        }
-      ],
-      "wiredCount": 29
+      "unwired": [],
+      "wiredCount": 32
     },
     {
       "disabledCount": 0,
@@ -233,59 +193,15 @@
       "disabledCount": 0,
       "elementCount": 30,
       "route": "SystemOperator",
-      "unwired": [
-        {
-          "label": "Paste a local operator token…",
-          "path": "div[1]>div[1]>main[1]>div[1]>div[1]>section[2]>div[2]>div[1]>input[1]",
-          "role": null,
-          "tag": "input"
-        },
-        {
-          "label": "Load Operator State",
-          "path": "div[1]>div[1]>main[1]>div[1]>div[1]>section[2]>div[2]>div[1]>button[1]",
-          "role": null,
-          "tag": "button"
-        },
-        {
-          "label": "trace-root…",
-          "path": "div[1]>div[1]>main[1]>div[1]>div[1]>div[1]>section[1]>div[2]>div[1]>div[1]>input[1]",
-          "role": null,
-          "tag": "input"
-        },
-        {
-          "label": "25",
-          "path": "div[1]>div[1]>main[1]>div[1]>div[1]>div[1]>section[1]>div[2]>div[1]>div[2]>input[1]",
-          "role": null,
-          "tag": "input"
-        },
-        {
-          "label": "Create Replay",
-          "path": "div[1]>div[1]>main[1]>div[1]>div[1]>div[1]>section[1]>div[2]>div[1]>button[1]",
-          "role": null,
-          "tag": "button"
-        }
-      ],
-      "wiredCount": 25
+      "unwired": [],
+      "wiredCount": 30
     },
     {
       "disabledCount": 0,
-      "elementCount": 30,
+      "elementCount": 29,
       "route": "SystemExtensions",
-      "unwired": [
-        {
-          "label": "Pause",
-          "path": "div[1]>div[1]>main[1]>div[1]>div[1]>section[1]>div[2]>div[1]>button[1]",
-          "role": null,
-          "tag": "button"
-        },
-        {
-          "label": "Download & validate latest",
-          "path": "div[1]>div[1]>main[1]>div[1]>div[1]>div[2]>section[2]>div[2]>button[1]",
-          "role": null,
-          "tag": "button"
-        }
-      ],
-      "wiredCount": 28
+      "unwired": [],
+      "wiredCount": 29
     },
     {
       "disabledCount": 0,
@@ -296,13 +212,13 @@
     },
     {
       "disabledCount": 0,
-      "elementCount": 34,
+      "elementCount": 41,
       "route": "ModelsRoles",
       "unwired": [],
-      "wiredCount": 34
+      "wiredCount": 41
     },
     {
-      "disabledCount": 0,
+      "disabledCount": 1,
       "elementCount": 29,
       "route": "Benchmark",
       "unwired": [],
@@ -389,21 +305,8 @@
       "disabledCount": 0,
       "elementCount": 31,
       "route": "ObserveLogs",
-      "unwired": [
-        {
-          "label": "All sources",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[2]>div[1]>button[1]",
-          "role": null,
-          "tag": "button"
-        },
-        {
-          "label": "combined",
-          "path": "div[1]>div[1]>main[1]>div[1]>section[1]>div[2]>div[1]>button[2]",
-          "role": null,
-          "tag": "button"
-        }
-      ],
-      "wiredCount": 29
+      "unwired": [],
+      "wiredCount": 31
     },
     {
       "disabledCount": 0,
@@ -449,9 +352,9 @@
     }
   ],
   "totals": {
-    "deadControls": 15,
-    "disabledControls": 5,
-    "elements": 1478,
+    "deadControls": 0,
+    "disabledControls": 1,
+    "elements": 1481,
     "routes": 50
   }
 }
