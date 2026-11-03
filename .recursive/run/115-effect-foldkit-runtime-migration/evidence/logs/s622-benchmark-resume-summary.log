@@ -45,3 +45,21 @@ subset toMatchObject. Targeted suites s622 + s618 + s620: 25/25 pass.
 (routes.ts carries their in-flight edits and a transient tsc error in modelsRoute), so the clean 92/901 raw
 run (vitest + node --test invariants, full output) will be produced from a clean detached worktree at the
 final commit after that repair lands, and committed raw - not just summarised.
+
+
+## FINAL (resumed completion at 458b787e)
+
+- Run gating enforced: Run is disabled when the judge is empty OR fewer than two runnable benchmark subjects
+  exist. Because the per-subject selection UI is not built, "selected" means all runnable endpoints. The
+  running-state condition is STILL a recorded difference (there is no active-run/progress state yet).
+- Targeted verification: tsc 0; s622 + s618 + s620 + s617 = 34/34 (s622-benchmark-final-targeted.log).
+- RAW full-suite evidence committed, not a summary: evidence/logs/s622-benchmark-full-suite-raw-458b787e.log
+  is the complete, unedited output of `corepack pnpm test` (tsc + vitest + node --test invariants) from a
+  clean detached worktree at HEAD 458b787e: 93 test files / 910 tests PASS, SUITE_EXIT=0.
+- Method note (honest): the first junction-based clean run produced 93/910 with 3 environment-only failures
+  (S48a build resolved the workspace packages through the junction into the main checkout; S26f/S40b timed
+  out under load). Replacing junctions with a real offline pnpm install plus copied built workspace dists
+  (the dists are untracked build artifacts) made the clean run green: S48a needed the local dists and a warm
+  build cache to finish inside its 20s timeout; S26f/S40b then passed.
+- The suite is now 93 files / 910 tests (not 92/901) because the models repair added the S623 per-route
+  verification matrix (1 file, 9 tests).
