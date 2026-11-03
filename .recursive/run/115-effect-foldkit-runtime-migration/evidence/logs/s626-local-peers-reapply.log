@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s626-local-peers-wiring.test.ts (3 tests) 433ms
+   ✓ S626 local peers wiring > renders the labelled inputs, add button, and row actions  345ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  16:42:57
+   Duration  46.95s (transform 21.22s, setup 0ms, collect 33.77s, tests 433ms, environment 9.22s, prepare 1.31s)
+
