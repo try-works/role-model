@@ -493,7 +493,7 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
       h.div([h.Class("mt-4 flex flex-wrap gap-2")], [
         h.button([
           h.Type("button"),
-          ...(modelCount === 0 || judge === "" ? [h.Disabled(true)] : []),
+          ...(modelCount < 2 || judge === "" ? [h.Disabled(true)] : []),
           h.OnClick(Message.BenchmarkRunRequested({})),
           h.Class("inline-flex h-[34px] items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground"),
         ], ["Run " + mode + " benchmark (" + String(modelCount) + " model" + (modelCount === 1 ? "" : "s") + ", " + String(caseCount) + " cases)"]),

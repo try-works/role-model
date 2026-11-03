@@ -110,6 +110,12 @@ describe("S622 benchmark parity", () => {
     const run = [...container.querySelectorAll("button")].find((button) => button.textContent?.startsWith("Run "));
     expect(run?.textContent).toBe("Run quick benchmark (2 models, 3 cases)");
     expect(run?.hasAttribute("disabled")).toBe(false);
+    // Reference gating: fewer than two selected subjects cannot compare head to head. The subject-selection
+    // UI is not built yet, so "selected" is all runnable endpoints for now; the running-state condition is
+    // still recorded as a difference until active-run state exists.
+    const single = await render({}, { modelEndpoints: parseReadbackFixture("modelEndpoints", [endpointsBody[0]]) });
+    const disabledRun = [...single.querySelectorAll("button")].find((button) => button.textContent?.startsWith("Run "));
+    expect(disabledRun?.hasAttribute("disabled")).toBe(true);
     expect(container.textContent).toContain("Clear all benchmark data");
   });
 
