@@ -149,8 +149,14 @@ describe("S617 handler-presence: routed inventory", () => {
     expect(learning?.unwired.some((entry) => entry.label.includes("Operator token"))).toBe(false);
     const packs = scans.find((scan) => scan.route === "LearningPacks");
     expect(packs?.unwired.some((entry) => entry.label.includes("Engage kill switch"))).toBe(false);
+    // The LocalPeers feature wired the peer actions; the endpoint/token inputs and row actions are no longer
+    // dead. These two routes remain the stable dead-control anchors.
     const peers = scans.find((scan) => scan.route === "LocalPeers");
-    expect(peers?.unwired.some((entry) => entry.label.includes("http://127.0.0.1:1234"))).toBe(true);
+    expect(peers?.unwired.some((entry) => entry.label.includes("http://127.0.0.1:1234"))).toBe(false);
+    const extensions = scans.find((scan) => scan.route === "SystemExtensions");
+    expect(extensions?.unwired.some((entry) => entry.label === "Pause")).toBe(true);
+    const operator = scans.find((scan) => scan.route === "SystemOperator");
+    expect(operator?.unwired.some((entry) => entry.label === "Create Replay")).toBe(true);
   });
 
   it("the comparison FAILS on a synthetic newly dead control and names it", () => {
