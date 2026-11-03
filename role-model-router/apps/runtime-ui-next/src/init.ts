@@ -217,9 +217,14 @@ const initRoute =
       const readbackKey = readbackKeyForRouteTag(route._tag);
       if (readbackKey !== null) {
         const token = 1;
-        const readbacks = { ...emptyReadbacks(), [readbackKey]: loadingReadback(token) };
+        const readbacks = route._tag === "Benchmark"
+          ? { ...emptyReadbacks(), benchmarkRuns: loadingReadback(token), benchmarkSummary: loadingReadback(token), benchmarkSuite: loadingReadback(token) }
+          : { ...emptyReadbacks(), [readbackKey]: loadingReadback(token) };
         return {
-          commands: [readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : route._tag === "Index" || route._tag === "Dashboard" ? "86400000" : undefined, key: readbackKey as ReadbackKey, token })],
+          commands: [
+            readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : route._tag === "Index" || route._tag === "Dashboard" ? "86400000" : undefined, key: readbackKey as ReadbackKey, token }),
+            ...(route._tag === "Benchmark" ? [readReadback({ key: "benchmarkSummary" as const, token }), readReadback({ key: "benchmarkRuns" as const, token })] : []),
+          ],
           model: {
             clicks: 0,
             controls: emptyControls(),

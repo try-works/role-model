@@ -365,48 +365,125 @@ export const modelsRolesRoute = (models: ReadbackState, endpoints: ReadbackState
   ], h, "models-roles-state");
 };
 
-export const benchmarkRoute = (readback: ReadbackState, h: HtmlBuilder<Message>, modelsView?: Model["modelsView"], endpoints?: ReadbackState): Html => {
-  const rows = readback.rows.map((row) => [row.id, row.label, row.value]);
-  const mode = modelsView?.benchmarkMode ?? "Quick (12 hard cases)";
-  const endpointOptions = (endpoints?.rows ?? []).flatMap((row) => {
+export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, runs: ReadbackState, h: HtmlBuilder<Message>, modelsView?: Model["modelsView"], endpoints?: ReadbackState): Html => {
+  const suiteCases = suite.rows.flatMap((entry) => {
     try {
-      // SAFETY: modelEndpoints rows carry this JSON record in meta.
-      const meta = JSON.parse(row.meta) as { readonly endpointId?: string; readonly modelId?: string };
-      if (meta.endpointId === undefined) return [];
-      return [{ label: meta.endpointId + (meta.modelId === undefined ? "" : " · " + meta.modelId), value: meta.endpointId }];
+      // SAFETY: benchmarkSuite rows carry this JSON record in meta.
+      const meta = JSON.parse(entry.meta) as { readonly benchmarkEligible?: boolean; readonly quickBenchmark?: boolean };
+      return [{ eligible: meta.benchmarkEligible === true, quick: meta.quickBenchmark === true }];
     } catch {
       return [];
     }
   });
-  const judgeOptions = endpointOptions.length === 0
-    ? [{ label: "Custom judge endpoint", value: "" }]
-    : [...endpointOptions, { label: "Custom judge endpoint", value: "" }];
-  const judge = modelsView?.benchmarkJudge ?? judgeOptions[0]?.value ?? "";
-  const select = (label: string, options: ReadonlyArray<string>, value: string, onChange: (next: string) => Message) => h.label([h.Class("flex flex-col gap-1 font-sans text-xs leading-4 text-muted-foreground")], [label, h.select([h.AriaLabel(label), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm text-foreground"), h.Value(value), h.OnInput(onChange)], options.map((option) => h.option([h.Value(option)], [option])))]);
+  const quickCases = suiteCases.filter((entry) => entry.eligible && entry.quick).length;
+  const eligibleCases = suiteCases.filter((entry) => entry.eligible).length;
+  const endpointOptions = (endpoints?.rows ?? []).flatMap((entry) => {
+    try {
+      // SAFETY: modelEndpoints rows carry this JSON record in meta.
+      const meta = JSON.parse(entry.meta) as { readonly endpointId?: string; readonly modelId?: string; readonly sourceType?: string };
+      if (meta.endpointId === undefined) return [];
+      return [{ label: (meta.modelId ?? meta.endpointId) + " (" + (meta.sourceType ?? "unknown") + ")", value: meta.endpointId }];
+    } catch {
+      return [];
+    }
+  });
+  const mode: "quick" | "full" = modelsView?.benchmarkMode !== undefined && modelsView.benchmarkMode.toLowerCase().includes("full") ? "full" : "quick";
+  const judge = modelsView?.benchmarkJudge ?? endpointOptions[0]?.value ?? "";
+  const caseCount = mode === "quick" ? quickCases : eligibleCases;
+  const modelCount = endpointOptions.length;
+  let summaryHeader: { readonly completedAtMs?: number | null; readonly judgeEndpointId?: string | null; readonly judgeModelId?: string | null; readonly mode?: string | null } | undefined;
+  try {
+    const headerRow = summary.rows.find((entry) => entry.id === "summary");
+    if (headerRow !== undefined) summaryHeader = JSON.parse(headerRow.meta) as typeof summaryHeader;
+  } catch {
+    summaryHeader = undefined;
+  }
+  const subjects = summary.rows.filter((entry) => entry.id !== "summary").flatMap((entry) => {
+    try {
+      // SAFETY: benchmarkSummary subject rows carry the BenchmarkSummarySubject record in meta.
+      const meta = JSON.parse(entry.meta) as {
+        readonly displayName?: string;
+        readonly endpointId?: string;
+        readonly modelId?: string;
+        readonly overallScore?: number;
+        readonly scoresByBucket?: Readonly<Record<"easy" | "medium" | "hard", { readonly score?: unknown; readonly cases?: unknown }>>;
+        readonly sourceType?: string | null;
+        readonly taxonomyScores?: Readonly<Record<string, Readonly<Record<string, number>>>>;
+      };
+      return [{ meta }];
+    } catch {
+      return [];
+    }
+  });
+  const percent = (value: unknown): string => {
+    const parsed = typeof value === "number" ? value : Number(value);
+    return Number.isFinite(parsed) ? String(Math.round(parsed * 100)) + "%" : "—";
+  };
+  const bucket = (value: unknown): string => {
+    const record = value as { readonly score?: unknown; readonly cases?: unknown } | undefined;
+    if (record === undefined) return "—";
+    const cases = Number(record.cases);
+    return percent(record.score) + (Number.isFinite(cases) ? " · " + String(cases) : "");
+  };
+  const scoreRows = subjects.map(({ meta }) => [
+    meta.displayName ?? meta.modelId ?? meta.endpointId ?? "—",
+    percent(meta.overallScore),
+    "—",
+    bucket(meta.scoresByBucket?.easy),
+    bucket(meta.scoresByBucket?.medium),
+    bucket(meta.scoresByBucket?.hard),
+    "—",
+    "—",
+    meta.sourceType ?? "—",
+  ]);
+  const taxonomyRows = subjects.flatMap(({ meta }) =>
+    Object.entries(meta.taxonomyScores ?? {}).flatMap(([dimension, values]) =>
+      Object.entries(values).map(([value, score]) => [dimension, value, percent(score)]),
+    ),
+  );
+  const runRows = runs.rows.flatMap((entry) => {
+    try {
+      // SAFETY: benchmarkRuns rows carry the BenchmarkRunListEntry record in meta.
+      const meta = JSON.parse(entry.meta) as { readonly completedAtMs?: number; readonly endpointIds?: ReadonlyArray<string>; readonly mode?: string; readonly suiteId?: string };
+      const completed = typeof meta.completedAtMs === "number" ? new Date(meta.completedAtMs).toISOString().slice(0, 10) : "—";
+      return [[entry.id, meta.mode ?? "—", String(entry.value), String(meta.endpointIds?.length ?? 0), completed, meta.suiteId ?? "—"]];
+    } catch {
+      return [];
+    }
+  });
+  const select = (label: string, options: ReadonlyArray<{ readonly label: string; readonly value: string }>, value: string, onChange: (next: string) => Message) =>
+    h.label([h.Class("flex flex-col gap-1 font-sans text-xs leading-4 text-muted-foreground")], [
+      label,
+      h.select([
+        h.AriaLabel(label),
+        h.Class("h-[34px] rounded-md border border-input bg-background px-2 font-sans text-sm"),
+        h.OnChange((next) => onChange(next)),
+      ], options.map((option) => h.option([h.Value(option.value), ...(option.value === value ? [h.Selected(true)] : [])], [option.label]))),
+    ]);
   return referenceSection("models", "ok", [
     h.h2([h.Class("rm3-next-route-title text-sm font-medium leading-5 tracking-tight")], ["Capability benchmark"]),
-    referenceCard("Run capability benchmark", "Select mode and judge, then grade runnable endpoints. Judge endpoint is also a benchmark subject.", [
-      h.div([h.Class("flex flex-wrap items-end justify-between gap-4")], [
-        h.div([h.Class("flex flex-wrap items-end gap-3")], [
-          select("Benchmark mode", ["Quick (12 hard cases)", "Full"], mode, (next) => Message.BenchmarkModeChanged({ value: next })),
-          h.label([h.Class("flex flex-col gap-1 font-sans text-xs leading-4 text-muted-foreground")], ["Judge endpoint", h.select([h.AriaLabel("Judge endpoint"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm text-foreground"), h.Value(judge), h.OnInput((next) => Message.BenchmarkJudgeChanged({ value: next }))], judgeOptions.map((option) => h.option([h.Value(option.value)], [option.label])))]),
-        ]),
-        h.div([h.Class("flex flex-wrap gap-2")], [
-          h.button([h.Type("button"), h.OnClick(Message.BenchmarkRunRequested({})), h.Class("inline-flex h-[34px] items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Run quick benchmark (3 models, 12 cases)"]),
-          h.button([h.Type("button"), h.OnClick(Message.BenchmarkClearRequested({})), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium text-foreground")], ["Clear all benchmark data"]),
-        ]),
+    referenceCard("Run capability benchmark", "Select mode and judge, then grade runnable endpoints.", [
+      h.div([h.Class("flex flex-wrap items-end gap-3")], [
+        select("Benchmark mode", [
+          { label: "Quick (" + String(quickCases) + " hard cases)", value: "quick" },
+          { label: "Full (all eligible cases)", value: "full" },
+        ], mode, (next) => Message.BenchmarkModeChanged({ value: next })),
+        select("Judge endpoint", endpointOptions.length === 0 ? [{ label: "No runnable endpoints", value: "" }] : endpointOptions, judge, (next) => Message.BenchmarkJudgeChanged({ value: next })),
+      ]),
+      h.div([h.Class("mt-4 flex flex-wrap gap-2")], [
+        h.button([h.Type("button"), h.OnClick(Message.BenchmarkRunRequested({})), h.Class("inline-flex h-[34px] items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Run " + mode + " benchmark (" + String(modelCount) + " model" + (modelCount === 1 ? "" : "s") + ", " + String(caseCount) + " cases)"]),
+        h.button([h.Type("button"), h.OnClick(Message.BenchmarkClearRequested({})), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium")], ["Clear all benchmark data"]),
       ]),
     ], h),
-    referenceCard("Benchmark scores", "Normalized 0–1 case scores for the selected run.", [
-      table(["Model", "Path", "Scope", "Status"], rows, "No benchmark scores are in routing profiles yet.", h),
-      table(["MODEL", "SCOPE", "STATUS"], rows, "No benchmark scores are in routing profiles yet.", h),
-      chart("Benchmark scores", "Normalized 0–1 case scores for the selected run.", "No benchmark score chart data recorded yet.", h),
+    referenceCard("Benchmark scores", "Scores are normalized 0–1 fractions shown as percentages.", [
+      h.p([h.DataAttribute("benchmark-last-run", ""), h.Class("font-mono text-xs")], ["Last run: " + (typeof summaryHeader?.completedAtMs === "number" ? new Date(summaryHeader.completedAtMs).toISOString().slice(0, 10) : "—") + " · Suite: " + (summaryHeader?.mode ?? "—") + " · Judge: " + (summaryHeader?.judgeModelId ?? summaryHeader?.judgeEndpointId ?? "—")]),
+      referenceTable(["Model", "Overall", "Profile", "Easy", "Medium", "Hard", "p50", "p95", "Scope"], scoreRows, "No benchmark scores are in routing profiles yet.", h, "models"),
     ], h),
-    referenceCard("Taxonomy dimensions", "Capability dimensions and their scores.", [
-      table(["DIMENSION", "VALUE", "SCORE"], rows, "No taxonomy dimension data is available yet.", h),
+    referenceCard("Taxonomy dimensions", "Per-model scores by taxonomy dimension.", [
+      referenceTable(["Dimension", "Value", "Score"], taxonomyRows, "No taxonomy dimension data is available yet.", h, "models"),
     ], h),
     referenceCard("Run history", "Completed capability benchmark runs.", [
-      table(["RUN", "MODEL", "SCORE"], rows, "No completed benchmark runs yet.", h),
+      referenceTable(["Run", "Mode", "Cases", "Models", "Completed", "Suite"], runRows, "No completed benchmark runs yet.", h, "models"),
     ], h),
   ], h);
 };

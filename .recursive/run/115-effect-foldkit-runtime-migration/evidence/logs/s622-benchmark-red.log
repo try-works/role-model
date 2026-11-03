@@ -1,0 +1,36 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s618-models-wiring.test.ts (11 tests) 1210ms
+   ✓ S618 models route wiring > renders every model as a real selectable control and selects the state model  648ms
+ ❯ test/s622-benchmark-parity.test.ts (7 tests | 1 failed) 1086ms
+   ✓ S622 benchmark parity > renders the mode options with suite-derived counts and the judge select with endpoint ids  574ms
+   ✓ S622 benchmark parity > renders the Run label with the selected model, case counts and the clear-all control 175ms
+   ✓ S622 benchmark parity > renders the scores, taxonomy and run-history tables from the readbacks 184ms
+   ✓ S622 benchmark parity > stores the mode/judge and dispatches the exact RunBenchmark/ClearBenchmark contract 41ms
+   ✓ S622 benchmark parity > sends the exact host contracts for the run and clear commands 34ms
+   × S622 benchmark parity > plans the suite, summary and runs readback queries on route entry 49ms
+     → Url.fromString is not a function
+   ✓ S622 benchmark parity > parses the three benchmark readbacks with their host paths 14ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s622-benchmark-parity.test.ts > S622 benchmark parity > plans the suite, summary and runs readback queries on route entry
+TypeError: Url.fromString is not a function
+ ❯ urlOf test/s622-benchmark-parity.test.ts:85:55
+     83| };
+     84| 
+     85| const urlOf = (href: string) => Option.getOrThrow(Url.fromString("http…
+       |                                                       ^
+     86| 
+     87| describe("S622 benchmark parity", () => {
+ ❯ test/s622-benchmark-parity.test.ts:153:70
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 17 passed (18)
+   Start at  10:13:13
+   Duration  55.11s (transform 26.69s, setup 0ms, collect 80.83s, tests 2.30s, environment 17.18s, prepare 2.52s)
+

@@ -191,6 +191,8 @@ const noopReadback = defineReadReadback({
   roles: async () => ({ body: [], status: 200 }),
   rolePolicy: async () => ({ body: { roleDefinitions: [], taskDefinitions: [] }, status: 200 }),
   benchmarkSuite: async () => ({ body: emptyBody, status: 200 }),
+  benchmarkSummary: async () => ({ body: {}, status: 200 }),
+  benchmarkRuns: async () => ({ body: [], status: 200 }),
   storageRetention: async () => ({ body: emptyBody, status: 200 }),
   models: async () => ({ body: emptyBody, status: 200 }),
   runtimeSummary: async () => ({ body: emptyBody, status: 200 }),
@@ -535,19 +537,25 @@ const endpointAdmissionCompletion = (
       const readbackKey = readbackKeyForRouteTag(route._tag);
       if (readbackKey !== null) {
         const learningPacks = route._tag === "Learning";
+        const benchmark = route._tag === "Benchmark";
         const token = model.readbacks[readbackKey].token + 1;
         const readbacks = { ...model.readbacks, [readbackKey]: loadingReadback(token) };
         return {
           commands: [
             readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : undefined, key: readbackKey, token }),
             ...(learningPacks ? [readReadback({ key: "learningPacks", token })] : []),
+            ...(benchmark ? [readReadback({ key: "benchmarkSummary" as const, token }), readReadback({ key: "benchmarkRuns" as const, token })] : []),
             scrollShellToTopCommand(),
           ],
           model: {
             ...model,
             diagnostics: idleDiagnostics(),
             observability: idleObservability(),
-            readbacks: learningPacks ? { ...readbacks, learningPacks: loadingReadback(token) } : readbacks,
+            readbacks: learningPacks
+              ? { ...readbacks, learningPacks: loadingReadback(token) }
+              : benchmark
+                ? { ...readbacks, benchmarkRuns: loadingReadback(token), benchmarkSummary: loadingReadback(token) }
+                : readbacks,
             refresh: {
               ...model.refresh,
               message: undefined,
@@ -614,6 +622,7 @@ const updateLocalPolicyDraft = (
       if (model.route._tag === "IntegrationsUpstream") return [{ key: "integrationProviders" }, { key: "configuredModels" }];
       if (model.route._tag === "SystemOperator") return [{ key: "operatorStatus" }, { key: "operatorTraceRoots" }];
       if (model.route._tag === "RuntimeConfig") return [{ key: "runtimeConfig" }];
+      if (model.route._tag === "Benchmark") return [{ key: "benchmarkSuite" }, { key: "benchmarkSummary" }, { key: "benchmarkRuns" }];
       if (model.route._tag === "Router") return [{ key: "router" }, { key: "routerConfig" }, { key: "routerCandidates" }, { key: "runtimeConfig" }, { key: "health" }];
       if (model.route._tag === "RouterStrategy" || model.route._tag === "RouterWorkloads" || model.route._tag === "RouterConfig" || model.route._tag === "RouterAgentStrategy") return [{ key: "routerConfig" }, { key: "runtimeConfig" }];
       const readbackKey = readbackKeyForRouteTag(model.route._tag);

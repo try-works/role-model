@@ -44,7 +44,7 @@ const renderBenchmark = async (modelsView?: Model["modelsView"]): Promise<HTMLEl
   const rendered = await Effect.runPromise(renderToString({
     init: () => ({ model: shellModel({ route: { _tag: "Benchmark" } }), commands: [] }),
     // SAFETY: renderToString infers Message=unknown; benchmarkRoute only emits typed messages.
-    view: (_model, h) => ({ body: benchmarkRoute(readbackWith({ rows: [] }), h as Parameters<typeof benchmarkRoute>[1], modelsView, endpoints), title: "benchmark" }),
+    view: (_model, h) => ({ body: benchmarkRoute(readbackWith({ rows: [] }), readbackWith({ rows: [] }), readbackWith({ rows: [] }), h as Parameters<typeof benchmarkRoute>[3], modelsView, endpoints), title: "benchmark" }),
   }, { isHydratable: false }));
   const container = document.createElement("div");
   container.innerHTML = rendered.html;
@@ -108,13 +108,13 @@ describe("S618 models route wiring", () => {
       const rendered = await Effect.runPromise(renderToString({
         init: () => ({ model: shellModel({ route: { _tag: "Benchmark" } }), commands: [] }),
         // SAFETY: renderToString infers Message=unknown; benchmarkRoute only emits typed messages.
-        view: (_model, h) => ({ body: benchmarkRoute({ rows: [], status: "ok", token: 0 }, h as Parameters<typeof benchmarkRoute>[1], undefined, endpointsWithModel), title: "benchmark" }),
+        view: (_model, h) => ({ body: benchmarkRoute({ rows: [], status: "ok", token: 0 }, { rows: [], status: "ok", token: 0 }, { rows: [], status: "ok", token: 0 }, h as Parameters<typeof benchmarkRoute>[3], undefined, endpointsWithModel), title: "benchmark" }),
       }, { isHydratable: false }));
       return { html: rendered.html };
     })()).html;
     const values = [...container.querySelectorAll("select[aria-label='Judge endpoint'] option")].map((option) => option.getAttribute("value"));
-    expect(values).toEqual(["judge-1", "judge-2", ""]);
-    expect(container.textContent).toContain("judge-1 · model-one");
+    expect(values).toEqual(["judge-1", "judge-2"]);
+    expect(container.textContent).toContain("model-one (unknown)");
     const model = shellModel({ route: { _tag: "Benchmark" } });
     expect(update(model, Message.BenchmarkJudgeChanged({ value: "judge-2" })).model.modelsView?.benchmarkJudge).toBe("judge-2");
   });

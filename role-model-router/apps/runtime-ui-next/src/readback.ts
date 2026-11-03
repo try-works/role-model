@@ -35,6 +35,8 @@ export type ReadbackKey =
   | "roles"
   | "rolePolicy"
   | "benchmarkSuite"
+  | "benchmarkSummary"
+  | "benchmarkRuns"
   | "storageRetention"
   | "models"
   | "runtimeSummary"
@@ -86,6 +88,8 @@ export const ReadbackKeySchema = Schema.Literals([
   "roles",
   "rolePolicy",
   "benchmarkSuite",
+  "benchmarkSummary",
+  "benchmarkRuns",
   "storageRetention",
   "models",
   "runtimeSummary",
@@ -159,6 +163,8 @@ export const ReadbacksState = Schema.Struct({
   roles: ReadbackState,
   rolePolicy: ReadbackState,
   benchmarkSuite: ReadbackState,
+  benchmarkSummary: ReadbackState,
+  benchmarkRuns: ReadbackState,
   storageRetention: ReadbackState,
   models: ReadbackState,
   runtimeSummary: ReadbackState,
@@ -225,6 +231,8 @@ export const emptyReadbacks = (): ReadbacksState => ({
   roles: idleReadback(),
   rolePolicy: idleReadback(),
   benchmarkSuite: idleReadback(),
+  benchmarkSummary: idleReadback(),
+  benchmarkRuns: idleReadback(),
   storageRetention: idleReadback(),
   models: idleReadback(),
   runtimeSummary: idleReadback(),
@@ -658,7 +666,7 @@ const parseModelEndpoints = (body: unknown, token: number): ReadbackState => {
     if (endpoint === undefined) return [];
     const id = typeof endpoint.endpointId === "string" ? endpoint.endpointId : typeof endpoint.id === "string" ? endpoint.id : undefined;
     if (id === undefined) return [];
-    return [row(id, id, String(endpoint.modelId ?? "—"), JSON.stringify({ endpointId: id, healthStatus: endpoint.healthStatus ?? null, modelId: endpoint.modelId ?? null, providerAccountId: endpoint.providerAccountId ?? null, reasoningEffort: endpoint.reasoningEffort ?? null, reasoningEffortLevels: endpoint.reasoningEffortLevels ?? [], roleIds: endpoint.roleIds ?? [], status: endpoint.status ?? null }))];
+    return [row(id, id, String(endpoint.modelId ?? "—"), JSON.stringify({ endpointId: id, healthStatus: endpoint.healthStatus ?? null, modelId: endpoint.modelId ?? null, providerAccountId: endpoint.providerAccountId ?? null, reasoningEffort: endpoint.reasoningEffort ?? null, reasoningEffortLevels: endpoint.reasoningEffortLevels ?? [], roleIds: endpoint.roleIds ?? [], sourceType: endpoint.sourceType ?? null, status: endpoint.status ?? null }))];
   });
   if (list.length > 0 && rows.length === 0) return failedReadback("Model endpoints read failed: invalid response", token);
   return okRows(rows, token);
@@ -896,8 +904,41 @@ const parseBenchmarkSuite = (body: unknown, token: number): ReadbackState => {
   const rows = list.flatMap((value, index) => {
     const item = asRecord(value);
     if (item === undefined) return [];
-    return [row(String(item.case_id ?? index), String(item.case_id ?? index), String(item.difficulty_bucket ?? ""), String(item.category ?? ""))];
+    return [row(String(item.case_id ?? index), String(item.case_id ?? index), String(item.difficulty_bucket ?? ""), JSON.stringify({
+      benchmarkEligible: item.benchmark_eligible === true,
+      category: String(item.category ?? ""),
+      difficulty: String(item.difficulty_bucket ?? ""),
+      quickBenchmark: item.quick_benchmark === true,
+    }))];
   });
+  return okRows(rows, token);
+};
+const parseBenchmarkSummary = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  if (record === undefined) return failedReadback("Benchmark summary read failed: invalid response", token);
+  const header = row("summary", "Benchmark summary", String(record.mode ?? ""), JSON.stringify({
+    completedAtMs: record.completedAtMs ?? null,
+    judgeEndpointId: record.judgeEndpointId ?? null,
+    judgeModelId: record.judgeModelId ?? null,
+    mode: record.mode ?? null,
+    runId: record.runId ?? null,
+    suiteId: record.suiteId ?? null,
+  }));
+  const subjects = asArray(record.subjects).flatMap((value) => {
+    const subject = asRecord(value);
+    if (subject === undefined) return [];
+    return [row(String(subject.endpointId ?? ""), String(subject.displayName ?? subject.modelId ?? subject.endpointId ?? ""), String(subject.overallScore ?? ""), JSON.stringify(subject))];
+  });
+  return okRows([header, ...subjects], token);
+};
+const parseBenchmarkRuns = (body: unknown, token: number): ReadbackState => {
+  const list = Array.isArray(body) ? body : asArray(asRecord(body)?.runs);
+  const rows = list.flatMap((value, index) => {
+    const entry = asRecord(value);
+    if (entry === undefined) return [];
+    return [row(String(entry.runId ?? index), String(entry.mode ?? ""), String(entry.caseCount ?? ""), JSON.stringify(entry))];
+  });
+  if (rows.length === 0) return { rows: [], status: "empty", token };
   return okRows(rows, token);
 };
 const parseStorageRetention = (body: unknown, token: number): ReadbackState => {
@@ -1136,6 +1177,20 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     parse: parseBenchmarkSuite,
     path: READBACK_PATHS.benchmarkSuite,
   },
+  benchmarkSummary: {
+    emptyText: "No benchmark summary available.",
+    key: "benchmarkSummary",
+    label: "Benchmark summary",
+    parse: parseBenchmarkSummary,
+    path: READBACK_PATHS.benchmarkSummary,
+  },
+  benchmarkRuns: {
+    emptyText: "No completed benchmark runs yet.",
+    key: "benchmarkRuns",
+    label: "Benchmark runs",
+    parse: parseBenchmarkRuns,
+    path: READBACK_PATHS.benchmarkRuns,
+  },
   storageRetention: {
     emptyText: "No storage retention records available.",
     key: "storageRetention",
@@ -1357,6 +1412,8 @@ export const createReadbackClients = (
   roles: client(READBACK_SPECS.roles),
   rolePolicy: client(READBACK_SPECS.rolePolicy),
     benchmarkSuite: client(READBACK_SPECS.benchmarkSuite),
+    benchmarkSummary: client(READBACK_SPECS.benchmarkSummary),
+    benchmarkRuns: client(READBACK_SPECS.benchmarkRuns),
     storageRetention: client(READBACK_SPECS.storageRetention),
     models: client(READBACK_SPECS.models),
     runtimeSummary: client(READBACK_SPECS.runtimeSummary),
