@@ -18,10 +18,10 @@ describe("S629 system operator wiring", () => {
     }, { isHydratable: false }));
     const container = document.createElement("div");
     container.innerHTML = rendered.html;
-    expect(container.querySelector("#operator-token")?.getAttribute("value")).toBe("tok");
+    expect(container.querySelector("#operator-access-token")?.getAttribute("value")).toBe("tok");
     expect(container.querySelector("[data-operator-load-state]")).not.toBeNull();
-    expect(container.querySelector("#operator-trace-root")?.getAttribute("value")).toBe("trace-1");
-    expect(container.querySelector("#operator-replay-count")?.getAttribute("value")).toBe("25");
+    expect(container.querySelector("#replay-trace-root")?.getAttribute("value")).toBe("trace-1");
+    expect(container.querySelector("#replay-budget")?.getAttribute("value")).toBe("25");
     expect(container.querySelector("[data-operator-create-replay]")).not.toBeNull();
   });
 

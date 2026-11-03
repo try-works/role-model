@@ -50,9 +50,9 @@ describe("S631 task-102 real familyPage state plumbing", () => {
 
   it("SystemOperator reads token/trace/count", async () => {
     const html = await render((h) => familyPage("Operator Controls", "system-operator", "op", [{ label: "Operator status", readback: empty }], h, undefined, undefined, { learningOperatorToken: "tok", systemOperatorReplayCount: "7", systemOperatorTraceRoot: "trace-1" }));
-    expect(html.querySelector("#operator-token")?.getAttribute("value")).toBe("tok");
-    expect(html.querySelector("#operator-trace-root")?.getAttribute("value")).toBe("trace-1");
-    expect(html.querySelector("#operator-replay-count")?.getAttribute("value")).toBe("7");
+    expect(html.querySelector("#operator-access-token")?.getAttribute("value")).toBe("tok");
+    expect(html.querySelector("#replay-trace-root")?.getAttribute("value")).toBe("trace-1");
+    expect(html.querySelector("#replay-budget")?.getAttribute("value")).toBe("7");
   });
 
   it("SystemExtensions renders one Pause per row and mutates the chosen id", async () => {

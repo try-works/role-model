@@ -131,7 +131,7 @@ describe("S595 storage retention and control wiring", () => {
     await waitFor(() => document.querySelector("[data-route='system-operator']")?.getAttribute("data-page-layout") ?? null, "operator page");
     const select = document.querySelector<HTMLSelectElement>("[data-learning-mode-select]");
     expect(select, "learning mode select missing").not.toBeNull();
-    select!.value = "off";
+    select!.value = "disabled";
     select!.dispatchEvent(new Event("change", { bubbles: true }));
     await new Promise((resolve) => setTimeout(resolve, 40));
     document.querySelector<HTMLButtonElement>("[data-learning-mode-update]")?.click();
@@ -140,7 +140,7 @@ describe("S595 storage retention and control wiring", () => {
     await new Promise((resolve) => setTimeout(resolve, 250));
     expect(requests.some((request) => request.method === "POST" && request.url.includes("/api/role-model/operator/learning/mode"))).toBe(true);
     const modeRequest = requests.find((request) => request.url.includes("/api/role-model/operator/learning/mode"));
-    expect(modeRequest?.body).toEqual({ mode: "off" });
+    expect(modeRequest?.body).toEqual({ mode: "disabled" });
     expect(requests.some((request) => request.method === "POST" && request.url.includes("/api/role-model/operator/learning/rollback"))).toBe(true);
   });
 });

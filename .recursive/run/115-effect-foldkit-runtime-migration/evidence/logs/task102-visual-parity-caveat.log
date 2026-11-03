@@ -1,4 +1,12 @@
-task-102 repair caveat
-SystemOperator (features/system/operator.ts) and SystemExtensions (features/system/extensions.ts) preserve the
-readbacks, controls, and exact host contracts, but compress the reference cards from families-view. Visual parity
-with :3456 is intentionally deferred and recorded in route-verification-matrix.md rows 45-46.
+task-105 closure: SystemOperator/SystemExtensions visual parity
+
+The task-102 caveat (compressed reference cards) is CLOSED for SystemOperator and SystemExtensions.
+Both extracted feature pages now follow the :3456 React sources:
+- operator-controls.tsx: Operator Controls -> Operator Capability Status -> Trace lineage ->
+  Replay Jobs -> Evaluation Jobs -> Shadow Learning, with the reference copy, token/trace-root/
+  budget layout, Disabled/Shadow/Advisory mode select, Update Mode / Roll Back Shadow State and
+  the Storage & Retention link.
+- extensions.tsx: Contribution posture -> Recommendation ledger -> Extension inventory, with the
+  reference descriptions, Download & validate latest, and per-row Pause.
+No visual-parity remainder remains for these two routes; other compressed family pages are out of
+this task's scope.

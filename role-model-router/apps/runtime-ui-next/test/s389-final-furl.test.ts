@@ -102,6 +102,6 @@ describe("S379d final family pages (real host readbacks)", () => {
   it("renders the system operator page from the operator status readback", async () => {
     mountAt("/system/operator", "s389-operator", async () => json());
     expect(await waitForRouteState("system-operator", "ok", "operator ok")).toBe("ok");
-    expect(document.querySelector("[data-route='system-operator']")?.textContent).toContain("Operator status");
+    expect(document.querySelector("[data-route='system-operator']")?.textContent).toContain("Operator Capability Status");
   });
 });
