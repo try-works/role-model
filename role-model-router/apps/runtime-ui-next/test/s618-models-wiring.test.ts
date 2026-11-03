@@ -202,7 +202,7 @@ describe("S618 models route wiring", () => {
       rows: [
         { id: "p", label: "p", meta: JSON.stringify({ endpointId: "p", modelId: "peer-model", providerId: "peer", sourceType: "local" }), value: "local" },
         { id: "l", label: "l", meta: JSON.stringify({ endpointId: "l", modelId: "llama-model", providerId: "llama-swap", sourceType: "local" }), value: "local" },
-        { id: "r", label: "r", meta: JSON.stringify({ endpointId: "r", modelId: "remote-model", providerId: "openai", sourceType: "remote" }), value: "remote" },
+        { id: "r", label: "r", meta: JSON.stringify({ endpointId: "r", modelId: "remote-model", providerAccountId: "acct-1", providerId: "openai", sourceType: "remote" }), value: "remote" },
       ], status: "ok" as const, token: 0,
     };
     const base = shellModel({ route: { _tag: "Models" } });
@@ -213,8 +213,15 @@ describe("S618 models route wiring", () => {
     };
     expect(kindOf("peer-model").args.kind).toBe("peer");
     expect(kindOf("llama-model").args.kind).toBe("llama-swap");
-    // KNOWN GAP(S620): remote/account-managed toggles still use the peer route until the account upsert path exists.
-    expect(kindOf("remote-model").args.kind).toBe("peer");
+    const roles = { rows: [{ id: "role-policy", label: "policy", meta: JSON.stringify({ roleDefinitions: [{ role_id: "coder" }, { role_id: "architect" }], taskDefinitions: [] }), value: "" }], status: "ok" as const, token: 0 };
+    const accounts = { rows: [{ id: "account:0", label: "acct-1", meta: JSON.stringify({ accountScope: "workspace-default", allowedModels: ["remote-model"], authMode: "api-key", credentialRef: "vault:acct-1", deniedModels: [], modelRoleBindings: [{ modelId: "remote-model", endpointId: "r", roleAssignmentMode: "include", enabledRoleIds: ["coder"], roleIds: ["coder"], disabledRoleIds: [] }], orgScope: "personal", providerAccountId: "acct-1", providerId: "openai", providerKind: "openai" }), value: "openai" }], status: "ok" as const, token: 0 };
+    const remote = { ...base, readbacks: { ...base.readbacks, modelEndpoints: fixtureEndpoints, providerAccounts: accounts, rolePolicy: roles } };
+    const next = update(remote, Message.ModelsRoleToggled({ enabled: true, modelId: "remote-model", roleId: "architect" }));
+    const command = (next.commands ?? [])[0] as unknown as { readonly args: { readonly accountJson: string }; readonly name: string };
+    expect(command.name).toBe("UpsertProviderAccount");
+    const body = JSON.parse(command.args.accountJson) as Record<string, unknown>;
+    expect(body.providerAccountId).toBe("acct-1");
+    expect(body.modelRoleBindings).toEqual([{ disabledRoleIds: [], enabledRoleIds: [], modelId: "remote-model", endpointId: "r", roleAssignmentMode: "all", roleIds: [] }]);
   });
 
   it("renders the disabled eject reason, confirm transition, and zero-endpoint guard", async () => {
@@ -245,6 +252,22 @@ describe("S618 models route wiring", () => {
     const command = (removed.commands ?? [])[0] as unknown as { readonly args: { readonly endpointId: string; readonly accountId: string } };
     expect(command.args.endpointId).toBe("e1");
     expect(command.args.accountId).toBe("acct-a");
+  });
+
+  it("renders account role eligibility for a remote model", async () => {
+    const remoteModels = { ...models, rows: [{ id: "remote-model", label: "Remote", meta: JSON.stringify({ endpointIds: ["r"] }), value: "openai" }] };
+    const remoteEndpoints = { ...endpoints, rows: [{ id: "r", label: "r", meta: JSON.stringify({ endpointId: "r", modelId: "remote-model", providerAccountId: "acct-1", providerId: "openai", sourceType: "remote" }), value: "remote" }] };
+    const roles = { rows: [{ id: "role-policy", label: "policy", meta: JSON.stringify({ roleDefinitions: [{ role_id: "coder" }, { role_id: "architect" }], taskDefinitions: [] }), value: "" }], status: "ok" as const, token: 0 };
+    const accounts = { rows: [{ id: "account:0", label: "acct-1", meta: JSON.stringify({ modelRoleBindings: [{ modelId: "remote-model", endpointId: "r", roleAssignmentMode: "include", enabledRoleIds: ["coder"], roleIds: ["coder"] }], providerAccountId: "acct-1" }), value: "openai" }], status: "ok" as const, token: 0 };
+    const rendered = await Effect.runPromise(renderToString({
+      init: () => ({ model: shellModel({ route: { _tag: "Models" } }), commands: [] }),
+      // SAFETY: renderToString infers Message=unknown; modelsRoute only emits typed messages.
+      view: (_model, h) => ({ body: modelsRoute(remoteModels, remoteEndpoints, h as Parameters<typeof modelsRoute>[2], { selectedModelId: "remote-model" }, roles, accounts), title: "models" }),
+    }, { isHydratable: false }));
+    const container = document.createElement("div");
+    container.innerHTML = rendered.html;
+    expect(container.querySelector("[data-models-account-eligibility='acct-1']")?.textContent).toContain("Account role eligibility");
+    expect(container.querySelector("[data-models-account-eligibility='acct-1']")?.textContent).toContain("coder");
   });
 
   it("sends the exact host removal and controller requests", async () => {

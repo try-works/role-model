@@ -30,9 +30,47 @@ const ROLE_TASK_COUNTS = {
   writer: 85,
 } as const;
 
-export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: HtmlBuilder<Message>, modelsView?: Model["modelsView"], rolePolicy?: ReadbackState): Html => {
+export interface AccountEligibility {
+  readonly accountId: string;
+  readonly endpointId: string;
+  readonly roleIds: readonly string[];
+}
+
+export const accountEligibilityFor = (accounts: ReadbackState | undefined, endpoints: ReadbackState, modelId: string, roleIds: readonly string[]): AccountEligibility | undefined => {
+  if (accounts === undefined) return undefined;
+  for (const endpointRow of endpoints.rows) {
+    try {
+      // SAFETY: modelEndpoints rows carry this JSON record in meta.
+      const endpoint = JSON.parse(endpointRow.meta) as { readonly endpointId?: string; readonly modelId?: string; readonly providerAccountId?: string; readonly sourceType?: string };
+      if (endpoint.modelId !== modelId || endpoint.sourceType === "local" || typeof endpoint.providerAccountId !== "string" || typeof endpoint.endpointId !== "string") continue;
+      for (const accountRow of accounts.rows) {
+        try {
+          // SAFETY: providerAccounts rows carry the full account JSON in meta.
+          const account = JSON.parse(accountRow.meta) as Record<string, unknown>;
+          if (account.providerAccountId !== endpoint.providerAccountId) continue;
+          const bindings = Array.isArray(account.modelRoleBindings) ? account.modelRoleBindings : [];
+          const binding = bindings.find((entry) => entry !== null && typeof entry === "object" && (entry as Record<string, unknown>).endpointId === endpoint.endpointId)
+            ?? bindings.find((entry) => entry !== null && typeof entry === "object" && (entry as Record<string, unknown>).endpointId === undefined && (entry as Record<string, unknown>).modelId === modelId);
+          const mode = binding === undefined || binding === null ? "all" : (binding as Record<string, unknown>).roleAssignmentMode;
+          if (mode === "all" || mode === undefined) return { accountId: endpoint.providerAccountId, endpointId: endpoint.endpointId, roleIds };
+          const disabled = new Set(Array.isArray((binding as Record<string, unknown>).disabledRoleIds) ? ((binding as Record<string, unknown>).disabledRoleIds as unknown[]).filter((id): id is string => typeof id === "string") : []);
+          const enabled = Array.isArray((binding as Record<string, unknown>).enabledRoleIds) ? ((binding as Record<string, unknown>).enabledRoleIds as unknown[]).filter((id): id is string => typeof id === "string") : [];
+          return { accountId: endpoint.providerAccountId, endpointId: endpoint.endpointId, roleIds: mode === "exclude" ? roleIds.filter((id) => !disabled.has(id)) : enabled };
+        } catch {
+          // Unparseable accounts fall through to the next row.
+        }
+      }
+    } catch {
+      // Unparseable endpoints cannot identify an account.
+    }
+  }
+  return undefined;
+};
+
+export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: HtmlBuilder<Message>, modelsView?: Model["modelsView"], rolePolicy?: ReadbackState, accounts?: ReadbackState): Html => {
   const rolePolicyValue = rolePolicyFromReadback(rolePolicy);
   const roleCatalog = rolePolicyValue?.roleDefinitions.map((role) => role.role_id) ?? (Object.keys(ROLE_TASK_COUNTS) as Array<keyof typeof ROLE_TASK_COUNTS>);
+  const allRoleIds = rolePolicyValue?.roleDefinitions.map((role) => role.role_id) ?? (Object.keys(ROLE_TASK_COUNTS) as string[]);
   const taskCount = (roleId: string): number => {
     // SAFETY: the fallback catalog is exactly the ROLE_TASK_COUNTS record keys.
     if (rolePolicyValue === null || rolePolicyValue === undefined) return Number(ROLE_TASK_COUNTS[roleId as keyof typeof ROLE_TASK_COUNTS] ?? 0);
@@ -57,7 +95,9 @@ export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: 
     }
     const endpointsForModel = endpointMeta.filter((endpoint) => endpoint.modelId === row.id || (meta.endpointIds ?? []).includes(endpoint.endpointId ?? ""));
     const health = endpointsForModel[0]?.healthStatus ?? endpointsForModel[0]?.status ?? "unknown";
-    const roles = [...new Set(endpointsForModel.flatMap((endpoint) => endpoint.roleIds ?? []))];
+    const endpointRoles = [...new Set(endpointsForModel.flatMap((endpoint) => endpoint.roleIds ?? []))];
+    const account = accountEligibilityFor(accounts, endpoints, row.id, allRoleIds);
+    const roles = endpointRoles.length > 0 ? endpointRoles : (account?.roleIds ?? []);
     return {
       contextWindow: meta.contextWindow ?? null,
       displayName: row.label,
@@ -189,8 +229,8 @@ export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: 
                       h.DataAttribute("models-role-toggle", String(role)),
                       h.AriaPressed(enabled ? "true" : "false"),
                       h.Class("flex w-full items-center gap-3 py-2 text-left"),
-                      // KNOWN GAP(S620): remote/account-managed role toggles still target the local model-role route;
-                      // the account-model binding path needs the account readback + upsert payload.
+                      // Remote/account-managed toggles upsert the provider account modelRoleBindings; local
+                      // peers/llama-swap use the local model-role route.
                       h.OnClick(Message.ModelsRoleToggled({ enabled: !enabled, modelId: selected?.id ?? "", roleId: String(role) })),
                     ], [
                       h.span([h.Attribute("aria-hidden", "true"), h.Class("flex size-4 shrink-0 items-center justify-center rounded-[4px] " + (enabled ? "bg-[var(--rm-fg)] text-[10px] text-[var(--rm-bg)]" : "border border-[var(--rm-border)]"))], [enabled ? "✓" : ""]),
@@ -200,6 +240,10 @@ export const modelsRoute = (models: ReadbackState, endpoints: ReadbackState, h: 
                   ]);
                 }),
               ),
+              (() => {
+                const account = selected === undefined ? undefined : accountEligibilityFor(accounts, endpoints, selected.id, allRoleIds);
+                return account === undefined ? null : h.div([h.Class("rounded-md border border-border bg-secondary px-3 py-2 text-xs text-muted-foreground"), h.DataAttribute("models-account-eligibility", account.accountId)], ["Account role eligibility · " + account.accountId + " · " + account.roleIds.join(", ")]);
+              })(),
               h.div([h.Class("flex flex-wrap gap-2 pt-2"), h.DataAttribute("models-footer-actions", "")], [
                 h.button([h.Type("button"), h.AriaDisabled(selected === undefined || selected.endpointCount === 0), h.OnClick(Message.ModelsControllerSetRequested({ modelId: selected?.id ?? "" })), h.Class("inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground")], ["Make primary controller"]),
                 h.a([h.Href("/models/roles"), h.Class("inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground")], ["Open Roles"]),

@@ -307,6 +307,44 @@ const benchmarkEndpointIds = (model: Model): ReadonlyArray<string> =>
 const roleAction = (kind: RoleActionKind, status: "idle" | "saving" | "saved" | "error", message?: string, token?: number) =>
   ({ kind, status, ...(message === undefined ? {} : { message }), ...(token === undefined ? {} : { token }) });
 
+const accountRoleIds = (binding: Record<string, unknown> | undefined, allRoleIds: readonly string[]): string[] => {
+  if (binding === undefined) return [...allRoleIds];
+  const mode = binding.roleAssignmentMode;
+  if (mode === "all" || mode === undefined) return [...allRoleIds];
+  if (mode === "exclude") {
+    const disabled = new Set(Array.isArray(binding.disabledRoleIds) ? binding.disabledRoleIds.filter((id): id is string => typeof id === "string") : []);
+    return allRoleIds.filter((id) => !disabled.has(id));
+  }
+  const enabled = Array.isArray(binding.enabledRoleIds) ? binding.enabledRoleIds.filter((id): id is string => typeof id === "string") : Array.isArray(binding.roleIds) ? binding.roleIds.filter((id): id is string => typeof id === "string") : [];
+  return enabled;
+};
+
+const accountRoleMutation = (account: Record<string, unknown>, modelId: string, roleIds: readonly string[], allRoleIds: readonly string[], endpointId?: string): string => {
+  const bindings = Array.isArray(account.modelRoleBindings) ? account.modelRoleBindings : [];
+  const otherBindings = bindings.filter((entry) => {
+    if (entry === null || typeof entry !== "object") return false;
+    const binding = entry as Record<string, unknown>;
+    return endpointId === undefined ? binding.modelId !== modelId : binding.endpointId !== endpointId;
+  });
+  const selected = new Set(roleIds);
+  const known = allRoleIds.filter((roleId) => selected.has(roleId));
+  const assignment = allRoleIds.length > 0 && known.length === allRoleIds.length
+    ? { disabledRoleIds: [] as string[], enabledRoleIds: [] as string[], roleAssignmentMode: "all" as const }
+    : known.length === 0
+      ? { disabledRoleIds: [] as string[], enabledRoleIds: [] as string[], roleAssignmentMode: "include" as const }
+      : { disabledRoleIds: allRoleIds.filter((roleId) => !selected.has(roleId)), enabledRoleIds: [] as string[], roleAssignmentMode: "exclude" as const };
+  const nextBinding = {
+    modelId,
+    ...(endpointId === undefined ? {} : { endpointId }),
+    roleIds: assignment.roleAssignmentMode === "include" ? [...assignment.enabledRoleIds] : [],
+    ...assignment,
+  };
+  return JSON.stringify({
+    ...account,
+    modelRoleBindings: [...otherBindings, nextBinding],
+  });
+};
+
 const peerRows = (model: Model): ReadonlyArray<{ readonly authToken?: string; readonly id: string; readonly url: string }> =>
   model.readbacks.localPeers.rows.flatMap((row) => {
     try {
@@ -1077,6 +1115,46 @@ const updateLocalPolicyDraft = (
             if (entry.modelId !== modelId) continue;
             if (entry.enabled) baseline.add(entry.roleId);
             else baseline.delete(entry.roleId);
+          }
+          const rolePolicy = rolePolicyFromReadback(model.readbacks.rolePolicy);
+          const allRoleIds = rolePolicy?.roleDefinitions.map((role) => role.role_id) ?? [];
+          let remote: { readonly endpointId?: string; readonly providerAccountId: string } | undefined;
+          for (const row of model.readbacks.modelEndpoints.rows) {
+            try {
+              // SAFETY: modelEndpoints rows carry this JSON record in meta.
+              const meta = JSON.parse(row.meta) as { readonly endpointId?: string; readonly modelId?: string; readonly providerAccountId?: string; readonly sourceType?: string };
+              if (meta.modelId !== modelId || meta.sourceType === "local" || typeof meta.providerAccountId !== "string") continue;
+              remote = { ...(typeof meta.endpointId === "string" ? { endpointId: meta.endpointId } : {}), providerAccountId: meta.providerAccountId };
+              break;
+            } catch {
+              // Unparseable rows cannot identify an account binding.
+            }
+          }
+          if (remote !== undefined) {
+            const account = model.readbacks.providerAccounts.rows.flatMap((row) => {
+              try {
+                // SAFETY: providerAccounts rows carry the full account JSON in meta.
+                const meta = JSON.parse(row.meta) as Record<string, unknown>;
+                return meta.providerAccountId === remote?.providerAccountId ? [meta] : [];
+              } catch {
+                return [];
+              }
+            })[0];
+            if (account !== undefined) {
+              const bindings = Array.isArray(account.modelRoleBindings) ? account.modelRoleBindings : [];
+              const binding = bindings.find((entry) => entry !== null && typeof entry === "object" && remote?.endpointId !== undefined && (entry as Record<string, unknown>).endpointId === remote?.endpointId)
+                ?? bindings.find((entry) => entry !== null && typeof entry === "object" && (entry as Record<string, unknown>).endpointId === undefined && (entry as Record<string, unknown>).modelId === modelId);
+              const selected = new Set(accountRoleIds(binding === null || binding === undefined ? undefined : binding as Record<string, unknown>, allRoleIds));
+              for (const entry of overrides) {
+                if (entry.modelId !== modelId) continue;
+                if (entry.enabled) selected.add(entry.roleId);
+                else selected.delete(entry.roleId);
+              }
+              return {
+                commands: [modelsCommands.upsertAccount({ accountJson: accountRoleMutation(account, modelId, [...selected].sort(), allRoleIds, remote.endpointId), token: model.readbacks.providerAccounts.token + 1 })],
+                model: { ...model, modelsView: { ...state, roleOverrides: overrides } },
+              };
+            }
           }
           let kind: "llama-swap" | "peer" = "peer";
           for (const row of model.readbacks.modelEndpoints.rows) {

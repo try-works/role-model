@@ -771,6 +771,7 @@ export interface ModelsClient {
   readonly removeLlamaSwapModel: (modelId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly setController: (endpointId: string | null) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly setRoles: (modelId: string, kind: "llama-swap" | "peer", roleIds: ReadonlyArray<string>) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly upsertAccount: (accountJson: string) => Promise<{ readonly body: unknown; readonly status: number }>;
 }
 export const createModelsClient = (options: { readonly fetchImpl?: typeof fetch } = {}): ModelsClient => {
   const fetchImpl = options.fetchImpl ?? fetch;
@@ -795,6 +796,7 @@ export const createModelsClient = (options: { readonly fetchImpl?: typeof fetch 
     removePeerModel: (modelId) => send("/api/role-model/local/peer/models/" + encodeURIComponent(modelId) + "/unload", "POST", "{}"),
     removeLlamaSwapModel: (modelId) => send("/api/role-model/local/llama-swap/models/" + encodeURIComponent(modelId) + "/unload", "POST", "{}"),
     setController: (endpointId) => send("/api/role-model/controller", "PATCH", JSON.stringify({ endpointId })),
+    upsertAccount: (accountJson) => send("/api/role-model/accounts", "POST", accountJson),
     setRoles: (modelId, kind, roleIds) => send("/api/role-model/local/" + kind + "/models/" + encodeURIComponent(modelId) + "/roles", "PUT", JSON.stringify({
       disabledRoleIds: [],
       enabledRoleIds: [...roleIds],
@@ -933,6 +935,15 @@ export const defineModelsCommands = (client: ModelsClient) => ({
           : Message.ModelsActionFailed({ message: "Controller update failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
     messages: [Message.ModelsActionSucceeded, Message.ModelsActionFailed],
   }),
+  upsertAccount: Command.define("UpsertProviderAccount", {
+    args: { accountJson: Schema.String, token: Schema.Number },
+    execute: ({ accountJson, token }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.upsertAccount(accountJson) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.ModelsActionSucceeded({ message: "Account model role eligibility saved.", token })
+          : Message.ModelsActionFailed({ message: "Save account roles failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
+    messages: [Message.ModelsActionSucceeded, Message.ModelsActionFailed],
+  }),
   setRoles: Command.define("SetModelRoles", {
     args: { kind: Schema.Literals(["llama-swap", "peer"]), modelId: Schema.String, roleIdsJson: Schema.String, token: Schema.Number },
     execute: ({ kind, modelId, roleIdsJson, token }): Effect.Effect<ReturnType<typeof Message.ModelsActionSucceeded> | ReturnType<typeof Message.ModelsActionFailed>> => {
@@ -957,6 +968,7 @@ export const noopModelsCommands = defineModelsCommands({
   updateTasks: async () => ({ body: {}, status: 200 }),
   runBenchmark: async () => ({ body: {}, status: 200 }),
   setRoles: async () => ({ body: {}, status: 200 }),
+  upsertAccount: async () => ({ body: {}, status: 200 }),
   removeAccountModel: async () => ({ body: {}, status: 200 }),
   removeEndpoint: async () => ({ body: {}, status: 200 }),
   removePeerModel: async () => ({ body: {}, status: 200 }),

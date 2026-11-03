@@ -102,3 +102,10 @@ S48a styled-client build passed in this final run; earlier 41-55s timeouts occur
 
 SystemOperator/SystemExtensions reference-card parity restored; caveat closed.
 Full UI suite: **945/945 passed** (raw log task105-final-full.log).
+
+## task-107 account role binding verification
+
+Remote/account-managed ModelsRoleToggled now POSTs /api/role-model/accounts with the full account body and
+updated modelRoleBindings (roleAssignmentMode all/include/exclude), instead of the local peer/llama route.
+The models page renders the account eligibility from the providerAccounts readback. S618 covers the exact
+upsert body and eligibility render; the KNOWN GAP(S620) comment/test are retired.
