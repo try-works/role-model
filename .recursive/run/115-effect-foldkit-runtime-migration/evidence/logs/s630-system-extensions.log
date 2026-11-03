@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s630-system-extensions-wiring.test.ts (2 tests) 559ms
+   ✓ S630 system extensions wiring > renders Pause and Download & validate latest  527ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  19:25:56
+   Duration  35.24s (transform 16.83s, setup 0ms, collect 26.06s, tests 559ms, environment 5.28s, prepare 1.14s)
+

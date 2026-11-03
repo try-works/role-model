@@ -915,6 +915,43 @@ export const noopModelsCommands = defineModelsCommands({
   setController: async () => ({ body: {}, status: 200 }),
 });
 
+export interface SystemExtensionsClient {
+  readonly mutate: (id: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly download: () => Promise<{ readonly body: unknown; readonly status: number }>;
+}
+export const createSystemExtensionsClient = (fetchImpl: typeof fetch = fetch): SystemExtensionsClient => ({
+  download: async () => {
+    const response = await fetchImpl("/api/role-model/recommendations/download", { body: "{}", headers: { "content-type": "application/json" }, method: "POST" });
+    return { body: await response.json(), status: response.status };
+  },
+  mutate: async (id) => {
+    const response = await fetchImpl("/api/role-model/extensions/mutate", { body: JSON.stringify({ action: "set_mode", id, mode: "disabled" }), headers: { "content-type": "application/json" }, method: "POST" });
+    return { body: await response.json(), status: response.status };
+  },
+});
+export const defineSystemExtensionsCommands = (client: SystemExtensionsClient) => ({
+  pause: Command.define("PauseSystemExtension", {
+    args: { id: Schema.String, token: Schema.Number },
+    execute: ({ id, token }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.mutate(id) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.SystemExtensionsActionSucceeded({ message: "Paused extension " + id + ".", token })
+          : Message.SystemExtensionsActionFailed({ message: "Pause extension failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
+    messages: [Message.SystemExtensionsActionSucceeded, Message.SystemExtensionsActionFailed],
+  }),
+  download: Command.define("DownloadSystemRecommendations", {
+    args: { token: Schema.Number },
+    execute: ({ token }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.download() })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.SystemExtensionsActionSucceeded({ message: "Downloaded and validated latest recommendations.", token })
+          : Message.SystemExtensionsActionFailed({ message: "Download recommendations failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
+    messages: [Message.SystemExtensionsActionSucceeded, Message.SystemExtensionsActionFailed],
+  }),
+});
+export type SystemExtensionsCommands = ReturnType<typeof defineSystemExtensionsCommands>;
+export const noopSystemExtensionsCommands = defineSystemExtensionsCommands({ download: async () => ({ body: {}, status: 200 }), mutate: async () => ({ body: {}, status: 200 }) });
+
 export interface SystemOperatorClient {
   readonly loadState: (token: string) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly createReplay: (traceRootId: string, maxRequests: number, token: string) => Promise<{ readonly body: unknown; readonly status: number }>;

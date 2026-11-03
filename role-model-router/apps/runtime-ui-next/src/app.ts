@@ -25,6 +25,8 @@ import {
   defineLocalPeersCommands,
   createSystemOperatorClient,
   defineSystemOperatorCommands,
+  createSystemExtensionsClient,
+  defineSystemExtensionsCommands,
 } from "./commands";
 import { createDeviceAuthClient } from "./device-auth";
 import { createEndpointAdmissionClient } from "./endpoint-admission";
@@ -79,6 +81,7 @@ export interface ShellOptions {
   readonly modelsFetchImpl?: typeof fetch;
   readonly localPeersFetchImpl?: typeof fetch;
   readonly systemOperatorFetchImpl?: typeof fetch;
+  readonly systemExtensionsFetchImpl?: typeof fetch;
   readonly deviceAuthFetchImpl?: typeof fetch;
   readonly providerAccountFetchImpl?: typeof fetch;
   readonly endpointAdmissionFetchImpl?: typeof fetch;
@@ -185,7 +188,8 @@ export const createShellApp = (options: ShellOptions = {}) => {
       replayAutoQueueCommands,
       defineModelsCommands(createModelsClient({ fetchImpl: options.modelsFetchImpl })),
       defineLocalPeersCommands(createLocalPeersClient(options.localPeersFetchImpl)),
-      defineSystemOperatorCommands(createSystemOperatorClient(options.systemOperatorFetchImpl))
+      defineSystemOperatorCommands(createSystemOperatorClient(options.systemOperatorFetchImpl)),
+      defineSystemExtensionsCommands(createSystemExtensionsClient(options.systemExtensionsFetchImpl))
     ),
     view,
   };

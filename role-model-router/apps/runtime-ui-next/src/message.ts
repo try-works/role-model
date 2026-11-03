@@ -134,6 +134,10 @@ export const Message: MessageUnion<{
   readonly LocalPeerAddRequested: EmptyFields;
   readonly LocalPeerHealthRequested: { readonly peerId: typeof Schema.String };
   readonly LocalPeerRemoveRequested: { readonly peerId: typeof Schema.String };
+  readonly SystemExtensionsPauseRequested: EmptyFields;
+  readonly SystemExtensionsDownloadRequested: EmptyFields;
+  readonly SystemExtensionsActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly SystemExtensionsActionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly SystemOperatorTraceRootChanged: { readonly value: typeof Schema.String };
   readonly SystemOperatorReplayCountChanged: { readonly value: typeof Schema.String };
   readonly SystemOperatorLoadRequested: EmptyFields;
@@ -348,6 +352,10 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   LocalPeerAddRequested: {},
   LocalPeerHealthRequested: { peerId: Schema.String },
   LocalPeerRemoveRequested: { peerId: Schema.String },
+  SystemExtensionsPauseRequested: {},
+  SystemExtensionsDownloadRequested: {},
+  SystemExtensionsActionSucceeded: { message: Schema.String, token: Schema.Number },
+  SystemExtensionsActionFailed: { message: Schema.String, token: Schema.Number },
   SystemOperatorTraceRootChanged: { value: Schema.String },
   SystemOperatorReplayCountChanged: { value: Schema.String },
   SystemOperatorLoadRequested: {},

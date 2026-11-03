@@ -149,6 +149,7 @@ const modelFields = {
   observeRoutingFilters: observeFields.observeRoutingFilters,
   observeLogsSource: Schema.optional(Schema.String),
   localLogsAutoRefresh: Schema.optional(Schema.Boolean),
+  systemExtensionsMessage: Schema.optional(Schema.String),
   systemOperatorTraceRoot: Schema.optional(Schema.String),
   systemOperatorReplayCount: Schema.optional(Schema.String),
   systemOperatorMessage: Schema.optional(Schema.String),

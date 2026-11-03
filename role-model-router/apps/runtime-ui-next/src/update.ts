@@ -62,6 +62,8 @@ import {
   type ModelsCommands,
   type LocalPeersCommands,
   type SystemOperatorCommands,
+  type SystemExtensionsCommands,
+  noopSystemExtensionsCommands,
   noopSystemOperatorCommands,
   noopLocalPeersCommands,
   noopModelsCommands,
@@ -325,6 +327,7 @@ export const createUpdate =
     modelsCommands: ModelsCommands = noopModelsCommands,
     localPeersCommands: LocalPeersCommands = noopLocalPeersCommands,
     systemOperatorCommands: SystemOperatorCommands = noopSystemOperatorCommands,
+    systemExtensionsCommands: SystemExtensionsCommands = noopSystemExtensionsCommands,
   ) => {
 
 
@@ -1311,6 +1314,15 @@ const updateLocalPolicyDraft = (
           const draft = model.localPeersDraft ?? { token: "", url: "" };
           return { model: { ...model, localPeersDraft: { ...draft, token: value } } };
         },
+        SystemExtensionsPauseRequested: (): UpdateReturn<Model, Message> => {
+          const first = model.readbacks.extensions.rows[0];
+          return first === undefined
+            ? { model: { ...model, systemExtensionsMessage: "No extension available to pause." } }
+            : { commands: [systemExtensionsCommands.pause({ id: first.id, token: model.readbacks.extensions.token + 1 })], model: { ...model, systemExtensionsMessage: undefined } };
+        },
+        SystemExtensionsDownloadRequested: (): UpdateReturn<Model, Message> => ({ commands: [systemExtensionsCommands.download({ token: model.readbacks.extensions.token + 1 })], model: { ...model, systemExtensionsMessage: undefined } }),
+        SystemExtensionsActionSucceeded: ({ message }: Extract<Message, { readonly _tag: "SystemExtensionsActionSucceeded" }>): UpdateReturn<Model, Message> => ({ model: { ...model, systemExtensionsMessage: message } }),
+        SystemExtensionsActionFailed: ({ message }: Extract<Message, { readonly _tag: "SystemExtensionsActionFailed" }>): UpdateReturn<Model, Message> => ({ model: { ...model, systemExtensionsMessage: message } }),
         SystemOperatorTraceRootChanged: ({ value }: Extract<Message, { readonly _tag: "SystemOperatorTraceRootChanged" }>): UpdateReturn<Model, Message> => ({ model: { ...model, systemOperatorTraceRoot: value } }),
         SystemOperatorReplayCountChanged: ({ value }: Extract<Message, { readonly _tag: "SystemOperatorReplayCountChanged" }>): UpdateReturn<Model, Message> => ({ model: { ...model, systemOperatorReplayCount: value } }),
         SystemOperatorLoadRequested: (): UpdateReturn<Model, Message> => {
