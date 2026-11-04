@@ -1,0 +1,48 @@
+{
+  "liveCount": 6,
+  "reviewCount": 3,
+  "endpoints": [
+    {
+      "endpointId": "openai.personal.primary.us-east-1.fast",
+      "modelId": "openai/gpt-4.1-mini-fast",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true,
+      "sourceType": "remote"
+    },
+    {
+      "endpointId": "anthropic.team.shared.us-east-1.default",
+      "modelId": "claude-3.7-sonnet",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true,
+      "sourceType": "remote"
+    },
+    {
+      "endpointId": "review.judge.us-east-1.gpt-5.5",
+      "modelId": "chatgpt/gpt-5.5",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true,
+      "sourceType": "remote"
+    },
+    {
+      "endpointId": "review.subject.alpha.us-east-1.gpt-5.4",
+      "modelId": "chatgpt/gpt-5.4",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true,
+      "sourceType": "remote"
+    },
+    {
+      "endpointId": "review.subject.beta.us-east-1.gpt-5.4-mini",
+      "modelId": "chatgpt/gpt-5.4-mini",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true,
+      "sourceType": "remote"
+    },
+    {
+      "endpointId": "cli.local.coder",
+      "modelId": "gpt-5.4",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true,
+      "sourceType": "local"
+    }
+  ]
+}

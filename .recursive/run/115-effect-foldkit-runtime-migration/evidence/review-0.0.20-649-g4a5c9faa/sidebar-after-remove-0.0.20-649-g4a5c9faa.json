@@ -1,0 +1,6 @@
+{
+  "aside": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\nGpt 5.4 Mini\n0\nGpt 5.5\n0\nClaude 3.7 Sonnet\n11\ngpt-5.4\n14\nGPT-4.1 Mini Fast\n12\nCACHE\n53%\nROUTER ENDPOINT\n127.0.0.1:3458/v1\n—",
+  "navCount": 1,
+  "url": "http://127.0.0.1:3480/models",
+  "bodyTail": "s\n✓\noperator\n45 tasks\n✓\nanalyst\n47 tasks\n✓\nplanner\n47 tasks\n✓\ntester\n24 tasks\n✓\ndata\n22 tasks\n✓\nproduct\n56 tasks\n✓\ndesigner\n19 tasks\n✓\nsupport\n27 tasks\n✓\nlegal\n22 tasks\n✓\nfinance\n27 tasks\n✓\ncreative\n14 tasks\n✓\neducator\n22 tasks\n✓\ntranslator\n11 tasks\n✓\nmarketer\n28 tasks\n✓\nseller\n18 tasks\n✓\nrecruiter\n11 tasks\n✓\nprocurement\n18 tasks\n✓\ncoordinator\n24 tasks\n✓\nknowledge\n16 tasks\n✓\nstrategist\n24 tasks\n✓\nmathematician\n13 tasks\n✓\nscientist\n15 tasks\n✓\nhealth\n11 tasks\nMake primary controller\nOpen Roles\nOpen Benchmark\nEject controller\nRemove model\n\nRemoved chatgpt/gpt-5.4; sibling instances are unchanged."
+}

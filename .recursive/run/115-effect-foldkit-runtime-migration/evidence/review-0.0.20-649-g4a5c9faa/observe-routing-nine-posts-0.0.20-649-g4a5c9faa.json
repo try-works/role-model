@@ -1,0 +1,207 @@
+{
+  "count": 9,
+  "posts": [
+    {
+      "url": "/api/role-model/telemetry/query",
+      "body": {
+        "breakdown": null,
+        "filters": {
+          "selectedStrategies": [
+            "baseline"
+          ],
+          "taxonomyRoleIds": [
+            "coder"
+          ]
+        },
+        "granularity": "hour",
+        "metrics": [
+          "routingCostSavingsUsd",
+          "cacheCostSavingsUsd",
+          "totalAvoidedCostUsd"
+        ],
+        "ranking": null,
+        "windowMs": 86400000
+      }
+    },
+    {
+      "url": "/api/role-model/telemetry/query",
+      "body": {
+        "breakdown": null,
+        "filters": {
+          "selectedStrategies": [
+            "baseline"
+          ],
+          "taxonomyRoleIds": [
+            "coder"
+          ]
+        },
+        "granularity": "hour",
+        "metrics": [
+          "requestCount"
+        ],
+        "ranking": null,
+        "windowMs": 86400000
+      }
+    },
+    {
+      "url": "/api/role-model/telemetry/query",
+      "body": {
+        "breakdown": "taxonomyRoleId",
+        "filters": {
+          "selectedStrategies": [
+            "baseline"
+          ],
+          "taxonomyRoleIds": [
+            "coder"
+          ]
+        },
+        "granularity": "hour",
+        "metrics": [
+          "requestCount"
+        ],
+        "ranking": null,
+        "windowMs": 86400000
+      }
+    },
+    {
+      "url": "/api/role-model/telemetry/query",
+      "body": {
+        "breakdown": null,
+        "filters": {
+          "selectedStrategies": [
+            "baseline"
+          ],
+          "taxonomyRoleIds": [
+            "coder"
+          ]
+        },
+        "granularity": "hour",
+        "metrics": [
+          "totalAvoidedCostUsd"
+        ],
+        "ranking": {
+          "dimension": "taxonomyTaskType",
+          "limit": 8,
+          "metric": "totalAvoidedCostUsd"
+        },
+        "windowMs": 86400000
+      }
+    },
+    {
+      "url": "/api/role-model/telemetry/query",
+      "body": {
+        "breakdown": null,
+        "filters": {
+          "selectedStrategies": [
+            "baseline"
+          ],
+          "taxonomyRoleIds": [
+            "coder"
+          ]
+        },
+        "granularity": "hour",
+        "metrics": [
+          "requestCount"
+        ],
+        "ranking": {
+          "dimension": "difficultyBucket",
+          "limit": 8,
+          "metric": "requestCount"
+        },
+        "windowMs": 86400000
+      }
+    },
+    {
+      "url": "/api/role-model/telemetry/query",
+      "body": {
+        "breakdown": "selectedStrategy",
+        "filters": {
+          "selectedStrategies": [
+            "baseline"
+          ],
+          "taxonomyRoleIds": [
+            "coder"
+          ]
+        },
+        "granularity": "hour",
+        "metrics": [
+          "requestCount"
+        ],
+        "ranking": null,
+        "windowMs": 86400000
+      }
+    },
+    {
+      "url": "/api/role-model/telemetry/query",
+      "body": {
+        "breakdown": null,
+        "filters": {
+          "selectedStrategies": [
+            "baseline"
+          ],
+          "taxonomyRoleIds": [
+            "coder"
+          ]
+        },
+        "granularity": "hour",
+        "metrics": [
+          "requestCount"
+        ],
+        "ranking": {
+          "dimension": "taxonomyCapabilityId",
+          "limit": 8,
+          "metric": "requestCount"
+        },
+        "windowMs": 86400000
+      }
+    },
+    {
+      "url": "/api/role-model/telemetry/query",
+      "body": {
+        "breakdown": null,
+        "filters": {
+          "selectedStrategies": [
+            "baseline"
+          ],
+          "taxonomyRoleIds": [
+            "coder"
+          ]
+        },
+        "granularity": "hour",
+        "metrics": [
+          "requestCount"
+        ],
+        "ranking": {
+          "dimension": "taxonomyToolClassId",
+          "limit": 8,
+          "metric": "requestCount"
+        },
+        "windowMs": 86400000
+      }
+    },
+    {
+      "url": "/api/role-model/telemetry/query",
+      "body": {
+        "breakdown": null,
+        "filters": {
+          "selectedStrategies": [
+            "baseline"
+          ],
+          "taxonomyRoleIds": [
+            "coder"
+          ]
+        },
+        "granularity": "hour",
+        "metrics": [
+          "requestCount"
+        ],
+        "ranking": {
+          "dimension": "modelId",
+          "limit": 8,
+          "metric": "requestCount"
+        },
+        "windowMs": 86400000
+      }
+    }
+  ]
+}
