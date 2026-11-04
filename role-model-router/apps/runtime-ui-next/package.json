@@ -15,7 +15,7 @@
   },
   "scripts": {
     "test": "tsc --noEmit -p tsconfig.json && vitest run && node --test test/*.test.mjs",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:invariants": "node --test test/*.test.mjs",
     "build": "node build.mjs",
     "test:handler-presence": "vitest run test/s617-handler-presence.test.ts",

@@ -82,7 +82,6 @@
     "ci:quality": "corepack pnpm run lint && corepack pnpm run schemas:validate",
     "ci:build": "corepack pnpm run build",
     "ci:build-test": "corepack pnpm run ci:build && corepack pnpm run typecheck && corepack pnpm run test:workspace",
-    "typecheck": "pnpm exec turbo run typecheck --concurrency=4",
     "ci:runtime": "corepack pnpm run runtime:test-critical && corepack pnpm run runtime:test-router",
     "ci:fast": "corepack pnpm run ci:quality && corepack pnpm run ci:build-test && corepack pnpm run runtime:test-critical",
     "turbo:build": "pnpm exec turbo run build --filter=./apps/* --filter=./packages/* --filter=./role-model-router/apps/* --filter=./role-model-router/packages/*",
