@@ -60,6 +60,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run ci:quality
+      - run: pnpm run verify:vendors
 
   build-test:
     name: build-test
