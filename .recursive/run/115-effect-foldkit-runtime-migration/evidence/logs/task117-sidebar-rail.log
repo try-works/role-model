@@ -1,0 +1,15 @@
+task-117 sidebar rail refresh
+
+FIX
+- update.ts: ModelsActionSucceeded and EndpointAdmissionSucceeded now refresh the whole rail readback set
+  (models, runtimeSummary, health, dashboard, router, overviewMetrics, routerCandidates) so the sidebar
+  converges after enable/disable/registry mutations without a reload.
+
+TESTS
+- s634: ModelsActionSucceeded dispatches exactly the seven rail reads; rendered sidebar shows old-model,
+  then after the rail resolves shows new-model and not old-model. 2/2.
+- NOTE: s634 is render+shellUpdate, not a mounted click; mounted mutation coverage is still absent.
+
+FULL SUITE ATTEMPT: 938 passed / 6 failed at this shared-tree state; failures are the active task-118
+observe-filter lane plus S617 CLI and S26f/S623 inventory-plan drift, not this slice.
+PACKAGED HOST: not verified from this worktree; build lane must enable a model and watch the sidebar.

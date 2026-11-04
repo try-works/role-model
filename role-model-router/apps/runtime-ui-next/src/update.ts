@@ -750,7 +750,20 @@ const updateLocalPolicyDraft = (
   };
 };
 
-    const readPlanForRoute = (model: Model): ReadonlyArray<{ readonly key: ReadbackKey; readonly id?: string; readonly query?: string }> => {
+const RAIL_KEYS = ["models", "runtimeSummary", "health", "dashboard", "router", "overviewMetrics", "routerCandidates"] as const;
+const refreshRailReadbacks = (model: Model): { readonly commands: ReadonlyArray<ReturnType<typeof readReadback>>; readonly readbacks: Model["readbacks"] } => {
+  const readbacks = { ...model.readbacks };
+  const commands: Array<ReturnType<typeof readReadback>> = [];
+  for (const key of RAIL_KEYS) {
+    const token = readbacks[key].token + 1;
+    readbacks[key] = loadingReadback(token);
+    const id = key === "dashboard" || key === "overviewMetrics" ? "86400000" : undefined;
+    commands.push(readReadback({ ...(id === undefined ? {} : { id }), key, token }));
+  }
+  return { commands, readbacks };
+};
+
+const readPlanForRoute = (model: Model): ReadonlyArray<{ readonly key: ReadbackKey; readonly id?: string; readonly query?: string }> => {
       if (model.route._tag === "Learning") return [{ key: "learning" }, { key: "learningPacks" }];
       if (model.route._tag === "ModelsRoles") return [{ key: "configuredModels" }, { key: "modelEndpoints" }, { key: "rolePolicy" }];
       if (model.route._tag === "Providers") return [{ key: "integrationProviders" }, { key: "configuredModels" }, { key: "modelEndpoints" }];
@@ -1563,7 +1576,8 @@ const updateLocalPolicyDraft = (
         }),
         ModelsActionSucceeded: ({ message }: Extract<Message, { readonly _tag: "ModelsActionSucceeded" }>): UpdateReturn<Model, Message> => {
           const state = model.modelsView ?? {};
-          return { model: { ...model, modelsView: { ...state, actionMessage: message } } };
+          const rail = refreshRailReadbacks(model);
+          return { commands: [...rail.commands], model: { ...model, modelsView: { ...state, actionMessage: message }, readbacks: rail.readbacks } };
         },
         ModelsActionFailed: ({ message }: Extract<Message, { readonly _tag: "ModelsActionFailed" }>): UpdateReturn<Model, Message> => {
           const state = model.modelsView ?? {};
@@ -2967,7 +2981,9 @@ const updateLocalPolicyDraft = (
           const state = model.endpointAdmission ?? initialEndpointAdmissionState();
           const result = settleEndpointActivation(state.run, { activationId, generation, outcome: "succeeded" });
           if (result.kind !== "updated") return { model };
-          return endpointAdmissionCompletion(model, state, result.run);
+          const completed = endpointAdmissionCompletion(model, state, result.run);
+          const rail = refreshRailReadbacks(completed.model);
+          return { ...completed, commands: [...(completed.commands ?? []), ...rail.commands], model: { ...completed.model, readbacks: rail.readbacks } };
         },
         EndpointAdmissionFailed: ({ activationId, generation, message }: Extract<Message, { readonly _tag: "EndpointAdmissionFailed" }>): UpdateReturn<Model, Message> => {
           const state = model.endpointAdmission ?? initialEndpointAdmissionState();
