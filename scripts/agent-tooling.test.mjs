@@ -287,3 +287,85 @@ test("typecheck coverage ratchet is honest about the checked packages", () => {
   const dirs = coverage.packages.map((entry) => entry.dir);
   assert.deepEqual(dirs, [...new Set(dirs)].sort(), "coverage dirs must be unique and sorted");
 });
+
+test("root oxlint scripts and CI quality steps enforce the effect gate", () => {
+  const manifest = readJson("package.json");
+  const lint = manifest.scripts?.["lint:oxlint"];
+  const report = manifest.scripts?.["lint:oxlint:report"];
+  assert.equal(typeof lint, "string", "root package.json must define lint:oxlint");
+  assert.equal(typeof report, "string", "root package.json must define lint:oxlint:report");
+  assert.match(
+    lint,
+    /effect-tsgo oxlint\b/u,
+    "lint:oxlint must use the effect-tsgo oxlint wrapper",
+  );
+  assert.match(
+    lint,
+    /--config \.oxlintrc\.effect\.json\b/u,
+    "lint:oxlint must load the effect config",
+  );
+  assert.match(lint, /--deny-warnings\b/u, "lint:oxlint must deny warnings to enforce the gate");
+  assert.match(
+    report,
+    /^node scripts\/quality\/oxlint-report\.mjs$/u,
+    "the report must run the committed report helper",
+  );
+  const reportSource = readText("scripts/quality/oxlint-report.mjs");
+  assert.match(
+    reportSource,
+    /--config", EFFECT_CONFIG/u,
+    "the report must load the effect config through the shared constant",
+  );
+  assert.doesNotMatch(
+    reportSource,
+    /["']--deny-warnings["']/u,
+    "the report must not pass --deny-warnings to oxlint",
+  );
+  assert.match(
+    manifest.scripts?.["lint:oxlint:baseline"] ?? "",
+    /^node scripts\/quality\/oxlint-baseline-check\.mjs$/u,
+    "the baseline check must run the committed check helper",
+  );
+
+  const enforcedScope = [
+    "role-model-router/packages/effect/src",
+    "role-model-router/packages/effect/build.mjs",
+    "role-model-router/packages/effect/entries.mjs",
+    "role-model-router/packages/foldkit/build.mjs",
+    "role-model-router/packages/foldkit/entries.mjs",
+    "role-model-router/packages/foldkit/test",
+    "role-model-router/packages/foldkit-ui/build.mjs",
+    "role-model-router/packages/foldkit-ui/entries.mjs",
+    "role-model-router/apps/runtime-ui-next/src",
+  ];
+  for (const scopePath of enforcedScope) {
+    assert.ok(lint.includes(scopePath), `lint:oxlint must cover ${scopePath}`);
+  }
+
+  const workflow = readText(".github/workflows/ci.yml").replaceAll("\r\n", "\n");
+  const quality = workflowJob(workflow, "quality");
+  assert.ok(quality, "CI quality job not found");
+  const qualityIndex = workflowRunIndex(quality, "pnpm run ci:quality");
+  const lintIndex = workflowRunIndex(quality, "pnpm run lint:oxlint");
+  const baselineIndex = workflowRunIndex(quality, "pnpm run lint:oxlint:baseline");
+  assert.notEqual(qualityIndex, -1, "quality job must run pnpm run ci:quality");
+  assert.notEqual(lintIndex, -1, "quality job must run pnpm run lint:oxlint");
+  assert.ok(lintIndex > qualityIndex, "the oxlint gate must run after ci:quality");
+  assert.doesNotMatch(
+    workflowStep(quality, lintIndex),
+    /continue-on-error:\s*true/u,
+    "the oxlint gate must not be allowed to fail",
+  );
+  assert.notEqual(baselineIndex, -1, "quality job must run pnpm run lint:oxlint:baseline");
+  assert.ok(baselineIndex > lintIndex, "the baseline check must run after the oxlint gate");
+  assert.doesNotMatch(
+    workflowStep(quality, baselineIndex),
+    /continue-on-error:\s*true/u,
+    "the baseline check must not be allowed to fail",
+  );
+  assert.equal(
+    quality.split("\n").filter((line) => line.trim() === "- run: pnpm run lint:oxlint").length,
+    1,
+    "the quality job must run the oxlint gate exactly once",
+  );
+});
