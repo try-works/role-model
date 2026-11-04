@@ -19,7 +19,15 @@ test("request-only selfcheck executes controls without claiming browser parity",
 test("full React selfcheck is NOT RUN until actual captures are available", () => {
   const result = invoke(["--selfcheck"]);
   assert.equal(result.status, 2);
-  assert.deepEqual(JSON.parse(result.stdout), { status: "NOT_RUN", scope: "browser-parity", reason: "react-capture-runner-unavailable" });
+  const output = JSON.parse(result.stdout);
+  assert.equal(output.status, "NOT_RUN");
+  assert.equal(output.scope, "browser-parity");
+  // The harness reports the concrete reason it could not capture: the React capture runner may be
+  // unavailable, or the machine may expose no browser at all. Both are honest NOT_RUN results.
+  assert.ok(
+    ["react-capture-runner-unavailable", "no-browser-available"].includes(output.reason),
+    `unexpected browser-parity reason: ${String(output.reason)}`,
+  );
 });
 test("unknown or combined modes fail without silently selecting fixture success", () => {
   for (const args of [[], ["--wat"], ["--request-selfcheck", "--selfcheck"]]) {
