@@ -290,7 +290,7 @@ const parseStatus = (value: string | null | undefined): DeviceAuthSession["statu
 const parseSession = (value: unknown): DeviceAuthSession => {
   const record = asRecord(value) ?? {};
   const candidate = asRecord(record.deviceAuthorization) ?? record;
-  const decoded = Schema.decodeUnknownOption(HostDeviceAuthFieldsSchema)(candidate);
+  const decoded = Schema.decodeOption(HostDeviceAuthFieldsSchema)(candidate);
   const fields: Partial<HostDeviceAuthFields> = Option.isNone(decoded) ? {} : decoded.value;
   return {
     authRequestId: fields.authRequestId ?? "",
