@@ -2,9 +2,20 @@
   "version": "0.0.20-636-gc8fdb768",
   "commit": "c8fdb768",
   "exeSha256": "60d0c999cc4c3e9a3ba0ffd49499664c5094ead60f9deb4e9627c54eee214fb1",
-  "pid": 23428,
+  "pid": 10348,
   "port": 3480,
   "health": "healthy",
+  "seedMechanism": "node scripts/runtime/seed-review-benchmark-endpoints.mjs --url http://127.0.0.1:3480 posts 3 provider accounts (oauth2-device-code, credentialRef local-file) then 3 endpoints; asserts GET /api/role-model/endpoints live",
+  "liveEndpoints": {
+    "total": 6,
+    "review": 3,
+    "reviewIds": [
+      "review.judge.us-east-1.gpt-5.5",
+      "review.subject.alpha.us-east-1.gpt-5.4",
+      "review.subject.beta.us-east-1.gpt-5.4-mini"
+    ],
+    "allHealthyAndBenchmarkEligible": true
+  },
   "suite": {
     "filesPassed": 111,
     "testsPassed": 982,
@@ -13,7 +24,6 @@
   "seed": {
     "telemetryRecords": 320,
     "observations": 48,
-    "registryEndpoints": 3,
     "benchmarkCases": 61,
     "benchmarkEligibleCases": 55,
     "quickEligibleCases": 12
@@ -29,17 +39,21 @@
       "visibleTables": 0
     },
     "benchmark": {
-      "endpointRows": 3,
-      "selectedText": "2 of 3 selected",
-      "externalJudge": "openai.personal.primary.us-east-1.fast",
+      "endpointRows": 6,
+      "selectedText": "2 of 6 selected",
+      "selectedIds": [
+        "review.subject.alpha.us-east-1.gpt-5.4",
+        "review.subject.beta.us-east-1.gpt-5.4-mini"
+      ],
+      "externalJudge": "review.judge.us-east-1.gpt-5.5",
       "runEnabled": true,
       "disabledAttribute": null,
       "expectedPostBody": {
         "endpointIds": [
-          "anthropic.team.shared.us-east-1.default",
-          "cli.local.coder"
+          "review.subject.alpha.us-east-1.gpt-5.4",
+          "review.subject.beta.us-east-1.gpt-5.4-mini"
         ],
-        "judgeEndpointId": "openai.personal.primary.us-east-1.fast",
+        "judgeEndpointId": "review.judge.us-east-1.gpt-5.5",
         "mode": "quick"
       },
       "overlapWarningWhenJudgeSelected": "Judge endpoint is also a benchmark subject. Expect slower grading and higher judge failure risk — prefer a dedicated judge when available."
@@ -66,8 +80,7 @@
         "postureDiagnostics": 1,
         "entries": 1
       },
-      "literalPlaceholderMarkers": 0,
-      "note": "Both pages show empty-state copy because no workload/agent-strategy entries are seeded; section counts are single."
+      "literalPlaceholderMarkers": 0
     },
     "queues": {
       "rendered": true,
