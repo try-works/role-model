@@ -21,6 +21,22 @@ export interface RoutingChartDefinition {
   readonly metrics: ReadonlyArray<string>;
   readonly ranking?: { readonly dimension: string; readonly limit: number; readonly metric: string };
   readonly title: string;
+  /** The :3456 buildBaseQuery passes the page's selected breakdown to these two charts; the rest override it. */
+  readonly usesSelectedBreakdown?: boolean;
+}
+
+/** The analytics filters carried by the routing page (source/difficulty/taxonomy/strategy selections). */
+export interface RoutingChartFilters {
+  readonly difficultyBuckets?: ReadonlyArray<string>;
+  readonly selectedStrategies?: ReadonlyArray<string>;
+  readonly sourceTypes?: ReadonlyArray<string>;
+  readonly taxonomyCapabilityIds?: ReadonlyArray<string>;
+  readonly taxonomyGroupIds?: ReadonlyArray<string>;
+  readonly taxonomyModalityIds?: ReadonlyArray<string>;
+  readonly taxonomyRoleIds?: ReadonlyArray<string>;
+  readonly taxonomyTaskTypes?: ReadonlyArray<string>;
+  readonly taxonomyTaskVariants?: ReadonlyArray<string>;
+  readonly taxonomyToolClassIds?: ReadonlyArray<string>;
 }
 
 export const ROUTING_CHARTS: ReadonlyArray<RoutingChartDefinition> = [
@@ -32,6 +48,7 @@ export const ROUTING_CHARTS: ReadonlyArray<RoutingChartDefinition> = [
     kind: "area",
     metrics: ["routingCostSavingsUsd", "cacheCostSavingsUsd", "totalAvoidedCostUsd"],
     title: "Cost avoided by routing",
+    usesSelectedBreakdown: true,
   },
   {
     className: "min-w-0 bg-card col-span-1 md:col-span-2",
@@ -40,6 +57,7 @@ export const ROUTING_CHARTS: ReadonlyArray<RoutingChartDefinition> = [
     kind: "bar",
     metrics: ["requestCount"],
     title: "Routing decision volume",
+    usesSelectedBreakdown: true,
   },
   {
     breakdown: "taxonomyRoleId",
@@ -80,7 +98,7 @@ export const ROUTING_CHARTS: ReadonlyArray<RoutingChartDefinition> = [
   {
     className: "min-w-0 bg-card col-span-1",
     description: "Rank the taxonomy capabilities currently driving routed traffic.",
-    emptyMessage: "No capability-tagged routing telemetry is available for the current slice.",
+    emptyMessage: "No capability-tagged telemetry is available for the current slice.",
     kind: "ranking",
     metrics: ["requestCount"],
     ranking: { dimension: "taxonomyCapabilityId", limit: 8, metric: "requestCount" },
@@ -110,7 +128,7 @@ export interface RoutingChartQuery {
   readonly id: string;
   readonly query: {
     readonly breakdown: string | null;
-    readonly filters: Readonly<Record<string, never>>;
+    readonly filters: RoutingChartFilters;
     readonly granularity: "hour" | "day";
     readonly metrics: ReadonlyArray<string>;
     readonly ranking: { readonly dimension: string; readonly limit: number; readonly metric: string } | null;
@@ -120,12 +138,16 @@ export interface RoutingChartQuery {
 
 export const routingChartGranularity = (windowMs: number): "hour" | "day" => (windowMs <= 86_400_000 ? "hour" : "day");
 
-export const buildRoutingChartQueries = (windowMs: number): ReadonlyArray<RoutingChartQuery> =>
+export const buildRoutingChartQueries = (
+  windowMs: number,
+  selectedBreakdown: string | null = null,
+  filters: RoutingChartFilters = {},
+): ReadonlyArray<RoutingChartQuery> =>
   ROUTING_CHARTS.map((chart) => ({
     id: chart.title,
     query: {
-      breakdown: chart.breakdown ?? null,
-      filters: {},
+      breakdown: chart.usesSelectedBreakdown === true ? selectedBreakdown : chart.breakdown ?? null,
+      filters,
       granularity: routingChartGranularity(windowMs),
       metrics: chart.metrics,
       ranking: chart.ranking ?? null,

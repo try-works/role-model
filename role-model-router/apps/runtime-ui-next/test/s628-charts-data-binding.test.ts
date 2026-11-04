@@ -194,5 +194,20 @@ describe("S628 chart data binding", () => {
       expect(table.classList.contains("sr-only"), "chart table must be sr-only").toBe(true);
     }
     expect(container.querySelectorAll("[data-overview-card] table:not(.sr-only)")).toHaveLength(0);
+
+    const metrics = parseReadbackFixture("overviewMetrics", metricsBody);
+    const requests = await render({ _tag: "Requests" }, {
+      overviewMetrics: metrics,
+      requests: parseReadbackFixture("requests", []),
+    });
+    expect(requests.querySelectorAll("[data-overview-card] table[data-chart-part='table']").length).toBeGreaterThan(0);
+    expect(requests.querySelectorAll("[data-overview-card] table:not(.sr-only)")).toHaveLength(0);
+
+    const routing = await render({ _tag: "ObserveRouting" }, {
+      observeRouting: parseReadbackFixture("observeRouting", []),
+      overviewMetrics: metrics,
+    });
+    expect(routing.querySelectorAll("[data-overview-card] table[data-chart-part='table']")).toHaveLength(9);
+    expect(routing.querySelectorAll("[data-overview-card] table:not(.sr-only)")).toHaveLength(0);
   });
 });

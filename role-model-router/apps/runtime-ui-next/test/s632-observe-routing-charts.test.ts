@@ -43,17 +43,34 @@ const renderRoute = async () => {
 };
 
 describe("S632 observe routing charts", () => {
-  it("defines the nine reference charts with their exact queries", () => {
+  it("emits the full reference definition payloads for all nine charts", () => {
     expect(ROUTING_CHARTS.map((chart) => chart.title)).toEqual([
       "Cost avoided by routing", "Routing decision volume", "Routing volume by taxonomy role", "Avoided cost by taxonomy task",
       "Difficulty distribution", "Strategy selection trend", "Capability routing mix", "Tool class routing mix", "Model selection",
     ]);
-    const queries = buildRoutingChartQueries(86_400_000);
-    expect(queries).toHaveLength(9);
-    expect(queries.every((entry) => entry.query.granularity === "hour")).toBe(true);
-    expect(queries.find((entry) => entry.id === "Strategy selection trend")?.query.breakdown).toBe("selectedStrategy");
-    expect(queries.find((entry) => entry.id === "Model selection")?.query.ranking).toEqual({ dimension: "modelId", limit: 8, metric: "requestCount" });
+    expect(ROUTING_CHARTS.find((chart) => chart.title === "Capability routing mix")?.emptyMessage)
+      .toBe("No capability-tagged telemetry is available for the current slice.");
+    expect(buildRoutingChartQueries(86_400_000)).toEqual([
+      { id: "Cost avoided by routing", query: { breakdown: null, filters: {}, granularity: "hour", metrics: ["routingCostSavingsUsd", "cacheCostSavingsUsd", "totalAvoidedCostUsd"], ranking: null, windowMs: 86_400_000 } },
+      { id: "Routing decision volume", query: { breakdown: null, filters: {}, granularity: "hour", metrics: ["requestCount"], ranking: null, windowMs: 86_400_000 } },
+      { id: "Routing volume by taxonomy role", query: { breakdown: "taxonomyRoleId", filters: {}, granularity: "hour", metrics: ["requestCount"], ranking: null, windowMs: 86_400_000 } },
+      { id: "Avoided cost by taxonomy task", query: { breakdown: null, filters: {}, granularity: "hour", metrics: ["totalAvoidedCostUsd"], ranking: { dimension: "taxonomyTaskType", limit: 8, metric: "totalAvoidedCostUsd" }, windowMs: 86_400_000 } },
+      { id: "Difficulty distribution", query: { breakdown: null, filters: {}, granularity: "hour", metrics: ["requestCount"], ranking: { dimension: "difficultyBucket", limit: 8, metric: "requestCount" }, windowMs: 86_400_000 } },
+      { id: "Strategy selection trend", query: { breakdown: "selectedStrategy", filters: {}, granularity: "hour", metrics: ["requestCount"], ranking: null, windowMs: 86_400_000 } },
+      { id: "Capability routing mix", query: { breakdown: null, filters: {}, granularity: "hour", metrics: ["requestCount"], ranking: { dimension: "taxonomyCapabilityId", limit: 8, metric: "requestCount" }, windowMs: 86_400_000 } },
+      { id: "Tool class routing mix", query: { breakdown: null, filters: {}, granularity: "hour", metrics: ["requestCount"], ranking: { dimension: "taxonomyToolClassId", limit: 8, metric: "requestCount" }, windowMs: 86_400_000 } },
+      { id: "Model selection", query: { breakdown: null, filters: {}, granularity: "hour", metrics: ["requestCount"], ranking: { dimension: "modelId", limit: 8, metric: "requestCount" }, windowMs: 86_400_000 } },
+    ]);
     expect(buildRoutingChartQueries(604_800_000).every((entry) => entry.query.granularity === "day")).toBe(true);
+  });
+
+  it("gives the time-series charts the selected breakdown and threads the analytics filters into every query", () => {
+    const filters = { difficultyBuckets: ["hard"], sourceTypes: ["local"], taxonomyRoleIds: ["coder"] };
+    const queries = buildRoutingChartQueries(86_400_000, "modelId", filters);
+    expect(queries.find((entry) => entry.id === "Cost avoided by routing")?.query.breakdown).toBe("modelId");
+    expect(queries.find((entry) => entry.id === "Routing decision volume")?.query.breakdown).toBe("modelId");
+    expect(queries.find((entry) => entry.id === "Routing volume by taxonomy role")?.query.breakdown).toBe("taxonomyRoleId");
+    expect(queries.every((entry) => entry.query.filters === filters)).toBe(true);
   });
 
   it("renders all nine cards, real series where data exists, and in-plot empty states otherwise", async () => {
@@ -89,11 +106,11 @@ describe("S632 observe routing charts", () => {
       }
       expect(requests.length).toBe(9);
       expect(requests.every((entry) => entry.path === "/api/role-model/telemetry/query")).toBe(true);
-      const bodies = requests.map((entry) => entry.body as { readonly breakdown?: string; readonly ranking?: { readonly dimension?: string } });
-      expect(bodies.some((body) => body.breakdown === "selectedStrategy")).toBe(true);
-      expect(bodies.some((body) => body.breakdown === "taxonomyRoleId")).toBe(true);
-      expect(bodies.some((body) => body.ranking?.dimension === "modelId")).toBe(true);
-      expect(bodies.some((body) => Array.isArray((body as { metrics?: unknown }).metrics) && (body as { metrics: string[] }).metrics.includes("totalAvoidedCostUsd"))).toBe(true);
+      const expected = buildRoutingChartQueries(86_400_000).map((entry) => entry.query as unknown);
+      for (const query of expected) {
+        expect(requests.map((entry) => entry.body as unknown)).toContainEqual(query);
+      }
+      expect(new Set(requests.map((entry) => JSON.stringify(entry.body))).size).toBe(9);
     } finally {
       handle.dispose();
       container.remove();
