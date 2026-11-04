@@ -175,7 +175,10 @@ describe("S632 observe routing charts", () => {
     expect(model?.querySelectorAll("svg[data-chart-part='chart'] rect, svg[data-chart-part='chart'] path").length ?? 0).toBeGreaterThan(0);
     const costEmpty = container.querySelector("[data-overview-card='Cost avoided by routing'] [data-chart-plot] [data-chart-empty-message]");
     expect(costEmpty?.textContent).toContain("No routing savings");
-    expect(container.querySelectorAll("[data-overview-card] table:not(.sr-only)")).toHaveLength(0);
+    // Reference parity: the routing page has no visible table at all; only the nine sr-only chart tables.
+    expect(container.querySelectorAll("table:not(.sr-only)")).toHaveLength(0);
+    expect(container.querySelectorAll("table[data-chart-part='table'].sr-only")).toHaveLength(9);
+    expect(container.textContent).not.toContain("Routing results");
   });
 
   it("dispatches the analytics batch with nine queries on the real route", async () => {

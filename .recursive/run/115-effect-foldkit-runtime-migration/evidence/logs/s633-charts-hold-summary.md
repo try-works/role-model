@@ -52,3 +52,14 @@ Now exactly :3456: "No capability-tagged telemetry is available for the current 
   (body 2 stays taxonomyRoleId).
 - TDD RED s633-entry-filters-red.log -> GREEN s633-entry-filters-green.log: s632 7/7, tsc 0.
 - FINAL TOTALS: full UI suite 107 files / 966 tests PASS; S247 4/4 (fail 0).
+
+## LAST parity detail - Routing results table removed
+- observeRoutingRoute no longer renders the visible "Routing results" Model/Endpoint/Count card; the :3456 reference has
+  no tabular block there. The page now renders the filter bar + the nine chart cards only, plus an invisible
+  [data-observe-routing-rows]/[data-observe-routing-status] probe used by the shared-readback state test.
+- s632 and s563 now assert zero visible tables and exactly nine sr-only chart tables (data-chart-part="table") on
+  the route; s563's old "results table" expectation and s26e text-based success check were updated (selector-based).
+- Packaged-host re-verification (/observe/routing, isolated host): 9 chart cards, 9 tables total = 9 sr-only chart
+  tables, 0 visible tables, no "Routing results" text. Evidence: s633-routing-zero-tables-3484.png and -dom.json.
+- TDD RED s633-routing-results-red.log -> GREEN s633-routing-results-green.log (s632 7/7, s563 16/16, s26e 72/72
+  across the three files), tsc 0. FINAL: full UI suite 107 files / 966 tests PASS; S247 4/4 (fail 0).

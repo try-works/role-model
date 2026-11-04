@@ -340,14 +340,12 @@ export const observeRoutingRoute = (
 ): Html => {
   const volume = volumeSeriesFor(metrics, windowMs);
   return page("Routing analytics", [
+    h.span([h.DataAttribute("observe-routing-rows", String(readback.rows.length)), h.DataAttribute("observe-routing-status", readback.status)], []),
     observeFilterBar(h, ["Difficulty"], filters, {
       advanced: () => Message.ObserveAdvancedToggled({}),
       filter: (field, value) => Message.ObserveFilterChanged({ field, value }),
       range: (value) => Message.ObserveRangeChanged({ value }),
     }),
-    section("Routing results", "Bounded routing analytics for the selected filters.", [
-      table(["Model", "Endpoint", "Count"], readback.rows.map((row) => [row.label, row.meta, row.value]), "No routing rows recorded yet.", h),
-    ], h),
     routingChartCards(
       routingCharts?.entries ?? [],
       { ...(routingCharts?.message === undefined ? {} : { message: routingCharts.message }), status: routingCharts?.status ?? "idle" },

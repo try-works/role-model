@@ -181,14 +181,15 @@ describe("S563 Router + Observe + Connect reference layout", () => {
     expect(sourceFilter?.getAttribute("aria-label")).toBe("Log source filter");
   });
 
-  it("observe routing: filter bar, results table, chart grid", async () => {
+  it("observe routing: filter bar and chart grid only, with no visible table", async () => {
     const container = await render("ObserveRouting");
     const text = textOf(container);
-    expectOrdered(text, ["Routing analytics", "Routing results"]);
+    expectOrdered(text, ["Routing analytics", "Routing decision volume"]);
     expect(container.querySelectorAll("select").length).toBeGreaterThanOrEqual(1);
-    expectTables(container, ["Model", "Endpoint", "Count"]);
+    expect(container.querySelectorAll("table:not(.sr-only)")).toHaveLength(0);
+    expect(container.querySelectorAll("table[data-chart-part='table'].sr-only")).toHaveLength(9);
     expect(container.querySelector(".md\\:grid-cols-2")).not.toBeNull();
-    expectCardShell(container);
+    expect(container.querySelectorAll("[data-overview-card]")).toHaveLength(9);
   });
 
   it("observability snapshot: card, refresh and metric registry table", async () => {

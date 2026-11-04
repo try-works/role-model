@@ -42,6 +42,7 @@ interface RouteCase {
   readonly initialReads?: number;
   readonly emptyBody: unknown;
   readonly successText: string;
+  readonly successSelector?: string;
 }
 
 const fixture = (key: string): unknown =>
@@ -206,6 +207,7 @@ const routes: readonly RouteCase[] = [
     path: "/observe/routing",
     stateTestName: "Observe routing renders success, empty, loading and error on the DOM",
     successBody: { rows: [{ count: 2, model: "routing-model" }] },
+    successSelector: "[data-observe-routing-rows='1']",
     successText: "routing-model",
   },
   {
@@ -391,15 +393,20 @@ describe("S26e shared readback routes", () => {
       const success = mountRoute(route, `s26e-${route.key}-ok`, async () =>
         json(route.successBody),
       );
+      const successVisible = () =>
+        route.successSelector === undefined
+          ? document.body.textContent?.includes(route.successText) === true
+          : document.querySelector(route.successSelector) !== null;
       await waitFor(
-        () => (document.body.textContent?.includes(route.successText) ? true : undefined),
+        () => (successVisible() ? true : undefined),
         `${route.key} success`,
       );
       dispose(success);
 
       const empty = mountRoute(route, `s26e-${route.key}-empty`, async () => json(route.emptyBody));
       await new Promise((resolve) => setTimeout(resolve, 150));
-      expect(document.body.textContent).not.toContain(route.successText);
+      if (route.successSelector === undefined) expect(document.body.textContent).not.toContain(route.successText);
+      else expect(document.querySelector(route.successSelector)).toBeNull();
       dispose(empty);
 
       let resolveRead: ((response: Response) => void) | undefined;
@@ -412,7 +419,8 @@ describe("S26e shared readback routes", () => {
           }),
       );
       await new Promise((resolve) => setTimeout(resolve, 100));
-      expect(document.body.textContent).not.toContain(route.successText);
+      if (route.successSelector === undefined) expect(document.body.textContent).not.toContain(route.successText);
+      else expect(document.querySelector(route.successSelector)).toBeNull();
       resolveRead?.(json(route.emptyBody));
       await new Promise((resolve) => setTimeout(resolve, 150));
       dispose(loading);
@@ -421,7 +429,8 @@ describe("S26e shared readback routes", () => {
         json({ reason: "unavailable" }, 503),
       );
       await new Promise((resolve) => setTimeout(resolve, 100));
-      expect(document.body.textContent).not.toContain(route.successText);
+      if (route.successSelector === undefined) expect(document.body.textContent).not.toContain(route.successText);
+      else expect(document.querySelector(route.successSelector)).toBeNull();
       dispose(error);
     });
 
