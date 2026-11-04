@@ -12,7 +12,7 @@ HEAD base: 8799aadc
 - SystemOperator: Operator Controls + capability status grid, Trace lineage table, Replay Jobs table + create form, Evaluation Jobs table, Shadow Learning mode select, learning profile and advisory tables. Real rows only; empty states are explicit.
 - SystemExtensions: Readiness counts, contribution posture, recommendation ledger, replay automation, extension inventory with lifecycle/mode/health and Pause per row.
 - Readbacks added/wired: learningProfile, learningAdvisory, contribution, recommendations, replayAutomation; SystemOperator init reads status/trace/replay/evaluation/profile/advisory; SystemExtensions init reads extensions/contribution/recommendations/replayAutomation.
-- Actions wired to verified host endpoints: recommendation apply/dismiss, replay automation pause/resume, extension pause (existing), download (existing), operator load and create replay (existing). Recommendation/automation action bodies are asserted in s637.
+- Actions wired to verified host endpoints: recommendation apply/dismiss, replay automation pause/resume, extension pause (existing), download (existing), operator load/create replay (existing), plus replay cancel and evaluation retry/cancel. Recommendation/automation/operator action bodies and encoded job paths are asserted in s637.
 - parseLearningFamily now keeps full JSON meta (previously sliced at 600 chars, which made object readbacks unparseable) so capability/contribution/automation objects expand into real rows.
 
 ## Packaged-host DOM evidence (0.0.20-609 build, host 3491)
@@ -21,6 +21,6 @@ HEAD base: 8799aadc
 - Screenshots: evidence/logs/s637-operator.png, evidence/logs/s637-extensions.png.
 
 ## Tests
-- s637 4/4: rendered operator values, rendered extension lifecycle/mode/health + action controls, exact recommendation/automation POST bodies + update dispatch, operator load endpoint/auth.
+- s637 5/5: rendered operator values, rendered extension lifecycle/mode/health + action controls, exact recommendation/automation POST bodies + update dispatch, operator load endpoint/auth, replay cancel + evaluation retry/cancel exact paths/auth.
 - s632 updated to the real feature-page hierarchy; s393/s623 read plans updated; s26f host-route parser also reads the host path->handler table.
 - tsc 0; targeted 7 files / 36 tests pass; full suite below.

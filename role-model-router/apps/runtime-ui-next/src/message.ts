@@ -180,6 +180,9 @@ export const Message: MessageUnion<{
   readonly SystemOperatorReplayCountChanged: { readonly value: typeof Schema.String };
   readonly SystemOperatorLoadRequested: EmptyFields;
   readonly SystemOperatorCreateReplayRequested: EmptyFields;
+  readonly SystemOperatorReplayCancelRequested: { readonly jobId: typeof Schema.String };
+  readonly SystemOperatorEvaluationCancelRequested: { readonly jobId: typeof Schema.String };
+  readonly SystemOperatorEvaluationRetryRequested: { readonly jobId: typeof Schema.String };
   readonly SystemOperatorActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly SystemOperatorActionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly LocalLlamaSwapModelIdChanged: { readonly value: typeof Schema.String };
@@ -420,6 +423,9 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   SystemOperatorReplayCountChanged: { value: Schema.String },
   SystemOperatorLoadRequested: {},
   SystemOperatorCreateReplayRequested: {},
+  SystemOperatorReplayCancelRequested: { jobId: Schema.String },
+  SystemOperatorEvaluationCancelRequested: { jobId: Schema.String },
+  SystemOperatorEvaluationRetryRequested: { jobId: Schema.String },
   SystemOperatorActionSucceeded: { message: Schema.String, token: Schema.Number },
   SystemOperatorActionFailed: { message: Schema.String, token: Schema.Number },
   LocalLlamaSwapModelIdChanged: { value: Schema.String },

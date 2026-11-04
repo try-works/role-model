@@ -1687,6 +1687,24 @@ const readPlanForRoute = (model: Model): ReadonlyArray<{ readonly key: ReadbackK
             ? { model: { ...model, systemOperatorMessage: "Operator access token is required." } }
             : { commands: [systemOperatorCommands.loadState({ token, tokenId: 1 })], model: { ...model, systemOperatorMessage: undefined } };
         },
+        SystemOperatorReplayCancelRequested: ({ jobId }: Extract<Message, { readonly _tag: "SystemOperatorReplayCancelRequested" }>): UpdateReturn<Model, Message> => {
+          const token = model.learningOperatorToken ?? "";
+          return token.length === 0
+            ? { model: { ...model, systemOperatorMessage: "Operator access token is required." } }
+            : { commands: [systemOperatorCommands.cancelReplay({ jobId, token, tokenId: 1 })], model: { ...model, systemOperatorMessage: undefined } };
+        },
+        SystemOperatorEvaluationCancelRequested: ({ jobId }: Extract<Message, { readonly _tag: "SystemOperatorEvaluationCancelRequested" }>): UpdateReturn<Model, Message> => {
+          const token = model.learningOperatorToken ?? "";
+          return token.length === 0
+            ? { model: { ...model, systemOperatorMessage: "Operator access token is required." } }
+            : { commands: [systemOperatorCommands.cancelEvaluation({ jobId, token, tokenId: 1 })], model: { ...model, systemOperatorMessage: undefined } };
+        },
+        SystemOperatorEvaluationRetryRequested: ({ jobId }: Extract<Message, { readonly _tag: "SystemOperatorEvaluationRetryRequested" }>): UpdateReturn<Model, Message> => {
+          const token = model.learningOperatorToken ?? "";
+          return token.length === 0
+            ? { model: { ...model, systemOperatorMessage: "Operator access token is required." } }
+            : { commands: [systemOperatorCommands.retryEvaluation({ jobId, token, tokenId: 1 })], model: { ...model, systemOperatorMessage: undefined } };
+        },
         SystemOperatorCreateReplayRequested: (): UpdateReturn<Model, Message> => {
           const token = model.learningOperatorToken ?? "";
           const traceRootId = (model.systemOperatorTraceRoot ?? "").trim();

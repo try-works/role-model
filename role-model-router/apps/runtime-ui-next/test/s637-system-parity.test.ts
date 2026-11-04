@@ -113,6 +113,20 @@ describe("S637 SystemOperator/SystemExtensions real parity", () => {
     expect((paused.commands?.[0] as unknown as { args: { action: string } }).args.action).toBe("pause");
   });
 
+  it("wires replay cancel and evaluation retry/cancel against the verified host endpoints", async () => {
+    const calls: Array<{ auth: string | null; body: string; path: string }> = [];
+    const commands = defineSystemOperatorCommands(createSystemOperatorClient(async (input, init) => {
+      calls.push({ auth: (init?.headers as Record<string, string> | undefined)?.authorization ?? null, body: String(init?.body ?? ""), path: String(input) });
+      return new Response("{}", { status: 200 });
+    }));
+    await Effect.runPromise(commands.cancelReplay({ jobId: "replay 1", token: "tok", tokenId: 1 }).effect);
+    await Effect.runPromise(commands.retryEvaluation({ jobId: "eval-1", token: "tok", tokenId: 1 }).effect);
+    await Effect.runPromise(commands.cancelEvaluation({ jobId: "eval-1", token: "tok", tokenId: 1 }).effect);
+    expect(calls[0]).toEqual({ auth: "Bearer tok", body: "{}", path: "/api/role-model/operator/replay/jobs/replay%201/cancel" });
+    expect(calls[1]).toEqual({ auth: "Bearer tok", body: "{}", path: "/api/role-model/operator/evaluation/jobs/eval-1/retry" });
+    expect(calls[2]).toEqual({ auth: "Bearer tok", body: "{}", path: "/api/role-model/operator/evaluation/jobs/eval-1/cancel" });
+  });
+
   it("loads the operator state against the verified host endpoint", async () => {
     const calls: Array<{ auth: string | null; path: string }> = [];
     const commands = defineSystemOperatorCommands(createSystemOperatorClient(async (input, init) => {

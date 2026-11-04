@@ -61,13 +61,19 @@ const expandedRows = (rows: ReadonlyArray<ReadbackRow>): ReadonlyArray<ReadbackR
 });
 
 const expandedState = (state: ReadbackState | undefined): ReadbackState | undefined => state === undefined || state.status !== "ok" ? state : { ...state, rows: expandedRows(state.rows) };
-const rowTable = (rows: ReadbackState | undefined, headings: ReadonlyArray<string>, empty: string, h: HtmlBuilder<Message>): Html => {
+const rowTable = (rows: ReadbackState | undefined, headings: ReadonlyArray<string>, empty: string, h: HtmlBuilder<Message>, actions?: (row: ReadbackRow) => ReadonlyArray<Html>): Html => {
   if (rows === undefined || rows.status === "idle" || rows.status === "loading") return h.p([h.Class(supporting)], ["Loading " + headings.join(", ").toLowerCase() + "…"]);
   if (rows.status === "error") return h.p([h.Role("alert"), h.Class(supporting)], [rows.message ?? "Readback failed."]);
   if (rows.rows.length === 0) return h.p([h.Class(supporting)], [empty]);
+  const heads = actions === undefined ? headings : [...headings, "Action"];
   return h.div([h.Class("overflow-x-auto")], [h.table([h.Class("min-w-full text-left")], [
-    h.thead([], [h.tr([], headings.map((head) => h.th([h.Class(tableHead)], [head])))]),
-    h.tbody([], rows.rows.map((row: ReadbackRow) => h.tr([], [h.td([h.Class(tableCell + " font-mono")], [row.label]), h.td([h.Class(tableCell)], [row.value.length === 0 ? "—" : row.value]), h.td([h.Class(tableCell + " text-muted-foreground")], [row.meta.length === 0 ? "—" : row.meta])]))),
+    h.thead([], [h.tr([], heads.map((head) => h.th([h.Class(tableHead)], [head])))]),
+    h.tbody([], rows.rows.map((row: ReadbackRow) => h.tr([], [
+      h.td([h.Class(tableCell + " font-mono")], [row.label]),
+      h.td([h.Class(tableCell)], [row.value.length === 0 ? "—" : row.value]),
+      h.td([h.Class(tableCell + " text-muted-foreground")], [row.meta.length === 0 ? "—" : row.meta]),
+      ...(actions === undefined ? [] : [h.td([h.Class(tableCell)], actions(row))]),
+    ]))),
   ])]);
 };
 
@@ -109,10 +115,17 @@ export const systemOperatorPage = (input: ReadbacksState | ReadbackState | undef
         h.div([], [h.label([h.Class(fieldLabel), h.Attribute("for", "replay-budget")], ["Max requests"]), h.input([h.Id("replay-budget"), h.Type("number"), h.Value(count), h.Class(fieldClass + " mt-1 w-full"), h.OnInput((next) => Message.SystemOperatorReplayCountChanged({ value: next }))])]),
         h.button([h.Type("button"), h.DataAttribute("operator-create-replay", ""), h.OnClick(Message.SystemOperatorCreateReplayRequested({})), h.Class(primaryButton)], ["Create Replay"]),
       ]),
-      rowTable(readbacks.replayJobs, ["Job", "Status", "Budget"], "No replay jobs recorded for this operator session.", h),
+      rowTable(readbacks.replayJobs, ["Job", "Status", "Budget"], "No replay jobs recorded for this operator session.", h, (row) => [
+        h.button([h.Type("button"), h.DataAttribute("operator-replay-cancel", row.id), h.OnClick(Message.SystemOperatorReplayCancelRequested({ jobId: row.id })), h.Class(secondaryButton)], ["Cancel"]),
+      ]),
     ], h),
     card("Evaluation Jobs", "Retry or cancel bounded evaluation work with confirmation for cancellation.", [
-      rowTable(readbacks.evaluationJobs, ["Job", "Status", "Detail"], "No evaluation jobs recorded for this operator session.", h),
+      rowTable(readbacks.evaluationJobs, ["Job", "Status", "Detail"], "No evaluation jobs recorded for this operator session.", h, (row) => [
+        h.div([h.Class("flex gap-2")], [
+          h.button([h.Type("button"), h.DataAttribute("operator-evaluation-retry", row.id), h.OnClick(Message.SystemOperatorEvaluationRetryRequested({ jobId: row.id })), h.Class(secondaryButton)], ["Retry"]),
+          h.button([h.Type("button"), h.DataAttribute("operator-evaluation-cancel", row.id), h.OnClick(Message.SystemOperatorEvaluationCancelRequested({ jobId: row.id })), h.Class(secondaryButton)], ["Cancel"]),
+        ]),
+      ]),
     ], h),
     card("Shadow Learning", "Learning output is advisory. Mode changes and rollback never directly alter production routing.", [
       h.div([h.Class("grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end")], [

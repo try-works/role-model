@@ -1059,8 +1059,23 @@ export const noopSystemExtensionsCommands = defineSystemExtensionsCommands({ app
 export interface SystemOperatorClient {
   readonly loadState: (token: string) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly createReplay: (traceRootId: string, maxRequests: number, token: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly cancelReplay: (jobId: string, token: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly cancelEvaluation: (jobId: string, token: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly retryEvaluation: (jobId: string, token: string) => Promise<{ readonly body: unknown; readonly status: number }>;
 }
 export const createSystemOperatorClient = (fetchImpl: typeof fetch = fetch): SystemOperatorClient => ({
+  cancelReplay: async (jobId, token) => {
+    const response = await fetchImpl("/api/role-model/operator/replay/jobs/" + encodeURIComponent(jobId) + "/cancel", { body: "{}", headers: { authorization: "Bearer " + token, "content-type": "application/json" }, method: "POST" });
+    return { body: await response.json(), status: response.status };
+  },
+  cancelEvaluation: async (jobId, token) => {
+    const response = await fetchImpl("/api/role-model/operator/evaluation/jobs/" + encodeURIComponent(jobId) + "/cancel", { body: "{}", headers: { authorization: "Bearer " + token, "content-type": "application/json" }, method: "POST" });
+    return { body: await response.json(), status: response.status };
+  },
+  retryEvaluation: async (jobId, token) => {
+    const response = await fetchImpl("/api/role-model/operator/evaluation/jobs/" + encodeURIComponent(jobId) + "/retry", { body: "{}", headers: { authorization: "Bearer " + token, "content-type": "application/json" }, method: "POST" });
+    return { body: await response.json(), status: response.status };
+  },
   createReplay: async (traceRootId, maxRequests, token) => {
     const response = await fetchImpl("/api/role-model/operator/replay/jobs", { body: JSON.stringify({ budget: { maxRequests }, traceRootId }), headers: { authorization: "Bearer " + token, "content-type": "application/json" }, method: "POST" });
     return { body: await response.json(), status: response.status };
@@ -1080,6 +1095,33 @@ export const defineSystemOperatorCommands = (client: SystemOperatorClient) => ({
           : Message.SystemOperatorActionFailed({ message: "Load operator state failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token: tokenId }))),
     messages: [Message.SystemOperatorActionSucceeded, Message.SystemOperatorActionFailed],
   }),
+  cancelReplay: Command.define("CancelSystemOperatorReplay", {
+    args: { jobId: Schema.String, token: Schema.String, tokenId: Schema.Number },
+    execute: ({ jobId, token, tokenId }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.cancelReplay(jobId, token) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.SystemOperatorActionSucceeded({ message: "Cancelled replay " + jobId + ".", token: tokenId })
+          : Message.SystemOperatorActionFailed({ message: "Cancel replay failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token: tokenId }))),
+    messages: [Message.SystemOperatorActionSucceeded, Message.SystemOperatorActionFailed],
+  }),
+  cancelEvaluation: Command.define("CancelSystemOperatorEvaluation", {
+    args: { jobId: Schema.String, token: Schema.String, tokenId: Schema.Number },
+    execute: ({ jobId, token, tokenId }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.cancelEvaluation(jobId, token) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.SystemOperatorActionSucceeded({ message: "Cancelled evaluation " + jobId + ".", token: tokenId })
+          : Message.SystemOperatorActionFailed({ message: "Cancel evaluation failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token: tokenId }))),
+    messages: [Message.SystemOperatorActionSucceeded, Message.SystemOperatorActionFailed],
+  }),
+  retryEvaluation: Command.define("RetrySystemOperatorEvaluation", {
+    args: { jobId: Schema.String, token: Schema.String, tokenId: Schema.Number },
+    execute: ({ jobId, token, tokenId }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.retryEvaluation(jobId, token) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.SystemOperatorActionSucceeded({ message: "Retried evaluation " + jobId + ".", token: tokenId })
+          : Message.SystemOperatorActionFailed({ message: "Retry evaluation failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token: tokenId }))),
+    messages: [Message.SystemOperatorActionSucceeded, Message.SystemOperatorActionFailed],
+  }),
   createReplay: Command.define("CreateSystemOperatorReplay", {
     args: { maxRequests: Schema.Number, token: Schema.String, tokenId: Schema.Number, traceRootId: Schema.String },
     execute: ({ maxRequests, token, tokenId, traceRootId }) =>
@@ -1091,7 +1133,7 @@ export const defineSystemOperatorCommands = (client: SystemOperatorClient) => ({
   }),
 });
 export type SystemOperatorCommands = ReturnType<typeof defineSystemOperatorCommands>;
-export const noopSystemOperatorCommands = defineSystemOperatorCommands({ createReplay: async () => ({ body: {}, status: 200 }), loadState: async () => ({ body: {}, status: 200 }) });
+export const noopSystemOperatorCommands = defineSystemOperatorCommands({ cancelEvaluation: async () => ({ body: {}, status: 200 }), cancelReplay: async () => ({ body: {}, status: 200 }), createReplay: async () => ({ body: {}, status: 200 }), loadState: async () => ({ body: {}, status: 200 }), retryEvaluation: async () => ({ body: {}, status: 200 }) });
 
 export interface LocalPeersClient {
   readonly save: (peers: ReadonlyArray<{ readonly authToken?: string; readonly id: string; readonly url: string }>) => Promise<{ readonly body: unknown; readonly status: number }>;
