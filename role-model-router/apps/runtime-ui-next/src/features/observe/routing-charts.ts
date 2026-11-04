@@ -98,6 +98,9 @@ export const ROUTING_CHARTS: ReadonlyArray<RoutingChartDefinition> = [
 /** The analytics filters carried by the routing page (source/difficulty/taxonomy/strategy selections). */
 export interface RoutingChartFilters {
   readonly difficultyBuckets?: ReadonlyArray<string>;
+  readonly effortSources?: ReadonlyArray<string>;
+  readonly reasoningEfforts?: ReadonlyArray<string>;
+  readonly requestedRoleIds?: ReadonlyArray<string>;
   readonly selectedStrategies?: ReadonlyArray<string>;
   readonly sourceTypes?: ReadonlyArray<string>;
   readonly taxonomyCapabilityIds?: ReadonlyArray<string>;
@@ -120,12 +123,47 @@ export const routingBreakdownDimension = (breakdown: string | undefined): string
 };
 
 /** Maps the observe page filter labels to the reference analytics filters. */
-export const routingChartFilters = (state: { readonly difficulty?: string; readonly source?: string } | undefined): RoutingChartFilters => ({
+const csv = (value: string | undefined): ReadonlyArray<string> =>
+  value === undefined
+    ? []
+    : value.split(",").map((entry) => entry.trim()).filter((entry) => entry.length > 0);
+const single = (value: string | undefined): ReadonlyArray<string> =>
+  value === undefined || value.trim().length === 0 ? [] : [value.trim()];
+
+/** Maps the observe page filter state (basic selects + Advanced controls) to the reference analytics filters. */
+export const routingChartFilters = (
+  state: {
+    readonly difficulty?: string;
+    readonly effortSources?: string;
+    readonly reasoningEfforts?: string;
+    readonly requestedRoleId?: string;
+    readonly selectedStrategy?: string;
+    readonly source?: string;
+    readonly taxonomyCapabilityIds?: string;
+    readonly taxonomyGroupId?: string;
+    readonly taxonomyModalityIds?: string;
+    readonly taxonomyRoleId?: string;
+    readonly taxonomyTaskType?: string;
+    readonly taxonomyTaskVariant?: string;
+    readonly taxonomyToolClassIds?: string;
+  } | undefined,
+): RoutingChartFilters => ({
   ...(state?.source === "Local only" ? { sourceTypes: ["local"] } : state?.source === "Remote only" ? { sourceTypes: ["remote"] } : {}),
   ...(state?.difficulty === "Easy only" ? { difficultyBuckets: ["easy"] }
     : state?.difficulty === "Medium only" ? { difficultyBuckets: ["medium"] }
       : state?.difficulty === "Hard only" ? { difficultyBuckets: ["hard"] }
         : {}),
+  ...(single(state?.requestedRoleId).length === 0 ? {} : { requestedRoleIds: single(state?.requestedRoleId) }),
+  ...(single(state?.selectedStrategy).length === 0 ? {} : { selectedStrategies: single(state?.selectedStrategy) }),
+  ...(csv(state?.reasoningEfforts).length === 0 ? {} : { reasoningEfforts: csv(state?.reasoningEfforts) }),
+  ...(csv(state?.effortSources).length === 0 ? {} : { effortSources: csv(state?.effortSources) }),
+  ...(single(state?.taxonomyGroupId).length === 0 ? {} : { taxonomyGroupIds: single(state?.taxonomyGroupId) }),
+  ...(single(state?.taxonomyRoleId).length === 0 ? {} : { taxonomyRoleIds: single(state?.taxonomyRoleId) }),
+  ...(single(state?.taxonomyTaskType).length === 0 ? {} : { taxonomyTaskTypes: single(state?.taxonomyTaskType) }),
+  ...(single(state?.taxonomyTaskVariant).length === 0 ? {} : { taxonomyTaskVariants: single(state?.taxonomyTaskVariant) }),
+  ...(csv(state?.taxonomyCapabilityIds).length === 0 ? {} : { taxonomyCapabilityIds: csv(state?.taxonomyCapabilityIds) }),
+  ...(csv(state?.taxonomyModalityIds).length === 0 ? {} : { taxonomyModalityIds: csv(state?.taxonomyModalityIds) }),
+  ...(csv(state?.taxonomyToolClassIds).length === 0 ? {} : { taxonomyToolClassIds: csv(state?.taxonomyToolClassIds) }),
 });
 
 export interface RoutingChartQuery {

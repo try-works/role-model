@@ -33,14 +33,36 @@ import { resolveAppUrl } from "./route";
 import { studioIdle, studioTabFromUrl } from "./studio";
 import { applyDocumentTheme, readInitialTheme } from "./theme";
 
-/** Restores the observe-routing filter state carried in the URL (source/breakdown/difficulty/range). */
+/**
+ * Restores the observe-routing filter state carried in the URL: the basic selects (source/breakdown/difficulty/range)
+ * and the reference Advanced controls (roleId/strategy/effort/effortSource/taxGroup/taxRole/taxTask/taxVariant/
+ * taxCapability/taxModality/taxTool), matching apps/runtime-ui/app/routes/observe-routing.tsx query params.
+ */
 const observeFiltersFromSearch = (search: string): Model["observeRoutingFilters"] | undefined => {
   const params = new URLSearchParams(search);
   const rawSource = params.get("source");
   const rawBreakdown = params.get("breakdown");
   const rawDifficulty = params.get("difficulty");
   const rawRange = params.get("range");
-  if (rawSource === null && rawBreakdown === null && rawDifficulty === null && rawRange === null) return undefined;
+  const rawRequestedRoleId = params.get("roleId");
+  const rawSelectedStrategy = params.get("strategy");
+  const rawReasoningEfforts = params.get("effort");
+  const rawEffortSources = params.get("effortSource");
+  const rawTaxonomyGroupId = params.get("taxGroup");
+  const rawTaxonomyRoleId = params.get("taxRole");
+  const rawTaxonomyTaskType = params.get("taxTask");
+  const rawTaxonomyTaskVariant = params.get("taxVariant");
+  const rawTaxonomyCapabilityIds = params.get("taxCapability");
+  const rawTaxonomyModalityIds = params.get("taxModality");
+  const rawTaxonomyToolClassIds = params.get("taxTool");
+  const basicPresent = rawSource !== null || rawBreakdown !== null || rawDifficulty !== null || rawRange !== null;
+  const advancedValues = [
+    rawRequestedRoleId, rawSelectedStrategy, rawReasoningEfforts, rawEffortSources, rawTaxonomyGroupId,
+    rawTaxonomyRoleId, rawTaxonomyTaskType, rawTaxonomyTaskVariant, rawTaxonomyCapabilityIds,
+    rawTaxonomyModalityIds, rawTaxonomyToolClassIds,
+  ];
+  const advancedPresent = advancedValues.some((value) => value !== null && value.trim().length > 0);
+  if (!basicPresent && !advancedPresent) return undefined;
   const source = rawSource === "local" ? "Local only"
     : rawSource === "remote" ? "Remote only"
       : rawSource ?? "All sources";
@@ -56,7 +78,24 @@ const observeFiltersFromSearch = (search: string): Model["observeRoutingFilters"
     : rawRange === "month" ? "Month"
       : rawRange === "90days" ? "90 days"
         : "Day";
-  return { breakdown, difficulty, expanded: false, range, source };
+  return {
+    breakdown,
+    difficulty,
+    expanded: advancedPresent,
+    range,
+    source,
+    ...(rawRequestedRoleId === null || rawRequestedRoleId.trim().length === 0 ? {} : { requestedRoleId: rawRequestedRoleId.trim() }),
+    ...(rawSelectedStrategy === null || rawSelectedStrategy.trim().length === 0 ? {} : { selectedStrategy: rawSelectedStrategy.trim() }),
+    ...(rawReasoningEfforts === null || rawReasoningEfforts.trim().length === 0 ? {} : { reasoningEfforts: rawReasoningEfforts.trim() }),
+    ...(rawEffortSources === null || rawEffortSources.trim().length === 0 ? {} : { effortSources: rawEffortSources.trim() }),
+    ...(rawTaxonomyGroupId === null || rawTaxonomyGroupId.trim().length === 0 ? {} : { taxonomyGroupId: rawTaxonomyGroupId.trim() }),
+    ...(rawTaxonomyRoleId === null || rawTaxonomyRoleId.trim().length === 0 ? {} : { taxonomyRoleId: rawTaxonomyRoleId.trim() }),
+    ...(rawTaxonomyTaskType === null || rawTaxonomyTaskType.trim().length === 0 ? {} : { taxonomyTaskType: rawTaxonomyTaskType.trim() }),
+    ...(rawTaxonomyTaskVariant === null || rawTaxonomyTaskVariant.trim().length === 0 ? {} : { taxonomyTaskVariant: rawTaxonomyTaskVariant.trim() }),
+    ...(rawTaxonomyCapabilityIds === null || rawTaxonomyCapabilityIds.trim().length === 0 ? {} : { taxonomyCapabilityIds: rawTaxonomyCapabilityIds.trim() }),
+    ...(rawTaxonomyModalityIds === null || rawTaxonomyModalityIds.trim().length === 0 ? {} : { taxonomyModalityIds: rawTaxonomyModalityIds.trim() }),
+    ...(rawTaxonomyToolClassIds === null || rawTaxonomyToolClassIds.trim().length === 0 ? {} : { taxonomyToolClassIds: rawTaxonomyToolClassIds.trim() }),
+  };
 };
 
 /** Routing init: the runtime passes the Url derived from window.location at startup. */

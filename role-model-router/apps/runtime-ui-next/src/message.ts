@@ -22,7 +22,22 @@ const RouterBlockSchema = Schema.Literals(["agent_strategies", "workloads"]);
 const RoleActionKindSchema = Schema.Literals(["create", "edit", "tasks"] as const);
 const RoleDraftFieldSchema = Schema.Literals(["roleId", "name", "description", "instructions", "kind", "toolPolicy", "allowedTools", "defaultSystemInstructions", "forbiddenCapabilities", "outputContracts", "preferredCapabilities", "requiredCapabilities", "roleKind", "routingOverridesText", "safetyPolicyRefs", "taskTypesSupported", "toolPolicyMode"]);
 const RequestsFilterFieldSchema = Schema.Literals(["breakdown", "difficulty", "source", "statusFamily"]);
-const ObserveFilterFieldSchema = Schema.Literals(["breakdown", "difficulty", "source"]);
+const ObserveFilterFieldSchema = Schema.Literals([
+  "breakdown",
+  "difficulty",
+  "source",
+  "requestedRoleId",
+  "selectedStrategy",
+  "reasoningEfforts",
+  "effortSources",
+  "taxonomyGroupId",
+  "taxonomyRoleId",
+  "taxonomyTaskType",
+  "taxonomyTaskVariant",
+  "taxonomyCapabilityIds",
+  "taxonomyModalityIds",
+  "taxonomyToolClassIds",
+]);
 
 export const Message: MessageUnion<{
   readonly ChangedUrl: { readonly url: typeof Url.Url };

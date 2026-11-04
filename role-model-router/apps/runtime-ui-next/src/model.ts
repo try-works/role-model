@@ -101,6 +101,18 @@ const observeFields = {
     expanded: Schema.Boolean,
     range: Schema.String,
     source: Schema.String,
+    // Advanced controls (reference observe-routing route): optional so pre-task-118 state still decodes.
+    effortSources: Schema.optional(Schema.String),
+    reasoningEfforts: Schema.optional(Schema.String),
+    requestedRoleId: Schema.optional(Schema.String),
+    selectedStrategy: Schema.optional(Schema.String),
+    taxonomyCapabilityIds: Schema.optional(Schema.String),
+    taxonomyGroupId: Schema.optional(Schema.String),
+    taxonomyModalityIds: Schema.optional(Schema.String),
+    taxonomyRoleId: Schema.optional(Schema.String),
+    taxonomyTaskType: Schema.optional(Schema.String),
+    taxonomyTaskVariant: Schema.optional(Schema.String),
+    taxonomyToolClassIds: Schema.optional(Schema.String),
   })),
 };
 const RoleDraftStateSchema = Schema.Struct({

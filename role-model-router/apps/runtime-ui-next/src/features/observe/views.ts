@@ -50,13 +50,47 @@ const observeChart = (
 
 const observeCharts = (card: Html, h: HtmlBuilder<Message>): Html => chartGrid([{ span: 12, body: card }], h);
 
+/** Fields of the reference observe-routing Advanced controls that dispatch ObserveFilterChanged. */
+export type ObserveFilterField =
+  | "breakdown"
+  | "difficulty"
+  | "source"
+  | "requestedRoleId"
+  | "selectedStrategy"
+  | "reasoningEfforts"
+  | "effortSources"
+  | "taxonomyGroupId"
+  | "taxonomyRoleId"
+  | "taxonomyTaskType"
+  | "taxonomyTaskVariant"
+  | "taxonomyCapabilityIds"
+  | "taxonomyModalityIds"
+  | "taxonomyToolClassIds";
+
 const observeFilterBar = (
   h: HtmlBuilder<Message>,
   extra: ReadonlyArray<string> = [],
-  filters?: { readonly breakdown: string; readonly difficulty: string; readonly expanded: boolean; readonly range: string; readonly source: string },
+  filters?: {
+    readonly breakdown: string;
+    readonly difficulty: string;
+    readonly effortSources?: string;
+    readonly expanded: boolean;
+    readonly range: string;
+    readonly reasoningEfforts?: string;
+    readonly requestedRoleId?: string;
+    readonly selectedStrategy?: string;
+    readonly source: string;
+    readonly taxonomyCapabilityIds?: string;
+    readonly taxonomyGroupId?: string;
+    readonly taxonomyModalityIds?: string;
+    readonly taxonomyRoleId?: string;
+    readonly taxonomyTaskType?: string;
+    readonly taxonomyTaskVariant?: string;
+    readonly taxonomyToolClassIds?: string;
+  },
   on?: {
     readonly advanced: () => Message;
-    readonly filter: (field: "breakdown" | "difficulty" | "source", value: string) => Message;
+    readonly filter: (field: ObserveFilterField, value: string) => Message;
     readonly range: (value: string) => Message;
   },
 ): Html => {
@@ -64,6 +98,18 @@ const observeFilterBar = (
   const fieldClass = "flex shrink-0 flex-col gap-1.5";
   const selectClass =
     "flex h-[34px] min-w-[9rem] items-center justify-between gap-2 rounded-md border border-input bg-secondary px-2.5 text-left font-sans text-sm text-foreground";
+  const advancedField = (label: string, value: string, field: ObserveFilterField) =>
+    h.label([h.Class(fieldClass)], [
+      h.span([h.Class(labelClass)], [label]),
+      h.input([
+        h.Type("text"),
+        h.AriaLabel(label),
+        h.Value(value),
+        h.DataAttribute("observe-filter", field),
+        ...(on === undefined ? [] : [h.OnInput((next) => on.filter(field, next))]),
+        h.Class("flex h-[34px] w-full min-w-[9rem] rounded-md border border-input bg-secondary px-2.5 font-sans text-sm text-foreground"),
+      ]),
+    ]);
   const field = (label: string, value: string, options: ReadonlyArray<string>, key: "breakdown" | "difficulty" | "source") =>
     h.label([h.Class(fieldClass)], [
       h.span([h.Class(labelClass)], [label]),
@@ -108,7 +154,22 @@ const observeFilterBar = (
       [h.Class("flex w-full flex-wrap items-center justify-between gap-4 rounded-lg border border-border bg-card p-3"), h.DataAttribute("observe-advanced", "")],
       [
         h.span([h.Class("font-sans text-sm font-medium text-foreground")], ["Advanced controls"]),
-        h.button([h.Type("button"), h.AriaExpanded(filters?.expanded === true), ...(on === undefined ? [] : [h.OnClick(on.advanced())]), h.Class("inline-flex h-[34px] items-center gap-1 rounded-md border border-border bg-background px-3 font-sans text-sm text-foreground")], ["Expand"]),
+        h.button([h.Type("button"), h.AriaExpanded(filters?.expanded === true), ...(on === undefined ? [] : [h.OnClick(on.advanced())]), h.Class("inline-flex h-[34px] items-center gap-1 rounded-md border border-border bg-background px-3 font-sans text-sm text-foreground")], [filters?.expanded === true ? "Collapse" : "Expand"]),
+        ...(filters?.expanded === true && on !== undefined
+          ? [h.div([h.Class("grid w-full gap-4 xl:grid-cols-4")], [
+              advancedField("Requested role id", filters.requestedRoleId ?? "", "requestedRoleId"),
+              advancedField("Selected strategy", filters.selectedStrategy ?? "", "selectedStrategy"),
+              advancedField("Taxonomy group id", filters.taxonomyGroupId ?? "", "taxonomyGroupId"),
+              advancedField("Taxonomy role id", filters.taxonomyRoleId ?? "", "taxonomyRoleId"),
+              advancedField("Taxonomy task type", filters.taxonomyTaskType ?? "", "taxonomyTaskType"),
+              advancedField("Taxonomy task variant", filters.taxonomyTaskVariant ?? "", "taxonomyTaskVariant"),
+              advancedField("Reasoning efforts", filters.reasoningEfforts ?? "", "reasoningEfforts"),
+              advancedField("Effort sources", filters.effortSources ?? "", "effortSources"),
+              advancedField("Taxonomy capability ids", filters.taxonomyCapabilityIds ?? "", "taxonomyCapabilityIds"),
+              advancedField("Taxonomy modality ids", filters.taxonomyModalityIds ?? "", "taxonomyModalityIds"),
+              advancedField("Taxonomy tool class ids", filters.taxonomyToolClassIds ?? "", "taxonomyToolClassIds"),
+            ])]
+          : []),
       ],
     ),
   ]);
