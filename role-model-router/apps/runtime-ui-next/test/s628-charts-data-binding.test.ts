@@ -79,16 +79,17 @@ describe("S628 chart data binding", () => {
     expect(drawnShapes(container, "Token usage over time")).toBe(0);
   });
 
-  it("renders an in-plot honest empty state on the observe volume card when there are no metrics", async () => {
+  it("renders in-plot honest empty states on the observe routing chart suite when no analytics are loaded", async () => {
     const container = await render({ _tag: "ObserveRouting" }, {
       observeRouting: parseReadbackFixture("observeRouting", []),
     });
-    const message = card(container, "Routing analytics volume")?.querySelector("[data-chart-plot] [data-chart-empty-message]");
+    const message = card(container, "Routing decision volume")?.querySelector("[data-chart-plot] [data-chart-empty-message]");
     expect(message).not.toBeNull();
-    expect(message?.textContent ?? "").toContain("No routing analytics volume");
+    expect(message?.textContent ?? "").toContain("No routed decisions");
+    expect(container.querySelectorAll("[data-overview-card] svg[data-chart-part='chart']").length).toBe(9);
   });
 
-  it("draws the real requests and routing volume series from the metrics readback", async () => {
+  it("draws the real requests volume and observe-routing chart series from their readbacks", async () => {
     const metrics = parseReadbackFixture("overviewMetrics", metricsBody);
     const requests = await render({ _tag: "Requests" }, {
       overviewMetrics: metrics,
@@ -96,12 +97,31 @@ describe("S628 chart data binding", () => {
     });
     expect(drawnShapes(requests, "Request volume")).toBeGreaterThan(0);
     expect(card(requests, "Request volume")?.textContent).toContain("Requests");
+    const startAtMs = Date.UTC(2026, 10, 3, 0, 0, 0);
+    const dayMs = 86_400_000;
     const routing = await render({ _tag: "ObserveRouting" }, {
       observeRouting: parseReadbackFixture("observeRouting", []),
       overviewMetrics: metrics,
     });
-    expect(drawnShapes(routing, "Routing analytics volume")).toBeGreaterThan(0);
-    expect(card(routing, "Routing analytics volume")?.querySelector("[data-chart-plot] [data-chart-empty-message]")).toBeNull();
+    const baseModel = shellModel({ route: { _tag: "ObserveRouting" } });
+    const routingModel = {
+      ...baseModel,
+      readbacks: { ...emptyReadbacks(), ...baseModel.readbacks, observeRouting: parseReadbackFixture("observeRouting", []), overviewMetrics: metrics },
+      routingCharts: {
+        entries: [
+          { id: "Routing decision volume", json: JSON.stringify({ buckets: [{ startAtMs, totals: { requestCount: 4 } }], granularity: "day" }) },
+          { id: "Model selection", json: JSON.stringify({ ranking: { dimension: "modelId", metric: "requestCount", rows: [{ key: "m1", label: "Model One", value: 4 }] } }) },
+        ],
+        status: "ok" as const,
+        token: 1,
+      },
+    };
+    const rendered = await Effect.runPromise(renderToString({ init: () => ({ commands: [], model: routingModel }), view }, { isHydratable: false }));
+    const container = document.createElement("div");
+    container.innerHTML = rendered.html;
+    expect(drawnShapes(container, "Routing decision volume")).toBeGreaterThan(0);
+    expect(drawnShapes(container, "Model selection")).toBeGreaterThan(0);
+    expect(card(routing, "Routing decision volume")?.querySelector("[data-chart-plot] [data-chart-empty-message]")).not.toBeNull();
   });
 
   it("re-reads metrics and the route with the exact Day and Week windows on Requests and ObserveRouting", async () => {

@@ -7,6 +7,7 @@ import type { ReadbackState } from "../../readback";
 import { REQUESTS_RANKING_METRIC_OPTIONS, REQUESTS_RANKING_TARGET_OPTIONS, type RequestsRankingState } from "../requests-ranking/model";
 import { telemetryChartCard } from "../overview/charts";
 import { seriesHasValues, volumeSeriesFor } from "../overview/chart-data";
+import { routingChartCards } from "./routing-charts";
 
 import { card, chartGrid, filterBar, metrics, segmented, table } from "../s563-layout";
 import type { ChartSeries } from "@role-model/ui/foldkit-chart";
@@ -329,7 +330,14 @@ export const observeLogsRoute = (readback: ReadbackState, h: HtmlBuilder<Message
   ], h);
 };
 
-export const observeRoutingRoute = (readback: ReadbackState, metrics: ReadbackState, windowMs: number, h: HtmlBuilder<Message>, filters?: Model["observeRoutingFilters"]): Html => {
+export const observeRoutingRoute = (
+  readback: ReadbackState,
+  metrics: ReadbackState,
+  windowMs: number,
+  routingCharts: Model["routingCharts"],
+  h: HtmlBuilder<Message>,
+  filters?: Model["observeRoutingFilters"],
+): Html => {
   const volume = volumeSeriesFor(metrics, windowMs);
   return page("Routing analytics", [
     observeFilterBar(h, ["Difficulty"], filters, {
@@ -340,7 +348,11 @@ export const observeRoutingRoute = (readback: ReadbackState, metrics: ReadbackSt
     section("Routing results", "Bounded routing analytics for the selected filters.", [
       table(["Model", "Endpoint", "Count"], readback.rows.map((row) => [row.label, row.meta, row.value]), "No routing rows recorded yet.", h),
     ], h),
-    observeCharts(observeChart("Routing analytics volume", "Requests by time bucket for the selected window. The routing analytics readback has no timestamps, so this series comes from the metrics page.", volume.series, "No routing analytics volume recorded yet.", h, seriesHasValues(volume.series), volumeChartState(metrics, volume.series)), h),
+    routingChartCards(
+      routingCharts?.entries ?? [],
+      { ...(routingCharts?.message === undefined ? {} : { message: routingCharts.message }), status: routingCharts?.status ?? "idle" },
+      h,
+    ),
   ], h);
 };
 export const observabilitySnapshotRoute = (state: ObservabilityState, h: HtmlBuilder<Message>): Html =>

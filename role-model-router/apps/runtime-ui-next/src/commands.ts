@@ -21,6 +21,7 @@ import { type RetentionPolicyPayload, type StorageRetentionClient } from "./stor
 import { type EndpointActivationPayload, type EndpointAdmissionClient, type EndpointBatchPayload } from "./endpoint-admission";
 import { type LearningRankingClient, type LearningRollbackPayload } from "./learning-ranking";
 import { type RequestsRankingClient, type RequestsRankingQuery } from "./requests-ranking";
+import type { RoutingChartQuery } from "./features/observe/routing-charts";
 import { Message } from "./message";
 import { createRuntimeConfigClient, type RuntimeConfigClient } from "./runtime-config";
 import { type StudioClient, StudioState, studioRequestFor } from "./studio";
@@ -1145,3 +1146,44 @@ export const defineRequestsRankingCommands = (client: RequestsRankingClient) => 
 export type RequestsRankingCommands = ReturnType<typeof defineRequestsRankingCommands>;
 const noopRequestsRankingClient: RequestsRankingClient = { query: async () => [] };
 export const noopRequestsRankingCommands = defineRequestsRankingCommands(noopRequestsRankingClient);
+
+export interface RoutingChartsClient {
+  readonly load: (queries: ReadonlyArray<RoutingChartQuery>) => Promise<ReadonlyArray<{ readonly body: unknown; readonly id: string }>>;
+}
+export const createRoutingChartsClient = (options: { readonly fetchImpl?: typeof fetch } = {}): RoutingChartsClient => ({
+  load: async (queries) => {
+    const fetchImpl = options.fetchImpl ?? fetch;
+    return Promise.all(queries.map(async ({ id, query }) => {
+      const response = await fetchImpl("/api/role-model/telemetry/query", {
+        body: JSON.stringify(query),
+        headers: { accept: "application/json", "content-type": "application/json" },
+        method: "POST",
+      });
+      return { body: await response.json(), id };
+    }));
+  },
+});
+export const defineRoutingChartsCommands = (client: RoutingChartsClient) => ({
+  load: Command.define("LoadRoutingCharts", {
+    args: { queriesJson: Schema.String, token: Schema.Number },
+    execute: ({ queriesJson, token }) =>
+      Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            // SAFETY: queriesJson is JSON.stringify of the typed RoutingChartQuery list built by buildRoutingChartQueries.
+            try: () => client.load(JSON.parse(queriesJson) as ReadonlyArray<RoutingChartQuery>),
+          }),
+        ),
+        (exit) => Effect.succeed(
+          Exit.isSuccess(exit)
+            ? Message.RoutingChartsLoaded({ entriesJson: JSON.stringify(exit.value), token })
+            : Message.RoutingChartsFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("routing charts query failed"))), token }),
+        ),
+      ),
+    messages: [Message.RoutingChartsLoaded, Message.RoutingChartsFailed],
+  }),
+});
+export type RoutingChartsCommands = ReturnType<typeof defineRoutingChartsCommands>;
+const noopRoutingChartsClient: RoutingChartsClient = { load: async () => [] };
+export const noopRoutingChartsCommands = defineRoutingChartsCommands(noopRoutingChartsClient);

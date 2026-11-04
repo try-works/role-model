@@ -1217,6 +1217,7 @@ interface RouteViewContext {
   readonly learningPackAction: Model["learningPackAction"];
   readonly learningDecisionFilters: Model["learningDecisionFilters"];
   readonly requestsRanking: RequestsRankingState | undefined;
+  readonly routingCharts: Model["routingCharts"];
   readonly requestsRankingMetricListbox: Model["requestsRankingMetricListbox"];
   readonly requestsRankingTargetListbox: Model["requestsRankingTargetListbox"];
   readonly h: HtmlBuilder<Message>;
@@ -1253,6 +1254,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     learningPackAction,
     learningDecisionFilters,
     requestsRanking,
+    routingCharts,
     requestsRankingMetricListbox,
     requestsRankingTargetListbox,
     h,
@@ -1325,7 +1327,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
     LocalSwap: () => familyPage("Llama-swap swap history", "local-swap", "Most recent swap events first.", [{ label: "Event ledger", spec: READBACK_SPECS.localSwap, readback: readbacks.localSwap, columns: ["Time", "Event", "Model", "Reason"], rows: (row) => [row.label, row.value, row.meta, "—"] }, { label: "Ledger semantics", note: "Initial load · Swap reason · Timeline order: events appear when the managed host loads a first model, swaps to a new one, or records the operator-visible reason." }], h),
     ObserveActivity: () => observeActivityRoute(readbacks.observeActivity, h),
     ObserveLogs: () => observeLogsRoute(readbacks.observeLogs, h, observeLogsSource ?? "All sources"),
-    ObserveRouting: () => observeRoutingRoute(readbacks.observeRouting, readbacks.overviewMetrics, windowForRange(observeRoutingFilters?.range), h, observeRoutingFilters),
+    ObserveRouting: () => observeRoutingRoute(readbacks.observeRouting, readbacks.overviewMetrics, windowForRange(observeRoutingFilters?.range), routingCharts, h, observeRoutingFilters),
     Router: () => routerOverviewPage(readbacks, h),
     Providers: () => providersPage({ controls, deviceAuth, deviceAuthDialog, h, providerAccount, readbacks }),
     Endpoints: () => endpointsPage({ controls, endpointAdmission, h, readbacks }),
@@ -1508,6 +1510,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
     modelsView: model.modelsView,
     learningOperatorToken: model.learningOperatorToken,
     requestsFilters: model.requestsFilters,
+    routingCharts: model.routingCharts,
     observeRoutingFilters: model.observeRoutingFilters,
     observeLogsSource: model.observeLogsSource,
     localLogsAutoRefresh: model.localLogsAutoRefresh,

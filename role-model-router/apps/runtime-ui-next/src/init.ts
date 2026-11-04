@@ -1,12 +1,15 @@
 import type { Return as UpdateReturn } from "@role-model-router/foldkit/update";
 import type { Url } from "@role-model-router/foldkit/url";
 
-import type {
-  ReadControlCommand,
-  ReadDiagnosticsCommand,
-  ReadObservabilityCommand,
-  ReadReadbackCommand,
+import {
+  type ReadControlCommand,
+  type ReadDiagnosticsCommand,
+  type ReadObservabilityCommand,
+  type ReadReadbackCommand,
+  type RoutingChartsCommands,
+  noopRoutingChartsCommands,
 } from "./commands";
+import { buildRoutingChartQueries } from "./features/observe/routing-charts";
 import { type ControlKey, controlKeyForRouteTag, emptyControls, loadingControl } from "./control";
 import { idleDiagnostics, loadingDiagnostics } from "./diagnostics";
 import { replaceLegacyUrlCommand } from "./legacy-redirects";
@@ -31,6 +34,7 @@ const initRoute =
     readObservability: ReadObservabilityCommand,
     readReadback: ReadReadbackCommand,
     readControl: ReadControlCommand,
+    routingChartsCommands: RoutingChartsCommands = noopRoutingChartsCommands,
   ) =>
   (url: Url): UpdateReturn<Model, Message> => {
     const theme = readInitialTheme();
@@ -219,6 +223,7 @@ const initRoute =
         const token = 1;
         // The Requests and Observe-routing volume charts read the same metrics page as the overview.
         const observeVolume = route._tag === "Requests" || route._tag === "ObserveRouting";
+        const routingCharts = route._tag === "ObserveRouting";
         const readbacks = route._tag === "Benchmark"
           ? { ...emptyReadbacks(), benchmarkRuns: loadingReadback(token), benchmarkSummary: loadingReadback(token), benchmarkSuite: loadingReadback(token), benchmarkPreferences: loadingReadback(token), benchmarkActiveRun: loadingReadback(token) }
           : observeVolume
@@ -229,6 +234,7 @@ const initRoute =
             readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : route._tag === "Index" || route._tag === "Dashboard" ? "86400000" : undefined, key: readbackKey as ReadbackKey, token }),
             ...(route._tag === "Benchmark" ? [readReadback({ key: "benchmarkSummary" as const, token }), readReadback({ key: "benchmarkRuns" as const, token }), readReadback({ key: "benchmarkPreferences" as const, token }), readReadback({ key: "benchmarkActiveRun" as const, token })] : []),
             ...(observeVolume ? [readReadback({ key: "overviewMetrics", query: "?windowMs=86400000", token })] : []),
+            ...(routingCharts ? [routingChartsCommands.load({ queriesJson: JSON.stringify(buildRoutingChartQueries(86_400_000)), token })] : []),
           ],
           model: {
             clicks: 0,
@@ -238,6 +244,7 @@ const initRoute =
             readbacks,
             refresh: initialRuntimeRefreshState(),
             route,
+            ...(routingCharts ? { routingCharts: { entries: [], status: "loading" as const, token } } : {}),
             theme,
           },
         };
@@ -270,9 +277,10 @@ export const createInit =
     readReadback: ReadReadbackCommand,
     readControl: ReadControlCommand,
     loadRail = true,
+    routingChartsCommands: RoutingChartsCommands = noopRoutingChartsCommands,
   ) =>
   (url: Url): UpdateReturn<Model, Message> => {
-    const result = initRoute(readDiagnostics, readObservability, readReadback, readControl)(url);
+    const result = initRoute(readDiagnostics, readObservability, readReadback, readControl, routingChartsCommands)(url);
     if (!loadRail) return result;
     const railKeys = ["models", "runtimeSummary", "health", "dashboard", "router", "overviewMetrics", "routerCandidates"] as const;
     const token = 1;

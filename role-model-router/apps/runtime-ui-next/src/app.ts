@@ -9,6 +9,8 @@ import {
   defineProviderAccountCommands,
   defineLearningRankingCommands,
   defineRequestsRankingCommands,
+  createRoutingChartsClient,
+  defineRoutingChartsCommands,
   defineEndpointAdmissionCommands,
   defineRouterConfigCommands,
   defineDispatchControl,
@@ -87,6 +89,7 @@ export interface ShellOptions {
   readonly endpointAdmissionFetchImpl?: typeof fetch;
   readonly learningRankingFetchImpl?: typeof fetch;
   readonly requestsRankingFetchImpl?: typeof fetch;
+  readonly routingChartsFetchImpl?: typeof fetch;
   readonly routerConfigFetchImpl?: typeof fetch;
   readonly localPolicyFetchImpl?: typeof fetch;
   readonly retentionFetchImpl?: typeof fetch;
@@ -160,9 +163,12 @@ export const createShellApp = (options: ShellOptions = {}) => {
   const readReadback = defineReadReadback(readbackReaders);
   const studioClient = options.studioClient ?? createStudioClient({ ...(options.studioBaseUrl === undefined ? {} : { baseUrl: options.studioBaseUrl }), ...(options.studioFetchImpl === undefined ? {} : { fetchImpl: options.studioFetchImpl }) });
   const dispatchStudio = defineDispatchStudio(studioClient);
+  const routingChartsCommands = defineRoutingChartsCommands(createRoutingChartsClient({
+    ...(options.routingChartsFetchImpl === undefined ? {} : { fetchImpl: options.routingChartsFetchImpl }),
+  }));
   return {
     Model,
-    init: createInit(readDiagnostics, readObservability, readReadback, readControl, options.readbackReaders === undefined),
+    init: createInit(readDiagnostics, readObservability, readReadback, readControl, options.readbackReaders === undefined, routingChartsCommands),
     subscriptions: makeRefreshSubscriptions(
       options.runtimeEventSourceFactory ?? defaultRuntimeEventSourceFactory,
     ),
@@ -188,6 +194,7 @@ export const createShellApp = (options: ShellOptions = {}) => {
       replayAutoQueueCommands,
       defineModelsCommands(createModelsClient({ fetchImpl: options.modelsFetchImpl })),
       defineLocalPeersCommands(createLocalPeersClient(options.localPeersFetchImpl)),
+      routingChartsCommands,
       defineSystemOperatorCommands(createSystemOperatorClient(options.systemOperatorFetchImpl)),
       defineSystemExtensionsCommands(createSystemExtensionsClient(options.systemExtensionsFetchImpl))
     ),

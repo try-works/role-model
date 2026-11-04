@@ -1,0 +1,40 @@
+
+ RUN  v3.2.4 D:/DEV/rm-clean/routing-charts-red/role-model-router/apps/runtime-ui-next
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s632-observe-routing-charts.test.ts [ test/s632-observe-routing-charts.test.ts ]
+Error: Failed to resolve import "../src/features/observe/routing-charts" from "test/s632-observe-routing-charts.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: D:/DEV/rm-clean/routing-charts-red/role-model-router/apps/runtime-ui-next/test/s632-observe-routing-charts.test.ts:7:57
+  3  |  import { renderToString } from "@role-model-router/foldkit/experimental/server";
+  4  |  import { mountShell } from "../src/mount";
+  5  |  import { buildRoutingChartQueries, ROUTING_CHARTS } from "../src/features/observe/routing-charts";
+     |                                                            ^
+  6  |  import { emptyReadbacks, parseReadbackFixture } from "../src/readback";
+  7  |  import { shellModel } from "./support/runtime-shell";
+ ❯ TransformPluginContext._formatLog ../../../../../role-model/.worktrees/115-effect-foldkit-runtime-migration/node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:29003:43
+ ❯ TransformPluginContext.error ../../../../../role-model/.worktrees/115-effect-foldkit-runtime-migration/node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:29000:14
+ ❯ normalizeUrl ../../../../../role-model/.worktrees/115-effect-foldkit-runtime-migration/node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:27123:18
+ ❯ ../../../../../role-model/.worktrees/115-effect-foldkit-runtime-migration/node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:27181:32
+ ❯ TransformPluginContext.transform ../../../../../role-model/.worktrees/115-effect-foldkit-runtime-migration/node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:27149:4
+ ❯ EnvironmentPluginContainer.transform ../../../../../role-model/.worktrees/115-effect-foldkit-runtime-migration/node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:28801:14
+ ❯ loadAndTransform ../../../../../role-model/.worktrees/115-effect-foldkit-runtime-migration/node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:22670:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  10:06:05
+   Duration  7.21s (transform 94ms, setup 0ms, collect 0ms, tests 0ms, environment 4.48s, prepare 961ms)
+
+
+
+# Provenance footer
+# Command: corepack pnpm exec vitest run test/s632-observe-routing-charts.test.ts
+# CWD: D:/DEV/rm-clean/routing-charts-red/role-model-router/apps/runtime-ui-next
+# Worktree: clean detached worktree at e06c2386 (parent, before the routing chart suite); s632 was copied in.
+# Exit 1: the test file cannot even collect because src/features/observe/routing-charts.ts does not exist yet
+# (the feature is absent), and the route rendered only one chart card before this change.

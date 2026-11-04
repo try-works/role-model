@@ -42,6 +42,14 @@ const runtimeFields = {
   pendingRedirectHref: shellFields.pendingRedirectHref,
 };
 
+const routingChartsFields = {
+  routingCharts: Schema.optional(Schema.Struct({
+    entries: Schema.Array(Schema.Struct({ id: Schema.String, json: Schema.String })),
+    message: Schema.optional(Schema.String),
+    status: Schema.Literals(["idle", "loading", "ok", "error"]),
+    token: Schema.Number,
+  })),
+};
 const requestsFields = {
   requestsRanking: Schema.optional(RequestsRankingStateSchema),
   requestsRankingMetricListbox: Schema.optional(Schema.Any),
@@ -181,6 +189,7 @@ const modelFields = {
   deviceAuthModalKey: deviceAuthFields.deviceAuthModalKey,
   chartInteraction: shellFields.chartInteraction,
   diagnostics: shellFields.diagnostics,
+  routingCharts: routingChartsFields.routingCharts,
   requestsRanking: requestsFields.requestsRanking,
   requestsRankingMetricListbox: requestsFields.requestsRankingMetricListbox,
   requestsRankingTargetListbox: requestsFields.requestsRankingTargetListbox,

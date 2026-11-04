@@ -23,6 +23,7 @@ import { blankRoleDraft, draftFromRole, draftToRolePayload, rolePolicyFromReadba
 import { writeStoredOperatorToken } from "./operator-token";
 import { DEFAULT_OVERVIEW_FILTERS, overviewQuery, type OverviewFilters } from "./overview-filters";
 import { windowForRange } from "./features/overview/chart-data";
+import { buildRoutingChartQueries } from "./features/observe/routing-charts";
 import { parseRuntimeConfigRecord, parseRuntimeConfigText, runtimeConfigDiff, runtimeConfigText } from "./runtime-config";
 
 import {
@@ -62,6 +63,8 @@ import {
   noopReplayAutoQueueCommands,
   type ModelsCommands,
   type LocalPeersCommands,
+  type RoutingChartsCommands,
+  noopRoutingChartsCommands,
   type SystemOperatorCommands,
   type SystemExtensionsCommands,
   noopSystemExtensionsCommands,
@@ -378,10 +381,23 @@ export const createUpdate =
     replayAutoQueueCommands: ReplayAutoQueueCommands = noopReplayAutoQueueCommands,
     modelsCommands: ModelsCommands = noopModelsCommands,
     localPeersCommands: LocalPeersCommands = noopLocalPeersCommands,
+    routingChartsCommands: RoutingChartsCommands = noopRoutingChartsCommands,
     systemOperatorCommands: SystemOperatorCommands = noopSystemOperatorCommands,
     systemExtensionsCommands: SystemExtensionsCommands = noopSystemExtensionsCommands,
   ) => {
 
+
+const routingChartsToken = (model: Model): number => (model.routingCharts?.token ?? 0) + 1;
+const routingChartsLoading = (model: Model): NonNullable<Model["routingCharts"]> => ({
+  entries: [],
+  status: "loading",
+  token: routingChartsToken(model),
+});
+const loadRoutingChartsCommand = (model: Model, windowMs: number) =>
+  routingChartsCommands.load({
+    queriesJson: JSON.stringify(buildRoutingChartQueries(windowMs)),
+    token: routingChartsToken(model),
+  });
 
 const updateRequestsRankingField = (
   model: Model,
@@ -612,6 +628,7 @@ const endpointAdmissionCompletion = (
         const benchmark = route._tag === "Benchmark";
         // The Requests and Observe-routing volume charts read the same metrics page as the overview.
         const observeVolume = route._tag === "Requests" || route._tag === "ObserveRouting";
+        const routingCharts = route._tag === "ObserveRouting";
         const observeRange = route._tag === "Requests" ? model.requestsFilters?.range : model.observeRoutingFilters?.range;
         const token = model.readbacks[readbackKey].token + 1;
         const readbacks = { ...model.readbacks, [readbackKey]: loadingReadback(token) };
@@ -626,6 +643,7 @@ const endpointAdmissionCompletion = (
             ...(observeVolume
               ? [readReadback({ key: "overviewMetrics", query: overviewQuery(DEFAULT_OVERVIEW_FILTERS, windowForRange(observeRange)), token: model.readbacks.overviewMetrics.token + 1 })]
               : []),
+            ...(routingCharts ? [loadRoutingChartsCommand(model, windowForRange(observeRange))] : []),
             scrollShellToTopCommand(),
           ],
           model: {
@@ -637,6 +655,7 @@ const endpointAdmissionCompletion = (
               : benchmark
                 ? { ...withVolume, benchmarkRuns: loadingReadback(token), benchmarkSummary: loadingReadback(token), benchmarkPreferences: loadingReadback(token), benchmarkActiveRun: loadingReadback(token) }
                 : withVolume,
+            routingCharts: routingCharts ? routingChartsLoading(model) : model.routingCharts,
             refresh: {
               ...model.refresh,
               message: undefined,
@@ -1545,8 +1564,9 @@ const updateLocalPolicyDraft = (
             commands: [
               readReadback({ key: "observeRouting", query: observeQuery(next), token }),
               readReadback({ key: "overviewMetrics", query: overviewQuery(DEFAULT_OVERVIEW_FILTERS, windowForRange(value)), token: metricsToken }),
+              loadRoutingChartsCommand(model, windowForRange(value)),
             ],
-            model: { ...model, readbacks: { ...model.readbacks, observeRouting: loadingReadback(token), overviewMetrics: loadingReadback(metricsToken) }, observeRoutingFilters: next },
+            model: { ...model, readbacks: { ...model.readbacks, observeRouting: loadingReadback(token), overviewMetrics: loadingReadback(metricsToken) }, observeRoutingFilters: next, routingCharts: routingChartsLoading(model) },
           };
         },
         ObserveFilterChanged: ({ field, value }: Extract<Message, { readonly _tag: "ObserveFilterChanged" }>): UpdateReturn<Model, Message> => {
@@ -2710,6 +2730,26 @@ const updateLocalPolicyDraft = (
           const state = model.requestsRanking ?? initialRequestsRankingState();
           const next = mergeRequestsRankingFailed(state, message, token);
           return next === undefined ? { model } : { model: { ...model, requestsRanking: next } };
+        },
+        RoutingChartsLoaded: ({ entriesJson, token }: Extract<Message, { readonly _tag: "RoutingChartsLoaded" }>): UpdateReturn<Model, Message> => {
+          const state = model.routingCharts;
+          if (state !== undefined && token !== state.token) return { model };
+          try {
+            const entries = JSON.parse(entriesJson) as ReadonlyArray<{ readonly body: unknown; readonly id: string }>;
+            return {
+              model: {
+                ...model,
+                routingCharts: { entries: entries.map((entry) => ({ id: entry.id, json: JSON.stringify(entry.body) })), status: "ok", token },
+              },
+            };
+          } catch {
+            return { model };
+          }
+        },
+        RoutingChartsFailed: ({ message, token }: Extract<Message, { readonly _tag: "RoutingChartsFailed" }>): UpdateReturn<Model, Message> => {
+          const state = model.routingCharts;
+          if (state !== undefined && token !== state.token) return { model };
+          return { model: { ...model, routingCharts: { entries: [], message, status: "error", token } } };
         },
       };
       const learningRankingHandlers = {
