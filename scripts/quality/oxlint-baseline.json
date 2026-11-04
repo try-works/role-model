@@ -57,7 +57,7 @@
     "effecttsgo/unsafe-effect-type-assertion": 0
   },
   "reportOnly": {
-    "effecttsgo/any-unknown-in-error-context": 0,
+    "effecttsgo/any-unknown-in-error-context": 56,
     "effecttsgo/catch-unfailable-effect": 0,
     "effecttsgo/class-self-mismatch": 0,
     "effecttsgo/duplicate-package": 0,
@@ -75,9 +75,9 @@
     "effecttsgo/lazy-promise-in-effect-sync": 0,
     "effecttsgo/leaking-requirements": 0,
     "effecttsgo/missing-effect-context": 0,
-    "effecttsgo/missing-effect-error": 0,
+    "effecttsgo/missing-effect-error": 6,
     "effecttsgo/missing-layer-context": 0,
-    "effecttsgo/missing-return-yield-star": 0,
+    "effecttsgo/missing-return-yield-star": 2,
     "effecttsgo/missing-star-in-yield-effect-gen": 0,
     "effecttsgo/multiple-effect-provide": 0,
     "effecttsgo/non-object-effect-service-type": 0,
@@ -85,8 +85,8 @@
     "effecttsgo/obsolete-schema-import": 0,
     "effecttsgo/outdated-api": 0,
     "effecttsgo/overridden-schema-constructor": 0,
-    "effecttsgo/prefer-typed-schema-decoder": 0,
-    "effecttsgo/prefer-unsafe-constructor": 0,
+    "effecttsgo/prefer-typed-schema-decoder": 13,
+    "effecttsgo/prefer-unsafe-constructor": 22,
     "effecttsgo/promise-in-effect-success": 0,
     "effecttsgo/return-effect-in-gen": 0,
     "effecttsgo/schema-class-missing-brand": 0,
@@ -96,7 +96,8 @@
     "effecttsgo/schema-sync-in-effect": 0,
     "effecttsgo/scope-in-layer-effect": 0,
     "effecttsgo/try-catch-in-effect-gen": 1,
-    "effecttsgo/unknown-in-effect-catch": 0,
-    "effecttsgo/unsafe-effect-type-assertion": 0
-  }
+    "effecttsgo/unknown-in-effect-catch": 10,
+    "effecttsgo/unsafe-effect-type-assertion": 1
+  },
+  "": "undefined Reconciled with the run115 recursive tree on 2026-11-04: reportOnly counts record the pre-existing run115 findings outside the enforced scope (append-only ratchet; enforced scope stays at 0)."
 }
