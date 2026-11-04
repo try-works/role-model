@@ -26,6 +26,8 @@ const routes = [
   { route: "/", name: "overview" },
   { route: "/requests", name: "requests" },
   { route: "/observe/routing", name: "routing" },
+  { route: "/observe/routing?source=local&breakdown=By+upstream+model&difficulty=hard", name: "routing-filtered" },
+  { route: "/observe/queues", name: "queues" },
 ];
 const CHROME = [
   process.env.CHROME_PATH,
@@ -54,12 +56,20 @@ const socket = new WebSocket(wsUrl);
 await new Promise((resolve, reject) => { socket.addEventListener("open", resolve, { once: true }); socket.addEventListener("error", reject, { once: true }); });
 let nextId = 1;
 const pending = new Map();
+const telemetryQueries = [];
 socket.addEventListener("message", (event) => {
   const message = JSON.parse(String(event.data));
   if (message.id && pending.has(message.id)) {
     const { resolve, reject } = pending.get(message.id);
     pending.delete(message.id);
     if (message.error) reject(new Error(message.error.message)); else resolve(message.result);
+    return;
+  }
+  if (message.method === "Network.requestWillBeSent" && String(message.params?.request?.url ?? "").includes("/api/role-model/telemetry/query")) {
+    const raw = message.params?.request?.postData;
+    let parsed = null;
+    try { parsed = raw ? JSON.parse(raw) : null; } catch {}
+    telemetryQueries.push({ url: message.params.request.url, body: parsed });
   }
 });
 const send = (method, params = {}, sessionId) => new Promise((resolve, reject) => {
@@ -71,6 +81,7 @@ const { targetId } = await send("Target.createTarget", { url: "about:blank" });
 const { sessionId } = await send("Target.attachToTarget", { targetId, flatten: true });
 await send("Page.enable", {}, sessionId);
 await send("Runtime.enable", {}, sessionId);
+await send("Network.enable", {}, sessionId);
 await send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false }, sessionId);
 
 const expression = `JSON.stringify({
@@ -84,10 +95,16 @@ const expression = `JSON.stringify({
     paths: plot.querySelectorAll("svg path").length,
     series: plot.querySelector("svg")?.getAttribute("data-chart-series-count") ?? null,
   })),
+  chartCards: document.querySelectorAll("[data-chart-plot]").length,
+  bars: [...document.querySelectorAll("[data-chart-plot]")].reduce((sum, plot) => sum + plot.querySelectorAll("rect").length, 0),
+  visibleChartTables: [...document.querySelectorAll("[data-chart-part='table']")].filter((table) => table.getClientRects().length > 0 && getComputedStyle(table).visibility !== "hidden" && !table.closest(".sr-only")).length,
+  hiddenChartTables: [...document.querySelectorAll("[data-chart-part='table']")].filter((table) => table.closest(".sr-only") || getComputedStyle(table).clipPath.includes("inset(50%)") || table.hidden).length,
+  title: document.title,
   pathCount: document.querySelectorAll("svg path").length,
 })`;
 const results = [];
 for (const item of routes) {
+  telemetryQueries.length = 0;
   await send("Page.navigate", { url: base + item.route }, sessionId);
   await new Promise((resolve) => setTimeout(resolve, 8000));
   const evaluated = await send("Runtime.evaluate", { expression, returnByValue: true }, sessionId);
@@ -97,7 +114,7 @@ for (const item of routes) {
   const screenshot = await send("Page.captureScreenshot", { format: "png" }, sessionId);
   const file = path.join(outDir, item.name + ".png");
   writeFileSync(file, Buffer.from(String(screenshot.data), "base64"));
-  results.push({ route: item.route, screenshot: file, ...data });
+  results.push({ route: item.route, screenshot: file, telemetryQueries: item.route.includes("routing?") ? [...telemetryQueries] : undefined, ...data });
 }
 console.log(JSON.stringify({ url: base, results }, null, 2));
 cleanup();
