@@ -45,3 +45,12 @@ node scripts/runtime/chart-dom-probe.mjs --url http://127.0.0.1:3480 --out-dir <
 It drives its own headless Chrome (the shared browser is contested), records SVG path and
 series counts per route, and writes `overview.png`, `requests.png`, `routing.png`, and
 `probe.json`.
+
+## Benchmark endpoint and suite preconditions
+
+The review host is launched with `--fixture-root testdata/router-runtime/fixtures`; that
+fixture registry is the endpoint seed. It provides three runnable endpoints - two subjects
+(`openai.personal.primary.us-east-1.fast`, `cli.local.coder`) plus a dedicated judge
+(`anthropic.team.shared.us-east-1.default`) that is distinct from both subjects.
+The seeder's test asserts that inventory and the bundled benchmark suite's eligible
+`quick_benchmark` case before a review run. The seeder does not rewrite fixture files.

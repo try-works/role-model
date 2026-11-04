@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { generateSeedRecords, summarize } from "./seed-review-telemetry.mjs";
+import benchSuite from "../../role-model-router/packages/bench-routing/data/routing-capability-suite.json" with { type: "json" };
+import registrySources from "../../testdata/router-runtime/fixtures/registry-sources.json" with { type: "json" };
 
 const NOW = Date.parse("2026-11-04T08:00:00.000Z");
 
@@ -32,4 +34,28 @@ test("seed data carries a success/failure mix, multiple models and cache/token v
   assert.ok(summary.cacheReadTokens > 0);
   assert.ok(summary.p95LatencyMs > summary.p50LatencyMs);
   assert.ok(summary.models.length >= 3);
+});
+
+test("the review fixture registry provides three runnable endpoints including a distinct judge", () => {
+  const cloud = registrySources.cloud.filter((entry) => entry.healthStatus === "healthy");
+  const all = [...cloud, ...registrySources.local];
+  assert.ok(all.length >= 3, "at least three runnable registry endpoints");
+  const ids = all.map((entry) => entry.endpointId);
+  const judge = "anthropic.team.shared.us-east-1.default";
+  assert.ok(ids.includes(judge), "the dedicated judge endpoint is present");
+  const subjects = [
+    "openai.personal.primary.us-east-1.fast",
+    "cli.local.coder",
+  ];
+  for (const subject of subjects) {
+    assert.ok(ids.includes(subject), "subject endpoint is present: " + subject);
+    assert.notEqual(judge, subject);
+  }
+});
+
+test("the bundled benchmark suite has an eligible quick case for the Run control", () => {
+  const quickEligible = benchSuite.cases.filter(
+    (entry) => entry.benchmark_eligible === true && entry.quick_benchmark === true,
+  );
+  assert.ok(quickEligible.length > 0, "at least one benchmark_eligible quick_benchmark case must exist");
 });
