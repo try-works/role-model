@@ -165,4 +165,14 @@ describe("S628 chart data binding", () => {
     expect(READBACK_SPECS.overviewMetrics.pathFor?.("")).toBe("/api/metrics/page?windowMs=86400000");
     expect(READBACK_SPECS.dashboard.pathFor?.("604800000")).toBe("/api/role-model/telemetry/summary?windowMs=604800000");
   });
+
+  it("keeps the chart data table as an sr-only a11y surface, never a visible table", async () => {
+    const container = await render({ _tag: "Index" }, { overviewMetrics: parseReadbackFixture("overviewMetrics", metricsBody) });
+    const tables = [...container.querySelectorAll("[data-overview-card] table[data-chart-part='table']")];
+    expect(tables.length).toBeGreaterThan(0);
+    for (const table of tables) {
+      expect(table.classList.contains("sr-only"), "chart table must be sr-only").toBe(true);
+    }
+    expect(container.querySelectorAll("[data-overview-card] table:not(.sr-only)")).toHaveLength(0);
+  });
 });

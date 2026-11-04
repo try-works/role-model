@@ -71,7 +71,7 @@ const renderCard = async (input: {
 };
 
 describe("S612 telemetry chart card visible contract", () => {
-  it("renders the visible TanStack svg plus the visible numeric table for a line card", async () => {
+  it("renders the visible TanStack svg plus the sr-only numeric table for a line card", async () => {
     const card = await renderCard({ hasData: true, kind: "line", series, state: "ready" });
     const svg = card.querySelector("[data-chart-part='chart']");
     const table = card.querySelector("[data-chart-part='table']");
@@ -89,7 +89,8 @@ describe("S612 telemetry chart card visible contract", () => {
     expect(point?.getAttribute("data-chart-series-id")).toBe("latency");
     expect(point?.getAttribute("data-chart-point-label")).toBe("00:00");
     expect(point?.getAttribute("data-chart-point")).not.toBeNull();
-    expect(card.querySelector(".sr-only")).toBeNull();
+    expect(table?.classList.contains("sr-only")).toBe(true);
+    expect(card.querySelector("table:not(.sr-only)")).toBeNull();
   });
 
   it("renders a TanStack bar scene for a bar card", async () => {

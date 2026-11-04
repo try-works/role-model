@@ -170,7 +170,9 @@ const chartTable = (
 ): Html => {
   const labels: string[] = [];
   for (const entry of series) for (const point of entry.points) if (!labels.includes(point.label)) labels.push(point.label);
-  return h.table([h.DataAttribute("chart-part", "table"), h.Class("mt-3 w-full border-collapse text-left text-xs")], [
+  // The chart data table is the accessible representation of the SVG, not a visible table: the reference
+  // UI (and the owner) expect chart cards to show the plot only.
+  return h.table([h.DataAttribute("chart-part", "table"), h.Class("sr-only")], [
     h.caption([h.Class("pb-2 text-xs text-muted-foreground")], [title]),
     h.thead([], [h.tr([], [
       h.th([h.Attribute("scope", "col"), h.Class("border-b border-border py-1 pr-3 font-medium")], ["Bucket"]),
