@@ -434,6 +434,15 @@ type BenchmarkRunResultView = {
     readonly modelId?: string;
     readonly overallScore?: number;
   }>;
+  readonly caseResults?: ReadonlyArray<{
+    readonly actualPreview?: string;
+    readonly caseId?: string;
+    readonly difficultyBucket?: string;
+    readonly errorMessage?: string;
+    readonly judgeError?: string | null;
+    readonly rationale?: string;
+    readonly score?: number;
+  }>;
   readonly errorMessage?: string;
   readonly runId?: string;
   readonly status?: string;
@@ -442,8 +451,17 @@ type BenchmarkRunResultView = {
 const parseBenchmarkRunResult = (json: string | undefined): BenchmarkRunResultView | undefined => {
   if (json === undefined || json.length === 0) return undefined;
   try {
-    // SAFETY: the benchmark progress readback carries the host run result record; the view only reads the fields below.
-    return JSON.parse(json) as BenchmarkRunResultView;
+    // SAFETY: GET /benchmark/runs/<id> returns the finished progress snapshot with the run result nested under
+    // `result` (runId/status/totalSteps/... + result.endpointGrades/caseResults); progress poll bodies carry the bare
+    // result. Read the nested result when present and keep the snapshot's terminal status/error on top.
+    const record = JSON.parse(json) as Record<string, unknown>;
+    const nested = record.result;
+    const base = (nested !== null && typeof nested === "object" ? nested : record) as BenchmarkRunResultView;
+    return {
+      ...base,
+      ...(typeof record.errorMessage === "string" ? { errorMessage: record.errorMessage } : {}),
+      ...(typeof record.status === "string" ? { status: record.status } : {}),
+    };
   } catch {
     return undefined;
   }
@@ -451,7 +469,9 @@ const parseBenchmarkRunResult = (json: string | undefined): BenchmarkRunResultVi
 
 const benchmarkResultStats = (result: BenchmarkRunResultView | undefined) => {
   const grades = result?.endpointGrades ?? [];
-  const cases = grades.flatMap((grade) => grade.caseResults ?? []);
+  const cases = grades.length > 0
+    ? grades.flatMap((grade) => grade.caseResults ?? [])
+    : result?.caseResults ?? [];
   const executed = cases.length;
   const passed = cases.filter((entry) => typeof entry.score === "number" && entry.score > 0).length;
   return { cases, executed, failed: executed - passed, grades, passed };
