@@ -1,17 +1,18 @@
 #!/usr/bin/env node
 /**
  * Repository tooling contracts for the agent quality gates (see
- * `docs/plans/agent-quality-gates-and-effect-foldkit-tooling.md`, Phase 0).
+ * `docs/plans/agent-quality-gates-and-effect-foldkit-tooling.md`, Phases 0 and 3).
  *
  * These assertions are structural on purpose: they pin the workspace build
- * policy, the root vendored-source verification script and its CI wiring, so a
- * later edit cannot quietly drop the guard while every product test still
- * passes.
+ * policy, the root vendored-source verification script and its CI wiring, the
+ * repo-local Foldkit/Effect skills, the devtools MCP registration and the skill
+ * inventory, so a later edit cannot quietly drop the guard while every product
+ * test still passes.
  *
  * Run with: `node --test scripts/agent-tooling.test.mjs`
  */
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -368,4 +369,220 @@ test("root oxlint scripts and CI quality steps enforce the effect gate", () => {
     1,
     "the quality job must run the oxlint gate exactly once",
   );
+});
+
+/** Names of installed skills: directories under `.agents/skills` that contain a SKILL.md. */
+function installedSkillNames() {
+  return readdirSync(path.join(REPO_ROOT, ".agents/skills"), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .filter((name) => existsSync(path.join(REPO_ROOT, ".agents/skills", name, "SKILL.md")))
+    .sort();
+}
+
+/** The YAML frontmatter fields of a SKILL.md, parsed from its leading `---` block. */
+function skillFrontmatter(source) {
+  const lines = source.replaceAll("\r\n", "\n").split("\n");
+  assert.equal(lines[0], "---", "SKILL.md must open with a YAML frontmatter delimiter");
+  const end = lines.indexOf("---", 1);
+  assert.notEqual(end, -1, "SKILL.md must close its YAML frontmatter");
+  const fields = new Map();
+  for (const line of lines.slice(1, end)) {
+    const match = /^([A-Za-z0-9_-]+):\s*(.*)$/u.exec(line);
+    if (match) fields.set(match[1], match[2].trim());
+  }
+  return fields;
+}
+
+/** Concrete `vendor/...` paths referenced by a document (glob tokens are skipped). */
+function referencedVendorPaths(source) {
+  const tokens = source.match(/vendor\/[A-Za-z0-9._/-]+/gu) ?? [];
+  const paths = new Set();
+  for (const token of tokens) {
+    const candidate = token.replace(/[.,;:]+$/u, "").replace(/\/+$/u, "");
+    if (!candidate.includes("*")) paths.add(candidate);
+  }
+  return [...paths].sort();
+}
+
+/**
+ * Installed skills with no skills-lock.json entry, each with the reason it is
+ * allowlisted instead. The names here are checked against the actual uncovered
+ * set; no computedHash is ever written by hand, so an entry carries evidence
+ * (a PROVENANCE.md or recorded CLI output), never a guessed hash.
+ */
+const UNLOCKED_SKILL_ALLOWLIST = [
+  {
+    name: "effect-ts",
+    reason:
+      "Installed copy pinned in .agents/skills/effect-ts/PROVENANCE.md (upstream commit, sha256 and the three-line local delta); `npx skills list --json` reports it untracked and the CLI metadata hash is not reproducible from the tree.",
+  },
+  {
+    name: "effect-v3-to-v4",
+    reason:
+      "Installed copy pinned in .agents/skills/effect-v3-to-v4/PROVENANCE.md (upstream commit and sha256); `npx skills list --json` reports it untracked and the CLI metadata hash is not reproducible from the tree.",
+  },
+  {
+    name: "foldkit",
+    reason:
+      "Repo-local skill authored for this repository in Phase 3 of the agent-quality-gates plan; it is not installed from an upstream registry, so there is no lock source or CLI-computable hash.",
+  },
+  {
+    name: "swiss-design",
+    reason:
+      "No upstream source or provenance is recorded in-repo; `npx skills list --json` reports it untracked with no source, so there is no verified source to lock.",
+  },
+  {
+    name: "ui-design-system",
+    reason:
+      "No upstream source or provenance is recorded in-repo; `npx skills list --json` reports it untracked with no source, so there is no verified source to lock.",
+  },
+];
+
+test("repo-local Foldkit skill points at the vendored source and records provenance", () => {
+  const skill = readText(".agents/skills/foldkit/SKILL.md");
+  assert.equal(skillFrontmatter(skill).get("name"), "foldkit");
+
+  for (const required of [
+    "vendor/foldkit",
+    "vendor/foldkit/packages/foldkit/src",
+    "vendor/foldkit/packages/typing-game/client/src",
+    "vendor/foldkit/packages/website/src",
+  ]) {
+    assert.ok(skill.includes(required), `Foldkit skill must reference ${required}`);
+  }
+  assert.doesNotMatch(skill, /repos\/foldkit/u, "the Foldkit subtree is not vendored under repos/");
+  assert.match(skill, /examples\/\*\*/u, "the skill must call out the upstream examples directory");
+  assert.match(skill, /not vendored/iu, "the skill must state that examples/** is not vendored");
+
+  const referenced = referencedVendorPaths(skill);
+  assert.ok(referenced.length > 0, "the Foldkit skill must reference the vendored source");
+  for (const relativePath of referenced) {
+    assert.ok(
+      existsSync(path.join(REPO_ROOT, relativePath)),
+      `Foldkit skill references ${relativePath}, which does not exist`,
+    );
+  }
+
+  const provenance = readText(".agents/skills/foldkit/PROVENANCE.md");
+  assert.match(provenance, /foldkit@0\.169\.0/u, "provenance must record the vendored tag");
+  assert.match(
+    provenance,
+    /7ee214268c602967937b80f6f20d1e831f2e8ab6/u,
+    "provenance must record the upstream commit",
+  );
+  assert.match(
+    provenance,
+    /packages\/create-foldkit-app\/templates\/base\/FOLDKIT\.md/u,
+    "provenance must record the upstream source path",
+  );
+  assert.match(
+    provenance,
+    /528a49661fa7265fcf4f724413b8b004ce43e5f5773dcd0e178ec300ec9f7faf/u,
+    "provenance must record the sha256 of the adapted source",
+  );
+});
+
+test("every installed skill is locked or allowlisted with a concrete reason", () => {
+  const lock = readJson("skills-lock.json");
+  const lockEntries = lock.skills ?? {};
+  const installed = installedSkillNames();
+
+  const allowlistNames = UNLOCKED_SKILL_ALLOWLIST.map((entry) => entry.name);
+  assert.equal(
+    new Set(allowlistNames).size,
+    allowlistNames.length,
+    "allowlist names must be unique",
+  );
+  for (const entry of UNLOCKED_SKILL_ALLOWLIST) {
+    assert.ok(installed.includes(entry.name), `allowlisted skill ${entry.name} must exist on disk`);
+    assert.equal(typeof entry.reason, "string");
+    assert.ok(
+      entry.reason.trim().length >= 20,
+      `allowlist reason for ${entry.name} is not concrete`,
+    );
+  }
+
+  const uncovered = installed.filter((name) => !(name in lockEntries));
+  assert.deepEqual(
+    [...allowlistNames].sort(),
+    uncovered,
+    "the in-test allowlist must cover exactly the installed skills missing from skills-lock.json",
+  );
+  assert.ok(
+    installed.length > uncovered.length,
+    "skills-lock.json must still track the installed marketplace skills",
+  );
+
+  for (const name of Object.keys(lockEntries)) {
+    assert.ok(
+      installed.includes(name),
+      `skills-lock.json entry ${name} must be an installed skill`,
+    );
+    const entry = lockEntries[name];
+    assert.equal(typeof entry.source, "string", `${name}.source must be a string`);
+    assert.ok(entry.source.trim().length > 0, `${name}.source must be non-empty`);
+    assert.equal(typeof entry.sourceType, "string", `${name}.sourceType must be a string`);
+    assert.ok(entry.sourceType.trim().length > 0, `${name}.sourceType must be non-empty`);
+    assert.match(
+      entry.computedHash,
+      /^[0-9a-f]{64}$/u,
+      `${name}.computedHash must be a CLI-computed sha256`,
+    );
+  }
+});
+
+test("AGENTS.md routes agents to the Foldkit skill and the vendored source", () => {
+  const agents = readText("AGENTS.md");
+  assert.ok(
+    agents.includes(".agents/skills/foldkit/SKILL.md"),
+    "AGENTS.md must tell agents to read the Foldkit skill",
+  );
+  assert.ok(
+    agents.includes("vendor/foldkit"),
+    "AGENTS.md must point at the vendored Foldkit source",
+  );
+});
+
+test("root .mcp.json registers exactly one Foldkit devtools server", () => {
+  const config = readJson(".mcp.json");
+  const servers = Object.entries(config.mcpServers ?? {});
+  assert.equal(servers.length, 1, ".mcp.json must register exactly one MCP server");
+  const [name, server] = servers[0];
+  assert.equal(name, "foldkit-devtools");
+  assert.equal(server.command, "npx");
+  assert.deepEqual(server.args, ["-y", "@foldkit/devtools-mcp"]);
+  assert.equal(
+    existsSync(path.join(REPO_ROOT, "role-model-router/apps/runtime-ui-next/.mcp.json")),
+    false,
+    "the Foldkit devtools MCP is registered once, at the repository root",
+  );
+});
+
+test("Effect skill body redirects to the vendored Effect source", () => {
+  const skill = readText(".agents/skills/effect-ts/SKILL.md");
+  assert.equal(
+    skill.match(/node_modules\/effect/gu),
+    null,
+    "the Effect skill body must not point at the absent node_modules/effect package",
+  );
+  assert.ok(
+    skill.includes("vendor/effect"),
+    "the Effect skill body must redirect to vendor/effect",
+  );
+
+  for (const relativePath of referencedVendorPaths(skill)) {
+    assert.ok(
+      existsSync(path.join(REPO_ROOT, relativePath)),
+      `Effect skill references ${relativePath}, which does not exist`,
+    );
+  }
+
+  const provenance = readText(".agents/skills/effect-ts/PROVENANCE.md");
+  assert.match(
+    provenance,
+    /node_modules\/effect/u,
+    "PROVENANCE must record the replaced upstream pointers as a local delta",
+  );
+  assert.match(provenance, /vendor\/effect/u, "PROVENANCE must record the vendor redirect");
 });
