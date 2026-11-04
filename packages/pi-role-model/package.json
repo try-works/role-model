@@ -23,6 +23,7 @@
     "skills": ["skills"]
   },
   "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "build": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run"
   },
