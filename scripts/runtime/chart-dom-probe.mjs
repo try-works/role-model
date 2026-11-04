@@ -96,6 +96,8 @@ const expression = `JSON.stringify({
     series: plot.querySelector("svg")?.getAttribute("data-chart-series-count") ?? null,
   })),
   chartCards: document.querySelectorAll("[data-chart-plot]").length,
+  totalTables: document.querySelectorAll("table").length,
+  routingResultsText: /Routing results/i.test(document.body.innerText),
   bars: [...document.querySelectorAll("[data-chart-plot]")].reduce((sum, plot) => sum + plot.querySelectorAll("rect").length, 0),
   visibleChartTables: [...document.querySelectorAll("[data-chart-part='table']")].filter((table) => table.getClientRects().length > 0 && getComputedStyle(table).visibility !== "hidden" && !table.closest(".sr-only")).length,
   hiddenChartTables: [...document.querySelectorAll("[data-chart-part='table']")].filter((table) => table.closest(".sr-only") || getComputedStyle(table).clipPath.includes("inset(50%)") || table.hidden).length,
