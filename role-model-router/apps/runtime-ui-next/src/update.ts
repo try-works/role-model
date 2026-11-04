@@ -23,7 +23,7 @@ import { blankRoleDraft, draftFromRole, draftToRolePayload, rolePolicyFromReadba
 import { writeStoredOperatorToken } from "./operator-token";
 import { DEFAULT_OVERVIEW_FILTERS, overviewQuery, type OverviewFilters } from "./overview-filters";
 import { windowForRange } from "./features/overview/chart-data";
-import { buildRoutingChartQueries } from "./features/observe/routing-charts";
+import { buildRoutingChartQueries, routingBreakdownDimension, routingChartFilters } from "./features/observe/routing-charts";
 import { parseRuntimeConfigRecord, parseRuntimeConfigText, runtimeConfigDiff, runtimeConfigText } from "./runtime-config";
 
 import {
@@ -393,11 +393,17 @@ const routingChartsLoading = (model: Model): NonNullable<Model["routingCharts"]>
   status: "loading",
   token: routingChartsToken(model),
 });
-const loadRoutingChartsCommand = (model: Model, windowMs: number) =>
-  routingChartsCommands.load({
-    queriesJson: JSON.stringify(buildRoutingChartQueries(windowMs)),
+const loadRoutingChartsCommand = (model: Model, windowMs: number) => {
+  const filters = model.observeRoutingFilters;
+  return routingChartsCommands.load({
+    queriesJson: JSON.stringify(buildRoutingChartQueries(
+      windowMs,
+      routingBreakdownDimension(filters?.breakdown),
+      routingChartFilters(filters),
+    )),
     token: routingChartsToken(model),
   });
+};
 
 const updateRequestsRankingField = (
   model: Model,
@@ -1573,7 +1579,14 @@ const updateLocalPolicyDraft = (
           const state = model.observeRoutingFilters ?? { breakdown: "Total", difficulty: "All buckets", expanded: false, range: "Day", source: "All sources" };
           const next = { ...state, [field]: value };
           const token = model.readbacks.observeRouting.token + 1;
-          return { commands: [readReadback({ key: "observeRouting", query: observeQuery(next), token })], model: { ...model, readbacks: { ...model.readbacks, observeRouting: loadingReadback(token) }, observeRoutingFilters: next } };
+          const nextModel: Model = { ...model, readbacks: { ...model.readbacks, observeRouting: loadingReadback(token) }, observeRoutingFilters: next };
+          return {
+            commands: [
+              readReadback({ key: "observeRouting", query: observeQuery(next), token }),
+              loadRoutingChartsCommand(nextModel, windowForRange(next.range)),
+            ],
+            model: { ...nextModel, routingCharts: routingChartsLoading(model) },
+          };
         },
         ObserveAdvancedToggled: (): UpdateReturn<Model, Message> => {
           const state = model.observeRoutingFilters ?? { breakdown: "Total", difficulty: "All buckets", expanded: false, range: "Day", source: "All sources" };

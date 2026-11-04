@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { renderToString } from "@role-model-router/foldkit/experimental/server";
 
 import { mountShell } from "../src/mount";
-import { buildRoutingChartQueries, ROUTING_CHARTS } from "../src/features/observe/routing-charts";
+import { buildRoutingChartQueries, routingBreakdownDimension, routingChartFilters, ROUTING_CHARTS } from "../src/features/observe/routing-charts";
 import { emptyReadbacks, parseReadbackFixture } from "../src/readback";
 import { shellModel } from "./support/runtime-shell";
 import { view } from "../src/view";
@@ -71,6 +71,64 @@ describe("S632 observe routing charts", () => {
     expect(queries.find((entry) => entry.id === "Routing decision volume")?.query.breakdown).toBe("modelId");
     expect(queries.find((entry) => entry.id === "Routing volume by taxonomy role")?.query.breakdown).toBe("taxonomyRoleId");
     expect(queries.every((entry) => entry.query.filters === filters)).toBe(true);
+  });
+
+  it("maps the page filters to the reference analytics filters and breakdown dimension", () => {
+    expect(routingBreakdownDimension("By endpoint variant")).toBe("endpointId");
+    expect(routingBreakdownDimension("By upstream model")).toBe("modelId");
+    expect(routingBreakdownDimension("By provider")).toBe("providerId");
+    expect(routingBreakdownDimension("Total")).toBeNull();
+    expect(routingBreakdownDimension(undefined)).toBeNull();
+    expect(routingChartFilters({ difficulty: "Hard only", source: "Local only" })).toEqual({ difficultyBuckets: ["hard"], sourceTypes: ["local"] });
+    expect(routingChartFilters({ difficulty: "All buckets", source: "All sources" })).toEqual({});
+  });
+
+  it("reloads the nine queries with the selected source and breakdown on the real route", async () => {
+    const bodies: unknown[] = [];
+    window.history.replaceState({}, "", "/observe/routing");
+    const container = document.createElement("div");
+    container.id = "s632-routing-filters";
+    document.body.append(container);
+    const handle = mountShell(container, {
+      readbackFetchImpl: async () => new Response(JSON.stringify({ items: [], rows: [], requests: [], window: { startAtMs: 0, endAtMs: 0 } }), { status: 200, headers: { "content-type": "application/json" } }),
+      routingChartsFetchImpl: async (_input, init) => {
+        bodies.push(JSON.parse(String(init?.body)));
+        return new Response(JSON.stringify({ buckets: [], ranking: { rows: [] } }), { status: 200, headers: { "content-type": "application/json" } });
+      },
+    });
+    const waitFor = async (read: () => boolean, label: string) => {
+      const end = Date.now() + 10000;
+      while (Date.now() < end) {
+        if (read()) return;
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+      throw new Error("Timed out waiting for " + label);
+    };
+    try {
+      await waitFor(() => bodies.length >= 9, "initial nine queries");
+      const source = document.querySelector("select[aria-label='Source']") as HTMLSelectElement;
+      expect(source).not.toBeNull();
+      source.value = "Local only";
+      source.dispatchEvent(new Event("input", { bubbles: true }));
+      source.dispatchEvent(new Event("change", { bubbles: true }));
+      await waitFor(() => bodies.length >= 18, "source-filtered nine queries");
+      for (const body of bodies.slice(-9)) expect((body as { filters?: unknown }).filters).toEqual({ sourceTypes: ["local"] });
+
+      const breakdown = document.querySelector("select[aria-label='Breakdown']") as HTMLSelectElement;
+      expect(breakdown).not.toBeNull();
+      breakdown.value = "By upstream model";
+      breakdown.dispatchEvent(new Event("input", { bubbles: true }));
+      breakdown.dispatchEvent(new Event("change", { bubbles: true }));
+      await waitFor(() => bodies.length >= 27, "breakdown-selected nine queries");
+      const last = bodies.slice(-9) as Array<{ readonly breakdown?: string | null; readonly filters?: unknown }>;
+      expect(last[0]?.breakdown).toBe("modelId");
+      expect(last[1]?.breakdown).toBe("modelId");
+      expect(last[2]?.breakdown).toBe("taxonomyRoleId");
+      for (const body of last) expect(body.filters).toEqual({ sourceTypes: ["local"] });
+    } finally {
+      handle.dispose();
+      container.remove();
+    }
   });
 
   it("renders all nine cards, real series where data exists, and in-plot empty states otherwise", async () => {

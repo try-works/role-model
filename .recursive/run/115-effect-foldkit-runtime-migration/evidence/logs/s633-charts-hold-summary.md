@@ -28,10 +28,15 @@ Now exactly :3456: "No capability-tagged telemetry is available for the current 
   test fails (selected breakdown null).
 - GREEN: evidence/logs/s633-charts-hold-green.log - s628 8/8 + s632 4/4; tsc 0.
 
-## Held (shared plumbing)
-message/model/update/init are untouched here (s10 is finishing task-113 in view/init/update/message). Therefore the
-LIVE dispatch still calls buildRoutingChartQueries(windowMs) with defaults: the selected observe breakdown and the
-analytics filter state are not yet threaded from model.observeRoutingFilters (and whatever taxonomy/strategy state
-task-113 adds). This is the confirmed follow-up once the Lead confirms task-113 landed: wire the filter state into
-the three call sites (update ChangedUrl, ObserveRangeChanged, init) and refresh test expectations if the live
-query payloads gain filters.
+## Live wiring (task-113 confirmed landed, ba2dbbc8)
+- routing-charts.ts exports routingBreakdownDimension ("Total"->null, "By endpoint variant"->endpointId,
+  "By upstream model"->modelId, "By provider"->providerId) and routingChartFilters ("Local only"->sourceTypes
+  ["local"], "Remote only"->["remote"], Easy/Medium/Hard only -> difficultyBuckets).
+- update.ts loadRoutingChartsCommand now builds its nine queries from model.observeRoutingFilters (breakdown +
+  source + difficulty) so init entry, ChangedUrl and ObserveRangeChanged all carry the selected filters/breakdown.
+- ObserveFilterChanged also reloads the nine charts (filters change without a range change).
+- Taxonomy/strategy/task filters are NOT available in this port's model (observeRoutingFilters has only breakdown/
+  difficulty/expanded/range/source; the reference's taxonomy/strategy URL filters have no UI here), so those
+  filter keys stay absent rather than invented. This is recorded, not hidden.
+- s632 mapping + mounted-route live tests added (RED s633-filters-red.log -> GREEN s633-filters-green.log).
+- FINAL: full UI suite 107 files / 965 tests PASS; S247 4/4 (fail 0).

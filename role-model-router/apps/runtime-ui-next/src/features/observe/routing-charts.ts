@@ -124,6 +124,25 @@ export const ROUTING_CHARTS: ReadonlyArray<RoutingChartDefinition> = [
   },
 ];
 
+/** Maps the observe page breakdown label to the analytics dimension (:3456 mapping). */
+export const routingBreakdownDimension = (breakdown: string | undefined): string | null => {
+  switch (breakdown) {
+    case "By endpoint variant": return "endpointId";
+    case "By upstream model": return "modelId";
+    case "By provider": return "providerId";
+    default: return null;
+  }
+};
+
+/** Maps the observe page filter labels to the reference analytics filters. */
+export const routingChartFilters = (state: { readonly difficulty?: string; readonly source?: string } | undefined): RoutingChartFilters => ({
+  ...(state?.source === "Local only" ? { sourceTypes: ["local"] } : state?.source === "Remote only" ? { sourceTypes: ["remote"] } : {}),
+  ...(state?.difficulty === "Easy only" ? { difficultyBuckets: ["easy"] }
+    : state?.difficulty === "Medium only" ? { difficultyBuckets: ["medium"] }
+      : state?.difficulty === "Hard only" ? { difficultyBuckets: ["hard"] }
+        : {}),
+});
+
 export interface RoutingChartQuery {
   readonly id: string;
   readonly query: {
