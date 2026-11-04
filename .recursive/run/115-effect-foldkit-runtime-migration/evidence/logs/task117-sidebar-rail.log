@@ -13,3 +13,8 @@ TESTS
 FULL SUITE ATTEMPT: 938 passed / 6 failed at this shared-tree state; failures are the active task-118
 observe-filter lane plus S617 CLI and S26f/S623 inventory-plan drift, not this slice.
 PACKAGED HOST: not verified from this worktree; build lane must enable a model and watch the sidebar.
+
+Mounted mutation test added after probe-route-2 landed task-118: Remove model two-click -> ModelsActionSucceeded -> rail re-read;
+sidebar old-model -> new-model, old gone. 3/3 s634. Full UI suite 992/992 at this HEAD.
+
+BUILD LANE: verify on the packaged rebuild by enabling a model and watching the left rail update without reload.
