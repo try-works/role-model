@@ -228,7 +228,7 @@ describe("S622 benchmark parity", () => {
     const base = benchmarkModel({ benchmarkJudge: "ep-b" }, { modelEndpoints: endpoints });
     const oneSelected = { ...base, modelsView: { ...base.modelsView, benchmarkSelectedEndpointIds: ["ep-a"] } };
     expect((await renderModel(oneSelected)).querySelector("[data-benchmark-run]")?.hasAttribute("disabled")).toBe(true);
-    const running = { ...base, modelsView: { ...base.modelsView, benchmarkProgress: { completedSteps: 1, runId: "run-1", status: "running", totalSteps: 4 } } };
+    const running = { ...base, modelsView: { ...base.modelsView, benchmarkProgress: { completedSteps: 1, runId: "run-1", status: "running" as const, totalSteps: 4 } } };
     expect((await renderModel(running)).querySelector("[data-benchmark-run]")?.hasAttribute("disabled")).toBe(true);
   });
 

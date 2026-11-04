@@ -54,21 +54,6 @@ export const peersSupplement = (base: Html, _readback: ReadbackState, _h: H): Ht
 
 export const localPeersSupplement = (base: Html, _readback: ReadbackState, _h: H): Html => base;
 
-export const agentSupplement = (base: Html, readbacks: ReadbackState, h: H): Html =>
-  wrap(base, [
-    section("Posture diagnostics", [text("Violations and capability warnings the runtime raised for the saved Agent strategy entries on this page. A scope that cannot resolve is reported on its own entry.", h), table(["SCOPE", "STATUS", "CANDIDATES", "LEADER"], readbacks.rows.map((row) => [row.label, row.value, row.meta, ""]), "The readback reports no posture violations or capability warnings for this page.", h)], h),
-    section("Entries", [text("Edit the Agent strategy block. Saving upserts only the rows below; an entry is deleted only when you remove it here. 1 saved · 0 new rows. Add as many entries as you need: saving upserts the rows here and never touches an entry you did not edit. EDITING SAVED ENTRY RESEARCHER Remove entry Name Role (required) Select a runtime role… Analyst (analyst) Architect (architect) Coder (coder) Coordinator (coordinator) Creative (creative) Data (data) Designer (designer) Educator (educator) Finance (finance) Health (health) Knowledge (knowledge) Legal (legal) Marketer (marketer) Mathematician (mathematician) Operator (operator) Planner (planner) Procurement (procurement) Product (product) Recruiter (recruiter) Researcher (researcher) Scientist (scientist) Security (security) Seller (seller) Strategist (strategist) Support (support) Tester (tester) Translator (translator) Writer (writer) Search, compare, synthesize, cite, and summarize information. Every entry named researcher materialises researcher.<scope> aliases an agent can call.", h), table(["ENTRY", "ROLE", "SCOPE", "MODE"], readbacks.rows.map((row) => [row.label, row.value, row.meta, "Baseline"]), "No entries in the editor yet.", h)], h),
-    chart("Agent strategy posture", "Saved role-bound postures by execution scope.", "No agent strategy chart data recorded yet.", h),
-  ], h);
-
-export const workloadsSupplement = (base: Html, readbacks: ReadbackState, h: H): Html =>
-  wrap(base, [
-    section("Posture diagnostics", [text("Violations and capability warnings the runtime raised for the saved Workloads entries on this page. A scope that cannot resolve is reported on its own entry.", h), table(["SCOPE", "STATUS", "CANDIDATES"], readbacks.rows.map((row) => [row.label, row.value, row.meta]), "The readback reports no posture violations or capability warnings for this page.", h)], h),
-    section("Workload templates", [text("The two workload examples the runtime ships and validates. A template only fills the editor; nothing is written until you save. Use batch template Use embedding template", h)], h),
-    section("Entries", [text("Edit the Workloads block. Saving upserts only the rows below; an entry is deleted only when you remove it here. 0 saved · 0 new rows. Add workload Save Workloads", h)], h),
-    chart("Workloads posture", "Workload entries by execution scope.", "No workload posture chart data recorded yet.", h),
-  ], h);
-
 export const llamaModelsSupplement = (base: Html, _readback: ReadbackState, _h: H): Html => base;
 
 const legacyLlamaModelsSupplement = (base: Html, readback: ReadbackState, h: H): Html =>

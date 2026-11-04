@@ -1,0 +1,28 @@
+# S636 density supplements removal
+
+date: 2026-11-04
+HEAD: 68a15a78
+
+## Diagnosis
+/router/workloads and /router/agent-strategy rendered their real readback-driven pages, then view.ts wrapped them with features/density/supplements.ts workloadsSupplement/agentSupplement. Those appended a second "Posture diagnostics" and "Entries", a fake "1 saved · 0 new rows" counter, fixed template buttons and a hardcoded role list. The other supplement users were audited:
+- SystemPeers: peersSupplement is a no-op, base is readback-driven.
+- LocalLlamaSwapModels: llamaModelsSupplement is a no-op; legacy placeholder helper is unused.
+- SessionReadiness: sessionSupplement renders the real systemSessionPage readback.
+
+## Change
+- view.ts RouterWorkloads/RouterAgentStrategy now render routerWorkloadsPage/routerAgentStrategyPage directly.
+- Removed the two static workloadsSupplement/agentSupplement exports from features/density/supplements.ts; no fabricated counts/entries remain.
+
+## TDD
+- RED: s636 with the old wrappers = 2 failed (duplicate Posture diagnostics/Entries) / 1 passed.
+- GREEN: s636 3/3; s540 updated to assert the real pages (no chart/tables structure requirement from the removed supplement); tsc 0.
+
+## Packaged-host DOM evidence (0.0.20-609-gd953a8c7, built static client, host on 3491)
+- /router/workloads headings: Workloads, Posture diagnostics, Workload templates, Entries, Workloads JSON (exactly one each; no duplicate, no "Workloads posture").
+- /router/agent-strategy headings: Agent strategy, Posture diagnostics, Entries, Entries editor, Agent strategy JSON (exactly one each; no "Agent strategy posture").
+- /system/peers headings: Peer inventory, Peer config, Contract fields; no placeholder markers.
+- /local/llama-swap/models headings: Load model, Role summary, Loaded models; no "All roles 28 selected".
+- /session-readiness headings: Session bootstrap, Canonical lifecycle, Operator intent manifest, Credential readiness, Routable inventory, Alias drift warnings; no placeholder markers.
+
+## Scope note
+- Also fixed a pre-existing test-only type error in s622 (status literal) so project tsc is 0; no product behavior changed there.

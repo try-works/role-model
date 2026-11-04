@@ -60,7 +60,6 @@ import {
 } from "./features/learning/routes";
 import { benchmarkRoute, modelsRolesRoute, modelsRoute } from "./features/models/routes";
 import {
-  agentSupplement,
   endpointsSupplement,
   llamaModelsSupplement,
   localPeersSupplement,
@@ -69,7 +68,6 @@ import {
   runtimeSupplement,
   sessionSupplement,
   swapSupplement,
-  workloadsSupplement,
 } from "./features/density/supplements";
 import { type StudioField, type StudioState, StudioTabSchema, studioIdle } from "./studio";
 import { card as layoutCard } from "./features/s563-layout";
@@ -1318,9 +1316,9 @@ const routeContent = (ctx: RouteViewContext): Html => {
     Models: () => modelsRoute(readbacks.configuredModels, readbacks.modelEndpoints, h, modelsView, readbacks.rolePolicy, readbacks.providerAccounts),
     ModelsRoles: () => modelsRolesRoute(readbacks.configuredModels, readbacks.modelEndpoints, h, modelsView, readbacks.rolePolicy),
     RouterStrategy: () => routerStrategyPage("router-strategy", readbacks, routerPosture, h),
-    RouterWorkloads: () => workloadsSupplement(routerWorkloadsPage(readbacks, routerPosture, h), readbacks.routerConfig, h),
+    RouterWorkloads: () => routerWorkloadsPage(readbacks, routerPosture, h),
     RouterConfig: () => routerConfigPage(readbacks, routerPosture, h),
-    RouterAgentStrategy: () => agentSupplement(routerAgentStrategyPage(readbacks, routerPosture, h), readbacks.routerConfig, h),
+    RouterAgentStrategy: () => routerAgentStrategyPage(readbacks, routerPosture, h),
     LocalChoose: () => localChoosePage(readbacks, h),
     Runtime: () => runtimeRoute({ h, readbacks, runtimeConfigEditor, runtimeConfigPage }),
     RuntimeConfig: () => runtimeConfigRoute({ h, readbacks, runtimeConfigEditor, runtimeConfigPage }),
