@@ -271,14 +271,14 @@ const initRoute =
               routingChartFilters(restoredObserveFilters),
             );
         const readbacks = route._tag === "Benchmark"
-          ? { ...emptyReadbacks(), benchmarkRuns: loadingReadback(token), benchmarkSummary: loadingReadback(token), benchmarkSuite: loadingReadback(token), benchmarkPreferences: loadingReadback(token), benchmarkActiveRun: loadingReadback(token) }
+          ? { ...emptyReadbacks(), benchmarkRuns: loadingReadback(token), benchmarkSummary: loadingReadback(token), benchmarkSuite: loadingReadback(token), benchmarkPreferences: loadingReadback(token), benchmarkActiveRun: loadingReadback(token), modelEndpoints: loadingReadback(token) }
           : observeVolume
             ? { ...emptyReadbacks(), [readbackKey]: loadingReadback(token), overviewMetrics: loadingReadback(token) }
             : { ...emptyReadbacks(), [readbackKey]: loadingReadback(token) };
         return {
           commands: [
             readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : route._tag === "Index" || route._tag === "Dashboard" ? "86400000" : undefined, key: readbackKey as ReadbackKey, token }),
-            ...(route._tag === "Benchmark" ? [readReadback({ key: "benchmarkSummary" as const, token }), readReadback({ key: "benchmarkRuns" as const, token }), readReadback({ key: "benchmarkPreferences" as const, token }), readReadback({ key: "benchmarkActiveRun" as const, token })] : []),
+            ...(route._tag === "Benchmark" ? [readReadback({ key: "benchmarkSummary" as const, token }), readReadback({ key: "benchmarkRuns" as const, token }), readReadback({ key: "benchmarkPreferences" as const, token }), readReadback({ key: "benchmarkActiveRun" as const, token }), readReadback({ key: "modelEndpoints" as const, token })] : []),
             ...(observeVolume ? [readReadback({ key: "overviewMetrics", query: "?windowMs=86400000", token })] : []),
             ...(routingCharts ? [routingChartsCommands.load({ queriesJson: JSON.stringify(restoreCharts), token })] : []),
             ...(requestsCharts ? [requestsChartsCommands.load({
