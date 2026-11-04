@@ -61,6 +61,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run ci:quality
       - run: pnpm run verify:vendors
+      - run: pnpm run lint:oxlint
+      - run: pnpm run lint:oxlint:baseline
 
   typecheck:
     name: typecheck
