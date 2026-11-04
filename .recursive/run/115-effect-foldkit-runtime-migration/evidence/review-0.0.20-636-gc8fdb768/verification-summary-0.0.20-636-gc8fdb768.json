@@ -1,0 +1,77 @@
+{
+  "version": "0.0.20-636-gc8fdb768",
+  "commit": "c8fdb768",
+  "exeSha256": "60d0c999cc4c3e9a3ba0ffd49499664c5094ead60f9deb4e9627c54eee214fb1",
+  "pid": 23428,
+  "port": 3480,
+  "health": "healthy",
+  "suite": {
+    "filesPassed": 111,
+    "testsPassed": 982,
+    "exitCode": 0
+  },
+  "seed": {
+    "telemetryRecords": 320,
+    "observations": 48,
+    "registryEndpoints": 3,
+    "benchmarkCases": 61,
+    "benchmarkEligibleCases": 55,
+    "quickEligibleCases": 12
+  },
+  "verification": {
+    "requests": {
+      "charts": 9,
+      "srOnlyTables": 9,
+      "visibleTables": 0
+    },
+    "observeRouting": {
+      "charts": 9,
+      "visibleTables": 0
+    },
+    "benchmark": {
+      "endpointRows": 3,
+      "selectedText": "2 of 3 selected",
+      "externalJudge": "openai.personal.primary.us-east-1.fast",
+      "runEnabled": true,
+      "disabledAttribute": null,
+      "expectedPostBody": {
+        "endpointIds": [
+          "anthropic.team.shared.us-east-1.default",
+          "cli.local.coder"
+        ],
+        "judgeEndpointId": "openai.personal.primary.us-east-1.fast",
+        "mode": "quick"
+      },
+      "overlapWarningWhenJudgeSelected": "Judge endpoint is also a benchmark subject. Expect slower grading and higher judge failure risk — prefer a dedicated judge when available."
+    },
+    "routingStrategy": {
+      "request": "PUT /api/role-model/runtime/config",
+      "body": {
+        "execution_mode": "decision_only",
+        "routing": {
+          "mode": "baseline",
+          "pin_weights": false,
+          "scoring_strategy": "balanced"
+        }
+      },
+      "hostAccepted": true,
+      "page": "Routing posture saved."
+    },
+    "posture": {
+      "workloads": {
+        "postureDiagnostics": 1,
+        "entries": 1
+      },
+      "agentStrategy": {
+        "postureDiagnostics": 1,
+        "entries": 1
+      },
+      "literalPlaceholderMarkers": 0,
+      "note": "Both pages show empty-state copy because no workload/agent-strategy entries are seeded; section counts are single."
+    },
+    "queues": {
+      "rendered": true,
+      "title": "Queues | RM3 Foldkit shell"
+    }
+  }
+}
