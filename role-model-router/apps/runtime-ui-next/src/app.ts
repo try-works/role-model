@@ -9,7 +9,9 @@ import {
   defineProviderAccountCommands,
   defineLearningRankingCommands,
   defineRequestsRankingCommands,
+  createRequestsChartsClient,
   createRoutingChartsClient,
+  defineRequestsChartsCommands,
   defineRoutingChartsCommands,
   defineEndpointAdmissionCommands,
   defineRouterConfigCommands,
@@ -90,6 +92,7 @@ export interface ShellOptions {
   readonly learningRankingFetchImpl?: typeof fetch;
   readonly requestsRankingFetchImpl?: typeof fetch;
   readonly routingChartsFetchImpl?: typeof fetch;
+  readonly requestsChartsFetchImpl?: typeof fetch;
   readonly routerConfigFetchImpl?: typeof fetch;
   readonly localPolicyFetchImpl?: typeof fetch;
   readonly retentionFetchImpl?: typeof fetch;
@@ -166,9 +169,12 @@ export const createShellApp = (options: ShellOptions = {}) => {
   const routingChartsCommands = defineRoutingChartsCommands(createRoutingChartsClient({
     ...(options.routingChartsFetchImpl === undefined ? {} : { fetchImpl: options.routingChartsFetchImpl }),
   }));
+  const requestsChartsCommands = defineRequestsChartsCommands(createRequestsChartsClient({
+    ...(options.requestsChartsFetchImpl === undefined ? {} : { fetchImpl: options.requestsChartsFetchImpl }),
+  }));
   return {
     Model,
-    init: createInit(readDiagnostics, readObservability, readReadback, readControl, options.readbackReaders === undefined, routingChartsCommands),
+    init: createInit(readDiagnostics, readObservability, readReadback, readControl, options.readbackReaders === undefined, routingChartsCommands, requestsChartsCommands),
     subscriptions: makeRefreshSubscriptions(
       options.runtimeEventSourceFactory ?? defaultRuntimeEventSourceFactory,
     ),
@@ -195,6 +201,7 @@ export const createShellApp = (options: ShellOptions = {}) => {
       defineModelsCommands(createModelsClient({ fetchImpl: options.modelsFetchImpl })),
       defineLocalPeersCommands(createLocalPeersClient(options.localPeersFetchImpl)),
       routingChartsCommands,
+      requestsChartsCommands,
       defineSystemOperatorCommands(createSystemOperatorClient(options.systemOperatorFetchImpl)),
       defineSystemExtensionsCommands(createSystemExtensionsClient(options.systemExtensionsFetchImpl))
     ),

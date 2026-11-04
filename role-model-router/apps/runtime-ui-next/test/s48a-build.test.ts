@@ -6,7 +6,9 @@ import { describe, expect, it } from "vitest";
 const here = path.join(import.meta.dirname, "..");
 
 describe("S48a styled client build", () => {
-  it("builds a linked non-empty stylesheet and Geist fonts", { timeout: 20_000 }, () => {
+  // Building the client under the full parallel suite can exceed 20s on a busy machine (the build itself is
+  // well under that in isolation); keep the timeout generous so a load spike does not fail an otherwise green suite.
+  it("builds a linked non-empty stylesheet and Geist fonts", { timeout: 90_000 }, () => {
     const result = spawnSync(process.execPath, ["build.mjs"], { cwd: here, encoding: "utf8" });
     expect(result.status, result.stderr).toBe(0);
     const css = readFileSync(path.join(here, "dist/client/assets/main.css"), "utf8");

@@ -1,8 +1,7 @@
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
-import type { ChartSeries } from "@role-model/ui/foldkit-chart";
 
 import type { Message } from "../../message";
-import { telemetryChartCard } from "../overview/charts";
+import { telemetryChartCards, type TelemetryChartDefinition } from "./telemetry-chart-suite";
 
 /**
  * S632 (task-112): the observe-routing chart suite ported from the :3456 reference
@@ -10,38 +9,10 @@ import { telemetryChartCard } from "../overview/charts";
  * telemetry analytics query (POST /api/role-model/telemetry/query); a card whose query failed or returned no
  * data renders the honest empty state INSIDE the plot.
  */
-export type RoutingChartKind = "area" | "bar" | "ranking";
-
-export interface RoutingChartDefinition {
-  readonly breakdown?: string;
-  readonly className: string;
-  readonly description: string;
-  readonly emptyMessage: string;
-  readonly kind: RoutingChartKind;
-  readonly metrics: ReadonlyArray<string>;
-  readonly ranking?: { readonly dimension: string; readonly limit: number; readonly metric: string };
-  readonly title: string;
-  /** The :3456 buildBaseQuery passes the page's selected breakdown to these two charts; the rest override it. */
-  readonly usesSelectedBreakdown?: boolean;
-}
-
-/** The analytics filters carried by the routing page (source/difficulty/taxonomy/strategy selections). */
-export interface RoutingChartFilters {
-  readonly difficultyBuckets?: ReadonlyArray<string>;
-  readonly selectedStrategies?: ReadonlyArray<string>;
-  readonly sourceTypes?: ReadonlyArray<string>;
-  readonly taxonomyCapabilityIds?: ReadonlyArray<string>;
-  readonly taxonomyGroupIds?: ReadonlyArray<string>;
-  readonly taxonomyModalityIds?: ReadonlyArray<string>;
-  readonly taxonomyRoleIds?: ReadonlyArray<string>;
-  readonly taxonomyTaskTypes?: ReadonlyArray<string>;
-  readonly taxonomyTaskVariants?: ReadonlyArray<string>;
-  readonly taxonomyToolClassIds?: ReadonlyArray<string>;
-}
+export type RoutingChartDefinition = TelemetryChartDefinition;
 
 export const ROUTING_CHARTS: ReadonlyArray<RoutingChartDefinition> = [
   {
-    breakdown: undefined,
     className: "min-w-0 bg-card col-span-1 md:col-span-2",
     description: "Avoided spend based on the selected route versus the highest-cost eligible configured candidate, plus cache savings.",
     emptyMessage: "No routing savings have been recorded for the current slice.",
@@ -124,6 +95,20 @@ export const ROUTING_CHARTS: ReadonlyArray<RoutingChartDefinition> = [
   },
 ];
 
+/** The analytics filters carried by the routing page (source/difficulty/taxonomy/strategy selections). */
+export interface RoutingChartFilters {
+  readonly difficultyBuckets?: ReadonlyArray<string>;
+  readonly selectedStrategies?: ReadonlyArray<string>;
+  readonly sourceTypes?: ReadonlyArray<string>;
+  readonly taxonomyCapabilityIds?: ReadonlyArray<string>;
+  readonly taxonomyGroupIds?: ReadonlyArray<string>;
+  readonly taxonomyModalityIds?: ReadonlyArray<string>;
+  readonly taxonomyRoleIds?: ReadonlyArray<string>;
+  readonly taxonomyTaskTypes?: ReadonlyArray<string>;
+  readonly taxonomyTaskVariants?: ReadonlyArray<string>;
+  readonly taxonomyToolClassIds?: ReadonlyArray<string>;
+}
+
 /** Maps the observe page breakdown label to the analytics dimension (:3456 mapping). */
 export const routingBreakdownDimension = (breakdown: string | undefined): string | null => {
   switch (breakdown) {
@@ -174,90 +159,8 @@ export const buildRoutingChartQueries = (
     },
   }));
 
-const labelFor = (metric: string): string => {
-  switch (metric) {
-    case "requestCount": return "Requests";
-    case "routingCostSavingsUsd": return "Routing avoided cost";
-    case "cacheCostSavingsUsd": return "Cache avoided cost";
-    case "totalAvoidedCostUsd": return "Total avoided cost";
-    default: return metric;
-  }
-};
-
-const numberOrNull = (value: unknown): number | null => {
-  const numeric = Number(value);
-  return value === null || value === undefined || value === "" || !Number.isFinite(numeric) ? null : numeric;
-};
-
-interface AnalyticsBucket {
-  readonly series?: ReadonlyArray<{ readonly key?: unknown; readonly label?: unknown; readonly totals?: unknown }>;
-  readonly startAtMs?: unknown;
-  readonly totals?: unknown;
-}
-
-const bucketLabel = (startAtMs: unknown, granularity: "hour" | "day"): string => {
-  const ms = Number(startAtMs);
-  if (!Number.isFinite(ms)) return "—";
-  const iso = new Date(ms).toISOString();
-  return granularity === "hour" ? iso.slice(11, 13) + ":00" : iso.slice(5, 10);
-};
-
-const seriesFrom = (body: unknown, chart: RoutingChartDefinition): { hasData: boolean; series: ReadonlyArray<ChartSeries> } => {
-  const record = body as {
-    readonly buckets?: ReadonlyArray<AnalyticsBucket>;
-    readonly granularity?: unknown;
-    readonly ranking?: { readonly rows?: ReadonlyArray<{ readonly key?: unknown; readonly label?: unknown; readonly value?: unknown }> } | null;
-  } | null;
-  if (record === null || typeof record !== "object") return { hasData: false, series: [] };
-  if (chart.kind === "ranking") {
-    const rows = record.ranking?.rows ?? [];
-    const points = rows.flatMap((row) => {
-      const value = numberOrNull(row.value);
-      return value === null || value === 0 ? [] : [{ label: typeof row.label === "string" ? row.label : String(row.key ?? "—"), value }];
-    });
-    return points.length === 0
-      ? { hasData: false, series: [] }
-      : { hasData: true, series: [{ id: chart.ranking?.metric ?? "value", label: labelFor(chart.ranking?.metric ?? "value"), points }] };
-  }
-  const granularity = record.granularity === "hour" ? "hour" : "day";
-  const buckets = record.buckets ?? [];
-  const series: ChartSeries[] = chart.metrics.map((metric) => ({
-    id: metric,
-    label: labelFor(metric),
-    points: buckets.map((bucket) => ({
-      label: bucketLabel(bucket.startAtMs, granularity),
-      value: numberOrNull((bucket.totals as Record<string, unknown> | undefined)?.[metric]),
-    })),
-  }));
-  const hasData = series.some((entry) => entry.points.some((point) => point.value !== null && point.value > 0));
-  return { hasData, series };
-};
-
 export const routingChartCards = (
   entries: ReadonlyArray<{ readonly id: string; readonly json: string }>,
   state: { readonly status: "idle" | "loading" | "ok" | "error"; readonly message?: string },
   h: HtmlBuilder<Message>,
-): Html => {
-  const byId = new Map(entries.map((entry) => [entry.id, entry.json]));
-  return h.div([h.DataAttribute("routing-charts", ""), h.Class("grid w-full grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border md:grid-cols-2")], ROUTING_CHARTS.map((chart) => {
-    const json = byId.get(chart.title);
-    let body: unknown;
-    if (json !== undefined) {
-      try { body = JSON.parse(json); } catch { body = undefined; }
-    }
-    const parsed = body === undefined ? { hasData: false, series: [] } : seriesFrom(body, chart);
-    const cardState = state.status === "loading" ? "loading" : state.status === "error" ? "error" : parsed.hasData ? "ready" : "empty";
-    return h.div([h.Class(chart.className)], [
-      telemetryChartCard({
-        description: chart.description,
-        emptyMessage: chart.emptyMessage,
-        hasData: parsed.hasData,
-        h,
-        kind: chart.kind === "ranking" ? "bar" : chart.kind,
-        series: parsed.series,
-        state: cardState,
-        title: chart.title,
-      }),
-    ]);
-  }));
-};
+): Html => telemetryChartCards(ROUTING_CHARTS, entries, state, h, "routing-charts");

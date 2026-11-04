@@ -10,8 +10,11 @@ import {
   type ReadReadbackCommand,
   type RoutingChartsCommands,
   noopRoutingChartsCommands,
+  type RequestsChartsCommands,
+  noopRequestsChartsCommands,
 } from "./commands";
 import { buildRoutingChartQueries, routingBreakdownDimension, routingChartFilters } from "./features/observe/routing-charts";
+import { buildRequestsChartQueries } from "./features/observe/requests-charts";
 import { windowForRange } from "./features/overview/chart-data";
 import { type ControlKey, controlKeyForRouteTag, emptyControls, loadingControl } from "./control";
 import { idleDiagnostics, loadingDiagnostics } from "./diagnostics";
@@ -64,6 +67,7 @@ const initRoute =
     readReadback: ReadReadbackCommand,
     readControl: ReadControlCommand,
     routingChartsCommands: RoutingChartsCommands = noopRoutingChartsCommands,
+    requestsChartsCommands: RequestsChartsCommands = noopRequestsChartsCommands,
   ) =>
   (url: Url): UpdateReturn<Model, Message> => {
     const theme = readInitialTheme();
@@ -253,6 +257,7 @@ const initRoute =
         // The Requests and Observe-routing volume charts read the same metrics page as the overview.
         const observeVolume = route._tag === "Requests" || route._tag === "ObserveRouting";
         const routingCharts = route._tag === "ObserveRouting";
+        const requestsCharts = route._tag === "Requests";
         const restoredObserveFilters = routingCharts
           ? observeFiltersFromSearch(Option.getOrUndefined(url.search) ?? "")
           : undefined;
@@ -276,6 +281,15 @@ const initRoute =
             ...(route._tag === "Benchmark" ? [readReadback({ key: "benchmarkSummary" as const, token }), readReadback({ key: "benchmarkRuns" as const, token }), readReadback({ key: "benchmarkPreferences" as const, token }), readReadback({ key: "benchmarkActiveRun" as const, token })] : []),
             ...(observeVolume ? [readReadback({ key: "overviewMetrics", query: "?windowMs=86400000", token })] : []),
             ...(routingCharts ? [routingChartsCommands.load({ queriesJson: JSON.stringify(restoreCharts), token })] : []),
+            ...(requestsCharts ? [requestsChartsCommands.load({
+              queriesJson: JSON.stringify(buildRequestsChartQueries(86_400_000, {
+                breakdown: null,
+                filters: {},
+                rankingDimension: "endpointId",
+                rankingMetric: "averageLatencyMs",
+              })),
+              token,
+            })] : []),
           ],
           model: {
             clicks: 0,
@@ -289,6 +303,7 @@ const initRoute =
               routingCharts: { entries: [], status: "loading" as const, token },
               ...(restoredObserveFilters === undefined ? {} : { observeRoutingFilters: restoredObserveFilters }),
             } : {}),
+            ...(requestsCharts ? { requestsCharts: { entries: [], status: "loading" as const, token } } : {}),
             theme,
           },
         };
@@ -322,9 +337,10 @@ export const createInit =
     readControl: ReadControlCommand,
     loadRail = true,
     routingChartsCommands: RoutingChartsCommands = noopRoutingChartsCommands,
+    requestsChartsCommands: RequestsChartsCommands = noopRequestsChartsCommands,
   ) =>
   (url: Url): UpdateReturn<Model, Message> => {
-    const result = initRoute(readDiagnostics, readObservability, readReadback, readControl, routingChartsCommands)(url);
+    const result = initRoute(readDiagnostics, readObservability, readReadback, readControl, routingChartsCommands, requestsChartsCommands)(url);
     if (!loadRail) return result;
     const railKeys = ["models", "runtimeSummary", "health", "dashboard", "router", "overviewMetrics", "routerCandidates"] as const;
     const token = 1;

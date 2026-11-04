@@ -76,7 +76,7 @@ describe("S417 freshness during loading", () => {
   it("refences an in-flight query when the metric changes while loading", () => {
     const loading = modelWith(stateWith({ metric: "averageLatencyMs", status: "loading" as const, token: 2 }));
     const changed = shellUpdate(loading, Message.RequestsRankingFieldChanged({ field: "metric", value: "requestCount" }));
-    expect((changed.commands ?? []).map((command) => command.name)).toEqual(["QueryRequestsRanking"]);
+    expect((changed.commands ?? []).map((command) => command.name)).toEqual(["QueryRequestsRanking", "LoadRequestsCharts"]);
     const payload = JSON.parse(String((changed.commands ?? [])[0]?.args?.payload));
     expect(payload.metrics).toEqual(["requestCount"]);
     expect(changed.model.requestsRanking?.status).toBe("loading");
@@ -115,10 +115,10 @@ describe("S417 freshness during loading", () => {
   });
 });
 describe("S413 requests ranking state machine", () => {
-  it("auto-queries one token-fenced command when the metric changes", () => {
+  it("auto-queries the token-fenced ranking command and its charts refresh when the metric changes", () => {
     const changed = shellUpdate(modelWith(stateWith()), Message.RequestsRankingFieldChanged({ field: "metric", value: "totalTokens" }));
     expect(changed.model.requestsRanking?.metric).toBe("totalTokens");
-    expect((changed.commands ?? []).map((command) => command.name)).toEqual(["QueryRequestsRanking"]);
+    expect((changed.commands ?? []).map((command) => command.name)).toEqual(["QueryRequestsRanking", "LoadRequestsCharts"]);
     expect(JSON.parse(String((changed.commands ?? [])[0]?.args?.payload)).metrics).toEqual(["totalTokens"]);
     expect(changed.model.requestsRanking?.status).toBe("loading");
   });

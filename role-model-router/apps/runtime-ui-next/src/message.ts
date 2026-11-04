@@ -95,6 +95,8 @@ export const Message: MessageUnion<{
   readonly RequestsRankingFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly RoutingChartsLoaded: { readonly entriesJson: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly RoutingChartsFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly RequestsChartsLoaded: { readonly entriesJson: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly RequestsChartsFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly ReplayAutoQueueToggleChanged: { readonly value: typeof Schema.String };
   readonly ReplayAutoQueueCapChanged: { readonly value: typeof Schema.String };
   readonly ReplayAutoQueueSaveRequested: EmptyFields;
@@ -329,6 +331,8 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   RequestsRankingFailed: { message: Schema.String, token: Schema.Number },
   RoutingChartsLoaded: { entriesJson: Schema.String, token: Schema.Number },
   RoutingChartsFailed: { message: Schema.String, token: Schema.Number },
+  RequestsChartsLoaded: { entriesJson: Schema.String, token: Schema.Number },
+  RequestsChartsFailed: { message: Schema.String, token: Schema.Number },
   ReplayAutoQueueToggleChanged: { value: Schema.String },
   ReplayAutoQueueCapChanged: { value: Schema.String },
   ReplayAutoQueueSaveRequested: {},

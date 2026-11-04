@@ -6,8 +6,8 @@ import type { ObservabilityState } from "../../observability";
 import type { ReadbackState } from "../../readback";
 import { REQUESTS_RANKING_METRIC_OPTIONS, REQUESTS_RANKING_TARGET_OPTIONS, type RequestsRankingState } from "../requests-ranking/model";
 import { telemetryChartCard } from "../overview/charts";
-import { seriesHasValues, volumeSeriesFor } from "../overview/chart-data";
 import { routingChartCards } from "./routing-charts";
+import { requestsChartCards } from "./requests-charts";
 
 import { card, chartGrid, filterBar, metrics, segmented, table } from "../s563-layout";
 import type { ChartSeries } from "@role-model/ui/foldkit-chart";
@@ -47,8 +47,6 @@ const observeChart = (
     title,
   });
 
-const volumeChartState = (state: ReadbackState, series: ReadonlyArray<ChartSeries>): "empty" | "error" | "loading" | "ready" =>
-  state.status === "loading" ? "loading" : state.status === "error" ? "error" : seriesHasValues(series) ? "ready" : "empty";
 
 const observeCharts = (card: Html, h: HtmlBuilder<Message>): Html => chartGrid([{ span: 12, body: card }], h);
 
@@ -120,12 +118,11 @@ export const telemetryRequestsRoute = (
   readback: ReadbackState,
   metrics: ReadbackState,
   windowMs: number,
+  requestsCharts: Model["requestsCharts"],
   ranking: RequestsRankingState | undefined,
   h: HtmlBuilder<Message>,
   filters?: Model["requestsFilters"],
 ): Html => {
-  const volume = volumeSeriesFor(metrics, windowMs, { failures: true });
-  const volumeReady = seriesHasValues(volume.series);
   const rows = readback.rows.map((row) => [row.id, row.label, row.meta, row.value]);
   const current = ranking ?? { metric: "averageLatencyMs", rankingTarget: "endpointId", rows: [], status: "idle" as const, token: 0 };
   const loading = current.status === "loading";
@@ -246,7 +243,11 @@ export const telemetryRequestsRoute = (
       section("Recent telemetry requests", "Explainable request ledger with endpoint, model, status, and direct Observe/Router drill-in.", [
         table(["Request", "Model", "Endpoint", "Status"], rows, "Loading the canonical telemetry ledger…", h),
       ], h),
-      observeCharts(observeChart("Request volume", "Explainable requests and failures by time bucket for the selected window.", volume.series, "No request volume data recorded yet.", h, volumeReady, volumeChartState(metrics, volume.series)), h),
+      requestsChartCards(
+        requestsCharts?.entries ?? [],
+        { ...(requestsCharts?.message === undefined ? {} : { message: requestsCharts.message }), status: requestsCharts?.status ?? "idle" },
+        h,
+      ),
     ],
   );
 };
@@ -338,7 +339,6 @@ export const observeRoutingRoute = (
   h: HtmlBuilder<Message>,
   filters?: Model["observeRoutingFilters"],
 ): Html => {
-  const volume = volumeSeriesFor(metrics, windowMs);
   return page("Routing analytics", [
     h.span([h.DataAttribute("observe-routing-rows", String(readback.rows.length)), h.DataAttribute("observe-routing-status", readback.status)], []),
     observeFilterBar(h, ["Difficulty"], filters, {

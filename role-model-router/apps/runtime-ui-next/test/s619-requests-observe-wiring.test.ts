@@ -25,7 +25,7 @@ const render = async (body: unknown): Promise<HTMLElement> => {
 };
 
 const renderRequests = async (filters?: ReturnType<typeof filtersOf>): Promise<HTMLElement> =>
-  render((_model: Model, h: HtmlBuilder<Message>) => ({ body: telemetryRequestsRoute(readback, readback, 86400000, undefined, h as Parameters<typeof telemetryRequestsRoute>[4], filters), title: "requests" }));
+  render((_model: Model, h: HtmlBuilder<Message>) => ({ body: telemetryRequestsRoute(readback, readback, 86400000, undefined, undefined, h as Parameters<typeof telemetryRequestsRoute>[5], filters), title: "requests" }));
 const renderObserve = async (filters?: ReturnType<typeof filtersOf>): Promise<HTMLElement> =>
   render((_model: Model, h: HtmlBuilder<Message>) => ({ body: observeRoutingRoute(readback, readback, 86400000, undefined, h as Parameters<typeof observeRoutingRoute>[4], filters), title: "observe" }));
 const filtersOf = () => ({ breakdown: "Total", difficulty: "All buckets", expanded: false, range: "Week", source: "Local only", statusFamily: "All statuses" });

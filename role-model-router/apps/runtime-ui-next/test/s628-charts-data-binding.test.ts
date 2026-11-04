@@ -91,14 +91,26 @@ describe("S628 chart data binding", () => {
 
   it("draws the real requests volume and observe-routing chart series from their readbacks", async () => {
     const metrics = parseReadbackFixture("overviewMetrics", metricsBody);
-    const requests = await render({ _tag: "Requests" }, {
-      overviewMetrics: metrics,
-      requests: parseReadbackFixture("requests", []),
-    });
-    expect(drawnShapes(requests, "Request volume")).toBeGreaterThan(0);
-    expect(card(requests, "Request volume")?.textContent).toContain("Requests");
     const startAtMs = Date.UTC(2026, 10, 3, 0, 0, 0);
     const dayMs = 86_400_000;
+    const requestsBase = shellModel({ route: { _tag: "Requests" } });
+    const requestsModel = {
+      ...requestsBase,
+      readbacks: { ...emptyReadbacks(), ...requestsBase.readbacks, requests: parseReadbackFixture("requests", []), overviewMetrics: metrics },
+      requestsCharts: {
+        entries: [
+          { id: "Request volume over time", json: JSON.stringify({ buckets: [{ startAtMs, totals: { requestCount: 4 } }], granularity: "day" }) },
+          { id: "Latency trend", json: JSON.stringify({ buckets: [{ startAtMs, totals: { averageLatencyMs: 120, p95LatencyMs: 300 } }], granularity: "day" }) },
+        ],
+        status: "ok" as const,
+        token: 1,
+      },
+    };
+    const requestsRendered = await Effect.runPromise(renderToString({ init: () => ({ commands: [], model: requestsModel }), view }, { isHydratable: false }));
+    const requests = document.createElement("div");
+    requests.innerHTML = requestsRendered.html;
+    expect(drawnShapes(requests, "Request volume over time")).toBeGreaterThan(0);
+    expect(card(requests, "Request volume over time")?.textContent).toContain("Requests");
     const routing = await render({ _tag: "ObserveRouting" }, {
       observeRouting: parseReadbackFixture("observeRouting", []),
       overviewMetrics: metrics,

@@ -1,0 +1,39 @@
+
+ RUN  v3.2.4 D:/DEV/rm-clean/requests-charts-red/role-model-router/apps/runtime-ui-next
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s634-observe-requests-charts.test.ts [ test/s634-observe-requests-charts.test.ts ]
+Error: Failed to resolve import "../src/features/observe/requests-charts" from "test/s634-observe-requests-charts.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: D:/DEV/rm-clean/requests-charts-red/role-model-router/apps/runtime-ui-next/test/s634-observe-requests-charts.test.ts:12:7
+  8  |    requestsChartFilters,
+  9  |    REQUESTS_CHARTS
+  10 |  } from "../src/features/observe/requests-charts";
+     |          ^
+  11 |  import { emptyReadbacks, parseReadbackFixture } from "../src/readback";
+  12 |  import { shellModel } from "./support/runtime-shell";
+ ❯ TransformPluginContext._formatLog ../../../../../role-model/.worktrees/115-effect-foldkit-runtime-migration/node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:29003:43
+ ❯ TransformPluginContext.error ../../../../../role-model/.worktrees/115-effect-foldkit-runtime-migration/node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:29000:14
+ ❯ normalizeUrl ../../../../../role-model/.worktrees/115-effect-foldkit-runtime-migration/node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:27123:18
+ ❯ ../../../../../role-model/.worktrees/115-effect-foldkit-runtime-migration/node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:27181:32
+ ❯ TransformPluginContext.transform ../../../../../role-model/.worktrees/115-effect-foldkit-runtime-migration/node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:27149:4
+ ❯ EnvironmentPluginContainer.transform ../../../../../role-model/.worktrees/115-effect-foldkit-runtime-migration/node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:28801:14
+ ❯ loadAndTransform ../../../../../role-model/.worktrees/115-effect-foldkit-runtime-migration/node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:22670:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  19:30:09
+   Duration  7.21s (transform 75ms, setup 0ms, collect 0ms, tests 0ms, environment 5.02s, prepare 723ms)
+
+
+
+# Provenance footer
+# Command: corepack pnpm exec vitest run test/s634-observe-requests-charts.test.ts
+# CWD: D:/DEV/rm-clean/requests-charts-red/role-model-router/apps/runtime-ui-next
+# Worktree: clean detached worktree at d953a8c7 (before the Requests chart suite); s634 was copied in.
+# Exit 1: the test cannot collect because src/features/observe/requests-charts.ts does not exist yet.

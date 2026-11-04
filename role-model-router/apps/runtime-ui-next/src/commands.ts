@@ -1187,3 +1187,44 @@ export const defineRoutingChartsCommands = (client: RoutingChartsClient) => ({
 export type RoutingChartsCommands = ReturnType<typeof defineRoutingChartsCommands>;
 const noopRoutingChartsClient: RoutingChartsClient = { load: async () => [] };
 export const noopRoutingChartsCommands = defineRoutingChartsCommands(noopRoutingChartsClient);
+
+export interface RequestsChartsClient {
+  readonly load: (queries: ReadonlyArray<{ readonly id: string; readonly query: unknown }>) => Promise<ReadonlyArray<{ readonly body: unknown; readonly id: string }>>;
+}
+export const createRequestsChartsClient = (options: { readonly fetchImpl?: typeof fetch } = {}): RequestsChartsClient => ({
+  load: async (queries) => {
+    const fetchImpl = options.fetchImpl ?? fetch;
+    return Promise.all(queries.map(async ({ id, query }) => {
+      const response = await fetchImpl("/api/role-model/telemetry/query", {
+        body: JSON.stringify(query),
+        headers: { accept: "application/json", "content-type": "application/json" },
+        method: "POST",
+      });
+      return { body: await response.json(), id };
+    }));
+  },
+});
+export const defineRequestsChartsCommands = (client: RequestsChartsClient) => ({
+  load: Command.define("LoadRequestsCharts", {
+    args: { queriesJson: Schema.String, token: Schema.Number },
+    execute: ({ queriesJson, token }) =>
+      Effect.flatMap(
+        Effect.exit(
+          Effect.tryPromise({
+            catch: (cause) => new Error(describeCause(cause)),
+            // SAFETY: queriesJson is JSON.stringify of the typed RequestsChartQuery list built by buildRequestsChartQueries.
+            try: () => client.load(JSON.parse(queriesJson) as ReadonlyArray<{ readonly id: string; readonly query: unknown }>),
+          }),
+        ),
+        (exit) => Effect.succeed(
+          Exit.isSuccess(exit)
+            ? Message.RequestsChartsLoaded({ entriesJson: JSON.stringify(exit.value), token })
+            : Message.RequestsChartsFailed({ message: describeCause(Option.getOrElse(Exit.findErrorOption(exit), () => new Error("requests charts query failed"))), token }),
+        ),
+      ),
+    messages: [Message.RequestsChartsLoaded, Message.RequestsChartsFailed],
+  }),
+});
+export type RequestsChartsCommands = ReturnType<typeof defineRequestsChartsCommands>;
+const noopRequestsChartsClient: RequestsChartsClient = { load: async () => [] };
+export const noopRequestsChartsCommands = defineRequestsChartsCommands(noopRequestsChartsClient);

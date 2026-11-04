@@ -24,6 +24,7 @@ import { writeStoredOperatorToken } from "./operator-token";
 import { DEFAULT_OVERVIEW_FILTERS, overviewQuery, type OverviewFilters } from "./overview-filters";
 import { windowForRange } from "./features/overview/chart-data";
 import { buildRoutingChartQueries, routingBreakdownDimension, routingChartFilters } from "./features/observe/routing-charts";
+import { buildRequestsChartQueries, requestsBreakdownDimension, requestsChartFilters } from "./features/observe/requests-charts";
 import { parseRuntimeConfigRecord, parseRuntimeConfigText, runtimeConfigDiff, runtimeConfigText } from "./runtime-config";
 
 import {
@@ -65,6 +66,8 @@ import {
   type LocalPeersCommands,
   type RoutingChartsCommands,
   noopRoutingChartsCommands,
+  type RequestsChartsCommands,
+  noopRequestsChartsCommands,
   type SystemOperatorCommands,
   type SystemExtensionsCommands,
   noopSystemExtensionsCommands,
@@ -382,6 +385,7 @@ export const createUpdate =
     modelsCommands: ModelsCommands = noopModelsCommands,
     localPeersCommands: LocalPeersCommands = noopLocalPeersCommands,
     routingChartsCommands: RoutingChartsCommands = noopRoutingChartsCommands,
+    requestsChartsCommands: RequestsChartsCommands = noopRequestsChartsCommands,
     systemOperatorCommands: SystemOperatorCommands = noopSystemOperatorCommands,
     systemExtensionsCommands: SystemExtensionsCommands = noopSystemExtensionsCommands,
   ) => {
@@ -405,6 +409,26 @@ const loadRoutingChartsCommand = (model: Model, windowMs: number) => {
   });
 };
 
+const requestsChartsToken = (model: Model): number => (model.requestsCharts?.token ?? 0) + 1;
+const requestsChartsLoading = (model: Model): NonNullable<Model["requestsCharts"]> => ({
+  entries: [],
+  status: "loading",
+  token: requestsChartsToken(model),
+});
+const loadRequestsChartsCommand = (model: Model, windowMs: number) => {
+  const filters = model.requestsFilters;
+  const ranking = model.requestsRanking ?? initialRequestsRankingState();
+  return requestsChartsCommands.load({
+    queriesJson: JSON.stringify(buildRequestsChartQueries(windowMs, {
+      breakdown: requestsBreakdownDimension(filters?.breakdown),
+      filters: requestsChartFilters(filters),
+      rankingDimension: ranking.rankingTarget,
+      rankingMetric: ranking.metric,
+    })),
+    token: requestsChartsToken(model),
+  });
+};
+
 const updateRequestsRankingField = (
   model: Model,
   field: "metric" | "rankingTarget",
@@ -415,9 +439,13 @@ const updateRequestsRankingField = (
   if (plan.kind === "error") {
     return { model: { ...model, requestsRanking: plan.state } };
   }
+  const nextModel: Model = { ...model, requestsRanking: plan.state };
   return {
-    commands: [requestsRankingCommands.query({ payload: JSON.stringify(plan.payload), token: plan.state.token })],
-    model: { ...model, requestsRanking: plan.state },
+    commands: [
+      requestsRankingCommands.query({ payload: JSON.stringify(plan.payload), token: plan.state.token }),
+      loadRequestsChartsCommand(nextModel, windowForRange(model.requestsFilters?.range)),
+    ],
+    model: { ...nextModel, requestsCharts: requestsChartsLoading(model) },
   };
 };
 
@@ -635,6 +663,7 @@ const endpointAdmissionCompletion = (
         // The Requests and Observe-routing volume charts read the same metrics page as the overview.
         const observeVolume = route._tag === "Requests" || route._tag === "ObserveRouting";
         const routingCharts = route._tag === "ObserveRouting";
+        const requestsCharts = route._tag === "Requests";
         const observeRange = route._tag === "Requests" ? model.requestsFilters?.range : model.observeRoutingFilters?.range;
         const token = model.readbacks[readbackKey].token + 1;
         const readbacks = { ...model.readbacks, [readbackKey]: loadingReadback(token) };
@@ -650,6 +679,7 @@ const endpointAdmissionCompletion = (
               ? [readReadback({ key: "overviewMetrics", query: overviewQuery(DEFAULT_OVERVIEW_FILTERS, windowForRange(observeRange)), token: model.readbacks.overviewMetrics.token + 1 })]
               : []),
             ...(routingCharts ? [loadRoutingChartsCommand(model, windowForRange(observeRange))] : []),
+            ...(requestsCharts ? [loadRequestsChartsCommand(model, windowForRange(observeRange))] : []),
             scrollShellToTopCommand(),
           ],
           model: {
@@ -662,6 +692,7 @@ const endpointAdmissionCompletion = (
                 ? { ...withVolume, benchmarkRuns: loadingReadback(token), benchmarkSummary: loadingReadback(token), benchmarkPreferences: loadingReadback(token), benchmarkActiveRun: loadingReadback(token) }
                 : withVolume,
             routingCharts: routingCharts ? routingChartsLoading(model) : model.routingCharts,
+            requestsCharts: requestsCharts ? requestsChartsLoading(model) : model.requestsCharts,
             refresh: {
               ...model.refresh,
               message: undefined,
@@ -1407,7 +1438,7 @@ const updateLocalPolicyDraft = (
           const state = model.modelsView ?? {};
           const selected = state.benchmarkSelectedEndpointIds ?? benchmarkEndpointIds(model);
           const judge = state.benchmarkJudge ?? "";
-          if (selected.length < 2 || judge.length === 0 || !selected.includes(judge)) {
+          if (selected.length < 2 || judge.length === 0) {
             return { model: { ...model, modelsView: { ...state, benchmarkAction: { message: "Select at least two subjects and a selected judge.", status: "error" } } } };
           }
           const rawMode = (state.benchmarkMode ?? "quick").toLowerCase().includes("full") ? "full" : "quick";
@@ -1543,19 +1574,28 @@ const updateLocalPolicyDraft = (
           const next = { ...state, range: value };
           const token = model.readbacks.requests.token + 1;
           const metricsToken = model.readbacks.overviewMetrics.token + 1;
+          const nextModel: Model = { ...model, readbacks: { ...model.readbacks, requests: loadingReadback(token), overviewMetrics: loadingReadback(metricsToken) }, requestsFilters: next };
           return {
             commands: [
               readReadback({ key: "requests", query: requestsQuery(next), token }),
               readReadback({ key: "overviewMetrics", query: overviewQuery(DEFAULT_OVERVIEW_FILTERS, windowForRange(value)), token: metricsToken }),
+              loadRequestsChartsCommand(nextModel, windowForRange(value)),
             ],
-            model: { ...model, readbacks: { ...model.readbacks, requests: loadingReadback(token), overviewMetrics: loadingReadback(metricsToken) }, requestsFilters: next },
+            model: { ...nextModel, requestsCharts: requestsChartsLoading(model) },
           };
         },
         RequestsFilterChanged: ({ field, value }: Extract<Message, { readonly _tag: "RequestsFilterChanged" }>): UpdateReturn<Model, Message> => {
           const state = model.requestsFilters ?? { breakdown: "Total", difficulty: "All buckets", expanded: false, range: "Day", source: "All sources", statusFamily: "All statuses" };
           const next = { ...state, [field]: value };
           const token = model.readbacks.requests.token + 1;
-          return { commands: [readReadback({ key: "requests", query: requestsQuery(next), token })], model: { ...model, readbacks: { ...model.readbacks, requests: loadingReadback(token) }, requestsFilters: next } };
+          const nextModel: Model = { ...model, readbacks: { ...model.readbacks, requests: loadingReadback(token) }, requestsFilters: next };
+          return {
+            commands: [
+              readReadback({ key: "requests", query: requestsQuery(next), token }),
+              loadRequestsChartsCommand(nextModel, windowForRange(next.range)),
+            ],
+            model: { ...nextModel, requestsCharts: requestsChartsLoading(model) },
+          };
         },
         RequestsAdvancedToggled: (): UpdateReturn<Model, Message> => {
           const state = model.requestsFilters ?? { breakdown: "Total", difficulty: "All buckets", expanded: false, range: "Day", source: "All sources", statusFamily: "All statuses" };
@@ -2101,6 +2141,41 @@ const updateLocalPolicyDraft = (
                 },
               };
             }
+          }
+          if (key === "routerConfig") {
+            const rowValue = (id: string): string | undefined => snapshot.rows.find((entry) => entry.id === id)?.value;
+            const strategy = rowValue("routing.mode") ?? rowValue("strategy") ?? "baseline";
+            const scoring = rowValue("routing.scoringStrategy") ?? "balanced";
+            const execution = rowValue("executionMode") ?? "decision_only";
+            const pin = rowValue("routing.pinWeights");
+            let weights: Record<string, number> = {};
+            try {
+              const meta = snapshot.rows.find((entry) => entry.id === "routing.weights")?.meta;
+              weights = meta === undefined ? {} : JSON.parse(meta) as Record<string, number>;
+            } catch {
+              weights = {};
+            }
+            const current = model.routerPosture ?? initialRouterPostureState();
+            const hydrated = {
+              ...current,
+              executionMode: current.executionMode.length > 0 ? current.executionMode : execution,
+              mode: current.mode.length > 0 ? current.mode : strategy,
+              pinWeights: current.pinWeights === "off" && pin === "true" ? "on" : current.pinWeights,
+              scoringStrategy: current.scoringStrategy.length > 0 ? current.scoringStrategy : scoring,
+              weightCost: current.weightCost.length > 0 ? current.weightCost : typeof weights.cost === "number" ? String(weights.cost) : current.weightCost,
+              weightLatency: current.weightLatency.length > 0 ? current.weightLatency : typeof weights.latency === "number" ? String(weights.latency) : current.weightLatency,
+              weightPreference: current.weightPreference.length > 0 ? current.weightPreference : typeof weights.preference === "number" ? String(weights.preference) : current.weightPreference,
+              weightQuality: current.weightQuality.length > 0 ? current.weightQuality : typeof weights.quality === "number" ? String(weights.quality) : current.weightQuality,
+              weightReliability: current.weightReliability.length > 0 ? current.weightReliability : typeof weights.reliability === "number" ? String(weights.reliability) : current.weightReliability,
+              weightThroughput: current.weightThroughput.length > 0 ? current.weightThroughput : typeof weights.throughput === "number" ? String(weights.throughput) : current.weightThroughput,
+            };
+            return {
+              model: {
+                ...model,
+                readbacks: { ...model.readbacks, [key]: { ...snapshot, token } },
+                routerPosture: hydrated,
+              },
+            };
           }
           if (key === "runtimeConfig") {
             let text = "{}"; let originalText = "{}";
@@ -2763,6 +2838,26 @@ const updateLocalPolicyDraft = (
           const state = model.routingCharts;
           if (state !== undefined && token !== state.token) return { model };
           return { model: { ...model, routingCharts: { entries: [], message, status: "error", token } } };
+        },
+        RequestsChartsLoaded: ({ entriesJson, token }: Extract<Message, { readonly _tag: "RequestsChartsLoaded" }>): UpdateReturn<Model, Message> => {
+          const state = model.requestsCharts;
+          if (state !== undefined && token !== state.token) return { model };
+          try {
+            const entries = JSON.parse(entriesJson) as ReadonlyArray<{ readonly body: unknown; readonly id: string }>;
+            return {
+              model: {
+                ...model,
+                requestsCharts: { entries: entries.map((entry) => ({ id: entry.id, json: JSON.stringify(entry.body) })), status: "ok", token },
+              },
+            };
+          } catch {
+            return { model };
+          }
+        },
+        RequestsChartsFailed: ({ message, token }: Extract<Message, { readonly _tag: "RequestsChartsFailed" }>): UpdateReturn<Model, Message> => {
+          const state = model.requestsCharts;
+          if (state !== undefined && token !== state.token) return { model };
+          return { model: { ...model, requestsCharts: { entries: [], message, status: "error", token } } };
         },
       };
       const learningRankingHandlers = {

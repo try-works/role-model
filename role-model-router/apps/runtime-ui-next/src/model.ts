@@ -43,6 +43,12 @@ const runtimeFields = {
 };
 
 const routingChartsFields = {
+  requestsCharts: Schema.optional(Schema.Struct({
+    entries: Schema.Array(Schema.Struct({ id: Schema.String, json: Schema.String })),
+    message: Schema.optional(Schema.String),
+    status: Schema.Literals(["idle", "loading", "ok", "error"]),
+    token: Schema.Number,
+  })),
   routingCharts: Schema.optional(Schema.Struct({
     entries: Schema.Array(Schema.Struct({ id: Schema.String, json: Schema.String })),
     message: Schema.optional(Schema.String),
@@ -189,6 +195,7 @@ const modelFields = {
   deviceAuthModalKey: deviceAuthFields.deviceAuthModalKey,
   chartInteraction: shellFields.chartInteraction,
   diagnostics: shellFields.diagnostics,
+  requestsCharts: routingChartsFields.requestsCharts,
   routingCharts: routingChartsFields.routingCharts,
   requestsRanking: requestsFields.requestsRanking,
   requestsRankingMetricListbox: requestsFields.requestsRankingMetricListbox,
