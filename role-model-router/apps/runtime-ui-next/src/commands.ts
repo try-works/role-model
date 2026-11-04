@@ -761,6 +761,7 @@ export interface ModelsClient {
   readonly clearBenchmark: () => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly clearEndpointData: (endpointId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly pollBenchmarkRun: (runId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly benchmarkRunDetail: (runId: string) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly savePreferences: (body: Readonly<Record<string, unknown>>) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly createRole: (draft: Readonly<Record<string, unknown>>) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly updateRole: (roleId: string, draft: Readonly<Record<string, unknown>>) => Promise<{ readonly body: unknown; readonly status: number }>;
@@ -783,6 +784,10 @@ export const createModelsClient = (options: { readonly fetchImpl?: typeof fetch 
   return {
     clearBenchmark: () => send("/api/role-model/benchmark/data", "DELETE", "{}"),
     clearEndpointData: (endpointId) => send("/api/role-model/benchmark/endpoints/" + encodeURIComponent(endpointId) + "/data", "DELETE", "{}"),
+    benchmarkRunDetail: async (runId) => {
+      const response = await fetchImpl("/api/role-model/benchmark/runs/" + encodeURIComponent(runId), { headers: { accept: "application/json" }, method: "GET" });
+      return { body: await response.json(), status: response.status };
+    },
     pollBenchmarkRun: async (runId) => {
       const response = await fetchImpl("/api/role-model/benchmark/runs/" + encodeURIComponent(runId), { headers: { accept: "application/json" }, method: "GET" });
       return { body: await response.json(), status: response.status };
@@ -824,6 +829,15 @@ export const defineModelsCommands = (client: ModelsClient) => ({
           ? Message.BenchmarkEndpointCleared({ endpointId, token })
           : Message.BenchmarkEndpointClearFailed({ message: "Clear endpoint benchmark data failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
     messages: [Message.BenchmarkEndpointCleared, Message.BenchmarkEndpointClearFailed],
+  }),
+  benchmarkRunDetail: Command.define("LoadBenchmarkRunDetail", {
+    args: { runId: Schema.String, token: Schema.Number },
+    execute: ({ runId, token }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.benchmarkRunDetail(runId) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.BenchmarkRunDetailLoaded({ json: JSON.stringify(exit.value.body), runId, token })
+          : Message.BenchmarkRunDetailFailed({ message: "Benchmark run detail failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), runId, token }))),
+    messages: [Message.BenchmarkRunDetailLoaded, Message.BenchmarkRunDetailFailed],
   }),
   pollBenchmarkRun: Command.define("PollBenchmarkRun", {
     args: { runId: Schema.String, token: Schema.Number },
@@ -962,6 +976,7 @@ export type ModelsCommands = ReturnType<typeof defineModelsCommands>;
 export const noopModelsCommands = defineModelsCommands({
   clearBenchmark: async () => ({ body: {}, status: 200 }),
   clearEndpointData: async () => ({ body: {}, status: 200 }),
+  benchmarkRunDetail: async () => ({ body: {}, status: 200 }),
   pollBenchmarkRun: async () => ({ body: {}, status: 200 }),
   savePreferences: async () => ({ body: {}, status: 200 }),
   createRole: async () => ({ body: {}, status: 200 }),

@@ -153,6 +153,9 @@ export const Message: MessageUnion<{
   readonly BenchmarkRunPollRequested: { readonly runId: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly BenchmarkRunPolled: { readonly progressJson: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly BenchmarkRunPollFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly BenchmarkRunDetailRequested: { readonly runId: typeof Schema.String };
+  readonly BenchmarkRunDetailLoaded: { readonly json: typeof Schema.String; readonly runId: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly BenchmarkRunDetailFailed: { readonly message: typeof Schema.String; readonly runId: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly BenchmarkTaxonomyFilterChanged: { readonly filter: typeof Schema.String; readonly value: typeof Schema.String };
   readonly ModelsRemoveRequested: { readonly modelId: typeof Schema.String };
   readonly ModelsControllerSetRequested: { readonly modelId: typeof Schema.String };
@@ -395,6 +398,9 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   BenchmarkRunPollRequested: { runId: Schema.String, token: Schema.Number },
   BenchmarkRunPolled: { progressJson: Schema.String, token: Schema.Number },
   BenchmarkRunPollFailed: { message: Schema.String, token: Schema.Number },
+  BenchmarkRunDetailRequested: { runId: Schema.String },
+  BenchmarkRunDetailLoaded: { json: Schema.String, runId: Schema.String, token: Schema.Number },
+  BenchmarkRunDetailFailed: { message: Schema.String, runId: Schema.String, token: Schema.Number },
   BenchmarkTaxonomyFilterChanged: { filter: Schema.String, value: Schema.String },
   ModelsRemoveRequested: { modelId: Schema.String },
   ModelsControllerSetRequested: { modelId: Schema.String },

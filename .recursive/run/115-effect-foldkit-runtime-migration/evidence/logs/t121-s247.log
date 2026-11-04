@@ -1,0 +1,12 @@
+✔ S247: no test may exceed its recorded synthetic-click budget (257.781ms)
+✔ S247: every file with clicks is recorded in the budget (236.3102ms)
+✔ S247: the total click count does not grow (274.5213ms)
+✔ S247: every recorded budget entry names the user path it exercises (1.2568ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1244.8503

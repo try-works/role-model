@@ -419,6 +419,60 @@ export const modelsRolesRoute = (models: ReadbackState, endpoints: ReadbackState
   ], h, "models-roles-state");
 };
 
+type BenchmarkRunResultView = {
+  readonly endpointGrades?: ReadonlyArray<{
+    readonly caseResults?: ReadonlyArray<{
+      readonly actualPreview?: string;
+      readonly caseId?: string;
+      readonly difficultyBucket?: string;
+      readonly errorMessage?: string;
+      readonly judgeError?: string | null;
+      readonly rationale?: string;
+      readonly score?: number;
+    }>;
+    readonly endpointId?: string;
+    readonly modelId?: string;
+    readonly overallScore?: number;
+  }>;
+  readonly errorMessage?: string;
+  readonly runId?: string;
+  readonly status?: string;
+};
+
+const parseBenchmarkRunResult = (json: string | undefined): BenchmarkRunResultView | undefined => {
+  if (json === undefined || json.length === 0) return undefined;
+  try {
+    // SAFETY: the benchmark progress readback carries the host run result record; the view only reads the fields below.
+    return JSON.parse(json) as BenchmarkRunResultView;
+  } catch {
+    return undefined;
+  }
+};
+
+const benchmarkResultStats = (result: BenchmarkRunResultView | undefined) => {
+  const grades = result?.endpointGrades ?? [];
+  const cases = grades.flatMap((grade) => grade.caseResults ?? []);
+  const executed = cases.length;
+  const passed = cases.filter((entry) => typeof entry.score === "number" && entry.score > 0).length;
+  return { cases, executed, failed: executed - passed, grades, passed };
+};
+
+/** Reference phase wording (apps/runtime-ui/app/routes/control-benchmark.tsx describeBenchmarkProgress). */
+const benchmarkPhaseCopy = (progress: NonNullable<NonNullable<Model["modelsView"]>["benchmarkProgress"]>) => {
+  const model = progress.currentEndpointModelId === undefined ? null : "model " + String((progress.endpointIndex ?? 0) + 1) + "/" + String(progress.endpointCount ?? 0) + ": " + progress.currentEndpointModelId;
+  const testCase = progress.currentCaseId === undefined ? null : "case " + String((progress.caseIndex ?? 0) + 1) + "/" + String(progress.caseCount ?? 0) + " (" + progress.currentCaseId + ")";
+  if (progress.runPhase === "compare") {
+    return { detail: [testCase, progress.currentPhase === "compare" ? "ranking subjects for this case" : "preparing compare pass"].filter((value): value is string => value !== null).join(" • "), label: "Phase 3 of 3 · Head-to-head compare" };
+  }
+  if (progress.runPhase === "grading") {
+    return { detail: [model, testCase, progress.currentPhase === "judge" ? "scoring recorded deliverables" : "grading saved responses"].filter((value): value is string => value !== null).join(" • "), label: "Phase 2 of 3 · Judge grading" };
+  }
+  if (progress.runPhase === "complete") {
+    return { detail: "final scores recorded", label: "Phase 3 of 3 · Complete" };
+  }
+  return { detail: [model, testCase, progress.currentPhase === "execute" ? "running benchmark cases and saving deliverables" : "preparing execution pass"].filter((value): value is string => value !== null).join(" • "), label: "Phase 1 of 3 · Recording responses" };
+};
+
 export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, runs: ReadbackState, h: HtmlBuilder<Message>, modelsView?: Model["modelsView"], endpoints?: ReadbackState, preferences?: ReadbackState, activeRun?: ReadbackState): Html => {
   const suiteCases = suite.rows.flatMap((entry) => {
     try {
@@ -583,6 +637,13 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
     ]);
   const progress = modelsView?.benchmarkProgress;
   const running = progress?.status === "running";
+  const benchmarkResult = parseBenchmarkRunResult(progress?.resultJson);
+  const benchmarkStats = benchmarkResultStats(benchmarkResult);
+  const benchmarkPercent = progress === undefined || (progress.totalSteps ?? 0) <= 0
+    ? 0
+    : Math.min(100, Math.round(((progress.completedSteps ?? 0) / (progress.totalSteps ?? 1)) * 100));
+  const benchmarkPhase = progress === undefined ? undefined : benchmarkPhaseCopy(progress);
+  const failedCase = benchmarkStats.cases.find((entry) => typeof entry.score !== "number" || entry.score <= 0);
   return referenceSection("models", "ok", [
     h.h2([h.Class("rm3-next-route-title text-sm font-medium leading-5 tracking-tight")], ["Capability benchmark"]),
     referenceCard("Run capability benchmark", "Select mode and judge, then grade runnable endpoints.", [
@@ -606,9 +667,40 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
         ...(modelsView?.benchmarkClearPending === true ? [] : [h.button([h.Type("button"), h.OnClick(Message.BenchmarkClearRequested({})), h.Class("inline-flex h-[34px] items-center justify-center rounded-md border border-border bg-background px-3 text-sm font-medium")], ["Clear all benchmark data"])]),
       ]),
       modelsView?.benchmarkAction?.message === undefined ? null : h.p([h.DataAttribute("benchmark-action-status", modelsView.benchmarkAction.status), h.Role(modelsView.benchmarkAction.status === "error" ? "alert" : "status"), h.Class("mt-2 text-xs text-muted-foreground")], [modelsView.benchmarkAction.message]),
-      running ? h.div([h.DataAttribute("benchmark-progress", ""), h.Class("mt-3 rounded-md border border-dashed border-border p-3 text-xs text-muted-foreground")], [
-        h.p([h.Role("status")], ["Benchmark " + (progress?.runId ?? "") + " running: " + String(progress?.completedSteps ?? 0) + " / " + String(progress?.totalSteps ?? 0) + " steps"]),
-      ]) : null,
+      progress === undefined ? null : h.div([h.DataAttribute("benchmark-progress", ""), h.DataAttribute("benchmark-progress-status", progress.status), h.Class("mt-3 space-y-2 rounded-md border border-dashed border-border p-3 text-xs text-muted-foreground")], [
+        h.div([h.Class("flex flex-wrap items-center justify-between gap-2")], [
+          h.p([h.DataAttribute("benchmark-progress-phase", ""), h.Class("font-sans text-sm font-semibold leading-5 text-foreground")], [benchmarkPhase?.label ?? "Benchmark in progress"]),
+          h.p([h.DataAttribute("benchmark-progress-percent", ""), h.Class("font-mono text-[12px] tabular-nums text-foreground")], [String(benchmarkPercent) + "%"]),
+        ]),
+        h.div([h.Class("h-1.5 overflow-hidden rounded-sm bg-border")], [
+          h.div([h.Attribute("style", "width: " + String(benchmarkPercent) + "%"), h.DataAttribute("benchmark-progress-bar", ""), h.Class("h-full bg-primary transition-all duration-500")], []),
+        ]),
+        h.div([h.Class("flex flex-wrap gap-x-4 gap-y-1")], [
+          h.p([h.DataAttribute("benchmark-progress-steps", "")], [String(progress.completedSteps ?? 0) + " / " + String(progress.totalSteps ?? 0) + " steps"]),
+          benchmarkPhase === undefined || benchmarkPhase.detail.length === 0 ? null : h.p([h.DataAttribute("benchmark-progress-detail", "")], [benchmarkPhase.detail]),
+        ]),
+        progress.status === "failed"
+          ? h.p([h.DataAttribute("benchmark-terminal-status", "failed"), h.Role("alert"), h.Class("font-sans text-sm leading-5 text-destructive")], ["Failed: " + (progress.errorCode === undefined ? "" : progress.errorCode + " · ") + (progress.errorMessage ?? progress.message ?? "Benchmark run failed.")])
+          : null,
+        progress.status === "completed"
+          ? h.div([h.DataAttribute("benchmark-terminal-status", "completed"), h.Class("space-y-1 border-t border-border pt-2")], [
+              h.p([h.Class("font-sans text-sm font-semibold leading-5 text-foreground")], ["Completed" + (benchmarkResult?.runId === undefined ? "" : " · " + benchmarkResult.runId)]),
+              benchmarkStats.executed === 0
+                ? h.p([h.DataAttribute("benchmark-case-summary", "")], ["No executed cases were recorded for this run."])
+                : h.p([h.DataAttribute("benchmark-case-summary", ""), h.Class(benchmarkStats.failed > 0 ? "font-sans text-sm font-semibold leading-5 text-destructive" : "font-sans text-sm leading-5 text-foreground")], [
+                    String(benchmarkStats.passed) + "/" + String(benchmarkStats.executed) + " cases executed" + (benchmarkStats.failed > 0 ? " — " + String(benchmarkStats.failed) + " failed" : ""),
+                  ]),
+              ...(benchmarkStats.failed > 0 && failedCase !== undefined
+                ? [h.p([h.DataAttribute("benchmark-case-failure", ""), h.Class("font-mono text-[12px] leading-4 text-destructive")], [
+                    String(failedCase.caseId ?? "case") + ": " + (failedCase.rationale ?? "case failed") + (failedCase.actualPreview === undefined ? "" : " · " + failedCase.actualPreview) + (failedCase.judgeError === undefined || failedCase.judgeError === null ? "" : " · judge: " + failedCase.judgeError),
+                  ])]
+                : []),
+              ...benchmarkStats.grades.map((grade) => h.p([h.DataAttribute("benchmark-endpoint-score", grade.endpointId ?? ""), h.Class("font-mono text-[12px] leading-4 text-muted-foreground")], [
+                (grade.modelId ?? grade.endpointId ?? "endpoint") + " — overall " + String(Math.round((grade.overallScore ?? 0) * 100)) + "% · " + String((grade.caseResults ?? []).filter((entry) => typeof entry.score === "number" && entry.score > 0).length) + "/" + String((grade.caseResults ?? []).length) + " cases passed",
+              ])),
+            ])
+          : null,
+      ]),
       ...(modelsView?.benchmarkClearPending === true
         ? [h.div([h.DataAttribute("benchmark-clear-confirmation", ""), h.Class("mt-4 rounded-md border border-destructive/40 bg-background p-3")], [
             h.p([h.Class("text-sm leading-5 text-foreground")], ["Clear all benchmark data? This removes every benchmark run, artifact, and routing profile sample. This cannot be undone."]),
@@ -653,8 +745,66 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
       ]),
       referenceTable(["DIMENSION", "VALUE", "SCORE", "MODEL"], taxonomyRows, "No taxonomy dimension data is available yet.", h, "models"),
     ], h),
-    referenceCard("Run history", "Completed capability benchmark runs.", [
-      referenceTable(["RUN", "MODE", "CASES", "MODELS", "COMPLETED", "SUITE"], runRows, "No completed benchmark runs yet.", h, "models"),
+    referenceCard("Run history", "Completed capability benchmark runs. Open a run to see per-case results.", [
+      h.div([h.Class("overflow-x-auto")], [
+            h.table([h.Class("w-full min-w-[760px] border-collapse text-left text-sm")], [
+              h.thead([], [h.tr([h.Class("border-b border-border")], ["RUN", "MODE", "CASES", "MODELS", "COMPLETED", "SUITE", "DETAIL"].map((heading) => h.th([h.Class("px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground")], [heading])))]),
+              h.tbody([], runs.rows.length === 0
+                ? [h.tr([], [h.td([h.Attribute("colspan", "7"), h.Class("px-3 py-3 text-xs text-muted-foreground")], ["No completed benchmark runs yet."])])]
+                : runs.rows.flatMap((entry) => {
+                try {
+                  // SAFETY: benchmarkRuns rows carry the BenchmarkRunListEntry record in meta.
+                  const meta = JSON.parse(entry.meta) as { readonly completedAtMs?: number; readonly endpointIds?: ReadonlyArray<string>; readonly mode?: string; readonly suiteId?: string };
+                  const completed = typeof meta.completedAtMs === "number" ? new Date(meta.completedAtMs).toISOString().slice(0, 10) : "—";
+                  return [h.tr([h.Class("border-b border-border last:border-b-0")], [
+                    h.td([h.Class("px-3 py-2 font-mono text-[12px] text-foreground")], [entry.id]),
+                    h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [meta.mode ?? "—"]),
+                    h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [String(entry.value)]),
+                    h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [String(meta.endpointIds?.length ?? 0)]),
+                    h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [completed]),
+                    h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [meta.suiteId ?? "—"]),
+                    h.td([h.Class("px-3 py-2")], [h.button([h.Type("button"), h.DataAttribute("benchmark-run-detail", entry.id), h.OnClick(Message.BenchmarkRunDetailRequested({ runId: entry.id })), h.Class("inline-flex h-[30px] items-center rounded-md border border-border bg-background px-2.5 text-xs font-medium text-foreground")], ["View details"])]),
+                  ])];
+                  } catch {
+                    return [];
+                  }
+                })),
+            ]),
+          ]),
+      ...(() => {
+        const detail = modelsView?.benchmarkRunDetail;
+        if (detail === undefined) return [];
+        if (detail.status === "loading") {
+          return [h.div([h.DataAttribute("benchmark-run-detail-panel", ""), h.Class("mt-4 rounded-md border border-border bg-background p-3 text-xs text-muted-foreground")], ["Loading run detail " + detail.runId + "…"])];
+        }
+        if (detail.status === "error") {
+          return [h.div([h.DataAttribute("benchmark-run-detail-panel", ""), h.Role("alert"), h.Class("mt-4 rounded-md border border-destructive/40 bg-background p-3 text-xs text-destructive")], ["Run detail failed: " + (detail.message ?? "unknown error")])];
+        }
+        const parsed = parseBenchmarkRunResult(detail.json);
+        const stats = benchmarkResultStats(parsed);
+        const statusLine = (parsed?.status ?? "completed") + (parsed?.errorMessage === undefined ? "" : " — " + parsed.errorMessage);
+        return [h.div([h.DataAttribute("benchmark-run-detail-panel", ""), h.Class("mt-4 rounded-md border border-border bg-background p-3 text-xs text-muted-foreground")], [
+          h.p([h.DataAttribute("benchmark-run-detail-status", ""), h.Class("font-sans text-sm font-semibold leading-5 text-foreground")], ["Run detail · " + detail.runId + " · " + statusLine]),
+          h.p([h.DataAttribute("benchmark-run-detail-cases", ""), h.Class(stats.failed > 0 ? "font-sans text-sm font-semibold leading-5 text-destructive" : "font-sans text-sm leading-5 text-foreground")], [String(stats.passed) + "/" + String(stats.executed) + " cases passed" + (stats.failed > 0 ? " — " + String(stats.failed) + " failed" : "")]),
+          h.div([h.Class("mt-2 overflow-x-auto")], [
+            h.table([h.Class("w-full min-w-[760px] border-collapse text-left text-sm")], [
+              h.thead([], [h.tr([h.Class("border-b border-border")], ["CASE", "DIFFICULTY", "SCORE", "RESULT", "RATIONALE", "ACTUAL PREVIEW", "JUDGE ERROR"].map((heading) => h.th([h.Class("px-2 py-2 font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground")], [heading])))]),
+              h.tbody([], stats.cases.map((entry) => {
+                const passed = typeof entry.score === "number" && entry.score > 0;
+                return h.tr([h.DataAttribute("benchmark-case-row", entry.caseId ?? ""), h.Class("border-b border-border last:border-b-0")], [
+                  h.td([h.Class("px-2 py-2 font-mono text-[12px] text-foreground")], [entry.caseId ?? "—"]),
+                  h.td([h.Class("px-2 py-2 text-[12px] text-foreground")], [entry.difficultyBucket ?? "—"]),
+                  h.td([h.Class("px-2 py-2 font-mono text-[12px] text-foreground")], [String(Math.round((entry.score ?? 0) * 100)) + "%"]),
+                  h.td([h.DataAttribute("benchmark-case-result", passed ? "pass" : "fail"), h.Class("px-2 py-2 text-[12px] font-semibold " + (passed ? "text-foreground" : "text-destructive"))], [passed ? "PASS" : "FAIL"]),
+                  h.td([h.Class("px-2 py-2 text-[12px] text-foreground")], [entry.rationale ?? "—"]),
+                  h.td([h.Class("px-2 py-2 font-mono text-[11px] text-muted-foreground")], [entry.actualPreview ?? "—"]),
+                  h.td([h.Class("px-2 py-2 font-mono text-[11px] text-destructive")], [entry.judgeError ?? entry.errorMessage ?? "—"]),
+                ]);
+              })),
+            ]),
+          ]),
+        ])];
+      })(),
     ], h),
   ], h);
 };

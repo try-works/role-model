@@ -1,0 +1,472 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s638-benchmark-progress-results.test.ts > S638 benchmark progress and per-case results > transitions from running to the failed-case completed state on the mounted route
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 84.4ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      learningProfile: [Object],
+      learningAdvisory: [Object],
+      contribution: [Object],
+      recommendations: [Object],
+      replayAutomation: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Benchmark' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 84.43269999999757,
+  thresholdMs: 8
+}
+
+stderr | test/s638-benchmark-progress-results.test.ts > S638 benchmark progress and per-case results > transitions from running to the failed-case completed state on the mounted route
+[foldkit] Slow update: 16.4ms (budget: 4ms), triggered by ReadbackLoaded. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Update',
+  previousModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      learningProfile: [Object],
+      learningAdvisory: [Object],
+      contribution: [Object],
+      recommendations: [Object],
+      replayAutomation: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Benchmark' },
+    theme: 'dark'
+  },
+  nextModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      learningProfile: [Object],
+      learningAdvisory: [Object],
+      contribution: [Object],
+      recommendations: [Object],
+      replayAutomation: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Benchmark' },
+    theme: 'dark'
+  },
+  message: {
+    _tag: 'ReadbackLoaded',
+    key: 'benchmarkSuite',
+    snapshot: { rows: [], status: 'empty', token: 1 },
+    token: 1
+  },
+  durationMs: 16.445200000001932,
+  thresholdMs: 4
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'benchmarkSuite',
+  snapshot: { rows: [], status: 'empty', token: 1 },
+  token: 1
+}
+
+stderr | test/s638-benchmark-progress-results.test.ts > S638 benchmark progress and per-case results > transitions from running to the failed-case completed state on the mounted route
+[foldkit] Slow patch: 9.8ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      learningProfile: [Object],
+      learningAdvisory: [Object],
+      contribution: [Object],
+      recommendations: [Object],
+      replayAutomation: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Benchmark' },
+    theme: 'dark',
+    modelsView: { benchmarkAction: [Object], benchmarkProgress: [Object] }
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'benchmarkActiveRun',
+      snapshot: [Object],
+      token: 2
+    }
+  },
+  durationMs: 9.777299999997922,
+  thresholdMs: 8
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'benchmarkActiveRun',
+  snapshot: { rows: [], status: 'empty', token: 2 },
+  token: 2
+}
+
+ ❯ test/s638-benchmark-progress-results.test.ts (6 tests | 6 failed) 15627ms
+   × S638 benchmark progress and per-case results > renders the reference phase label, percent bar, steps and endpoint/case context while running 270ms
+     → expected undefined to be 'Phase 3 of 3 · Head-to-head compare' // Object.is equality
+   × S638 benchmark progress and per-case results > surfaces a terminal failure with the host error code and message 105ms
+     → the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string
+   × S638 benchmark progress and per-case results > does not show a green completed state when the host completed a run whose cases all failed 76ms
+     → expected null not to be null
+   × S638 benchmark progress and per-case results > lists per-case pass/fail, rationale, actual preview and judge error in the run detail panel 69ms
+     → expected null not to be null
+   × S638 benchmark progress and per-case results > dispatches the detail request from a history row and loads the exact detail path 82ms
+     → expected null not to be null
+   × S638 benchmark progress and per-case results > transitions from running to the failed-case completed state on the mounted route 15019ms
+     → Test timed out in 15000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s638-benchmark-progress-results.test.ts > S638 benchmark progress and per-case results > renders the reference phase label, percent bar, steps and endpoint/case context while running
+AssertionError: expected undefined to be 'Phase 3 of 3 · Head-to-head compare' // Object.is equality
+
+- Expected: 
+"Phase 3 of 3 · Head-to-head compare"
+
++ Received: 
+undefined
+
+ ❯ test/s638-benchmark-progress-results.test.ts:87:85
+     85|   it("renders the reference phase label, percent bar, steps and endpoi…
+     86|     const container = await renderWith({ benchmarkProgress: runningPro…
+     87|     expect(container.querySelector("[data-benchmark-progress-phase]")?…
+       |                                                                                     ^
+     88|     expect(container.querySelector("[data-benchmark-progress-percent]"…
+     89|     expect(container.querySelector("[data-benchmark-progress-steps]")?…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  test/s638-benchmark-progress-results.test.ts > S638 benchmark progress and per-case results > surfaces a terminal failure with the host error code and message
+AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string
+ ❯ test/s638-benchmark-progress-results.test.ts:102:33
+    100|     });
+    101|     const failed = container.querySelector("[data-benchmark-terminal-s…
+    102|     expect(failed?.textContent).toContain("benchmark_execution_failed"…
+       |                                 ^
+    103|     expect(failed?.textContent).toContain("upstream provider returned …
+    104|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  test/s638-benchmark-progress-results.test.ts > S638 benchmark progress and per-case results > does not show a green completed state when the host completed a run whose cases all failed
+AssertionError: expected null not to be null
+ ❯ test/s638-benchmark-progress-results.test.ts:108:89
+    106|   it("does not show a green completed state when the host completed a …
+    107|     const container = await renderWith({ benchmarkProgress: completedP…
+    108|     expect(container.querySelector("[data-benchmark-terminal-status='c…
+       |                                                                                         ^
+    109|     expect(container.querySelector("[data-benchmark-case-summary]")?.t…
+    110|     const failure = container.querySelector("[data-benchmark-case-fail…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  test/s638-benchmark-progress-results.test.ts > S638 benchmark progress and per-case results > lists per-case pass/fail, rationale, actual preview and judge error in the run detail panel
+AssertionError: expected null not to be null
+ ❯ test/s638-benchmark-progress-results.test.ts:123:23
+    121|     });
+    122|     const panel = container.querySelector("[data-benchmark-run-detail-…
+    123|     expect(panel).not.toBeNull();
+       |                       ^
+    124|     expect(container.querySelector("[data-benchmark-run-detail-cases]"…
+    125|     expect(container.querySelector("[data-benchmark-run-detail-status]…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  test/s638-benchmark-progress-results.test.ts > S638 benchmark progress and per-case results > dispatches the detail request from a history row and loads the exact detail path
+AssertionError: expected null not to be null
+ ❯ test/s638-benchmark-progress-results.test.ts:141:24
+    139|     container.innerHTML = rendered.html;
+    140|     const button = container.querySelector("[data-benchmark-run-detail…
+    141|     expect(button).not.toBeNull();
+       |                        ^
+    142|     const requested = shellUpdate(model, Message.BenchmarkRunDetailReq…
+    143|     const command = (requested.commands ?? [])[0] as unknown as { read…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  test/s638-benchmark-progress-results.test.ts > S638 benchmark progress and per-case results > transitions from running to the failed-case completed state on the mounted route
+Error: Test timed out in 15000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ test/s638-benchmark-progress-results.test.ts:149:3
+    147|   });
+    148| 
+    149|   it("transitions from running to the failed-case completed state on t…
+       |   ^
+    150|     window.history.replaceState({}, "", "/system/benchmark");
+    151|     const container = document.createElement("div");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed (6)
+   Start at  05:19:37
+   Duration  42.86s (transform 12.45s, setup 0ms, collect 20.86s, tests 15.63s, environment 4.33s, prepare 760ms)
+
+
+
+# Provenance footer
+# Command: corepack pnpm exec vitest run test/s638-benchmark-progress-results.test.ts
+# State: HEAD 3224a01e product data-layer changes kept, but src/features/models/routes.ts reverted to its HEAD
+# version (the old "N / M steps" only panel and the plain run-history table). This isolates the UI/result behavior
+# the tests target: 6/6 failed - no phase label/percent/bar markers, no terminal failure or case-failure summary,
+# no run-detail panel or detail button, and the mounted transition never renders the completed failure state.

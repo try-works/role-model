@@ -434,6 +434,43 @@ const loadRequestsChartsCommand = (model: Model, windowMs: number) => {
   });
 };
 
+type BenchmarkProgress = NonNullable<NonNullable<Model["modelsView"]>["benchmarkProgress"]>;
+
+/**
+ * S638: keeps the whole host progress snapshot (phase, endpoint/case context, terminal error and the completed
+ * run result) instead of only N/M steps, so the benchmark panel can show phase wording and surface per-case
+ * failures. Accepts the raw JSON readback row meta or the polled progress body.
+ */
+const benchmarkProgressFrom = (raw: unknown): BenchmarkProgress | undefined => {
+  const record = (raw ?? {}) as Record<string, unknown>;
+  const runId = typeof record.runId === "string" ? record.runId : "";
+  if (runId.length === 0) return undefined;
+  const status = record.status === "completed" ? "completed" : record.status === "failed" ? "failed" : "running";
+  const numberField = (key: string): number | undefined => (typeof record[key] === "number" ? record[key] as number : undefined);
+  const stringField = (key: string): string | undefined => (typeof record[key] === "string" ? record[key] as string : undefined);
+  const phase = record.currentPhase;
+  const runPhase = record.runPhase;
+  const result = record.result;
+  return {
+    runId,
+    status,
+    ...(numberField("caseCount") === undefined ? {} : { caseCount: numberField("caseCount") }),
+    ...(numberField("caseIndex") === undefined ? {} : { caseIndex: numberField("caseIndex") }),
+    ...(numberField("completedSteps") === undefined ? {} : { completedSteps: numberField("completedSteps") }),
+    ...(stringField("currentCaseId") === undefined ? {} : { currentCaseId: stringField("currentCaseId") }),
+    ...(stringField("currentEndpointModelId") === undefined ? {} : { currentEndpointModelId: stringField("currentEndpointModelId") }),
+    ...(phase === "execute" || phase === "judge" || phase === "compare" ? { currentPhase: phase } : {}),
+    ...(numberField("endpointCount") === undefined ? {} : { endpointCount: numberField("endpointCount") }),
+    ...(numberField("endpointIndex") === undefined ? {} : { endpointIndex: numberField("endpointIndex") }),
+    ...(stringField("errorCode") === undefined ? {} : { errorCode: stringField("errorCode") }),
+    ...(stringField("errorMessage") === undefined ? {} : { errorMessage: stringField("errorMessage") }),
+    ...(runPhase === "execution" || runPhase === "grading" || runPhase === "compare" || runPhase === "complete" ? { runPhase } : {}),
+    ...(numberField("totalSteps") === undefined ? {} : { totalSteps: numberField("totalSteps") }),
+    ...(numberField("updatedAtMs") === undefined ? {} : { updatedAtMs: numberField("updatedAtMs") }),
+    ...(result === undefined || result === null ? {} : { resultJson: JSON.stringify(result) }),
+  };
+};
+
 const updateRequestsRankingField = (
   model: Model,
   field: "metric" | "rankingTarget",
@@ -1479,18 +1516,19 @@ const readPlanForRoute = (model: Model): ReadonlyArray<{ readonly key: ReadbackK
           return { model: { ...model, modelsView: { ...state, benchmarkAction: { message, status: "error" }, benchmarkProgress: undefined } } };
         },
         BenchmarkRunPolled: ({ progressJson, token }: Extract<Message, { readonly _tag: "BenchmarkRunPolled" }>): UpdateReturn<Model, Message> => {
-          let progress: { readonly completedSteps?: number; readonly errorMessage?: string; readonly runId?: string; readonly status?: string; readonly totalSteps?: number } = {};
-          try { progress = JSON.parse(progressJson) as typeof progress; } catch { progress = {}; }
-          const runId = typeof progress.runId === "string" ? progress.runId : "";
-          const status = progress.status === "completed" ? "completed" : progress.status === "failed" ? "failed" : "running";
+          let raw: unknown;
+          try { raw = JSON.parse(progressJson); } catch { raw = {}; }
+          const progress = benchmarkProgressFrom(raw);
           const state = model.modelsView ?? {};
-          if (runId.length === 0) return { model };
+          if (progress === undefined) return { model };
+          const runId = progress.runId;
+          const status = progress.status;
           if (status === "running") {
             return {
               commands: [modelsCommands.pollBenchmarkRun({ runId, token: token + 1 })],
               model: {
                 ...model,
-                modelsView: { ...state, benchmarkAction: { message: "Benchmark running…", status: "saving" }, benchmarkProgress: { completedSteps: progress.completedSteps, message: progress.errorMessage, runId, status, totalSteps: progress.totalSteps } },
+                modelsView: { ...state, benchmarkAction: { message: "Benchmark running…", status: "saving" }, benchmarkProgress: progress },
               },
             };
           }
@@ -1511,7 +1549,7 @@ const readPlanForRoute = (model: Model): ReadonlyArray<{ readonly key: ReadbackK
               modelsView: {
                 ...state,
                 benchmarkAction: status === "completed" ? { message: "Benchmark completed.", status: "saved" } : { message: progress.errorMessage ?? "Benchmark failed.", status: "error" },
-                benchmarkProgress: { completedSteps: progress.completedSteps, message: progress.errorMessage, runId, status, totalSteps: progress.totalSteps },
+                benchmarkProgress: progress,
               },
             },
           };
@@ -1519,6 +1557,24 @@ const readPlanForRoute = (model: Model): ReadonlyArray<{ readonly key: ReadbackK
         BenchmarkRunPollFailed: ({ message }: Extract<Message, { readonly _tag: "BenchmarkRunPollFailed" }>): UpdateReturn<Model, Message> => {
           const state = model.modelsView ?? {};
           return { model: { ...model, modelsView: { ...state, benchmarkAction: { message, status: "error" } } } };
+        },
+        BenchmarkRunDetailRequested: ({ runId }: Extract<Message, { readonly _tag: "BenchmarkRunDetailRequested" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          const token = (state.benchmarkRunDetail?.token ?? 0) + 1;
+          return {
+            commands: [modelsCommands.benchmarkRunDetail({ runId, token })],
+            model: { ...model, modelsView: { ...state, benchmarkRunDetail: { runId, status: "loading", token } } },
+          };
+        },
+        BenchmarkRunDetailLoaded: ({ json, runId, token }: Extract<Message, { readonly _tag: "BenchmarkRunDetailLoaded" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          if (state.benchmarkRunDetail?.token !== token || state.benchmarkRunDetail?.runId !== runId) return { model };
+          return { model: { ...model, modelsView: { ...state, benchmarkRunDetail: { json, runId, status: "loaded", token } } } };
+        },
+        BenchmarkRunDetailFailed: ({ message, runId, token }: Extract<Message, { readonly _tag: "BenchmarkRunDetailFailed" }>): UpdateReturn<Model, Message> => {
+          const state = model.modelsView ?? {};
+          if (state.benchmarkRunDetail?.token !== token || state.benchmarkRunDetail?.runId !== runId) return { model };
+          return { model: { ...model, modelsView: { ...state, benchmarkRunDetail: { message, runId, status: "error", token } } } };
         },
         BenchmarkClearRequested: (): UpdateReturn<Model, Message> => {
           const state = model.modelsView ?? {};
@@ -2176,22 +2232,27 @@ const readPlanForRoute = (model: Model): ReadonlyArray<{ readonly key: ReadbackK
             };
           }
           if (key === "benchmarkActiveRun" && snapshot.status === "ok") {
-            let active: { readonly completedSteps?: number; readonly runId?: string; readonly status?: string; readonly totalSteps?: number } | undefined;
+            let active: unknown;
             try {
               const meta = snapshot.rows.find((entry) => entry.id === "active-run")?.meta;
-              active = meta === undefined ? undefined : JSON.parse(meta) as typeof active;
+              active = meta === undefined ? undefined : JSON.parse(meta);
             } catch {
               active = undefined;
             }
-            const runId = active?.runId;
-            if (typeof runId === "string" && runId.length > 0 && active?.status === "running") {
+            const progress = benchmarkProgressFrom(active);
+            if (progress !== undefined) {
               const state = model.modelsView ?? {};
+              const running = progress.status === "running";
               return {
-                commands: [modelsCommands.pollBenchmarkRun({ runId, token: token + 1 })],
+                commands: running ? [modelsCommands.pollBenchmarkRun({ runId: progress.runId, token: token + 1 })] : [],
                 model: {
                   ...model,
                   readbacks: { ...model.readbacks, [key]: { ...snapshot, token } },
-                  modelsView: { ...state, benchmarkAction: { message: "Benchmark running…", status: "saving" }, benchmarkProgress: { completedSteps: active.completedSteps, runId, status: "running", totalSteps: active.totalSteps } },
+                  modelsView: {
+                    ...state,
+                    ...(running ? { benchmarkAction: { message: "Benchmark running…", status: "saving" as const } } : {}),
+                    benchmarkProgress: progress,
+                  },
                 },
               };
             }
