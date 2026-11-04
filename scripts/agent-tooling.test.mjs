@@ -11,7 +11,7 @@
  * Run with: `node --test scripts/agent-tooling.test.mjs`
  */
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
@@ -165,4 +165,125 @@ test("CI quality job verifies vendored upstream pins after lint", () => {
     /continue-on-error:\s*true/u,
     "vendor verification must not be allowed to fail",
   );
+});
+/** Every `--filter=<value>` token of a script command, in order. */
+function workspaceFilters(command) {
+  return [...command.matchAll(/--filter=\S+/gu)].map((match) => match[0]);
+}
+
+/** The step block containing `needle`, or null when no step mentions it. */
+function workflowStepContaining(job, needle) {
+  const index = job.split("\n").findIndex((line) => line.includes(needle));
+  return index === -1 ? null : workflowStep(job, index);
+}
+
+const TYPECHECK_COVERAGE_FILE = "scripts/quality/typecheck-coverage.json";
+
+test("root typecheck script runs turbo over the build workspace filters", () => {
+  const { scripts } = readJson("package.json");
+  const command = scripts?.typecheck;
+  assert.equal(typeof command, "string", "root package.json must define a typecheck script");
+
+  const generateIndex = command.indexOf("types:generate");
+  const turboIndex = command.indexOf("turbo run typecheck");
+  assert.notEqual(generateIndex, -1, "typecheck must run types:generate first");
+  assert.notEqual(turboIndex, -1, "typecheck must invoke turbo run typecheck");
+  assert.ok(generateIndex < turboIndex, "types:generate must run before turbo run typecheck");
+
+  const buildFilters = workspaceFilters(scripts.build ?? "");
+  assert.ok(buildFilters.length > 0, "root build script must declare workspace filters to mirror");
+  assert.deepEqual(
+    [...workspaceFilters(command)].sort(),
+    [...buildFilters].sort(),
+    "typecheck must run turbo with the same workspace filters as build",
+  );
+});
+
+test("turbo typecheck task builds workspace dependencies first", () => {
+  const { tasks } = readJson("turbo.json");
+  const task = tasks?.typecheck;
+  assert.ok(task, "turbo.json must define a typecheck task");
+  assert.deepEqual(
+    task.dependsOn,
+    ["^build"],
+    "turbo typecheck must depend on dependency builds so workspace types exist",
+  );
+});
+
+test("CI typecheck job installs the pinned toolchain and runs the gate", () => {
+  const workflow = readText(".github/workflows/ci.yml").replaceAll("\r\n", "\n");
+  const job = workflowJob(workflow, "typecheck");
+  assert.ok(job, "CI workflow must define a typecheck job");
+
+  assert.match(job, /uses:\s*actions\/checkout@v4/u, "typecheck job must check out the repository");
+  const pnpmStep = workflowStepContaining(job, "pnpm/action-setup@v4");
+  assert.ok(pnpmStep, "typecheck job must set up pnpm");
+  assert.match(pnpmStep, /version:\s*10\.6\.5/u, "typecheck job must pin pnpm 10.6.5");
+  const nodeStep = workflowStepContaining(job, "actions/setup-node@v4");
+  assert.ok(nodeStep, "typecheck job must set up Node.js");
+  assert.match(nodeStep, /node-version:\s*24\b/u, "typecheck job must use Node.js 24");
+
+  const installIndex = workflowRunIndex(job, "pnpm install --frozen-lockfile");
+  const typecheckIndex = workflowRunIndex(job, "pnpm run typecheck");
+  assert.notEqual(installIndex, -1, "typecheck job must run pnpm install --frozen-lockfile");
+  assert.notEqual(typecheckIndex, -1, "typecheck job must run pnpm run typecheck");
+  assert.ok(typecheckIndex > installIndex, "typecheck must run after the frozen-lockfile install");
+  assert.doesNotMatch(
+    workflowStep(job, typecheckIndex),
+    /continue-on-error:\s*true/u,
+    "the typecheck gate must not be allowed to fail",
+  );
+
+  const timeout = /timeout-minutes:\s*(\d+)/u.exec(job);
+  assert.ok(timeout, "typecheck job must declare timeout-minutes");
+  const minutes = Number(timeout[1]);
+  assert.ok(
+    minutes > 0 && minutes <= 20,
+    `typecheck job timeout must be <= 20 minutes (found ${minutes})`,
+  );
+});
+
+test("typecheck coverage ratchet is honest about the checked packages", () => {
+  const coveragePath = path.join(REPO_ROOT, TYPECHECK_COVERAGE_FILE);
+  assert.ok(existsSync(coveragePath), `${TYPECHECK_COVERAGE_FILE} must exist`);
+  const coverage = JSON.parse(readFileSync(coveragePath, "utf8"));
+
+  assert.equal(coverage.version, 1, "typecheck coverage must declare version 1");
+  assert.equal(coverage.wave, 1, "typecheck coverage must declare wave 1");
+  assert.equal(
+    typeof coverage.note,
+    "string",
+    "typecheck coverage must document the append-only review rule in the file",
+  );
+  assert.match(coverage.note, /append-only/iu, "the coverage note must state the append-only rule");
+  assert.ok(Array.isArray(coverage.packages), "typecheck coverage must declare a packages array");
+  assert.ok(coverage.packages.length > 0, "typecheck coverage must not be empty");
+
+  for (const entry of coverage.packages) {
+    assert.equal(typeof entry.dir, "string", "every coverage entry must have a string dir");
+    assert.ok(entry.dir.length > 0, "every coverage entry must name a package directory");
+    assert.equal(typeof entry.command, "string", `${entry.dir}: command must be a string`);
+    assert.ok(entry.command.length > 0, `${entry.dir}: command must not be empty`);
+    assert.ok(!entry.dir.includes("\\"), `${entry.dir}: use repo-relative POSIX paths`);
+    assert.ok(
+      !entry.dir.startsWith("/") && !entry.dir.startsWith("."),
+      `${entry.dir}: must be a repo-relative directory`,
+    );
+    assert.ok(
+      !entry.dir.split("/").includes(".."),
+      `${entry.dir}: must not escape the repository root`,
+    );
+
+    const manifestPath = path.join(REPO_ROOT, entry.dir, "package.json");
+    assert.ok(existsSync(manifestPath), `${entry.dir}: coverage entry must name a real package`);
+    const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+    assert.equal(
+      manifest.scripts?.typecheck,
+      entry.command,
+      `${entry.dir}: package.json scripts.typecheck must equal the coverage command`,
+    );
+  }
+
+  const dirs = coverage.packages.map((entry) => entry.dir);
+  assert.deepEqual(dirs, [...new Set(dirs)].sort(), "coverage dirs must be unique and sorted");
 });
