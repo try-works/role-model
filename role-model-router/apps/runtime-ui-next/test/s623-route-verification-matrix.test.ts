@@ -61,7 +61,7 @@ const MATRIX: ReadonlyArray<MatrixEntry> = [
   { behavior: "s534-families.test.ts", readbacks: ["extensions"], tag: "SystemExtensions", url: "/system/extensions" },
   { behavior: "s618-models-wiring.test.ts", readbacks: ["configuredModels","modelEndpoints","rolePolicy"], tag: "Models", url: "/models" },
   { behavior: "s620-roles-parity.test.ts", readbacks: ["configuredModels","modelEndpoints","rolePolicy"], tag: "ModelsRoles", url: "/models/roles" },
-  { behavior: "s622-benchmark-parity.test.ts", readbacks: ["benchmarkSuite","benchmarkSummary","benchmarkRuns","benchmarkPreferences","benchmarkActiveRun"], tag: "Benchmark", url: "/system/benchmark" },
+  { behavior: "s622-benchmark-parity.test.ts", readbacks: ["benchmarkSuite","benchmarkSummary","benchmarkRuns","benchmarkPreferences","benchmarkActiveRun","modelEndpoints"], tag: "Benchmark", url: "/system/benchmark" },
   { behavior: "s595-storage-retention.test.ts", readbacks: ["storageRetention"], tag: "StorageRetention", url: "/system/storage-retention" },
   { behavior: "s533-learning-models.test.ts", readbacks: ["runtime"], tag: "Runtime", url: "/runtime" },
   { behavior: "s76a-runtime-config.test.ts", readbacks: ["runtimeConfig"], tag: "RuntimeConfig", url: "/runtime/config" },

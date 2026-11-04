@@ -116,3 +116,9 @@ Run is enabled with >=2 selected subjects and any non-empty runnable judge; judg
 Overlap warning renders in the reference wording when it is. Exact POST /api/role-model/benchmark/runs
 body covered by s622. Seed requirement: /api/role-model/endpoints must contain >=2 runnable endpoint rows;
 models alone do not populate the page. Full UI suite 977/977.
+
+## benchmark endpoint loading fix
+
+Benchmark route now includes modelEndpoints in readPlanForRoute invalidation (init.ts already scheduled it
+at this HEAD). Mounted s633 proves GET /api/role-model/endpoints rows render as checkboxes and enable Run.
+Full UI suite 982/982.
