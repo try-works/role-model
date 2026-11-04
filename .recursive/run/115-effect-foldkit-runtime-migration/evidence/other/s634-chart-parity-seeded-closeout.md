@@ -1,7 +1,9 @@
 # S634 - Chart presentation parity + seeded review data closeout (goal-12e45052)
 
 ## Final artifact
-0.0.20-605-g5b14d8b2 (HEAD 5b14d8b2), sha256 cc483fe10f10c075f926c3eed099c28c5821c51836434ed278d447ea82f4220f - CHANGED vs the previous build. verify-packaged-candidate PASS (bundle 3,492,612). Health 200; served /assets/main.js byte-identical to the package.
+0.0.20-609-gd953a8c7 (HEAD d953a8c7; supersedes 605-g5b14d8b2), sha256 099d0d1a6f4b88d72c96ffc16a9d9f2fdaa15472d58af1201804f98757e9b10f - CHANGED vs the previous build (cc483fe1). verify-packaged-candidate PASS (bundle 3,492,703). Health 200; served /assets/main.js byte-identical to the package. Packaged identity evidence: d758e35b (version-named healthz/render/probe JSON + screenshots) and e03ff654 (independent 609 DOM evidence).
+
+Final follow-up fixed in d953a8c7: init route entry now uses windowForRange(restored range), so /observe/routing?range=week|month|90days issues the nine entry queries with the matching windowMs (s632 loops all three; live 609 build verified ?range=week -> 604800000).
 
 ## Owner item 1 - no tables among the charts
 - e06c2386: chartTable() is now styled sr-only only; the chart cards show the plot (axis labels/legend) with the numeric table kept as a visually-hidden accessibility node carrying data-chart-part="table".
