@@ -16,8 +16,10 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { computeVendorDigest } from "../scripts/vendor-upstream.mjs";
 
 const REPO_ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+const VENDOR_DIR = path.join(REPO_ROOT, "vendor", "effect");
 
 const EXPECTED_TAG = "effect@4.0.6";
 const EXPECTED_COMMIT = "3b28bf686bf26e9700edd39c025aff2744dc5303";
@@ -39,7 +41,10 @@ test("the vendored upstream effect package reports the pinned version", () => {
 });
 
 test("the workspace Effect wrapper reports the pinned version", () => {
-  assert.equal(readJson("role-model-router/packages/effect/package.json").version, EXPECTED_VERSION);
+  assert.equal(
+    readJson("role-model-router/packages/effect/package.json").version,
+    EXPECTED_VERSION,
+  );
 });
 
 test("vendor-upstream.mjs defaults Effect to the reviewed tag and commit", () => {
@@ -50,4 +55,12 @@ test("vendor-upstream.mjs defaults Effect to the reviewed tag and commit", () =>
   const entry = source.slice(start, end);
   assert.equal(entry.match(/tag:\s*"([^"]+)"/)?.[1], EXPECTED_TAG);
   assert.equal(entry.match(/commit:\s*"([0-9a-f]{40})"/)?.[1], EXPECTED_COMMIT);
+});
+
+test("the content digest recomputed from the vendored bytes matches the manifest", () => {
+  const value = readJson("vendor/effect/VENDORED.json");
+  const actual = computeVendorDigest(VENDOR_DIR);
+  assert.equal(actual.fileCount, value.fileCount);
+  assert.equal(actual.byteCount, value.byteCount);
+  assert.equal(actual.contentDigest, value.contentDigest);
 });

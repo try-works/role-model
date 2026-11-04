@@ -18,11 +18,11 @@
  * Run with: `node --test scripts/foldkit-vendored.test.mjs`
  */
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { computeVendorDigest } from "../scripts/vendor-upstream.mjs";
 
 const REPO_ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const VENDOR_DIR = path.join(REPO_ROOT, "vendor", "foldkit");
@@ -52,43 +52,19 @@ const RELEASE_LINE_PACKAGES = ["foldkit", "@foldkit/ui", "@foldkit/devtools"];
 
 const manifest = () => JSON.parse(readFileSync(path.join(VENDOR_DIR, "VENDORED.json"), "utf8"));
 
-/** The exact digest algorithm `scripts/vendor-upstream.mjs` uses: stable, path-ordered lines. */
-function digestTree() {
-  const files = [];
-  const walk = (dir) => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        if (entry.name === "node_modules" || entry.name === ".git") continue;
-        walk(full);
-        continue;
-      }
-      if (entry.isFile() && !entry.name.endsWith(".tsbuildinfo")) files.push(full);
-    }
-  };
-  walk(VENDOR_DIR);
-  let bytes = 0;
-  const lines = [];
-  for (const file of files) {
-    const relative = path.relative(VENDOR_DIR, file).split(path.sep).join("/");
-    if (MANIFEST_FILES.includes(relative)) continue;
-    const size = statSync(file).size;
-    bytes += size;
-    const digest = createHash("sha256").update(readFileSync(file)).digest("hex");
-    lines.push(`${relative}\u0000${size}\u0000${digest}`);
-  }
-  lines.sort();
-  return {
-    fileCount: lines.length,
-    byteCount: bytes,
-    contentDigest: createHash("sha256").update(lines.join("\n")).digest("hex"),
-  };
-}
+/**
+ * The digest algorithm is owned by scripts/vendor-upstream.mjs. Calling its exported helper keeps
+ * exactly one implementation and one recorded digest format across the pin proofs.
+ */
+const digestTree = () => computeVendorDigest(VENDOR_DIR);
 
 function listDirectories(dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
-    out.push({ name: entry.name, relative: path.relative(VENDOR_DIR, path.join(dir, entry.name)).split(path.sep).join("/") });
+    out.push({
+      name: entry.name,
+      relative: path.relative(VENDOR_DIR, path.join(dir, entry.name)).split(path.sep).join("/"),
+    });
     listDirectories(path.join(dir, entry.name), out);
   }
   return out;
@@ -142,7 +118,9 @@ test("the content digest recomputed from the vendored bytes matches the manifest
 });
 
 test("the vendored tree carries no node_modules or .git directory", () => {
-  const offLimit = listDirectories(VENDOR_DIR).filter((entry) => entry.name === "node_modules" || entry.name === ".git");
+  const offLimit = listDirectories(VENDOR_DIR).filter(
+    (entry) => entry.name === "node_modules" || entry.name === ".git",
+  );
   assert.deepEqual(offLimit, []);
 });
 
