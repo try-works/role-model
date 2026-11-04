@@ -759,7 +759,7 @@ const updateLocalPolicyDraft = (
       if (model.route._tag === "IntegrationsUpstream") return [{ key: "integrationProviders" }, { key: "configuredModels" }];
       if (model.route._tag === "SystemOperator") return [{ key: "operatorStatus" }, { key: "operatorTraceRoots" }];
       if (model.route._tag === "RuntimeConfig") return [{ key: "runtimeConfig" }];
-      if (model.route._tag === "Benchmark") return [{ key: "benchmarkSuite" }, { key: "benchmarkSummary" }, { key: "benchmarkRuns" }, { key: "benchmarkPreferences" }, { key: "benchmarkActiveRun" }];
+      if (model.route._tag === "Benchmark") return [{ key: "benchmarkSuite" }, { key: "benchmarkSummary" }, { key: "benchmarkRuns" }, { key: "benchmarkPreferences" }, { key: "benchmarkActiveRun" }, { key: "modelEndpoints" }];
       if (model.route._tag === "Requests") return [{ key: "requests" }, { key: "overviewMetrics", query: overviewQuery(DEFAULT_OVERVIEW_FILTERS, windowForRange(model.requestsFilters?.range)) }];
       if (model.route._tag === "ObserveRouting") return [{ key: "observeRouting" }, { key: "overviewMetrics", query: overviewQuery(DEFAULT_OVERVIEW_FILTERS, windowForRange(model.observeRoutingFilters?.range)) }];
       if (model.route._tag === "Router") return [{ key: "router" }, { key: "routerConfig" }, { key: "routerCandidates" }, { key: "runtimeConfig" }, { key: "health" }];
@@ -1796,10 +1796,14 @@ const updateLocalPolicyDraft = (
           const state = model.routerPosture ?? initialRouterPostureState();
           if (state.status === "saving") return { model };
           const token = state.token + 1;
-          const persisted = model.readbacks.routerConfig.rows.find((entry) => entry.id === "strategy")?.value;
-          const persistedMode = model.readbacks.routerConfig.rows.find((entry) => entry.id === "routing.mode")?.value;
-          const persistedScoring = model.readbacks.routerConfig.rows.find((entry) => entry.id === "routing.scoringStrategy")?.value;
-          const persistedExecution = model.readbacks.routerConfig.rows.find((entry) => entry.id === "executionMode")?.value;
+          const persistedRow = (id: string): string | undefined => {
+            const value = model.readbacks.routerConfig.rows.find((entry) => entry.id === id)?.value;
+            return value === undefined || value === "" || value === "null" || value === "undefined" ? undefined : value;
+          };
+          const persisted = persistedRow("strategy");
+          const persistedMode = persistedRow("routing.mode");
+          const persistedScoring = persistedRow("routing.scoringStrategy");
+          const persistedExecution = persistedRow("executionMode");
           const mode = state.mode.length > 0 ? state.mode : persistedMode ?? persisted ?? "baseline";
           const scoringStrategy = state.scoringStrategy.length > 0 ? state.scoringStrategy : persistedScoring ?? "balanced";
           const executionMode = state.executionMode.length > 0 ? state.executionMode : persistedExecution ?? "decision_only";
@@ -2143,7 +2147,10 @@ const updateLocalPolicyDraft = (
             }
           }
           if (key === "routerConfig") {
-            const rowValue = (id: string): string | undefined => snapshot.rows.find((entry) => entry.id === id)?.value;
+            const rowValue = (id: string): string | undefined => {
+              const value = snapshot.rows.find((entry) => entry.id === id)?.value;
+              return value === undefined || value === "" || value === "null" || value === "undefined" ? undefined : value;
+            };
             const strategy = rowValue("routing.mode") ?? rowValue("strategy") ?? "baseline";
             const scoring = rowValue("routing.scoringStrategy") ?? "balanced";
             const execution = rowValue("executionMode") ?? "decision_only";
