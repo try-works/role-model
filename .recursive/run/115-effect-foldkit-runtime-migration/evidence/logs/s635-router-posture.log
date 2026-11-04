@@ -19,5 +19,6 @@ HEAD: 9e75fc44
 - GREEN: s635 3/3 (hydration/defaults + untouched baseline body + non-default body); s584 1/1; tsc 0.
 - Packaged-host POST capture above is the live proof.
 
-## Scope
-- Files: src/update.ts (hydration block only), test/s635-router-posture-hydration.test.ts, test/s247-click-budget.test.mjs (2 click sites), this evidence log.
+## Scope / commit attribution
+- Source fix: the routerConfig hydration block landed in 252c851d (the concurrent S634 commit picked up the working-tree update.ts hunk). It is present at HEAD.
+- This task's commit bac87257 adds test/s635-router-posture-hydration.test.ts, the 2-site S247 budget entry, and this evidence log. No unrelated source changes were committed by bac87257.
