@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s639-duplicate-chart-series.test.ts (2 tests) 519ms
+   ✓ S639 duplicate display names in chart series > keeps both /requests ranking rows and disambiguates the shared label  394ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  07:58:14
+   Duration  26.67s (transform 11.01s, setup 0ms, collect 18.40s, tests 519ms, environment 5.21s, prepare 826ms)
+

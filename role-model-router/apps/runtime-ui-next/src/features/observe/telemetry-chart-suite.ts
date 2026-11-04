@@ -67,10 +67,23 @@ export const chartSeriesFrom = (
   } | null;
   if (record === null || typeof record !== "object") return { hasData: false, series: [] };
   if (chart.kind === "ranking") {
+    // A ranking row's unique identity is its key (endpoint/model id), never its display label: two endpoints can
+    // share a displayName. Dedupe by key and disambiguate equal labels with the key so the chart's x positions stay
+    // unique (TanStack throws "A stack requires at most one value for each position and series" otherwise).
     const rows = record.ranking?.rows ?? [];
-    const points = rows.flatMap((row) => {
-      const value = numberOrNull(row.value);
-      return value === null || value === 0 ? [] : [{ label: typeof row.label === "string" ? row.label : String(row.key ?? "—"), value }];
+    const byKey = new Map<string, { readonly key: string; readonly label: string; readonly value: number | null }>();
+    for (const row of rows) {
+      const rawKey = row.key;
+      const key = typeof rawKey === "string" && rawKey.length > 0 ? rawKey : String(rawKey ?? row.label ?? "—");
+      if (byKey.has(key)) continue;
+      byKey.set(key, { key, label: typeof row.label === "string" ? row.label : key, value: numberOrNull(row.value) });
+    }
+    const labelCounts = new Map<string, number>();
+    for (const entry of byKey.values()) labelCounts.set(entry.label, (labelCounts.get(entry.label) ?? 0) + 1);
+    const points = [...byKey.values()].flatMap((entry) => {
+      if (entry.value === null || entry.value === 0) return [];
+      const shared = (labelCounts.get(entry.label) ?? 0) > 1;
+      return [{ label: shared ? entry.label + " (" + entry.key + ")" : entry.label, value: entry.value }];
     });
     return points.length === 0
       ? { hasData: false, series: [] }
