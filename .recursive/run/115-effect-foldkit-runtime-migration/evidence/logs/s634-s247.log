@@ -1,83 +1,12 @@
-✖ S247: no test may exceed its recorded synthetic-click budget (1219.9539ms)
-✖ S247: every file with clicks is recorded in the budget (1614.0286ms)
-✖ S247: the total click count does not grow (1446.4417ms)
-✔ S247: every recorded budget entry names the user path it exercises (7.9973ms)
+✔ S247: no test may exceed its recorded synthetic-click budget (528.633ms)
+✔ S247: every file with clicks is recorded in the budget (453.8239ms)
+✔ S247: the total click count does not grow (503.6432ms)
+✔ S247: every recorded budget entry names the user path it exercises (1.2679ms)
 ℹ tests 4
 ℹ suites 0
-ℹ pass 1
-ℹ fail 3
+ℹ pass 4
+ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 5180.4447
-
-✖ failing tests:
-
-test at test\s247-click-budget.test.mjs:78:1
-✖ S247: no test may exceed its recorded synthetic-click budget (1219.9539ms)
-  AssertionError [ERR_ASSERTION]: lower the site count with a scene/story conversion instead of adding clicks
-  + actual - expected
-  
-  + [
-  +   [
-  +     's634-observe-requests-charts.test.ts',
-  +     1
-  +   ],
-  +   [
-  +     's635-router-posture-hydration.test.ts',
-  +     1
-  +   ],
-  +   [
-  +     'tmp-posture-untouched.test.ts',
-  +     1
-  +   ]
-  + ]
-  - []
-  
-      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next/test/s247-click-budget.test.mjs:81:10)
-      at async Test.run (node:internal/test_runner/test:1113:7)
-      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: [ [ 's634-observe-requests-charts.test.ts', 1 ], [ 's635-router-posture-hydration.test.ts', 1 ], [ 'tmp-posture-untouched.test.ts', 1 ] ],
-    expected: [],
-    operator: 'deepStrictEqual',
-    diff: 'simple'
-  }
-
-test at test\s247-click-budget.test.mjs:84:1
-✖ S247: every file with clicks is recorded in the budget (1614.0286ms)
-  AssertionError [ERR_ASSERTION]: record a new click site in BUDGET with its justification
-  + actual - expected
-  
-  + [
-  +   's634-observe-requests-charts.test.ts',
-  +   's635-router-posture-hydration.test.ts',
-  +   'tmp-posture-untouched.test.ts'
-  + ]
-  - []
-  
-      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next/test/s247-click-budget.test.mjs:87:10)
-      at async Test.run (node:internal/test_runner/test:1113:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: [ 's634-observe-requests-charts.test.ts', 's635-router-posture-hydration.test.ts', 'tmp-posture-untouched.test.ts' ],
-    expected: [],
-    operator: 'deepStrictEqual',
-    diff: 'simple'
-  }
-
-test at test\s247-click-budget.test.mjs:90:1
-✖ S247: the total click count does not grow (1446.4417ms)
-  AssertionError [ERR_ASSERTION]: synthetic clicks 40 > budget 37
-      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next/test/s247-click-budget.test.mjs:94:10)
-      at async Test.run (node:internal/test_runner/test:1113:7)
-      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: false,
-    expected: true,
-    operator: '==',
-    diff: 'simple'
-  }
+ℹ duration_ms 1910.213

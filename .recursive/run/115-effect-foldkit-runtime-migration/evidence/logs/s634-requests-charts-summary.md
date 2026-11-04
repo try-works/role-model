@@ -23,7 +23,12 @@
 - Render: nine cards, real bars/lines/ranking series, in-plot empty state, zero visible chart tables, nine sr-only.
 - Mounted /requests: nine POSTs, then source change re-queries (filters sourceTypes), Week range re-queries
   (windowMs 604800000), ranking metric change re-queries Ranked comparison with metrics ["totalTokens"].
-- RED s634-requests-red.log (clean worktree at d953a8c7, module absent) -> GREEN s634-requests-charts.log (4/4).
+- RED s634-requests-red.log is now a GENUINE behavioral RED: clean detached worktree at 9e75fc44 (parent of the
+  wiring commit 252c851d), requests-charts.ts + telemetry-chart-suite.ts and ONLY the s634 test copied in, while the
+  product wiring stayed pre-feature. Real assertions ran: 2 failed | 2 passed - render expected the nine titles and
+  got ["Request volume"], and the mounted route dispatched none of the nine analytics queries (wait timed out).
+  The earlier import-resolution transcript (zero assertions) is DISCARDED and replaced by this one.
+- GREEN s634-requests-charts.log (4/4) at the wiring commit.
 - s415 updated: the ranking metric/target change now emits the ranking query + LoadRequestsCharts (2 commands).
 - s628 requests series test uses a requestsCharts fixture and the new "Request volume over time" title.
 
@@ -33,13 +38,13 @@
   0 visible chart tables, 9 sr-only chart tables.
   Evidence: s634-requests-charts-seeded-3484.png, s634-requests-charts-dom.json, s634-requests-charts-evidence.json;
   reference s629-reference-3456-requests.png.
-- Full-suite status at commit time: our changes are tsc 0 and all targeted suites green, but the shared tree is
-  concurrently dirty with OTHER lanes' in-flight work, which the full suite picks up:
-  * s634-full-ui.log run: 109/110 files, 974/975 tests passed; the only failure was the untracked
-    test/s635-router-posture-hydration.test.ts from another lane (not staged by us).
-  * a later run excluding s635 still failed on untracked test/tmp-posture-untouched.test.ts and
-    s622-benchmark-parity (benchmark lane's uncommitted src/features/models/routes.ts).
-  The last fully green authoritative full-suite run before this change was 107 files / 967 tests at d953a8c7.
-- S247: green (s634-s247.log); no new synthetic clicks in the Requests chart suite (selects/range use
-  input/change events, the Week range uses the already-budgeted click from task-109).
+- FULL SUITE: the shared working tree is UNVERIFIED - other lanes' in-flight/untracked tests (s635/tmp-posture) and
+  their uncommitted benchmark routes.ts polluted every shared-tree run, so no honest green claim is made from it.
+  Clean-worktree run at 252c851d: 107/108 files, 970/971 tests passed; the only vitest failure was s48a's client build,
+  which cannot resolve the workspace packages through the clean worktree's junctioned node_modules (an environment
+  artifact of the detached tree, not the change; s48a passes in the main worktree). The node --test batch initially
+  failed S247 because s634's Week-range click was not yet budgeted - fixed by adding
+  "s634-observe-requests-charts.test.ts": 1 with rationale, after which S247 is 4/4 (s634-s247.log).
+- S247: green (s634-s247.log). The one synthetic click in the Requests chart test is the Week range switch, budgeted
+  with the rationale "Week-range re-query assertion for the nine Requests analytics charts".
 

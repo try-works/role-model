@@ -39,7 +39,9 @@ const BUDGET = {
   // task-109: Day->Week range switch to prove the metrics re-read window in s628.
   "s628-charts-data-binding.test.ts": 1,
   // S635: untouched Save baseline and non-default posture paths.
-  "s635-router-posture-hydration.test.ts": 2
+  "s635-router-posture-hydration.test.ts": 2,
+  // S634: Week range switch to prove the Requests charts re-query window.
+  "s634-observe-requests-charts.test.ts": 1
 };
 
 /** S247 policy: every budgeted click site names the user path it proves. */
@@ -61,7 +63,8 @@ const RATIONALE = {
   "s619-learning-controls.test.ts": "Scope-wide pack rollback with operator token; engage then release the learning kill switch",
   "s635-router-posture-hydration.test.ts": "Save routing strategy without select interaction (baseline and non-default posture)",
   "s620-roles-parity.test.ts": "Expand Task detail in the role catalog",
-  "s628-charts-data-binding.test.ts": "Week-range metrics re-read assertion on Requests and ObserveRouting volume charts"
+  "s628-charts-data-binding.test.ts": "Week-range metrics re-read assertion on Requests and ObserveRouting volume charts",
+  "s634-observe-requests-charts.test.ts": "Week-range re-query assertion for the nine Requests analytics charts"
 };
 
 const testDirectory = path.join(import.meta.dirname);
