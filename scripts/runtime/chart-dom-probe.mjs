@@ -27,6 +27,7 @@ const routes = [
   { route: "/requests", name: "requests" },
   { route: "/observe/routing", name: "routing" },
   { route: "/observe/routing?source=local&breakdown=By+upstream+model&difficulty=hard", name: "routing-filtered" },
+  { route: "/observe/routing?range=week", name: "routing-week" },
   { route: "/observe/queues", name: "queues" },
 ];
 const CHROME = [
