@@ -202,6 +202,51 @@ describe("S622 benchmark parity", () => {
     expect(((clear.commands ?? [])[0] as unknown as { readonly name: string }).name).toBe("ClearBenchmark");
   });
 
+  it("enables Run with 2 subjects and an external judge, warning only on overlap", async () => {
+    const endpoints = parseReadbackFixture("modelEndpoints", [
+      { endpointId: "ep-a", modelId: "model-a", sourceType: "remote" },
+      { endpointId: "ep-b", modelId: "model-b", sourceType: "remote" },
+      { endpointId: "ep-c", modelId: "model-c", sourceType: "remote" },
+    ]);
+    const externalBase = benchmarkModel({ benchmarkJudge: "ep-c" }, { modelEndpoints: endpoints });
+    const external = await renderModel({ ...externalBase, modelsView: { ...externalBase.modelsView, benchmarkSelectedEndpointIds: ["ep-a", "ep-b"] } });
+    const externalButton = external.querySelector("[data-benchmark-run]");
+    expect(externalButton?.hasAttribute("disabled")).toBe(false);
+    expect(external.querySelector("[data-benchmark-judge-overlap]")).toBeNull();
+    const overlap = await render({ benchmarkJudge: "ep-a" }, { modelEndpoints: endpoints });
+    expect(overlap.querySelector("[data-benchmark-run]")?.hasAttribute("disabled")).toBe(false);
+    expect(overlap.querySelector("[data-benchmark-judge-overlap]")?.textContent).toBe("Judge endpoint is also a benchmark subject. Expect slower grading and higher judge failure risk — prefer a dedicated judge when available.");
+  });
+
+  it("disables Run for empty judge, fewer than two subjects, and a running benchmark", async () => {
+    const endpoints = parseReadbackFixture("modelEndpoints", [
+      { endpointId: "ep-a", modelId: "model-a", sourceType: "remote" },
+      { endpointId: "ep-b", modelId: "model-b", sourceType: "remote" },
+    ]);
+    const noJudge = await render({}, { modelEndpoints: parseReadbackFixture("modelEndpoints", []) });
+    expect(noJudge.querySelector("[data-benchmark-run]")?.hasAttribute("disabled")).toBe(true);
+    const base = benchmarkModel({ benchmarkJudge: "ep-b" }, { modelEndpoints: endpoints });
+    const oneSelected = { ...base, modelsView: { ...base.modelsView, benchmarkSelectedEndpointIds: ["ep-a"] } };
+    expect((await renderModel(oneSelected)).querySelector("[data-benchmark-run]")?.hasAttribute("disabled")).toBe(true);
+    const running = { ...base, modelsView: { ...base.modelsView, benchmarkProgress: { completedSteps: 1, runId: "run-1", status: "running", totalSteps: 4 } } };
+    expect((await renderModel(running)).querySelector("[data-benchmark-run]")?.hasAttribute("disabled")).toBe(true);
+  });
+
+  it("dispatches the exact external-judge body with 2 subjects", () => {
+    const endpoints = parseReadbackFixture("modelEndpoints", [
+      { endpointId: "ep-a", modelId: "model-a", sourceType: "remote" },
+      { endpointId: "ep-b", modelId: "model-b", sourceType: "remote" },
+      { endpointId: "ep-c", modelId: "model-c", sourceType: "remote" },
+    ]);
+    const base = benchmarkModel({ benchmarkJudge: "ep-c" }, { modelEndpoints: endpoints });
+    const next = shellUpdate({ ...base, modelsView: { ...base.modelsView, benchmarkSelectedEndpointIds: ["ep-a", "ep-b"] } }, Message.BenchmarkRunRequested());
+    const command = (next.commands ?? [])[0] as unknown as { readonly args: { readonly endpointIdsJson: string; readonly judgeEndpointId: string; readonly mode: string }; readonly name: string };
+    expect(command.name).toBe("RunBenchmark");
+    expect(JSON.parse(command.args.endpointIdsJson)).toEqual(["ep-a", "ep-b"]);
+    expect(command.args.judgeEndpointId).toBe("ep-c");
+    expect(command.args.mode).toBe("quick");
+  });
+
   it("sends the exact host contracts for the run and clear commands", async () => {
     const calls: Array<{ readonly body: unknown; readonly method: string; readonly path: string }> = [];
     const commands = defineModelsCommands(createModelsClient({

@@ -109,3 +109,10 @@ Remote/account-managed ModelsRoleToggled now POSTs /api/role-model/accounts with
 updated modelRoleBindings (roleAssignmentMode all/include/exclude), instead of the local peer/llama route.
 The models page renders the account eligibility from the providerAccounts readback. S618 covers the exact
 upsert body and eligibility render; the KNOWN GAP(S620) comment/test are retired.
+
+## task-116 benchmark Run gate verification
+
+Run is enabled with >=2 selected subjects and any non-empty runnable judge; judge need not be a subject.
+Overlap warning renders in the reference wording when it is. Exact POST /api/role-model/benchmark/runs
+body covered by s622. Seed requirement: /api/role-model/endpoints must contain >=2 runnable endpoint rows;
+models alone do not populate the page. Full UI suite 977/977.

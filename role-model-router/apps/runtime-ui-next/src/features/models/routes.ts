@@ -593,11 +593,12 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
         ], mode, (next) => Message.BenchmarkModeChanged({ value: next })),
         select("Judge endpoint", endpointOptions.length === 0 ? [{ label: "No runnable endpoints", value: "" }] : endpointOptions, judge, (next) => Message.BenchmarkJudgeChanged({ value: next })),
       ]),
+      selected.has(judge) && judge !== "" ? h.p([h.DataAttribute("benchmark-judge-overlap", ""), h.Class("mt-3 text-xs leading-4 text-[var(--rm-warning,#b45309)]")], ["Judge endpoint is also a benchmark subject. Expect slower grading and higher judge failure risk — prefer a dedicated judge when available."]) : null,
       h.div([h.Class("mt-4 flex flex-wrap items-center gap-2")], [
         h.button([
           h.Type("button"),
           h.DataAttribute("benchmark-run", ""),
-          ...(selectedCount < 2 || judge === "" || !selected.has(judge) || running ? [h.Disabled(true)] : []),
+          ...(selectedCount < 2 || judge === "" || running ? [h.Disabled(true)] : []),
           h.OnClick(Message.BenchmarkRunRequested({})),
           h.Class("inline-flex h-[34px] items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground"),
         ], ["Run " + mode + " benchmark (" + String(selectedCount) + " of " + String(allEndpointIds.length) + " selected, " + String(caseCount) + " cases)"]),

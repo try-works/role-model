@@ -1439,7 +1439,7 @@ const updateLocalPolicyDraft = (
           const selected = state.benchmarkSelectedEndpointIds ?? benchmarkEndpointIds(model);
           const judge = state.benchmarkJudge ?? "";
           if (selected.length < 2 || judge.length === 0) {
-            return { model: { ...model, modelsView: { ...state, benchmarkAction: { message: "Select at least two subjects and a selected judge.", status: "error" } } } };
+            return { model: { ...model, modelsView: { ...state, benchmarkAction: { message: "Select at least two subjects and a judge.", status: "error" } } } };
           }
           const rawMode = (state.benchmarkMode ?? "quick").toLowerCase().includes("full") ? "full" : "quick";
           return {
