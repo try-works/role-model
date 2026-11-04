@@ -12,7 +12,7 @@ pnpm add effect@rc
 ```
 
 If in a monorepo, install it as a dev dependency at the root, so you can access
-the source code from `node_modules/effect/src`.
+the source code from `vendor/effect/packages/effect/src`.
 
 ```
 pnpm add -D effect@rc
@@ -27,9 +27,9 @@ Ensure that the agent instructions contain the following:
 
 This repository uses the Effect Typescript library.
 
-Before writing any Effect code, first read `node_modules/effect/AGENTS.md`
+Before writing any Effect code, first read `vendor/effect/packages/effect/*.md`
 **completely**, and follow the links in the file when required.
 
 If you need to learn more about particular Effect apis and concepts that the
-guide doesn't cover, search through the source code in `node_modules/effect/src`.
+guide doesn't cover, search through the source code in `vendor/effect/packages/effect/src`.
 ```
