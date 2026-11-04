@@ -1,0 +1,89 @@
+ WARN  using --force I sure hope you know what you are doing
+Scope: all 55 workspace projects
+(node:24912) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ WARN  There are cyclic workspace dependencies: D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\adapter-execution, D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\provider-anthropic
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +974
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 974, reused 15, downloaded 0, added 0
+Progress: resolved 974, reused 490, downloaded 0, added 0
+Progress: resolved 974, reused 760, downloaded 0, added 0
+Progress: resolved 974, reused 966, downloaded 0, added 5
+Progress: resolved 974, reused 966, downloaded 0, added 26
+Progress: resolved 974, reused 966, downloaded 0, added 62
+Progress: resolved 974, reused 966, downloaded 0, added 99
+Progress: resolved 974, reused 966, downloaded 0, added 131
+Progress: resolved 974, reused 966, downloaded 0, added 153
+Progress: resolved 974, reused 966, downloaded 0, added 169
+Progress: resolved 974, reused 966, downloaded 0, added 195
+Progress: resolved 974, reused 966, downloaded 0, added 205
+Progress: resolved 974, reused 966, downloaded 0, added 226
+Progress: resolved 974, reused 966, downloaded 0, added 231
+Progress: resolved 974, reused 966, downloaded 0, added 236
+Progress: resolved 974, reused 966, downloaded 0, added 249
+Progress: resolved 974, reused 966, downloaded 0, added 254
+Progress: resolved 974, reused 966, downloaded 0, added 293
+Progress: resolved 974, reused 966, downloaded 0, added 333
+Progress: resolved 974, reused 966, downloaded 0, added 366
+Progress: resolved 974, reused 966, downloaded 0, added 405
+Progress: resolved 974, reused 966, downloaded 0, added 421
+Progress: resolved 974, reused 966, downloaded 0, added 439
+Progress: resolved 974, reused 966, downloaded 0, added 457
+Progress: resolved 974, reused 966, downloaded 0, added 479
+Progress: resolved 974, reused 966, downloaded 0, added 521
+Progress: resolved 974, reused 966, downloaded 0, added 550
+Progress: resolved 974, reused 966, downloaded 0, added 552
+Progress: resolved 974, reused 966, downloaded 0, added 559
+Progress: resolved 974, reused 966, downloaded 0, added 570
+Progress: resolved 974, reused 966, downloaded 0, added 594
+Progress: resolved 974, reused 966, downloaded 0, added 618
+Progress: resolved 974, reused 966, downloaded 0, added 660
+Progress: resolved 974, reused 966, downloaded 0, added 675
+Progress: resolved 974, reused 966, downloaded 0, added 690
+Progress: resolved 974, reused 966, downloaded 0, added 695
+Progress: resolved 974, reused 966, downloaded 0, added 704
+Progress: resolved 974, reused 966, downloaded 0, added 708
+Progress: resolved 974, reused 966, downloaded 0, added 717
+Progress: resolved 974, reused 966, downloaded 0, added 727
+Progress: resolved 974, reused 966, downloaded 0, added 731
+Progress: resolved 974, reused 966, downloaded 0, added 733
+Progress: resolved 974, reused 966, downloaded 0, added 742
+Progress: resolved 974, reused 966, downloaded 0, added 748
+Progress: resolved 974, reused 966, downloaded 0, added 752
+Progress: resolved 974, reused 966, downloaded 0, added 753
+Progress: resolved 974, reused 966, downloaded 0, added 758
+Progress: resolved 974, reused 966, downloaded 0, added 771
+Progress: resolved 974, reused 966, downloaded 0, added 782
+Progress: resolved 974, reused 966, downloaded 0, added 794
+Progress: resolved 974, reused 966, downloaded 0, added 808
+Progress: resolved 974, reused 966, downloaded 0, added 812
+Progress: resolved 974, reused 966, downloaded 0, added 825
+Progress: resolved 974, reused 966, downloaded 0, added 827
+Progress: resolved 974, reused 966, downloaded 0, added 838
+Progress: resolved 974, reused 966, downloaded 0, added 840
+Progress: resolved 974, reused 966, downloaded 0, added 843
+Progress: resolved 974, reused 966, downloaded 0, added 847
+Progress: resolved 974, reused 966, downloaded 0, added 849
+Progress: resolved 974, reused 966, downloaded 0, added 866
+Progress: resolved 974, reused 966, downloaded 0, added 877
+Progress: resolved 974, reused 966, downloaded 0, added 882
+Progress: resolved 974, reused 966, downloaded 0, added 883
+Progress: resolved 974, reused 966, downloaded 0, added 901
+Progress: resolved 974, reused 966, downloaded 0, added 902
+Progress: resolved 974, reused 966, downloaded 0, added 903
+Progress: resolved 974, reused 966, downloaded 0, added 908
+Progress: resolved 974, reused 966, downloaded 0, added 909
+Progress: resolved 974, reused 966, downloaded 0, added 913
+Progress: resolved 974, reused 966, downloaded 0, added 914
+Progress: resolved 974, reused 966, downloaded 0, added 937
+Progress: resolved 974, reused 966, downloaded 0, added 969
+Progress: resolved 974, reused 966, downloaded 0, added 970
+Progress: resolved 974, reused 966, downloaded 0, added 971
+Progress: resolved 974, reused 966, downloaded 0, added 972
+Progress: resolved 974, reused 966, downloaded 0, added 973
+Progress: resolved 974, reused 966, downloaded 0, added 974
+Progress: resolved 974, reused 966, downloaded 0, added 974, done
+
+Done in 2m 9.9s using pnpm v10.6.5
