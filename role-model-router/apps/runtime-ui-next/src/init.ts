@@ -12,6 +12,7 @@ import {
   noopRoutingChartsCommands,
 } from "./commands";
 import { buildRoutingChartQueries, routingBreakdownDimension, routingChartFilters } from "./features/observe/routing-charts";
+import { windowForRange } from "./features/overview/chart-data";
 import { type ControlKey, controlKeyForRouteTag, emptyControls, loadingControl } from "./control";
 import { idleDiagnostics, loadingDiagnostics } from "./diagnostics";
 import { replaceLegacyUrlCommand } from "./legacy-redirects";
@@ -255,10 +256,12 @@ const initRoute =
         const restoredObserveFilters = routingCharts
           ? observeFiltersFromSearch(Option.getOrUndefined(url.search) ?? "")
           : undefined;
+        // The entry batch uses the same range->window mapping as the live reload path; a fresh load is Day.
+        const entryWindowMs = windowForRange(restoredObserveFilters?.range);
         const restoreCharts = restoredObserveFilters === undefined
-          ? buildRoutingChartQueries(86_400_000)
+          ? buildRoutingChartQueries(entryWindowMs)
           : buildRoutingChartQueries(
-              86_400_000,
+              entryWindowMs,
               routingBreakdownDimension(restoredObserveFilters.breakdown),
               routingChartFilters(restoredObserveFilters),
             );

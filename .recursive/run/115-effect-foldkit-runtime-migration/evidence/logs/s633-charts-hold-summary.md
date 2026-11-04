@@ -63,3 +63,11 @@ Now exactly :3456: "No capability-tagged telemetry is available for the current 
   tables, 0 visible tables, no "Routing results" text. Evidence: s633-routing-zero-tables-3484.png and -dom.json.
 - TDD RED s633-routing-results-red.log -> GREEN s633-routing-results-green.log (s632 7/7, s563 16/16, s26e 72/72
   across the three files), tsc 0. FINAL: full UI suite 107 files / 966 tests PASS; S247 4/4 (fail 0).
+
+## FINAL HOLD 1 - init entry range window
+- init.ts entry no longer hardcodes 86_400_000: entryWindowMs = windowForRange(restoredObserveFilters?.range),
+  the same mapping as the live reload helper, so /observe/routing?range=week|month|90days sends the matching
+  windowMs (604800000 / 2592000000 / 7776000000) and day granularity.
+- s632 new test loops range=week/month/90days and asserts all nine ENTRY queries carry the matching windowMs and
+  "day" granularity. RED s633-init-range-red.log -> GREEN s633-init-range-green.log (s632 8/8, tsc 0).
+- FINAL TOTALS: full UI suite 107 files / 967 tests PASS; S247 4/4 (fail 0).

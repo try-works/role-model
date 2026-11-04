@@ -165,6 +165,36 @@ describe("S632 observe routing charts", () => {
     }
   });
 
+  it("uses the restored range window for the nine entry queries", async () => {
+    const cases: ReadonlyArray<readonly [string, number]> = [["week", 604_800_000], ["month", 2_592_000_000], ["90days", 7_776_000_000]];
+    for (const [range, expectedWindowMs] of cases) {
+      const bodies: unknown[] = [];
+      window.history.replaceState({}, "", "/observe/routing?range=" + range);
+      const container = document.createElement("div");
+      container.id = "s632-routing-range-" + range;
+      document.body.append(container);
+      const handle = mountShell(container, {
+        readbackFetchImpl: async () => new Response(JSON.stringify({ items: [], rows: [], requests: [], window: { startAtMs: 0, endAtMs: 0 } }), { status: 200, headers: { "content-type": "application/json" } }),
+        routingChartsFetchImpl: async (_input, init) => {
+          bodies.push(JSON.parse(String(init?.body)));
+          return new Response(JSON.stringify({ buckets: [], ranking: { rows: [] } }), { status: 200, headers: { "content-type": "application/json" } });
+        },
+      });
+      try {
+        const end = Date.now() + 10000;
+        while (Date.now() < end && bodies.length < 9) await new Promise((resolve) => setTimeout(resolve, 20));
+        expect(bodies.length, range + " entry query count").toBe(9);
+        for (const body of bodies) {
+          expect((body as { readonly windowMs?: number }).windowMs, range + " windowMs").toBe(expectedWindowMs);
+          expect((body as { readonly granularity?: string }).granularity, range + " granularity").toBe("day");
+        }
+      } finally {
+        handle.dispose();
+        container.remove();
+      }
+    }
+  });
+
   it("renders all nine cards, real series where data exists, and in-plot empty states otherwise", async () => {
     const container = await renderRoute();
     const titles = [...container.querySelectorAll("[data-overview-card]")].map((element) => element.getAttribute("data-overview-card"));
