@@ -131,6 +131,40 @@ describe("S632 observe routing charts", () => {
     }
   });
 
+  it("builds the nine entry queries from the URL-restored filter state", async () => {
+    const bodies: unknown[] = [];
+    window.history.replaceState({}, "", "/observe/routing?source=local&breakdown=By+upstream+model&difficulty=hard");
+    const container = document.createElement("div");
+    container.id = "s632-routing-entry-filters";
+    document.body.append(container);
+    const handle = mountShell(container, {
+      readbackFetchImpl: async () => new Response(JSON.stringify({ items: [], rows: [], requests: [], window: { startAtMs: 0, endAtMs: 0 } }), { status: 200, headers: { "content-type": "application/json" } }),
+      routingChartsFetchImpl: async (_input, init) => {
+        bodies.push(JSON.parse(String(init?.body)));
+        return new Response(JSON.stringify({ buckets: [], ranking: { rows: [] } }), { status: 200, headers: { "content-type": "application/json" } });
+      },
+    });
+    const waitFor = async (read: () => boolean, label: string) => {
+      const end = Date.now() + 10000;
+      while (Date.now() < end) {
+        if (read()) return;
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+      throw new Error("Timed out waiting for " + label);
+    };
+    try {
+      await waitFor(() => bodies.length >= 9, "nine entry queries");
+      const entry = bodies.slice(0, 9) as Array<{ readonly breakdown?: string | null; readonly filters?: unknown }>;
+      for (const body of entry) expect(body.filters).toEqual({ difficultyBuckets: ["hard"], sourceTypes: ["local"] });
+      expect(entry[0]?.breakdown).toBe("modelId");
+      expect(entry[1]?.breakdown).toBe("modelId");
+      expect(entry[2]?.breakdown).toBe("taxonomyRoleId");
+    } finally {
+      handle.dispose();
+      container.remove();
+    }
+  });
+
   it("renders all nine cards, real series where data exists, and in-plot empty states otherwise", async () => {
     const container = await renderRoute();
     const titles = [...container.querySelectorAll("[data-overview-card]")].map((element) => element.getAttribute("data-overview-card"));

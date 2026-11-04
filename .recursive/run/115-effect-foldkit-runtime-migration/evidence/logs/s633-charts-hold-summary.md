@@ -40,3 +40,15 @@ Now exactly :3456: "No capability-tagged telemetry is available for the current 
   filter keys stay absent rather than invented. This is recorded, not hidden.
 - s632 mapping + mounted-route live tests added (RED s633-filters-red.log -> GREEN s633-filters-green.log).
 - FINAL: full UI suite 107 files / 965 tests PASS; S247 4/4 (fail 0).
+
+## FINAL init-entry fix (review HOLD)
+- src/init.ts no longer calls buildRoutingChartQueries(86400000) directly: the entry batch is built with the same
+  breakdown/filter mapping as the live helper, from observeRoutingFilters restored out of the URL
+  (source=local|remote, breakdown=endpointId|modelId|providerId or label, difficulty=easy|medium|hard,
+  range=day|week|month|90days). A fresh entry (no query params) still uses the reference defaults (null / {}).
+- The restored state is placed on the model (observeRoutingFilters) so the filter bar and later reloads agree.
+- s632 new mounted test: /observe/routing?source=local&breakdown=By+upstream+model&difficulty=hard asserts all nine
+  ENTRY POSTs carry {difficultyBuckets:["hard"], sourceTypes:["local"]} and bodies 0/1 use breakdown modelId
+  (body 2 stays taxonomyRoleId).
+- TDD RED s633-entry-filters-red.log -> GREEN s633-entry-filters-green.log: s632 7/7, tsc 0.
+- FINAL TOTALS: full UI suite 107 files / 966 tests PASS; S247 4/4 (fail 0).

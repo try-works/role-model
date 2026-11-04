@@ -1,3 +1,5 @@
+import { Option } from "effect";
+
 import type { Return as UpdateReturn } from "@role-model-router/foldkit/update";
 import type { Url } from "@role-model-router/foldkit/url";
 
@@ -9,7 +11,7 @@ import {
   type RoutingChartsCommands,
   noopRoutingChartsCommands,
 } from "./commands";
-import { buildRoutingChartQueries } from "./features/observe/routing-charts";
+import { buildRoutingChartQueries, routingBreakdownDimension, routingChartFilters } from "./features/observe/routing-charts";
 import { type ControlKey, controlKeyForRouteTag, emptyControls, loadingControl } from "./control";
 import { idleDiagnostics, loadingDiagnostics } from "./diagnostics";
 import { replaceLegacyUrlCommand } from "./legacy-redirects";
@@ -26,6 +28,32 @@ import { initialRuntimeRefreshState } from "./refresh";
 import { resolveAppUrl } from "./route";
 import { studioIdle, studioTabFromUrl } from "./studio";
 import { applyDocumentTheme, readInitialTheme } from "./theme";
+
+/** Restores the observe-routing filter state carried in the URL (source/breakdown/difficulty/range). */
+const observeFiltersFromSearch = (search: string): Model["observeRoutingFilters"] | undefined => {
+  const params = new URLSearchParams(search);
+  const rawSource = params.get("source");
+  const rawBreakdown = params.get("breakdown");
+  const rawDifficulty = params.get("difficulty");
+  const rawRange = params.get("range");
+  if (rawSource === null && rawBreakdown === null && rawDifficulty === null && rawRange === null) return undefined;
+  const source = rawSource === "local" ? "Local only"
+    : rawSource === "remote" ? "Remote only"
+      : rawSource ?? "All sources";
+  const breakdown = rawBreakdown === "modelId" ? "By upstream model"
+    : rawBreakdown === "endpointId" ? "By endpoint variant"
+      : rawBreakdown === "providerId" ? "By provider"
+        : rawBreakdown ?? "Total";
+  const difficulty = rawDifficulty === "easy" ? "Easy only"
+    : rawDifficulty === "medium" ? "Medium only"
+      : rawDifficulty === "hard" ? "Hard only"
+        : rawDifficulty ?? "All buckets";
+  const range = rawRange === "week" ? "Week"
+    : rawRange === "month" ? "Month"
+      : rawRange === "90days" ? "90 days"
+        : "Day";
+  return { breakdown, difficulty, expanded: false, range, source };
+};
 
 /** Routing init: the runtime passes the Url derived from window.location at startup. */
 const initRoute =
@@ -224,6 +252,16 @@ const initRoute =
         // The Requests and Observe-routing volume charts read the same metrics page as the overview.
         const observeVolume = route._tag === "Requests" || route._tag === "ObserveRouting";
         const routingCharts = route._tag === "ObserveRouting";
+        const restoredObserveFilters = routingCharts
+          ? observeFiltersFromSearch(Option.getOrUndefined(url.search) ?? "")
+          : undefined;
+        const restoreCharts = restoredObserveFilters === undefined
+          ? buildRoutingChartQueries(86_400_000)
+          : buildRoutingChartQueries(
+              86_400_000,
+              routingBreakdownDimension(restoredObserveFilters.breakdown),
+              routingChartFilters(restoredObserveFilters),
+            );
         const readbacks = route._tag === "Benchmark"
           ? { ...emptyReadbacks(), benchmarkRuns: loadingReadback(token), benchmarkSummary: loadingReadback(token), benchmarkSuite: loadingReadback(token), benchmarkPreferences: loadingReadback(token), benchmarkActiveRun: loadingReadback(token) }
           : observeVolume
@@ -234,7 +272,7 @@ const initRoute =
             readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : route._tag === "Index" || route._tag === "Dashboard" ? "86400000" : undefined, key: readbackKey as ReadbackKey, token }),
             ...(route._tag === "Benchmark" ? [readReadback({ key: "benchmarkSummary" as const, token }), readReadback({ key: "benchmarkRuns" as const, token }), readReadback({ key: "benchmarkPreferences" as const, token }), readReadback({ key: "benchmarkActiveRun" as const, token })] : []),
             ...(observeVolume ? [readReadback({ key: "overviewMetrics", query: "?windowMs=86400000", token })] : []),
-            ...(routingCharts ? [routingChartsCommands.load({ queriesJson: JSON.stringify(buildRoutingChartQueries(86_400_000)), token })] : []),
+            ...(routingCharts ? [routingChartsCommands.load({ queriesJson: JSON.stringify(restoreCharts), token })] : []),
           ],
           model: {
             clicks: 0,
@@ -244,7 +282,10 @@ const initRoute =
             readbacks,
             refresh: initialRuntimeRefreshState(),
             route,
-            ...(routingCharts ? { routingCharts: { entries: [], status: "loading" as const, token } } : {}),
+            ...(routingCharts ? {
+              routingCharts: { entries: [], status: "loading" as const, token },
+              ...(restoredObserveFilters === undefined ? {} : { observeRoutingFilters: restoredObserveFilters }),
+            } : {}),
             theme,
           },
         };
