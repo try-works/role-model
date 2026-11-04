@@ -130,6 +130,18 @@ describe("S638 benchmark progress and per-case results", () => {
     expect(panel?.textContent).toContain("judge unavailable: 401");
   });
 
+  it("reads endpoint grades from the finished run record nested under result", async () => {
+    const nestedSnapshot = { completedSteps: 60, result: runResult, runId, status: "completed", totalSteps: 60 };
+    const container = await renderWith({
+      benchmarkProgress: completedProgress,
+      benchmarkRunDetail: { json: JSON.stringify(nestedSnapshot), runId, status: "loaded", token: 1 },
+    });
+    expect(container.querySelector("[data-benchmark-run-detail-cases]")?.textContent).toBe("0/12 cases passed — 12 failed");
+    expect(container.querySelectorAll("[data-benchmark-case-row]")).toHaveLength(12);
+    expect(container.querySelectorAll("[data-benchmark-case-result='fail']")).toHaveLength(12);
+    expect(container.querySelector("[data-benchmark-run-detail-status]")?.textContent).toContain("completed");
+  });
+
   it("dispatches the detail request from a history row and loads the exact detail path", async () => {
     const base = shellModel({ route: { _tag: "Benchmark" } });
     const runs = parseReadbackFixture("benchmarkRuns", [{ caseCount: 12, completedAtMs: 1_700_000_000_000, endpointIds: ["ep-a"], mode: "quick", runId, suiteId: "suite-1" }]);
