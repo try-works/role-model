@@ -1,0 +1,723 @@
+# S635 routing-strategy hydration — RED
+date: 2026-11-04T20:38:50.2437870+08:00
+basis: current working tree with only the routerConfig hydration block reversed (other lane changes untouched)
+exit: 1
+--- output ---
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s635-router-posture-hydration.test.ts > S635 routing-strategy posture hydration > posts the rendered baseline values on an untouched save
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow view: 49.6ms (budget: 16ms), triggered by init. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'View',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'RouterStrategy' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 49.58899999999994,
+  thresholdMs: 16
+}
+[foldkit] Slow patch: 203.2ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'RouterStrategy' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 203.19230000000243,
+  thresholdMs: 8
+}
+
+stderr | test/s635-router-posture-hydration.test.ts > S635 routing-strategy posture hydration > posts the rendered baseline values on an untouched save
+[foldkit] Slow patch: 22.5ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'RouterStrategy' },
+    theme: 'dark',
+    runtimeConfigEditor: {
+      diff: [],
+      originalText: '{}',
+      status: 'editing',
+      text: '{}',
+      token: 1
+    }
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'runtimeConfig',
+      snapshot: [Object],
+      token: 1
+    }
+  },
+  durationMs: 22.477599999998347,
+  thresholdMs: 8
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'runtimeConfig',
+  snapshot: {
+    message: 'Runtime config read failed: invalid response',
+    rows: [],
+    status: 'error',
+    token: 1
+  },
+  token: 1
+}
+
+stderr | test/s635-router-posture-hydration.test.ts > S635 routing-strategy posture hydration > posts a non-default saved posture on an untouched save
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 119.3ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'RouterStrategy' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 119.32630000000063,
+  thresholdMs: 8
+}
+
+stderr | test/s635-router-posture-hydration.test.ts > S635 routing-strategy posture hydration > posts a non-default saved posture on an untouched save
+[foldkit] Slow view: 16.9ms (budget: 16ms), triggered by ReadbackLoaded. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'View',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'RouterStrategy' },
+    theme: 'dark',
+    runtimeConfigEditor: {
+      diff: [],
+      originalText: '{}',
+      status: 'editing',
+      text: '{}',
+      token: 1
+    }
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'runtimeConfig',
+      snapshot: [Object],
+      token: 1
+    }
+  },
+  durationMs: 16.94670000000042,
+  thresholdMs: 16
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'runtimeConfig',
+  snapshot: {
+    message: 'Runtime config read failed: invalid response',
+    rows: [],
+    status: 'error',
+    token: 1
+  },
+  token: 1
+}
+[foldkit] Slow patch: 10.4ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'RouterStrategy' },
+    theme: 'dark',
+    runtimeConfigEditor: {
+      diff: [],
+      originalText: '{}',
+      status: 'editing',
+      text: '{}',
+      token: 1
+    }
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'runtimeConfig',
+      snapshot: [Object],
+      token: 1
+    }
+  },
+  durationMs: 10.4346000000005,
+  thresholdMs: 8
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'runtimeConfig',
+  snapshot: {
+    message: 'Runtime config read failed: invalid response',
+    rows: [],
+    status: 'error',
+    token: 1
+  },
+  token: 1
+}
+
+stderr | test/s635-router-posture-hydration.test.ts > S635 routing-strategy posture hydration > posts a non-default saved posture on an untouched save
+[foldkit] Slow patch: 8.2ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'RouterStrategy' },
+    theme: 'dark',
+    runtimeConfigEditor: {
+      diff: [],
+      originalText: '{}',
+      status: 'editing',
+      text: '{}',
+      token: 2
+    },
+    routerPosture: {
+      agentJson: '',
+      entryDescription: '',
+      entryModel: '',
+      entryName: '',
+      entryRole: '',
+      weightCost: '',
+      weightLatency: '',
+      weightPreference: '',
+      weightQuality: '',
+      weightReliability: '',
+      weightThroughput: '',
+      executionMode: '',
+      mode: '',
+      pinWeights: 'off',
+      scoringStrategy: '',
+      status: 'saved',
+      token: 1,
+      workloadsJson: '',
+      message: 'Routing posture saved.'
+    }
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'router',
+      snapshot: [Object],
+      token: 1
+    }
+  },
+  durationMs: 8.244299999998475,
+  thresholdMs: 8
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'router',
+  snapshot: { rows: [], status: 'empty', token: 1 },
+  token: 1
+}
+
+ ❯ test/s635-router-posture-hydration.test.ts (3 tests | 1 failed) 2302ms
+   × S635 routing-strategy posture hydration > hydrates model fields from the loaded posture, including host defaults when rows are absent 150ms
+     → expected undefined to match object { Object (executionMode, mode, ...) }
+   ✓ S635 routing-strategy posture hydration > posts the rendered baseline values on an untouched save  1330ms
+   ✓ S635 routing-strategy posture hydration > posts a non-default saved posture on an untouched save  815ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s635-router-posture-hydration.test.ts > S635 routing-strategy posture hydration > hydrates model fields from the loaded posture, including host defaults when rows are absent
+AssertionError: expected undefined to match object { Object (executionMode, mode, ...) }
+
+- Expected: 
+{
+  "executionMode": "decision_only",
+  "mode": "hybrid",
+  "scoringStrategy": "cost",
+}
+
++ Received: 
+undefined
+
+ ❯ test/s635-router-posture-hydration.test.ts:80:40
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  20:38:09
+   Duration  39.05s (transform 17.61s, setup 0ms, collect 28.39s, tests 2.30s, environment 5.67s, prepare 963ms)
+
+

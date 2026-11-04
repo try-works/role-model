@@ -37,7 +37,9 @@ const BUDGET = {
   // S620: expand Task detail through the rendered role catalog control.
   "s620-roles-parity.test.ts": 1,
   // task-109: Day->Week range switch to prove the metrics re-read window in s628.
-  "s628-charts-data-binding.test.ts": 1
+  "s628-charts-data-binding.test.ts": 1,
+  // S635: untouched Save baseline and non-default posture paths.
+  "s635-router-posture-hydration.test.ts": 2
 };
 
 /** S247 policy: every budgeted click site names the user path it proves. */
@@ -57,6 +59,7 @@ const RATIONALE = {
   "s591-router-weights-editor.test.ts": "Save routing strategy from three weight drafts",
   "s595-storage-retention.test.ts": "Save retention, dry-run, execute, mode update, rollback",
   "s619-learning-controls.test.ts": "Scope-wide pack rollback with operator token; engage then release the learning kill switch",
+  "s635-router-posture-hydration.test.ts": "Save routing strategy without select interaction (baseline and non-default posture)",
   "s620-roles-parity.test.ts": "Expand Task detail in the role catalog",
   "s628-charts-data-binding.test.ts": "Week-range metrics re-read assertion on Requests and ObserveRouting volume charts"
 };
