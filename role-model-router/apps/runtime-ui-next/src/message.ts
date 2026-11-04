@@ -20,6 +20,7 @@ const RouterPostureFieldSchema = Schema.Literals(["mode", "scoringStrategy", "ex
 const RouterEntryFieldSchema = Schema.Literals(["name", "role", "model", "description"]);
 const RouterBlockSchema = Schema.Literals(["agent_strategies", "workloads"]);
 const RoleActionKindSchema = Schema.Literals(["create", "edit", "tasks"] as const);
+const ReplayAutomationActionSchema = Schema.Literals(["pause", "resume"]);
 const RoleDraftFieldSchema = Schema.Literals(["roleId", "name", "description", "instructions", "kind", "toolPolicy", "allowedTools", "defaultSystemInstructions", "forbiddenCapabilities", "outputContracts", "preferredCapabilities", "requiredCapabilities", "roleKind", "routingOverridesText", "safetyPolicyRefs", "taskTypesSupported", "toolPolicyMode"]);
 const RequestsFilterFieldSchema = Schema.Literals(["breakdown", "difficulty", "source", "statusFamily"]);
 const ObserveFilterFieldSchema = Schema.Literals([
@@ -170,6 +171,9 @@ export const Message: MessageUnion<{
   readonly LocalPeerRemoveRequested: { readonly peerId: typeof Schema.String };
   readonly SystemExtensionsPauseRequested: { readonly extensionId: typeof Schema.String };
   readonly SystemExtensionsDownloadRequested: EmptyFields;
+  readonly SystemExtensionsRecommendationApplyRequested: { readonly recommendationId: typeof Schema.String };
+  readonly SystemExtensionsRecommendationDismissRequested: { readonly recommendationId: typeof Schema.String };
+  readonly SystemReplayAutomationControlRequested: { readonly action: typeof ReplayAutomationActionSchema };
   readonly SystemExtensionsActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly SystemExtensionsActionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
   readonly SystemOperatorTraceRootChanged: { readonly value: typeof Schema.String };
@@ -407,6 +411,9 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   LocalPeerRemoveRequested: { peerId: Schema.String },
   SystemExtensionsPauseRequested: { extensionId: Schema.String },
   SystemExtensionsDownloadRequested: {},
+  SystemExtensionsRecommendationApplyRequested: { recommendationId: Schema.String },
+  SystemExtensionsRecommendationDismissRequested: { recommendationId: Schema.String },
+  SystemReplayAutomationControlRequested: { action: ReplayAutomationActionSchema },
   SystemExtensionsActionSucceeded: { message: Schema.String, token: Schema.Number },
   SystemExtensionsActionFailed: { message: Schema.String, token: Schema.Number },
   SystemOperatorTraceRootChanged: { value: Schema.String },

@@ -79,6 +79,10 @@ describe("S26f client/host tie", () => {
       )) {
         registrations.add(match[1]);
       }
+      // The host also registers routes through its path->handler table; those keys are real routes.
+      for (const match of source.matchAll(/"(\/api\/role-model\/[^"]+)":\s*\{/g)) {
+        registrations.add(match[1]);
+      }
     }
     const inventory = JSON.parse(
       readFileSync(

@@ -63,7 +63,6 @@ describe("S392a telemetry read plan (R12 exact multiplicity)", () => {
     ["LearningDecisions", "learningDecisions"],
     ["LearningEvidence", "learningEvidence"],
     ["LearningHistory", "learningHistory"],
-    ["SystemExtensions", "extensions"],
     ["LocalLlamaSwapModels", "localLlamaSwapModels"],
   ] as const;
 
@@ -95,15 +94,29 @@ describe("S392a telemetry read plan (R12 exact multiplicity)", () => {
     expect(result.model.refresh).toEqual(model.refresh);
   });
 
-  it("invalidates BOTH sources of SystemOperator with per-key tokens", () => {
+  it("invalidates all SystemOperator sources with per-key tokens", () => {
     const model = shellModel({ route: { _tag: "SystemOperator" } });
     const result = shellUpdate(model, telemetry());
     const reads = readsOf(result, "ReadReadback");
-    expect(reads.map((command) => String(command.args?.key)).sort()).toEqual(["operatorStatus", "operatorTraceRoots"]);
+    const keys = ["operatorStatus", "operatorTraceRoots", "replayJobs", "evaluationJobs", "learningProfile", "learningAdvisory"];
+    expect(reads.map((command) => String(command.args?.key)).sort()).toEqual([...keys].sort());
     for (const command of reads) {
       const key = String(command.args?.key);
-      // SAFETY: the two plan keys were asserted above; indexing only those readback keys.
-      const readbackKey = key as "operatorStatus" | "operatorTraceRoots";
+      const readbackKey = key as keyof typeof model.readbacks;
+      expect(Number(command.args?.token)).toBe(model.readbacks[readbackKey].token + 1);
+      expect(result.model.readbacks[readbackKey].status).toBe("loading");
+    }
+  });
+
+  it("invalidates all SystemExtensions sources with per-key tokens", () => {
+    const model = shellModel({ route: { _tag: "SystemExtensions" } });
+    const result = shellUpdate(model, telemetry());
+    const reads = readsOf(result, "ReadReadback");
+    const keys = ["extensions", "contribution", "recommendations", "replayAutomation"];
+    expect(reads.map((command) => String(command.args?.key)).sort()).toEqual([...keys].sort());
+    for (const command of reads) {
+      const key = String(command.args?.key);
+      const readbackKey = key as keyof typeof model.readbacks;
       expect(Number(command.args?.token)).toBe(model.readbacks[readbackKey].token + 1);
       expect(result.model.readbacks[readbackKey].status).toBe("loading");
     }

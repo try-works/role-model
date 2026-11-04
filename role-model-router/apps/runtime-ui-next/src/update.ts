@@ -223,6 +223,11 @@ const noopReadback = defineReadReadback({
   localPolicy: async () => ({ body: {}, status: 200 }),
   operatorStatus: async () => ({ body: { items: [] }, status: 200 }),
   operatorTraceRoots: async () => ({ body: { items: [] }, status: 200 }),
+  learningProfile: async () => ({ body: { items: [] }, status: 200 }),
+  learningAdvisory: async () => ({ body: { items: [] }, status: 200 }),
+  contribution: async () => ({ body: {}, status: 200 }),
+  recommendations: async () => ({ body: [], status: 200 }),
+  replayAutomation: async () => ({ body: {}, status: 200 }),
   extensions: async () => ({ body: { items: [] }, status: 200 }),
   configuredModels: async () => ({ body: [], status: 200 }),
   modelEndpoints: async () => ({ body: [], status: 200 }),
@@ -750,7 +755,7 @@ const updateLocalPolicyDraft = (
   };
 };
 
-const RAIL_KEYS = ["models", "runtimeSummary", "health", "dashboard", "router", "overviewMetrics", "routerCandidates"] as const;
+    const RAIL_KEYS = ["models", "runtimeSummary", "health", "dashboard", "router", "overviewMetrics", "routerCandidates"] as const;
 const refreshRailReadbacks = (model: Model): { readonly commands: ReadonlyArray<ReturnType<typeof readReadback>>; readonly readbacks: Model["readbacks"] } => {
   const readbacks = { ...model.readbacks };
   const commands: Array<ReturnType<typeof readReadback>> = [];
@@ -770,7 +775,8 @@ const readPlanForRoute = (model: Model): ReadonlyArray<{ readonly key: ReadbackK
       if (model.route._tag === "Endpoints") return [{ key: "modelEndpoints" }, { key: "configuredModels" }, { key: "integrationProviders" }];
       if (model.route._tag === "IntegrationsDownstream") return [{ key: "downstreamOpenAI" }, { key: "configuredModels" }];
       if (model.route._tag === "IntegrationsUpstream") return [{ key: "integrationProviders" }, { key: "configuredModels" }];
-      if (model.route._tag === "SystemOperator") return [{ key: "operatorStatus" }, { key: "operatorTraceRoots" }];
+      if (model.route._tag === "SystemOperator") return [{ key: "operatorStatus" }, { key: "operatorTraceRoots" }, { key: "replayJobs" }, { key: "evaluationJobs" }, { key: "learningProfile" }, { key: "learningAdvisory" }];
+      if (model.route._tag === "SystemExtensions") return [{ key: "extensions" }, { key: "contribution" }, { key: "recommendations" }, { key: "replayAutomation" }];
       if (model.route._tag === "RuntimeConfig") return [{ key: "runtimeConfig" }];
       if (model.route._tag === "Benchmark") return [{ key: "benchmarkSuite" }, { key: "benchmarkSummary" }, { key: "benchmarkRuns" }, { key: "benchmarkPreferences" }, { key: "benchmarkActiveRun" }, { key: "modelEndpoints" }];
       if (model.route._tag === "Requests") return [{ key: "requests" }, { key: "overviewMetrics", query: overviewQuery(DEFAULT_OVERVIEW_FILTERS, windowForRange(model.requestsFilters?.range)) }];
@@ -1659,6 +1665,18 @@ const readPlanForRoute = (model: Model): ReadonlyArray<{ readonly key: ReadbackK
           model: { ...model, systemExtensionsMessage: undefined },
         }),
         SystemExtensionsDownloadRequested: (): UpdateReturn<Model, Message> => ({ commands: [systemExtensionsCommands.download({ token: model.readbacks.extensions.token + 1 })], model: { ...model, systemExtensionsMessage: undefined } }),
+        SystemExtensionsRecommendationApplyRequested: ({ recommendationId }: Extract<Message, { readonly _tag: "SystemExtensionsRecommendationApplyRequested" }>): UpdateReturn<Model, Message> => ({
+          commands: [systemExtensionsCommands.applyRecommendation({ id: recommendationId, token: model.readbacks.recommendations.token + 1 })],
+          model: { ...model, systemExtensionsMessage: undefined },
+        }),
+        SystemExtensionsRecommendationDismissRequested: ({ recommendationId }: Extract<Message, { readonly _tag: "SystemExtensionsRecommendationDismissRequested" }>): UpdateReturn<Model, Message> => ({
+          commands: [systemExtensionsCommands.dismissRecommendation({ id: recommendationId, token: model.readbacks.recommendations.token + 1 })],
+          model: { ...model, systemExtensionsMessage: undefined },
+        }),
+        SystemReplayAutomationControlRequested: ({ action }: Extract<Message, { readonly _tag: "SystemReplayAutomationControlRequested" }>): UpdateReturn<Model, Message> => ({
+          commands: [systemExtensionsCommands.replayControl({ action, token: model.readbacks.replayAutomation.token + 1 })],
+          model: { ...model, systemExtensionsMessage: undefined },
+        }),
         SystemExtensionsActionSucceeded: ({ message }: Extract<Message, { readonly _tag: "SystemExtensionsActionSucceeded" }>): UpdateReturn<Model, Message> => ({ model: { ...model, systemExtensionsMessage: message } }),
         SystemExtensionsActionFailed: ({ message }: Extract<Message, { readonly _tag: "SystemExtensionsActionFailed" }>): UpdateReturn<Model, Message> => ({ model: { ...model, systemExtensionsMessage: message } }),
         SystemOperatorTraceRootChanged: ({ value }: Extract<Message, { readonly _tag: "SystemOperatorTraceRootChanged" }>): UpdateReturn<Model, Message> => ({ model: { ...model, systemOperatorTraceRoot: value } }),

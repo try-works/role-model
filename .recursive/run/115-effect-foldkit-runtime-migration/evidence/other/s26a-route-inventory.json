@@ -218,7 +218,10 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/extensions.tsx",
       "status": "absent",
       "hostEndpoints": [
-        "/api/role-model/extensions"
+        "/api/role-model/extensions",
+        "/api/role-model/contribution",
+        "/api/role-model/recommendations",
+        "/api/role-model/track-b/replay/status"
       ],
       "requiresHostEndpoint": false,
       "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."
@@ -578,7 +581,12 @@
       "source": "role-model-router/apps/runtime-ui/app/routes/operator-controls.tsx",
       "status": "absent",
       "hostEndpoints": [
-        "/api/role-model/operator/trace-roots"
+        "/api/role-model/operator/status",
+        "/api/role-model/operator/trace-roots",
+        "/api/role-model/operator/replay/jobs",
+        "/api/role-model/operator/evaluation/jobs",
+        "/api/role-model/operator/learning/profile",
+        "/api/role-model/operator/learning/advisory"
       ],
       "requiresHostEndpoint": false,
       "absenceReason": "Needs an action payload, identity, or confirmation flow not covered by this non-destructive slice; left absent rather than wiring a guessed command."

@@ -159,15 +159,17 @@ const initRoute =
         const token = 1;
         const key: "localLlamaSwapModels" | "extensions" = route._tag === "LocalLlamaSwapModels" ? "localLlamaSwapModels" : "extensions";
         return {
-          commands: [readReadback({ key, token })],
-          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), [key]: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
+          commands: route._tag === "SystemExtensions"
+            ? [readReadback({ key: "extensions", token }), readReadback({ key: "contribution", token }), readReadback({ key: "recommendations", token }), readReadback({ key: "replayAutomation", token })]
+            : [readReadback({ key, token })],
+          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: route._tag === "SystemExtensions" ? { ...emptyReadbacks(), extensions: loadingReadback(token), contribution: loadingReadback(token), recommendations: loadingReadback(token), replayAutomation: loadingReadback(token) } : { ...emptyReadbacks(), [key]: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
         };
       }
       if (route._tag === "SystemOperator") {
         const token = 1;
         return {
-          commands: [readReadback({ key: "operatorStatus", token }), readReadback({ key: "operatorTraceRoots", token })],
-          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), operatorStatus: loadingReadback(token), operatorTraceRoots: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
+          commands: [readReadback({ key: "operatorStatus", token }), readReadback({ key: "operatorTraceRoots", token }), readReadback({ key: "replayJobs", token }), readReadback({ key: "evaluationJobs", token }), readReadback({ key: "learningProfile", token }), readReadback({ key: "learningAdvisory", token })],
+          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), operatorStatus: loadingReadback(token), operatorTraceRoots: loadingReadback(token), replayJobs: loadingReadback(token), evaluationJobs: loadingReadback(token), learningProfile: loadingReadback(token), learningAdvisory: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
         };
       }
       if (route._tag === "LearningConfiguration" || route._tag === "LearningPacks" || route._tag === "LearningDecisions" || route._tag === "LearningEvidence" || route._tag === "LearningHistory") {

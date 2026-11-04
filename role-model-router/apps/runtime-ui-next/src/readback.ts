@@ -57,6 +57,11 @@ export type ReadbackKey =
   | "extensions"
   | "replayJobs"
   | "evaluationJobs"
+  | "learningProfile"
+  | "learningAdvisory"
+  | "contribution"
+  | "recommendations"
+  | "replayAutomation"
   | "configuredModels"
   | "modelEndpoints"
   | "runtimeConfig"
@@ -112,6 +117,11 @@ export const ReadbackKeySchema = Schema.Literals([
   "extensions",
   "replayJobs",
   "evaluationJobs",
+  "learningProfile",
+  "learningAdvisory",
+  "contribution",
+  "recommendations",
+  "replayAutomation",
   "configuredModels",
   "modelEndpoints",
   "runtimeConfig",
@@ -189,6 +199,11 @@ export const ReadbacksState = Schema.Struct({
   extensions: ReadbackState,
   replayJobs: ReadbackState,
   evaluationJobs: ReadbackState,
+  learningProfile: ReadbackState,
+  learningAdvisory: ReadbackState,
+  contribution: ReadbackState,
+  recommendations: ReadbackState,
+  replayAutomation: ReadbackState,
   configuredModels: ReadbackState,
   modelEndpoints: ReadbackState,
   runtimeConfig: ReadbackState,
@@ -259,6 +274,11 @@ export const emptyReadbacks = (): ReadbacksState => ({
   extensions: idleReadback(),
   replayJobs: idleReadback(),
   evaluationJobs: idleReadback(),
+  learningProfile: idleReadback(),
+  learningAdvisory: idleReadback(),
+  contribution: idleReadback(),
+  recommendations: idleReadback(),
+  replayAutomation: idleReadback(),
   configuredModels: idleReadback(),
   modelEndpoints: idleReadback(),
   runtimeConfig: idleReadback(),
@@ -703,7 +723,7 @@ const parseLearningFamily = (label: string) => (body: unknown, token: number): R
     const id = String(entry.id ?? entry.decisionId ?? entry.packId ?? entry.recordId ?? index);
     const labelText = String(entry.label ?? entry.title ?? entry.kind ?? entry.name ?? id);
     const valueText = String(entry.value ?? entry.status ?? entry.outcome ?? entry.summary ?? entry.origin ?? "");
-    return [row(labelText, labelText, valueText, JSON.stringify(entry).slice(0, 600))];
+    return [row(labelText, labelText, valueText, JSON.stringify(entry))];
   });
   const scoped = scopeId === undefined ? undefined : { scopeId };
   return rows.length === 0 ? { rows: [], status: "empty", token, ...scoped } : { ...okRows(rows, token), ...scoped };
@@ -1292,6 +1312,11 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
   },
   operatorStatus: { emptyText: "No operator status rows.", key: "operatorStatus", label: "Operator status", parse: parseLearningFamily("Operator status"), path: READBACK_PATHS.operatorStatus },
   operatorTraceRoots: { emptyText: "No operator trace-root rows.", key: "operatorTraceRoots", label: "Operator trace roots", parse: parseLearningFamily("Operator trace roots"), path: READBACK_PATHS.operatorTraceRoots },
+  learningProfile: { emptyText: "No learning profile rows.", key: "learningProfile", label: "Learning profile", parse: parseLearningFamily("Learning profile"), path: READBACK_PATHS.learningProfile },
+  learningAdvisory: { emptyText: "No learning advisory rows.", key: "learningAdvisory", label: "Learning advisory", parse: parseLearningFamily("Learning advisory"), path: READBACK_PATHS.learningAdvisory },
+  contribution: { emptyText: "No contribution policy rows.", key: "contribution", label: "Contribution policy", parse: parseLearningFamily("Contribution policy"), path: READBACK_PATHS.contribution },
+  recommendations: { emptyText: "No recommendation rows.", key: "recommendations", label: "Recommendations", parse: parseLearningFamily("Recommendations"), path: READBACK_PATHS.recommendations },
+  replayAutomation: { emptyText: "No replay automation rows.", key: "replayAutomation", label: "Replay automation", parse: parseLearningFamily("Replay automation"), path: READBACK_PATHS.replayAutomation },
   extensions: { emptyText: "No extension rows.", key: "extensions", label: "Extensions", parse: parseLearningFamily("Extensions"), path: READBACK_PATHS.extensions },
   replayJobs: {
     emptyText: "No replay jobs.",
@@ -1466,6 +1491,11 @@ export const createReadbackClients = (
   localPolicy: client(READBACK_SPECS.localPolicy),
   operatorStatus: client(READBACK_SPECS.operatorStatus),
   operatorTraceRoots: client(READBACK_SPECS.operatorTraceRoots),
+  learningProfile: client(READBACK_SPECS.learningProfile),
+  learningAdvisory: client(READBACK_SPECS.learningAdvisory),
+  contribution: client(READBACK_SPECS.contribution),
+  recommendations: client(READBACK_SPECS.recommendations),
+  replayAutomation: client(READBACK_SPECS.replayAutomation),
   extensions: client(READBACK_SPECS.extensions),
     configuredModels: client(READBACK_SPECS.configuredModels),
     modelEndpoints: client(READBACK_SPECS.modelEndpoints),

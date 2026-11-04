@@ -978,10 +978,25 @@ export const noopModelsCommands = defineModelsCommands({
 });
 
 export interface SystemExtensionsClient {
+  readonly applyRecommendation: (id: string) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly dismissRecommendation: (id: string) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly mutate: (id: string) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly download: () => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly replayControl: (action: "pause" | "resume") => Promise<{ readonly body: unknown; readonly status: number }>;
 }
 export const createSystemExtensionsClient = (fetchImpl: typeof fetch = fetch): SystemExtensionsClient => ({
+  applyRecommendation: async (id) => {
+    const response = await fetchImpl("/api/role-model/recommendations/apply", { body: JSON.stringify({ id }), headers: { "content-type": "application/json" }, method: "POST" });
+    return { body: await response.json(), status: response.status };
+  },
+  dismissRecommendation: async (id) => {
+    const response = await fetchImpl("/api/role-model/recommendations/dismiss", { body: JSON.stringify({ id }), headers: { "content-type": "application/json" }, method: "POST" });
+    return { body: await response.json(), status: response.status };
+  },
+  replayControl: async (action) => {
+    const response = await fetchImpl("/api/role-model/track-b/replay/control", { body: JSON.stringify({ action }), headers: { "content-type": "application/json" }, method: "POST" });
+    return { body: await response.json(), status: response.status };
+  },
   download: async () => {
     const response = await fetchImpl("/api/role-model/recommendations/download", { body: "{}", headers: { "content-type": "application/json" }, method: "POST" });
     return { body: await response.json(), status: response.status };
@@ -992,6 +1007,33 @@ export const createSystemExtensionsClient = (fetchImpl: typeof fetch = fetch): S
   },
 });
 export const defineSystemExtensionsCommands = (client: SystemExtensionsClient) => ({
+  applyRecommendation: Command.define("ApplySystemRecommendation", {
+    args: { id: Schema.String, token: Schema.Number },
+    execute: ({ id, token }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.applyRecommendation(id) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.SystemExtensionsActionSucceeded({ message: "Applied recommendation " + id + ".", token })
+          : Message.SystemExtensionsActionFailed({ message: "Apply recommendation failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
+    messages: [Message.SystemExtensionsActionSucceeded, Message.SystemExtensionsActionFailed],
+  }),
+  dismissRecommendation: Command.define("DismissSystemRecommendation", {
+    args: { id: Schema.String, token: Schema.Number },
+    execute: ({ id, token }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.dismissRecommendation(id) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.SystemExtensionsActionSucceeded({ message: "Dismissed recommendation " + id + ".", token })
+          : Message.SystemExtensionsActionFailed({ message: "Dismiss recommendation failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
+    messages: [Message.SystemExtensionsActionSucceeded, Message.SystemExtensionsActionFailed],
+  }),
+  replayControl: Command.define("ControlReplayAutomation", {
+    args: { action: Schema.Literals(["pause", "resume"]), token: Schema.Number },
+    execute: ({ action, token }) =>
+      Effect.flatMap(Effect.exit(Effect.tryPromise({ catch: (cause) => new Error(describeCause(cause)), try: () => client.replayControl(action) })), (exit) =>
+        Effect.succeed(Exit.isSuccess(exit) && exit.value.status >= 200 && exit.value.status < 300
+          ? Message.SystemExtensionsActionSucceeded({ message: "Replay automation " + action + "d.", token })
+          : Message.SystemExtensionsActionFailed({ message: "Replay automation " + action + " failed: HTTP " + String(Exit.isSuccess(exit) ? exit.value.status : 0), token }))),
+    messages: [Message.SystemExtensionsActionSucceeded, Message.SystemExtensionsActionFailed],
+  }),
   pause: Command.define("PauseSystemExtension", {
     args: { id: Schema.String, token: Schema.Number },
     execute: ({ id, token }) =>
@@ -1012,7 +1054,7 @@ export const defineSystemExtensionsCommands = (client: SystemExtensionsClient) =
   }),
 });
 export type SystemExtensionsCommands = ReturnType<typeof defineSystemExtensionsCommands>;
-export const noopSystemExtensionsCommands = defineSystemExtensionsCommands({ download: async () => ({ body: {}, status: 200 }), mutate: async () => ({ body: {}, status: 200 }) });
+export const noopSystemExtensionsCommands = defineSystemExtensionsCommands({ applyRecommendation: async () => ({ body: {}, status: 200 }), dismissRecommendation: async () => ({ body: {}, status: 200 }), download: async () => ({ body: {}, status: 200 }), mutate: async () => ({ body: {}, status: 200 }), replayControl: async () => ({ body: {}, status: 200 }) });
 
 export interface SystemOperatorClient {
   readonly loadState: (token: string) => Promise<{ readonly body: unknown; readonly status: number }>;

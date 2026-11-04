@@ -27,6 +27,8 @@ import type { ObservabilityState } from "./observability";
 import { chartPointKeyAction, type ChartSeries, view as chartView } from "@role-model/ui/foldkit-chart";
 
 import { READBACK_SPECS, type ReadbacksState, localPolicyControls, localPolicyDraftFromReadback, localPolicyFromReadback, renderReadbackPage } from "./readback";
+import { systemOperatorPage as systemOperatorFeaturePage } from "./features/system/operator";
+import { systemExtensionsPage as systemExtensionsFeaturePage } from "./features/system/extensions";
 import { endpointsRoute, providersRoute } from "./features/control/routes";
 import { integrationsDownstreamRoute, integrationsUpstreamRoute, observeQueuesRoute } from "./features/s563-pages";
 import {
@@ -1311,8 +1313,8 @@ const routeContent = (ctx: RouteViewContext): Html => {
       { label: "Load model", note: "Model must already be declared in runtime config. Loading triggers the managed swap.", children: [h.div([h.Class("flex flex-wrap items-end gap-3")], [h.label([h.Class("flex flex-col gap-1 font-sans text-xs text-muted-foreground")], [h.span([], ["Model ID"]), h.input([h.Id("llama-model-id"), h.AriaLabel("Model ID"), h.Class("h-[34px] rounded-md border border-input bg-secondary px-3 text-sm")])]), h.button([h.Type("button"), h.Class("inline-flex h-[34px] items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground")], ["Load model"])])] },
       { label: "Loaded models", spec: READBACK_SPECS.localLlamaSwapModels, readback: readbacks.localLlamaSwapModels, columns: ["Model", "Status", "Roles", "Actions"], rows: (row) => [row.label, row.value, row.meta, "—"] },
     ], h, undefined, undefined, familyState), readbacks.localLlamaSwapModels, h),
-    SystemOperator: () => familyPage("Operator Controls", "system-operator", "Inspect bounded replay, evaluation, and shadow-learning state. The access token stays only in this browser component and is never stored.", [{ label: "Operator status", spec: READBACK_SPECS.operatorStatus, readback: readbacks.operatorStatus }, { label: "Trace lineage", spec: READBACK_SPECS.operatorTraceRoots, readback: readbacks.operatorTraceRoots }, { label: "Replay Jobs", spec: READBACK_SPECS.replayJobs, readback: readbacks.replayJobs }, { label: "Evaluation Jobs", spec: READBACK_SPECS.evaluationJobs, readback: readbacks.evaluationJobs }, { label: "Shadow Learning", note: "This page does not enable production learning; shadow-learning actions stay bounded to the readback." }], h, retention, operatorLearningMode, familyState),
-    SystemExtensions: () => familyPage("Extensions", "system-extensions", "Extension boundary, replay automation, contribution posture and the extension inventory.", [{ label: "Extension boundary", note: "The host enforces the extension boundary before any extension code runs." }, { label: "Replay automation", note: "Replay automation is configured per extension and reported by the host." }, { label: "Contribution posture", note: "Contribution posture records whether an extension may contribute runtime behavior." }, { label: "Recommendation ledger", note: "Recommendation receipts are recorded in the ledger when an extension produces one." }, { label: "Extension inventory", spec: READBACK_SPECS.extensions, readback: readbacks.extensions }], h, undefined, undefined, familyState),
+    SystemOperator: () => systemOperatorFeaturePage(readbacks, h, familyState),
+    SystemExtensions: () => systemExtensionsFeaturePage(readbacks, h, familyState),
     Models: () => modelsRoute(readbacks.configuredModels, readbacks.modelEndpoints, h, modelsView, readbacks.rolePolicy, readbacks.providerAccounts),
     ModelsRoles: () => modelsRolesRoute(readbacks.configuredModels, readbacks.modelEndpoints, h, modelsView, readbacks.rolePolicy),
     RouterStrategy: () => routerStrategyPage("router-strategy", readbacks, routerPosture, h),
