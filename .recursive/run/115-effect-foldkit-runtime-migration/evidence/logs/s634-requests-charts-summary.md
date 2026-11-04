@@ -40,10 +40,12 @@
   reference s629-reference-3456-requests.png.
 - FULL SUITE: the shared working tree is UNVERIFIED - other lanes' in-flight/untracked tests (s635/tmp-posture) and
   their uncommitted benchmark routes.ts polluted every shared-tree run, so no honest green claim is made from it.
-  Clean-worktree run at 252c851d: 107/108 files, 970/971 tests passed; the only vitest failure was s48a's client build,
-  which cannot resolve the workspace packages through the clean worktree's junctioned node_modules (an environment
-  artifact of the detached tree, not the change; s48a passes in the main worktree). The node --test batch initially
-  failed S247 because s634's Week-range click was not yet budgeted - fixed by adding
+  Clean detached worktree at 2b97493a (junctioned node_modules so workspace packages resolve through the main
+  checkout): tsc 0; vitest 108 files / 976 tests PASS excluding s48a-build; node --test batch PASS (fail 0).
+  s48a is excluded ONLY because its client build cannot resolve the workspace package dists through a detached
+  worktree's junctioned node_modules (environment artifact); s48a itself passes in the main worktree
+  (s634-s48a-standalone.log, 4.7s). Evidence: s634-clean-worktree-full-ui-excluded-build.log.
+- S247 was initially red in the clean run because s634's Week-range click was unbudgeted; fixed by adding
   "s634-observe-requests-charts.test.ts": 1 with rationale, after which S247 is 4/4 (s634-s247.log).
 - S247: green (s634-s247.log). The one synthetic click in the Requests chart test is the Week range switch, budgeted
   with the rationale "Week-range re-query assertion for the nine Requests analytics charts".
