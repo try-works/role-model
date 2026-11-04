@@ -1,0 +1,1 @@
+{"status":"Run detail · 81fa44ab-f52d-4c16-a7c1-af5658448e8a · completed","cases":"0/24 cases passed — 24 failed","rows":24,"fails":24,"passes":0,"firstFail":"p17-tools-multi-hard\thard\t0%\tFAIL\tBenchmark execution failed.\tCodex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.\t—"}
