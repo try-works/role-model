@@ -1,0 +1,191 @@
+{
+  "version": 1,
+  "wave": 1,
+  "note": "Append-only: entries may be added as packages become clean, but never removed or renamed. Removing an entry silently narrows the typecheck coverage this gate enforces.",
+  "packages": [
+    {
+      "dir": "apps/docs-site",
+      "command": "react-router typegen && fumadocs-mdx && tsc --noEmit"
+    },
+    {
+      "dir": "packages/conformance",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "packages/dsh-role-model",
+      "command": "tsc --noEmit -p tsconfig.json"
+    },
+    {
+      "dir": "packages/packaging",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "packages/pi-role-model",
+      "command": "tsc --noEmit -p tsconfig.json"
+    },
+    {
+      "dir": "packages/protocol-types",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "packages/schema-tools",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "packages/store-contract",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/apps/bench-cli",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/apps/gateway-smoke",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/apps/router-devtools",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/apps/runtime-host-bridge",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/apps/runtime-ui",
+      "command": "react-router typegen && tsc --noEmit"
+    },
+    {
+      "dir": "role-model-router/apps/runtime-ui-next",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/adapter-execution",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/bench-core",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/bench-judge",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/bench-routing",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/catalog",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/context-envelope",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/core",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/endpoint-registry",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/openai-compat",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/process-supervisor",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/profile-aggregator",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/protocol-routing",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/provider-account",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/provider-acp",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/provider-anthropic",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/provider-cli",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/provider-litellm",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/provider-mcp",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/provider-openai",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/retrieval-receipt",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/roles",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/runtime-observability",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/runtime-web",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/sqlite-memory",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/tasks",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/tool-registry",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/trace",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/ui-parity",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/usage",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/vendor-abstraction",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/vendor-litellm",
+      "command": "tsc -p tsconfig.json --noEmit"
+    },
+    {
+      "dir": "role-model-router/packages/vendor-llama-swap",
+      "command": "tsc -p tsconfig.json --noEmit"
+    }
+  ]
+}

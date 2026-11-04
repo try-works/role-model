@@ -27,6 +27,20 @@ consumes the vendored source drop instead, so the same instruction resolves to:
 - `vendor/effect/packages/**/src/**` for the source of any API the guides do not cover;
 - `role-model-router/packages/effect/src/**`, the workspace package published as `effect` from that vendored tree.
 
+## Local delta from upstream (2026-11-04)
+
+Upstream points at `node_modules/effect/...`, a package this repository never installs: it consumes
+the vendored source drop (`vendor/effect`) and publishes `effect` from
+`role-model-router/packages/effect`. The installed `SKILL.md` therefore changes exactly three body
+lines; everything else is byte-identical to the upstream file described above. The sha256 recorded
+above is the digest of the **unmodified upstream file**, not of the installed copy.
+
+| upstream line | upstream text | installed text |
+| --- | --- | --- |
+| 15 | the source code from `node_modules/effect/src`. | the source code from `vendor/effect/packages/effect/src`. |
+| 30 | first read `node_modules/effect/AGENTS.md` | first read `vendor/effect/packages/effect/*.md` |
+| 34 | search through the source code in `node_modules/effect/src`. | search through the source code in `vendor/effect/packages/effect/src`. |
+
 ## Refreshing the pin
 
 ```bash
@@ -34,4 +48,4 @@ git clone --depth 1 https://github.com/effect-ts/skills.git /tmp/effect-skills
 cp /tmp/effect-skills/skills/effect-ts/SKILL.md .agents/skills/effect-ts/SKILL.md
 ```
 
-Then update this file's commit, retrieval date and digest in the same commit.
+Then re-apply the three-line vendor redirect recorded above and update this file's commit, retrieval date and upstream digest in the same commit. The installed file is intentionally not byte-identical to upstream, so the recorded sha256 stays the upstream file's digest.

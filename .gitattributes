@@ -15,6 +15,11 @@ vendor/effect/** text eol=lf
 vendor/effect/**/*.tar.gz -text
 vendor/effect-mq/** text eol=lf
 vendor/effect-mq/**/*.png -text
+vendor/crease/** text eol=lf
+vendor/foldkit/** text eol=lf
+vendor/foldkit/**/*.png -text
+vendor/foldkit/**/*.webp -text
+vendor/foldkit/**/*.woff2 -text
 *.go text eol=lf
 *.html text eol=lf
 *.js text eol=lf
