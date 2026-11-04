@@ -1,0 +1,20 @@
+# S630 /observe/queues redirect diagnosis
+
+date: 2026-11-04
+HEAD: 07d002d6
+
+## Reproduction attempts
+- routeFromUrl("/observe/queues") => Queues; trailing slash, query, and hash variants => Queues.
+- Direct mountShell at /observe/queues with a stub queues readback: location stays /observe/queues, title is "Queues | RM3 Foldkit shell", body renders "Queues" + "Queue truth from the shared store"; no Overview title/body.
+- Live packaged/dev host at http://127.0.0.1:3480/observe/queues: 200, location /observe/queues, title Queues, body includes [data-route=queues] and the Queues copy.
+- Existing queues routes tests: s269 canonical URL, s26e readback route, s567 reference titles all pass.
+
+## Result
+No redirect exists at 07d002d6. The observed "location /, title Overview" is not reproducible at this HEAD; the route/view/init/update path renders Queues in place. No product code was changed.
+
+## Regression test
+test/s630-queues-route-render.test.ts:
+- asserts canonical + trailing/query/hash URLs parse as Queues;
+- mounts /observe/queues and asserts no redirect (location/title), the Queues copy renders, and the Overview copy does not.
+
+This turns the reported symptom into a written invariant so a future change that redirects Queues to Overview fails the UI suite.
