@@ -1,0 +1,11 @@
+{
+  "route": "/router/agent-strategy",
+  "postureDiagnostics": 1,
+  "entries": 1,
+  "placeholderMarkers": [
+    "—",
+    "No posture entries are configured yet.",
+    "No Agent strategy entries are configured yet."
+  ],
+  "body": "Skip to content\nrole-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\nCACHE\n53%\nROUTER ENDPOINT\n127.0.0.1:3458/v1\n—\nAgent strategy\nOverview\nRouting strategy\nAgent strategy\nWorkloads\nController\nCandidates\nDecisions\nAgent strategy\n\nRole-bound postures stored in the agent_strategies block of the unified runtime config.\n\nNo posture entries are configured yet.\n\nPosture diagnostics\n\nViolations and capability warnings the runtime raised for the saved entries on this page. A scope that cannot resolve is reported on its own entry.\n\nNo diagnostics readback available yet.\n\nEntries\n\n0 saved · edit the JSON block below to add, change or remove entries; saving replaces the whole block.\n\nNo Agent strategy entries are configured yet.\n\nAdd entry\nSave Agent strategy\nEntries editor\n\nEdit the entry fields, add the entry to the JSON block, then save the canonical block.\n\nEDITING SAVED ENTRY RESEARCHER\n\nName\nRole (required)\nDescription\nModel id\nAgent strategy JSON\n\nThis is the exact block the host persists; saving replaces the whole block.\n\nagent_strategies (JSON)\nSave Agent strategy\nReload from host"
+}

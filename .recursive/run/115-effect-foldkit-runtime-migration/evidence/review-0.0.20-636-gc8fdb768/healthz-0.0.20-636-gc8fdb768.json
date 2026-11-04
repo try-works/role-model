@@ -1,0 +1,118 @@
+{
+  "runtime": {
+    "version": "0.0.20-636-gc8fdb768",
+    "release_version": "0.0.20-636-gc8fdb768",
+    "commit": "c8fdb76888d0972c2f1d0bc01810cde06839b19d",
+    "build_date": "2026-11-04T15:24:12.110Z",
+    "channel": "development",
+    "name": "role-model-dev",
+    "endpoint": "http://127.0.0.1:3458",
+    "source_tree": "651b009ac9dab1a4be85554bf3dc661ce51cf676",
+    "executable_sha256": "60d0c999cc4c3e9a3ba0ffd49499664c5094ead60f9deb4e9627c54eee214fb1",
+    "core_payload_sha256": "60d0c999cc4c3e9a3ba0ffd49499664c5094ead60f9deb4e9627c54eee214fb1"
+  },
+  "status": "healthy",
+  "executionMode": "decision_only",
+  "vendors": {
+    "llama-swap": {
+      "vendorId": "llama-swap",
+      "healthStatus": "inactive"
+    },
+    "litellm": {
+      "vendorId": "litellm",
+      "healthStatus": "inactive"
+    }
+  },
+  "inactiveVendors": [
+    "llama-swap",
+    "litellm"
+  ],
+  "credentialLifecycleAuthority": {
+    "state": "authoritative",
+    "bootstrapStatus": "ready"
+  },
+  "sessionBootstrap": {
+    "status": "ready",
+    "startedAt": "2026-11-04T15:28:47.844Z",
+    "finishedAt": "2026-11-04T15:28:47.974Z",
+    "stages": [
+      {
+        "stageId": "credentials",
+        "status": "ready",
+        "startedAt": "2026-11-04T15:28:47.844Z",
+        "finishedAt": "2026-11-04T15:28:47.879Z",
+        "details": {
+          "pendingAttempted": 0,
+          "pendingSucceeded": 0,
+          "pendingConnected": 0,
+          "pendingFailed": 0,
+          "pendingDeferred": 0,
+          "refreshAttempted": 0,
+          "refreshSucceeded": 0,
+          "refreshFailed": 0
+        }
+      },
+      {
+        "stageId": "endpoints",
+        "status": "ready",
+        "startedAt": "2026-11-04T15:28:47.943Z",
+        "finishedAt": "2026-11-04T15:28:47.972Z",
+        "details": {
+          "source": "manifest",
+          "count": 0,
+          "reconciled": 0,
+          "failed": 0,
+          "skipped": 0
+        }
+      },
+      {
+        "stageId": "peers",
+        "status": "skipped",
+        "startedAt": "2026-11-04T15:28:47.972Z",
+        "finishedAt": "2026-11-04T15:28:47.972Z",
+        "message": "no peer loads in manifest",
+        "details": {
+          "reloaded": 0,
+          "failed": 0
+        }
+      },
+      {
+        "stageId": "vendors",
+        "status": "skipped",
+        "startedAt": "2026-11-04T15:28:47.972Z",
+        "finishedAt": "2026-11-04T15:28:47.973Z",
+        "message": "unified runtime config disabled"
+      },
+      {
+        "stageId": "local-reload",
+        "status": "skipped",
+        "startedAt": "2026-11-04T15:28:47.973Z",
+        "finishedAt": "2026-11-04T15:28:47.973Z",
+        "message": "no llama-swap loads in manifest"
+      },
+      {
+        "stageId": "remote-health",
+        "status": "skipped",
+        "startedAt": "2026-11-04T15:28:47.973Z",
+        "finishedAt": "2026-11-04T15:28:47.973Z",
+        "message": "execution probes skipped in decision_only mode"
+      },
+      {
+        "stageId": "inventory",
+        "status": "ready",
+        "startedAt": "2026-11-04T15:28:47.973Z",
+        "finishedAt": "2026-11-04T15:28:47.974Z",
+        "details": {
+          "modelIdCount": 3,
+          "endpointIdCount": 3,
+          "localEndpointCount": 1,
+          "remoteEndpointCount": 2,
+          "emptyAliasIds": [],
+          "driftWarningCount": 0,
+          "driftWarnings": []
+        }
+      }
+    ]
+  },
+  "ready": true
+}

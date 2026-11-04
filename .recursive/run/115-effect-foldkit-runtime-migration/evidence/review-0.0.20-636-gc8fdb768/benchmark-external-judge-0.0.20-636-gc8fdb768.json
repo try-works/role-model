@@ -1,0 +1,32 @@
+{
+  "rows": [
+    {
+      "id": "openai.personal.primary.us-east-1.fast",
+      "checked": false
+    },
+    {
+      "id": "anthropic.team.shared.us-east-1.default",
+      "checked": true
+    },
+    {
+      "id": "cli.local.coder",
+      "checked": true
+    }
+  ],
+  "selectedText": "2 of 3 selected",
+  "judge": "openai.personal.primary.us-east-1.fast",
+  "mode": "quick",
+  "disabledAttribute": null,
+  "disabledProperty": false,
+  "runLabel": "Run quick benchmark (2 of 3 selected, 12 cases)",
+  "overlapWarningPresent": false,
+  "overlapWarningText": null,
+  "expectedPostBody": {
+    "endpointIds": [
+      "anthropic.team.shared.us-east-1.default",
+      "cli.local.coder"
+    ],
+    "judgeEndpointId": "openai.personal.primary.us-east-1.fast",
+    "mode": "quick"
+  }
+}
