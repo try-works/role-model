@@ -10,3 +10,5 @@ key-updated paths.
 
 TESTS s638 3/3: distinct ids for distinct payloads at the SAME token (RED captured with old ids),
 exact bodies, fake host binding id->payload accepts both consecutive saves, saved state after activation.
+
+FINAL: full UI suite 1010/1010; UI tsc 0. Packaged check (add a second DeepSeek model on the rebuild) still required by the build lane.
