@@ -1,0 +1,26 @@
+{
+  "capturedAt": "2026-11-05T12:47:53.932Z",
+  "artifact": "0.0.20-670-g26f21e01",
+  "mode": "routing-alias",
+  "correction": "\"deepseek-flash-direct\" is a user modelAliases config entry, not a routing alias; the routing aliases are the derived baseline.remote-only / difficulty.remote-only / controller.remote-only / hybrid.remote-only family.",
+  "request": {
+    "model": "baseline.remote-only",
+    "response_format": {
+      "type": "json_schema",
+      "json_schema": {
+        "name": "routing_alias_check",
+        "strict": true
+      }
+    }
+  },
+  "response": {
+    "httpStatus": 200,
+    "model": "deepseek/deepseek-flash",
+    "content": "{\"ok\":true,\"alias\":\"baseline.remote-only\"}",
+    "usage": {
+      "prompt_tokens": 79,
+      "completion_tokens": 34,
+      "total_tokens": 113
+    }
+  }
+}
