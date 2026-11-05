@@ -54,4 +54,18 @@ fixture registry is the endpoint seed. It provides three runnable endpoints - tw
 (`anthropic.team.shared.us-east-1.default`) that is distinct from both subjects.
 The seeder's test asserts that inventory and the bundled benchmark suite's eligible
 `quick_benchmark` case before a review run. The seeder does not rewrite fixture files.
-`n`n## Live benchmark endpoint seeding`n`nThe host registry is not populated by SQLite: run the companion after the host is up:`n`n```powershell`nnode scripts/runtime/seed-review-benchmark-endpoints.mjs --url http://127.0.0.1:3480`n```n`nIt POSTs three non-secret provider accounts (`review.subject.alpha`, `review.subject.beta`,`n`review.judge) with `authMode: oauth2-device-code` so admission does not probe a credential,`nthen POSTs one endpoint per account. The accounts use `credentialRef` as a local reference only.`nThe script then calls GET `/api/role-model/endpoints` and fails unless at least three review`nendpoints are live, healthy, benchmark-eligible, and the judge endpoint is distinct.`n
+
+
+## Opt-in dev-only benchmark seeders
+
+The fake review/mock accounts are NOT part of the default review seed. They live under
+`scripts/runtime/dev/` and must be invoked explicitly by a developer:
+
+```powershell
+node scripts/runtime/dev/seed-review-benchmark-endpoints.mjs --url http://127.0.0.1:3480
+node scripts/runtime/dev/mock-benchmark-upstream.mjs --port 3490 --mode healthy
+```
+
+The production review root uses the real provider account (for example
+`deepseek.personal.deepseek-api-key`) and its configured local credential; it does not create
+`review.*` or `mock.*` rows.

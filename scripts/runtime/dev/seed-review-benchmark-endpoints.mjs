@@ -8,7 +8,7 @@
  * and activates one endpoint per account, then asserts GET /api/role-model/endpoints.
  *
  * Usage:
- *   node scripts/runtime/seed-review-benchmark-endpoints.mjs --url http://127.0.0.1:3480
+ *   node scripts/runtime/dev/seed-review-benchmark-endpoints.mjs --url http://127.0.0.1:3480
  */
 
 export const REVIEW_ACCOUNTS = [

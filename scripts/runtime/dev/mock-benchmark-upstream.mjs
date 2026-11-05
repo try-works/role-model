@@ -7,8 +7,8 @@
  * returns HTTP 500 so a terminal benchmark run has a real per-case error.
  *
  * Usage:
- *   node scripts/runtime/mock-benchmark-upstream.mjs --port 3490 --mode healthy
- *   node scripts/runtime/mock-benchmark-upstream.mjs --port 3491 --mode fail-after-first
+ *   node scripts/runtime/dev/mock-benchmark-upstream.mjs --port 3490 --mode healthy
+ *   node scripts/runtime/dev/mock-benchmark-upstream.mjs --port 3491 --mode fail-after-first
  */
 import { appendFileSync } from "node:fs";
 import http from "node:http";
