@@ -3,9 +3,12 @@ version: 2.1
 executors:
   node24:
     docker:
-      - image: cimg/node:24.4.1
+      - image: cimg/node:24.11.1
     resource_class: medium
     working_directory: ~/project
+    environment:
+      # The frozen public graph is large; the default CircleCI heap OOMs during pnpm install.
+      NODE_OPTIONS: --max-old-space-size=3072
 
 commands:
   install-public:
@@ -20,7 +23,7 @@ commands:
             - public-pnpm-v1-{{ checksum "pnpm-lock.yaml" }}
       - run:
           name: Install the frozen public dependency graph
-          command: corepack pnpm install --frozen-lockfile
+          command: corepack pnpm install --frozen-lockfile --child-concurrency=1 --network-concurrency=4
       - save_cache:
           key: public-pnpm-v1-{{ checksum "pnpm-lock.yaml" }}
           paths:
