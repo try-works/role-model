@@ -47,6 +47,7 @@ import {
 } from "./benchmark-artifacts.js";
 
 import { writeBenchmarkRunResult } from "./benchmark-summary.js";
+import { benchmarkOutcomeFields } from "./benchmark-outcome.js";
 
 import {
   completeBenchmarkRunProgress,
@@ -257,6 +258,10 @@ export interface BenchmarkRunResult {
   readonly artifactRoot: string;
 
   readonly endpointGrades: readonly BenchmarkRunEndpointGrade[];
+
+  readonly caseCounts: import("./benchmark-outcome.js").BenchmarkCaseCounts;
+
+  readonly outcome: import("./benchmark-outcome.js").BenchmarkRunOutcome;
 }
 
 export interface BenchmarkRunEndpointGrade extends BenchmarkEndpointGrade {
@@ -2105,6 +2110,11 @@ export async function runRoutingCapabilityBenchmark(
       }
 
       caseResultsByEndpoint.set(endpoint.endpointId, caseResults);
+
+      const live = benchmarkOutcomeFields(
+        [...caseResultsByEndpoint.values()].map((results) => ({ caseResults: results })),
+      );
+      updateBenchmarkRunProgress(runId, live);
     }
 
     for (const endpoint of targetEndpoints) {
@@ -2264,6 +2274,8 @@ export async function runRoutingCapabilityBenchmark(
       artifactRoot: path.join(artifactRoot, runId),
 
       endpointGrades,
+
+      ...benchmarkOutcomeFields(endpointGrades),
     };
 
     const caseTaxonomyTags: Record<

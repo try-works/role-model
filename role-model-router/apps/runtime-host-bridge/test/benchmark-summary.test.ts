@@ -1064,6 +1064,8 @@ describe("benchmark-summary", () => {
         completedAtMs: 600,
         suiteId: "routing-capability-v2",
         caseCount: 1,
+        caseCounts: { failed: 0, passed: 1, total: 1 },
+        outcome: "passed",
         endpointIds: ["endpoint.quick"],
       },
       {
@@ -1072,6 +1074,8 @@ describe("benchmark-summary", () => {
         completedAtMs: 300,
         suiteId: "routing-capability-v2",
         caseCount: 3,
+        caseCounts: { failed: 0, passed: 3, total: 3 },
+        outcome: "passed",
         endpointIds: ["endpoint.full"],
       },
     ]);
