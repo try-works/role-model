@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s641-router-alias-resolution.test.ts (2 tests) 279ms
+ ✓ test/s530-router-family.test.ts (8 tests) 629ms
+
+ Test Files  2 passed (2)
+      Tests  10 passed (10)
+   Start at  21:29:30
+   Duration  18.34s (transform 8.03s, setup 0ms, collect 26.74s, tests 908ms, environment 5.42s, prepare 1.01s)
+

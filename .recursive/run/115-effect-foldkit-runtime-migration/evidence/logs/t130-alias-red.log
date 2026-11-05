@@ -1,0 +1,49 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s641-router-alias-resolution.test.ts (2 tests | 2 failed) 360ms
+   × S641 routing alias id resolution > resolves the hyphenated inventory alias instead of fabricating strategy.execution_mode 268ms
+     → expected 'Skip to contentrole-modelOverviewStud…' not to contain 'baseline.remote_only'
+   × S641 routing alias id resolution > prefers the active alias carried by the router readback profile 85ms
+     → expected 'Skip to contentrole-modelOverviewStud…' not to contain 'baseline.remote_only'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s641-router-alias-resolution.test.ts > S641 routing alias id resolution > resolves the hyphenated inventory alias instead of fabricating strategy.execution_mode
+AssertionError: expected 'Skip to contentrole-modelOverviewStud…' not to contain 'baseline.remote_only'
+
+Expected: "baseline.remote_only"
+Received: "Skip to contentrole-modelOverviewStudioLocalRemoteModelsRouterObserveConnectSystemLearningModelsRequestsCacheno live samplesRouter endpointlocalhost:3000/v1—OverviewStudioLocalRemoteModelsRouterObserveConnectSystemLearningRouting overviewOverviewRouting strategyAgent strategyWorkloadsControllerCandidatesDecisionsAlias inventoryKeep the current alias posture visible, then expand the registry only when you need every pool.Current active aliasbaseline.remote_onlyAlias readinessNo readiness rows available.Alias modesbasic 2 · difficulty 0 · hybrid 0AliasModeEffective modelsCandidate expansionReadinessbaseline.remote-onlybasicm11configuredbaseline.decision-onlybasicm11configuredBrowse all alias pools (2)⌄Routing candidatesConcrete endpoint and model candidates currently visible to the router for this runtime posture.ModelEndpointSourceHealthRoutingNo rows recorded yet.endpoints: 12"
+
+ ❯ test/s641-router-alias-resolution.test.ts:48:22
+     46|     const text = container.textContent ?? "";
+     47|     expect(text).toContain("baseline.remote-only");
+     48|     expect(text).not.toContain("baseline.remote_only");
+       |                      ^
+     49|     expect(text).toContain("Execution mode");
+     50|     expect(text).toContain("remote_only");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s641-router-alias-resolution.test.ts > S641 routing alias id resolution > prefers the active alias carried by the router readback profile
+AssertionError: expected 'Skip to contentrole-modelOverviewStud…' not to contain 'baseline.remote_only'
+
+Expected: "baseline.remote_only"
+Received: "Skip to contentrole-modelOverviewStudioLocalRemoteModelsRouterObserveConnectSystemLearningModelsRequestsCacheno live samplesRouter endpointlocalhost:3000/v1baseline.local-onlyOverviewStudioLocalRemoteModelsRouterObserveConnectSystemLearningRouting overviewOverviewRouting strategyAgent strategyWorkloadsControllerCandidatesDecisionsAlias inventoryKeep the current alias posture visible, then expand the registry only when you need every pool.Current active aliasbaseline.remote_onlyAlias readinessNo readiness rows available.Alias modesbasic 2 · difficulty 0 · hybrid 0AliasModeEffective modelsCandidate expansionReadinessbaseline.remote-onlybasicm11configuredbaseline.local-onlybasicm11configuredBrowse all alias pools (2)⌄Routing candidatesConcrete endpoint and model candidates currently visible to the router for this runtime posture.ModelEndpointSourceHealthRoutingNo rows recorded yet.alias: baseline.local-only · endpoints: 12"
+
+ ❯ test/s641-router-alias-resolution.test.ts:64:22
+     62|     const text = container.textContent ?? "";
+     63|     expect(text).toContain("baseline.local-only");
+     64|     expect(text).not.toContain("baseline.remote_only");
+       |                      ^
+     65|   });
+     66| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  21:28:09
+   Duration  16.72s (transform 7.71s, setup 0ms, collect 12.79s, tests 360ms, environment 2.35s, prepare 353ms)
+

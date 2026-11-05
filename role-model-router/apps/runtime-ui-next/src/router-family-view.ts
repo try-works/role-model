@@ -144,6 +144,43 @@ const blockEditor = (
 
 const metaText = (meta: string): string => (meta.length === 0 ? "—" : meta);
 
+/** Execution-mode token -> the real alias id suffix (unified-runtime-config primaryRoutingAliasExecutionSuffixes). */
+const executionModeAliasSuffix = (mode: string | undefined): string | null => {
+  switch (mode?.trim().toLowerCase()) {
+    case "decision_only": return "decision-only";
+    case "local_only": return "local-only";
+    case "remote_only": return "remote-only";
+    case "hybrid": return "hybrid";
+    default: return null;
+  }
+};
+
+/**
+ * The real active alias id, never a fabricated strategy + "." + executionMode: the router readback profile wins,
+ * otherwise the alias inventory is resolved with the documented hyphenated suffix for the execution mode. When no
+ * inventory entry matches, the strategy id is shown as-is (unresolved alias) and the execution mode is labelled as
+ * a mode, not as part of the alias.
+ */
+const resolveActiveAliasId = (input: {
+  readonly aliasIds: ReadonlyArray<string>;
+  readonly executionMode: string;
+  readonly strategy: string;
+  readonly summaryRows: ReadonlyArray<{ readonly label: string; readonly value: string }>;
+}): string => {
+  const profileAlias = input.summaryRows.find((entry) => entry.label === "alias" || entry.label === "activeAlias")?.value.trim();
+  if (profileAlias !== undefined && profileAlias.length > 0 && profileAlias !== "—") return profileAlias;
+  const strategy = input.strategy.trim();
+  const exact = input.aliasIds.find((aliasId) => aliasId === strategy);
+  if (exact !== undefined) return exact;
+  const suffix = executionModeAliasSuffix(input.executionMode);
+  if (suffix !== null) {
+    const expected = strategy + "." + suffix;
+    const resolved = input.aliasIds.find((aliasId) => aliasId === expected);
+    if (resolved !== undefined) return resolved;
+  }
+  return strategy.length === 0 ? "unresolved" : strategy;
+};
+
 const family = (
   readbacks: ReadbacksState,
   prefixes: readonly string[],
@@ -234,7 +271,8 @@ export const routerOverviewPage = (readbacks: ReadbacksState, h: H): Html => {
       [
         statGrid(
           [
-            { label: "Current active alias", value: activeAlias + "." + executionMode },
+            { label: "Current active alias", value: resolveActiveAliasId({ aliasIds: aliases.flatMap((alias) => (alias.aliasId === undefined ? [] : [alias.aliasId])), executionMode, strategy: activeAlias, summaryRows: summary }) },
+            { label: "Execution mode", value: executionMode },
             { label: "Alias readiness", value: candidateRows.length === 0 ? "No readiness rows available." : String(ready) + " ready · " + String(degraded) + " degraded · " + String(unavailable) + " unavailable" },
             { label: "Alias modes", value: modes.length === 0 ? "—" : "basic " + String(modeCount("basic")) + " · difficulty " + String(modeCount("difficulty")) + " · hybrid " + String(modeCount("hybrid")) },
           ],
