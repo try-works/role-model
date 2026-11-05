@@ -1,0 +1,24 @@
+{
+  "samples": [
+    {
+      "ms": 1500,
+      "progress": "Phase 1 of 3 · Recording responses\n\n0%\n\n0 / 0 steps\n\npreparing execution pass\n\nRequested 3 endpoints · executed — · skipped: deepseek.personal.deepseek-api-key.global.deepseek-flash-low, deepseek.personal.deepseek-api-key.global.deepseek-flash-max, deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high",
+      "action": "Benchmark running…"
+    },
+    {
+      "ms": 3000,
+      "progress": "Phase 1 of 3 · Recording responses\n\n0%\n\n0 / 84 steps\n\nmodel 2/3: deepseek/deepseek-flash • running benchmark cases and saving deliverables\n\nRequested 3 endpoints · executed 3",
+      "action": "Benchmark running…"
+    },
+    {
+      "ms": 5000,
+      "progress": "Phase 1 of 3 · Recording responses\n\n1%\n\n1 / 84 steps\n\nmodel 2/3: deepseek/deepseek-flash • running benchmark cases and saving deliverables\n\nRequested 3 endpoints · executed 3",
+      "action": "Benchmark running…"
+    },
+    {
+      "ms": 8000,
+      "progress": "Phase 1 of 3 · Recording responses\n\n1%\n\n1 / 84 steps\n\nmodel 2/3: deepseek/deepseek-flash • running benchmark cases and saving deliverables\n\nRequested 3 endpoints · executed 3",
+      "action": "Benchmark running…"
+    }
+  ]
+}

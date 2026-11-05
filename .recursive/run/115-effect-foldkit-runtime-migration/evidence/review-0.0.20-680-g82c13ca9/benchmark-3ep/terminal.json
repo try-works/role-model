@@ -1,0 +1,588 @@
+{
+  "runId": "f3422b68-ac5c-4256-ac1a-e79715c493b0",
+  "status": "completed",
+  "mode": "quick",
+  "startedAtMs": 1793910619216,
+  "updatedAtMs": 1793911511216,
+  "totalSteps": 84,
+  "completedSteps": 84,
+  "endpointIndex": 0,
+  "endpointCount": 3,
+  "requestedEndpointCount": 3,
+  "executedEndpointCount": 3,
+  "skippedEndpoints": [],
+  "currentEndpointId": null,
+  "currentEndpointModelId": null,
+  "caseIndex": 12,
+  "caseCount": 12,
+  "currentCaseId": "h15-max-signal-v3",
+  "currentPhase": null,
+  "runPhase": "complete",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+  "activeJudgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+  "artifactRoot": "D:\\DEV\\rm-clean\\ui-review28\\standalone-runtime-dev\\memory\\benchmark-runs",
+  "caseCounts": {
+    "total": 36,
+    "passed": 33,
+    "failed": 3
+  },
+  "outcome": "partial",
+  "result": {
+    "runId": "f3422b68-ac5c-4256-ac1a-e79715c493b0",
+    "suiteId": "routing-capability-v2",
+    "suiteVersion": "3.4",
+    "mode": "quick",
+    "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+    "startedAtMs": 1793910619213,
+    "completedAtMs": 1793911511130,
+    "artifactRoot": "D:\\DEV\\rm-clean\\ui-review28\\standalone-runtime-dev\\memory\\benchmark-runs\\f3422b68-ac5c-4256-ac1a-e79715c493b0",
+    "endpointGrades": [
+      {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-low",
+        "modelId": "deepseek/deepseek-flash",
+        "sourceType": "remote",
+        "overallScore": 0.8375,
+        "byDifficulty": {
+          "easy": {
+            "cases": 0,
+            "score": 0
+          },
+          "medium": {
+            "cases": 0,
+            "score": 0
+          },
+          "hard": {
+            "cases": 12,
+            "score": 0.8375
+          }
+        },
+        "caseResults": [
+          {
+            "caseId": "p17-tools-multi-hard",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable includes recorded API tool_calls for read_file (src/router.ts) and apply_patch, satisfying the MUST call criteria. The apply_patch diff has proper ---/+++ headers, an @@ hunk marker, and real change content (MODE const, ThroughputSla interface, guard clause), meeting the patch-format requirement with no placeholders. The JSON answer key is present and names both MODE and throughput SLA schema fields (requestsPerSecond, p95LatencyMs, burstCapacity) plus the test validation (sla.mode mismatch throw), matching the required MODE.*throughput SLA clue and checklist items.",
+            "gradingMethod": "judge",
+            "latencyMs": 6930,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "x01-max-signal",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable satisfies all MUST items: structured plan with milestones (4 steps), recorded API tool calls read_file/grep_search/apply_patch, JSON keys plan and patch_summary plus test_snippet (test checklist). apply_patch uses a valid Codex patch envelope (*** Begin Patch / *** Update File / bare @@ / *** End Patch) with real change content, no ----/+++ placeholders, no malformed patch, and no prose submitted as code.",
+            "gradingMethod": "judge",
+            "latencyMs": 9690,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h01-implement-two-sum",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable defines twoSum(nums: number[], target: number): [number, number], uses a Map (seen = new Map<number, number>()), iterates nums once in a single for loop with complement lookup, and returns two numeric indices [complementIndex, i]. No nested O(n^2) double loop. Complete working TypeScript with no placeholders or partial helpers, satisfying all MUST and SHOULD checklist items.",
+            "gradingMethod": "judge",
+            "latencyMs": 17723,
+            "actualPreview": "[i, j]` with `i < j` whose values sum to `target`.\n * @throws {Error} If no such pair exists.\n */\nfunction twoSum(nums: number[], target: number): [number, number] {\n  // Maps a previously visited value to its earliest index.\n  const seen =",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h02-fix-async-counter",
+            "difficultyBucket": "hard",
+            "score": 0.4,
+            "rationale": "The mutex/queue pattern correctly serializes the read-modify-write and would reach count 3 in principle, but the submitted deliverable is a partial helper: it opens with a bare '{' and 'private tail...' with no 'class Mutex {' declaration, so it does not compile. This violates the MUST 'Provide complete working TypeScript — no placeholders or partial helpers only' checklist item, even though the race-fix (MUST fix shared count via lock) and SHOULD clues (lock/mutex/Promise.resolve) are satisfied.",
+            "gradingMethod": "judge",
+            "latencyMs": 21535,
+            "actualPreview": "{\n  private tail: Promise<void> = Promise.resolve();\n\n  /** Enqueue for the lock; resolves with a `release` callback once acquired. */\n  acquire(): Promise<() => void> {\n    let release!: () => void;\n    const next = new Promise<void>((reso",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h04-tool-read-router",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable includes read_file API tool call with path src/router.ts (matching router\\.ts|read_file clue) and a JSON answer key whose value 'createRouter' is a valid exported function name, satisfying all MUST checklist items: read_file call, function-name answer, API tool call emission, and answer JSON key. No diff placeholders, prose-only TOOL_CALL lines, or malformed patch content present.",
+            "gradingMethod": "judge",
+            "latencyMs": 2596,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    }\n  ],\n  \"answer\": \"createRouter\"\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h05-tool-grep-eligibility",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable emits grep_search with pattern evaluateEligibility (satisfies MUST call grep_search with evaluateEligibility pattern and recorded API tool call), includes required JSON 'bullets' key with exactly two string bullets, and bullet text explicitly frames the helper as the routing eligibility check, satisfying the criterion that the summary mentions eligibility checks. No diff placeholders, prose-only TOOL_CALL lines, or malformed patch content present.",
+            "gradingMethod": "judge",
+            "latencyMs": 6040,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"evaluateEligibility is referenced three times in src/router.ts: invoked at line 42, ",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h06-tool-apply-patch",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Calls apply_patch via API and provides a valid unified diff with ---/+++ headers for src/config.ts, an @@ hunk marker, and a real change from const MODE = 'baseline'; to const MODE = 'difficulty'; meeting all MUST checklist items.",
+            "gradingMethod": "judge",
+            "latencyMs": 4277,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/config.ts\\n+++ b/src/config.ts\\n@@ -1 +1 @@\\n-const MODE = 'baseline';\\n+const MODE = 'difficulty';\"\n      }\n    }\n  ]\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h07-multi-turn-sla-guard",
+            "difficultyBucket": "hard",
+            "score": 0.65,
+            "rationale": "The code uses the multi-turn context and correctly references throughput SLA, sole-candidate handling, and fallback allow (THROUGHPUT_SLA, canUseSoleCandidateFallback, sole_candidate_throughput_sla_fallback). However, the extracted deliverable begins with stray '{});' and references an undefined HardDenyReason type, so it is not complete working TypeScript and lacks the required single typescript fence.",
+            "gradingMethod": "judge",
+            "latencyMs": 46564,
+            "actualPreview": "{});\n\nexport const THROUGHPUT_SLA: HardDenyReason = 'throughput_sla';\n\nexport interface EndpointEvaluation {\n  readonly endpointId: string;\n  readonly allowListed: boolean;\n  readonly hardDenied: boolean;\n  /** Reasons attributed to the har",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h08-multi-turn-tool-refine",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable satisfies all MUST items: it emits the required API read_file call on state/runtime-config.yaml (confirmed by the recorded tool-call metadata), then returns the JSON object with the required answer key set to \"controller\", matching the routing.strategy clue/value from the expected answer, with no diff placeholders or prose-only TOOL_CALL lines.",
+            "gradingMethod": "judge",
+            "latencyMs": 3338,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"state/runtime-config.yaml\"\n      }\n    }\n  ],\n  \"answer\": \"controller\"\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h09-agent-metrics-chain",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "[grounded_truth_mismatch] expected grounded comparison that local.lfm2.5-8b-a1b has lower p95 latency than remote.deepseek-v4-flash. Deliverable includes list_endpoints plus get_metrics for both local.lfm2.5-8b-a1b and remote.deepseek-v4-flash, matching the required tool-call chain, and the answer JSON contains the required 'answer' key with an explicit local vs remote p95 latency comparison (62 ms vs 245 ms), satisfying all MUST and SHOULD checklist items with no diff placeholders or prose-only tool syntax.",
+            "gradingMethod": "judge",
+            "latencyMs": 8142,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.lfm2.5-8b-a1b\"\n      }\n    },\n    {\n      \"name\": \"get_metrics\",\n  ",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h10-agent-read-grep-patch",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable emits all three required API tool calls in order: read_file with path src/router.ts, grep_search with pattern evaluateEligibility, and apply_patch. The apply_patch diff contains valid ---/+++ headers, an @@ hunk marker, and real one-line comment change content with no placeholder or malformed patch. No prose-only TOOL_CALL lines or reasoning prose submitted as code, satisfying all MUST and MUST NOT checklist items.",
+            "gradingMethod": "judge",
+            "latencyMs": 5753,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    },\n    {\n ",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h15-max-signal-v3",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable emits all three required API tool calls (read_file, grep_search, apply_patch) as recorded metadata confirms. Final JSON includes required keys plan, patch_summary, and test_snippet. The apply_patch diff contains valid ---/+++ headers, a proper @@ -1,3 +1,9 @@ hunk marker, and real change content (comment block) with no placeholders, satisfying the patch-format MUST. test_snippet includes a test selector matching the test|expect|assert clue, and plan milestones match milestone|plan clues.",
+            "gradingMethod": "judge",
+            "latencyMs": 6786,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          }
+        ],
+        "reasoningEffort": "low"
+      },
+      {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+        "modelId": "deepseek/deepseek-flash",
+        "sourceType": "remote",
+        "overallScore": 0.8416666666666667,
+        "byDifficulty": {
+          "easy": {
+            "cases": 0,
+            "score": 0
+          },
+          "medium": {
+            "cases": 0,
+            "score": 0
+          },
+          "hard": {
+            "cases": 12,
+            "score": 0.8416666666666667
+          }
+        },
+        "caseResults": [
+          {
+            "caseId": "p17-tools-multi-hard",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable includes recorded API read_file and apply_patch calls, and the apply_patch has valid ---/+++ headers, an @@ hunk marker, and real added content for MODE. The JSON answer key is present and acknowledges MODE plus throughput SLA schema fields/tests, explicitly noting validation status and missing SLA/test definitions. No placeholder diff or prose-only tool syntax.",
+            "gradingMethod": "judge",
+            "latencyMs": 10700,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "x01-max-signal",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable includes structured plan milestones, patch_summary, and test_snippet; API tool_calls list includes read_file, grep_search (throughputSla), and apply_patch with valid ---/+++ headers, @@ hunk, and real comment-only change content. No forbidden placeholder diff or prose-only TOOL_CALL.",
+            "gradingMethod": "judge",
+            "latencyMs": 10503,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h01-implement-two-sum",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable defines `export function twoSum(nums: number[], target: number): [number, number]`, uses `new Map<number, number>()`, iterates nums once with complement lookup and returns `[seen.get(complement)!, i]`, satisfying all MUST items (Map/hash, single pass, two numeric indices, no nested O(n^2) loop) plus SHOULD clues (function twoSum, Map, nums, target, return) with complete working TypeScript and no placeholders.",
+            "gradingMethod": "judge",
+            "latencyMs": 19460,
+            "actualPreview": "[i]`) is looked up in O(1), yielding O(n) overall time\n * and O(n) extra space.\n *\n * @param nums - The input array of numbers.\n * @param target - The desired sum.\n * @returns A tuple of two indices `[i, j]` such that `nums[i] + nums[j] ===",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h02-fix-async-counter",
+            "difficultyBucket": "hard",
+            "score": 0.55,
+            "rationale": "The locking logic correctly serializes increments via a promise-chain mutex, awaits Promise.resolve inside the critical section, and would reliably reach count 3 if the helper were valid. However it fails the MUST 'provide complete working TypeScript' item: the Mutex helper is partial/malformed — it begins with a bare `{ private tail... }` block missing the `class Mutex` declaration, so the code will not compile or run as submitted. No ```typescript fence present either.",
+            "gradingMethod": "judge",
+            "latencyMs": 27652,
+            "actualPreview": "{\n  private tail: Promise<void> = Promise.resolve();\n\n  async lock(): Promise<() => void> {\n    let release!: () => void;\n    const next = new Promise<void>((resolve) => {\n      release = resolve;\n    });\n\n    const previous = this.tail;\n  ",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h04-tool-read-router",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable includes required API tool call read_file with path src/router.ts and answer key containing function name createRouter, satisfying MUST checklist items and JSON answer schema.",
+            "gradingMethod": "judge",
+            "latencyMs": 2805,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    }\n  ],\n  \"answer\": \"createRouter\"\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h05-tool-grep-eligibility",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable includes required grep_search API call with pattern evaluateEligibility matching the MUST call criterion, and JSON object contains required bullets key with exactly two real bullet strings that discuss eligibility checks/eligibility logic, satisfying the summary-mentions-eligibility-checks criterion. No diff placeholders, prose TOOL_CALL lines, or malformed patch content present.",
+            "gradingMethod": "judge",
+            "latencyMs": 3548,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"evaluateEligibility appears 3 times in src/router.ts: called at line 42 with `endpoi",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h06-tool-apply-patch",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable emits an API apply_patch tool call whose diff argument contains valid --- a/src/config.ts and +++ b/src/config.ts headers, a real @@ -1,3 +1,3 @@ hunk marker, and an actual change line replacing const MODE = 'baseline'; with const MODE = 'difficulty';. Satisfies all MUST items (apply_patch invoked, headers present, MODE changed to difficulty, valid patch content, no placeholders or prose-only TOOL_CALL text) and matches the SHOULD clues.",
+            "gradingMethod": "judge",
+            "latencyMs": 3164,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/config.ts\\n+++ b/src/config.ts\\n@@ -1,3 +1,3 @@\\n-const MODE = 'baseline';\\n+const MODE = 'difficulty';\\n\"\n      }\n    }\n  ]\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h07-multi-turn-sla-guard",
+            "difficultyBucket": "hard",
+            "score": 0.7,
+            "rationale": "The code uses multi-turn context and provides a full guard referencing throughput SLA, sole candidate, and fallback allow logic. However the submitted block begins with an orphan object literal and relies on undefined EndpointCandidate/HardDenyReason types, so it fails the MUST for complete working TypeScript.",
+            "gradingMethod": "judge",
+            "latencyMs": 60509,
+            "actualPreview": "{\n  /** Stable endpoint identifier surfaced in the response payload. */\n  readonly endpointId: string;\n  /** True when the endpoint survived the alias allow-list filter. */\n  readonly allowListed?: boolean;\n  /** Hard-deny reasons recorded ",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h08-multi-turn-tool-refine",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "[grounded_truth_mismatch] expected grounded answer \"controller\". The API tool call is correct: read_file was emitted with path state/runtime-config.yaml, satisfying the [MUST] Emit API tool calls: read_file and the multi-turn requirement. The JSON also includes the required 'answer' key, so schema shape passes. However, the authoritative grading criterion requires answering with the routing.strategy value from the tool result (expected 'controller'), and the deliverable instead echoes the file path 'state/runtime-config.yaml'. That fails the core [MUST] 'answer with the routing.strategy value from the provided tool result' and the [SHOULD] clue match for t…",
+            "gradingMethod": "judge",
+            "latencyMs": 2961,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"state/runtime-config.yaml\"\n      }\n    }\n  ],\n  \"answer\": \"state/runtime-config.yaml\"\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h09-agent-metrics-chain",
+            "difficultyBucket": "hard",
+            "score": 0.85,
+            "rationale": "Deliverable includes the required list_endpoints and get_metrics calls for both local.lfm2.5-8b-a1b and remote.deepseek-v4-flash, and the answer explicitly compares remote (245 ms) vs local (62 ms) p95 latency, satisfying the JSON 'answer' schema and latency/p95/remote/local clue. Minor deduction: recorded API metadata shows only one get_metrics executed (list_endpoints, get_metrics) rather than the required two, so the 'get_metrics for both endpoints before summarizing' MUST is only fully satisfied in the deliverable's tool_calls field, not the authoritative call log.",
+            "gradingMethod": "judge",
+            "latencyMs": 10536,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.lfm2.5-8b-a1b\"\n      }\n    },\n    {\n      \"name\": \"get_metrics\",\n  ",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h10-agent-read-grep-patch",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable emits all three required API tool calls in order: read_file on src/router.ts, grep_search for evaluateEligibility (matching the named symbol clue), and apply_patch. The patch includes valid ---/+++ headers, an @@ -156 +156 @@ hunk marker with real one-line comment change content (-// evaluateEligibility helper / +// evaluateEligibility: returns whether an endpoint is eligible for routing), satisfying the MUST for valid diff format, no placeholders, and no prose-only TOOL_CALL lines. Recorded API metadata confirms the three tool calls executed.",
+            "gradingMethod": "judge",
+            "latencyMs": 5809,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    },\n    {\n ",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h15-max-signal-v3",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable includes required read_file, grep_search, and apply_patch tool calls and a JSON object with plan, patch_summary, and test_snippet. The apply_patch arguments contain valid ---/+++ headers, an @@ hunk marker, and real added comment content, satisfying the patch-format MUST and avoiding placeholder/malformed patch content.",
+            "gradingMethod": "judge",
+            "latencyMs": 9758,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          }
+        ],
+        "reasoningEffort": "max"
+      },
+      {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high",
+        "modelId": "deepseek/deepseek-v4-pro",
+        "sourceType": "remote",
+        "overallScore": 0.775,
+        "byDifficulty": {
+          "easy": {
+            "cases": 0,
+            "score": 0
+          },
+          "medium": {
+            "cases": 0,
+            "score": 0
+          },
+          "hard": {
+            "cases": 12,
+            "score": 0.775
+          }
+        },
+        "caseResults": [
+          {
+            "caseId": "p17-tools-multi-hard",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Meets all checklist items: recorded API tool calls include read_file src/router.ts and apply_patch; patch has ---/+++ headers, an @@ hunk marker, and real added MODE/throughput SLA schema content with no placeholders; answer JSON includes required answer key and acknowledges MODE plus throughput SLA schema/test validation.",
+            "gradingMethod": "judge",
+            "latencyMs": 54719,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- src/router.ts\\n+++ src/router.ts\\n@@ -1 +1",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "x01-max-signal",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable satisfies all MUST items: structured plan with milestones (read router.ts, add sole-candidate fallback comment); patch_summary present; test_snippet provided as test checklist; and recorded API tool calls include read_file, grep_search (throughputSla), and apply_patch. The apply_patch uses a valid Codex patch envelope (*** Begin Patch / *** Update File / bare @@ / real added comment line / *** End Patch) with no ----/+++ placeholders or malformed content, and no reasoning prose is submitted as code.",
+            "gradingMethod": "judge",
+            "latencyMs": 12941,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h01-implement-two-sum",
+            "difficultyBucket": "hard",
+            "score": 0.2,
+            "rationale": "The extracted deliverable is truncated/malformed: it begins with \"[], target: number): [number, number] {\" and never declares `function twoSum(nums: number[]`, so the [MUST] 'define twoSum' and 'complete working TypeScript — no placeholders or partial helpers' criteria fail (code would not compile). The surviving body does use a single Map pass with complement lookup and returns two numeric indices, and contains no O(n^2) nested loop, so partial credit is warranted but the deliverable is incomplete.",
+            "gradingMethod": "judge",
+            "latencyMs": 28269,
+            "actualPreview": "[], target: number): [number, number] {\n  const map = new Map<number, number>();\n  for (let i = 0; i < nums.length; i++) {\n    const complement = target - nums[i];\n    if (map.has(complement)) {\n      return [map.get(complement)!, i];\n    }",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h02-fix-async-counter",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "The submitted deliverable is an incomplete code fragment: it lacks `let count = 0`, `let lock = Promise.resolve()`, and an `async function acquire()` declaration, so `count`, `lock`, and `acquire` are undefined and the top-level `return release` is invalid TypeScript. It fails the MUST deliverable 'complete working TypeScript — no placeholders or partial helpers only' and cannot reliably reach count 3, despite containing a queue/mutex pattern.",
+            "gradingMethod": "judge",
+            "latencyMs": 72522,
+            "actualPreview": "{\n  let release!: () => void;\n  const p = new Promise<void>(resolve => { release = resolve; });\n  const previous = lock;\n  lock = previous.then(() => p);\n  await previous;\n  return release;\n}\n\nasync function increment() {\n  const release = ",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h04-tool-read-router",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Recorded API tool call read_file with path src/router.ts satisfies the [MUST] read_file requirement, and the JSON deliverable includes the required key \"answer\" with value \"createRouter\", a valid exported-style function name matching the [MUST] answer-references-a-function-name and schema (answer string, minLength 1). No diff placeholders or prose-only TOOL_CALL lines present.",
+            "gradingMethod": "judge",
+            "latencyMs": 3560,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    }\n  ],\n  \"answer\": \"createRouter\"\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h05-tool-grep-eligibility",
+            "difficultyBucket": "hard",
+            "score": 0.8,
+            "rationale": "The deliverable correctly records grep_search with pattern evaluateEligibility and includes the required bullets key with exactly two bullets, with no forbidden placeholders or prose-only tool syntax. However, the bullets mostly describe call sites and helper references and do not explicitly mention eligibility checks as required by the MUST summary criterion, so it is not fully compliant.",
+            "gradingMethod": "judge",
+            "latencyMs": 26151,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"evaluateEligibility is called at line 42 of src/router.ts as evaluateEligibility(end",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h06-tool-apply-patch",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable calls apply_patch with a valid unified diff containing ---/+++ headers for src/config.ts, an @@ hunk marker, and real change lines converting 'baseline' to 'difficulty', satisfying all MUST checklist items without placeholders or malformed content.",
+            "gradingMethod": "judge",
+            "latencyMs": 12777,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/config.ts\\n+++ b/src/config.ts\\n@@ -1 +1 @@\\n-const MODE = 'baseline';\\n+const MODE = 'difficulty';\\n\"\n      }\n    }\n  ]\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h07-multi-turn-sla-guard",
+            "difficultyBucket": "hard",
+            "score": 0.3,
+            "rationale": "Partially meets checklist: it uses multi-turn context and references throughput_sla, sole candidate, allowlist, and fallback logic. However it fails [MUST] Provide complete working TypeScript: the code begins with an orphan object type lacking `type/interface EndpointHardDenial =` and references undefined `DenialReason` and `EndpointHardDenial`, making it invalid/not runnable.",
+            "gradingMethod": "judge",
+            "latencyMs": 70641,
+            "actualPreview": "{\n  endpointId: string;\n  reason: DenialReason;\n}\n\nfunction getSoleCandidateFallback(\n  allowlistedEndpointIds: readonly string[],\n  hardDenials: readonly EndpointHardDenial[]\n): string | null {\n  if (allowlistedEndpointIds.length !== 1) {\n",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h08-multi-turn-tool-refine",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable calls read_file on state/runtime-config.yaml (confirmed by recorded API tool_calls metadata) and returns JSON with required key answer set to \"controller\", matching the routing.strategy value; no diff placeholders or prose-only tool syntax present.",
+            "gradingMethod": "judge",
+            "latencyMs": 6031,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"state/runtime-config.yaml\"\n      }\n    }\n  ],\n  \"answer\": \"controller\"\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h09-agent-metrics-chain",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable includes list_endpoints and get_metrics for both local.lfm2.5-8b-a1b and remote.deepseek-v4-flash, matching the recorded API tool calls, and the answer explicitly compares local vs remote p95 latency, satisfying all MUST checklist items and matching latency/p95/remote/local clues.",
+            "gradingMethod": "judge",
+            "latencyMs": 17559,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.lfm2.5-8b-a1b\"\n      }\n    },\n    {\n      \"name\": \"get_metrics\",\n  ",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h10-agent-read-grep-patch",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "All three required API tool calls are present in order: read_file with path src/router.ts, grep_search with pattern evaluateEligibility, and apply_patch containing a valid ---/+++ diff with an @@ hunk marker and a real one-line comment change (no placeholders). Clues router/evaluateEligibility/patch/diff are matched and no fake TOOL_CALL prose or reasoning-as-code was submitted.",
+            "gradingMethod": "judge",
+            "latencyMs": 18187,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    },\n    {\n ",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h15-max-signal-v3",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable satisfies all MUST checklist items: it includes API tool_calls for read_file, grep_search, and apply_patch; the final JSON includes plan, patch_summary, and test_snippet. The apply_patch uses a valid Codex patch envelope (*** Begin Patch / *** Update File / @@ / real added comment / *** End Patch), so it meets the patch-content requirement without placeholders or malformed content.",
+            "gradingMethod": "judge",
+            "latencyMs": 13976,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          }
+        ],
+        "reasoningEffort": "high"
+      }
+    ],
+    "caseCounts": {
+      "total": 36,
+      "passed": 33,
+      "failed": 3
+    },
+    "outcome": "partial",
+    "requestedEndpointCount": 3,
+    "executedEndpointCount": 3,
+    "skippedEndpoints": []
+  }
+}
