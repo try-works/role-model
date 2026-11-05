@@ -29,3 +29,13 @@
 - s624/s622/s563/s640 updated to the production columns/empty states.
 - RED t133-parity-red.log (pre-parity routes/update) -> targeted 55/55 green; tsc 0; full suite 122 files / 1027 tests
   PASS; S247 4/4.
+
+## Packaged / fixture evidence
+- Production reference DOM (:3456 /app/models/benchmark): t133-production-benchmark-dom.json + .png - current production has no scores/taxonomy data,
+  and renders the same descriptions/empty-state sentences this port now uses.
+- Packaged dev host (:3484, same empty-state data): t133-packaged-benchmark-dom.json + .png - matches production
+  section text and endpoint column headers (Model/Path/Scope/Status plus the port's Actions column).
+- 3-endpoint fixture rendered from the committed view with host-shaped summary/runs (two DeepSeek Flash efforts +
+  DeepSeek V4 Pro): t133-benchmark-3-endpoints.png/html/dom.json shows 3 distinct rows
+  (deepseek.flash.low / flash.high / v4-pro), production columns Model..Actions with 3 Clear actions, taxonomy
+  "Role: coder" single-dimension list of 3, and history "quick • 12 cases • 3 models" + outcome 11/12.
