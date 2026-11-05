@@ -1,0 +1,109 @@
+{
+  "version": "0.0.20-684-g41d60424",
+  "commit": "41d60424",
+  "sha256": "d03ed8216be3aff5d35f9d3c5d8e992d895c0fb0d484b9e18c7e2c570343ac01",
+  "pid": 21924,
+  "health": "healthy",
+  "benchmark": {
+    "runId": "e8cf403e-3be5-4100-8b8c-284b8e681c77",
+    "status": "completed",
+    "outcome": "partial",
+    "requestedEndpointCount": 3,
+    "executedEndpointCount": 3,
+    "totalSteps": 84,
+    "caseCounts": {
+      "total": 36,
+      "passed": 34,
+      "failed": 2
+    },
+    "scores": [
+      {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-low",
+        "modelId": "deepseek/deepseek-flash",
+        "score": 0.6916666666666668,
+        "passed": 11,
+        "failed": 1
+      },
+      {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+        "modelId": "deepseek/deepseek-flash",
+        "score": 0.7374999999999998,
+        "passed": 11,
+        "failed": 1
+      },
+      {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high",
+        "modelId": "deepseek/deepseek-v4-pro",
+        "score": 0.8250000000000001,
+        "passed": 12,
+        "failed": 0
+      }
+    ]
+  },
+  "display": {
+    "lastRun": "e8cf403e-3be5-4100-8b8c-284b8e681c77",
+    "suite": "Quick",
+    "judge": "deepseek/deepseek-flash",
+    "headers": [
+      "Model",
+      "Path",
+      "Scope",
+      "Status",
+      "Actions",
+      "Model",
+      "Overall",
+      "Profile",
+      "Easy",
+      "Medium",
+      "Hard",
+      "p50",
+      "p95",
+      "Scope",
+      "Actions"
+    ],
+    "scoreRows": [
+      "deepseek/deepseek-flash (low)\n\ne8cf403e-3be5-4100-8b8c-284b8e681c77 · quick\n\ndeepseek.personal.deepseek-api-key.global.deepseek-flash-low\n\nExact (run artifact)\n\n\t69%\t—\t0% · 0\t0% · 0\t69% · 12\t4881 ms\t43384 ms\tremote\tClear",
+      "deepseek/deepseek-flash (max)\n\ne8cf403e-3be5-4100-8b8c-284b8e681c77 · quick\n\ndeepseek.personal.deepseek-api-key.global.deepseek-flash-max\n\nExact (run artifact)\n\n\t74%\t—\t0% · 0\t0% · 0\t74% · 12\t6291 ms\t73872 ms\tremote\tClear",
+      "deepseek/deepseek-v4-pro (high)\n\ne8cf403e-3be5-4100-8b8c-284b8e681c77 · quick\n\ndeepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high\n\nExact (run artifact)\n\n\t83%\t—\t0% · 0\t0% · 0\t83% · 12\t15548 ms\t82043 ms\tremote\tClear"
+    ],
+    "clearPerRow": true,
+    "threeDistinctRows": true
+  },
+  "taxonomy": {
+    "eyebrow": "ROLE: CODER",
+    "entries": 3,
+    "tableCount": 0,
+    "mutuallyExclusive": true,
+    "emptySelectSentence": "Select a taxonomy dimension above to see per-model benchmark scores.",
+    "noDataSentence": "No taxonomy dimension data is available yet. Benchmark results with taxonomy-tagged cases will appear here."
+  },
+  "history": {
+    "line": "e8cf403e-3be5-4100-8b8c-284b8e681c77 quick • 12 cases • 3 models 2026-11-05 22:43 • routing-capability-v2 Outcome: partial · 34/36 passed QUICK"
+  },
+  "regressions": {
+    "router": {
+      "hyphen": true,
+      "mode": true,
+      "underscore": false
+    },
+    "requests": {
+      "charts": 9,
+      "visible": 0
+    },
+    "routing": {
+      "charts": 9,
+      "visible": 0
+    },
+    "queues": true
+  },
+  "secretScan": {
+    "files": 2799,
+    "skKey": 0,
+    "bearer": 0
+  },
+  "suite": {
+    "files": 122,
+    "tests": 1027,
+    "exitCode": 0
+  }
+}
