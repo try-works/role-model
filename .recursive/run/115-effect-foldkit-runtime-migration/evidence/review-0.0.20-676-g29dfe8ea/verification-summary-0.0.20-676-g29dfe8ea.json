@@ -1,0 +1,97 @@
+{
+  "version": "0.0.20-676-g29dfe8ea",
+  "commit": "29dfe8ea",
+  "sha256": "72c9b1ad2f34593fa6dd2fcced4b6b78998fe0011a86561308b70c8ea26dce2f",
+  "pid": 9552,
+  "health": "healthy",
+  "suite": {
+    "files": 119,
+    "tests": 1014,
+    "exitCode": 0
+  },
+  "routerOverview": {
+    "currentAlias": "baseline.remote-only",
+    "executionMode": "remote_only",
+    "bodyHasHyphen": true,
+    "bodyHasSeparateExecutionMode": true,
+    "bodyHasFabricatedUnderscoreAlias": false,
+    "inventoryHyphenated": true
+  },
+  "aliasRequest": {
+    "status": 200,
+    "response": {
+      "id": "chatcmpl-role-model",
+      "object": "chat.completion",
+      "created": 1793887972,
+      "model": "deepseek/deepseek-flash",
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "{\"answer\":\"alias-baseline-ok\"}"
+          },
+          "finish_reason": "stop"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 65,
+        "completion_tokens": 37,
+        "total_tokens": 102
+      }
+    },
+    "requestedModel": "baseline.remote-only",
+    "selectedModelId": "deepseek/deepseek-flash",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+    "routingDecisionId": "decision-req-b7c1a381-f6fe-4233-bf57-bb966c0a22e5",
+    "adapterFamily": "ai-sdk-openai-compatible"
+  },
+  "benchmark": {
+    "runId": "4c970a25-8a08-49a6-b3cf-47895bdf91d4",
+    "status": "completed",
+    "outcome": "partial",
+    "caseCounts": {
+      "total": 24,
+      "passed": 22,
+      "failed": 2
+    },
+    "scores": [
+      {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-low",
+        "score": 0.7041666666666666,
+        "passed": 11,
+        "failed": 1
+      },
+      {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+        "score": 0.775,
+        "passed": 11,
+        "failed": 1
+      }
+    ],
+    "detail": {
+      "rows": 24,
+      "passes": 22,
+      "fails": 2,
+      "headline": "Run detail · 4c970a25-8a08-49a6-b3cf-47895bdf91d4 · completed · outcome partial"
+    }
+  },
+  "regressions": {
+    "requests": {
+      "route": "/requests",
+      "title": "Requests | RM3 Foldkit shell",
+      "charts": 9,
+      "tables": 9,
+      "visible": 0,
+      "hasQueues": true,
+      "railModels": true
+    }
+  },
+  "secretScan": {
+    "files": 2734,
+    "skKey": 0,
+    "bearer": 0,
+    "apiKeyAssignments": "3 false positives (x-api-key header/form label)",
+    "mockEnvName": "identifier only in historical docs"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "request": {
+    "model": "baseline.remote-only",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Return JSON {\"answer\":\"alias-baseline-ok\"}."
+      }
+    ],
+    "response_format": {
+      "type": "json_schema",
+      "json_schema": {
+        "name": "probe",
+        "strict": true,
+        "schema": {
+          "type": "object",
+          "properties": {
+            "answer": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "answer"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "status": 200,
+  "responseText": "{\"id\":\"chatcmpl-role-model\",\"object\":\"chat.completion\",\"created\":1793887972,\"model\":\"deepseek/deepseek-flash\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"answer\\\":\\\"alias-baseline-ok\\\"}\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":65,\"completion_tokens\":37,\"total_tokens\":102}}\n",
+  "headers": {
+    "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id, X-Role-Model-Channel, X-Role-Model-Scope, X-Role-Model-Authorization-Epoch, X-Role-Model-Capability",
+    "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "access-control-allow-origin": "*",
+    "connection": "keep-alive",
+    "content-length": "307",
+    "content-type": "application/json",
+    "date": "Thu, 05 Nov 2026 14:12:52 GMT",
+    "keep-alive": "timeout=5",
+    "x-role-model-adapter-family": "ai-sdk-openai-compatible",
+    "x-role-model-endpoint-id": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+    "x-role-model-routing-decision-id": "decision-req-b7c1a381-f6fe-4233-bf57-bb966c0a22e5"
+  }
+}
