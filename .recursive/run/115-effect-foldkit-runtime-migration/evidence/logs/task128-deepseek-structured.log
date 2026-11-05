@@ -1,0 +1,23 @@
+task-128 DeepSeek structured-output policy
+
+ROOT CAUSE: provider-openai advertised structuredOutputs native for every model and sent
+response_format json_schema. DeepSeek rejects json_schema; benchmark structured cases failed immediately.
+
+FIX
+- getOpenAICapabilities: DeepSeek model ids -> structuredOutputs "json-fallback".
+- chat-completions builder: DeepSeek structured requests send {type:"json_object"}; explicit benchmark
+  response_format {type:"json_schema"} is rewritten to json_object for DeepSeek.
+- normalize reports structuredOutputMode "json-fallback".
+- benchmark-runner: DeepSeek subject deliverables and DeepSeek judge/compare use json_object rather
+  than JUDGE_RESPONSE_FORMAT/COMPARE_RESPONSE_FORMAT.
+
+TESTS
+- provider-openai 37/37 incl DeepSeek json_object, no json_schema, fake upstream rejects json_schema/
+  accepts json_object and parses JSON; RED captured (1 failed) with policy disabled.
+- benchmark-runner judge+compare 19/19 incl DeepSeek subject receives json_object and case grades >0.
+- host tsc 0.
+
+:3480 VERIFICATION BLOCKED: :3480 runs the packaged 633 exe built before this change. A real quick
+run on it (2 DeepSeek endpoints, judge deepseek-flash) reproduced 5 passed / 7 failed per endpoint
+(endpoint score ~0.4167). The build lane must rebuild the package and rerun; source verification is
+covered by the fake-upstream + runner tests.

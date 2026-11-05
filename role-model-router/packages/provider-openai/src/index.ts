@@ -13,7 +13,7 @@ export function createOpenAIProviderAdapter(adapterFamily = "ai-sdk-openai"): Pr
   return {
     adapterFamily,
     negotiateCapabilities: ({ executionRequest, target }) =>
-      getOpenAICapabilities(Boolean(executionRequest.structuredOutput), target.providerId),
+      getOpenAICapabilities(Boolean(executionRequest.structuredOutput), target.providerId, target.modelId),
     buildRequest: buildOpenAIRequest,
     normalizeResponse: normalizeOpenAIResponse,
   };
@@ -56,12 +56,20 @@ const OPENAI_MODEL_REQUEST_POLICIES: Record<string, OpenAIModelRequestPolicy> = 
   },
 };
 
+const isDeepSeekModel = (modelId: string): boolean =>
+  modelId.startsWith("deepseek/") || /^deepseek-(flash|v4-pro)$/.test(modelId);
+
 function getOpenAICapabilities(
   hasStructuredOutput: boolean,
   providerId: string,
+  modelId: string,
 ): ProviderCapabilityMatrix {
   return {
-    structuredOutputs: hasStructuredOutput ? "native" : "unsupported",
+    structuredOutputs: hasStructuredOutput
+      ? isDeepSeekModel(modelId)
+        ? "json-fallback"
+        : "native"
+      : "unsupported",
     toolCalling: {
       supported: true,
       extraction: "provider-native",
@@ -984,9 +992,19 @@ export function buildOpenAIRequest(
                 },
               },
             }
-          : input.executionRequest.responseFormat
-            ? { response_format: input.executionRequest.responseFormat }
-            : {}),
+          : input.executionRequest.structuredOutput &&
+              input.capabilities.structuredOutputs === "json-fallback" &&
+              isDeepSeekModel(input.target.modelId)
+            ? { response_format: { type: "json_object" } }
+            : input.executionRequest.responseFormat
+              ? {
+                  response_format:
+                    isDeepSeekModel(input.target.modelId) &&
+                    (input.executionRequest.responseFormat as { readonly type?: string }).type === "json_schema"
+                      ? { type: "json_object" }
+                      : input.executionRequest.responseFormat,
+                }
+              : {}),
       },
     };
   }
@@ -1122,7 +1140,10 @@ export function normalizeOpenAIResponse(
         input.capabilities.structuredOutputs === "native" &&
         "response_format" in input.requestCapture.body
           ? "native"
-          : "none",
+          : input.capabilities.structuredOutputs === "json-fallback" &&
+              "response_format" in input.requestCapture.body
+            ? "json-fallback"
+            : "none",
       stream: {
         requested: Boolean(
           input.executionRequest?.stream ??

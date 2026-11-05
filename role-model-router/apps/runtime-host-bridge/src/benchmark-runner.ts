@@ -381,7 +381,7 @@ async function executeBenchmarkTurn(
   const requestId = `bench-${caseItem.case_id}-${endpoint.endpointId}-${requestSuffix}-${randomUUID()}`;
 
   const omitTools = options?.omitTools === true;
-  const responseFormat = buildTextDeliverableResponseFormat(caseItem) as
+  const responseFormat:
     | {
         readonly type: "json_schema";
         readonly json_schema: {
@@ -390,7 +390,19 @@ async function executeBenchmarkTurn(
           readonly strict?: boolean;
         };
       }
-    | undefined;
+    | { readonly type: "json_object" }
+    | undefined = isDeepSeekBenchmarkModel(endpoint.modelId)
+    ? { type: "json_object" }
+    : (buildTextDeliverableResponseFormat(caseItem) as
+        | {
+            readonly type: "json_schema";
+            readonly json_schema: {
+              readonly name: string;
+              readonly schema: Record<string, unknown>;
+              readonly strict?: boolean;
+            };
+          }
+        | undefined);
   const usesResponsesExecution =
     typeof deps.executeResponses === "function" &&
     Boolean(caseItem.tools?.length) &&
@@ -402,7 +414,7 @@ async function executeBenchmarkTurn(
         model: endpoint.modelId,
         input: messages,
         ...(caseItem.tools && !omitTools ? { tools: caseItem.tools } : {}),
-        ...(responseFormat
+        ...(responseFormat?.type === "json_schema"
           ? {
               text: {
                 format: {
@@ -621,6 +633,9 @@ async function runCaseOnEndpoint(
   }
 }
 
+const isDeepSeekBenchmarkModel = (modelId: string): boolean =>
+  modelId.startsWith("deepseek/") || /^deepseek-(flash|v4-pro)$/.test(modelId);
+
 const JUDGE_RESPONSE_FORMAT = {
   type: "json_schema",
 
@@ -714,7 +729,9 @@ async function executeJudgeRequest(
       model: judgeEndpoint.modelId,
       messages,
       temperature: 0,
-      ...(structuredOutput ? { response_format: JUDGE_RESPONSE_FORMAT } : {}),
+      ...(structuredOutput
+        ? { response_format: isDeepSeekBenchmarkModel(judgeEndpoint.modelId) ? { type: "json_object" as const } : JUDGE_RESPONSE_FORMAT }
+        : {}),
     };
 
     const result = await deps.executeChatCompletions(
@@ -1370,7 +1387,7 @@ async function gradeCompareAcrossModels(input: {
 
           temperature: 0,
 
-          response_format: COMPARE_RESPONSE_FORMAT,
+          response_format: isDeepSeekBenchmarkModel(input.judgeEndpoint.modelId) ? { type: "json_object" } : COMPARE_RESPONSE_FORMAT,
         },
 
         requestId,
