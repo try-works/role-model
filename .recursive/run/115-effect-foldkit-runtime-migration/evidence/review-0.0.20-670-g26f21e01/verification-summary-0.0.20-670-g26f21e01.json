@@ -1,0 +1,99 @@
+{
+  "version": "0.0.20-670-g26f21e01",
+  "commit": "26f21e01",
+  "sha256": "45d045f1b821092591dc2e0f4f0cd345803fe95513fb5aaf6e3608f64b842910",
+  "pid": 39216,
+  "health": "healthy",
+  "suite": {
+    "files": 118,
+    "tests": 1012,
+    "exitCode": 0
+  },
+  "direct": {
+    "status": 200,
+    "response": {
+      "id": "chatcmpl-role-model",
+      "object": "chat.completion",
+      "created": 1793880797,
+      "model": "deepseek/deepseek-flash",
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "{\"answer\":\"ok\"}"
+          },
+          "finish_reason": "stop"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 66,
+        "completion_tokens": 36,
+        "total_tokens": 102
+      }
+    },
+    "requestId": "req-67f9ae76-7251-4552-9672-923fda4ba644"
+  },
+  "alias": {
+    "status": 200,
+    "response": {
+      "id": "chatcmpl-role-model",
+      "object": "chat.completion",
+      "created": 1793881083,
+      "model": "deepseek/deepseek-flash",
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "{\"answer\": \"alias-ok\"}"
+          },
+          "finish_reason": "stop"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 68,
+        "completion_tokens": 31,
+        "total_tokens": 99
+      }
+    },
+    "requestId": "req-1b333429-c507-42e7-8763-6668b22b506d",
+    "routingDecisionId": "decision-req-1b333429-c507-42e7-8763-6668b22b506d",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash"
+  },
+  "benchmark": {
+    "runId": "4d3ca38c-5682-473e-8a44-085cd37187a0",
+    "status": "completed",
+    "outcome": "passed",
+    "caseCounts": {
+      "total": 24,
+      "passed": 24,
+      "failed": 0
+    },
+    "scores": [
+      {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-low",
+        "overallScore": 0.7500000000000001,
+        "passed": 12,
+        "failed": 0
+      },
+      {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+        "overallScore": 0.8083333333333332,
+        "passed": 12,
+        "failed": 0
+      }
+    ],
+    "detail": {
+      "rows": 24,
+      "passes": 24,
+      "fails": 0,
+      "headline": "Run detail · 4d3ca38c-5682-473e-8a44-085cd37187a0 · completed · outcome passed"
+    },
+    "preFix": "5/12 = 0.4167 per endpoint"
+  },
+  "secretScan": {
+    "files": 118,
+    "result": "sk-key 0; bearer-token 0; api-key-assignment 3 false positives; MOCK_API_KEY identifier only, no value"
+  }
+}
