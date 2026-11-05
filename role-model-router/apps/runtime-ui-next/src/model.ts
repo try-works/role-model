@@ -149,6 +149,11 @@ const modelsFields = {
     benchmarkMode: Schema.optional(Schema.String),
     benchmarkProgress: Schema.optional(Schema.Struct({
       caseCount: Schema.optional(Schema.Number),
+      caseCounts: Schema.optional(Schema.Struct({
+        failed: Schema.Number,
+        passed: Schema.Number,
+        total: Schema.Number,
+      })),
       caseIndex: Schema.optional(Schema.Number),
       completedSteps: Schema.optional(Schema.Number),
       currentCaseId: Schema.optional(Schema.String),
@@ -159,6 +164,7 @@ const modelsFields = {
       errorCode: Schema.optional(Schema.String),
       errorMessage: Schema.optional(Schema.String),
       message: Schema.optional(Schema.String),
+      outcome: Schema.optional(Schema.Literals(["passed", "partial", "failed"])),
       resultJson: Schema.optional(Schema.String),
       runId: Schema.String,
       runPhase: Schema.optional(Schema.Literals(["execution", "grading", "compare", "complete"])),

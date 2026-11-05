@@ -1,0 +1,37 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s640-benchmark-outcome.test.ts (5 tests | 1 failed) 995ms
+   ✓ S640 benchmark host outcome fields > renders outcome and passed/total in history rows for partial, failed and passed runs  437ms
+   ✓ S640 benchmark host outcome fields > uses the host outcome/caseCounts in the run-detail headline with nested result grades 191ms
+   ✓ S640 benchmark host outcome fields > shows the host outcome and caseCounts in the progress panel without a result payload 123ms
+   × S640 benchmark host outcome fields > retains host caseCounts/outcome when a polled snapshot arrives 53ms
+     → expected undefined to deeply equal { failed: 4, passed: 8, total: 12 }
+   ✓ S640 benchmark host outcome fields > keeps the local derivation when an old record has no host outcome fields 182ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s640-benchmark-outcome.test.ts > S640 benchmark host outcome fields > retains host caseCounts/outcome when a polled snapshot arrives
+AssertionError: expected undefined to deeply equal { failed: 4, passed: 8, total: 12 }
+
+- Expected: 
+{
+  "failed": 4,
+  "passed": 8,
+  "total": 12,
+}
+
++ Received: 
+undefined
+
+ ❯ test/s640-benchmark-outcome.test.ts:73:68
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  08:11:27
+   Duration  28.29s (transform 13.29s, setup 0ms, collect 21.75s, tests 995ms, environment 3.83s, prepare 560ms)
+

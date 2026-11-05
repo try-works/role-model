@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s640-benchmark-outcome.test.ts (5 tests) 764ms
+   ✓ S640 benchmark host outcome fields > renders outcome and passed/total in history rows for partial, failed and passed runs  366ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  08:13:00
+   Duration  26.69s (transform 12.27s, setup 0ms, collect 20.11s, tests 764ms, environment 3.78s, prepare 707ms)
+

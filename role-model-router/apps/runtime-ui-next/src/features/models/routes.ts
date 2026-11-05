@@ -434,6 +434,7 @@ type BenchmarkRunResultView = {
     readonly modelId?: string;
     readonly overallScore?: number;
   }>;
+  readonly caseCounts?: { readonly failed?: number; readonly passed?: number; readonly total?: number };
   readonly caseResults?: ReadonlyArray<{
     readonly actualPreview?: string;
     readonly caseId?: string;
@@ -444,6 +445,7 @@ type BenchmarkRunResultView = {
     readonly score?: number;
   }>;
   readonly errorMessage?: string;
+  readonly outcome?: string;
   readonly runId?: string;
   readonly status?: string;
 };
@@ -461,6 +463,10 @@ const parseBenchmarkRunResult = (json: string | undefined): BenchmarkRunResultVi
       ...base,
       ...(typeof record.errorMessage === "string" ? { errorMessage: record.errorMessage } : {}),
       ...(typeof record.status === "string" ? { status: record.status } : {}),
+      ...(typeof record.outcome === "string" ? { outcome: record.outcome } : {}),
+      ...(typeof record.caseCounts === "object" && record.caseCounts !== null
+        ? { caseCounts: record.caseCounts as { readonly failed?: number; readonly passed?: number; readonly total?: number } }
+        : {}),
     };
   } catch {
     return undefined;
@@ -472,9 +478,13 @@ const benchmarkResultStats = (result: BenchmarkRunResultView | undefined) => {
   const cases = grades.length > 0
     ? grades.flatMap((grade) => grade.caseResults ?? [])
     : result?.caseResults ?? [];
-  const executed = cases.length;
-  const passed = cases.filter((entry) => typeof entry.score === "number" && entry.score > 0).length;
-  return { cases, executed, failed: executed - passed, grades, passed };
+  // Host outcome fields (run 125) win when present; the local score>0 derivation is the fallback for old runs.
+  const hostCounts = result?.caseCounts;
+  const executed = typeof hostCounts?.total === "number" ? hostCounts.total : cases.length;
+  const passed = typeof hostCounts?.passed === "number"
+    ? hostCounts.passed
+    : cases.filter((entry) => typeof entry.score === "number" && entry.score > 0).length;
+  return { cases, executed, failed: executed - passed, grades, outcome: result?.outcome, passed };
 };
 
 /** Reference phase wording (apps/runtime-ui/app/routes/control-benchmark.tsx describeBenchmarkProgress). */
@@ -663,6 +673,11 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
     ? 0
     : Math.min(100, Math.round(((progress.completedSteps ?? 0) / (progress.totalSteps ?? 1)) * 100));
   const benchmarkPhase = progress === undefined ? undefined : benchmarkPhaseCopy(progress);
+  const hostCounts = progress?.caseCounts;
+  const hostOutcome = progress?.outcome;
+  const showPassed = hostCounts === undefined ? benchmarkStats.passed : hostCounts.passed;
+  const showExecuted = hostCounts === undefined ? benchmarkStats.executed : hostCounts.total;
+  const showFailed = hostCounts === undefined ? benchmarkStats.failed : hostCounts.failed;
   const failedCase = benchmarkStats.cases.find((entry) => typeof entry.score !== "number" || entry.score <= 0);
   return referenceSection("models", "ok", [
     h.h2([h.Class("rm3-next-route-title text-sm font-medium leading-5 tracking-tight")], ["Capability benchmark"]),
@@ -705,10 +720,11 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
         progress.status === "completed"
           ? h.div([h.DataAttribute("benchmark-terminal-status", "completed"), h.Class("space-y-1 border-t border-border pt-2")], [
               h.p([h.Class("font-sans text-sm font-semibold leading-5 text-foreground")], ["Completed" + (benchmarkResult?.runId === undefined ? "" : " · " + benchmarkResult.runId)]),
-              benchmarkStats.executed === 0
+              h.p([h.DataAttribute("benchmark-progress-outcome", hostOutcome ?? ""), h.Class("font-sans text-sm leading-5 text-foreground")], ["Outcome: " + (hostOutcome ?? "unknown")]),
+              showExecuted === 0
                 ? h.p([h.DataAttribute("benchmark-case-summary", "")], ["No executed cases were recorded for this run."])
-                : h.p([h.DataAttribute("benchmark-case-summary", ""), h.Class(benchmarkStats.failed > 0 ? "font-sans text-sm font-semibold leading-5 text-destructive" : "font-sans text-sm leading-5 text-foreground")], [
-                    String(benchmarkStats.passed) + "/" + String(benchmarkStats.executed) + " cases executed" + (benchmarkStats.failed > 0 ? " — " + String(benchmarkStats.failed) + " failed" : ""),
+                : h.p([h.DataAttribute("benchmark-case-summary", ""), h.Class(showFailed > 0 ? "font-sans text-sm font-semibold leading-5 text-destructive" : "font-sans text-sm leading-5 text-foreground")], [
+                    String(showPassed) + "/" + String(showExecuted) + " cases executed" + (showFailed > 0 ? " — " + String(showFailed) + " failed" : ""),
                   ]),
               ...(benchmarkStats.failed > 0 && failedCase !== undefined
                 ? [h.p([h.DataAttribute("benchmark-case-failure", ""), h.Class("font-mono text-[12px] leading-4 text-destructive")], [
@@ -768,18 +784,29 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
     referenceCard("Run history", "Completed capability benchmark runs. Open a run to see per-case results.", [
       h.div([h.Class("overflow-x-auto")], [
             h.table([h.Class("w-full min-w-[760px] border-collapse text-left text-sm")], [
-              h.thead([], [h.tr([h.Class("border-b border-border")], ["RUN", "MODE", "CASES", "MODELS", "COMPLETED", "SUITE", "DETAIL"].map((heading) => h.th([h.Class("px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground")], [heading])))]),
+              h.thead([], [h.tr([h.Class("border-b border-border")], ["RUN", "MODE", "OUTCOME", "CASES", "PASSED", "MODELS", "COMPLETED", "SUITE", "DETAIL"].map((heading) => h.th([h.Class("px-3 py-2.5 font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground")], [heading])))]),
               h.tbody([], runs.rows.length === 0
-                ? [h.tr([], [h.td([h.Attribute("colspan", "7"), h.Class("px-3 py-3 text-xs text-muted-foreground")], ["No completed benchmark runs yet."])])]
+                ? [h.tr([], [h.td([h.Attribute("colspan", "9"), h.Class("px-3 py-3 text-xs text-muted-foreground")], ["No completed benchmark runs yet."])])]
                 : runs.rows.flatMap((entry) => {
                 try {
                   // SAFETY: benchmarkRuns rows carry the BenchmarkRunListEntry record in meta.
-                  const meta = JSON.parse(entry.meta) as { readonly completedAtMs?: number; readonly endpointIds?: ReadonlyArray<string>; readonly mode?: string; readonly suiteId?: string };
+                  const meta = JSON.parse(entry.meta) as {
+                    readonly caseCounts?: { readonly failed?: number; readonly passed?: number; readonly total?: number };
+                    readonly completedAtMs?: number;
+                    readonly endpointIds?: ReadonlyArray<string>;
+                    readonly mode?: string;
+                    readonly outcome?: string;
+                    readonly suiteId?: string;
+                  };
                   const completed = typeof meta.completedAtMs === "number" ? new Date(meta.completedAtMs).toISOString().slice(0, 10) : "—";
-                  return [h.tr([h.Class("border-b border-border last:border-b-0")], [
+                  const passedCount = meta.caseCounts?.passed;
+                  const totalCount = meta.caseCounts?.total;
+                  return [h.tr([h.DataAttribute("benchmark-run-row", entry.id), h.DataAttribute("benchmark-run-outcome", meta.outcome ?? ""), h.Class("border-b border-border last:border-b-0")], [
                     h.td([h.Class("px-3 py-2 font-mono text-[12px] text-foreground")], [entry.id]),
                     h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [meta.mode ?? "—"]),
+                    h.td([h.DataAttribute("benchmark-run-outcome-cell", meta.outcome ?? ""), h.Class("px-3 py-2 text-[13px] font-semibold " + (meta.outcome === "failed" ? "text-destructive" : meta.outcome === "partial" ? "text-[var(--rm-warning,#b45309)]" : "text-foreground"))], [meta.outcome ?? "—"]),
                     h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [String(entry.value)]),
+                    h.td([h.DataAttribute("benchmark-run-passed", ""), h.Class("px-3 py-2 font-mono text-[12px] text-foreground")], [typeof passedCount === "number" && typeof totalCount === "number" ? String(passedCount) + "/" + String(totalCount) : "—"]),
                     h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [String(meta.endpointIds?.length ?? 0)]),
                     h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [completed]),
                     h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [meta.suiteId ?? "—"]),
@@ -802,7 +829,7 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
         }
         const parsed = parseBenchmarkRunResult(detail.json);
         const stats = benchmarkResultStats(parsed);
-        const statusLine = (parsed?.status ?? "completed") + (parsed?.errorMessage === undefined ? "" : " — " + parsed.errorMessage);
+        const statusLine = (parsed?.status ?? "completed") + (parsed?.outcome === undefined ? "" : " · outcome " + parsed.outcome) + (parsed?.errorMessage === undefined ? "" : " — " + parsed.errorMessage);
         return [h.div([h.DataAttribute("benchmark-run-detail-panel", ""), h.Class("mt-4 rounded-md border border-border bg-background p-3 text-xs text-muted-foreground")], [
           h.p([h.DataAttribute("benchmark-run-detail-status", ""), h.Class("font-sans text-sm font-semibold leading-5 text-foreground")], ["Run detail · " + detail.runId + " · " + statusLine]),
           h.p([h.DataAttribute("benchmark-run-detail-cases", ""), h.Class(stats.failed > 0 ? "font-sans text-sm font-semibold leading-5 text-destructive" : "font-sans text-sm leading-5 text-foreground")], [String(stats.passed) + "/" + String(stats.executed) + " cases passed" + (stats.failed > 0 ? " — " + String(stats.failed) + " failed" : "")]),
