@@ -1,5 +1,5 @@
 import type { BenchmarkRunResult } from "./benchmark-runner.js";
-import type { BenchmarkCaseCounts, BenchmarkRunOutcome } from "./benchmark-outcome.js";
+import type { BenchmarkCaseCounts, BenchmarkRunOutcomeOrPending } from "./benchmark-outcome.js";
 
 export type BenchmarkRunStatus = "running" | "completed" | "failed";
 export type BenchmarkRunErrorCode =
@@ -30,7 +30,7 @@ export interface BenchmarkRunProgressSnapshot {
   readonly errorCode?: BenchmarkRunErrorCode;
   readonly errorMessage?: string;
   readonly caseCounts: BenchmarkCaseCounts;
-  readonly outcome: BenchmarkRunOutcome;
+  readonly outcome: BenchmarkRunOutcomeOrPending;
   readonly result?: BenchmarkRunResult;
 }
 
@@ -88,7 +88,7 @@ export function createBenchmarkRunProgress(input: {
     activeJudgeEndpointId: input.judgeEndpointId,
     artifactRoot: input.artifactRoot ?? null,
     caseCounts: { failed: 0, passed: 0, total: 0 },
-    outcome: "passed",
+    outcome: null,
   };
   activeRuns.set(input.runId, snapshot);
   pruneRuns();
@@ -190,7 +190,7 @@ export function failBenchmarkRunProgress(
     status: "failed",
     updatedAtMs: Date.now(),
     currentPhase: null,
-    outcome: "failed",
+    outcome: current.caseCounts.total === 0 ? null : "failed",
     errorCode,
     errorMessage:
       errorCode === "benchmark_initialization_failed"

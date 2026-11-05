@@ -29,6 +29,10 @@ describe("benchmark outcome", () => {
     const failed = benchmarkCaseCounts([grade([0, 0])]);
     expect(failed).toEqual({ failed: 2, passed: 0, total: 2 });
     expect(benchmarkRunOutcome(failed)).toBe("failed");
+    const pending = benchmarkCaseCounts([]);
+    expect(pending).toEqual({ failed: 0, passed: 0, total: 0 });
+    expect(benchmarkRunOutcome(pending)).toBeNull();
+    expect(benchmarkOutcomeFields([])).toEqual({ caseCounts: { failed: 0, passed: 0, total: 0 }, outcome: null });
     expect(benchmarkOutcomeFields([grade([0, 1])])).toEqual({ caseCounts: { failed: 1, passed: 1, total: 2 }, outcome: "partial" });
   });
 

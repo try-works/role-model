@@ -12,6 +12,9 @@ export interface BenchmarkCaseCounts {
 
 export type BenchmarkRunOutcome = "passed" | "partial" | "failed";
 
+/** No case has been executed yet: the run has no outcome, not a passing one. */
+export type BenchmarkRunOutcomeOrPending = BenchmarkRunOutcome | null;
+
 export interface BenchmarkCaseResultLike {
   readonly score: number;
 }
@@ -34,12 +37,18 @@ export const benchmarkCaseCounts = (
   return { total, passed, failed: total - passed };
 };
 
-export const benchmarkRunOutcome = (counts: BenchmarkCaseCounts): BenchmarkRunOutcome =>
-  counts.failed === 0 ? "passed" : counts.passed === 0 ? "failed" : "partial";
+export const benchmarkRunOutcome = (counts: BenchmarkCaseCounts): BenchmarkRunOutcomeOrPending =>
+  counts.total === 0
+    ? null
+    : counts.failed === 0
+      ? "passed"
+      : counts.passed === 0
+        ? "failed"
+        : "partial";
 
 export const benchmarkOutcomeFields = (
   grades: readonly BenchmarkGradeLike[],
-): { readonly caseCounts: BenchmarkCaseCounts; readonly outcome: BenchmarkRunOutcome } => {
+): { readonly caseCounts: BenchmarkCaseCounts; readonly outcome: BenchmarkRunOutcomeOrPending } => {
   const caseCounts = benchmarkCaseCounts(grades);
   return { caseCounts, outcome: benchmarkRunOutcome(caseCounts) };
 };

@@ -5,7 +5,7 @@ import { canonicalTaxonomy } from "@role-model-router/core";
 import type { TaxonomyDimensionScoreMap } from "@role-model/protocol-types";
 
 import type { BenchmarkCompareRecord, BenchmarkRunManifest } from "./benchmark-artifacts.js";
-import { type BenchmarkCaseCounts, type BenchmarkRunOutcome, benchmarkOutcomeFields } from "./benchmark-outcome.js";
+import { type BenchmarkCaseCounts, type BenchmarkRunOutcomeOrPending, benchmarkOutcomeFields } from "./benchmark-outcome.js";
 import { resolveBenchmarkRunArtifactDir } from "./benchmark-artifacts.js";
 
 interface CompletedBenchmarkRun {
@@ -21,7 +21,7 @@ export interface BenchmarkRunListEntry {
   readonly suiteId: string;
   readonly caseCount: number;
   readonly caseCounts: BenchmarkCaseCounts;
-  readonly outcome: BenchmarkRunOutcome;
+  readonly outcome: BenchmarkRunOutcomeOrPending;
   readonly endpointIds: readonly string[];
 }
 
@@ -117,7 +117,7 @@ export interface BenchmarkSummaryResponse {
   readonly artifactRoot: string | null;
   readonly subjects: readonly BenchmarkSummarySubject[];
   readonly caseCounts: BenchmarkCaseCounts;
-  readonly outcome: BenchmarkRunOutcome;
+  readonly outcome: BenchmarkRunOutcomeOrPending;
   readonly caseComparisons: readonly BenchmarkCaseComparison[];
   readonly caseAudits: readonly BenchmarkCaseAuditEntry[];
   readonly manifest: {
@@ -374,7 +374,7 @@ export const EMPTY_BENCHMARK_SUMMARY: BenchmarkSummaryResponse = {
   artifactRoot: null,
   subjects: [],
   caseCounts: { failed: 0, passed: 0, total: 0 },
-  outcome: "passed",
+  outcome: null,
   caseComparisons: [],
   caseAudits: [],
   manifest: null,

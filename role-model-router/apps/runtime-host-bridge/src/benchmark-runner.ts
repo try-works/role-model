@@ -261,7 +261,7 @@ export interface BenchmarkRunResult {
 
   readonly caseCounts: import("./benchmark-outcome.js").BenchmarkCaseCounts;
 
-  readonly outcome: import("./benchmark-outcome.js").BenchmarkRunOutcome;
+  readonly outcome: import("./benchmark-outcome.js").BenchmarkRunOutcomeOrPending;
 }
 
 export interface BenchmarkRunEndpointGrade extends BenchmarkEndpointGrade {

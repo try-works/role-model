@@ -720,7 +720,7 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
         progress.status === "completed"
           ? h.div([h.DataAttribute("benchmark-terminal-status", "completed"), h.Class("space-y-1 border-t border-border pt-2")], [
               h.p([h.Class("font-sans text-sm font-semibold leading-5 text-foreground")], ["Completed" + (benchmarkResult?.runId === undefined ? "" : " · " + benchmarkResult.runId)]),
-              h.p([h.DataAttribute("benchmark-progress-outcome", hostOutcome ?? ""), h.Class("font-sans text-sm leading-5 text-foreground")], ["Outcome: " + (hostOutcome ?? "unknown")]),
+              h.p([h.DataAttribute("benchmark-progress-outcome", hostOutcome ?? ""), h.Class("font-sans text-sm leading-5 text-foreground")], ["Outcome: " + (showExecuted === 0 ? "pending" : (hostOutcome ?? "unknown"))]),
               showExecuted === 0
                 ? h.p([h.DataAttribute("benchmark-case-summary", "")], ["No executed cases were recorded for this run."])
                 : h.p([h.DataAttribute("benchmark-case-summary", ""), h.Class(showFailed > 0 ? "font-sans text-sm font-semibold leading-5 text-destructive" : "font-sans text-sm leading-5 text-foreground")], [
@@ -801,10 +801,11 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
                   const completed = typeof meta.completedAtMs === "number" ? new Date(meta.completedAtMs).toISOString().slice(0, 10) : "—";
                   const passedCount = meta.caseCounts?.passed;
                   const totalCount = meta.caseCounts?.total;
-                  return [h.tr([h.DataAttribute("benchmark-run-row", entry.id), h.DataAttribute("benchmark-run-outcome", meta.outcome ?? ""), h.Class("border-b border-border last:border-b-0")], [
+                  const outcomeLabel = totalCount === 0 ? "pending" : (meta.outcome ?? "—");
+                  return [h.tr([h.DataAttribute("benchmark-run-row", entry.id), h.DataAttribute("benchmark-run-outcome", outcomeLabel), h.Class("border-b border-border last:border-b-0")], [
                     h.td([h.Class("px-3 py-2 font-mono text-[12px] text-foreground")], [entry.id]),
                     h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [meta.mode ?? "—"]),
-                    h.td([h.DataAttribute("benchmark-run-outcome-cell", meta.outcome ?? ""), h.Class("px-3 py-2 text-[13px] font-semibold " + (meta.outcome === "failed" ? "text-destructive" : meta.outcome === "partial" ? "text-[var(--rm-warning,#b45309)]" : "text-foreground"))], [meta.outcome ?? "—"]),
+                    h.td([h.DataAttribute("benchmark-run-outcome-cell", outcomeLabel), h.Class("px-3 py-2 text-[13px] font-semibold " + (outcomeLabel === "failed" ? "text-destructive" : outcomeLabel === "partial" ? "text-[var(--rm-warning,#b45309)]" : "text-foreground"))], [outcomeLabel]),
                     h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [String(entry.value)]),
                     h.td([h.DataAttribute("benchmark-run-passed", ""), h.Class("px-3 py-2 font-mono text-[12px] text-foreground")], [typeof passedCount === "number" && typeof totalCount === "number" ? String(passedCount) + "/" + String(totalCount) : "—"]),
                     h.td([h.Class("px-3 py-2 text-[13px] text-foreground")], [String(meta.endpointIds?.length ?? 0)]),

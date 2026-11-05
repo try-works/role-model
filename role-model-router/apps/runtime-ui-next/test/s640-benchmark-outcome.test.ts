@@ -86,6 +86,18 @@ describe("S640 benchmark host outcome fields", () => {
     expect(polled.model.modelsView?.benchmarkProgress?.outcome).toBe("partial");
   });
 
+  it("renders pending, never passed, when no case has executed", async () => {
+    const container = await renderWith({
+      benchmarkProgress: { caseCounts: { failed: 0, passed: 0, total: 0 }, completedSteps: 2, outcome: undefined, runId: "run-pending", status: "running", totalSteps: 60 },
+    });
+    expect(container.querySelector("[data-benchmark-progress-outcome]")).toBeNull();
+    const completed = await renderWith({
+      benchmarkProgress: { caseCounts: { failed: 0, passed: 0, total: 0 }, completedSteps: 2, runId: "run-pending", status: "completed", totalSteps: 60 },
+    });
+    expect(completed.querySelector("[data-benchmark-progress-outcome]")?.textContent).toBe("Outcome: pending");
+    expect(completed.textContent).not.toContain("Outcome: passed");
+  });
+
   it("keeps the local derivation when an old record has no host outcome fields", async () => {
     const legacySnapshot = { result: { endpointGrades: grades(8, 12) }, runId, status: "completed" };
     const container = await renderWith({ benchmarkRunDetail: { json: JSON.stringify(legacySnapshot), runId, status: "loaded", token: 1 } });
