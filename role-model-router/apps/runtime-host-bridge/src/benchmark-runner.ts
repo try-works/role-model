@@ -262,6 +262,12 @@ export interface BenchmarkRunResult {
   readonly caseCounts: import("./benchmark-outcome.js").BenchmarkCaseCounts;
 
   readonly outcome: import("./benchmark-outcome.js").BenchmarkRunOutcomeOrPending;
+
+  readonly requestedEndpointCount: number;
+
+  readonly executedEndpointCount: number;
+
+  readonly skippedEndpoints: readonly import("./benchmark-outcome.js").BenchmarkSkippedEndpoint[];
 }
 
 export interface BenchmarkRunEndpointGrade extends BenchmarkEndpointGrade {
@@ -1685,6 +1691,8 @@ export async function runRoutingCapabilityBenchmark(
 
     endpointCount: request.endpointIds?.length ?? 0,
 
+    requestedEndpointCount: request.endpointIds?.length ?? 0,
+
     caseCount: cases.length,
 
     judgeEndpointId: request.judgeEndpointId ?? null,
@@ -1702,9 +1710,22 @@ export async function runRoutingCapabilityBenchmark(
     | "benchmark_membership_drifted" = "benchmark_initialization_failed";
 
   try {
-    const endpoints = (await deps.listConfiguredEndpoints()).filter((endpoint) =>
+    const configuredEndpoints = await deps.listConfiguredEndpoints();
+    const endpoints = configuredEndpoints.filter((endpoint) =>
       isHealthyEndpoint(endpoint.healthStatus),
     );
+    const requestedEndpointIds = request.endpointIds?.length
+      ? [...new Set(request.endpointIds)]
+      : configuredEndpoints.map((endpoint) => endpoint.endpointId);
+    const skippedEndpoints: ReadonlyArray<import("./benchmark-outcome.js").BenchmarkSkippedEndpoint> =
+      requestedEndpointIds.flatMap((endpointId): ReadonlyArray<import("./benchmark-outcome.js").BenchmarkSkippedEndpoint> => {
+        if (!configuredEndpoints.some((endpoint) => endpoint.endpointId === endpointId)) {
+          return [{ endpointId, reason: "not_configured" as const }];
+        }
+        return endpoints.some((endpoint) => endpoint.endpointId === endpointId)
+          ? []
+          : [{ endpointId, reason: "unhealthy" as const }];
+      });
 
     const targetEligibility = evaluateBenchmarkTargetEligibility({
       endpointIds: request.endpointIds,
@@ -1715,9 +1736,15 @@ export async function runRoutingCapabilityBenchmark(
       throw new Error(targetEligibility.warnings[0] ?? "benchmark_endpoint_ineligible");
     }
 
-    const targetEndpoints = request.endpointIds?.length
-      ? endpoints.filter((endpoint) => request.endpointIds?.includes(endpoint.endpointId))
+    const targetEndpoints = requestedEndpointIds.length
+      ? endpoints.filter((endpoint) => requestedEndpointIds.includes(endpoint.endpointId))
       : endpoints;
+
+    updateBenchmarkRunProgressPlan(runId, {
+      requestedEndpointCount: requestedEndpointIds.length,
+      executedEndpointCount: targetEndpoints.length,
+      skippedEndpoints,
+    });
 
     if (targetEndpoints.length === 0) {
       throw new Error("No healthy configured endpoints available for benchmarking.");
@@ -1767,6 +1794,9 @@ export async function runRoutingCapabilityBenchmark(
 
     updateBenchmarkRunProgressPlan(runId, {
       endpointCount: targetEndpoints.length,
+      requestedEndpointCount: requestedEndpointIds.length,
+      executedEndpointCount: targetEndpoints.length,
+      skippedEndpoints,
       caseCount: cases.length,
       totalSteps:
         executionSteps + (useJudge ? targetEndpoints.length * cases.length : 0) + compareCaseCount,
@@ -1791,7 +1821,13 @@ export async function runRoutingCapabilityBenchmark(
     throwIfCancelled();
         const requestId = `bench-${runId}-${caseItem.case_id}-${endpoint.endpointId}`;
 
+        // The step counter is the authoritative progress position at case start:
+        // completedSteps == (endpointIndex - 1) * caseCount + (caseIndex - 1) in 1-based terms.
+        const stepsAtCaseStart = endpointIndex * cases.length + caseIndex;
+        completedSteps = stepsAtCaseStart;
+
         updateBenchmarkRunProgress(runId, {
+          completedSteps: stepsAtCaseStart,
           runPhase: "execution",
 
           endpointIndex: endpointIndex + 1,
@@ -1865,7 +1901,7 @@ export async function runRoutingCapabilityBenchmark(
           answerTurns: execution.answerTurns,
         });
 
-        completedSteps += 1;
+        completedSteps = stepsAtCaseStart + 1;
 
         updateBenchmarkRunProgress(runId, { completedSteps, currentPhase: null });
       }
@@ -2293,6 +2329,12 @@ export async function runRoutingCapabilityBenchmark(
       endpointGrades,
 
       ...benchmarkOutcomeFields(endpointGrades),
+
+      requestedEndpointCount: requestedEndpointIds.length,
+
+      executedEndpointCount: targetEndpoints.length,
+
+      skippedEndpoints,
     };
 
     const caseTaxonomyTags: Record<

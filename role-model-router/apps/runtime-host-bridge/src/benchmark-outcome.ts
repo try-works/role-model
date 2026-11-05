@@ -4,6 +4,11 @@
  * derived only from executed case scores (> 0 counts as passed, matching the summary's
  * passingCaseIds semantics) and never changes caseResults.
  */
+export interface BenchmarkSkippedEndpoint {
+  readonly endpointId: string;
+  readonly reason: "unhealthy" | "not_configured";
+}
+
 export interface BenchmarkCaseCounts {
   readonly total: number;
   readonly passed: number;

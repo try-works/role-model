@@ -1,5 +1,5 @@
 import type { BenchmarkRunResult } from "./benchmark-runner.js";
-import type { BenchmarkCaseCounts, BenchmarkRunOutcomeOrPending } from "./benchmark-outcome.js";
+import type { BenchmarkCaseCounts, BenchmarkRunOutcomeOrPending, BenchmarkSkippedEndpoint } from "./benchmark-outcome.js";
 
 export type BenchmarkRunStatus = "running" | "completed" | "failed";
 export type BenchmarkRunErrorCode =
@@ -17,6 +17,9 @@ export interface BenchmarkRunProgressSnapshot {
   readonly completedSteps: number;
   readonly endpointIndex: number;
   readonly endpointCount: number;
+  readonly requestedEndpointCount: number;
+  readonly executedEndpointCount: number;
+  readonly skippedEndpoints: readonly BenchmarkSkippedEndpoint[];
   readonly currentEndpointId: string | null;
   readonly currentEndpointModelId: string | null;
   readonly caseIndex: number;
@@ -58,6 +61,7 @@ export function createBenchmarkRunProgress(input: {
   readonly mode: "quick" | "full";
   readonly endpointCount: number;
   readonly caseCount: number;
+  readonly requestedEndpointCount?: number;
   readonly judgeEndpointId: string | null;
   readonly useJudge: boolean;
   readonly compareCaseCount?: number;
@@ -77,6 +81,9 @@ export function createBenchmarkRunProgress(input: {
     completedSteps: 0,
     endpointIndex: 0,
     endpointCount: input.endpointCount,
+    requestedEndpointCount: input.requestedEndpointCount ?? input.endpointCount,
+    executedEndpointCount: 0,
+    skippedEndpoints: [],
     currentEndpointId: null,
     currentEndpointModelId: null,
     caseIndex: 0,
@@ -133,6 +140,9 @@ export function updateBenchmarkRunProgressPlan(
     Pick<
       BenchmarkRunProgressSnapshot,
       | "endpointCount"
+      | "requestedEndpointCount"
+      | "executedEndpointCount"
+      | "skippedEndpoints"
       | "caseCount"
       | "totalSteps"
       | "judgeEndpointId"
