@@ -1,0 +1,12 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s404-endpoint-admission.test.ts (9 tests) 87ms
+ ✓ test/s638-provider-account-activation.test.ts (3 tests) 78ms
+ ✓ test/s401-provider-account-form.test.ts (11 tests) 151ms
+
+ Test Files  3 passed (3)
+      Tests  23 passed (23)
+   Start at  08:02:49
+   Duration  21.67s (transform 11.10s, setup 0ms, collect 48.26s, tests 316ms, environment 11.56s, prepare 1.86s)
+

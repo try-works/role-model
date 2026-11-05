@@ -1,0 +1,12 @@
+task-124 activation batch id collision
+
+ROOT CAUSE: activationBatchId was "activation-"+activationToken (per-attempt counter). Distinct
+payloads reusing a counter value collided; host binds one payload per batch id (index.ts:24122).
+HOST PATH: POST /api/role-model/endpoints/batch is correct for adding models to an existing provider
+account; it appends endpoints for {providerAccountId, modelId} and returns committed. Unique ids fix it.
+
+FIX: activationBatchId = activation-<token>-<FNV1a digest of activations> in both create and
+key-updated paths.
+
+TESTS s638 3/3: distinct ids for distinct payloads at the SAME token (RED captured with old ids),
+exact bodies, fake host binding id->payload accepts both consecutive saves, saved state after activation.

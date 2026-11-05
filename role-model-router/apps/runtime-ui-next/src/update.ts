@@ -451,9 +451,23 @@ const benchmarkProgressFrom = (raw: unknown): BenchmarkProgress | undefined => {
   const phase = record.currentPhase;
   const runPhase = record.runPhase;
   const result = record.result;
+  const rawCounts = record.caseCounts;
+  const caseCounts = rawCounts !== null && typeof rawCounts === "object"
+    && typeof (rawCounts as { readonly total?: unknown }).total === "number"
+    && typeof (rawCounts as { readonly passed?: unknown }).passed === "number"
+    && typeof (rawCounts as { readonly failed?: unknown }).failed === "number"
+    ? {
+        failed: (rawCounts as { readonly failed: number }).failed,
+        passed: (rawCounts as { readonly passed: number }).passed,
+        total: (rawCounts as { readonly total: number }).total,
+      }
+    : undefined;
+  const outcome = record.outcome === "passed" || record.outcome === "partial" || record.outcome === "failed" ? record.outcome : undefined;
   return {
     runId,
     status,
+    ...(caseCounts === undefined ? {} : { caseCounts }),
+    ...(outcome === undefined ? {} : { outcome }),
     ...(numberField("caseCount") === undefined ? {} : { caseCount: numberField("caseCount") }),
     ...(numberField("caseIndex") === undefined ? {} : { caseIndex: numberField("caseIndex") }),
     ...(numberField("completedSteps") === undefined ? {} : { completedSteps: numberField("completedSteps") }),
@@ -792,7 +806,20 @@ const updateLocalPolicyDraft = (
   };
 };
 
-    const RAIL_KEYS = ["models", "runtimeSummary", "health", "dashboard", "router", "overviewMetrics", "routerCandidates"] as const;
+    const activationPayloadDigest = (activations: ReadonlyArray<{ readonly modelId: string; readonly providerAccountId: string; readonly region: string }>): string => {
+  let hash = 2166136261;
+  const text = JSON.stringify(activations);
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+};
+
+const activationBatchIdFor = (token: number, activations: ReadonlyArray<{ readonly modelId: string; readonly providerAccountId: string; readonly region: string }>): string =>
+  "activation-" + String(token) + "-" + activationPayloadDigest(activations);
+
+const RAIL_KEYS = ["models", "runtimeSummary", "health", "dashboard", "router", "overviewMetrics", "routerCandidates"] as const;
 const refreshRailReadbacks = (model: Model): { readonly commands: ReadonlyArray<ReturnType<typeof readReadback>>; readonly readbacks: Model["readbacks"] } => {
   const readbacks = { ...model.readbacks };
   const commands: Array<ReturnType<typeof readReadback>> = [];
@@ -2532,9 +2559,10 @@ const readPlanForRoute = (model: Model): ReadonlyArray<{ readonly key: ReadbackK
               : [];
           if (chosenModels.length > 0) {
             const activationToken = state.token + 1;
+            const activations = chosenModels.map((modelId) => ({ providerAccountId: state.draft.providerAccountId.trim(), modelId, region: "global" }));
             const batch: ProviderAccountActivationBatch = {
-              activationBatchId: "activation-" + String(activationToken),
-              activations: chosenModels.map((modelId) => ({ providerAccountId: state.draft.providerAccountId.trim(), modelId, region: "global" })),
+              activationBatchId: activationBatchIdFor(activationToken, activations),
+              activations,
             };
             return {
               commands: [providerAccountCommands.activate({ payload: JSON.stringify(batch), token: activationToken })],
@@ -2614,9 +2642,10 @@ const readPlanForRoute = (model: Model): ReadonlyArray<{ readonly key: ReadbackK
               : [];
           if (state.pendingAction === "create" && chosenModels.length > 0) {
             const activationToken = state.token + 1;
+            const activations = chosenModels.map((modelId) => ({ providerAccountId: state.draft.providerAccountId.trim(), modelId, region: "global" }));
             const batch: ProviderAccountActivationBatch = {
-              activationBatchId: "activation-" + String(activationToken),
-              activations: chosenModels.map((modelId) => ({ providerAccountId: state.draft.providerAccountId.trim(), modelId, region: "global" })),
+              activationBatchId: activationBatchIdFor(activationToken, activations),
+              activations,
             };
             return {
               commands: [providerAccountCommands.activate({ payload: JSON.stringify(batch), token: activationToken })],

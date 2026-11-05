@@ -1,0 +1,28 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s638-provider-account-activation.test.ts (2 tests | 1 failed | 1 skipped) 55ms
+   × S638 provider account activation batch ids > uses distinct batch ids for distinct payloads even with the same activation token 50ms
+     → expected 'activation-2' not to be 'activation-2' // Object.is equality
+   ↓ S638 provider account activation batch ids > accepts two consecutive saves on the same account and preserves the exact bodies
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s638-provider-account-activation.test.ts > S638 provider account activation batch ids > uses distinct batch ids for distinct payloads even with the same activation token
+AssertionError: expected 'activation-2' not to be 'activation-2' // Object.is equality
+ ❯ test/s638-provider-account-activation.test.ts:40:46
+     38|     expect(first.body.activations).toEqual([{ modelId: "deepseek-chat"…
+     39|     expect(second.body.activations).toEqual([{ modelId: "deepseek-reas…
+     40|     expect(first.body.activationBatchId).not.toBe(second.body.activati…
+       |                                              ^
+     41|     expect(first.body.activationBatchId).toMatch(/^activation-2-[0-9a-…
+     42|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 skipped (2)
+   Start at  08:00:37
+   Duration  18.33s (transform 8.17s, setup 0ms, collect 13.84s, tests 55ms, environment 2.76s, prepare 641ms)
+
