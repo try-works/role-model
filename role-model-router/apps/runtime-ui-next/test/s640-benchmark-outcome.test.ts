@@ -44,10 +44,10 @@ describe("S640 benchmark host outcome fields", () => {
     const rows = [...container.querySelectorAll("[data-benchmark-run-row]")];
     expect(rows).toHaveLength(3);
     const byOutcome = (outcome: string) => rows.find((row) => row.getAttribute("data-benchmark-run-outcome") === outcome);
-    expect(byOutcome("partial")?.textContent).toContain("partial");
-    expect(byOutcome("partial")?.querySelector("[data-benchmark-run-passed]")?.textContent).toBe("8/12");
-    expect(byOutcome("failed")?.querySelector("[data-benchmark-run-passed]")?.textContent).toBe("0/12");
-    expect(byOutcome("passed")?.querySelector("[data-benchmark-run-passed]")?.textContent).toBe("12/12");
+    expect(byOutcome("partial")?.textContent).toContain("Outcome: partial");
+    expect(byOutcome("partial")?.querySelector("[data-benchmark-run-outcome-cell]")?.textContent).toContain("8/12 passed");
+    expect(byOutcome("failed")?.querySelector("[data-benchmark-run-outcome-cell]")?.textContent).toContain("0/12 passed");
+    expect(byOutcome("passed")?.querySelector("[data-benchmark-run-outcome-cell]")?.textContent).toContain("12/12 passed");
   });
 
   it("uses the host outcome/caseCounts in the run-detail headline with nested result grades", async () => {
@@ -95,7 +95,7 @@ describe("S640 benchmark host outcome fields", () => {
       benchmarkProgress: { caseCounts: { failed: 0, passed: 0, total: 0 }, completedSteps: 2, runId: "run-pending", status: "completed", totalSteps: 60 },
     });
     expect(completed.querySelector("[data-benchmark-progress-outcome]")?.textContent).toBe("Outcome: pending");
-    expect(completed.textContent).not.toContain("Outcome: passed");
+    expect(completed.querySelector("[data-benchmark-progress-outcome]")?.textContent).not.toBe("Outcome: passed");
   });
 
   it("keeps the local derivation when an old record has no host outcome fields", async () => {

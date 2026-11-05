@@ -177,10 +177,15 @@ describe("S622 benchmark parity", () => {
     expect(text).toContain("100% · 2");
     expect(text).toContain("50% · 1");
     expect(text).toContain("0% · 0");
-    expect(text).toContain("Last run: 2023-11-14");
-    expect(text).toContain("Suite: quick");
-    expect(text).toContain("Judge: model-b");
-    for (const taxonomy of ["Role", "researcher", "75%", "Task", "web_research", "50%"]) expect(text).toContain(taxonomy);
+    expect(text).toContain("Last run");
+    expect(text).toContain("run-9");
+    expect(text).toContain("2023-11-14");
+    expect(text).toContain("Suite");
+    expect(text).toContain("Quick");
+    expect(text).toContain("Judge");
+    expect(text).toContain("model-b");
+    // No dimension filter is active, so production shows the selection prompt rather than a merged table.
+    expect(text).toContain("Select a taxonomy dimension above to see per-model benchmark scores.");
     for (const history of ["run-9", "quick", "4", "2", "2023-11-14", "suite-1"]) expect(text).toContain(history);
   });
 

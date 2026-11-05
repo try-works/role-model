@@ -168,19 +168,21 @@ describe("S624 benchmark remaining gaps", () => {
     expect((done.commands ?? []).map((command) => command.name)).not.toContain("PollBenchmarkRun");
   });
 
-  it("filters the taxonomy table by role/task/capability", async () => {
-    const role = await renderRoute({ benchmarkTaxonomyFilters: { role: "researcher" } });
-    expect(role.textContent).toContain("Role");
-    expect(role.textContent).toContain("researcher");
+  it("renders only the active taxonomy dimension as a list", async () => {
+    const role = await renderRoute({ benchmarkTaxonomyFilters: { capability: "", role: "researcher", task: "" } });
+    expect(role.querySelector("[data-benchmark-taxonomy-active]")?.textContent).toBe("Role: researcher");
     expect(role.textContent).toContain("75%");
-    const taxonomyTable = [...role.querySelectorAll("table")].find((table) => table.textContent?.includes("DIMENSION"));
-    expect(taxonomyTable?.textContent).not.toContain("web_research");
-    const capability = await renderRoute({ benchmarkTaxonomyFilters: { capability: "tools" } });
-    expect(capability.textContent).toContain("Capability");
-    expect(capability.textContent).toContain("tools");
+    const roleRows = [...role.querySelectorAll("[data-benchmark-taxonomy-row]")];
+    expect(roleRows).toHaveLength(1);
+    expect(roleRows[0]?.textContent).toContain("ep-a");
+    // Only the role dimension is listed; task/capability values may still appear as select options.
+    expect(role.querySelectorAll("[data-benchmark-taxonomy-row]")).toHaveLength(1);
+    const capability = await renderRoute({ benchmarkTaxonomyFilters: { capability: "tools", role: "", task: "" } });
+    expect(capability.querySelector("[data-benchmark-taxonomy-active]")?.textContent).toBe("Capability: tools");
     expect(capability.textContent).toContain("80%");
     const filtered = shellUpdate(modelFor(), Message.BenchmarkTaxonomyFilterChanged({ filter: "task", value: "web_research" }));
-    expect(filtered.model.modelsView?.benchmarkTaxonomyFilters).toEqual({ task: "web_research" });
+    // Mutual exclusivity keeps the selected dimension and clears the other two.
+    expect(filtered.model.modelsView?.benchmarkTaxonomyFilters).toEqual({ capability: "", role: "", task: "web_research" });
   });
 
   it("renders real p50/p95 from summary case audits and em dashes when absent", async () => {

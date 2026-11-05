@@ -134,7 +134,8 @@ describe("S563 learning/models/studio/local reference layout", () => {
     ]);
     const page = await renderPage("Benchmark", { benchmarkSuite: readback(cases), modelEndpoints: endpoints });
     expectOrder(page, ["Capability benchmark", "Run capability benchmark", "Benchmark scores", "Taxonomy dimensions", "Run history"]);
-    expectColumns(page, ["Model", "Path", "Scope", "Status", "MODEL", "SCOPE", "STATUS", "DIMENSION", "VALUE", "SCORE", "MODEL", "RUN"]);
+    // With no summary readback the scores table is the production empty state; only the endpoint table has headers.
+    expectColumns(page, ["Model", "Path", "Scope", "Status", "Actions"]);
     expectControls(page, ["Benchmark mode", "Judge endpoint", "Select model-a", "Run quick benchmark (2 of 2 selected, 3 cases)", "Clear all benchmark data"]);
   });
 

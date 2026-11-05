@@ -1,0 +1,60 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s624-benchmark-gaps.test.ts (7 tests | 1 failed) 2366ms
+   ✓ S624 benchmark remaining gaps > hydrates judge preferences and resumes polling an active run from their readbacks 54ms
+   ✓ S624 benchmark remaining gaps > renders subject checkboxes, N of M selected, and >=2-selected Run gating  413ms
+   ✓ S624 benchmark remaining gaps > dispatches the exact selected-subject run body and persists judge preferences 21ms
+   ✓ S624 benchmark remaining gaps > confirms and clears one endpoint with the exact DELETE path 70ms
+   ✓ S624 benchmark remaining gaps > polls the active run and stops on completion  1539ms
+   × S624 benchmark remaining gaps > renders only the active taxonomy dimension as a list 143ms
+     → expected 'Capability benchmarkRun capability be…' not to contain 'web_research'
+   ✓ S624 benchmark remaining gaps > renders real p50/p95 from summary case audits and em dashes when absent 117ms
+ ✓ test/s640-benchmark-outcome.test.ts (7 tests) 1215ms
+   ✓ S640 benchmark host outcome fields > renders outcome and passed/total in history rows for partial, failed and passed runs  372ms
+   ✓ S640 benchmark host outcome fields > headlines passed and failed outcomes from host fields in the detail panel  309ms
+ ✓ test/s622-benchmark-parity.test.ts (12 tests) 1667ms
+   ✓ S622 benchmark parity > renders the mode options with suite-derived counts and the judge select with endpoint ids  447ms
+ ✓ test/s563-learningmodelsstudiolocal-layout.test.ts (21 tests) 1970ms
+   ✓ S563 learning/models/studio/local reference layout > learning overview  407ms
+ ✓ test/s644-benchmark-parity.test.ts (5 tests) 802ms
+   ✓ S644 benchmark taxonomy and run history parity > renders only the active dimension as an endpoint-keyed list  347ms
+ ✓ test/s643-benchmark-scores-identity.test.ts (3 tests) 493ms
+   ✓ S643 benchmark scores identity and run reconciliation > renders one distinct row per executed subject, including both same-model efforts and v4-pro  358ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s624-benchmark-gaps.test.ts > S624 benchmark remaining gaps > renders only the active taxonomy dimension as a list
+AssertionError: expected 'Capability benchmarkRun capability be…' not to contain 'web_research'
+
+Expected: "web_research"
+Received: "Capability benchmarkRun capability benchmarkSelect mode and judge, then grade runnable endpoints.Benchmark modeQuick (2 hard cases)Full (all eligible cases)Judge endpointmodel-a (remote)model-b (local)model-c (local)Judge endpoint is also a benchmark subject. Expect slower grading and higher judge failure risk — prefer a dedicated judge when available.Run quick benchmark (3 of 3 selected, 2 cases)3 of 3 selectedClear all benchmark dataModelPathScopeStatusActionsmodel-aep-aremoteunknownClearmodel-bep-blocalunknownClearmodel-cep-clocalunknownClearBenchmark scoresScores are normalized 0–1 fractions shown as percentages.Last runrun-9SuiteQuickJudgemodel-bCompleted: 2023-11-14 22:13:20ModelOverallProfileEasyMediumHardp50p95ScopeActionsModel Arun-9 · quickep-aExact (run artifact)66%—100% · 10% · 050% · 1120 ms200 msremoteClearTaxonomy dimensionsFilters switch which dimension is active.Filter by roleAll rolesresearcherFilter by taskAll tasksweb_researchFilter by capabilityAll capabilitiestoolsRole: researcherModel Aep-a75%Run historyCompleted benchmark runs stored on this runtime.run-9quick • 2 cases • 2 models2023-11-14 22:13 • suite-1Outcome: — · counts unavailablequickView details"
+
+ ❯ test/s624-benchmark-gaps.test.ts:178:34
+    176|     expect(roleRows).toHaveLength(1);
+    177|     expect(roleRows[0]?.textContent).toContain("ep-a");
+    178|     expect(role.textContent).not.toContain("web_research");
+       |                                  ^
+    179|     const capability = await renderRoute({ benchmarkTaxonomyFilters: {…
+    180|     expect(capability.querySelector("[data-benchmark-taxonomy-active]"…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 5 passed (6)
+      Tests  1 failed | 54 passed (55)
+   Start at  05:45:17
+   Duration  36.18s (transform 12.32s, setup 0ms, collect 80.57s, tests 8.51s, environment 22.08s, prepare 5.02s)
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s624-benchmark-gaps.test.ts (7 tests) 2166ms
+   ✓ S624 benchmark remaining gaps > renders subject checkboxes, N of M selected, and >=2-selected Run gating  358ms
+   ✓ S624 benchmark remaining gaps > polls the active run and stops on completion  1523ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  05:46:08
+   Duration  21.51s (transform 8.31s, setup 0ms, collect 14.21s, tests 2.17s, environment 3.23s, prepare 530ms)
+

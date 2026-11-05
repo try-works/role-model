@@ -1523,7 +1523,16 @@ const readPlanForRoute = (model: Model): ReadonlyArray<{ readonly key: ReadbackK
         },
         BenchmarkTaxonomyFilterChanged: ({ filter, value }: Extract<Message, { readonly _tag: "BenchmarkTaxonomyFilterChanged" }>): UpdateReturn<Model, Message> => {
           const state = model.modelsView ?? {};
-          return { model: { ...model, modelsView: { ...state, benchmarkTaxonomyFilters: { ...(state.benchmarkTaxonomyFilters ?? {}), [filter]: value } } } };
+          // The reference dimension filters are mutually exclusive: choosing one clears the other two.
+          const current = state.benchmarkTaxonomyFilters ?? {};
+          const next = value.length === 0
+            ? { ...current, [filter]: value }
+            : {
+                role: filter === "role" ? value : "",
+                task: filter === "task" ? value : "",
+                capability: filter === "capability" ? value : "",
+              };
+          return { model: { ...model, modelsView: { ...state, benchmarkTaxonomyFilters: next } } };
         },
         BenchmarkRunRequested: (): UpdateReturn<Model, Message> => {
           const state = model.modelsView ?? {};
