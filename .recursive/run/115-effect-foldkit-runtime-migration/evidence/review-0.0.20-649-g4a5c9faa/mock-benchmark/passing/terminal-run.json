@@ -1,0 +1,367 @@
+{
+  "runId": "23ce6d39-7fc3-4ba3-8408-44a7afde1840",
+  "status": "completed",
+  "mode": "quick",
+  "startedAtMs": 1793826051476,
+  "updatedAtMs": 1793826059873,
+  "totalSteps": 60,
+  "completedSteps": 60,
+  "endpointIndex": 0,
+  "endpointCount": 2,
+  "currentEndpointId": null,
+  "currentEndpointModelId": null,
+  "caseIndex": 12,
+  "caseCount": 12,
+  "currentCaseId": "h15-max-signal-v3",
+  "currentPhase": null,
+  "runPhase": "complete",
+  "judgeEndpointId": "mock.judge.us-east-1.gpt-4.1-mini-fast",
+  "activeJudgeEndpointId": "mock.judge.us-east-1.gpt-4.1-mini-fast",
+  "artifactRoot": "D:\\DEV\\rm-clean\\ui-review19\\standalone-runtime-dev\\memory\\benchmark-runs",
+  "result": {
+    "runId": "23ce6d39-7fc3-4ba3-8408-44a7afde1840",
+    "suiteId": "routing-capability-v2",
+    "suiteVersion": "3.4",
+    "mode": "quick",
+    "judgeEndpointId": "mock.judge.us-east-1.gpt-4.1-mini-fast",
+    "startedAtMs": 1793826051475,
+    "completedAtMs": 1793826059863,
+    "artifactRoot": "D:\\DEV\\rm-clean\\ui-review19\\standalone-runtime-dev\\memory\\benchmark-runs\\23ce6d39-7fc3-4ba3-8408-44a7afde1840",
+    "endpointGrades": [
+      {
+        "endpointId": "mock.subject.alpha.us-east-1.gpt-4.1-mini-fast",
+        "modelId": "openai/gpt-4.1-mini-fast",
+        "sourceType": "remote",
+        "overallScore": 0,
+        "byDifficulty": {
+          "easy": {
+            "cases": 0,
+            "score": 0
+          },
+          "medium": {
+            "cases": 0,
+            "score": 0
+          },
+          "hard": {
+            "cases": 12,
+            "score": 0
+          }
+        },
+        "caseResults": [
+          {
+            "caseId": "p17-tools-multi-hard",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 343,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.alpha.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "x01-max-signal",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 126,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.alpha.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h01-implement-two-sum",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 123,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.alpha.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h02-fix-async-counter",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 109,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.alpha.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h04-tool-read-router",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 114,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.alpha.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h05-tool-grep-eligibility",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 210,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.alpha.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h06-tool-apply-patch",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 137,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.alpha.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h07-multi-turn-sla-guard",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 127,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.alpha.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h08-multi-turn-tool-refine",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 136,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.alpha.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h09-agent-metrics-chain",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 168,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.alpha.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h10-agent-read-grep-patch",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 100,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.alpha.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h15-max-signal-v3",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 127,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.alpha.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          }
+        ],
+        "reasoningEffort": null
+      },
+      {
+        "endpointId": "mock.subject.beta.us-east-1.gpt-4.1-mini-fast",
+        "modelId": "openai/gpt-4.1-mini-fast",
+        "sourceType": "remote",
+        "overallScore": 0,
+        "byDifficulty": {
+          "easy": {
+            "cases": 0,
+            "score": 0
+          },
+          "medium": {
+            "cases": 0,
+            "score": 0
+          },
+          "hard": {
+            "cases": 12,
+            "score": 0
+          }
+        },
+        "caseResults": [
+          {
+            "caseId": "p17-tools-multi-hard",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 122,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.beta.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "x01-max-signal",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 120,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.beta.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h01-implement-two-sum",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 114,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.beta.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h02-fix-async-counter",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 106,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.beta.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h04-tool-read-router",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 120,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.beta.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h05-tool-grep-eligibility",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 96,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.beta.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h06-tool-apply-patch",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 101,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.beta.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h07-multi-turn-sla-guard",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 98,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.beta.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h08-multi-turn-tool-refine",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 121,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.beta.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h09-agent-metrics-chain",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 107,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.beta.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h10-agent-read-grep-patch",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 101,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.beta.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h15-max-signal-v3",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 105,
+            "actualPreview": "No response capture is configured for endpoint mock.subject.beta.us-east-1.gpt-4.1-mini-fast.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          }
+        ],
+        "reasoningEffort": null
+      }
+    ]
+  }
+}
