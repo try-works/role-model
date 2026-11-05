@@ -1,0 +1,97 @@
+{
+  "accounts": [
+    {
+      "providerAccountId": "deepseek.personal.deepseek-api-key",
+      "providerId": "deepseek",
+      "authMode": "api-key-static",
+      "credentialBackend": "local-file",
+      "credentialRef": "api-key/deepseek/deepseek.personal.deepseek-api-key",
+      "allowedModels": [
+        "deepseek/deepseek-flash",
+        "deepseek/deepseek-v4-pro",
+        "deepseek/deepseek-v4.1-flash"
+      ]
+    }
+  ],
+  "endpoints": [
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+      "modelId": "deepseek/deepseek-flash",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-low",
+      "modelId": "deepseek/deepseek-flash",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+      "modelId": "deepseek/deepseek-flash",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+      "modelId": "deepseek/deepseek-flash",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "modelId": "deepseek/deepseek-v4-pro",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high",
+      "modelId": "deepseek/deepseek-v4-pro",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-max",
+      "modelId": "deepseek/deepseek-v4-pro",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4.1-flash",
+      "modelId": "deepseek/deepseek-v4.1-flash",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4.1-flash-low",
+      "modelId": "deepseek/deepseek-v4.1-flash",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4.1-flash-high",
+      "modelId": "deepseek/deepseek-v4.1-flash",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4.1-flash-max",
+      "modelId": "deepseek/deepseek-v4.1-flash",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    }
+  ],
+  "activationBatches": [
+    {
+      "activationBatchId": "3792e475-b8f6-4439-a984-6b4a06bf92db",
+      "modelId": "deepseek/deepseek-v4.1-flash",
+      "status": "committed"
+    },
+    {
+      "activationBatchId": "f704b8b3-1e4f-4da3-9a43-6f3ae1d461a4",
+      "modelId": "deepseek/deepseek-v4-pro",
+      "status": "committed"
+    }
+  ],
+  "noAlreadyBoundError": true
+}

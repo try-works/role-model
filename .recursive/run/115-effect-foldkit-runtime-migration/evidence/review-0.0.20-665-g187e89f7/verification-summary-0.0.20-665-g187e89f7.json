@@ -1,0 +1,152 @@
+{
+  "version": "0.0.20-665-g187e89f7",
+  "commit": "187e89f7",
+  "sha256": "ef5e0c6a4aabfc771f866f968ab3c179211e7367108599d6b128c1273faca309",
+  "pid": 32088,
+  "health": "healthy",
+  "endpoints": [
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+      "modelId": "deepseek/deepseek-flash",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-low",
+      "modelId": "deepseek/deepseek-flash",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+      "modelId": "deepseek/deepseek-flash",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-max",
+      "modelId": "deepseek/deepseek-flash",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "modelId": "deepseek/deepseek-v4-pro",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high",
+      "modelId": "deepseek/deepseek-v4-pro",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-max",
+      "modelId": "deepseek/deepseek-v4-pro",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4.1-flash",
+      "modelId": "deepseek/deepseek-v4.1-flash",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4.1-flash-low",
+      "modelId": "deepseek/deepseek-v4.1-flash",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4.1-flash-high",
+      "modelId": "deepseek/deepseek-v4.1-flash",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4.1-flash-max",
+      "modelId": "deepseek/deepseek-v4.1-flash",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true
+    }
+  ],
+  "accounts": [
+    {
+      "providerAccountId": "deepseek.personal.deepseek-api-key",
+      "providerId": "deepseek",
+      "authMode": "api-key-static",
+      "credentialBackend": "local-file",
+      "credentialRef": "api-key/deepseek/deepseek.personal.deepseek-api-key",
+      "allowedModels": [
+        "deepseek/deepseek-flash",
+        "deepseek/deepseek-v4-pro",
+        "deepseek/deepseek-v4.1-flash"
+      ]
+    }
+  ],
+  "suite": {
+    "files": 118,
+    "tests": 1012,
+    "exitCode": 0
+  },
+  "realRun": {
+    "runId": "29cb3194-3ca4-4230-9c50-aee327275e0b",
+    "status": "completed",
+    "outcome": "partial",
+    "scores": [
+      0.4166666666666667,
+      0.4166666666666667
+    ],
+    "progressSamples": 87,
+    "terminal": "Phase 3 of 3 · Complete\n\n100%\n\n60 / 60 steps\n\nfinal scores recorded\n\nCompleted · 29cb3194-3ca4-4230-9c50-aee327275e0b\n\nOutcome: partial\n\n10/24 cases executed — 14 failed\n\np17-tools-multi-hard: Benchmark execution failed. · This response_format type is unavailable now (request_id: 2dff9325-1aae-41dc-8db5-cb63d4c6470a)\n\ndeepseek/deepseek-flash — overall 42% · 5/12 cases passed\n\ndeepseek/deepseek-flash — overall 42% · 5/12 cases passed",
+    "detail": {
+      "rows": 24,
+      "passes": 10,
+      "fails": 14,
+      "headline": "Run detail · 29cb3194-3ca4-4230-9c50-aee327275e0b · completed · outcome partial"
+    }
+  },
+  "connect": {
+    "activationBatches": [
+      {
+        "activationBatchId": "3792e475-b8f6-4439-a984-6b4a06bf92db",
+        "modelId": "deepseek/deepseek-v4.1-flash",
+        "status": "committed"
+      },
+      {
+        "activationBatchId": "f704b8b3-1e4f-4da3-9a43-6f3ae1d461a4",
+        "modelId": "deepseek/deepseek-v4-pro",
+        "status": "committed"
+      }
+    ],
+    "noAlreadyBoundError": true,
+    "modelCount": 3
+  },
+  "duplicateDisplayName": {
+    "note": "four deepseek-flash effort slots share displayName; /requests renders 9 charts with no crash",
+    "requests": {
+      "route": "/requests",
+      "title": "Requests | RM3 Foldkit shell",
+      "charts": 9,
+      "tables": 9,
+      "visible": 0,
+      "srOnly": 9,
+      "hasQueues": true,
+      "railModels": true
+    }
+  },
+  "investigation": {
+    "leadRun": "216af610-4a15-422e-a99a-6e722436c09c",
+    "artifactOnlyResponses": true,
+    "reproducedRun": "269677f4-5579-477b-984a-5c8d0267f8ea",
+    "reproducedStatus": "completed",
+    "reproducedOutcome": "partial",
+    "listBehavior": "runs list is empty while active and shows only terminal runs; not a listing failure"
+  },
+  "secretScan": {
+    "script": "scripts/runtime/scan-credential-material.mjs",
+    "result": "sk-key 0, bearer-token 0; api-key-assignment 3 false positives (x-api-key header/form label); MOCK_API_KEY identifier only in historical READMEs, no value"
+  }
+}
