@@ -490,7 +490,11 @@ const benchmarkResultStats = (result: BenchmarkRunResultView | undefined) => {
 /** Reference phase wording (apps/runtime-ui/app/routes/control-benchmark.tsx describeBenchmarkProgress). */
 const benchmarkPhaseCopy = (progress: NonNullable<NonNullable<Model["modelsView"]>["benchmarkProgress"]>) => {
   const model = progress.currentEndpointModelId === undefined ? null : "model " + String((progress.endpointIndex ?? 0) + 1) + "/" + String(progress.endpointCount ?? 0) + ": " + progress.currentEndpointModelId;
-  const testCase = progress.currentCaseId === undefined ? null : "case " + String((progress.caseIndex ?? 0) + 1) + "/" + String(progress.caseCount ?? 0) + " (" + progress.currentCaseId + ")";
+  // A case index beyond the steps already completed is a stale/incoherent snapshot; do not render it.
+  const caseCoherent = progress.caseIndex === undefined
+    || progress.completedSteps === undefined
+    || progress.completedSteps >= progress.caseIndex;
+  const testCase = !caseCoherent || progress.currentCaseId === undefined ? null : "case " + String((progress.caseIndex ?? 0) + 1) + "/" + String(progress.caseCount ?? 0) + " (" + progress.currentCaseId + ")";
   if (progress.runPhase === "compare") {
     return { detail: [testCase, progress.currentPhase === "compare" ? "ranking subjects for this case" : "preparing compare pass"].filter((value): value is string => value !== null).join(" • "), label: "Phase 3 of 3 · Head-to-head compare" };
   }
@@ -675,6 +679,13 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
   const benchmarkPhase = progress === undefined ? undefined : benchmarkPhaseCopy(progress);
   const hostCounts = progress?.caseCounts;
   const hostOutcome = progress?.outcome;
+  const requestedEndpointIds = modelsView?.benchmarkRunRequestedEndpointIds ?? [];
+  const resultEndpointIds = [...new Set((benchmarkResult?.endpointGrades ?? []).flatMap((grade) => (grade.endpointId === undefined ? [] : [grade.endpointId])))];
+  const requestedEndpointCount = progress?.requestedEndpointCount ?? (requestedEndpointIds.length > 0 ? requestedEndpointIds.length : undefined);
+  const executedEndpointCount = progress?.executedEndpointCount ?? (resultEndpointIds.length > 0 ? resultEndpointIds.length : undefined);
+  const skippedEndpoints = progress?.skippedEndpoints
+    ?? (requestedEndpointIds.length > 0 ? requestedEndpointIds.filter((endpointId) => !resultEndpointIds.includes(endpointId)) : []);
+  const endpointCountMismatch = (requestedEndpointCount !== undefined && executedEndpointCount !== undefined && requestedEndpointCount !== executedEndpointCount) || skippedEndpoints.length > 0;
   const showPassed = hostCounts === undefined ? benchmarkStats.passed : hostCounts.passed;
   const showExecuted = hostCounts === undefined ? benchmarkStats.executed : hostCounts.total;
   const showFailed = hostCounts === undefined ? benchmarkStats.failed : hostCounts.failed;
@@ -714,6 +725,11 @@ export const benchmarkRoute = (suite: ReadbackState, summary: ReadbackState, run
           h.p([h.DataAttribute("benchmark-progress-steps", "")], [String(progress.completedSteps ?? 0) + " / " + String(progress.totalSteps ?? 0) + " steps"]),
           benchmarkPhase === undefined || benchmarkPhase.detail.length === 0 ? null : h.p([h.DataAttribute("benchmark-progress-detail", "")], [benchmarkPhase.detail]),
         ]),
+        requestedEndpointCount === undefined && executedEndpointCount === undefined && skippedEndpoints.length === 0
+          ? null
+          : h.p([h.DataAttribute("benchmark-endpoint-counts", ""), h.Class("font-sans text-sm leading-5 " + (endpointCountMismatch ? "font-semibold text-[var(--rm-warning,#b45309)]" : "text-foreground"))], [
+              "Requested " + (requestedEndpointCount === undefined ? "—" : String(requestedEndpointCount)) + " endpoint" + (requestedEndpointCount === 1 ? "" : "s") + " · executed " + (executedEndpointCount === undefined ? "—" : String(executedEndpointCount)) + (skippedEndpoints.length === 0 ? "" : " · skipped: " + skippedEndpoints.join(", ")),
+            ]),
         progress.status === "failed"
           ? h.p([h.DataAttribute("benchmark-terminal-status", "failed"), h.Role("alert"), h.Class("font-sans text-sm leading-5 text-destructive")], ["Failed: " + (progress.errorCode === undefined ? "" : progress.errorCode + " · ") + (progress.errorMessage ?? progress.message ?? "Benchmark run failed.")])
           : null,

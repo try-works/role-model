@@ -463,11 +463,19 @@ const benchmarkProgressFrom = (raw: unknown): BenchmarkProgress | undefined => {
       }
     : undefined;
   const outcome = record.outcome === "passed" || record.outcome === "partial" || record.outcome === "failed" ? record.outcome : undefined;
+  const requestedEndpointCount = typeof record.requestedEndpointCount === "number" ? record.requestedEndpointCount : undefined;
+  const executedEndpointCount = typeof record.executedEndpointCount === "number" ? record.executedEndpointCount : undefined;
+  const skippedEndpoints = Array.isArray(record.skippedEndpoints)
+    ? record.skippedEndpoints.filter((value): value is string => typeof value === "string")
+    : undefined;
   return {
     runId,
     status,
     ...(caseCounts === undefined ? {} : { caseCounts }),
     ...(outcome === undefined ? {} : { outcome }),
+    ...(requestedEndpointCount === undefined ? {} : { requestedEndpointCount }),
+    ...(executedEndpointCount === undefined ? {} : { executedEndpointCount }),
+    ...(skippedEndpoints === undefined ? {} : { skippedEndpoints }),
     ...(numberField("caseCount") === undefined ? {} : { caseCount: numberField("caseCount") }),
     ...(numberField("caseIndex") === undefined ? {} : { caseIndex: numberField("caseIndex") }),
     ...(numberField("completedSteps") === undefined ? {} : { completedSteps: numberField("completedSteps") }),
@@ -1527,7 +1535,7 @@ const readPlanForRoute = (model: Model): ReadonlyArray<{ readonly key: ReadbackK
           const rawMode = (state.benchmarkMode ?? "quick").toLowerCase().includes("full") ? "full" : "quick";
           return {
             commands: [modelsCommands.runBenchmark({ endpointIdsJson: JSON.stringify(selected), judgeEndpointId: judge, mode: rawMode, token: model.readbacks.benchmarkSummary.token + 1 })],
-            model: { ...model, modelsView: { ...state, benchmarkAction: { status: "saving" } } },
+            model: { ...model, modelsView: { ...state, benchmarkAction: { status: "saving" }, benchmarkRunRequestedEndpointIds: [...selected] } },
           };
         },
         BenchmarkRunStarted: ({ runId, token }: Extract<Message, { readonly _tag: "BenchmarkRunStarted" }>): UpdateReturn<Model, Message> => {
@@ -1550,6 +1558,12 @@ const readPlanForRoute = (model: Model): ReadonlyArray<{ readonly key: ReadbackK
           if (progress === undefined) return { model };
           const runId = progress.runId;
           const status = progress.status;
+          // A snapshot from another run (or from before the client started this run) must never replace the panel:
+          // keep the run this client started and re-poll that id instead of following the stale record.
+          const expectedRunId = state.benchmarkProgress?.status === "running" ? state.benchmarkProgress.runId : undefined;
+          if (expectedRunId !== undefined && runId !== expectedRunId) {
+            return { commands: [modelsCommands.pollBenchmarkRun({ runId: expectedRunId, token: token + 1 })], model };
+          }
           if (status === "running") {
             return {
               commands: [modelsCommands.pollBenchmarkRun({ runId, token: token + 1 })],

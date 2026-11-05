@@ -163,7 +163,10 @@ const modelsFields = {
       endpointIndex: Schema.optional(Schema.Number),
       errorCode: Schema.optional(Schema.String),
       errorMessage: Schema.optional(Schema.String),
+      executedEndpointCount: Schema.optional(Schema.Number),
       message: Schema.optional(Schema.String),
+      requestedEndpointCount: Schema.optional(Schema.Number),
+      skippedEndpoints: Schema.optional(Schema.Array(Schema.String)),
       outcome: Schema.optional(Schema.Literals(["passed", "partial", "failed"])),
       resultJson: Schema.optional(Schema.String),
       runId: Schema.String,
@@ -172,6 +175,7 @@ const modelsFields = {
       totalSteps: Schema.optional(Schema.Number),
       updatedAtMs: Schema.optional(Schema.Number),
     })),
+    benchmarkRunRequestedEndpointIds: Schema.optional(Schema.Array(Schema.String)),
     benchmarkRunDetail: Schema.optional(Schema.Struct({
       json: Schema.optional(Schema.String),
       message: Schema.optional(Schema.String),
