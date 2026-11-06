@@ -234,8 +234,12 @@ export const enforceTempRoot = ({
   const drive = String(requiredDrive)
     .toUpperCase()
     .replace(/[\\/]$/, "");
-  const root = path.parse(tempRoot).root.toUpperCase();
-  return root.startsWith(drive)
+  const parsedRoot = path.parse(tempRoot).root;
+  // The drive requirement is a Windows filesystem constraint; POSIX temp roots ("/tmp") have no drive
+  // letter to enforce, so the guard must not fail the Linux CI lanes before the browser check runs.
+  const windowsRoot = /^[A-Za-z]:[\\/]$/.test(parsedRoot);
+  const root = parsedRoot.toUpperCase();
+  return !windowsRoot || root.startsWith(drive)
     ? { ok: true, requiredDrive, tempRoot }
     : {
         ok: false,
