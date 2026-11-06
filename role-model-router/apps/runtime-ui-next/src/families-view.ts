@@ -450,33 +450,6 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
                                 "Kimi Code connects with OAuth device authorization. Press Connect, then approve the code in your browser.",
                               ],
                             ),
-                            h.button(
-                              [
-                                h.Type("button"),
-                                h.AriaDisabled(
-                                  ctx.deviceAuth.status === "starting" ||
-                                    ctx.deviceAuth.status === "pending" ||
-                                    ctx.deviceAuth.inflight === true,
-                                ),
-                                h.OnClick(Message.ProviderAccountDeviceAuthRequested({})),
-                                h.Class(
-                                  "inline-flex h-[34px] w-fit items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-foreground",
-                                ),
-                              ],
-                              [
-                                ctx.deviceAuth.status === "starting"
-                                  ? "Starting device authorization…"
-                                  : "Connect with Kimi (device authorization)",
-                              ],
-                            ),
-                            ...(ctx.deviceAuth.session?.userCode !== undefined
-                              ? [
-                                  h.p(
-                                    [h.Class("font-mono text-[13px] text-foreground")],
-                                    ["Code: " + ctx.deviceAuth.session.userCode],
-                                  ),
-                                ]
-                              : []),
                             ...(deviceAuthorizationUrl !== undefined
                               ? [
                                   h.a(
@@ -486,10 +459,38 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
                                       h.Attribute("rel", "noopener noreferrer"),
                                       h.DataAttribute("device-auth-open-url", ""),
                                       h.Class(
-                                        "font-sans text-[12px] text-[var(--rm-accent)] underline",
+                                        "inline-flex h-[34px] w-fit items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-foreground underline",
                                       ),
                                     ],
                                     ["Open Kimi authorization page"],
+                                  ),
+                                ]
+                              : [
+                                  h.button(
+                                    [
+                                      h.Type("button"),
+                                      h.AriaDisabled(
+                                        ctx.deviceAuth.status === "starting" ||
+                                          ctx.deviceAuth.status === "pending" ||
+                                          ctx.deviceAuth.inflight === true,
+                                      ),
+                                      h.OnClick(Message.ProviderAccountDeviceAuthRequested({})),
+                                      h.Class(
+                                        "inline-flex h-[34px] w-fit items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-foreground",
+                                      ),
+                                    ],
+                                    [
+                                      ctx.deviceAuth.status === "starting"
+                                        ? "Starting device authorization…"
+                                        : "Connect with Kimi (device authorization)",
+                                    ],
+                                  ),
+                                ]),
+                            ...(ctx.deviceAuth.session?.userCode !== undefined
+                              ? [
+                                  h.p(
+                                    [h.Class("font-mono text-[13px] text-foreground")],
+                                    ["Code: " + ctx.deviceAuth.session.userCode],
                                   ),
                                 ]
                               : []),
