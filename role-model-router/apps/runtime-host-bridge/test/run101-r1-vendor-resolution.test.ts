@@ -138,4 +138,19 @@ describe("@recursive:101-effect-mq-queue-rebuild @sp1 R1 vendored Effect resolut
     expect(bundled).toContain("PersistedQueue");
     expect(bundled).toContain("Job");
   });
+
+  it("resolves the Node platform/node-shared surfaces through the effect wrapper", () => {
+    // Run 115 R5 follow-up: the browser closure has always resolved; the Node
+    // platform half must also resolve without a second workspace package or a
+    // lockfile change. Both root and a representative per-entry subpath are
+    // asserted so a wildcard export cannot hide a missing child build.
+    for (const specifier of [
+      "effect/platform-node",
+      "effect/platform-node/NodePath",
+      "effect/platform-node-shared",
+      "effect/platform-node-shared/NodePath",
+    ]) {
+      expect(() => require.resolve(specifier)).not.toThrow();
+    }
+  });
 });

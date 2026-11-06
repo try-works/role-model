@@ -1,0 +1,12 @@
+✔ every vendored Node platform entry is built and has a wrapper export path (74.0686ms)
+✔ the Node platform graph imports only the Effect wrapper, optional peers and Node builtins (41.8589ms)
+✔ the browser wrappers never import a Node platform package (140.6709ms)
+✔ representative Node subpaths resolve through the wrapper and import a namespace (593.9183ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1354.065

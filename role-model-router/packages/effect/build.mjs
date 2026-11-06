@@ -30,7 +30,13 @@ import path from "node:path";
  * a vendored tree, so it has no basis for certifying any generated file pure.
  */
 import { build } from "esbuild";
-import { assembleEntries, discoverEffectSubpaths, vendored } from "./entries.mjs";
+import {
+  assembleEntries,
+  discoverEffectSubpaths,
+  discoverPlatformEntries,
+  platformVendored,
+  vendored,
+} from "./entries.mjs";
 
 const here = import.meta.dirname;
 const repoRoot = path.resolve(here, "..", "..", "..");
@@ -41,6 +47,30 @@ const repoRoot = path.resolve(here, "..", "..", "..");
  * have to run the build.
  */
 const { entries, published, rekeyed } = await assembleEntries(await discoverEffectSubpaths());
+const platformEntries = await discoverPlatformEntries();
+const platformNodeSharedSrc = path.join(
+  repoRoot,
+  "vendor",
+  "effect",
+  "packages",
+  "platform",
+  "node-shared",
+  "src",
+);
+/** R5: the sibling node-shared package is vendored source, not an installed dep. */
+const platformNodeSharedPlugin = {
+  name: "platform-node-shared-source",
+  setup(pluginBuild) {
+    pluginBuild.onResolve({ filter: /^@effect\/platform-node-shared(\/.*)?$/ }, (args) => {
+      const subpath = args.path.slice("@effect/platform-node-shared".length).replace(/^\//, "") || "index";
+      return { path: path.join(platformNodeSharedSrc, `${subpath}.ts`) };
+    });
+  },
+};
+for (const [key, file] of Object.entries(platformEntries)) {
+  if (entries[key] !== undefined) throw new Error(`duplicate platform wrapper entry "${key}"`);
+  entries[key] = file;
+}
 
 /**
  * The published subpaths are discovered from the vendored tree, so a stale
@@ -65,6 +95,11 @@ await build({
   target: "node24",
   sourcemap: false,
   logLevel: "warning",
+  // R5 Node closure: the optional peers are not part of this workspace (ws,
+  // undici, redis); keep them external rather than inventing a polyfill. The
+  // Effect runtime and its subpaths stay the single external wrapper identity.
+  external: ["effect", "effect/*", "ws", "undici", "redis"],
+  plugins: [platformNodeSharedPlugin],
 });
 
 /**
@@ -91,7 +126,7 @@ const declarationEntries = Object.entries(entries).filter(([key]) => {
   // and that re-keying must not drop the subpath from declaration emit.
   const subpath = published.get(key) ?? key;
   return (
-    !subpath.includes("/") ||
+    (!subpath.startsWith("platform-node") && !subpath.includes("/")) ||
     subpath === "index" ||
     subpath === "persistence" ||
     subpath.startsWith("persistence/") ||
@@ -171,6 +206,57 @@ for (const file of await readdir(typesDir, { recursive: true, withFileTypes: tru
   );
   if (rewritten !== source) {
     await writeFile(filePath, rewritten, "utf8");
+  }
+}
+
+/**
+ * R5 Node closure declarations: emit each Node platform package with its own
+ * src as rootDir, then add the root shim the `./*` export map expects.
+ */
+for (const [prefix, sourceRoot] of Object.entries(platformVendored)) {
+  const platformTypesDir = path.join(typesDir, prefix);
+  await mkdir(platformTypesDir, { recursive: true });
+  const platformFiles = Object.entries(entries)
+    .filter(([key]) => key === prefix || key.startsWith(`${prefix}/`))
+    .map(([, file]) => file);
+  try {
+    execFileSync(
+      process.execPath,
+      [
+        path.join(repoRoot, "node_modules", "typescript", "bin", "tsc"),
+        "--noCheck",
+        "--emitDeclarationOnly",
+        "--declaration",
+        "--allowImportingTsExtensions",
+        "--module",
+        "nodenext",
+        "--moduleResolution",
+        "nodenext",
+        "--target",
+        "es2022",
+        "--skipLibCheck",
+        "--rootDir",
+        sourceRoot,
+        "--outDir",
+        platformTypesDir,
+        ...platformFiles,
+      ],
+      { stdio: "pipe" },
+    );
+  } catch {
+    // Optional peers (ws/undici/redis) and the sibling platform package are not
+    // installed; the per-entry existence gate below is the real check.
+  }
+  for (const [key, file] of Object.entries(entries)) {
+    if (key !== prefix && !key.startsWith(`${prefix}/`)) continue;
+    const emitted = path.join(platformTypesDir, path.relative(sourceRoot, file).replace(/\.ts$/, ".d.ts"));
+    if (!existsSync(emitted)) {
+      throw new Error(`platform declaration emit missed ${key} (${emitted})`);
+    }
+  }
+  const rootShim = path.join(typesDir, `${prefix}.d.ts`);
+  if (!existsSync(rootShim)) {
+    await writeFile(rootShim, `export * from "./${prefix}/index.js";\n`, "utf8");
   }
 }
 

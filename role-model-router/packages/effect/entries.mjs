@@ -199,3 +199,36 @@ export async function assembleEntries(subpaths, options = {}) {
   assertNoCaseInsensitiveCollisions(entries);
   return { entries, published, rekeyed };
 }
+
+
+/**
+ * Run 115 R5 follow-up: the Node platform surfaces mirror the browser wrapper.
+ * They are published under the existing wrapper namespace as
+ * `effect/platform-node[/<Entry>]` and `effect/platform-node-shared[/<Entry>]`.
+ * Discovery is by exact filename (no wildcard from the vendored manifest) so a
+ * new vendored entry cannot silently appear without a wrapper export.
+ */
+export const platformVendored = Object.freeze({
+  "platform-node": path.join(repoRoot, "vendor", "effect", "packages", "platform", "node", "src"),
+  "platform-node-shared": path.join(
+    repoRoot,
+    "vendor",
+    "effect",
+    "packages",
+    "platform",
+    "node-shared",
+    "src",
+  ),
+});
+
+export async function discoverPlatformEntries() {
+  const entries = {};
+  for (const [prefix, root] of Object.entries(platformVendored)) {
+    entries[prefix] = path.join(root, "index.ts");
+    for (const entry of await readdir(root, { withFileTypes: true })) {
+      if (!entry.isFile() || !entry.name.endsWith(".ts") || entry.name === "index.ts") continue;
+      entries[`${prefix}/${entry.name.slice(0, -3)}`] = path.join(root, entry.name);
+    }
+  }
+  return entries;
+}
