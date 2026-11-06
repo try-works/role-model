@@ -1,7 +1,7 @@
 {
   "status": "PASS",
   "shell": "foldkit",
-  "port": 59820,
+  "port": 57633,
   "indexMarker": "assets/main.js",
   "htmlBytes": 2194
 }

@@ -1,2 +1,2 @@
-PASS ui shell: active=foldkit retainedReact=0.0.20-730-g807900de stateSchema=role-model.runtime-state.v1
+PASS ui shell: active=foldkit retainedReact=0.0.20-756-g5e81b83e stateSchema=role-model.runtime-state.v1
 PASS ui shell switch selection

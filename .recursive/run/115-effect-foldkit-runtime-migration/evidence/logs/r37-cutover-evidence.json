@@ -1,48 +1,55 @@
 {
-  "schemaVersion": "role-model.r37.cutover-evidence.v1",
+  "schemaVersion": "role-model.r37.cutover-evidence.v2",
   "release": {
-    "version": "0.0.20-730-g807900de",
+    "version": "0.0.20-756-g5e81b83e",
+    "commit": "5e81b83e231e8e8fbcb141597195094bf1b235cd",
     "executable": "role-model-dev.exe",
-    "executableSha256": "3d3ff364506e4cbe50f8e0ad42bcae16109562ba349a813e778c5b6aa3c626a7",
-    "driver": "package-sea.ts stageUiShellSelection + scripts/runtime/package-ui-shell.mjs"
+    "executableSha256": "3238c4286051b99856d6620ee1cc6c64fdc8e3cd741a5a4f6ec53266c75d0ec6"
+  },
+  "driver": {
+    "packageSea": "stageUiShellSelection",
+    "selector": "scripts/runtime/package-ui-shell.mjs",
+    "httpProbe": "scripts/runtime/package-ui-shell-http.mjs",
+    "verifier": "verify-packaged-candidate --shell-only --expect-ui-shell"
   },
   "shells": {
     "foldkitIndexSha256": "f7ff9085ce284384dbba91286a4bf98c9be2e1e180f66ccac23c0c66aecf3937",
     "reactIndexSha256": "57411656f0bd690dce8dddedb0119fd54cc391d267df1e73238ef5f0c33a2bb9",
     "registry": {
       "schemaVersion": "role-model.ui-shells.v1",
-      "releaseId": "0.0.20-730-g807900de",
+      "releaseId": "0.0.20-756-g5e81b83e",
       "active": "foldkit",
       "shells": {
         "foldkit": "build/shells/foldkit",
         "react": "build/shells/react"
       },
-      "retainedReactRelease": "0.0.20-730-g807900de",
+      "retainedReactRelease": "0.0.20-756-g5e81b83e",
       "stateSchemaVersion": "role-model.runtime-state.v1",
       "docsSite": "fumadocs-react-retained-exception",
-      "rollback": "selectShell({ releaseDir, shell: \"react\" }) then restart the candidate; state.json and the runtime database are untouched."
+      "docsSiteArtifact": "not-staged-in-runtime-release; Fumadocs/React docs remain a separate deployment (explicit exception)",
+      "rollback": "node scripts/runtime/package-ui-shell.mjs --release <release> --select react; restart the candidate. state.json and the runtime database are untouched."
     }
   },
   "probes": {
     "foldkitShellOnly": "PASS",
     "reactShellOnly": "PASS",
-    "reactServedEntryClient": true,
-    "foldkitRestored": true,
-    "stateFileBeforeAfter": "{\"pending\":1}\r\n",
-    "statePreserved": true,
     "httpFoldkit": true,
     "httpReact": true,
+    "httpMarkers": {
+      "foldkit": "assets/main.js",
+      "react": "entry.client"
+    },
     "dbPreservation": {
       "schemaVersion": "role-model.r37.db-preservation.v1",
       "stateRoot": "D:/DEV/rm-clean/r37-state",
-      "before": "0c4167eb887035f557017f6acdf52fe9e1c9ed80627d214479aae451a8d878dc",
-      "duringReact": "0c4167eb887035f557017f6acdf52fe9e1c9ed80627d214479aae451a8d878dc",
-      "after": "0c4167eb887035f557017f6acdf52fe9e1c9ed80627d214479aae451a8d878dc",
+      "before": "9d2455ea1ac6830ac923cdddb061b870c7cfb7cfc53af68e27d09fc8010efcba",
+      "duringReact": "9d2455ea1ac6830ac923cdddb061b870c7cfb7cfc53af68e27d09fc8010efcba",
+      "after": "9d2455ea1ac6830ac923cdddb061b870c7cfb7cfc53af68e27d09fc8010efcba",
       "databaseBytesUnchanged": true
     }
   },
   "docsSiteException": {
     "label": "fumadocs-react-retained-exception",
-    "artifact": "not-staged-in-runtime-release; explicit exception"
+    "artifact": "not-staged-in-runtime-release; Fumadocs/React docs remain a separate deployment (explicit exception)"
   }
 }

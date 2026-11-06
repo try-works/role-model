@@ -1,0 +1,20 @@
+
+> role-model@0.0.0 runtime:verify-packaged-candidate D:\DEV\rm-clean\r5-lockstep-pub
+> node scripts/runtime/verify-packaged-candidate.mjs
+
+PASS ui shell: active=foldkit retainedReact=0.0.20-756-g5e81b83e stateSchema=role-model.runtime-state.v1
+version=healthy 0.0.20-756-g5e81b83e
+sha256=3238c4286051b99856d6620ee1cc6c64fdc8e3cd741a5a4f6ec53266c75d0ec6
+port=63953 state=E:\tmp\r39-candidate-state-mT8ZYm fixtures=D:\DEV\rm-clean\r5-lockstep-pub\testdata\router-runtime\fixtures
+PASS health: healthy 0.0.20-756-g5e81b83e
+PASS models: 3 models
+PASS telemetry: requestCount 0
+PASS controller: openai.personal.primary.us-east-1.fast
+PASS learning: role-model.knowledge-worker.v1
+PASS replay jobs: 0 jobs
+PASS evaluation jobs: 0 jobs
+PASS ui css: 67981 bytes, both theme blocks
+PASS ui bundle: 3732496 bytes
+PASS ui theme boot: theme selected in CSS, no inline palette
+PASS chat completion: openai/gpt-4.1-mini-fast total_tokens=56
+PASS ui shell: 2194 bytes
