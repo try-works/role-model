@@ -1,0 +1,59 @@
+{
+  "slice": "s316-refresh-owner",
+  "requirement": "R27 Refresh owner through composition DAG",
+  "decision": "STOP - characterization. Refresh semantics are in the UI app (runtime-ui-next readback-flight.ts + refresh.ts, commits a01230f0/c88aecdf); the host has no Refresh service, only the createRuntimeBridgeBackend rebuildCurrentState closure (index.ts:22656, 38 refs) over backend-local state, and the DAG Refresh is shape-only (composition-dag.ts:146). Backend/Server moves do not unblock it.",
+  "evidence": {
+    "inFlightSharing": "apps/runtime-ui-next/src/readback-flight.ts:38 ReadbackFlightTransport, :97 createReadbackFlightTransport (commit a01230f0); consumer runtime-ui-next/src/readback.ts.",
+    "telemetryInvalidation": "apps/runtime-ui-next/src/refresh.ts:29 REFRESH_STREAM_URL, :107 refreshRevisionStream, :216 makeRefreshSubscriptions (commit c88aecdf); plus update.ts/message.ts.",
+    "hostRefresh": "index.ts:22656 rebuildCurrentState closure (38 reference sites) mutating currentAccounts/currentEndpoints/currentNormalizedCatalog/currentModelsById/currentRegistry/currentUnifiedRuntimeConfig/sessionBootstrapState captured by createRuntimeBridgeBackend (index.ts:20905-35271).",
+    "dagRefresh": "composition-dag.ts:146 RefreshContract {id, eventLog}; :150 Refresh service; :423 refreshLayer; :479 baseOwnerLayers - shape only, no refresh behaviour.",
+    "scope": "Authorized files: composition-dag.ts, the refresh-related host composition region of index.ts/cli.ts, host-bridge test/**. The actual refresh implementation is in apps/runtime-ui-next (outside)."
+  },
+  "redGreen": {
+    "red": "No runtime RED: the move is not honest within scope (S21d pattern; source-level dependency, no type gap).",
+    "green": "Baseline re-run with no product changes: tsc exit 0; s21a 6/6 + s21c 2/2 + s313 5 + s310b 5 = 18/18 (evidence/logs/s316-characterization.log)."
+  },
+  "counts": {
+    "tests": 18,
+    "passed": 18,
+    "failed": 0,
+    "typecheck": "exit 0"
+  },
+  "files": {
+    "src/composition-dag.ts": "AD1780F13111115A94AADD4CEE7D9035A00E3B3256D470E4D7875D34FA02C25A",
+    "src/index.ts": "387DAC6E438EC0BCB9BF80D548F1C25D4039796CCAD83A60E61CB4C39352568B",
+    "src/cli.ts": "C6AFCD7354C2E5869D03B5D794974434B2B3308D49B29E8F0C1267EC0751F60A"
+  },
+  "changedProductFiles": "none",
+  "ownerTable": [
+    {
+      "owner": "Backend",
+      "status": "MOVED (6ade412f)"
+    },
+    {
+      "owner": "Server",
+      "status": "MOVED (693b2204)"
+    },
+    {
+      "owner": "Refresh",
+      "status": "blocked",
+      "blocker": "UI-layer semantics (runtime-ui-next readback-flight.ts/refresh.ts) outside scope; host refresh is backend closure state (index.ts:22656)."
+    },
+    {
+      "owner": "Drain",
+      "status": "blocked",
+      "blocker": "shutdown/drain spans backend, supervisor, queues, vendors; early readiness/partial shutdown gaps."
+    },
+    {
+      "owner": "Benchmark",
+      "status": "blocked",
+      "blocker": "separate CLI/runner; cancellation/cross-process ownership not modelled."
+    },
+    {
+      "owner": "Cli",
+      "status": "blocked",
+      "blocker": "process entrypoint (args/SEA/startup)."
+    }
+  ],
+  "unblock": "Authorize apps/runtime-ui-next refresh files as a separate UI Refresh owner slice, OR authorize extracting the Backend's rebuildCurrentState/closure state as a Backend-owned Refresh service."
+}

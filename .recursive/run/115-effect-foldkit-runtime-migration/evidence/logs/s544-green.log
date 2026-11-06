@@ -1,0 +1,9 @@
+S544 models density + studio tab depth
+RED: s541-red-final.log = FINAL s541 test against pre-S544 HEAD view.ts, full vitest output, 6/11 failures (models already passed structural labels at HEAD; new density is audited). s544-red.log = FINAL s544 test, 4/6 failures (models test passed structural labels at HEAD; studio tabs 4 failed). Final test hashes appended to each RED log.
+TSC=0
+SUITES: 63/63 across 8 required files (s544, s541, s533, s491, s534, s530, s386, s67a)
+S247: 3/3
+LINT: models routes/test clean; view added-line clean
+AUDIT: s544-audit.log
+/models 2342/1570 = 149.2% WITH real data: 28 role/task rows from live endpoint roleIds (analyst 47 ... writer 85), controls Make primary controller/Open Roles/Open Benchmark/Eject controller; no no-op model controls.
+Studio tabs: chat 215/130 165.4%; images 367/297 123.6%; audio 478/309 154.7%; rerank 371/276 134.4%; advanced 527/343 153.6%. Voice is a real select.

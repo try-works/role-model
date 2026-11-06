@@ -1,0 +1,31 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:13352) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run96-operator-surfaces.test.ts (7 tests) 193ms
+(node:10560) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run96-operator-controls.test.ts (5 tests) 195ms
+(node:56692) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run108-addendum01-a52-observability-snapshot-readback.test.ts (4 tests) 136ms
+(node:55120) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run99-learning-readback-auth.test.ts (5 tests) 131ms
+(node:22552) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run108-addendum01-a2-store-degradation-receipts-readback.test.ts (3 tests) 111ms
+(node:48884) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run98-a46-device-owner-trust.test.ts (3 tests) 94ms
+(node:52592) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run115-s15a-local-diagnostics-read.test.ts (14 tests) 23ms
+
+ Test Files  7 passed (7)
+      Tests  41 passed (41)
+   Start at  00:44:16
+   Duration  22.53s (transform 5.22s, setup 0ms, collect 18.53s, tests 883ms, environment 3ms, prepare 1.17s)
+
+EXIT_CODE: 0

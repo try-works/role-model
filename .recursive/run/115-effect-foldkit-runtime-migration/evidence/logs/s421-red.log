@@ -1,0 +1,63 @@
+COMMAND: node vitest run s421 (S421 isolation RED, before product change)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:65908) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s421-diagnostics-isolation.test.ts (5 tests | 2 failed) 1538ms
+   × S421 diagnostics isolation on a real backend > module diagnostics do not change business request/failure counts or rows 559ms
+     → expected 2 to be 1 // Object.is equality
+   × S421 diagnostics isolation on a real backend > authorized diagnostics omit a genuine business failure and show the module Cause 443ms
+     → expected true to be false // Object.is equality
+   ✓ S421 diagnostics isolation on a real backend > writer records stay visible when business storage is closed/degraded 278ms
+   ✓ S421 diagnostics isolation on a real backend > overflow is bounded and exposes the loss counter without double-reporting 6ms
+   ✓ S421 diagnostics isolation on a real backend > client-caused 4xx escapes remain excluded from module diagnostics 243ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s421-diagnostics-isolation.test.ts > S421 diagnostics isolation on a real backend > module diagnostics do not change business request/failure counts or rows
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ test/s421-diagnostics-isolation.test.ts:81:32
+     79|     const after = readRuntimeTelemetrySummary({ databasePath, windowMs…
+     80|     const afterRows = listRuntimeTelemetryRecords({ databasePath, limi…
+     81|     expect(after.requestCount).toBe(before.requestCount);
+       |                                ^
+     82|     expect(after.failureCount).toBe(before.failureCount);
+     83|     expect(afterRows).toHaveLength(beforeRows.length);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s421-diagnostics-isolation.test.ts > S421 diagnostics isolation on a real backend > authorized diagnostics omit a genuine business failure and show the module Cause
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ test/s421-diagnostics-isolation.test.ts:96:80
+     94|     const records = authorized.body.records ?? [];
+     95|     expect(records.filter((record) => record.code === "cause.die")).to…
+     96|     expect(records.some((record) => (record.code ?? "").includes("prov…
+       |                                                                                ^
+     97|     expect(records).toHaveLength(1);
+     98|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 3 passed (5)
+   Start at  20:47:06
+   Duration  36.47s (transform 21.57s, setup 0ms, collect 32.64s, tests 1.54s, environment 1ms, prepare 730ms)
+
+

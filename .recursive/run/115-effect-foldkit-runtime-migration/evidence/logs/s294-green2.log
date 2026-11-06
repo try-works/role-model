@@ -1,0 +1,28 @@
+COMMAND: node --test scripts/runtime/parity-selfcheck.test.mjs
+CWD: public worktree ; S295 GREEN: 15 tests after lint cleanup
+EXIT_CODE=0
+
+✔ S294 PASSED when both builds are deterministic, clean and the dual comparison is recorded (7.939ms)
+✔ S294 a React-vs-Foldkit difference is classified, never forced equal (0.7816ms)
+✔ S294 FAILED when a build is nondeterministic across the two runs (1.0672ms)
+✔ S294 FAILED when a capture surfaces console or network issues (0.6748ms)
+✔ S294 FAILED (not NOT_RUN) when a build target is unavailable (0.9359ms)
+✔ S294 NOT_RUN with exit 2 only when no browser is available (0.471ms)
+✔ S294 runSelfcheck captures every target twice (two runs) and evaluates the result (4.7755ms)
+✔ S294 partitions favicon harness noise out of the capture issues while recording it (2.0696ms)
+✔ S295 FAILED when a target has fewer than exactly two captures (1.5603ms)
+✔ S295 FAILED when a target entry is missing from the plan (1.347ms)
+✔ S295 emits per-target ignoredIssues and an ignored count in the JSON (1.1179ms)
+✔ S295 emits comparisons on the FAILED path and computes reactVsReact from the two react shas (0.9296ms)
+✔ S295 evidence.targets lists both run PNGs per target and echoes executable/temp roots (0.7098ms)
+✔ S295 runSelfcheck contains a capture failure as a FAILED JSON result, not a rejection (0.9692ms)
+✔ S294 planTargets names the React and Foldkit static roots from the repo root (1.1538ms)
+ℹ tests 15
+ℹ suites 0
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 401.173
+

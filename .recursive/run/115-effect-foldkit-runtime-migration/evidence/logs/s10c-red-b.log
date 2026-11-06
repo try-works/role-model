@@ -1,0 +1,35 @@
+# S10c mutation (b): the transport catch no longer calls reportRequestFailure
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:41744) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run115-s10c-wiring-proofs.test.ts (5 tests | 1 failed) 16ms
+   ✓ S10c module-health wiring proofs > constructs the composition once and injects its source by identity 6ms
+   ✓ S10c module-health wiring proofs > passes options through unchanged and no-ops the report when disabled 2ms
+   × S10c module-health wiring proofs > builds the wiring once per listener and reports each rejected handler exactly once 4ms
+     → expected "spy" to be called 1 times, but got 0 times
+   ✓ S10c module-health wiring proofs > does not report a handler that resolves 1ms
+   ✓ S10c module-health wiring proofs > disabled listener: the handler sees the unchanged options and a rejection is not reported 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run115-s10c-wiring-proofs.test.ts > S10c module-health wiring proofs > builds the wiring once per listener and reports each rejected handler exactly once
+AssertionError: expected "spy" to be called 1 times, but got 0 times
+ ❯ test/run115-s10c-wiring-proofs.test.ts:95:20
+     93|     listener(request, response);
+     94|     await flush();
+     95|     expect(report).toHaveBeenCalledTimes(1);
+       |                    ^
+     96|     expect(report).toHaveBeenCalledWith(fail);
+     97|     expect(captured).toHaveLength(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  01:51:56
+   Duration  8.07s (transform 4.79s, setup 0ms, collect 7.56s, tests 16ms, environment 0ms, prepare 177ms)
+
+EXIT_CODE: 1

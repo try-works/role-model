@@ -1,0 +1,19 @@
+COMMAND: node vitest run (S334 6 files)
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/s334-observation-storage.test.ts (4 tests) 17ms
+(node:49292) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s331-benchmark-behavior.test.ts (2 tests) 117ms
+ ✓ test/s321-partial-shutdown.test.ts (10 tests) 64ms
+ ✓ test/s327-drain-shutdown.test.ts (3 tests) 50ms
+ ✓ test/s324-readiness.test.ts (7 tests) 47ms
+ ✓ test/s330-benchmark-owner.test.ts (4 tests) 19ms
+
+ Test Files  6 passed (6)
+      Tests  30 passed (30)
+   Start at  10:01:06
+   Duration  13.18s (transform 4.32s, setup 0ms, collect 10.26s, tests 312ms, environment 2ms, prepare 1.00s)
+
+

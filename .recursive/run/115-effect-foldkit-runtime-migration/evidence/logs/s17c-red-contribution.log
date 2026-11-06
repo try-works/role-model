@@ -1,0 +1,55 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:55856) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s17a-transport-signal.test.ts (11 tests | 1 failed | 10 skipped) 14ms
+   ↓ private operations transport signal > cancels the underlying fetch when the enclosing fiber times out (request does not keep running)
+   ↓ private operations transport signal > releases the real reader and abort listener (body unlocked) on success
+   ↓ private operations transport signal > counts scoped releases on the status-failure path and does not retry a stated status
+   ↓ private operations transport signal > counts scoped releases on the caller-abort path and does not retry
+   ↓ private operations transport signal > pins the exact connection-retry schedule 250/1000/2500/5000ms
+   ↓ private operations transport signal > pins the retry schedule through the Effect path as well
+   ↓ private operations transport signal > pins status and timeout as one call and no sleep on both paths
+   ↓ private operations transport signal > does not retry a caller abort
+   ↓ private operations transport signal > keeps timeout, status, protocol and abort failures distinct and non-retried
+   × private operations transport signal > forwards the reachable request signal to the direct contribution recorder 12ms
+     → expected undefined to be AbortSignal { aborted: false } // Object.is equality
+   ↓ private operations transport signal > carries the caller signal through the REAL operation boundary into fetch
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s17a-transport-signal.test.ts > private operations transport signal > forwards the reachable request signal to the direct contribution recorder
+AssertionError: expected undefined to be AbortSignal { aborted: false } // Object.is equality
+
+- Expected: 
+AbortSignal {
+  Symbol(kEvents): Map {},
+  Symbol(events.maxEventTargetListeners): 0,
+  Symbol(events.maxEventTargetListenersWarned): false,
+  Symbol(kHandlers): Map {},
+  Symbol(kAborted): false,
+  Symbol(kReason): undefined,
+  Symbol(kComposite): false,
+}
+
++ Received: 
+undefined
+
+ ❯ test/s17a-transport-signal.test.ts:373:33
+    371| 
+    372|     expect(observed.length).toBe(1);
+    373|     expect(observed[0]?.signal).toBe(controller.signal);
+       |                                 ^
+    374|   });
+    375| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 skipped (11)
+   Start at  03:07:39
+   Duration  7.10s (transform 4.29s, setup 0ms, collect 6.61s, tests 14ms, environment 0ms, prepare 169ms)
+
+EXIT_CODE: 1

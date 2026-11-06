@@ -176,7 +176,9 @@ describe("diagnostics page states", () => {
     expect(bodyText()).toContain("state, not an error");
     expect(bodyText()).toContain("build: missing");
     // Disabled is a calm state: it must not keep a danger or warning border.
-    const disabledPanel = document.querySelector<HTMLElement>('[data-diagnostics-state="disabled"]');
+    const disabledPanel = document.querySelector<HTMLElement>(
+      '[data-diagnostics-state="disabled"]',
+    );
     expect(disabledPanel?.className).toContain("border-dashed");
     expect(disabledPanel?.className).not.toContain("border-[var(--rm-danger)]");
     expect(disabledPanel?.className).not.toContain("border-[var(--rm-warning)]");
@@ -396,16 +398,16 @@ describe("diagnostics page states", () => {
     );
     expect(refresh).toBeDefined();
     expect(refresh?.tagName).toBe("BUTTON");
-    expect(refresh?.className).toContain("focus-visible:ring-2");
+    expect(refresh?.className).toContain("focus-visible:outline-2");
     expect(refresh?.className).toContain("w-full");
     expect(refresh?.disabled).toBe(false);
 
-    const links = Array.from(document.querySelectorAll("nav a"));
-    expect(links.length).toBeGreaterThanOrEqual(2);
+    const links = Array.from(document.querySelectorAll("aside[data-shell-sidebar] a[data-nav]"));
+    expect(links).toHaveLength(10);
     for (const link of links) {
       expect(link.getAttribute("href")).toBeTruthy();
-      expect((link as HTMLElement).className).toContain("focus-visible:ring-2");
     }
+    expect(links.filter((link) => link.getAttribute("aria-current") === "page")).toHaveLength(1);
   });
 
   it("does not apply a resolved read for a previous route id after navigating away", async () => {
@@ -468,7 +470,10 @@ describe("diagnostics page states", () => {
     entry?.handle.dispose();
     entry?.container.remove();
 
-    await waitFor(() => (forwarded?.aborted === true ? true : undefined), "the forwarded signal abort");
+    await waitFor(
+      () => (forwarded?.aborted === true ? true : undefined),
+      "the forwarded signal abort",
+    );
     expect(abortedDuringRead).toBe(true);
   });
 
@@ -482,7 +487,9 @@ describe("diagnostics page states", () => {
     );
 
     await waitFor(() => stateNode("denied"), "the denied diagnostics state for a 403");
-    expect(bodyText()).toContain("Access denied: the server rejected this diagnostics read (HTTP 403).");
+    expect(bodyText()).toContain(
+      "Access denied: the server rejected this diagnostics read (HTTP 403).",
+    );
     expect(bodyText()).not.toContain("not authorized");
   });
 

@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:19092) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run101-r5-cancel-drain.test.ts (5 tests | 4 skipped) 1492ms
+   ✓ run 101 R5/R9 queue admin runtime side > claims nothing while the queue is draining, and claims again once it is cleared  1490ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 4 skipped (5)
+   Start at  05:47:06
+   Duration  5.11s (transform 1.99s, setup 0ms, collect 3.14s, tests 1.49s, environment 0ms, prepare 177ms)
+

@@ -1,0 +1,80 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "request_id": "req-74e1108d-b82b-4aab-8304-4f7d5a45068e",
+      "timestamp": "2026-10-25T16:50:38.086Z",
+      "model": "moonshot/kimi-k2.5",
+      "modelId": "moonshot/kimi-k2.5",
+      "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
+      "upstreamModelId": "moonshot/kimi-k2.5",
+      "reasoningEffort": null,
+      "req_path": "/v1/chat/completions",
+      "resp_content_type": "application/json",
+      "resp_status_code": 200,
+      "tokens": {
+        "cache_tokens": 0,
+        "input_tokens": 3,
+        "output_tokens": 2,
+        "prompt_per_second": 600,
+        "tokens_per_second": 400
+      },
+      "duration_ms": 5,
+      "has_capture": false
+    },
+    {
+      "id": 2,
+      "request_id": "req-db11f942-a3f8-4c75-8f34-60d25a3f346f",
+      "timestamp": "2026-10-25T16:50:37.934Z",
+      "model": "moonshot/kimi-k2.5",
+      "modelId": "moonshot/kimi-k2.5",
+      "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
+      "upstreamModelId": "moonshot/kimi-k2.5",
+      "reasoningEffort": null,
+      "req_path": "/v1/chat/completions",
+      "resp_content_type": "application/json",
+      "resp_status_code": 200,
+      "tokens": {
+        "cache_tokens": 0,
+        "input_tokens": 3,
+        "output_tokens": 2,
+        "prompt_per_second": 1000,
+        "tokens_per_second": 666.7
+      },
+      "duration_ms": 3,
+      "has_capture": false
+    },
+    {
+      "id": 3,
+      "request_id": "req-27bb0094-c516-48d5-b967-e1f71bc2c3d7",
+      "timestamp": "2026-10-25T16:50:37.740Z",
+      "model": "moonshot/kimi-k2.5",
+      "modelId": "moonshot/kimi-k2.5",
+      "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
+      "upstreamModelId": "moonshot/kimi-k2.5",
+      "reasoningEffort": null,
+      "req_path": "/v1/chat/completions",
+      "resp_content_type": "application/json",
+      "resp_status_code": 200,
+      "tokens": {
+        "cache_tokens": 0,
+        "input_tokens": 3,
+        "output_tokens": 2,
+        "prompt_per_second": 600,
+        "tokens_per_second": 400
+      },
+      "duration_ms": 5,
+      "has_capture": false
+    }
+  ],
+  "totalMatching": 3,
+  "returned": 3,
+  "pageSize": 50,
+  "truncated": false,
+  "nextCursor": null,
+  "window": {
+    "startAtMs": 1792860638586,
+    "endAtMs": 1792947038586,
+    "asOfMs": 1792947038586
+  }
+}

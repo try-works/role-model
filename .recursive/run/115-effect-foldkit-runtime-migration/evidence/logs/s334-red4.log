@@ -1,0 +1,16 @@
+COMMAND: node vitest run test/s334 (S335 test repair: watchdog abandonment + eventual settle; run BEFORE product edits)
+EXIT_CODE=0
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/s334-observation-storage.test.ts (9 tests) 15191ms
+   ✓ S334 observation storage > hung job: drain rejects with the typed 5s timeout and the pump does not stay permanently active  5042ms
+   ✓ S334 observation storage > drain watchdog abandons a hung active job and queued later jobs still run  5039ms
+   ✓ S334 observation storage > eventual settle after abandonment writes no cache entry and does not double-decrement pending  5034ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  10:14:01
+   Duration  19.23s (transform 1.99s, setup 0ms, collect 3.12s, tests 15.19s, environment 1ms, prepare 362ms)
+
+

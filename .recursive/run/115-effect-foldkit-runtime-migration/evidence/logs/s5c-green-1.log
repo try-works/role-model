@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ✓ test/s5c-supervisor-repairs.test.ts (2 tests | 1 skipped) 729ms
+   ✓ S5c supervisor repairs > a failed taskkill rejects within the stop bound instead of hanging  727ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 1 skipped (2)
+   Start at  04:02:22
+   Duration  1.48s (transform 100ms, setup 0ms, collect 104ms, tests 729ms, environment 0ms, prepare 224ms)
+

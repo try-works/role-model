@@ -1,0 +1,142 @@
+✖ R32 evaluation: descriptor protocol version incompatibility is rejected before the factory (124.4503ms)
+✖ R32 evaluation: required evaluation:list-jobs is enforced, not any evaluation:* (23.1144ms)
+✖ R32 evaluation: ready is false during the factory and true only after owner.add (25.6434ms)
+✖ R32 evaluation: null factory result never becomes ready (47.3985ms)
+✖ R32 evaluation: factory failure never leaves ready=true (63.3727ms)
+✖ R32 evaluation: closed late open releases the late child and stays not-ready (32.5774ms)
+✖ R32 evaluation: a reused handle resets accepted evidence before a failing open (50.9457ms)
+✖ R32 evaluation: no manifest returns null without invoking a custom factory (6.2392ms)
+✔ R32 evaluation: the actual packaged evaluation manifest is accepted with the required capability (27.2385ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 1
+ℹ fail 8
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2015.1417
+
+✖ failing tests:
+
+test at tests\track-b\run115-b9-evaluation-handshake-correctness.test.mjs:26:1
+✖ R32 evaluation: descriptor protocol version incompatibility is rejected before the factory (124.4503ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-evaluation-handshake-correctness.test.mjs:33:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run115-b9-evaluation-handshake-correctness.test.mjs:38:1
+✖ R32 evaluation: required evaluation:list-jobs is enforced, not any evaluation:* (23.1144ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-evaluation-handshake-correctness.test.mjs:45:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run115-b9-evaluation-handshake-correctness.test.mjs:50:1
+✖ R32 evaluation: ready is false during the factory and true only after owner.add (25.6434ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-evaluation-handshake-correctness.test.mjs:56:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run115-b9-evaluation-handshake-correctness.test.mjs:63:1
+✖ R32 evaluation: null factory result never becomes ready (47.3985ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-evaluation-handshake-correctness.test.mjs:68:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run115-b9-evaluation-handshake-correctness.test.mjs:72:1
+✖ R32 evaluation: factory failure never leaves ready=true (63.3727ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be strictly unequal to: true
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-evaluation-handshake-correctness.test.mjs:77:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: true,
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run115-b9-evaluation-handshake-correctness.test.mjs:81:1
+✖ R32 evaluation: closed late open releases the late child and stays not-ready (32.5774ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be strictly unequal to: true
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-evaluation-handshake-correctness.test.mjs:88:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: true,
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run115-b9-evaluation-handshake-correctness.test.mjs:91:1
+✖ R32 evaluation: a reused handle resets accepted evidence before a failing open (50.9457ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be strictly unequal to: true
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-evaluation-handshake-correctness.test.mjs:100:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: true,
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run115-b9-evaluation-handshake-correctness.test.mjs:104:1
+✖ R32 evaluation: no manifest returns null without invoking a custom factory (6.2392ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + {
+  +   close: [AsyncFunction: close]
+  + }
+  - null
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-evaluation-handshake-correctness.test.mjs:108:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [Object],
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

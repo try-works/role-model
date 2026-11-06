@@ -1,0 +1,1290 @@
+COMMAND: node vitest run (S379c 5 files)
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s110-nav-links.test.ts (25 tests) 76ms
+ ✓ test/s269-canonical-url.test.ts (81 tests) 361ms
+stderr | test/s26n-rows.test.ts > S26n redirects and static rows > renders local-choose as a static route
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 44.4ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'LocalChoose' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 44.36819999999898,
+  thresholdMs: 8
+}
+
+stderr | test/s269-canonical-url.scene.test.ts > S269 mounted legacy redirects > replaces a legacy request-list URL with /requests and reads it exactly once
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 45.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Requests' },
+    theme: 'dark',
+    pendingRedirectHref: '/requests'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 45.113100000000486,
+  thresholdMs: 8
+}
+
+stderr | test/s386-learning-family.test.ts > S379c Learning family pages (real per-panel readbacks) > renders loading then ok on the decisions panel
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 42.9ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'LearningDecisions' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 42.92410000000018,
+  thresholdMs: 8
+}
+
+stderr | test/s26n-rows.test.ts > S26n redirects and static rows > redirects /local/models to the Local choose target view
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s26n-rows.test.ts > S26n redirects and static rows > redirects /local/models to the Local choose target view
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s26n-rows.test.ts > S26n redirects and static rows > redirects /local/models to the Local choose target view
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s26n-rows.test.ts > S26n redirects and static rows > redirects /local/models to the Local choose target view
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s26n-rows.test.ts > S26n redirects and static rows > redirects /local/models to the Local choose target view
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s26n-rows.test.ts > S26n redirects and static rows > redirects /local/models to the Local choose target view
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s26n-rows.test.ts > S26n redirects and static rows > redirects /local/models to the Local choose target view
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 27.0ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'LocalChoose' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 27.013499999999112,
+  thresholdMs: 8
+}
+
+stderr | test/s269-canonical-url.scene.test.ts > S269 mounted legacy redirects > replaces a legacy redirect-map entry through history and reads it exactly once
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 28.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Requests' },
+    theme: 'dark',
+    pendingRedirectHref: '/requests'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 28.502200000000812,
+  thresholdMs: 8
+}
+
+stderr | test/s26n-rows.test.ts
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s26n-rows.test.ts
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s26n-rows.test.ts
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s26n-rows.test.ts
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s26n-rows.test.ts
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s26n-rows.test.ts
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+ ✓ test/s26n-rows.test.ts (2 tests) 1282ms
+   ✓ S26n redirects and static rows > renders local-choose as a static route  715ms
+   ✓ S26n redirects and static rows > redirects /local/models to the Local choose target view  564ms
+stderr | test/s386-learning-family.test.ts > S379c Learning family pages (real per-panel readbacks) > renders error honestly when a panel readback fails
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 26.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'LearningDecisions' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 26.764600000000428,
+  thresholdMs: 8
+}
+
+stderr | test/s269-canonical-url.scene.test.ts > S269 mounted legacy redirects > keeps a legacy detail ID and query through the canonical detail route
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 18.7ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'RequestDetail', requestId: 'req-9' },
+    theme: 'dark',
+    pendingRedirectHref: '/requests/req-9?window=3600000'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 18.71270000000004,
+  thresholdMs: 8
+}
+
+stderr | test/s386-learning-family.test.ts > S379c Learning family pages (real per-panel readbacks) > renders the history panel from its own readback
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 18.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'LearningHistory' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 18.141600000000835,
+  thresholdMs: 8
+}
+
+ ✓ test/s386-learning-family.test.ts (7 tests) 1866ms
+   ✓ S379c Learning family pages (real per-panel readbacks) > renders loading then ok on the decisions panel  655ms
+   ✓ S379c Learning family pages (real per-panel readbacks) > renders error honestly when a panel readback fails  569ms
+   ✓ S379c Learning family pages (real per-panel readbacks) > renders the history panel from its own readback  541ms
+stderr | test/s269-canonical-url.scene.test.ts > S269 mounted legacy redirects > selects the original Studio tab from the URL and canonicalises it as a query alias
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 25.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "max_tokens": 64,\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'images',
+      token: 0
+    },
+    theme: 'dark',
+    pendingRedirectHref: '/studio?tab=images'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 25.782000000001062,
+  thresholdMs: 8
+}
+
+stderr | test/s269-canonical-url.scene.test.ts > S269 mounted legacy redirects > routes the legacy runtime surfaces to the implemented /runtime page
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 27.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Runtime' },
+    theme: 'dark',
+    pendingRedirectHref: '/runtime'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 27.752999999998792,
+  thresholdMs: 8
+}
+
+stderr | test/s269-canonical-url.scene.test.ts > S269 mounted legacy redirects > preserves browser back/forward across the replace without a NotFound flash
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 26.3ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Requests' },
+    theme: 'dark',
+    pendingRedirectHref: '/requests'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 26.296700000000783,
+  thresholdMs: 8
+}
+
+stderr | test/s269-canonical-url.scene.test.ts > S269 mounted legacy redirects > preserves browser back/forward across the replace without a NotFound flash
+[foldkit] Slow patch: 12.8ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 1,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Index' },
+    theme: 'dark',
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'overviewMetrics',
+      snapshot: [Object],
+      token: 2
+    }
+  },
+  durationMs: 12.758900000000722,
+  thresholdMs: 8
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'overviewMetrics',
+  snapshot: {
+    message: 'Overview metrics read failed: invalid response',
+    rows: [],
+    status: 'error',
+    token: 2
+  },
+  token: 2
+}
+
+stderr | test/s269-canonical-url.scene.test.ts > S269 mounted legacy redirects > redirects an in-app URL change, not only the initial load
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 19.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Models' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 19.132800000001225,
+  thresholdMs: 8
+}
+
+stderr | test/s269-canonical-url.scene.test.ts > S269 mounted legacy redirects > leaves a missing original feature target NotFound instead of redirecting to a generic page
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 19.2ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'NotFound', path: '/app/local/llama-swap/models' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 19.19640000000072,
+  thresholdMs: 8
+}
+
+stderr | test/s269-canonical-url.scene.test.ts > S269 mounted legacy redirects > keeps a bare canonical URL untouched and reads it once
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 16.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Requests' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 16.454100000000835,
+  thresholdMs: 8
+}
+
+stderr | test/s269-canonical-url.scene.test.ts > S269 mounted legacy redirects > reads again for a genuine same-route navigation after the initial read
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 17.0ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Requests' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 16.986500000000888,
+  thresholdMs: 8
+}
+
+ ✓ test/s269-canonical-url.scene.test.ts (10 tests) 5883ms
+   ✓ S269 mounted legacy redirects > replaces a legacy request-list URL with /requests and reads it exactly once  722ms
+   ✓ S269 mounted legacy redirects > replaces a legacy redirect-map entry through history and reads it exactly once  567ms
+   ✓ S269 mounted legacy redirects > keeps a legacy detail ID and query through the canonical detail route  579ms
+   ✓ S269 mounted legacy redirects > selects the original Studio tab from the URL and canonicalises it as a query alias  562ms
+   ✓ S269 mounted legacy redirects > routes the legacy runtime surfaces to the implemented /runtime page  563ms
+   ✓ S269 mounted legacy redirects > preserves browser back/forward across the replace without a NotFound flash  628ms
+   ✓ S269 mounted legacy redirects > redirects an in-app URL change, not only the initial load  574ms
+   ✓ S269 mounted legacy redirects > leaves a missing original feature target NotFound instead of redirecting to a generic page  544ms
+   ✓ S269 mounted legacy redirects > keeps a bare canonical URL untouched and reads it once  560ms
+   ✓ S269 mounted legacy redirects > reads again for a genuine same-route navigation after the initial read  581ms
+
+ Test Files  5 passed (5)
+      Tests  125 passed (125)
+   Start at  15:53:43
+   Duration  14.27s (transform 4.99s, setup 0ms, collect 30.15s, tests 9.47s, environment 6.07s, prepare 1.70s)
+
+

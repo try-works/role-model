@@ -1,0 +1,27 @@
+# S432 lint evidence — anti_slop_lint (vendored 15 generic rules), ABSOLUTE targets, filesScanned>0
+
+file: role-model-router/apps/runtime-ui-next/src/device-auth.ts
+  status: findings; filesScanned: 1; rulesRun: 15; findings: 13
+  rules: {"no-unknown-returns":2,"no-unknown-parameters":4,"no-unsafe-dictionary-type":2,"no-runtime-typeof":1,"require-safety-comment-for-type-assertion":1,"no-known-value-widening":1,"no-conditional-empty-object-spread":2}
+  lines: 255:no-unknown-returns, 261:no-unknown-parameters, 261:no-unsafe-dictionary-type, 262:no-runtime-typeof, 263:require-safety-comment-for-type-assertion, 263:no-unsafe-dictionary-type, 290:no-unknown-parameters, 308:no-unknown-parameters, 325:no-known-value-widening, 328:no-conditional-empty-object-spread, 330:no-unknown-parameters, 330:no-unknown-returns, 332:no-conditional-empty-object-spread
+
+file: role-model-router/apps/runtime-ui-next/src/update.ts
+  status: findings; filesScanned: 1; rulesRun: 15; findings: 10
+  rules: {"no-unsafe-dictionary-type":2,"require-safety-comment-for-type-assertion":4,"no-runtime-typeof":1,"no-known-value-widening":2,"no-conditional-empty-object-spread":1}
+  lines: 171:no-unsafe-dictionary-type, 173:require-safety-comment-for-type-assertion, 173:no-runtime-typeof, 173:no-known-value-widening, 173:require-safety-comment-for-type-assertion, 173:no-unsafe-dictionary-type, 174:no-known-value-widening, 569:require-safety-comment-for-type-assertion, 596:require-safety-comment-for-type-assertion, 605:no-conditional-empty-object-spread
+
+file: role-model-router/apps/runtime-ui-next/src/control-view.ts
+  status: clean; filesScanned: 1; rulesRun: 15; findings: 0
+  rules: {}
+  lines: 
+
+file: role-model-router/apps/runtime-ui-next/test/s425-device-auth-correctness.test.ts
+  status: clean; filesScanned: 1; rulesRun: 15; findings: 0
+  rules: {}
+  lines: 
+
+S432 delta:
+- device-auth.ts: unchanged count vs S425 freeze (13); mergeDeviceAuthPoll adds no finding (nullish coalescing, named domain types). NEW=0.
+- update.ts: unchanged count vs S425 freeze (10); all findings on pre-existing lines (170-604); none on DeviceAuthPolled lines.
+- control-view.ts: clean (0) and byte-identical to its S425 frozen hash.
+- test file: clean (0); new S432 tests add no finding.

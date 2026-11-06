@@ -1,0 +1,22 @@
+✔ S282 installs deterministic clock/random, fixed viewport/timezone and hide styles before navigating (38.9509ms)
+✔ S282 waits for fonts/images and a bounded DOM-quiet window before the first screenshot (70.5975ms)
+✔ S282 requires consecutive byte-identical screenshots and returns exact PNG bytes plus deterministic metadata (46.8551ms)
+✔ S282 fails with a bounded diagnostic error when screenshots never stabilise, and rejects non-finite deadlines (122.9991ms)
+✔ S282 fails with a bounded diagnostic error when navigation never completes (125.9862ms)
+✔ S282 surfaces in-page console errors and unexpected network instead of ignoring them (28.0969ms)
+✔ S282 surfaces CDP event-channel failures and records an unavailable channel instead of claiming clean (59.6614ms)
+✔ S282 is deterministic: two identical runs produce identical PNG, sha256 and metadata (93.2293ms)
+✔ S285 enables the Runtime/Log/Network domains and disables the cache before capture (30.908ms)
+✔ S285 preserves callable/constructible Date semantics (bootstrap executed in node:vm) (42.713ms)
+✔ S285 attaches the mutation observer even while documentElement is null (executed bootstrap) (38.4304ms)
+✔ S285 tracks pending fetch/XHR as readiness, not networkidle, and an SSE response cannot block it (77.6985ms)
+✔ S285 does not capture while requests are pending and times out when they never settle (305.5912ms)
+✔ S285 bounds EVERY cdp.send by the remaining deadline, including hung sends (310.4521ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2696.5512

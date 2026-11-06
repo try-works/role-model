@@ -1,0 +1,17 @@
+
+> @role-model-router/runtime-ui-next@0.0.0 test:handler-presence D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-ui-next
+> vitest run test/s617-handler-presence.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s617-handler-presence.test.ts (9 tests) 2127ms
+   ✓ S617 handler-presence: routed inventory > scans every routed tag; the one known recorder gap is documented, not hidden  1291ms
+   ✓ S617 handler-presence: routed inventory > finds today's known dead controls from evidence/logs/ui-dead-controls-inventory.md  426ms
+   ✓ S617 handler-presence: routed inventory > matches the committed baseline, so a new dead control fails the suite  327ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  05:21:30
+   Duration  83.86s (transform 43.10s, setup 0ms, collect 65.50s, tests 2.13s, environment 11.89s, prepare 1.48s)
+

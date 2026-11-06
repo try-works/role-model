@@ -1,0 +1,35 @@
+{
+  "slice": "s76a-runtime-config",
+  "flow": [
+    "Load runtime config -> GET /api/role-model/runtime/config",
+    "edit JSON textarea",
+    "Review changes validates JSON and lists changed/added/removed top-level keys",
+    "Confirm save -> PUT same path with JSON object",
+    "fresh GET after save; editor shows server applied snapshot + notice"
+  ],
+  "safety": {
+    "invalid": "blocked before request, role=alert, text kept",
+    "diff": "top-level key diff",
+    "failure": "4xx role=alert with host message, text kept",
+    "serverTruth": "saved editor text comes from re-read, not optimistic input"
+  },
+  "tests": {
+    "file": "test/s76a-runtime-config.test.ts",
+    "count": 4,
+    "reds": {
+      "invalid": "s76a-red-invalid-json.log",
+      "optimistic": "s76a-red-optimistic-config.log"
+    }
+  },
+  "tempHost": {
+    "status": "NOT RUN",
+    "reason": "temp-state packaged host returns {applied:false,config:null}; no safe field exists to edit/restore, so PUT was not sent",
+    "evidence": "config-temp.log"
+  },
+  "counts": {
+    "clientFull": 249,
+    "files": 26,
+    "typecheck": 0
+  },
+  "screenshot": "E:/rm-tmp/s64a/runtime-config.png"
+}

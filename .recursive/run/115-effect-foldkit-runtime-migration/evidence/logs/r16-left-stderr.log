@@ -1,0 +1,68 @@
+[track-b-sidecar] (node:23920) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[track-b-sidecar] (Use `node --trace-warnings ...` to show where the warning was created)
+Runtime strategy posture scope researcher.local-only has no routable targets (ALIAS_POOL_EMPTY)
+[run101] replay queue plane:queue queue:replay.dispatch worker:running
+[run101] evaluation queue plane:queue worker:running
+[run105] durable task advisory refresh: scope=standalone-runtime pairs=0 stage=S4
+[track-b-auto-replay] tick start (interval 30000ms)
+[run101] replay job scope: derived runtime:1af3183cf87721229a7acadf94cf2e2d
+[run101] recovery page payload shape: value,businessOutput,durableLocator,evidenceRef,readCapability,workerPid
+[run101] recovery page came back empty: scope=runtime:1af3183cf87721229a7acadf94cf2e2d channel=production cursor=start
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 437ms (outcome ok)
+[track-b-auto-replay] tick start (interval 30000ms)
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 194ms (outcome ok)
+[run98] remote-health recovery: deepseek.personal.deepseek-api-key.global.deepseek-flash-high, deepseek.personal.deepseek-api-key.global.deepseek-flash-max
+[track-b-auto-replay] tick start (interval 30000ms)
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 155ms (outcome ok)
+[track-b-auto-replay] tick start (interval 30000ms)
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 129ms (outcome ok)
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime sessionId=operator filePath=D:\DEV\rm-clean\r16-seed-left\standalone-runtime\track-b\extensions\workers\profile-learner\profile-3909143ad8ef85409de3c0467dd5a1850bba8db1f2e2b239bd07202bec5647c1.json
+[track-b-sidecar] [run137] profile readback empty from the operator hop (input={"scope":null,"scopeId":null,"generationKey":null})
+[track-b-auto-replay] tick start (interval 30000ms)
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 109ms (outcome ok)
+[track-b-auto-replay] tick start (interval 30000ms)
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 180ms (outcome ok)
+[track-b-auto-replay] tick start (interval 30000ms)
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 164ms (outcome ok)
+[track-b-auto-replay] tick start (interval 30000ms)
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 149ms (outcome ok)
+[track-b-auto-replay] tick start (interval 30000ms)
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 113ms (outcome ok)
+[track-b-auto-replay] tick start (interval 30000ms)
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 164ms (outcome ok)
+[track-b-auto-replay] tick start (interval 30000ms)
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 86ms (outcome ok)
+[track-b-auto-replay] tick start (interval 30000ms)
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 130ms (outcome ok)
+[track-b-auto-replay] tick start (interval 30000ms)
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 132ms (outcome ok)
+[track-b-auto-replay] tick start (interval 30000ms)
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 174ms (outcome ok)
+[track-b-auto-replay] tick start (interval 30000ms)
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 118ms (outcome ok)
+[track-b-auto-replay] tick start (interval 30000ms)
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 192ms (outcome ok)
+[track-b-auto-replay] tick start (interval 30000ms)
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 131ms (outcome ok)
+[track-b-sidecar] [run140] profile invoke capability=profile:current-estimate scope=standalone-runtime sessionId=operator filePath=D:\DEV\rm-clean\r16-seed-left\standalone-runtime\track-b\extensions\workers\profile-learner\profile-3909143ad8ef85409de3c0467dd5a1850bba8db1f2e2b239bd07202bec5647c1.json
+[track-b-sidecar] [run137] profile readback empty from the operator hop (input={"scope":null,"scopeId":null,"generationKey":null})
+[track-b-auto-replay] tick start (interval 30000ms)
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=0
+[track-b-auto-replay] tick done in 124ms (outcome ok)

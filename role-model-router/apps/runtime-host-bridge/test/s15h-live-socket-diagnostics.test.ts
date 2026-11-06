@@ -84,7 +84,7 @@ async function startDiagnosticsServer(
     ...overrides,
   } as StartBridgeServerOptions;
   startedOptions.push(options);
-  const server = await startBridgeServer(options);
+  const server = await startBridgeServer(options, { allowTestSeamBackend: true });
   servers.push(server);
   return server;
 }

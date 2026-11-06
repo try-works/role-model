@@ -1,0 +1,171 @@
+# S530 RED — strict pre-wiring run
+scope: test/s530-router-family.test.ts against the pre-S530 view registry (raw readback / routerFamilyPage stubs; no router-family-view wiring, no Routing overview h2, no preview-only disclosure)
+command: vitest run test/s530-router-family.test.ts (cwd role-model-router/apps/runtime-ui-next)
+HEAD: 43a42020 + working-tree revert of ONLY the eight routeRegistry entries
+---
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s530-router-family.test.ts (8 tests | 8 failed) 525ms
+   × S530 router/control family structural parity > /router renders the alias inventory and routing candidates tables 133ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Routing overview'
+   × S530 router/control family structural parity > /router/candidates renders the candidate inventory cards 82ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Candidate inventory'
+   × S530 router/control family structural parity > /router/decisions renders the decision ledger 66ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Routing decisions'
+   × S530 router/control family structural parity > /router/strategy renders the routing strategy posture editors 56ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Preview only'
+   × S530 router/control family structural parity > /router/config renders the canonical routing strategy surface 47ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Preview only'
+   × S530 router/control family structural parity > /router/workloads renders workload templates and entries 43ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Preview only'
+   × S530 router/control family structural parity > /router/agent-strategy renders the role-bound posture editor 47ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Preview only'
+   × S530 router/control family structural parity > /control/controller renders candidate cards and promotion 49ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Routing controller'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s530-router-family.test.ts > S530 router/control family structural parity > /router renders the alias inventory and routing candidates tables
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Routing overview'
+
+Expected: "Routing overview"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeRouterToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime readbackRouter1 row(s) from the live host readendpoints12summaryRefresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ expectTitles test/s530-router-family.test.ts:52:18
+     50|   const text = await renderText(tag, overrides);
+     51|   for (const title of titles) {
+     52|     expect(text).toContain(title);
+       |                  ^
+     53|   }
+     54| };
+ ❯ test/s530-router-family.test.ts:58:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  test/s530-router-family.test.ts > S530 router/control family structural parity > /router/candidates renders the candidate inventory cards
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Candidate inventory'
+
+Expected: "Candidate inventory"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeRouter candidatesToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime readbackRouter candidates1 row(s) from the live host readgpt-6.1-sol0.82{"endpointId":"openai.personal.global.gpt-6.1-sol","healthStatus":"healthy","providerId":"openai","toolCallingSupported":true}Refresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ expectTitles test/s530-router-family.test.ts:52:18
+     50|   const text = await renderText(tag, overrides);
+     51|   for (const title of titles) {
+     52|     expect(text).toContain(title);
+       |                  ^
+     53|   }
+     54| };
+ ❯ test/s530-router-family.test.ts:64:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  test/s530-router-family.test.ts > S530 router/control family structural parity > /router/decisions renders the decision ledger
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Routing decisions'
+
+Expected: "Routing decisions"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeRouter decisionsToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime readbackRouter decisions1 row(s) from the live host readgpt-6.1-sol0.9openai.personal.global.gpt-6.1-solRefresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ expectTitles test/s530-router-family.test.ts:52:18
+     50|   const text = await renderText(tag, overrides);
+     51|   for (const title of titles) {
+     52|     expect(text).toContain(title);
+       |                  ^
+     53|   }
+     54| };
+ ❯ test/s530-router-family.test.ts:70:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  test/s530-router-family.test.ts > S530 router/control family structural parity > /router/strategy renders the routing strategy posture editors
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Preview only'
+
+Expected: "Preview only"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeRouter strategyToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRouter strategyRouting strategy: hybridExecution mode: decision_onlyRouting posture: mode: hybrid"
+
+ ❯ expectTitles test/s530-router-family.test.ts:52:18
+     50|   const text = await renderText(tag, overrides);
+     51|   for (const title of titles) {
+     52|     expect(text).toContain(title);
+       |                  ^
+     53|   }
+     54| };
+ ❯ test/s530-router-family.test.ts:76:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  test/s530-router-family.test.ts > S530 router/control family structural parity > /router/config renders the canonical routing strategy surface
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Preview only'
+
+Expected: "Preview only"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeRouter configToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRouter configRouting strategy: hybridExecution mode: decision_onlyRouting posture: mode: hybrid"
+
+ ❯ expectTitles test/s530-router-family.test.ts:52:18
+     50|   const text = await renderText(tag, overrides);
+     51|   for (const title of titles) {
+     52|     expect(text).toContain(title);
+       |                  ^
+     53|   }
+     54| };
+ ❯ test/s530-router-family.test.ts:82:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  test/s530-router-family.test.ts > S530 router/control family structural parity > /router/workloads renders workload templates and entries
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Preview only'
+
+Expected: "Preview only"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeRouter workloadsToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesWorkloadsWorkload: batch: baseline / cost"
+
+ ❯ expectTitles test/s530-router-family.test.ts:52:18
+     50|   const text = await renderText(tag, overrides);
+     51|   for (const title of titles) {
+     52|     expect(text).toContain(title);
+       |                  ^
+     53|   }
+     54| };
+ ❯ test/s530-router-family.test.ts:88:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  test/s530-router-family.test.ts > S530 router/control family structural parity > /router/agent-strategy renders the role-bound posture editor
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Preview only'
+
+Expected: "Preview only"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeAgent strategyToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesAgent strategyAgent strategy: coder: difficulty / difficulty"
+
+ ❯ expectTitles test/s530-router-family.test.ts:52:18
+     50|   const text = await renderText(tag, overrides);
+     51|   for (const title of titles) {
+     52|     expect(text).toContain(title);
+       |                  ^
+     53|   }
+     54| };
+ ❯ test/s530-router-family.test.ts:94:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  test/s530-router-family.test.ts > S530 router/control family structural parity > /control/controller renders candidate cards and promotion
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Routing controller'
+
+Expected: "Routing controller"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeControllerToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime controlController1 row(s) from the live host readController endpointendpoint-1Current: endpoint-otherSave controllerotherendpoint-otherUpdate controller"
+
+ ❯ expectTitles test/s530-router-family.test.ts:52:18
+     50|   const text = await renderText(tag, overrides);
+     51|   for (const title of titles) {
+     52|     expect(text).toContain(title);
+       |                  ^
+     53|   }
+     54| };
+ ❯ test/s530-router-family.test.ts:105:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  8 failed (8)
+   Start at  21:57:01
+   Duration  15.87s (transform 7.46s, setup 0ms, collect 12.01s, tests 525ms, environment 1.64s, prepare 524ms)
+
+VITEST_EXIT=1

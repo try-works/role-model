@@ -1,0 +1,19 @@
+
+> role-model@0.0.0 runtime:verify-packaged-candidate D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration
+> node scripts/runtime/verify-packaged-candidate.mjs
+
+version=healthy 0.0.20-503-ga7aafb46
+sha256=6d90b28aa2092e7af074324e7f1f0cc5c30d3d9d039c1a0ee25524aa52eea3ed
+port=59572 state=E:\tmp\r39-candidate-state-vShaen fixtures=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\testdata\router-runtime\fixtures
+PASS health: healthy 0.0.20-503-ga7aafb46
+PASS models: 3 models
+PASS telemetry: requestCount 0
+PASS controller: openai.personal.primary.us-east-1.fast
+PASS learning: role-model.knowledge-worker.v1
+PASS replay jobs: 0 jobs
+PASS evaluation jobs: 0 jobs
+PASS ui css: 65632 bytes, both theme blocks
+PASS ui bundle: 3335314 bytes
+PASS ui theme boot: theme selected in CSS, no inline palette
+PASS chat completion: openai/gpt-4.1-mini-fast total_tokens=56
+PASS ui shell: 2194 bytes

@@ -1,0 +1,467 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/diagnostics-client.test.ts (8 tests) 58ms
+stderr | test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > the real shell entry starts exactly one subscription and leaks none across two starts
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 11.4ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'light'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 11.362500000000182,
+  thresholdMs: 8
+}
+
+stderr | test/mount.test.ts > Foldkit app shell on the wrapper stack > mounts the app into a DOM container, dispatches a click through the runtime, and unmounts without throwing
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 11.2ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'light'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 11.23739999999998,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders the ok state with records and identity
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 13.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'inst-1', status: 'loading' },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'inst-1' },
+    theme: 'light'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 13.792500000000473,
+  thresholdMs: 8
+}
+
+stderr | test/routes.test.ts > runtime routing in the Foldkit shell > renders the route from the initial URL, including the diagnostics path parameter
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 13.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'abc', status: 'loading' },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 'abc' },
+    theme: 'light'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 13.508100000000013,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the ok state and its records, and requests the operator diagnostics URL
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 13.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 's15f-ok', status: 'loading' },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Diagnostics', id: 's15f-ok' },
+    theme: 'light'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 13.532799999999952,
+  thresholdMs: 8
+}
+
+ ✓ test/mount.test.ts (1 test) 631ms
+   ✓ Foldkit app shell on the wrapper stack > mounts the app into a DOM container, dispatches a click through the runtime, and unmounts without throwing  628ms
+stderr | test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > the real shell entry starts exactly one subscription and leaks none across two starts
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders the empty state distinctly
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/routes.test.ts > runtime routing in the Foldkit shell > renders the not-found view for an unknown URL without throwing
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the empty state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > a revision gap 1 -> 3 with NO later event resyncs immediately, shows stale, and ignores the old revision
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/routes.test.ts > runtime routing in the Foldkit shell > pushes a URL from an in-app control and the URL, not local state, changes the view
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders disabled as a state, not an error
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the disabled state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders stale with the rule and the age
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/routes.test.ts > runtime routing in the Foldkit shell > changes the view when history navigates back, through the runtime popstate config
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+ ✓ test/routes.test.ts (4 tests) 2221ms
+   ✓ runtime routing in the Foldkit shell > renders the route from the initial URL, including the diagnostics path parameter  613ms
+   ✓ runtime routing in the Foldkit shell > renders the not-found view for an unknown URL without throwing  526ms
+   ✓ runtime routing in the Foldkit shell > pushes a URL from an in-app control and the URL, not local state, changes the view  536ms
+   ✓ runtime routing in the Foldkit shell > changes the view when history navigates back, through the runtime popstate config  543ms
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the stale state with the server's exact age and rule
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/s25b-refresh-owner-gap.test.ts > S25b shell refresh owner and gap resync > a failed snapshot resync leaves the page visibly stale
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+ ✓ test/s25b-refresh-owner-gap.test.ts (3 tests) 2392ms
+   ✓ S25b shell refresh owner and gap resync > the real shell entry starts exactly one subscription and leaks none across two starts  1111ms
+   ✓ S25b shell refresh owner and gap resync > a revision gap 1 -> 3 with NO later event resyncs immediately, shows stale, and ignores the old revision  721ms
+   ✓ S25b shell refresh owner and gap resync > a failed snapshot resync leaves the page visibly stale  558ms
+stderr | test/diagnostics.test.ts > diagnostics page states > renders dropped with the loss counts
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the dropped state with the server's exact loss counts
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > shows independent conditions together instead of hiding one behind the other
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders a 401 denial
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > shows independent conditions together instead of hiding one behind the other
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders a 403 rejection distinctly from a 401 denial
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders a denied response as access denied
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders a transport failure as the error state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders denied rather than an empty list for a denied response
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > constructs the REAL client with the injected fetchImpl/baseUrl/token and mounts its reader
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders a transport error distinctly from a denied state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > mounts the reader instance returned by the client factory
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > labels a missing or unknown build identity as missing, never blank
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > turns a token-less same-origin 401 into the explicit trust-precondition error
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+ ✓ test/diagnostics-e2e.test.ts (11 tests) 6058ms
+   ✓ S15f diagnostics page over the real client > renders the ok state and its records, and requests the operator diagnostics URL  644ms
+   ✓ S15f diagnostics page over the real client > renders the empty state  516ms
+   ✓ S15f diagnostics page over the real client > renders the disabled state  547ms
+   ✓ S15f diagnostics page over the real client > renders the stale state with the server's exact age and rule  543ms
+   ✓ S15f diagnostics page over the real client > renders the dropped state with the server's exact loss counts  541ms
+   ✓ S15f diagnostics page over the real client > renders a 401 denial  542ms
+   ✓ S15f diagnostics page over the real client > renders a 403 rejection distinctly from a 401 denial  542ms
+   ✓ S15f diagnostics page over the real client > renders a transport failure as the error state  543ms
+   ✓ S15f diagnostics page over the real client > constructs the REAL client with the injected fetchImpl/baseUrl/token and mounts its reader  542ms
+   ✓ S15f diagnostics page over the real client > mounts the reader instance returned by the client factory  546ms
+   ✓ S15f diagnostics page over the real client > turns a token-less same-origin 401 into the explicit trust-precondition error  549ms
+stderr | test/diagnostics.test.ts > diagnostics page states > labels a missing or unknown build identity as missing, never blank
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > shows loading while the reader is in flight, then the command result message
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > re-reads through a Command when the refresh control is used
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders the refresh control and nav links with visible focus styles and the narrow layout classes
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > does not apply a resolved read for a previous route id after navigating away
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > aborts the Effect-forwarded signal when the shell disposes mid-flight
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > labels a 403 rejection by its HTTP status instead of a generic authorization failure
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > exposes role=status live-region semantics while loading and after settling
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+ ✓ test/diagnostics.test.ts (17 tests) 10412ms
+   ✓ diagnostics page states > renders the ok state with records and identity  610ms
+   ✓ diagnostics page states > renders the empty state distinctly  517ms
+   ✓ diagnostics page states > renders disabled as a state, not an error  549ms
+   ✓ diagnostics page states > renders stale with the rule and the age  542ms
+   ✓ diagnostics page states > renders dropped with the loss counts  541ms
+   ✓ diagnostics page states > shows independent conditions together instead of hiding one behind the other  1084ms
+   ✓ diagnostics page states > renders a denied response as access denied  542ms
+   ✓ diagnostics page states > renders denied rather than an empty list for a denied response  542ms
+   ✓ diagnostics page states > renders a transport error distinctly from a denied state  546ms
+   ✓ diagnostics page states > labels a missing or unknown build identity as missing, never blank  1090ms
+   ✓ diagnostics page states > shows loading while the reader is in flight, then the command result message  544ms
+   ✓ diagnostics page states > re-reads through a Command when the refresh control is used  534ms
+   ✓ diagnostics page states > renders the refresh control and nav links with visible focus styles and the narrow layout classes  531ms
+   ✓ diagnostics page states > does not apply a resolved read for a previous route id after navigating away  625ms
+   ✓ diagnostics page states > aborts the Effect-forwarded signal when the shell disposes mid-flight  522ms
+   ✓ diagnostics page states > labels a 403 rejection by its HTTP status instead of a generic authorization failure  541ms
+   ✓ diagnostics page states > exposes role=status live-region semantics while loading and after settling  547ms
+
+ Test Files  6 passed (6)
+      Tests  44 passed (44)
+   Start at  06:25:37
+   Duration  17.17s (transform 3.63s, setup 0ms, collect 28.48s, tests 21.77s, environment 4.90s, prepare 1.72s)
+

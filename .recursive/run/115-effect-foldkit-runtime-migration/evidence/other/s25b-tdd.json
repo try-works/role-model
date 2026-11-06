@@ -1,0 +1,41 @@
+{
+  "slice": "s25b-refresh-owner-gap",
+  "requirement": "R12 one shell-owned refresh subscription, injectable source, gap resync, stale visibility",
+  "seam": {
+    "factory": "ShellOptions.runtimeEventSourceFactory (src/app.ts) -> makeRefreshSubscriptions (src/refresh.ts). Default is a real EventSource in a browser and an inert source when EventSource is absent (happy-dom/server render). Tests inject a fake and assert the exact stream URL.",
+    "owner": "createShellApp installs exactly ONE persistent Subscription entry (refresh) on the application; routes have no subscription entry. Starting/stopping the shell twice is tested on the real mountShell entry.",
+    "sourceModule": "src/refresh.ts: RuntimeEventSourceLike/Factory, initialRuntimeRefreshState, refreshRevisionStream (Stream.callback + Effect.acquireRelease closes the source), makeRefreshSubscriptions."
+  },
+  "ownershipProof": "mountShell(container,{runtimeEventSourceFactory: fake}) -> one fake source active; dispose twice -> zero active and one close; second mount -> one active (peak 1), first stays closed; two starts do not leak.",
+  "resyncProof": {
+    "mechanism": "Message.RuntimeRevisionReceived({revision}) -> update.ts. lastAppliedRevision gates old revisions. After a baseline, revision > lastApplied+1 is a gap: update immediately returns a RefreshSnapshot Command (token/routeId) and sets status='stale'. The Command runs without waiting for another event. resyncToken fences older resync results.",
+    "hardCase": "revision 1 -> 3 with NO revision 2 and NO later event: snapshot reader is invoked once, page shows stale, then live on resolve; revision 2 arriving after 3 (while pending and after resolve) is ignored and does not re-trigger.",
+    "defaultSnapshot": "Default RefreshSnapshot reader re-reads the diagnostics snapshot for the current diagnostics route; other routes have no client snapshot source and need an injected reader (recorded limitation)."
+  },
+  "staleVisibility": "Model.refresh.status is rendered on the shell root (data-refresh-state/refresh-revision) and as a role=status stale banner. Pending shows 'Stale: resyncing after a revision gap.'; failure shows 'Stale: snapshot unavailable.' Tested both.",
+  "redGreen": {
+    "injectable": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25b-red-injectable.log (shell ignored the injected factory: no source)",
+    "ownership": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25b-red-ownership.log (subscription opened a duplicate source: expected 1, got 2)",
+    "gap": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25b-red-gap-no-event.log (gap branch disabled: no stale/resync after 1->3)",
+    "stale": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25b-red-stale-visible.log (stale banner hidden: stale text absent)"
+  },
+  "testRuns": {
+    "command": "vitest s25b + mount + routes + diagnostics + diagnostics-client + diagnostics-e2e",
+    "total": 44,
+    "passed": 44,
+    "failed": 0,
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s25b-green.log",
+    "typecheck": "tsc -p apps/runtime-ui-next/tsconfig.json --noEmit: exit 0",
+    "biome": "biome check src + new test: exit 0"
+  },
+  "files": {
+    "role-model-router/apps/runtime-ui-next/src/refresh.ts": "51e04d7778ebd73fe5e03c79628260693a95cf438c363f9ed19551ee9c692ff2",
+    "role-model-router/apps/runtime-ui-next/src/app.ts": "c13fc25945d3d4cf450a3ac53325d4cc61eec624bcd21bb249b28052baf3b35d",
+    "role-model-router/apps/runtime-ui-next/src/commands.ts": "da5d6501cc6de4b69d0dfc49614af969a7ae9557c292e2cb5a7d7ac159e98e01",
+    "role-model-router/apps/runtime-ui-next/src/update.ts": "f5661c26b2d70b5e5fce08e09392d593c60d73c44d4e16fe8c7c738d429ab8fa",
+    "role-model-router/apps/runtime-ui-next/src/view.ts": "9e1c426b95b0a081c46eb5739d1e9021bbfac12d2a9e7f011757c99a662b92cf",
+    "role-model-router/apps/runtime-ui-next/test/s25b-refresh-owner-gap.test.ts": "322e6054ba22103aa51298adebe2488553b7b155ea184b8a92a5c096e1107357"
+  },
+  "unproven": "A real browser EventSource network reconnect; non-diagnostics routes have no production snapshot reader (injected reader required); no generic runtime snapshot endpoint exists in this client."
+}

@@ -1,0 +1,135 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:25368) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts (20 tests | 5 failed) 45ms
+   ✓ S15a R21.1 bounded diagnostics query > returns identity, loss, cursor, staleness rule and records bounded by the record cap 9ms
+   ✓ S15a R21.1 bounded diagnostics query > pages with the opaque cursor and stops at the end 2ms
+   ✓ S15a R21.1 bounded diagnostics query > applies the byte cap before the record cap 1ms
+   ✓ S15a R21.2 reused authorization, forwarded-owner rejection and CORS > denies a non-loopback request without the existing read credential 0ms
+   ✓ S15a R21.2 reused authorization, forwarded-owner rejection and CORS > accepts the existing operator bearer credential from a remote peer 0ms
+   ✓ S15a R21.2 reused authorization, forwarded-owner rejection and CORS > rejects a spoofed forwarded owner header instead of trusting it 0ms
+   ✓ S15a R21.2 reused authorization, forwarded-owner rejection and CORS > does not grant device-owner trust from a spoofed Host header 0ms
+   ✓ S15a R21.2 reused authorization, forwarded-owner rejection and CORS > never emits wildcard or reflected CORS, even with an Origin header 1ms
+   ✓ S15a R21.3 diagnostics cannot contaminate business/live aggregates > leaves the observability aggregate and the source unchanged after a read 6ms
+   ✓ S15a R21.4 disabled/denied/stale/dropped/empty are distinct states > disabled is an explicit 200 state, not an error 1ms
+   ✓ S15a R21.4 disabled/denied/stale/dropped/empty are distinct states > stale reports its age against the stated rule 0ms
+   ✓ S15a R21.4 disabled/denied/stale/dropped/empty are distinct states > dropped reports the loss counters as its own state 0ms
+   ✓ S15a R21.4 disabled/denied/stale/dropped/empty are distinct states > empty is a successful read with zero records 0ms
+   ✓ S15a R21.4 disabled/denied/stale/dropped/empty are distinct states > ok is fresh records without loss 0ms
+   × S15c review defects (exact failing inputs) > Defect A: the WHOLE serialized body is bounded in UTF-8 bytes with CJK identity and long codes 5ms
+     → expected 18176 to be less than or equal to 16384
+   × S15c review defects (exact failing inputs) > Defect B: disabled answers before any query validation, while an invalid cursor still 400s with a source 5ms
+     → expected 400 to be 200 // Object.is equality
+   × S15c review defects (exact failing inputs) > Defect C: oldest-first records without lastRecordAtMs are not stale while the newest is 1s old 5ms
+     → expected { ruleMs: 300000, ageMs: 400000, …(1) } to match object { stale: false, ageMs: 1000 }
+(1 matching property omitted from actual)
+   × S15c review defects (exact failing inputs) > Defect D: loss is visible next to staleness instead of masked by it 2ms
+     → expected undefined to deeply equal { stale: true, dropped: true }
+   × S15c review defects (exact failing inputs) > a cursor past the end reads as empty, not ok 3ms
+     → expected 'ok' to be 'empty' // Object.is equality
+   ✓ S15c review defects (exact failing inputs) > the diagnostics 401 carries the path headers (no-store/nosniff) 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run115-s15a-local-diagnostics-read.test.ts > S15c review defects (exact failing inputs) > Defect A: the WHOLE serialized body is bounded in UTF-8 bytes with CJK identity and long codes
+AssertionError: expected 18176 to be less than or equal to 16384
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts:286:19
+    284|     expect(result.status).toBe(200);
+    285|     const bytes = Buffer.byteLength(JSON.stringify(result.body), "utf8…
+    286|     expect(bytes).toBeLessThanOrEqual(MAX_DIAGNOSTICS_RESPONSE_BYTES);
+       |                   ^
+    287|     expect(result.body.recordCount).toBeGreaterThan(0);
+    288|     expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  test/run115-s15a-local-diagnostics-read.test.ts > S15c review defects (exact failing inputs) > Defect B: disabled answers before any query validation, while an invalid cursor still 400s with a source
+AssertionError: expected 400 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 400
+
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts:298:29
+    296|       { ...baseOptions, ...offline },
+    297|     );
+    298|     expect(disabled.status).toBe(200);
+       |                             ^
+    299|     expect(disabled.body.state).toBe("disabled");
+    300| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  test/run115-s15a-local-diagnostics-read.test.ts > S15c review defects (exact failing inputs) > Defect C: oldest-first records without lastRecordAtMs are not stale while the newest is 1s old
+AssertionError: expected { ruleMs: 300000, ageMs: 400000, …(1) } to match object { stale: false, ageMs: 1000 }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "ageMs": 1000,
+-   "stale": false,
++   "ageMs": 400000,
++   "stale": true,
+  }
+
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts:319:35
+    317|       source: source(records, { lastRecordAtMs: undefined }),
+    318|     });
+    319|     expect(result.body.staleness).toMatchObject({ stale: false, ageMs:…
+       |                                   ^
+    320|     expect(result.body.state).toBe("ok");
+    321|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  test/run115-s15a-local-diagnostics-read.test.ts > S15c review defects (exact failing inputs) > Defect D: loss is visible next to staleness instead of masked by it
+AssertionError: expected undefined to deeply equal { stale: true, dropped: true }
+
+- Expected: 
+{
+  "dropped": true,
+  "stale": true,
+}
+
++ Received: 
+undefined
+
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts:335:36
+    333|     expect(result.body.state).toBe("stale");
+    334|     expect(result.body.loss).toEqual({ dropped: 7, windowMs: 60_000 });
+    335|     expect(result.body.conditions).toEqual({ stale: true, dropped: tru…
+       |                                    ^
+    336|   });
+    337| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  test/run115-s15a-local-diagnostics-read.test.ts > S15c review defects (exact failing inputs) > a cursor past the end reads as empty, not ok
+AssertionError: expected 'ok' to be 'empty' // Object.is equality
+
+Expected: "empty"
+Received: "ok"
+
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts:353:32
+    351|     expect(pastEnd.status).toBe(200);
+    352|     expect(pastEnd.body.recordCount).toBe(0);
+    353|     expect(pastEnd.body.state).toBe("empty");
+       |                                ^
+    354|   });
+    355| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 15 passed (20)
+   Start at  00:54:20
+   Duration  7.40s (transform 4.42s, setup 0ms, collect 6.80s, tests 45ms, environment 0ms, prepare 197ms)
+
+EXIT_CODE: 1

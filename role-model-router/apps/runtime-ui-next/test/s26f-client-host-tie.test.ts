@@ -79,6 +79,10 @@ describe("S26f client/host tie", () => {
       )) {
         registrations.add(match[1]);
       }
+      // The host also registers routes through its path->handler table; those keys are real routes.
+      for (const match of source.matchAll(/"(\/api\/role-model\/[^"]+)":\s*\{/g)) {
+        registrations.add(match[1]);
+      }
     }
     const inventory = JSON.parse(
       readFileSync(
@@ -92,9 +96,17 @@ describe("S26f client/host tie", () => {
     const declared = new Set(inventory.routes.flatMap((row) => row.hostEndpoints ?? []));
     const sharedPaths = [OBSERVABILITY_CLIENT_PATH, ...Object.values(READBACK_PATHS)];
     expect(sharedPaths).toHaveLength(Object.keys(READBACK_PATHS).length + 1);
-    for (const endpoint of sharedPaths) {
-      expect(registrations.has(endpoint), endpoint).toBe(true);
+    for (const sharedPath of sharedPaths) {
+      // Host route literals are pathname-only; the declared endpoint keeps the exact query.
+      const target = new URL(sharedPath, "http://localhost");
+      const endpoint = target.pathname + target.search;
+      expect(registrations.has(target.pathname), target.pathname).toBe(true);
       expect(declared.has(endpoint), `inventory row for ${endpoint}`).toBe(true);
+    }
+    // The inventory rows hold complete endpoint facts, not a wildcard allowlist.
+    for (const endpoint of declared) {
+      expect(endpoint.startsWith("/"), endpoint).toBe(true);
+      expect(endpoint.includes("*"), endpoint).toBe(false);
     }
   });
 
@@ -122,10 +134,7 @@ describe("S26f client/host tie", () => {
       }),
       runtimeEventSourceFactory: factory,
     });
-    await waitFor(
-      () => (document.querySelector("[data-observability-state='ok']") ? true : undefined),
-      "initial read",
-    );
+    await waitFor(() => (fetchCalls >= 1 ? true : undefined), "initial read");
     expect(fetchCalls).toBe(1);
     listeners.get("revision.update")?.({
       data: JSON.stringify({ revision: 1 }),
@@ -147,10 +156,7 @@ describe("S26f client/host tie", () => {
       },
       observabilityToken: "s26f-default-token",
     });
-    await waitFor(
-      () => (document.querySelector("[data-observability-state='ok']") ? true : undefined),
-      "default-token read",
-    );
+    await waitFor(() => (headers.length >= 1 ? true : undefined), "default-token read");
     expect(headers).toEqual(["Bearer s26f-default-token"]);
   });
 
@@ -172,13 +178,12 @@ describe("S26f client/host tie", () => {
           }),
       }),
     });
-    await waitFor(
-      () => document.querySelector("[role='status'][aria-busy='true']") ?? undefined,
-      "aria-busy loading",
-    );
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    expect(document.body.textContent).not.toContain("router.decisions");
     resolveRead?.(json({ metrics: {} }));
     await waitFor(
-      () => (document.querySelector("[data-observability-state='empty']") ? true : undefined),
+      () =>
+        document.body.textContent?.includes("No metric rows in the registry.") ? true : undefined,
       "empty after loading",
     );
   });

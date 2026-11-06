@@ -6,12 +6,24 @@ import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { parseArgs } from "node:util";
+import { Effect, Exit, Layer, Scope } from "effect";
+import { type R27HostContract, composeR27HostLayer } from "./r27-layer-dag.js";
 
 import { type SqliteService, makeSync } from "@effect/sql-sqlite-node/service";
 
 import type { NormalizedCatalog } from "@role-model-router/catalog";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 
+import {
+  type ShutdownDrain,
+  assertComposedBackendOwner,
+  backendStorageRefOf,
+  benchmarkGate,
+  bindBackendStorageRef,
+  composeBackendOwner,
+  composeReadinessOwner,
+  onceClose,
+} from "./composition-dag.js";
 import {
   type DevelopmentVerificationAuthorization,
   negotiateDevelopmentVerificationCapability,
@@ -20,12 +32,15 @@ import {
 // Run 100 addendum `evaluation-lease-wedge-repair.addendum-02` S3: a give-up must terminalize the
 // evaluation half of the handoff too, or the row stays "in flight" with no lease forever.
 import { terminalizeAbandonedEvaluation } from "./evaluation-orphan-terminalization.js";
+import { createHostRuntimeScope } from "./host-runtime-scope.js";
 import {
+  type BridgeServer,
   type CreateRuntimeBridgeBackendOptions,
   type RuntimeBridgeBackend,
   type RuntimeOperatorContext,
   type StartBridgeServerOptions,
   createRuntimeBridgeBackend,
+  drainDeferredRouteCapture,
   resolveBridgeServerOptions,
   startBridgeServer,
 } from "./index.js";
@@ -36,6 +51,7 @@ import {
   resolveLearningPolicyStateRoot,
 } from "./learning-policy-file.js";
 import { readRouteLearningDefaults } from "./product-defaults-file.js";
+import { releaseHostResources } from "./release-host-resources.js";
 import { readRouteLadderCensus } from "./route-ladder-census.js";
 import {
   CURRENT_RUNTIME_CHANNEL_VERSION,
@@ -46,6 +62,7 @@ import {
   negotiateRuntimeChannelStartup,
   readPackagedRuntimeProfile,
 } from "./runtime-channel.js";
+
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
 import {
@@ -97,6 +114,11 @@ import {
   learnerReceiptTimeMs,
   runLearnerRevalidationPass,
 } from "./learner-revalidation.js";
+import {
+  applyAutoQueueDailyCap,
+  resolveAutoQueueConfigPath,
+  resolveAutoQueueSettings,
+} from "./queue-runtime/auto-queue.js";
 import { evaluationAttemptOutcome } from "./queue-runtime/evaluation.js";
 // Run 101 R4: the replay plane's queue runtime (policy-driven mode, offer and
 // worker). Imported here so the auto-replay loop's composition can start it.
@@ -199,9 +221,7 @@ export const openReadOnlyStateDatabase = (file: string): DatabaseSync =>
  * reset it with undefined. (The setup/read-only options stay owned by this module.)
  */
 let stateDatabaseServiceFactory: typeof makeSync = makeSync;
-export function setStateDatabaseServiceFactoryForTests(
-  factory: typeof makeSync | undefined,
-): void {
+export function setStateDatabaseServiceFactoryForTests(factory: typeof makeSync | undefined): void {
   stateDatabaseServiceFactory = factory ?? makeSync;
 }
 
@@ -510,14 +530,28 @@ export function readPersistedControllerEndpointId(input: {
   });
 }
 
-function resolveChannelScopedReplayLedgerLimits(input: {
+export function resolveChannelScopedReplayLedgerLimits(input: {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
   readonly channel: string;
+  readonly unifiedRuntimeConfigPath?: string;
 }): Partial<ReplayLedgerLimits> {
   const resolved = resolveReplayLedgerLimits();
-  if (resolved.enforced !== undefined) return resolved;
+  /**
+   * Run 115: the Learning Overview's persisted auto-queue cap is the daily
+   * counterfactual ceiling the replay ledger already enforces. Read it from the
+   * scope's runtime config on every ledger construction so a config PUT applies
+   * on the next tick/restart without a separate env var.
+   */
+  const autoQueue = resolveAutoQueueSettings(
+    resolveAutoQueueConfigPath({
+      runtimeStateRoot: input.runtimeStateRoot,
+      unifiedRuntimeConfigPath: input.unifiedRuntimeConfigPath,
+    }),
+  );
+  const withCap = applyAutoQueueDailyCap(resolved, autoQueue.enabled ? autoQueue.dailyCap : 0);
+  if (resolved.enforced !== undefined) return withCap;
   const snapshot = readLearningPolicyFile({
     repoRoot: input.repoRoot,
     stateRoot: resolveLearningPolicyStateRoot({
@@ -528,7 +562,7 @@ function resolveChannelScopedReplayLedgerLimits(input: {
     scopeId: input.scopeId,
   });
   return {
-    ...resolved,
+    ...withCap,
     enforced: replayBudgetEnforcedForChannel(
       // A missing policy source falls through to the documented default scoping (production only).
       snapshot?.effective.replayBudgetEnforcement,
@@ -604,6 +638,7 @@ import {
   decodeExternalizedOperatorReadback,
   digestTrackBSemanticEvaluationCriteria,
   evaluateProductionExtensionRuntimeReadiness,
+  extensionHostTiming,
   normalizeTrackBSemanticEvaluationCriteria,
   readTrackBAdvisoryMeasurement,
   readTrackBRouteAdvisorySourceFromRuntime,
@@ -3293,6 +3328,7 @@ type CliBackend = Pick<
   | "loadLlamaSwapModel"
   | "setPeerModelRoles"
   | "setLlamaSwapModelRoles"
+  | "readLlamaSwapVendorStatus"
   | "unloadPeerModel"
   | "unloadLocalModel"
   | "readLocalPolicy"
@@ -3428,6 +3464,32 @@ export function projectCliStartupReadiness(state: CliBootstrapState): {
     status: state.status,
     ...(state.message ? { message: state.message } : {}),
   };
+}
+
+export async function runQaStartupInvoke<T>(input: {
+  readonly extensionId: string;
+  readonly invoke: () => Promise<T>;
+  readonly timeoutMs: number;
+}): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      input.invoke(),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () =>
+            reject(
+              new Error(
+                `QA extension startup invoke timed out after ${input.timeoutMs}ms: ${input.extensionId}`,
+              ),
+            ),
+          input.timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
 }
 
 export async function awaitCliExtensionRuntime<
@@ -4291,6 +4353,53 @@ export function startCliExtensionRuntimeWatchdog(options: {
   };
 }
 
+export function validatePackagedRun88Identity(input: {
+  readonly packagedReleaseId: string | undefined;
+  readonly identity: {
+    readonly generation: "N" | "N-1" | string;
+    readonly manifestSha256: string;
+    readonly channel: string;
+  };
+  readonly expected: {
+    readonly channel: "stage";
+    readonly manifestSha256: string;
+    readonly previousManifestSha256?: string;
+    readonly publicGeneration: "N";
+  };
+}): void {
+  if (input.packagedReleaseId === undefined) return;
+  validateRun88PrivateDistributionIdentity(input.identity, input.expected);
+}
+
+export async function runCliBackendBranch(input: {
+  readonly hasPackagedDistribution: boolean;
+  readonly packagedReleaseId?: string;
+  readonly bootstrapState: { status: CliBootstrapState["status"]; message?: string };
+  readonly readinessOwner: { markReady(): void };
+  readonly runPackaged?: () => Promise<void>;
+  readonly runPlain: () => Promise<void>;
+}): Promise<void> {
+  if (input.hasPackagedDistribution) {
+    if (!input.runPackaged) {
+      throw new Error("packaged distribution is present but its backend branch is unavailable");
+    }
+    await input.runPackaged();
+  } else {
+    await input.runPlain();
+  }
+  // R27: readiness is marked ONLY by the DAG host leaf (acquire:host); the bootstrap path below
+  // only flips the observable bootstrap state.
+  completeCliStartupReadiness(input.bootstrapState);
+}
+
+export function completeCliStartupReadiness(bootstrapState: {
+  status: CliBootstrapState["status"];
+  message?: string;
+}): void {
+  bootstrapState.status = "ready";
+  delete bootstrapState.message;
+}
+
 export function createCliServerOptions(
   options: {
     host: string;
@@ -4315,7 +4424,10 @@ export function createCliServerOptions(
   },
   backendOrResolver: CliBackend | CliBackendResolver,
   shutdown?: () => Promise<void>,
+  onBackendOwner?: (owner: import("./composition-dag.js").BackendOwner) => void,
+  closeBackend?: () => Promise<void>,
 ): StartBridgeServerOptions {
+  void onBackendOwner;
   const resolveBackend = () =>
     isCliBackendResolver(backendOrResolver) ? backendOrResolver.getBackend() : backendOrResolver;
   const readBootstrapState = () =>
@@ -4339,595 +4451,146 @@ export function createCliServerOptions(
       return method(...args);
     }) as unknown;
 
-  return {
+  const storageRef: { current: import("./composition-dag.js").BackendStorageContract | undefined } =
+    { current: undefined };
+  const owner = composeBackendOwner({
+    storageRef,
     host: options.host,
     port: options.port,
-    ...(options.observabilityScope ? { observabilityScope: options.observabilityScope } : {}),
     staticRoot: options.staticRoot,
     runtimeStateRoot: options.runtimeStateRoot,
     runtimeChannel: options.runtimeChannel,
     operatorAuthToken: options.operatorAuthToken ?? resolveBackend()?.operatorAuthToken,
     operatorContext: options.operatorContext,
-    ...(options.rescoreLearningScores
-      ? { rescoreLearningScores: options.rescoreLearningScores }
-      : {}),
-    ...(options.resolveLearningPolicySource
-      ? { resolveLearningPolicySource: options.resolveLearningPolicySource }
-      : {}),
+    observabilityScope: options.observabilityScope,
+    anonymousLearningReads: options.anonymousLearningReads,
+    rescoreLearningScores: options.rescoreLearningScores,
+    resolveLearningPolicySource: options.resolveLearningPolicySource,
     shutdown,
-    registry: resolveBackend()?.effectiveRegistry ?? EMPTY_REGISTRY,
-    getRegistry: () => resolveBackend()?.effectiveRegistry ?? EMPTY_REGISTRY,
-    getExecutionCatalog: () => resolveBackend()?.getExecutionCatalog() ?? EMPTY_CATALOG,
-    readStartupReadiness: () => {
-      return projectCliStartupReadiness(readBootstrapState());
-    },
-    executeChatCompletions: bindBackendMethod(
-      "executeChatCompletions",
-    ) as StartBridgeServerOptions["executeChatCompletions"],
-    executeResponses: bindBackendMethod(
-      "executeResponses",
-    ) as StartBridgeServerOptions["executeResponses"],
-    readVersionInfo: bindBackendMethod(
-      "readVersionInfo",
-    ) as StartBridgeServerOptions["readVersionInfo"],
-    listActivityMetrics: bindBackendMethod(
-      "listActivityMetrics",
-    ) as StartBridgeServerOptions["listActivityMetrics"],
-    listActivityMetricsPage: bindBackendMethod(
-      "listActivityMetricsPage",
-    ) as StartBridgeServerOptions["listActivityMetricsPage"],
-    /** S42: the operator readback for whether the boundary can return a capture's evidence, and why not. */
-    readCaptureEvidence: (bindBackendMethod as unknown as (method: string) => unknown)(
-      "readCaptureEvidence",
-    ) as StartBridgeServerOptions["readCaptureEvidence"],
-    readActivityCapture: bindBackendMethod(
-      "readActivityCapture",
-    ) as StartBridgeServerOptions["readActivityCapture"],
-    recordClientLatency: bindBackendMethod(
-      "recordClientLatency",
-    ) as StartBridgeServerOptions["recordClientLatency"],
-    readLogs: async () =>
-      (
-        (await (bindBackendMethod("getLocalLogs") as CliBackend["getLocalLogs"])()) as {
-          logs: string;
-        }
-      ).logs,
-    proxyVendorLogStream: bindBackendMethod(
-      "proxyVendorLogStream",
-    ) as StartBridgeServerOptions["proxyVendorLogStream"],
-    readRuntimeSummary: bindBackendMethod(
-      "readRuntimeSummary",
-    ) as StartBridgeServerOptions["readRuntimeSummary"],
-    readRuntimeConfig: bindBackendMethod(
-      "readRuntimeConfig",
-    ) as StartBridgeServerOptions["readRuntimeConfig"],
-    updateRuntimeConfig: bindBackendMethod(
-      "updateRuntimeConfig",
-    ) as StartBridgeServerOptions["updateRuntimeConfig"],
-    readHealthStatus: async () => {
-      const bootstrapState = readBootstrapState();
-      if (bootstrapState.status !== "ready") {
-        return createPendingHealthStatus(bootstrapState);
-      }
-      const resolver = isCliBackendResolver(backendOrResolver) ? backendOrResolver : null;
-      const extensionRuntime = resolver?.readExtensionRuntime
-        ? resolver.readExtensionRuntime()
-        : null;
-      if (extensionRuntime) {
-        const readiness = evaluateProductionExtensionRuntimeReadiness(extensionRuntime);
-        if (readiness.state === "degraded") {
-          // Routing stays available; the probe reports the degradation without
-          // invoking the fatal extension-runtime teardown.
-          return createPendingHealthStatus({
-            status: "degraded",
-            message: readiness.message,
-          });
-        }
-        if (readiness.state === "failed") {
-          if (resolver?.onExtensionRuntimeFailure) {
-            await resolver.onExtensionRuntimeFailure(new Error(readiness.message));
+    resolveBackend,
+    readBootstrapState,
+    projectCliStartupReadiness: (state: Parameters<typeof projectCliStartupReadiness>[0]) =>
+      projectCliStartupReadiness(state),
+    emptyRegistry: EMPTY_REGISTRY,
+    emptyCatalog: EMPTY_CATALOG,
+    closeBackend,
+    overrides: {
+      readCaptureEvidence: (bindBackendMethod as unknown as (method: string) => unknown)(
+        "readCaptureEvidence",
+      ) as StartBridgeServerOptions["readCaptureEvidence"],
+      readLogs: async () =>
+        (
+          (await (bindBackendMethod("getLocalLogs") as CliBackend["getLocalLogs"])()) as {
+            logs: string;
           }
-          return createPendingHealthStatus(readBootstrapState());
+        ).logs,
+      readHealthStatus: async () => {
+        const bootstrapState = readBootstrapState();
+        if (bootstrapState.status !== "ready") {
+          return createPendingHealthStatus(bootstrapState);
         }
-        if (readiness.state === "pending") {
-          // Keep the probe honest while a supervised transition is in flight
-          // without permanently failing an otherwise healthy runtime.
-          return createPendingHealthStatus({ status: "pending", message: readiness.message });
-        }
-      }
-      const backend = resolveBackend();
-      return backend ? backend.readHealthStatus() : createPendingHealthStatus(readBootstrapState());
-    },
-    readTelemetrySummary: bindBackendMethod(
-      "readTelemetrySummary",
-    ) as StartBridgeServerOptions["readTelemetrySummary"],
-    listTelemetryComparisonRows: bindBackendMethod(
-      "listTelemetryComparisonRows",
-    ) as StartBridgeServerOptions["listTelemetryComparisonRows"],
-    listTelemetryRequests: bindBackendMethod(
-      "listTelemetryRequests",
-    ) as StartBridgeServerOptions["listTelemetryRequests"],
-    listTelemetryRequestPage: bindBackendMethod(
-      "listTelemetryRequestPage",
-    ) as StartBridgeServerOptions["listTelemetryRequestPage"],
-    queryTelemetryAnalytics: bindBackendMethod(
-      "queryTelemetryAnalytics",
-    ) as StartBridgeServerOptions["queryTelemetryAnalytics"],
-    subscribeTelemetry: bindBackendMethod(
-      "subscribeTelemetry",
-    ) as StartBridgeServerOptions["subscribeTelemetry"],
-    listProviders: bindBackendMethod("listProviders") as StartBridgeServerOptions["listProviders"],
-    listModels: bindBackendMethod("listModels") as StartBridgeServerOptions["listModels"],
-    listExtensions: bindBackendMethod(
-      "listExtensions",
-    ) as StartBridgeServerOptions["listExtensions"],
-    mutateExtension: bindBackendMethod(
-      "mutateExtension",
-    ) as StartBridgeServerOptions["mutateExtension"],
-    readTrackBQaExtensions: bindBackendMethod(
-      "readTrackBQaExtensions",
-    ) as StartBridgeServerOptions["readTrackBQaExtensions"],
-    readTrackBShadowReceipts: bindBackendMethod(
-      "readTrackBShadowReceipts",
-    ) as StartBridgeServerOptions["readTrackBShadowReceipts"],
-    readTrackBPostObservationReceipt: bindBackendMethod(
-      "readTrackBPostObservationReceipt",
-    ) as StartBridgeServerOptions["readTrackBPostObservationReceipt"],
-    recordTrackBContributionAggregate: bindBackendMethod(
-      "recordTrackBContributionAggregate",
-    ) as StartBridgeServerOptions["recordTrackBContributionAggregate"],
-    retryTrackBContributionAggregates: bindBackendMethod(
-      "retryTrackBContributionAggregates",
-    ) as StartBridgeServerOptions["retryTrackBContributionAggregates"],
-    readTrackBExtensionReadback: bindBackendMethod(
-      "readTrackBExtensionReadback",
-    ) as StartBridgeServerOptions["readTrackBExtensionReadback"],
-    runTrackBSupervisedReplay: bindBackendMethod(
-      "runTrackBSupervisedReplay",
-    ) as StartBridgeServerOptions["runTrackBSupervisedReplay"],
-    readTrackBReplayStatus: () => activeAutoReplayLoop?.status() ?? null,
-    controlTrackBReplay: async (body: Record<string, unknown>) => {
-      const action = typeof body?.action === "string" ? body.action : "";
-      if (action === "pause") activeAutoReplayLoop?.pause();
-      else if (action === "resume") activeAutoReplayLoop?.resume();
-      else throw new Error("replay control action must be pause or resume");
-      return { action, status: activeAutoReplayLoop?.status() ?? null };
-    },
-    readTrackBLearningSummary: async () => {
-      return activeLearningSummaryReader ? activeLearningSummaryReader() : null;
-    },
-    readOperatorStatus: bindBackendMethod(
-      "readOperatorStatus",
-    ) as StartBridgeServerOptions["readOperatorStatus"],
-    listOperatorTraceRoots: bindBackendMethod(
-      "listOperatorTraceRoots",
-    ) as StartBridgeServerOptions["listOperatorTraceRoots"],
-    readOperatorTraceRoot: bindBackendMethod(
-      "readOperatorTraceRoot",
-    ) as StartBridgeServerOptions["readOperatorTraceRoot"],
-    listReplayJobs: bindBackendMethod(
-      "listReplayJobs",
-    ) as StartBridgeServerOptions["listReplayJobs"],
-    createReplayJob: bindBackendMethod(
-      "createReplayJob",
-    ) as StartBridgeServerOptions["createReplayJob"],
-    cancelReplayJob: bindBackendMethod(
-      "cancelReplayJob",
-    ) as StartBridgeServerOptions["cancelReplayJob"],
-    readReplayJob: bindBackendMethod("readReplayJob") as StartBridgeServerOptions["readReplayJob"],
-    readReplayResults: bindBackendMethod(
-      "readReplayResults",
-    ) as StartBridgeServerOptions["readReplayResults"],
-    listEvaluationJobs: bindBackendMethod(
-      "listEvaluationJobs",
-    ) as StartBridgeServerOptions["listEvaluationJobs"],
-    readEvaluationJob: bindBackendMethod(
-      "readEvaluationJob",
-    ) as StartBridgeServerOptions["readEvaluationJob"],
-    listEvaluationTrials: bindBackendMethod(
-      "listEvaluationTrials",
-    ) as StartBridgeServerOptions["listEvaluationTrials"],
-    listEvaluationScorers: bindBackendMethod(
-      "listEvaluationScorers",
-    ) as StartBridgeServerOptions["listEvaluationScorers"],
-    listEvaluationComparisons: bindBackendMethod(
-      "listEvaluationComparisons",
-    ) as StartBridgeServerOptions["listEvaluationComparisons"],
-    listEvaluationGroups: bindBackendMethod(
-      "listEvaluationGroups",
-    ) as StartBridgeServerOptions["listEvaluationGroups"],
-    cancelEvaluationJob: bindBackendMethod(
-      "cancelEvaluationJob",
-    ) as StartBridgeServerOptions["cancelEvaluationJob"],
-    retryEvaluationJob: bindBackendMethod(
-      "retryEvaluationJob",
-    ) as StartBridgeServerOptions["retryEvaluationJob"],
-    readLearningState: bindBackendMethod(
-      "readLearningState",
-    ) as StartBridgeServerOptions["readLearningState"],
-    readLearningProfile: bindBackendMethod(
-      "readLearningProfile",
-    ) as StartBridgeServerOptions["readLearningProfile"],
-    readLearningAdvisory: bindBackendMethod(
-      "readLearningAdvisory",
-    ) as StartBridgeServerOptions["readLearningAdvisory"],
-    updateLearningMode: bindBackendMethod(
-      "updateLearningMode",
-    ) as StartBridgeServerOptions["updateLearningMode"],
-    rollbackLearning: bindBackendMethod(
-      "rollbackLearning",
-    ) as StartBridgeServerOptions["rollbackLearning"],
-    // Run 98 R17: the CLI's server options enumerate every operator callback explicitly, so
-    // the Learning UI readback and rollout actions must be bound here or they answer
-    // "unavailable" behind the packaged executable.
-    readLearningRollout: bindBackendMethod(
-      "readLearningRollout",
-    ) as StartBridgeServerOptions["readLearningRollout"],
-    readLearningRecords: bindBackendMethod(
-      "readLearningRecords",
-    ) as StartBridgeServerOptions["readLearningRecords"],
-    readLearningDecisions: bindBackendMethod(
-      "readLearningDecisions",
-    ) as StartBridgeServerOptions["readLearningDecisions"],
-    readLearningMeasurement: bindBackendMethod(
-      "readLearningMeasurement",
-    ) as StartBridgeServerOptions["readLearningMeasurement"],
-    ...(options.anonymousLearningReads
-      ? { anonymousLearningReads: options.anonymousLearningReads }
-      : {}),
-    readLearningActivity: bindBackendMethod(
-      "readLearningActivity",
-    ) as StartBridgeServerOptions["readLearningActivity"],
-    readLearningHistory: bindBackendMethod(
-      "readLearningHistory",
-    ) as StartBridgeServerOptions["readLearningHistory"],
-    // Run 101 R9 (Phase 5 repair): the queue surface the UI calls, forwarded to the sidecar that
-    // owns the queue store.
-    /**
-     * Run 108 addendum-01 A2 (R3 acceptance + R6b): the LIVE binding behind the operator UI's store
-     * degradation receipts page. No backend capability answers this - the two receipt tables live in
-     * the private extensions, so the host reads them through the extension runtime (the same
-     * `readExtensionRuntime` resolver accessor `readHealthStatus` above uses) with the same envelope
-     * shape and payload unwrap as every other operator readback, and flattens both sources into the
-     * pinned contract. `readStoreDegradationReceiptsFromRuntime` never throws; a source that fails
-     * is published as unavailable WITH its reason, and a host with no extension runtime at all says
-     * exactly that instead of inventing an empty page.
-     */
-    readStoreDegradationReceipts: (() => {
-      const read = async (
-        query: Readonly<Record<string, string>> = {},
-      ): Promise<StoreDegradationReceiptReadback> => {
-        void query;
         const resolver = isCliBackendResolver(backendOrResolver) ? backendOrResolver : null;
-        const runtime = resolver?.readExtensionRuntime ? resolver.readExtensionRuntime() : null;
-        // The readback is served by the operator host, so the envelope carries the operator
-        // context's scope - the same binding every other operator readback uses (the extensions
-        // enforce channel/scope/epoch from the envelope itself). The fallback keeps a host whose
-        // options were built without an explicit context from sending an EMPTY scope, which the
-        // capability boundary would refuse as an unbound request.
-        const scope = options.operatorContext?.scope ?? "operator";
-        const envelopeFor = (
-          extensionId: string,
-          capability: string,
-          value: Record<string, unknown>,
-        ) => ({
-          requestId: `operator-store-degradation-receipts:${capability}:${Date.now()}`,
-          sessionId: `operator-store-degradation-receipts:${scope}`,
-          protocolVersion: "1.1.0",
-          channel: options.runtimeChannel ?? options.operatorContext?.channel ?? "development",
-          scope,
-          authorizationEpoch: 1,
-          capability,
-          value,
-          ...(extensionId === "knowledge-store" ? { payload: value } : {}),
-        });
-        const unavailable = (reason: string): StoreDegradationReceiptSource => ({
-          available: false,
-          reason,
-          receipts: [],
-        });
-        if (runtime === null || typeof runtime.invoke !== "function") {
-          return {
-            schemaVersion: "role-model.store-degradation-receipts.v1",
-            store: unavailable("extension runtime is not available"),
-            worker: unavailable("extension runtime is not available"),
-          };
+        const extensionRuntime = resolver?.readExtensionRuntime
+          ? resolver.readExtensionRuntime()
+          : null;
+        if (extensionRuntime) {
+          const readiness = evaluateProductionExtensionRuntimeReadiness(extensionRuntime);
+          if (readiness.state === "degraded") {
+            // Routing stays available; the probe reports the degradation without
+            // invoking the fatal extension-runtime teardown.
+            return createPendingHealthStatus({
+              status: "degraded",
+              message: readiness.message,
+            });
+          }
+          if (readiness.state === "failed") {
+            if (resolver?.onExtensionRuntimeFailure) {
+              await resolver.onExtensionRuntimeFailure(new Error(readiness.message));
+            }
+            return createPendingHealthStatus(readBootstrapState());
+          }
+          if (readiness.state === "pending") {
+            // Keep the probe honest while a supervised transition is in flight
+            // without permanently failing an otherwise healthy runtime.
+            return createPendingHealthStatus({ status: "pending", message: readiness.message });
+          }
         }
-        // The narrowed method is captured BEFORE the closure: property narrowing (the
-        // `typeof runtime.invoke !== "function"` guard above) does not survive into a callback,
-        // so calling `runtime.invoke` inside the arrow widens it back to optional (TS2722). The
-        // captured function keeps the call typechecking with no non-null assertion.
-        const invoke = runtime.invoke;
-        return readStoreDegradationReceiptsFromRuntime({
-          invoke,
-          envelopeFor,
-          stateRoot: options.runtimeStateRoot ?? "",
-          scopeId: scope,
-        });
-      };
-      return read as StartBridgeServerOptions["readStoreDegradationReceipts"];
-    })(),
-    readQueues: bindBackendMethod("readQueues") as StartBridgeServerOptions["readQueues"],
-    readQueueJobs: bindBackendMethod("readQueueJobs") as StartBridgeServerOptions["readQueueJobs"],
-    readQueueJob: bindBackendMethod("readQueueJob") as StartBridgeServerOptions["readQueueJob"],
-    readQueueReceipts: bindBackendMethod(
-      "readQueueReceipts",
-    ) as StartBridgeServerOptions["readQueueReceipts"],
-    readQueueConfig: bindBackendMethod(
-      "readQueueConfig",
-    ) as StartBridgeServerOptions["readQueueConfig"],
-    setQueueConfig: bindBackendMethod(
-      "setQueueConfig",
-    ) as StartBridgeServerOptions["setQueueConfig"],
-    retryQueueJob: bindBackendMethod("retryQueueJob") as StartBridgeServerOptions["retryQueueJob"],
-    cancelQueueJob: bindBackendMethod(
-      "cancelQueueJob",
-    ) as StartBridgeServerOptions["cancelQueueJob"],
-    setQueueDrain: bindBackendMethod("setQueueDrain") as StartBridgeServerOptions["setQueueDrain"],
-    readLearningPolicy: bindBackendMethod(
-      "readLearningPolicy",
-    ) as StartBridgeServerOptions["readLearningPolicy"],
-    setLearningPolicy: bindBackendMethod(
-      "setLearningPolicy",
-    ) as StartBridgeServerOptions["setLearningPolicy"],
-    rollbackLearningPolicy: bindBackendMethod(
-      "rollbackLearningPolicy",
-    ) as StartBridgeServerOptions["rollbackLearningPolicy"],
-    activateLearningPack: bindBackendMethod(
-      "activateLearningPack",
-    ) as StartBridgeServerOptions["activateLearningPack"],
-    rollbackLearningPack: bindBackendMethod(
-      "rollbackLearningPack",
-    ) as StartBridgeServerOptions["rollbackLearningPack"],
-    materializeRouteLadders: bindBackendMethod(
-      "materializeRouteLadders",
-    ) as StartBridgeServerOptions["materializeRouteLadders"],
-    recordLearningGuardrailBreach: bindBackendMethod(
-      "recordLearningGuardrailBreach",
-    ) as StartBridgeServerOptions["recordLearningGuardrailBreach"],
-    restoreLearningScenarioActivation: bindBackendMethod(
-      "restoreLearningScenarioActivation",
-    ) as StartBridgeServerOptions["restoreLearningScenarioActivation"],
-    engageLearningKillSwitch: bindBackendMethod(
-      "engageLearningKillSwitch",
-    ) as StartBridgeServerOptions["engageLearningKillSwitch"],
-    measureNoRichCaptureBaseline: bindBackendMethod(
-      "measureNoRichCaptureBaseline",
-    ) as StartBridgeServerOptions["measureNoRichCaptureBaseline"],
-    readDevelopmentVerificationStatus: bindBackendMethod(
-      "readDevelopmentVerificationStatus",
-    ) as StartBridgeServerOptions["readDevelopmentVerificationStatus"],
-    readGraphMigration: bindBackendMethod(
-      "readGraphMigration",
-    ) as StartBridgeServerOptions["readGraphMigration"],
-    advanceGraphMigration: bindBackendMethod(
-      "advanceGraphMigration",
-    ) as StartBridgeServerOptions["advanceGraphMigration"],
-    rollbackGraphMigration: bindBackendMethod(
-      "rollbackGraphMigration",
-    ) as StartBridgeServerOptions["rollbackGraphMigration"],
-    readStorageRetention: bindBackendMethod(
-      "readStorageRetention",
-    ) as StartBridgeServerOptions["readStorageRetention"],
-    dryRunStorageRetention: bindBackendMethod(
-      "dryRunStorageRetention",
-    ) as StartBridgeServerOptions["dryRunStorageRetention"],
-    updateStorageRetentionPolicy: bindBackendMethod(
-      "updateStorageRetentionPolicy",
-    ) as StartBridgeServerOptions["updateStorageRetentionPolicy"],
-    executeStorageRetention: bindBackendMethod(
-      "executeStorageRetention",
-    ) as StartBridgeServerOptions["executeStorageRetention"],
-    cancelStorageRetentionJob: bindBackendMethod(
-      "cancelStorageRetentionJob",
-    ) as StartBridgeServerOptions["cancelStorageRetentionJob"],
-    rollbackStorageRetention: bindBackendMethod(
-      "rollbackStorageRetention",
-    ) as StartBridgeServerOptions["rollbackStorageRetention"],
-    readContributionState: bindBackendMethod(
-      "readContributionState",
-    ) as StartBridgeServerOptions["readContributionState"],
-    updateContributionState: bindBackendMethod(
-      "updateContributionState",
-    ) as StartBridgeServerOptions["updateContributionState"],
-    listRecommendations: bindBackendMethod(
-      "listRecommendations",
-    ) as StartBridgeServerOptions["listRecommendations"],
-    downloadRecommendations: bindBackendMethod(
-      "downloadRecommendations",
-    ) as StartBridgeServerOptions["downloadRecommendations"],
-    applyRecommendation: bindBackendMethod(
-      "applyRecommendation",
-    ) as StartBridgeServerOptions["applyRecommendation"],
-    dismissRecommendation: bindBackendMethod(
-      "dismissRecommendation",
-    ) as StartBridgeServerOptions["dismissRecommendation"],
-    readActivePack: bindBackendMethod(
-      "readActivePack",
-    ) as StartBridgeServerOptions["readActivePack"],
-    listRoles: bindBackendMethod("listRoles") as StartBridgeServerOptions["listRoles"],
-    listAccounts: bindBackendMethod("listAccounts") as StartBridgeServerOptions["listAccounts"],
-    listProviderDeviceAuthorizations: bindBackendMethod(
-      "listProviderDeviceAuthorizations",
-    ) as StartBridgeServerOptions["listProviderDeviceAuthorizations"],
-    upsertProviderAccount: bindBackendMethod(
-      "upsertProviderAccount",
-    ) as StartBridgeServerOptions["upsertProviderAccount"],
-    startProviderDeviceAuthorization: bindBackendMethod(
-      "startProviderDeviceAuthorization",
-    ) as StartBridgeServerOptions["startProviderDeviceAuthorization"],
-    pollProviderDeviceAuthorization: bindBackendMethod(
-      "pollProviderDeviceAuthorization",
-    ) as StartBridgeServerOptions["pollProviderDeviceAuthorization"],
-    reconnectProviderAccount: bindBackendMethod(
-      "reconnectProviderAccount",
-    ) as StartBridgeServerOptions["reconnectProviderAccount"],
-    updateProviderApiKey: bindBackendMethod(
-      "updateProviderApiKey",
-    ) as StartBridgeServerOptions["updateProviderApiKey"],
-    openExternalUrl: bindBackendMethod(
-      "openExternalUrl",
-    ) as StartBridgeServerOptions["openExternalUrl"],
-    removeProviderAccountModel: bindBackendMethod(
-      "removeProviderAccountModel",
-    ) as StartBridgeServerOptions["removeProviderAccountModel"],
-    activateEndpoint: bindBackendMethod(
-      "activateEndpoint",
-    ) as StartBridgeServerOptions["activateEndpoint"],
-    activateEndpointBatch: bindBackendMethod(
-      "activateEndpointBatch",
-    ) as StartBridgeServerOptions["activateEndpointBatch"],
-    removeEndpoint: bindBackendMethod(
-      "removeEndpoint",
-    ) as StartBridgeServerOptions["removeEndpoint"],
-    readControllerAssignment: bindBackendMethod(
-      "readControllerAssignment",
-    ) as StartBridgeServerOptions["readControllerAssignment"],
-    updateControllerAssignment: bindBackendMethod(
-      "updateControllerAssignment",
-    ) as StartBridgeServerOptions["updateControllerAssignment"],
-    readRouterSummary: bindBackendMethod(
-      "readRouterSummary",
-    ) as StartBridgeServerOptions["readRouterSummary"],
-    readRouterConfig: bindBackendMethod(
-      "readRouterConfig",
-    ) as StartBridgeServerOptions["readRouterConfig"],
-    listRouterCandidates: bindBackendMethod(
-      "listRouterCandidates",
-    ) as StartBridgeServerOptions["listRouterCandidates"],
-    listRouterDecisions: bindBackendMethod(
-      "listRouterDecisions",
-    ) as StartBridgeServerOptions["listRouterDecisions"],
-    listRouterDecisionPage: bindBackendMethod(
-      "listRouterDecisionPage",
-    ) as StartBridgeServerOptions["listRouterDecisionPage"],
-    readRouterDecision: bindBackendMethod(
-      "readRouterDecision",
-    ) as StartBridgeServerOptions["readRouterDecision"],
-    listEndpoints: bindBackendMethod("listEndpoints") as StartBridgeServerOptions["listEndpoints"],
-    listRecentRequestIds: bindBackendMethod(
-      "listRecentRequestIds",
-    ) as StartBridgeServerOptions["listRecentRequestIds"],
-    listRecentRequestObservations: bindBackendMethod(
-      "listRecentRequestObservations",
-    ) as StartBridgeServerOptions["listRecentRequestObservations"],
-    readRequestObservation: bindBackendMethod(
-      "readRequestObservation",
-    ) as StartBridgeServerOptions["readRequestObservation"],
-    exportVerifiersTrace: bindBackendMethod(
-      "exportVerifiersTrace",
-    ) as StartBridgeServerOptions["exportVerifiersTrace"],
-    recoverLegacyTerminalFailure: bindBackendMethod(
-      "recoverLegacyTerminalFailure",
-    ) as StartBridgeServerOptions["recoverLegacyTerminalFailure"],
-    readEndpointProfile: bindBackendMethod(
-      "readEndpointProfile",
-    ) as StartBridgeServerOptions["readEndpointProfile"],
-    readBenchmarkSuite: bindBackendMethod(
-      "readBenchmarkSuite",
-    ) as StartBridgeServerOptions["readBenchmarkSuite"],
-    runBenchmark: bindBackendMethod("runBenchmark") as StartBridgeServerOptions["runBenchmark"],
-    readBenchmarkRun: bindBackendMethod(
-      "readBenchmarkRun",
-    ) as StartBridgeServerOptions["readBenchmarkRun"],
-    readActiveBenchmarkRun: bindBackendMethod(
-      "readActiveBenchmarkRun",
-    ) as StartBridgeServerOptions["readActiveBenchmarkRun"],
-    clearBenchmarkEndpointData: bindBackendMethod(
-      "clearBenchmarkEndpointData",
-    ) as StartBridgeServerOptions["clearBenchmarkEndpointData"],
-    clearBenchmarkData: bindBackendMethod(
-      "clearBenchmarkData",
-    ) as StartBridgeServerOptions["clearBenchmarkData"],
-    readBenchmarkSummary: bindBackendMethod(
-      "readBenchmarkSummary",
-    ) as StartBridgeServerOptions["readBenchmarkSummary"],
-    readBenchmarkPortfolio: bindBackendMethod(
-      "readBenchmarkPortfolio",
-    ) as StartBridgeServerOptions["readBenchmarkPortfolio"],
-    listBenchmarkRuns: bindBackendMethod(
-      "listBenchmarkRuns",
-    ) as StartBridgeServerOptions["listBenchmarkRuns"],
-    // Run 98 addendum 43 S4: the packaged runtime builds its options from this table, so a route wired only
-    // into the backend reads as 404 on the live runtime (which is how the first v270 swap failed).
-    readBenchmarkSampleRunStates: bindBackendMethod(
-      "readBenchmarkSampleRunStates",
-    ) as StartBridgeServerOptions["readBenchmarkSampleRunStates"],
-    readBenchmarkSummariesByMode: bindBackendMethod(
-      "readBenchmarkSummariesByMode",
-    ) as StartBridgeServerOptions["readBenchmarkSummariesByMode"],
-    readBenchmarkPreferences: bindBackendMethod(
-      "readBenchmarkPreferences",
-    ) as StartBridgeServerOptions["readBenchmarkPreferences"],
-    updateBenchmarkPreferences: bindBackendMethod(
-      "updateBenchmarkPreferences",
-    ) as StartBridgeServerOptions["updateBenchmarkPreferences"],
-    listLocalModels: bindBackendMethod(
-      "listLocalModels",
-    ) as StartBridgeServerOptions["listLocalModels"],
-    listPeerLocalModels: bindBackendMethod(
-      "listPeerLocalModels",
-    ) as StartBridgeServerOptions["listPeerLocalModels"],
-    listLlamaSwapLocalModels: bindBackendMethod(
-      "listLlamaSwapLocalModels",
-    ) as StartBridgeServerOptions["listLlamaSwapLocalModels"],
-    loadLocalModel: bindBackendMethod(
-      "loadLocalModel",
-    ) as StartBridgeServerOptions["loadLocalModel"],
-    loadPeerModel: bindBackendMethod("loadPeerModel") as StartBridgeServerOptions["loadPeerModel"],
-    loadLlamaSwapModel: bindBackendMethod(
-      "loadLlamaSwapModel",
-    ) as StartBridgeServerOptions["loadLlamaSwapModel"],
-    setPeerModelRoles: bindBackendMethod(
-      "setPeerModelRoles",
-    ) as StartBridgeServerOptions["setPeerModelRoles"],
-    setLlamaSwapModelRoles: bindBackendMethod(
-      "setLlamaSwapModelRoles",
-    ) as StartBridgeServerOptions["setLlamaSwapModelRoles"],
-    unloadPeerModel: bindBackendMethod(
-      "unloadPeerModel",
-    ) as StartBridgeServerOptions["unloadPeerModel"],
-    unloadLocalModel: bindBackendMethod(
-      "unloadLocalModel",
-    ) as StartBridgeServerOptions["unloadLocalModel"],
-    readLocalPolicy: bindBackendMethod(
-      "readLocalPolicy",
-    ) as StartBridgeServerOptions["readLocalPolicy"],
-    updateLocalPolicy: bindBackendMethod(
-      "updateLocalPolicy",
-    ) as StartBridgeServerOptions["updateLocalPolicy"],
-    readRolePolicy: bindBackendMethod(
-      "readRolePolicy",
-    ) as StartBridgeServerOptions["readRolePolicy"],
-    createRolePolicyRole: bindBackendMethod(
-      "createRolePolicyRole",
-    ) as StartBridgeServerOptions["createRolePolicyRole"],
-    updateRolePolicyRole: bindBackendMethod(
-      "updateRolePolicyRole",
-    ) as StartBridgeServerOptions["updateRolePolicyRole"],
-    listTaskDefinitions: bindBackendMethod(
-      "listTaskDefinitions",
-    ) as StartBridgeServerOptions["listTaskDefinitions"],
-    updateTaskDefinitions: bindBackendMethod(
-      "updateTaskDefinitions",
-    ) as StartBridgeServerOptions["updateTaskDefinitions"],
-    listSwapHistory: bindBackendMethod(
-      "listSwapHistory",
-    ) as StartBridgeServerOptions["listSwapHistory"],
-    getLocalLogs: bindBackendMethod("getLocalLogs") as StartBridgeServerOptions["getLocalLogs"],
-    readModelOverrides: bindBackendMethod(
-      "readModelOverrides",
-    ) as StartBridgeServerOptions["readModelOverrides"],
-    updateModelOverrides: bindBackendMethod(
-      "updateModelOverrides",
-    ) as StartBridgeServerOptions["updateModelOverrides"],
-    readPeers: bindBackendMethod("readPeers") as StartBridgeServerOptions["readPeers"],
-    updatePeers: bindBackendMethod("updatePeers") as StartBridgeServerOptions["updatePeers"],
-    checkPeerHealth: bindBackendMethod(
-      "checkPeerHealth",
-    ) as StartBridgeServerOptions["checkPeerHealth"],
-    getRoutableInventory: () => resolveBackend()?.getEffectiveRoutableInventory() ?? null,
-  };
+        const backend = resolveBackend();
+        return backend
+          ? backend.readHealthStatus()
+          : createPendingHealthStatus(readBootstrapState());
+      },
+      readTrackBReplayStatus: () => activeAutoReplayLoop?.status() ?? null,
+      controlTrackBReplay: async (body: Record<string, unknown>) => {
+        const action = typeof body?.action === "string" ? body.action : "";
+        if (action === "pause") activeAutoReplayLoop?.pause();
+        else if (action === "resume") activeAutoReplayLoop?.resume();
+        else throw new Error("replay control action must be pause or resume");
+        return { action, status: activeAutoReplayLoop?.status() ?? null };
+      },
+      readTrackBLearningSummary: async () => {
+        return activeLearningSummaryReader ? activeLearningSummaryReader() : null;
+      },
+      readStoreDegradationReceipts: (() => {
+        const read = async (
+          query: Readonly<Record<string, string>> = {},
+        ): Promise<StoreDegradationReceiptReadback> => {
+          void query;
+          const resolver = isCliBackendResolver(backendOrResolver) ? backendOrResolver : null;
+          const runtime = resolver?.readExtensionRuntime ? resolver.readExtensionRuntime() : null;
+          // The readback is served by the operator host, so the envelope carries the operator
+          // context's scope - the same binding every other operator readback uses (the extensions
+          // enforce channel/scope/epoch from the envelope itself). The fallback keeps a host whose
+          // options were built without an explicit context from sending an EMPTY scope, which the
+          // capability boundary would refuse as an unbound request.
+          const scope = options.operatorContext?.scope ?? "operator";
+          const envelopeFor = (
+            extensionId: string,
+            capability: string,
+            value: Record<string, unknown>,
+          ) => ({
+            requestId: `operator-store-degradation-receipts:${capability}:${Date.now()}`,
+            sessionId: `operator-store-degradation-receipts:${scope}`,
+            protocolVersion: "1.1.0",
+            channel: options.runtimeChannel ?? options.operatorContext?.channel ?? "development",
+            scope,
+            authorizationEpoch: 1,
+            capability,
+            value,
+            ...(extensionId === "knowledge-store" ? { payload: value } : {}),
+          });
+          const unavailable = (reason: string): StoreDegradationReceiptSource => ({
+            available: false,
+            reason,
+            receipts: [],
+          });
+          if (runtime === null || typeof runtime.invoke !== "function") {
+            return {
+              schemaVersion: "role-model.store-degradation-receipts.v1",
+              store: unavailable("extension runtime is not available"),
+              worker: unavailable("extension runtime is not available"),
+            };
+          }
+          // The narrowed method is captured BEFORE the closure: property narrowing (the
+          // `typeof runtime.invoke !== "function"` guard above) does not survive into a callback,
+          // so calling `runtime.invoke` inside the arrow widens it back to optional (TS2722). The
+          // captured function keeps the call typechecking with no non-null assertion.
+          const invoke = runtime.invoke;
+          return readStoreDegradationReceiptsFromRuntime({
+            invoke,
+            envelopeFor,
+            stateRoot: options.runtimeStateRoot ?? "",
+            scopeId: scope,
+          });
+        };
+        return read as StartBridgeServerOptions["readStoreDegradationReceipts"];
+      })(),
+    },
+  });
+  assertComposedBackendOwner(owner);
+  bindBackendStorageRef(owner.options, storageRef);
+  onBackendOwner?.(owner);
+  return owner.options;
 }
 
 function openBrowser(url: string): void {
@@ -5552,12 +5215,49 @@ export async function main(): Promise<void> {
   const extensionRuntimeRef: {
     current: Awaited<ReturnType<typeof createProductionExtensionRuntime>> | null;
   } = { current: null };
+  /**
+   * R27 (s94): ONE owner for every acquired host resource. Each acquisition registers
+   * itself here, and shutdown/failure release through this scope instead of hand-picking.
+   */
+  const hostScope = createHostRuntimeScope();
+  // S327 (R27 Drain): the shutdown phase steps are registered here and executed by the DAG Server
+  // owner between join and interrupt (bounded, release-all).
+  const shutdownDrains: ShutdownDrain[] = [];
+  shutdownDrains.push({
+    name: "auto-replay",
+    run: () => {
+      activeAutoReplayLoop?.stop();
+      activeAutoReplayLoop = null;
+    },
+  });
+  shutdownDrains.push({ name: "route-capture", run: drainDeferredRouteCapture });
+  shutdownDrains.push({
+    name: "benchmark",
+    run: () => {
+      benchmarkGate.cancel("shutdown");
+    },
+  });
+  // S324 (R27 early readiness): the production readiness owner consumed by the Server admission gate.
+  // S593 (R27): the closed Layer DAG now owns production acquisition order and readiness: the CLI
+  // builds the DAG scope, so its nodes acquire in the closed order (readiness -> permits -> backend ->
+  // bootstrap -> refresh -> drains -> benchmarks -> server -> cli -> host) and the host leaf marks THIS
+  // composed owner ready. The imperative resource builders still own their individual resources; the
+  // DAG is the acquisition spine, and its failure aborts host startup.
+  const readinessOwner = composeReadinessOwner();
+  // S321/S322 (R27): backend teardown runs through the DAG Backend close member; the shared idempotent
+  // closer closes the packaged SCOPE (the acquireRelease finalizer owns the runtime), so the DAG path and
+  // the later hostScope path can never close it twice.
+  const closePackagedScopeRef: { current: (() => Promise<void>) | null } = { current: null };
+  const closePackagedRuntimeOnce = onceClose(async () => {
+    if (closePackagedScopeRef.current !== null) await closePackagedScopeRef.current();
+  });
   // R3: the post-observation handler needs the running registry's configured
   // endpoints, but it is defined before the backend exists. The reference is filled
   // in once the runtime is created and read on every observation.
   const configuredEndpointIdsRef: { current: readonly string[] } = { current: [] };
   const bootstrapState: CliBootstrapState = { status: "pending" };
   let shutdownPromise: Promise<void> | null = null;
+  let closeR27Dag: (() => Promise<void>) | null = null;
   let stopExtensionRuntimeWatchdog: (() => void) | null = null;
   let extensionRuntimeFailurePromise: Promise<void> | null = null;
   const failExtensionRuntime = (error: unknown): Promise<void> => {
@@ -5565,21 +5265,25 @@ export async function main(): Promise<void> {
     bootstrapState.status = "failed";
     bootstrapState.message =
       error instanceof Error ? error.message : "extension runtime failed after startup";
+    readinessOwner.markFailed(bootstrapState.message);
     backend = null;
     extensionRuntimeRef.current = null;
     stopExtensionRuntimeWatchdog?.();
     stopExtensionRuntimeWatchdog = null;
     extensionRuntimeFailurePromise = (async () => {
-      const activeExtensionRuntimeOwner = extensionRuntimeOwner;
-      const activeExtensionRuntime = extensionRuntime;
-      const activePackagedRuntime = packagedRuntime;
+      const failureRelease = await hostScope.close();
+      backend = null;
       extensionRuntimeOwner = null;
       extensionRuntime = null;
       packagedRuntime = null;
-      if (activeExtensionRuntimeOwner) await activeExtensionRuntimeOwner.close();
-      else if (activeExtensionRuntime?.close)
-        await activeExtensionRuntime.close().catch(() => undefined);
-      if (activePackagedRuntime) await activePackagedRuntime.close().catch(() => undefined);
+      const firstFailure = failureRelease.errors[0];
+      if (firstFailure !== undefined) {
+        bootstrapState.message = `Release failed at ${firstFailure.step}: ${
+          firstFailure.error instanceof Error
+            ? firstFailure.error.message
+            : String(firstFailure.error)
+        }`;
+      }
     })();
     return extensionRuntimeFailurePromise;
   };
@@ -5589,20 +5293,33 @@ export async function main(): Promise<void> {
     }
 
     shutdownPromise = (async () => {
-      activeAutoReplayLoop?.stop();
-      activeAutoReplayLoop = null;
       stopExtensionRuntimeWatchdog?.();
       stopExtensionRuntimeWatchdog = null;
-      await server?.close();
-      const activeExtensionRuntimeOwner = extensionRuntimeOwner;
-      const activeExtensionRuntime = extensionRuntime;
+      if (closeR27Dag !== null) {
+        try {
+          await closeR27Dag();
+        } catch (error) {
+          process.exitCode = 1;
+          console.error(
+            `release failed at r27-dag: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }
+      const releaseResult = await hostScope.close();
+      server = null;
       extensionRuntimeOwner = null;
       extensionRuntime = null;
-      if (packagedRuntime) await packagedRuntime.close();
-      else await backend?.shutdown();
-      if (activeExtensionRuntimeOwner) await activeExtensionRuntimeOwner.close();
-      else await activeExtensionRuntime?.close();
-      process.exit(0);
+      packagedRuntime = null;
+      backend = null;
+      if (releaseResult.errors.length > 0) {
+        process.exitCode = 1;
+        for (const failure of releaseResult.errors) {
+          console.error(
+            `release failed at ${failure.step}: ${failure.error instanceof Error ? failure.error.message : String(failure.error)}`,
+          );
+        }
+      }
+      process.exit(releaseResult.errors.length > 0 ? 1 : 0);
     })();
 
     return shutdownPromise;
@@ -5618,8 +5335,9 @@ export async function main(): Promise<void> {
     current: ((body: Record<string, unknown>) => Promise<unknown>) | null;
   } = { current: null };
 
-  server = await startBridgeServer(
-    createCliServerOptions(
+  const startServer = () => {
+    let backendOwner: import("./composition-dag.js").BackendOwner | undefined;
+    const serverOptions = createCliServerOptions(
       {
         host: options.host,
         port: options.port,
@@ -5665,15 +5383,92 @@ export async function main(): Promise<void> {
         onExtensionRuntimeFailure: failExtensionRuntime,
       },
       shutdown,
-    ),
-  );
+      (owner) => {
+        backendOwner = owner;
+      },
+      closePackagedRuntimeOnce,
+    );
+    return startBridgeServer(
+      serverOptions,
+      backendOwner === undefined
+        ? undefined
+        : { backend: backendOwner, drains: shutdownDrains, readiness: readinessOwner },
+    );
+  };
+
+  /**
+   * S598 (R27): the server is acquired by the DAG server node, not by a separate imperative
+   * serverScope. The node's release closes the same BridgeServer handle; the host leaf exposes it
+   * to the CLI and marks readiness only after the real server exists.
+   */
+  let startedServer: BridgeServer | null = null;
+  const r27DagEvents: string[] = [];
+  const r27DagScope = Effect.runSync(Scope.make());
+  let r27Host: R27HostContract | undefined;
+  let r27DagClosePromise: Promise<void> | null = null;
+  closeR27Dag = () => {
+    r27DagClosePromise ??= Effect.runPromise(Scope.close(r27DagScope, Exit.void));
+    return r27DagClosePromise;
+  };
+  try {
+    await Effect.runPromise(
+      Layer.buildWithScope(
+        composeR27HostLayer({
+          events: r27DagEvents,
+          readiness: readinessOwner,
+          onHost: (host) => {
+            r27Host = host;
+          },
+          acquire: {
+            // bootstrap, drains and benchmarks are owned by their nodes now; their handles are the
+            // same objects the server owner consumes, and the DAG scope releases them after the server.
+            bootstrap: async () => ({ handle: bootstrapState, release: async () => {} }),
+            drains: async () => ({
+              handle: shutdownDrains,
+              release: async () => {
+                shutdownDrains.length = 0;
+              },
+            }),
+            benchmarks: async () => ({
+              handle: benchmarkGate,
+              release: async () => {
+                benchmarkGate.cancel("r27-scope-close");
+              },
+            }),
+            // backend/refresh remain records: the backend is created inside the branch/sidecar
+            // acquire path that startServer owns, and refresh starts only after extension-runtime
+            // readiness. Moving either before the server would invert the locked acquisition order;
+            // recorded follow-up rather than a silent imperative acquisition.
+            server: async () => {
+              const value = await startServer();
+              return { handle: value, release: () => value.close() };
+            },
+          },
+        }),
+        r27DagScope,
+      ),
+    );
+  } catch (error) {
+    await closeR27Dag().catch(() => undefined);
+    throw error;
+  }
+  const acquiredServer = r27Host?.handles.server?.handle;
+  if (
+    !(acquiredServer instanceof Object) ||
+    typeof (acquiredServer as { close?: unknown }).close !== "function"
+  ) {
+    await closeR27Dag().catch(() => undefined);
+    throw new Error("r27 DAG did not expose the acquired BridgeServer handle");
+  }
+  startedServer = acquiredServer as BridgeServer;
+  server = startedServer;
 
   console.log(
     JSON.stringify(
       {
         status: "listening",
         host: options.host,
-        port: server.port,
+        port: startedServer?.port ?? 0,
       },
       null,
       2,
@@ -5681,7 +5476,7 @@ export async function main(): Promise<void> {
   );
 
   if (launchedWithoutRuntimeArgs) {
-    openBrowser(`http://${options.host}:${server.port}/`);
+    openBrowser(`http://${options.host}:${startedServer?.port ?? 0}/`);
   }
 
   process.on("SIGINT", () => {
@@ -5943,7 +5738,18 @@ export async function main(): Promise<void> {
           runtimeStateRoot: options.runtimeStateRoot,
           scopeId: options.scopeId,
           channel,
+          unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
         }),
+        // Re-read the operator's cap each reservation/record so a Learning Overview
+        // PUT takes effect on the next automatic replay, without a runtime restart.
+        limitsProvider: () =>
+          resolveChannelScopedReplayLedgerLimits({
+            repoRoot: options.repoRoot,
+            runtimeStateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+            channel,
+            unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
+          }),
       });
       const policySet = buildReplayPolicySet();
       const intervalMs = Number(process.env.ROLE_MODEL_AUTO_REPLAY_INTERVAL_MS ?? 30_000);
@@ -6278,7 +6084,26 @@ export async function main(): Promise<void> {
          * Run 99 R33: one bounded evaluation-resume sweep per auto-replay tick, delegated to the
          * implementation that lives with the replay command handler.
          */
-        async resumePendingEvaluations() {
+        async resumePendingEvaluations(
+          input: {
+            readonly signal?: AbortSignal;
+            readonly candidateId?: string;
+            readonly window?: unknown;
+            readonly policySetDigest?: string;
+            readonly limit?: number;
+            readonly onlyGroupIds?: readonly string[];
+            readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void;
+          } = {},
+        ): Promise<{
+          resumed: number;
+          completed: number;
+          failed: number;
+          outsideRetentionWindow: number;
+          renewedFromDrain: number;
+          remaining: number;
+        }> {
+          if (input.signal instanceof AbortSignal && input.signal.aborted)
+            throw new Error("sweep aborted");
           if (!resumeEvaluationsRef.current) {
             return {
               resumed: 0,
@@ -6337,7 +6162,19 @@ export async function main(): Promise<void> {
          *   `knowledge:promote-candidate` when the receipt says `validate` -> `knowledge:record-learning` (pack).
          * It never dispatches a provider call and never mutates a route.
          */
-        async learnFromUnconsumedCandidates(input: Record<string, unknown> = {}) {
+        async learnFromUnconsumedCandidates(
+          input: {
+            readonly signal?: AbortSignal;
+            readonly candidateId?: string;
+            readonly window?: unknown;
+            readonly policySetDigest?: string;
+            readonly limit?: number;
+            readonly onlyGroupIds?: readonly string[];
+            readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void;
+          } = {},
+        ): Promise<{ scanned: number; consumed: number; remaining: number; activated?: number }> {
+          if (input.signal instanceof AbortSignal && input.signal.aborted)
+            throw new Error("sweep aborted");
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { scanned: 0, consumed: 0, remaining: 0 };
           const authority = await (async () => {
@@ -7301,7 +7138,19 @@ export async function main(): Promise<void> {
          * estimate over the comparison's own rows, and the two receipts minted with the durable authority. Bounded to
          * two groups per tick, idempotent, and it never dispatches a provider call or invents a trajectory.
          */
-        async deriveLearnerCandidates(input: Record<string, unknown> = {}) {
+        async deriveLearnerCandidates(
+          input: {
+            readonly signal?: AbortSignal;
+            readonly candidateId?: string;
+            readonly window?: unknown;
+            readonly policySetDigest?: string;
+            readonly limit?: number;
+            readonly onlyGroupIds?: readonly string[];
+            readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void;
+          } = {},
+        ): Promise<{ examined: number; derived: number; pending: number }> {
+          if (input.signal instanceof AbortSignal && input.signal.aborted)
+            throw new Error("sweep aborted");
           /**
            * Run 105 Phase 3.5 follow-up: the ladder materialization must NOT ride the legacy
            * consumer-secret derivation path - a runtime whose durable-evaluation authority secret
@@ -7533,7 +7382,25 @@ export async function main(): Promise<void> {
          * its captures are still in the retention ring. Bounded page, bounded computes, wall-clock budget, and
          * idempotent: a group whose own report already exists is settled and never re-analyzed.
          */
-        async sweepFinalizationSignals() {
+        async sweepFinalizationSignals(
+          input: {
+            readonly signal?: AbortSignal;
+            readonly candidateId?: string;
+            readonly window?: unknown;
+            readonly policySetDigest?: string;
+            readonly limit?: number;
+            readonly onlyGroupIds?: readonly string[];
+            readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void;
+          } = {},
+        ): Promise<{
+          examined: number;
+          analyzed: number;
+          skipped: number;
+          refused: number;
+          deferred: number;
+        }> {
+          if (input.signal instanceof AbortSignal && input.signal.aborted)
+            throw new Error("sweep aborted");
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { examined: 0, analyzed: 0, skipped: 0, refused: 0, deferred: 0 };
           const authority = await (async () => {
@@ -7706,7 +7573,19 @@ export async function main(): Promise<void> {
          * resume entry the existing sweep already knows how to complete (the entry's criteria, capture and
          * branch captures are all re-derived from durable state by that completion).
          */
-        async recoverHandedOffEvaluations() {
+        async recoverHandedOffEvaluations(
+          input: {
+            readonly signal?: AbortSignal;
+            readonly candidateId?: string;
+            readonly window?: unknown;
+            readonly policySetDigest?: string;
+            readonly limit?: number;
+            readonly onlyGroupIds?: readonly string[];
+            readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void;
+          } = {},
+        ): Promise<{ scanned: number; recovered: number; skipped: number }> {
+          if (input.signal instanceof AbortSignal && input.signal.aborted)
+            throw new Error("sweep aborted");
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { scanned: 0, recovered: 0, skipped: 0 };
           // Cadence guard (measured need): the listing used to clone every durable job of the scope on every
@@ -8978,6 +8857,12 @@ export async function main(): Promise<void> {
           return autoReplayExecutionFromCommandReceipt(decodedReplayReceipt);
         },
       });
+      shutdownDrains.push({
+        name: "queue-runtime:replay",
+        run: async () => {
+          await queueRuntime?.stop();
+        },
+      });
       queueRuntime = startReplayQueueRuntime({
         stateRoot: queueStateRoot,
         shippedRoot: options.repoRoot,
@@ -9005,6 +8890,12 @@ export async function main(): Promise<void> {
        * the tick's sweep uses (`resumeEvaluationsRef`), which is what keeps
        * evidence writing in one place.
        */
+      shutdownDrains.push({
+        name: "queue-runtime:evaluation",
+        run: async () => {
+          await evaluationQueueRuntime?.stop();
+        },
+      });
       evaluationQueueRuntime = startEvaluationQueueRuntime({
         stateRoot: queueStateRoot,
         shippedRoot: options.repoRoot,
@@ -9059,6 +8950,12 @@ export async function main(): Promise<void> {
        * comparison) and promotion consumes candidates the worker has not yet
        * validated, one at a time.
        */
+      shutdownDrains.push({
+        name: "queue-runtime:learner-derive",
+        run: async () => {
+          await learnerDeriveQueueRuntime?.stop();
+        },
+      });
       learnerDeriveQueueRuntime = startLearnerQueueRuntime({
         kind: "learner.derive",
         options: {
@@ -9114,6 +9011,12 @@ export async function main(): Promise<void> {
               ).slice(0, 200)}`,
             );
           },
+        },
+      });
+      shutdownDrains.push({
+        name: "queue-runtime:learner-promote",
+        run: async () => {
+          await learnerPromoteQueueRuntime?.stop();
         },
       });
       learnerPromoteQueueRuntime = startLearnerQueueRuntime({
@@ -9264,6 +9167,12 @@ export async function main(): Promise<void> {
             )
           : runTrackBPostObservation(runtime, observation, processingInput);
       };
+    shutdownDrains.push({
+      name: "post-observation-outbox",
+      run: async () => {
+        if (extensionRuntime !== null) await drainPostObservationOutbox(extensionRuntime);
+      },
+    });
     const drainPostObservationOutbox = async (
       runtime: Awaited<ReturnType<typeof createProductionExtensionRuntime>>,
     ) => postObservationOutbox.drain(postObservationHandler(runtime));
@@ -9551,6 +9460,7 @@ export async function main(): Promise<void> {
               runtimeStateRoot: options.runtimeStateRoot,
               scopeId: options.scopeId,
               channel: packagedProfile?.channel ?? "development",
+              unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
             }),
           });
           const replayLedgerStatus = replayLedger.status();
@@ -11317,6 +11227,7 @@ export async function main(): Promise<void> {
                   runtimeStateRoot: options.runtimeStateRoot,
                   scopeId: options.scopeId,
                   channel,
+                  unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
                 }),
               }),
               replayPolicySet: buildReplayPolicySet(),
@@ -11364,6 +11275,7 @@ export async function main(): Promise<void> {
                           runtimeStateRoot: options.runtimeStateRoot,
                           scopeId: options.scopeId,
                           channel,
+                          unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
                         }),
                       }).status().window,
                     }),
@@ -12170,7 +12082,10 @@ export async function main(): Promise<void> {
         .catch(() => {});
       return created;
     };
+    let hasPackagedDistribution = false;
+    let runPackagedBackend!: () => Promise<void>;
     if (trackBManifestText && trackBManifestPath) {
+      hasPackagedDistribution = true;
       const manifest = JSON.parse(trackBManifestText) as {
         readonly schemaVersion: string;
         readonly sidecar: { readonly modulePath: string; readonly artifactSha256: string };
@@ -12212,21 +12127,22 @@ export async function main(): Promise<void> {
         throw new Error("v2 Track B distribution is missing its public runtime adapter");
       }
       const distributionRoot = path.dirname(trackBManifestPath);
-      if (packagedReleaseId) {
-        validateRun88PrivateDistributionIdentity(
-          {
+      runPackagedBackend = async (): Promise<void> => {
+        validatePackagedRun88Identity({
+          packagedReleaseId,
+          identity: {
             generation:
               manifest.schemaVersion === "role-model.track-b-runtime-distribution.v2" ? "N" : "N-1",
             manifestSha256: createHash("sha256").update(trackBManifestText).digest("hex"),
             channel: packagedProfile?.channel ?? "development",
           },
-          {
+          expected: {
             channel: "stage",
             manifestSha256: String(packagedManifestRecord?.private_distribution_sha256 ?? ""),
             publicGeneration: "N",
           },
-        );
-      }
+        });
+      };
       // Run 99 R23: one definition of the Track B state root, shared with the policy resolver.
       const trackBStateRoot = resolveLearningPolicyStateRoot({
         runtimeStateRoot: options.runtimeStateRoot,
@@ -12380,62 +12296,101 @@ export async function main(): Promise<void> {
           qaExtensions,
         }),
       );
-      packagedRuntime = await createPackagedProductionRuntime({
-        stateRoot: trackBStateRoot,
-        sidecar: createOwnedTrackBSidecarSpec({
-          artifactPath: path.resolve(distributionRoot, manifest.sidecar.modulePath),
-          artifactSha256: manifest.sidecar.artifactSha256,
-          stateRoot: trackBStateRoot,
-          channel: runtimeChannel,
-          // Run 98 R17: the operator boundary must validate the same runtime scope
-          // identity the host sends on operator requests.
-          runtimeScope: options.scopeId,
-          // Run 98 R7/R17: the sidecar composes its supervised evaluation and rollout
-          // domains from the same staged manifest the host reads.
-          ...(trackBManifestPath ? { manifestPath: trackBManifestPath } : {}),
-          artifactDigestKeyFile: artifactKeyFiles.artifactDigestKeyFile,
-          artifactEncryptionKeyFile: artifactKeyFiles.artifactEncryptionKeyFile,
-          trustMaterialFile: destinationTrustMaterialFile,
-          aggregateEndpoint,
-          aggregateScope,
-          developmentVerificationLeaseFile,
-          developmentVerificationTrustKeyFile,
-          developmentVerificationDeploymentIds,
-          developmentVerificationRevocationEpoch,
-          ...(aggregateCorrelationReleaseId && aggregateCorrelationCohortId
-            ? {
-                aggregateCorrelationReleaseId,
-                aggregateCorrelationCohortId,
-                aggregateCorrelationOperationId: "aggregate.upload",
-              }
-            : {}),
-          ...(manifest.publicRuntimeAdapter
-            ? {
-                sqliteDatabasePath: path.join(
-                  options.runtimeStateRoot,
-                  options.scopeId,
-                  "memory",
-                  "memory.sqlite",
-                ),
-                publicRuntimeAdapterPath: path.resolve(
-                  distributionRoot,
-                  manifest.publicRuntimeAdapter.modulePath,
-                ),
-                publicRouterRoot: path.resolve(
-                  distributionRoot,
-                  manifest.publicRuntimeAdapter.routerRoot,
-                ),
-                migrationScope: options.scopeId,
-              }
-            : {}),
-        }),
-        createBackend: ({ trackBOperationsEndpoint, trackBOperationsToken }) =>
-          createBackend(
-            trackBOperationsEndpoint,
-            trackBOperationsToken,
-            trackBDistributionRequiresSQLiteMaintenance(manifest),
-          ),
+      /**
+       * S133 (R27 fourth slice): the extension runtime owner is owned by an Effect scope. The owner
+       * is created above (it starts its runtime promise immediately), so this is addFinalizer rather
+       * than acquireRelease - the acquisition cannot be moved without reordering startup, and moving
+       * it is a separate change. Ownership is what R27 counts, and close still runs exactly once
+       * because the owner memoizes its closePromise.
+       */
+      const extensionOwnerScope = Effect.runSync(Scope.make());
+      await Effect.runPromise(
+        Scope.addFinalizer(
+          extensionOwnerScope,
+          Effect.promise(async () => {
+            if (extensionRuntimeOwner !== null) await extensionRuntimeOwner.close();
+          }),
+        ),
+      );
+      hostScope.register("extensionRuntimeOwner", async () => {
+        await Effect.runPromise(Scope.close(extensionOwnerScope, Exit.void));
       });
+      const packagedScope = Effect.runSync(Scope.make());
+      // S322: the onceClose wrapper closes the SCOPE (finalizer owns the packaged runtime).
+      closePackagedScopeRef.current = async () => {
+        await Effect.runPromise(Scope.close(packagedScope, Exit.void));
+      };
+      try {
+        packagedRuntime = await Effect.runPromise(
+          Scope.provide(
+            Effect.acquireRelease(
+              Effect.promise(() =>
+                createPackagedProductionRuntime({
+                  stateRoot: trackBStateRoot,
+                  sidecar: createOwnedTrackBSidecarSpec({
+                    artifactPath: path.resolve(distributionRoot, manifest.sidecar.modulePath),
+                    artifactSha256: manifest.sidecar.artifactSha256,
+                    stateRoot: trackBStateRoot,
+                    channel: runtimeChannel,
+                    // Run 98 R17: the operator boundary must validate the same runtime scope
+                    // identity the host sends on operator requests.
+                    runtimeScope: options.scopeId,
+                    // Run 98 R7/R17: the sidecar composes its supervised evaluation and rollout
+                    // domains from the same staged manifest the host reads.
+                    ...(trackBManifestPath ? { manifestPath: trackBManifestPath } : {}),
+                    artifactDigestKeyFile: artifactKeyFiles.artifactDigestKeyFile,
+                    artifactEncryptionKeyFile: artifactKeyFiles.artifactEncryptionKeyFile,
+                    trustMaterialFile: destinationTrustMaterialFile,
+                    aggregateEndpoint,
+                    aggregateScope,
+                    developmentVerificationLeaseFile,
+                    developmentVerificationTrustKeyFile,
+                    developmentVerificationDeploymentIds,
+                    developmentVerificationRevocationEpoch,
+                    ...(aggregateCorrelationReleaseId && aggregateCorrelationCohortId
+                      ? {
+                          aggregateCorrelationReleaseId,
+                          aggregateCorrelationCohortId,
+                          aggregateCorrelationOperationId: "aggregate.upload",
+                        }
+                      : {}),
+                    ...(manifest.publicRuntimeAdapter
+                      ? {
+                          sqliteDatabasePath: path.join(
+                            options.runtimeStateRoot,
+                            options.scopeId,
+                            "memory",
+                            "memory.sqlite",
+                          ),
+                          publicRuntimeAdapterPath: path.resolve(
+                            distributionRoot,
+                            manifest.publicRuntimeAdapter.modulePath,
+                          ),
+                          publicRouterRoot: path.resolve(
+                            distributionRoot,
+                            manifest.publicRuntimeAdapter.routerRoot,
+                          ),
+                          migrationScope: options.scopeId,
+                        }
+                      : {}),
+                  }),
+                  createBackend: ({ trackBOperationsEndpoint, trackBOperationsToken }) =>
+                    createBackend(
+                      trackBOperationsEndpoint,
+                      trackBOperationsToken,
+                      trackBDistributionRequiresSQLiteMaintenance(manifest),
+                    ),
+                }),
+              ),
+              (value) => Effect.promise(() => value.close()),
+            ),
+            packagedScope,
+          ),
+        );
+      } catch (error) {
+        await Effect.runPromise(Scope.close(packagedScope, Exit.void)).catch(() => undefined);
+        throw error;
+      }
       extensionRuntime = await awaitCliExtensionRuntime(
         extensionRuntimeOwner.promise,
         bootstrapState,
@@ -12457,6 +12412,21 @@ export async function main(): Promise<void> {
              * interval the design allows. The drain work below is unaffected: it already has `runtime` in hand.
              */
             extensionRuntimeRef.current = runtime;
+            // S123: this registration used to sit INSIDE the qaExtensions loop below, so it ran
+            // zero times on a host with no QA extensions and would throw "already registered" on a
+            // host with two. Register once, before the loop.
+            // S124: the owner ALREADY closes this runtime (createCliExtensionRuntimeOwner.close calls
+            // runtime.close, memoized). Registering a second closer that calls runtime.close directly
+            // would close it twice at shutdown - so this registration delegates to the owner's memoized
+            // close. It still exists so the five-kind ownership contract stays complete and a
+            // registration cannot be silently dropped.
+            // S134 (R27 fifth slice): closes the SAME owner scope, so every host resource is now
+            // released by a scope close. Scope.close is idempotent, so the owner's memoized close
+            // still runs exactly once even though both registrations target it.
+            hostScope.register("extensionRuntime", async () => {
+              await Effect.runPromise(Scope.close(extensionOwnerScope, Exit.void));
+            });
+            const qaInvokeTimeoutMs = extensionHostTiming().timeoutMs;
             for (const extension of qaExtensions) {
               const capability = extension.descriptor.capabilities.find(
                 (candidate) => candidate !== "health:probe",
@@ -12466,14 +12436,19 @@ export async function main(): Promise<void> {
                   `QA extension has no business capability: ${extension.descriptor.id}`,
                 );
               const requestId = `run87:packaged-qa:${extension.descriptor.id}`;
-              const receipt = await runtime.invoke(extension.descriptor.id, {
-                requestId,
-                protocolVersion: extension.descriptor.protocolVersion,
-                channel: packagedProfile?.channel ?? "development",
-                scope: options.scopeId,
-                authorizationEpoch: 1,
-                capability,
-                payload: { packagedQa: true },
+              const receipt = await runQaStartupInvoke({
+                extensionId: extension.descriptor.id,
+                invoke: () =>
+                  runtime.invoke(extension.descriptor.id, {
+                    requestId,
+                    protocolVersion: extension.descriptor.protocolVersion,
+                    channel: packagedProfile?.channel ?? "development",
+                    scope: options.scopeId,
+                    authorizationEpoch: 1,
+                    capability,
+                    payload: { packagedQa: true },
+                  }),
+                timeoutMs: qaInvokeTimeoutMs,
               });
               qaStartupReceipts.set(extension.descriptor.id, { ...receipt, requestId });
             }
@@ -12502,17 +12477,49 @@ export async function main(): Promise<void> {
         },
       );
       backend = packagedRuntime.backend;
+      hostScope.register("packagedRuntime", async () => {
+        await closePackagedRuntimeOnce();
+      });
       stopExtensionRuntimeWatchdog = startCliExtensionRuntimeWatchdog({
         getRuntime: () => extensionRuntimeRef.current,
         bootstrapState,
         expectedExtensionIds: TRACK_B_CANONICAL_EXTENSION_IDS,
         onFailure: failExtensionRuntime,
       });
-    } else {
-      backend = await createBackend();
-      bootstrapState.status = "ready";
-      delete bootstrapState.message;
     }
+    const runPlainBackend = async (): Promise<void> => {
+      /**
+       * S129 (R27 second rewiring slice): the non-packaged backend is owned by an Effect scope, the
+       * same shape the server took in S128. The shutdown chain is unchanged - releaseHostResources
+       * calls this closer, the closer closes the scope, the finalizer runs backend.shutdown() once.
+       */
+      const backendScope = Effect.runSync(Scope.make());
+      try {
+        backend = await Effect.runPromise(
+          Scope.provide(
+            Effect.acquireRelease(
+              Effect.promise(() => createBackend()),
+              (value) => Effect.promise(() => value.shutdown()),
+            ),
+            backendScope,
+          ),
+        );
+      } catch (error) {
+        await Effect.runPromise(Scope.close(backendScope, Exit.void)).catch(() => undefined);
+        throw error;
+      }
+      hostScope.register("backend", async () => {
+        await Effect.runPromise(Scope.close(backendScope, Exit.void));
+      });
+    };
+    await runCliBackendBranch({
+      bootstrapState,
+      hasPackagedDistribution,
+      packagedReleaseId,
+      readinessOwner,
+      runPackaged: runPackagedBackend,
+      runPlain: runPlainBackend,
+    });
   } catch (error) {
     await failExtensionRuntime(error);
     console.error("runtime backend initialization failed", error);

@@ -1,0 +1,127 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node
+
+(node:63108) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:68108) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:76328) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:60636) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s273-cleanup.test.ts (11 tests) 161ms
+stderr | test/s268-mixed-owner.test.ts > S268 mixed async/sync connection ownership > refuses an external querySync (including a writing RETURNING query) before it touches the transaction
+[s273 cleanup] commit failed: TypeError: cleanup is not a function
+    at attemptCleanup (D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\sql-sqlite-node\test\support\s273-cleanup.ts:58:11)
+    at finishSuspended (D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\sql-sqlite-node\test\support\s273-cleanup.ts:79:9)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\sql-sqlite-node\test\s268-mixed-owner.test.ts:96:7
+    at file:///E:/role-model-run115/public-virtual-store/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+
+stderr | test/s268-mixed-owner.test.ts > S268 mixed async/sync connection ownership > refuses an external execSync write before it touches the transaction
+[s273 cleanup] commit failed: TypeError: cleanup is not a function
+    at attemptCleanup (D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\sql-sqlite-node\test\support\s273-cleanup.ts:58:11)
+    at finishSuspended (D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\sql-sqlite-node\test\support\s273-cleanup.ts:79:9)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\sql-sqlite-node\test\s268-mixed-owner.test.ts:113:7
+    at file:///E:/role-model-run115/public-virtual-store/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+
+stderr | test/s268-mixed-owner.test.ts > S268 mixed async/sync connection ownership > refuses an external transactionSync before it begins a nested transaction
+[s273 cleanup] commit failed: TypeError: cleanup is not a function
+    at attemptCleanup (D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\sql-sqlite-node\test\support\s273-cleanup.ts:58:11)
+    at finishSuspended (D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\sql-sqlite-node\test\support\s273-cleanup.ts:79:9)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\sql-sqlite-node\test\s268-mixed-owner.test.ts:126:7
+    at file:///E:/role-model-run115/public-virtual-store/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+
+stderr | test/s268-mixed-owner.test.ts > S268 mixed async/sync connection ownership > refuses an external closeSync without closing the connection the transaction owns
+[s273 cleanup] commit failed: TypeError: cleanup is not a function
+    at attemptCleanup (D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\sql-sqlite-node\test\support\s273-cleanup.ts:58:11)
+    at finishSuspended (D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\sql-sqlite-node\test\support\s273-cleanup.ts:79:9)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\sql-sqlite-node\test\s268-mixed-owner.test.ts:142:7
+    at file:///E:/role-model-run115/public-virtual-store/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+
+ ✓ test/sqlite-service.test.ts (11 tests) 611ms
+ ❯ test/s268-mixed-owner.test.ts (7 tests | 4 failed) 729ms
+   × S268 mixed async/sync connection ownership > refuses an external querySync (including a writing RETURNING query) before it touches the transaction 118ms
+     → cleanup is not a function
+   × S268 mixed async/sync connection ownership > refuses an external execSync write before it touches the transaction 58ms
+     → cleanup is not a function
+   × S268 mixed async/sync connection ownership > refuses an external transactionSync before it begins a nested transaction 54ms
+     → cleanup is not a function
+   × S268 mixed async/sync connection ownership > refuses an external closeSync without closing the connection the transaction owns 47ms
+     → cleanup is not a function
+   ✓ S268 mixed async/sync connection ownership > commits after external refusals and every facade operation plus close still works 110ms
+   ✓ S268 mixed async/sync connection ownership > refuses sync access during a suspended transaction and, on interruption, rolls back and clears ownership 125ms
+   ✓ S268 mixed async/sync connection ownership > clears ownership after a failed transaction and preserves the primary error identity 207ms
+ ✓ test/s18a-sql-truth.test.ts (10 tests) 3967ms
+   ✓ S18a blocking measurement > blocks the event loop for a whole synchronous statement whose work persists, relative to the idle timer baseline  2220ms
+   ✓ S18a blocking measurement > blocks through a whole synchronous transaction whose rows commit, relative to the idle timer baseline  376ms
+   ✓ S18a sqlite-memory PRAGMAs split by persistence scope > file-level initialization settings (WAL, auto_vacuum) survive on a new connection  608ms
+   ✓ S18a sqlite-memory PRAGMAs split by persistence scope > connection-level settings are read from the initializer's OWN connection and do not transfer to a fresh one  314ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s268-mixed-owner.test.ts > S268 mixed async/sync connection ownership > refuses an external querySync (including a writing RETURNING query) before it touches the transaction
+TypeError: cleanup is not a function
+ ❯ attemptCleanup test/support/s273-cleanup.ts:58:11
+     56| ): Promise<void> => {
+     57|   try {
+     58|     await cleanup();
+       |           ^
+     59|   } catch (error) {
+     60|     failures.push({ step, error });
+ ❯ finishSuspended test/support/s273-cleanup.ts:79:9
+ ❯ test/s268-mixed-owner.test.ts:96:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/s268-mixed-owner.test.ts > S268 mixed async/sync connection ownership > refuses an external execSync write before it touches the transaction
+TypeError: cleanup is not a function
+ ❯ attemptCleanup test/support/s273-cleanup.ts:58:11
+     56| ): Promise<void> => {
+     57|   try {
+     58|     await cleanup();
+       |           ^
+     59|   } catch (error) {
+     60|     failures.push({ step, error });
+ ❯ finishSuspended test/support/s273-cleanup.ts:79:9
+ ❯ test/s268-mixed-owner.test.ts:113:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/s268-mixed-owner.test.ts > S268 mixed async/sync connection ownership > refuses an external transactionSync before it begins a nested transaction
+TypeError: cleanup is not a function
+ ❯ attemptCleanup test/support/s273-cleanup.ts:58:11
+     56| ): Promise<void> => {
+     57|   try {
+     58|     await cleanup();
+       |           ^
+     59|   } catch (error) {
+     60|     failures.push({ step, error });
+ ❯ finishSuspended test/support/s273-cleanup.ts:79:9
+ ❯ test/s268-mixed-owner.test.ts:126:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/s268-mixed-owner.test.ts > S268 mixed async/sync connection ownership > refuses an external closeSync without closing the connection the transaction owns
+TypeError: cleanup is not a function
+ ❯ attemptCleanup test/support/s273-cleanup.ts:58:11
+     56| ): Promise<void> => {
+     57|   try {
+     58|     await cleanup();
+       |           ^
+     59|   } catch (error) {
+     60|     failures.push({ step, error });
+ ❯ finishSuspended test/support/s273-cleanup.ts:79:9
+ ❯ test/s268-mixed-owner.test.ts:142:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  4 failed | 35 passed (39)
+   Start at  15:47:59
+   Duration  17.16s (transform 7.64s, setup 0ms, collect 36.31s, tests 5.47s, environment 4ms, prepare 3.66s)
+

@@ -1,0 +1,28 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+ ✓ test/s12c-foldkit-input.scene.test.ts (3 tests) 35ms
+ ✓ test/s12c-foldkit-textarea.scene.test.ts (3 tests) 35ms
+ ✓ test/s12c-foldkit-checkbox.scene.test.ts (5 tests) 47ms
+ ❯ test/s12b-rm3-button.scene.test.ts (7 tests | 1 failed) 80ms
+   ✓ RM3 button Foldkit primitive > emits its message on click and the model observes it 38ms
+   ✓ RM3 button Foldkit primitive > does not emit when disabled and is not clickable 4ms
+   × RM3 button Foldkit primitive > keeps the RM3 variant token classes and fixed heights 27ms
+     → Expected element matching button to have class "inline-flex h-[36px] min-h-[36px] items-center justify-center rounded-[var(--rm-radius-field)] border border-primary bg-primary px-3.5 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] !text-primary-foreground transition hover:border-[var(--rm-accent-focus)] hover:bg-[var(--rm-accent-focus)] active:scale-95 disabled:opacity-60" but it does not.
+   ✓ RM3 button Foldkit primitive > renders the native disabled attribute, not only aria-disabled 1ms
+   ✓ RM3 button Foldkit primitive > keeps the primary block variant full width 2ms
+   ✓ RM3 button Foldkit primitive > uses aria-label as the accessible name for an icon-only button 2ms
+   ✓ RM3 button Foldkit primitive > refuses an icon-only button without an accessible name 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s12b-rm3-button.scene.test.ts > RM3 button Foldkit primitive > keeps the RM3 variant token classes and fixed heights
+Error: Expected element matching button to have class "inline-flex h-[36px] min-h-[36px] items-center justify-center rounded-[var(--rm-radius-field)] border border-primary bg-primary px-3.5 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] !text-primary-foreground transition hover:border-[var(--rm-accent-focus)] hover:bg-[var(--rm-accent-focus)] active:scale-95 disabled:opacity-60" but it does not.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 17 passed (18)
+   Start at  00:00:14
+   Duration  6.65s (transform 3.06s, setup 0ms, collect 16.54s, tests 197ms, environment 4.91s, prepare 1.80s)
+

@@ -1,0 +1,60 @@
+{
+  "slice": "s26f-client-host-tie",
+  "requirement": "Client/host path tie, gap refetch, default bearer, aria-busy, non-vacuous endpoint correlation",
+  "sharedPath": {
+    "module": "src/runtime-endpoints.ts",
+    "constants": "OBSERVABILITY_SNAPSHOT_PATH + READBACK_PATHS",
+    "consumers": "observability.ts and readback.ts import them; the test correlates all five with host index.ts/local-diagnostics-read.ts literals and with inventory hostEndpoints.",
+    "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26f-red-path.log"
+  },
+  "gapRefetch": {
+    "behaviour": "Revision gap (1 -> 3) now dispatches readObservability for the Observability route (and readReadback for readback routes), sets stale while loading, and clears stale on a successful result. No later event is needed.",
+    "proof": "S26f test mounts observability, emits 1 then 3, and expects fetch count 1 -> 2 -> 3 with one active source.",
+    "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26f-red-gap.log"
+  },
+  "defaultToken": {
+    "options": [
+      "observabilityBaseUrl",
+      "observabilityFetchImpl",
+      "observabilityToken",
+      "readbackBaseUrl",
+      "readbackFetchImpl",
+      "readbackToken"
+    ],
+    "behaviour": "createShellApp passes baseUrl/token/fetch into the default clients; a token-less config still sends none.",
+    "proof": "S26f mounts without readObservability injection, provisions observabilityToken, captures fetch headers, and sees Authorization: Bearer s26f-default-token.",
+    "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26f-red-bearer.log"
+  },
+  "statusSemantics": {
+    "messages": "401 -> 'Observability read failed: HTTP 401 (not authorized)'; 403 -> '... 403 (forbidden)'; other status retains reason.",
+    "ariaBusy": "Loading status paragraph carries aria-busy=true; asserted by S26f.",
+    "red401": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26f-red-401.log",
+    "redBusy": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26f-red-busy.log"
+  },
+  "nonVacuousCorrelation": {
+    "rule": "Every read route must declare at least one hostEndpoint; all declared endpoints on non-required rows must exist in the parsed host table.",
+    "filledReadRoutes": 20,
+    "proof": "S26a drift test fails when dashboard endpoints are removed; all read routes now declare present endpoints.",
+    "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26f-red-nonvacuous.log"
+  },
+  "counts": {
+    "tests": 88,
+    "passed": 88,
+    "failed": 0,
+    "typecheck": "tsc: exit 0",
+    "biome": "exit 0",
+    "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26f-green.log"
+  },
+  "files": [
+    "src/runtime-endpoints.ts",
+    "src/observability.ts",
+    "src/readback.ts",
+    "src/app.ts",
+    "src/update.ts",
+    "src/view.ts",
+    "src/init.ts",
+    "test/s26f-client-host-tie.test.ts",
+    "test/s26a-route-inventory.test.ts",
+    "evidence/other/s26a-route-inventory.json"
+  ]
+}

@@ -1,0 +1,195 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s643-benchmark-scores-identity.test.ts (3 tests | 2 failed) 795ms
+   × S643 benchmark scores identity and run reconciliation > renders one distinct row per executed subject, including both same-model efforts and v4-pro 576ms
+     → expected [] to have a length of 3 but got +0
+   × S643 benchmark scores identity and run reconciliation > renders the summary runId and completion time and shows both ids on a panel/summary mismatch 183ms
+     → expected 'Last run: 2023-11-14 · Suite: quick ·…' to contain 'run-summary'
+   ✓ S643 benchmark scores identity and run reconciliation > refreshes the benchmark summary when a run completes 30ms
+ ❯ test/s644-benchmark-parity.test.ts (5 tests | 5 failed) 1126ms
+   × S644 benchmark taxonomy and run history parity > clears the other dimension filters when one is selected 84ms
+     → expected { role: 'coder' } to deeply equal { capability: '', role: 'coder', …(1) }
+   × S644 benchmark taxonomy and run history parity > renders only the active dimension as an endpoint-keyed list 544ms
+     → expected undefined to be 'Role: coder' // Object.is equality
+   × S644 benchmark taxonomy and run history parity > shows the production empty-state wording for no filter, a filter with no scores and no taxonomy data 157ms
+     → expected undefined to be 'Select a taxonomy dimension above to …' // Object.is equality
+   × S644 benchmark taxonomy and run history parity > renders the production run-history fields with the outcome display 158ms
+     → expected 'run-9quickpartial43/422023-11-14suite…' to contain 'quick • 4 cases • 2 models'
+   × S644 benchmark taxonomy and run history parity > uses the production empty-state sentence when no benchmark scores exist 176ms
+     → expected 'Skip to contentrole-modelOverviewStud…' to contain 'No benchmark scores are in routing pr…'
+ ❯ test/s622-benchmark-parity.test.ts (12 tests | 1 failed) 1957ms
+   ✓ S622 benchmark parity > renders the mode options with suite-derived counts and the judge select with endpoint ids  539ms
+   ✓ S622 benchmark parity > renders the Run label with the selected model, case counts and the clear-all control 268ms
+   ✓ S622 benchmark parity > guards Clear all benchmark data behind an explicit confirmation  308ms
+   ✓ S622 benchmark parity > applies the reference runnable-candidate filter to endpoints and the judge select 106ms
+   × S622 benchmark parity > renders the scores, taxonomy and run-history tables from the readbacks 157ms
+     → expected 'Skip to contentrole-modelOverviewStud…' to contain 'Select a taxonomy dimension above to …'
+   ✓ S622 benchmark parity > stores the mode/judge and dispatches the exact RunBenchmark/ClearBenchmark contract 20ms
+   ✓ S622 benchmark parity > enables Run with 2 subjects and an external judge, warning only on overlap 224ms
+   ✓ S622 benchmark parity > disables Run for empty judge, fewer than two subjects, and a running benchmark 261ms
+   ✓ S622 benchmark parity > dispatches the exact external-judge body with 2 subjects 6ms
+   ✓ S622 benchmark parity > sends the exact host contracts for the run and clear commands 12ms
+   ✓ S622 benchmark parity > plans the suite, summary and runs readback queries on route entry 37ms
+   ✓ S622 benchmark parity > parses the three benchmark readbacks with their host paths 7ms
+ ✓ test/s563-learningmodelsstudiolocal-layout.test.ts (21 tests) 2074ms
+   ✓ S563 learning/models/studio/local reference layout > learning overview  478ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s622-benchmark-parity.test.ts > S622 benchmark parity > renders the scores, taxonomy and run-history tables from the readbacks
+AssertionError: expected 'Skip to contentrole-modelOverviewStud…' to contain 'Select a taxonomy dimension above to …'
+
+Expected: "Select a taxonomy dimension above to see per-model benchmark scores."
+Received: "Skip to contentrole-modelOverviewStudioLocalRemoteModelsRouterObserveConnectSystemLearningModelsRequestsCacheno live samplesRouter endpointlocalhost:3000/v1—OverviewStudioLocalRemoteModelsRouterObserveConnectSystemLearningCapability benchmarkModelsRolesBenchmarkCapability benchmarkRun capability benchmarkSelect mode and judge, then grade runnable endpoints.Benchmark modeQuick (3 hard cases)Full (all eligible cases)Judge endpointmodel-a (remote)model-b (local)Judge endpoint is also a benchmark subject. Expect slower grading and higher judge failure risk — prefer a dedicated judge when available.Run quick benchmark (2 of 2 selected, 3 cases)2 of 2 selectedClear all benchmark dataModelPathScopeStatusActionsmodel-aep-aremoteunknownClearmodel-bep-blocalunknownClearBenchmark scoresScores are normalized 0–1 fractions shown as percentages.Last run: 2023-11-14 · Suite: quick · Judge: model-bModelOverallProfileEasyMediumHardp50p95ScopeModel A66%—100% · 250% · 10% · 0——remoteMODELSCOPESTATUSModel AremotegradedTaxonomy dimensionsPer-model scores by taxonomy dimension.RoleAll rolesresearcherTaskAll tasksweb_researchCapabilityAll capabilitiesDIMENSIONVALUESCOREMODELRoleresearcher75%Model ATaskweb_research50%Model ARun historyCompleted capability benchmark runs. Open a run to see per-case results.RUNMODEOUTCOMECASESPASSEDMODELSCOMPLETEDSUITEDETAILrun-9quick—4—22023-11-14suite-1View details"
+
+ ❯ test/s622-benchmark-parity.test.ts:188:18
+    186|     expect(text).toContain("model-b");
+    187|     // No dimension filter is active, so production shows the selectio…
+    188|     expect(text).toContain("Select a taxonomy dimension above to see p…
+       |                  ^
+    189|     for (const history of ["run-9", "quick", "4", "2", "2023-11-14", "…
+    190|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  test/s643-benchmark-scores-identity.test.ts > S643 benchmark scores identity and run reconciliation > renders one distinct row per executed subject, including both same-model efforts and v4-pro
+AssertionError: expected [] to have a length of 3 but got +0
+
+- Expected
++ Received
+
+- 3
++ 0
+
+ ❯ test/s643-benchmark-scores-identity.test.ts:68:18
+     66|     expect(table).not.toBeUndefined();
+     67|     const rows = [...container.querySelectorAll("[data-benchmark-score…
+     68|     expect(rows).toHaveLength(3);
+       |                  ^
+     69|     expect(rows.map((row) => row.getAttribute("data-benchmark-score-ro…
+     70|     const low = rows.find((row) => row.getAttribute("data-benchmark-sc…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  test/s643-benchmark-scores-identity.test.ts > S643 benchmark scores identity and run reconciliation > renders the summary runId and completion time and shows both ids on a panel/summary mismatch
+AssertionError: expected 'Last run: 2023-11-14 · Suite: quick ·…' to contain 'run-summary'
+
+Expected: "run-summary"
+Received: "Last run: 2023-11-14 · Suite: quick · Judge: deepseek/judge"
+
+ ❯ test/s643-benchmark-scores-identity.test.ts:86:21
+     84|     });
+     85|     const lastRun = container.querySelector("[data-benchmark-last-run]…
+     86|     expect(lastRun).toContain("run-summary");
+       |                     ^
+     87|     expect(container.textContent).toContain("2023-11-14 22:13");
+     88|     const mismatch = container.querySelector("[data-benchmark-run-mism…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  test/s644-benchmark-parity.test.ts > S644 benchmark taxonomy and run history parity > clears the other dimension filters when one is selected
+AssertionError: expected { role: 'coder' } to deeply equal { capability: '', role: 'coder', …(1) }
+
+- Expected
++ Received
+
+  {
+-   "capability": "",
+    "role": "coder",
+-   "task": "",
+  }
+
+ ❯ test/s644-benchmark-parity.test.ts:58:61
+     56|     const base = shellModel({ route: { _tag: "Benchmark" } });
+     57|     const role = shellUpdate(base, Message.BenchmarkTaxonomyFilterChan…
+     58|     expect(role.model.modelsView?.benchmarkTaxonomyFilters).toEqual({ …
+       |                                                             ^
+     59|     const task = shellUpdate(role.model, Message.BenchmarkTaxonomyFilt…
+     60|     expect(task.model.modelsView?.benchmarkTaxonomyFilters).toEqual({ …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  test/s644-benchmark-parity.test.ts > S644 benchmark taxonomy and run history parity > renders only the active dimension as an endpoint-keyed list
+AssertionError: expected undefined to be 'Role: coder' // Object.is equality
+
+- Expected: 
+"Role: coder"
+
++ Received: 
+undefined
+
+ ❯ test/s644-benchmark-parity.test.ts:65:86
+     63|   it("renders only the active dimension as an endpoint-keyed list", as…
+     64|     const container = await renderWith({ benchmarkTaxonomyFilters: { c…
+     65|     expect(container.querySelector("[data-benchmark-taxonomy-active]")…
+       |                                                                                      ^
+     66|     const rows = [...container.querySelectorAll("[data-benchmark-taxon…
+     67|     expect(rows.map((row) => row.getAttribute("data-benchmark-taxonomy…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  test/s644-benchmark-parity.test.ts > S644 benchmark taxonomy and run history parity > shows the production empty-state wording for no filter, a filter with no scores and no taxonomy data
+AssertionError: expected undefined to be 'Select a taxonomy dimension above to …' // Object.is equality
+
+- Expected: 
+"Select a taxonomy dimension above to see per-model benchmark scores."
+
++ Received: 
+undefined
+
+ ❯ test/s644-benchmark-parity.test.ts:75:93
+     73|   it("shows the production empty-state wording for no filter, a filter…
+     74|     const noFilter = await renderWith();
+     75|     expect(noFilter.querySelector("[data-benchmark-taxonomy-empty='sel…
+       |                                                                                             ^
+     76|     const noScores = await renderWith({ benchmarkTaxonomyFilters: { ca…
+     77|     expect(noScores.querySelector("[data-benchmark-taxonomy-empty='no-…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  test/s644-benchmark-parity.test.ts > S644 benchmark taxonomy and run history parity > renders the production run-history fields with the outcome display
+AssertionError: expected 'run-9quickpartial43/422023-11-14suite…' to contain 'quick • 4 cases • 2 models'
+
+Expected: "quick • 4 cases • 2 models"
+Received: "run-9quickpartial43/422023-11-14suite-1View details"
+
+ ❯ test/s644-benchmark-parity.test.ts:88:18
+     86|     const text = row?.textContent ?? "";
+     87|     expect(text).toContain("run-9");
+     88|     expect(text).toContain("quick • 4 cases • 2 models");
+       |                  ^
+     89|     expect(text).toContain("2023-11-14 22:13 • suite-1");
+     90|     expect(text).toContain("Outcome: partial");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  test/s644-benchmark-parity.test.ts > S644 benchmark taxonomy and run history parity > uses the production empty-state sentence when no benchmark scores exist
+AssertionError: expected 'Skip to contentrole-modelOverviewStud…' to contain 'No benchmark scores are in routing pr…'
+
+Expected: "No benchmark scores are in routing profiles yet. Run the benchmark to grade each configured model and update observed routing profiles."
+Received: "Skip to contentrole-modelOverviewStudioLocalRemoteModelsRouterObserveConnectSystemLearningModelsRequestsCacheno live samplesRouter endpointlocalhost:3000/v1—OverviewStudioLocalRemoteModelsRouterObserveConnectSystemLearningCapability benchmarkModelsRolesBenchmarkCapability benchmarkRun capability benchmarkSelect mode and judge, then grade runnable endpoints.Benchmark modeQuick (0 hard cases)Full (all eligible cases)Judge endpointModel A (remote)Model B (remote)Judge endpoint is also a benchmark subject. Expect slower grading and higher judge failure risk — prefer a dedicated judge when available.Run quick benchmark (2 of 2 selected, 0 cases)2 of 2 selectedClear all benchmark dataModelPathScopeStatusActionsModel Aep-aremoteunknownClearModel Bep-bremoteunknownClearBenchmark scoresScores are normalized 0–1 fractions shown as percentages.Last run: 2023-11-14 · Suite: quick · Judge: model-jModelOverallProfileEasyMediumHardp50p95ScopeNo benchmark scores are in routing profiles yet.MODELSCOPESTATUSNo benchmark scores are in routing profiles yet.Taxonomy dimensionsPer-model scores by taxonomy dimension.RoleAll rolesTaskAll tasksCapabilityAll capabilitiesDIMENSIONVALUESCOREMODELNo taxonomy dimension data is available yet.Run historyCompleted capability benchmark runs. Open a run to see per-case results.RUNMODEOUTCOMECASESPASSEDMODELSCOMPLETEDSUITEDETAILrun-9quickpartial43/422023-11-14suite-1View details"
+
+ ❯ test/s644-benchmark-parity.test.ts:96:35
+     94|   it("uses the production empty-state sentence when no benchmark score…
+     95|     const container = await renderWith({}, summary([]));
+     96|     expect(container.textContent).toContain("No benchmark scores are i…
+       |                                   ^
+     97|   });
+     98| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+
+ Test Files  3 failed | 1 passed (4)
+      Tests  8 failed | 33 passed (41)
+   Start at  05:29:20
+   Duration  26.09s (transform 11.71s, setup 0ms, collect 73.37s, tests 5.95s, environment 15.74s, prepare 2.43s)
+
+
+
+# Provenance footer
+# Command: corepack pnpm exec vitest run test/s644-benchmark-parity.test.ts test/s643-benchmark-scores-identity.test.ts test/s622-benchmark-parity.test.ts test/s563-learningmodelsstudiolocal-layout.test.ts
+# State: HEAD 92d17f74 (or current HEAD) product files features/models/routes.ts and update.ts restored to their
+# pre-parity versions; the new/updated tests kept. 8 failed: no per-subject scores rows/actions, no summary runId or
+# mismatch, taxonomy filters not exclusive and no single-dimension list/empty prompts, history lacked production fields.

@@ -1,0 +1,8 @@
+# S343 — R23 Backend storage factory split Lead acceptance
+
+- Reviewer: s9 (deepseek-flash) FINAL PASS after one HOLD round — evidence/other/s342-backend-storage-review.md sha256 `075D98CD6D51237531613BEB7D21062EE54B3B5C50053DC6E97C086AAA70C046`.
+- Committed bytes verified by Lead: composition-dag.ts `D4DAD9C08A553AC9D2F88755E3297FF22C1CB7D6FEA4FE7DD620C8E4558484BC` (75021 B), index.ts `5672D0A2597B2001B3B2F17614DCF953F68A544A4D4A9039B45C5B5C463C639D` (1369947 B), cli.ts `086A812886352CBC50E84B23FE71D2F7BAF0BC206605B25C32A3926A783A03B0` (594641 B), s341 test `8F89501BED8BA219CB72B1C2FCB9163D7165C06C9F06C086721878E019CD02FE` (6020 B), s334 test `1E3D8548016F22C1571C55BF719371442F5C4D4EB5A1336A124AE1615F182A36` (6128 B).
+- Lead verification: 19/19 (3 files), tsc 0, test lint clean, DAG 161 classified.
+- What landed: composeBackendStorage (per-backend: initialization, fixture-conditional graphStore, observationStorage, retention-cleanup factory) with one idempotent close joining the shutdown phase; all three graph persist keys + read keyed graph:<scope>:<requestId>; index has zero makeSync constructions; BackendOwner exposes the storage via a generic-typed ref with an identity test; the observed-profiles family is bound to the per-backend store (the review caught a singleton leak — no composeObservationStorage() reads remain outside the construction).
+- R23 is now FULLY dispositioned: storage lifecycle, graph family, persist/read families, bounded async hydration with sync facade — the graph-store residual from S337 is closed.
+- Incident note preserved: a disclosed index.ts truncation-recovery (restore from edf7ea54 + consolidated re-apply) was independently verified by s9 (diff = only intended S341 edits, 25/23).

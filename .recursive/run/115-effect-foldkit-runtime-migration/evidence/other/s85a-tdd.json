@@ -1,0 +1,40 @@
+{
+  "slice": "s85a-repackage",
+  "outputRoot": "E:/rm-tmp/s85a/release",
+  "exe": "E:/rm-tmp/s85a/release/win32-x64/role-model-dev.exe",
+  "version": "0.0.20-66-g91f089ec",
+  "commit": "91f089ecde68f7486322208ed2a98f0ff6f858c2",
+  "tree": "b4aa67756fd0989eaa0fa26b24fe22b1c67ae0b9",
+  "exeSha256": "9faa2e1c8e7bd2bc176270de15e8a1bd580d86067914b00eb600898b77975827",
+  "clientBundle": {
+    "path": "dist/client/assets/main.js",
+    "sha256": "d7cd6ded7ec2116b1439e9dff8db25022fcdfe217f49b9130f96e55ead7fd837",
+    "bytes": 2660667,
+    "manifestTreeSha256": "392d6ec6402d29f5d1856ac4e4f9cea790a6f818da6e9f137ff738a8fc267301"
+  },
+  "privateDistribution": "D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/dist/run00-dev",
+  "validate": "exit 0",
+  "port": 5901,
+  "proofs": {
+    "foreign": {
+      "status": 403,
+      "acao": null,
+      "stateBefore": "openai.personal.primary.us-east-1.fast",
+      "stateAfter": "openai.personal.primary.us-east-1.fast"
+    },
+    "sameOrigin": {
+      "status": 200,
+      "stateAfter": "anthropic.team.shared.us-east-1.default",
+      "acao": null
+    },
+    "noOrigin": {
+      "status": 200,
+      "stateAfterRestored": "openai.personal.primary.us-east-1.fast",
+      "acao": null
+    },
+    "get": {
+      "status": 200,
+      "acao": "*"
+    }
+  }
+}

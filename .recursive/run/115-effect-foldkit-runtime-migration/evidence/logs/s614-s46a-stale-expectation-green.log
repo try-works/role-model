@@ -1,0 +1,3919 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s254-studio-request-shape.test.ts (8 tests) 25ms
+stderr | test/s46a-studio.test.ts > S46a Studio > renders each workspace's reference controls and run action
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow view: 34.9ms (budget: 16ms), triggered by init. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'View',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'chat',
+      token: 0
+    },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 34.86189999999988,
+  thresholdMs: 16
+}
+[foldkit] Slow patch: 116.6ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'chat',
+      token: 0
+    },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 116.60339999999997,
+  thresholdMs: 8
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders each workspace's reference controls and run action
+[foldkit] Slow update: 12.9ms (budget: 4ms), triggered by ChangedUrl. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Update',
+  previousModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'chat',
+      token: 0
+    },
+    theme: 'dark'
+  },
+  nextModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 1,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'chat',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _tag: 'ChangedUrl',
+    url: {
+      protocol: 'http:',
+      host: 'localhost',
+      port: [Object],
+      pathname: '/studio',
+      search: [Object],
+      hash: [Object]
+    }
+  },
+  durationMs: 12.873199999998178,
+  thresholdMs: 4
+} {
+  _tag: 'ChangedUrl',
+  url: {
+    protocol: 'http:',
+    host: 'localhost',
+    port: { _id: 'Option', _tag: 'Some', value: '3000' },
+    pathname: '/studio',
+    search: { _id: 'Option', _tag: 'Some', value: 'tab=chat' },
+    hash: { _id: 'Option', _tag: 'None' }
+  }
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders each workspace's reference controls and run action
+[foldkit] Slow update: 6.2ms (budget: 4ms), triggered by ChangedUrl. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Update',
+  previousModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 1,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'chat',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  nextModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 2,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'images',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _tag: 'ChangedUrl',
+    url: {
+      protocol: 'http:',
+      host: 'localhost',
+      port: [Object],
+      pathname: '/studio',
+      search: [Object],
+      hash: [Object]
+    }
+  },
+  durationMs: 6.2105999999985215,
+  thresholdMs: 4
+} {
+  _tag: 'ChangedUrl',
+  url: {
+    protocol: 'http:',
+    host: 'localhost',
+    port: { _id: 'Option', _tag: 'Some', value: '3000' },
+    pathname: '/studio',
+    search: { _id: 'Option', _tag: 'Some', value: 'tab=images' },
+    hash: { _id: 'Option', _tag: 'None' }
+  }
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders each workspace's reference controls and run action
+[foldkit] Slow patch: 33.8ms (budget: 8ms), triggered by ChangedUrl. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 2,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'images',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: { _tag: 'ChangedUrl', url: [Object] }
+  },
+  durationMs: 33.8012000000017,
+  thresholdMs: 8
+} {
+  _tag: 'ChangedUrl',
+  url: {
+    protocol: 'http:',
+    host: 'localhost',
+    port: { _id: 'Option', _tag: 'Some', value: '3000' },
+    pathname: '/studio',
+    search: { _id: 'Option', _tag: 'Some', value: 'tab=images' },
+    hash: { _id: 'Option', _tag: 'None' }
+  }
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders each workspace's reference controls and run action
+[foldkit] Slow update: 5.5ms (budget: 4ms), triggered by ChangedUrl. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Update',
+  previousModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 2,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'images',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  nextModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 3,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'audio',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _tag: 'ChangedUrl',
+    url: {
+      protocol: 'http:',
+      host: 'localhost',
+      port: [Object],
+      pathname: '/studio',
+      search: [Object],
+      hash: [Object]
+    }
+  },
+  durationMs: 5.485899999999674,
+  thresholdMs: 4
+} {
+  _tag: 'ChangedUrl',
+  url: {
+    protocol: 'http:',
+    host: 'localhost',
+    port: { _id: 'Option', _tag: 'Some', value: '3000' },
+    pathname: '/studio',
+    search: { _id: 'Option', _tag: 'Some', value: 'tab=audio' },
+    hash: { _id: 'Option', _tag: 'None' }
+  }
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders each workspace's reference controls and run action
+[foldkit] Slow patch: 13.6ms (budget: 8ms), triggered by ChangedUrl. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 3,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'audio',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: { _tag: 'ChangedUrl', url: [Object] }
+  },
+  durationMs: 13.604100000000471,
+  thresholdMs: 8
+} {
+  _tag: 'ChangedUrl',
+  url: {
+    protocol: 'http:',
+    host: 'localhost',
+    port: { _id: 'Option', _tag: 'Some', value: '3000' },
+    pathname: '/studio',
+    search: { _id: 'Option', _tag: 'Some', value: 'tab=audio' },
+    hash: { _id: 'Option', _tag: 'None' }
+  }
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders each workspace's reference controls and run action
+[foldkit] Slow update: 5.5ms (budget: 4ms), triggered by ChangedUrl. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Update',
+  previousModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 3,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'audio',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  nextModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 4,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'rerank',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _tag: 'ChangedUrl',
+    url: {
+      protocol: 'http:',
+      host: 'localhost',
+      port: [Object],
+      pathname: '/studio',
+      search: [Object],
+      hash: [Object]
+    }
+  },
+  durationMs: 5.496200000001409,
+  thresholdMs: 4
+} {
+  _tag: 'ChangedUrl',
+  url: {
+    protocol: 'http:',
+    host: 'localhost',
+    port: { _id: 'Option', _tag: 'Some', value: '3000' },
+    pathname: '/studio',
+    search: { _id: 'Option', _tag: 'Some', value: 'tab=rerank' },
+    hash: { _id: 'Option', _tag: 'None' }
+  }
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders each workspace's reference controls and run action
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders each workspace's reference controls and run action
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders each workspace's reference controls and run action
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders each workspace's reference controls and run action
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders each workspace's reference controls and run action
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders each workspace's reference controls and run action
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders each workspace's reference controls and run action
+[foldkit] Slow patch: 13.9ms (budget: 8ms), triggered by ChangedUrl. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 4,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'rerank',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: { _tag: 'ChangedUrl', url: [Object] }
+  },
+  durationMs: 13.911000000000058,
+  thresholdMs: 8
+} {
+  _tag: 'ChangedUrl',
+  url: {
+    protocol: 'http:',
+    host: 'localhost',
+    port: { _id: 'Option', _tag: 'Some', value: '3000' },
+    pathname: '/studio',
+    search: { _id: 'Option', _tag: 'Some', value: 'tab=rerank' },
+    hash: { _id: 'Option', _tag: 'None' }
+  }
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders each workspace's reference controls and run action
+[foldkit] Slow update: 4.8ms (budget: 4ms), triggered by ChangedUrl. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Update',
+  previousModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 4,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'rerank',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  nextModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 5,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'advanced',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _tag: 'ChangedUrl',
+    url: {
+      protocol: 'http:',
+      host: 'localhost',
+      port: [Object],
+      pathname: '/studio',
+      search: [Object],
+      hash: [Object]
+    }
+  },
+  durationMs: 4.849299999998038,
+  thresholdMs: 4
+} {
+  _tag: 'ChangedUrl',
+  url: {
+    protocol: 'http:',
+    host: 'localhost',
+    port: { _id: 'Option', _tag: 'Some', value: '3000' },
+    pathname: '/studio',
+    search: { _id: 'Option', _tag: 'Some', value: 'tab=advanced' },
+    hash: { _id: 'Option', _tag: 'None' }
+  }
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders each workspace's reference controls and run action
+[foldkit] Slow patch: 10.3ms (budget: 8ms), triggered by ChangedUrl. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 5,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'advanced',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: { _tag: 'ChangedUrl', url: [Object] }
+  },
+  durationMs: 10.327300000000832,
+  thresholdMs: 8
+} {
+  _tag: 'ChangedUrl',
+  url: {
+    protocol: 'http:',
+    host: 'localhost',
+    port: { _id: 'Option', _tag: 'Some', value: '3000' },
+    pathname: '/studio',
+    search: { _id: 'Option', _tag: 'Some', value: 'tab=advanced' },
+    hash: { _id: 'Option', _tag: 'None' }
+  }
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > dispatches each workspace with the exact method, path and body
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > dispatches each workspace with the exact method, path and body
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 60.9ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'chat',
+      token: 0
+    },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 60.947000000000116,
+  thresholdMs: 8
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > dispatches each workspace with the exact method, path and body
+[foldkit] Slow update: 4.8ms (budget: 4ms), triggered by ChangedUrl. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Update',
+  previousModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'chat',
+      token: 0
+    },
+    theme: 'dark'
+  },
+  nextModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 1,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'chat',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _tag: 'ChangedUrl',
+    url: {
+      protocol: 'http:',
+      host: 'localhost',
+      port: [Object],
+      pathname: '/studio',
+      search: [Object],
+      hash: [Object]
+    }
+  },
+  durationMs: 4.848500000000058,
+  thresholdMs: 4
+} {
+  _tag: 'ChangedUrl',
+  url: {
+    protocol: 'http:',
+    host: 'localhost',
+    port: { _id: 'Option', _tag: 'Some', value: '3000' },
+    pathname: '/studio',
+    search: { _id: 'Option', _tag: 'Some', value: 'tab=chat' },
+    hash: { _id: 'Option', _tag: 'None' }
+  }
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > dispatches each workspace with the exact method, path and body
+[foldkit] Slow update: 5.8ms (budget: 4ms), triggered by ChangedUrl. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Update',
+  previousModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 1,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: 'HTTP 404',
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: '{"error":"fixture rejection"}',
+      size: '1024x1024',
+      status: 'error',
+      statusCode: 404,
+      tab: 'chat',
+      token: 1
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  nextModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 2,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'images',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _tag: 'ChangedUrl',
+    url: {
+      protocol: 'http:',
+      host: 'localhost',
+      port: [Object],
+      pathname: '/studio',
+      search: [Object],
+      hash: [Object]
+    }
+  },
+  durationMs: 5.8054000000011,
+  thresholdMs: 4
+} {
+  _tag: 'ChangedUrl',
+  url: {
+    protocol: 'http:',
+    host: 'localhost',
+    port: { _id: 'Option', _tag: 'Some', value: '3000' },
+    pathname: '/studio',
+    search: { _id: 'Option', _tag: 'Some', value: 'tab=images' },
+    hash: { _id: 'Option', _tag: 'None' }
+  }
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > dispatches each workspace with the exact method, path and body
+[foldkit] Slow patch: 10.8ms (budget: 8ms), triggered by ChangedUrl. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 2,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'images',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: { _tag: 'ChangedUrl', url: [Object] }
+  },
+  durationMs: 10.813900000001013,
+  thresholdMs: 8
+} {
+  _tag: 'ChangedUrl',
+  url: {
+    protocol: 'http:',
+    host: 'localhost',
+    port: { _id: 'Option', _tag: 'Some', value: '3000' },
+    pathname: '/studio',
+    search: { _id: 'Option', _tag: 'Some', value: 'tab=images' },
+    hash: { _id: 'Option', _tag: 'None' }
+  }
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > dispatches each workspace with the exact method, path and body
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > dispatches each workspace with the exact method, path and body
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > dispatches each workspace with the exact method, path and body
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > dispatches each workspace with the exact method, path and body
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > dispatches each workspace with the exact method, path and body
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > dispatches each workspace with the exact method, path and body
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > dispatches each workspace with the exact method, path and body
+[foldkit] Slow update: 5.4ms (budget: 4ms), triggered by ChangedUrl. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Update',
+  previousModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 2,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: 'HTTP 404',
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: '{"error":"fixture rejection"}',
+      size: '1024x1024',
+      status: 'error',
+      statusCode: 404,
+      tab: 'images',
+      token: 1
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  nextModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 3,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'audio',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _tag: 'ChangedUrl',
+    url: {
+      protocol: 'http:',
+      host: 'localhost',
+      port: [Object],
+      pathname: '/studio',
+      search: [Object],
+      hash: [Object]
+    }
+  },
+  durationMs: 5.389600000002247,
+  thresholdMs: 4
+} {
+  _tag: 'ChangedUrl',
+  url: {
+    protocol: 'http:',
+    host: 'localhost',
+    port: { _id: 'Option', _tag: 'Some', value: '3000' },
+    pathname: '/studio',
+    search: { _id: 'Option', _tag: 'Some', value: 'tab=audio' },
+    hash: { _id: 'Option', _tag: 'None' }
+  }
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > dispatches each workspace with the exact method, path and body
+[foldkit] Slow patch: 8.5ms (budget: 8ms), triggered by ChangedUrl. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 3,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'audio',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: { _tag: 'ChangedUrl', url: [Object] }
+  },
+  durationMs: 8.475900000001275,
+  thresholdMs: 8
+} {
+  _tag: 'ChangedUrl',
+  url: {
+    protocol: 'http:',
+    host: 'localhost',
+    port: { _id: 'Option', _tag: 'Some', value: '3000' },
+    pathname: '/studio',
+    search: { _id: 'Option', _tag: 'Some', value: 'tab=audio' },
+    hash: { _id: 'Option', _tag: 'None' }
+  }
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > dispatches each workspace with the exact method, path and body
+[foldkit] Slow update: 8.2ms (budget: 4ms), triggered by ChangedUrl. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Update',
+  previousModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 3,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: 'HTTP 404',
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: '{"error":"fixture rejection"}',
+      size: '1024x1024',
+      status: 'error',
+      statusCode: 404,
+      tab: 'audio',
+      token: 1
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  nextModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 4,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'rerank',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _tag: 'ChangedUrl',
+    url: {
+      protocol: 'http:',
+      host: 'localhost',
+      port: [Object],
+      pathname: '/studio',
+      search: [Object],
+      hash: [Object]
+    }
+  },
+  durationMs: 8.227600000001985,
+  thresholdMs: 4
+} {
+  _tag: 'ChangedUrl',
+  url: {
+    protocol: 'http:',
+    host: 'localhost',
+    port: { _id: 'Option', _tag: 'Some', value: '3000' },
+    pathname: '/studio',
+    search: { _id: 'Option', _tag: 'Some', value: 'tab=rerank' },
+    hash: { _id: 'Option', _tag: 'None' }
+  }
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > dispatches each workspace with the exact method, path and body
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > dispatches each workspace with the exact method, path and body
+[foldkit] Slow update: 6.3ms (budget: 4ms), triggered by ChangedUrl. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Update',
+  previousModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 4,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: 'HTTP 404',
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: '{"error":"fixture rejection"}',
+      size: '1024x1024',
+      status: 'error',
+      statusCode: 404,
+      tab: 'rerank',
+      token: 1
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  nextModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 5,
+      status: 'idle',
+      message: undefined
+    },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'advanced',
+      token: 0
+    },
+    theme: 'dark',
+    chartInteraction: {
+      hiddenSeriesIds: [],
+      routeTag: 'Studio',
+      token: 1,
+      tooltip: null
+    },
+    pendingRedirectHref: undefined
+  },
+  message: {
+    _tag: 'ChangedUrl',
+    url: {
+      protocol: 'http:',
+      host: 'localhost',
+      port: [Object],
+      pathname: '/studio',
+      search: [Object],
+      hash: [Object]
+    }
+  },
+  durationMs: 6.251399999997375,
+  thresholdMs: 4
+} {
+  _tag: 'ChangedUrl',
+  url: {
+    protocol: 'http:',
+    host: 'localhost',
+    port: { _id: 'Option', _tag: 'Some', value: '3000' },
+    pathname: '/studio',
+    search: { _id: 'Option', _tag: 'Some', value: 'tab=advanced' },
+    hash: { _id: 'Option', _tag: 'None' }
+  }
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > dispatches each workspace with the exact method, path and body
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > dispatches typed values, including a custom model and prompt
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 28.4ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'chat',
+      token: 0
+    },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 28.409499999997934,
+  thresholdMs: 8
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > shows 404 raw body with role=alert and no fabricated success
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > shows 404 raw body with role=alert and no fabricated success
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > shows 404 raw body with role=alert and no fabricated success
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > shows 404 raw body with role=alert and no fabricated success
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > shows 404 raw body with role=alert and no fabricated success
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > shows 404 raw body with role=alert and no fabricated success
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > shows 404 raw body with role=alert and no fabricated success
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 27.9ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'chat',
+      token: 0
+    },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 27.87489999999889,
+  thresholdMs: 8
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders a real chat response
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders a real chat response
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders a real chat response
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders a real chat response
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders a real chat response
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders a real chat response
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s46a-studio.test.ts > S46a Studio > renders a real chat response
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 25.9ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Studio' },
+    studio: {
+      advancedBody: '{\n' +
+        '  "model": "moonshot/kimi-k2.5",\n' +
+        '  "messages": [{ "role": "user", "content": "Hello" }]\n' +
+        '}',
+      documents: 'first document\nsecond document',
+      message: undefined,
+      mode: 'generate',
+      model: 'moonshot/kimi-k2.5',
+      prompt: 'A quiet harbour at dawn',
+      query: 'Which document is first?',
+      responseText: 'Run a Studio request to see the raw response.',
+      size: '1024x1024',
+      status: 'idle',
+      statusCode: -1,
+      tab: 'chat',
+      token: 0
+    },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 25.913399999997637,
+  thresholdMs: 8
+}
+
+stderr | test/s46a-studio.test.ts
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s46a-studio.test.ts
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s46a-studio.test.ts
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s46a-studio.test.ts
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s46a-studio.test.ts
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+stderr | test/s46a-studio.test.ts
+Error: socket hang up
+    at Socket.socketCloseListener (node:_http_client:547:27)
+    at Socket.emit (node:events:520:35)
+    at TCP.<anonymous> (node:net:346:12) {
+  code: 'ECONNRESET'
+}
+
+ ✓ test/s46a-studio.test.ts (5 tests) 4101ms
+   ✓ S46a Studio > renders each workspace's reference controls and run action  1371ms
+   ✓ S46a Studio > dispatches each workspace with the exact method, path and body  927ms
+   ✓ S46a Studio > dispatches typed values, including a custom model and prompt  600ms
+   ✓ S46a Studio > shows 404 raw body with role=alert and no fabricated success  595ms
+   ✓ S46a Studio > renders a real chat response  601ms
+
+ Test Files  2 passed (2)
+      Tests  13 passed (13)
+   Start at  19:38:02
+   Duration  25.87s (transform 11.46s, setup 0ms, collect 23.89s, tests 4.13s, environment 5.50s, prepare 878ms)
+

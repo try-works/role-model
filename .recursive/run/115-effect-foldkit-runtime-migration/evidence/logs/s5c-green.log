@@ -1,0 +1,24 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ✓ test/s5c-supervisor-repairs.test.ts (2 tests | 1 skipped) 805ms
+   ✓ S5c supervisor repairs > a failed taskkill rejects within the stop bound instead of hanging  803ms
+ ✓ test/s5b-process-lifecycle.test.ts (5 tests | 2 skipped) 1271ms
+   ✓ S5b process lifecycle damage paths > repeated and concurrent stops settle once, signal once, and resolve after deletion  545ms
+   ✓ S5b process lifecycle damage paths > Windows records the force-only stop limitation for a console child  451ms
+ ✓ test/health-wait-timeout.test.ts (3 tests) 2762ms
+   ✓ process-supervisor bounded health wait > rejects within startupTimeoutMs when the health peer accepts and never responds  496ms
+   ✓ process-supervisor bounded health wait > becomes healthy when a responsive endpoint replies after about 200ms  567ms
+   ✓ process-supervisor bounded health wait > stops polling after a health timeout and shuts down cleanly  1696ms
+ ✓ test/index.test.ts (6 tests) 3583ms
+   ✓ process-supervisor > starts a vendor process, waits for health, and reports it as healthy  560ms
+   ✓ process-supervisor > can run supervised vendors without inheriting provider credential variables  492ms
+   ✓ process-supervisor > captures child logs and restarts an unexpectedly crashed vendor with backoff  1055ms
+   ✓ process-supervisor > forces bounded shutdown when a vendor ignores the initial termination signal  478ms
+   ✓ process-supervisor > stops spawned child processes when a managed vendor shuts down on Windows  792ms
+
+ Test Files  4 passed (4)
+      Tests  13 passed | 3 skipped (16)
+   Start at  04:03:21
+   Duration  4.41s (transform 226ms, setup 0ms, collect 443ms, tests 8.42s, environment 1ms, prepare 1.01s)
+

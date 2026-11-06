@@ -1,0 +1,26 @@
+# Linux oxlint native wrapper attempt (0.0.20-636-gc8fdb768, 2026-11-05)
+## Environment probe
+$ wsl.exe -l -v
+  NAME              STATE      VERSION
+* docker-desktop    Stopped    2
+
+$ docker version --format '{{.Server.Version}}'
+error during connect: ... dockerDesktopLinuxEngine: The system cannot find the file specified.
+
+$ wsl.exe -d docker-desktop -e sh -lc 'cat /etc/alpine-release; cat /etc/os-release | head -4'
+3.20.0
+PRETTY_NAME="Docker Desktop"
+
+## Node bootstrap (to execute the wrapper)
+Downloaded Node v24.11.0 linux-x64-musl; ran:
+$ LD_LIBRARY_PATH=/mnt/host/d/DEV/rm-clean/node-musl/lib /mnt/host/d/DEV/rm-clean/node-musl/bin/node -v
+v24.11.0
+
+## Wrapper execution
+$ cd /mnt/host/d/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+$ LD_LIBRARY_PATH=/mnt/host/d/DEV/rm-clean/node-musl/lib \
+  /mnt/host/d/DEV/rm-clean/node-musl/bin/node node_modules/@effect/tsgo/dist/effect-tsgo.cjs oxlint --version
+effect-tsgo oxlint: Linux musl is not supported by the packaged Oxlint integration.
+EXIT: 1
+
+VERDICT: ENVIRONMENT-BLOCKED. The only WSL distro is Docker Desktop 3.20 (Alpine/musl); the vendored wrapper explicitly refuses Linux musl. Docker daemon is unavailable, and there is no glibc Linux distro/container to run the gnu wrapper. CI (ubuntu/glibc) remains the required executor.

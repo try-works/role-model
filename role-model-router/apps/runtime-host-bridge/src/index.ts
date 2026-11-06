@@ -1,4 +1,5 @@
 import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
+import { Cause } from "effect";
 
 import {
   appendFileSync,
@@ -16,7 +17,6 @@ import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
-import { makeSync } from "@effect/sql-sqlite-node/service";
 import { parse } from "yaml";
 import { evaluateDispatchContextGuard } from "./dispatch-context-guard.js";
 import { persistFailureTelemetrySafely } from "./failure-telemetry-persistence.js";
@@ -251,6 +251,10 @@ import { createVendorNotConfiguredError } from "@role-model-router/vendor-abstra
 import { startLiteLLMVendor } from "@role-model-router/vendor-litellm";
 import { startLlamaSwapVendor } from "@role-model-router/vendor-llama-swap";
 
+// Run 115 S57: the llama-swap proxy target is resolved LIVE from the vendor status in the
+// request handler. The former module-level cache was never assigned anywhere, so every
+// Studio vendor call took the "not running" branch even with the vendor healthy.
+
 import {
   readActiveBenchmarkRun as readActiveBenchmarkRunProgress,
   readBenchmarkRunProgress,
@@ -275,8 +279,27 @@ import {
   writeBenchmarkPreferences,
 } from "./benchmark-summary.js";
 import {
-  type BootstrapShape,
+  type BackendOwner,
+  type BootstrapContract,
+  type ObservationStorageContract,
+  type ServerOwner,
+  type ServerTransport,
+  backendStorageRefOf,
+  benchmarkGate,
+  composeBackendStorage,
+  composeMetadataCacheOwner,
+  composeObservationStorage,
+  composeServerOwner,
+  composedBackendOwnerOf,
   bootstrapOwner as composedBootstrapOwner,
+  graphObservationKey,
+  liveScoresObservationKey,
+  makeRetentionCleanupDatabase,
+  metadataCacheKey,
+  metadataConfigIdentity,
+  startupReadinessRefusalBody,
+  testSeamBackendOwner,
+  withBackendProviderPermits,
 } from "./composition-dag.js";
 import {
   computeConfiguredMembershipRevision,
@@ -3510,6 +3533,11 @@ export interface StartBridgeServerOptions {
     readonly maxCodeBytes?: number;
     readonly instanceId?: string;
     readonly buildId?: string;
+    /**
+     * S365a calibration decision: enabled:true alone is NOT enough; a calibration approval must
+     * accompany it. Absent or approved !== true keeps the writer (and route) disabled.
+     */
+    readonly calibration?: { readonly approved?: boolean; readonly reason?: string };
   };
   readonly registry: EndpointRegistryResult;
   readonly getRegistry?: () => EndpointRegistryResult;
@@ -3519,6 +3547,16 @@ export interface StartBridgeServerOptions {
     readonly status: "pending" | "ready" | "degraded" | "failed";
     readonly message?: string;
   };
+  /**
+   * Run 115 S57: the live llama-swap vendor status, used by the Studio vendor proxy to
+   * resolve its target per request. Resolving it live (instead of caching a base URL that
+   * nothing ever assigned) is what makes the proxy reach the vendor when it is healthy and
+   * answer 503 when it is not.
+   */
+  readonly readLlamaSwapVendorStatus?: () => {
+    readonly healthStatus: "healthy" | "inactive" | "starting" | "stopped" | "crashed";
+    readonly baseUrl?: string;
+  } | null;
   readonly executeChatCompletions: (
     body: OpenAIChatCompletionsBody,
     requestId: string,
@@ -3728,7 +3766,11 @@ export interface StartBridgeServerOptions {
   readonly recoverLegacyTerminalFailure?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readEndpointProfile?: (endpointId: string) => Promise<unknown>;
   readonly readBenchmarkSuite?: () => Promise<unknown>;
-  readonly runBenchmark?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly runBenchmark?: (
+    body: Record<string, unknown>,
+    signal: AbortSignal,
+    runId: string,
+  ) => Promise<unknown>;
   readonly readBenchmarkRun?: (runId: string) => Promise<unknown>;
   readonly readActiveBenchmarkRun?: () => Promise<unknown>;
   readonly clearBenchmarkEndpointData?: (endpointId: string) => Promise<unknown>;
@@ -4058,7 +4100,7 @@ export interface RuntimeBridgeBackend {
     recentSamples: readonly ObservedPerformanceSample[];
   }>;
   readBenchmarkSuite(): Promise<unknown>;
-  runBenchmark(body: Record<string, unknown>): Promise<unknown>;
+  runBenchmark(body: Record<string, unknown>, signal: AbortSignal, runId: string): Promise<unknown>;
   readBenchmarkRun(runId: string): Promise<unknown>;
   readActiveBenchmarkRun(): Promise<unknown>;
   clearBenchmarkEndpointData(endpointId: string): Promise<unknown>;
@@ -4097,6 +4139,13 @@ export interface RuntimeBridgeBackend {
       useModelName?: string | null;
     }[]
   >;
+  /**
+   * Run 115 S57: live llama-swap vendor status, consumed by the Studio vendor proxy.
+   */
+  readLlamaSwapVendorStatus(): {
+    healthStatus: "healthy" | "inactive" | "starting" | "stopped" | "crashed";
+    baseUrl?: string;
+  } | null;
   listLlamaSwapLocalModels(): Promise<
     readonly {
       modelId: string;
@@ -4321,8 +4370,8 @@ export interface CreateRuntimeBridgeBackendOptions {
    * Both are inert unless supplied; removed when the backend returns its composition owners as a
    * public value. Production always uses the DAG singleton below.
    */
-  readonly onBootstrapOwner?: (owner: BootstrapShape) => void;
-  readonly bootstrapOwner?: BootstrapShape;
+  readonly onBootstrapOwner?: (owner: BootstrapContract) => void;
+  readonly bootstrapOwner?: BootstrapContract;
   readonly runtimeVendorStartup?: "enabled" | "disabled";
   readonly trackBOperationsEndpoint?: string;
   readonly trackBOperationsToken?: string;
@@ -6280,13 +6329,16 @@ function mergeObservedProfileForDifficultyBucket(input: {
   };
 }
 
-function readObservedProfilesForRouting(input: {
-  readonly databasePath: string;
-  readonly registry: EndpointRegistryResult;
-  readonly observedDataConfig: ReturnType<typeof resolveUnifiedRuntimeObservedDataConfig>;
-  readonly difficultyBucket?: UnifiedRuntimeDifficultyBucket;
-  readonly routingTimeMs: number;
-}): {
+export function readObservedProfilesForRouting(
+  input: {
+    readonly databasePath: string;
+    readonly registry: EndpointRegistryResult;
+    readonly observedDataConfig: ReturnType<typeof resolveUnifiedRuntimeObservedDataConfig>;
+    readonly difficultyBucket?: UnifiedRuntimeDifficultyBucket;
+    readonly routingTimeMs: number;
+  },
+  observationStorage: ObservationStorageContract,
+): {
   readonly observedProfilesByEndpointId: Parameters<
     typeof routeRuntimeRequest
   >[0]["observedProfilesByEndpointId"];
@@ -6298,19 +6350,41 @@ function readObservedProfilesForRouting(input: {
     NonNullable<RuntimeRoutingDiagnostics["observedProfile"]>
   >;
 } {
+  /**
+   * Run 115 R30 regression: an operator that turns observed data off gets routing from the
+   * declared catalog only. Before this gate the validation harness disabled observed data but
+   * still read live profiles, so a profile written by a previous case could flip a later alias
+   * from the local vendor to the remote one depending on write visibility. "enabled: false"
+   * must mean no observed profile participates in routing at all.
+   */
+  if (input.observedDataConfig.enabled === false) {
+    return {
+      observedProfilesByEndpointId: {},
+      throughputPenaltyStateByEndpointId: {},
+      diagnosticsByEndpointId: {},
+    };
+  }
   const endpointIds = [
     ...new Set(input.registry.endpoints.map((endpoint) => endpoint.identity.endpoint_id)),
   ];
-  const endpointWideProfilesByEndpointId = readLatestObservedProfilesByEndpointIds({
-    databasePath: input.databasePath,
-    endpointIds,
-  });
-  const difficultyBucketProfilesByEndpointId = input.difficultyBucket
-    ? readLatestObservedProfilesByEndpointIds({
+  const endpointWideProfilesByEndpointId = observationStorage.readHydrated(
+    `observed-profiles:${endpointIds.join(",")}`,
+    () =>
+      readLatestObservedProfilesByEndpointIds({
         databasePath: input.databasePath,
         endpointIds,
-        difficultyBucket: input.difficultyBucket,
-      })
+      }),
+  );
+  const difficultyBucketProfilesByEndpointId = input.difficultyBucket
+    ? observationStorage.readHydrated(
+        `observed-profiles:${endpointIds.join(",")}:${String(input.difficultyBucket)}`,
+        () =>
+          readLatestObservedProfilesByEndpointIds({
+            databasePath: input.databasePath,
+            endpointIds,
+            difficultyBucket: input.difficultyBucket,
+          }),
+      )
     : {};
   const latestProfilesByEndpointId = input.difficultyBucket
     ? Object.fromEntries(
@@ -16756,6 +16830,29 @@ function extractResponseId(responseBody: unknown): string | undefined {
   return undefined;
 }
 
+const isMutatingMethod = (method: string | undefined): boolean =>
+  method === "POST" || method === "PUT" || method === "PATCH" || method === "DELETE";
+
+function isMutatingRuntimeApiRequest(request: IncomingMessage, url: URL): boolean {
+  return url.pathname.startsWith("/api/role-model/") && isMutatingMethod(request.method);
+}
+
+function isSameOriginWrite(request: IncomingMessage): boolean {
+  const fetchSite = request.headers["sec-fetch-site"];
+  const site = Array.isArray(fetchSite) ? fetchSite[0] : fetchSite;
+  if (site !== undefined && site !== "same-origin" && site !== "none") return false;
+  const rawOrigin = request.headers.origin;
+  const origin = Array.isArray(rawOrigin) ? rawOrigin[0] : rawOrigin;
+  if (origin === undefined || origin.length === 0) return true;
+  try {
+    const originHost = new URL(origin).host.toLowerCase();
+    const requestHost = (request.headers.host ?? "").toLowerCase();
+    return requestHost.length > 0 && originHost === requestHost;
+  } catch {
+    return false;
+  }
+}
+
 function setCorsHeaders(response: ServerResponse): void {
   response.setHeader("Access-Control-Allow-Origin", "*");
   response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
@@ -17402,7 +17499,10 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     // Run 115 S15a (R21): the local diagnostics read path must not inherit the wildcard CORS layer.
     // Its response carries no CORS headers at all, so no origin is ever allowed or reflected.
     const isLocalDiagnosticsRequest = (request.url ?? "").startsWith(LOCAL_DIAGNOSTICS_PATH);
-    if (!isLocalDiagnosticsRequest) setCorsHeaders(response);
+    const earlyPath = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
+    const mutatingApiRequest =
+      earlyPath.startsWith("/api/role-model/") && isMutatingMethod(request.method);
+    if (!isLocalDiagnosticsRequest && !mutatingApiRequest) setCorsHeaders(response);
 
     if (request.method === "OPTIONS") {
       response.statusCode = 204;
@@ -17475,11 +17575,8 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       url.pathname !== "/logs" &&
       !url.pathname.startsWith("/logs/");
     if (startupReadiness && !startupReadiness.ready && !isPotentialStaticUiRequest) {
-      writeJson(response, 503, {
-        error: "runtime_initializing",
-        status: startupReadiness.status,
-        ...(startupReadiness.message ? { message: startupReadiness.message } : {}),
-      });
+      // S325: byte-for-byte the same refusal bytes as the DAG admission gate (shared helper).
+      writeText(response, 503, startupReadinessRefusalBody(startupReadiness), "application/json");
       return;
     }
 
@@ -17504,6 +17601,31 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       response.removeHeader("Access-Control-Allow-Headers");
       writeJson(response, result.status, result.body, { ...result.headers });
       return;
+    }
+
+    if (
+      url.pathname.startsWith("/api/role-model/") &&
+      (mutatingApiRequest || request.method === "OPTIONS")
+    ) {
+      if (!isSameOriginWrite(request)) {
+        writeJson(response, 403, {
+          error: "cross-origin write rejected",
+          code: "cross_origin_write_rejected",
+        });
+        return;
+      }
+      if (
+        mutatingApiRequest &&
+        options.operatorAuthToken !== undefined &&
+        options.operatorAuthToken.length > 0 &&
+        !operatorTokenMatches(request, options.operatorAuthToken)
+      ) {
+        writeJson(response, 401, {
+          error: "operator credential required",
+          code: "operator_credential_required",
+        });
+        return;
+      }
     }
 
     if (url.pathname.startsWith("/api/role-model/operator/")) {
@@ -19629,12 +19751,31 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         writeJson(response, 404, { error: "not found" });
         return;
       }
+      const benchmarkRunId = randomUUID();
+      const benchmarkRun = benchmarkGate.begin(benchmarkRunId);
+      if (benchmarkRun.ok !== true) {
+        writeJson(response, 409, {
+          activeRunId: benchmarkRun.activeRunId,
+          error: "benchmark_already_running",
+        });
+        return;
+      }
       try {
-        writeJson(response, 202, await options.runBenchmark(await readJsonBody(request)));
+        writeJson(
+          response,
+          202,
+          await options.runBenchmark(
+            await readJsonBody(request),
+            benchmarkRun.signal,
+            benchmarkRun.runId,
+          ),
+        );
       } catch (error) {
         writeJson(response, 400, {
           error: error instanceof Error ? error.message : "benchmark run failed",
         });
+      } finally {
+        benchmarkRun.finish();
       }
       return;
     }
@@ -20295,11 +20436,63 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    const llamaSwapProxyPath =
+      (request.method === "POST" &&
+        (url.pathname === "/v1/images/generations" ||
+          url.pathname === "/v1/audio/speech" ||
+          url.pathname === "/v1/rerank" ||
+          url.pathname === "/v1/reranking")) ||
+      (request.method === "GET" && url.pathname === "/v1/audio/voices");
+    if (llamaSwapProxyPath) {
+      const llamaSwapStatus = options.readLlamaSwapVendorStatus?.() ?? null;
+      const vendorBaseUrl =
+        llamaSwapStatus !== null &&
+        llamaSwapStatus.healthStatus === "healthy" &&
+        typeof llamaSwapStatus.baseUrl === "string"
+          ? llamaSwapStatus.baseUrl
+          : null;
+      if (vendorBaseUrl === null) {
+        writeJson(response, 503, {
+          error: "Llama-swap is not running. Start it from Local > llama-swap.",
+        });
+        return;
+      }
+      const suffix = url.pathname.slice("/v1".length);
+      let rawBody = "";
+      for await (const chunk of request) {
+        rawBody += String(chunk);
+      }
+      const upstream = await fetch(vendorBaseUrl + suffix + url.search, {
+        body: request.method === "GET" ? undefined : rawBody,
+        headers:
+          request.method === "GET"
+            ? {}
+            : { "content-type": request.headers["content-type"] ?? "application/json" },
+        method: request.method,
+      });
+      const upstreamBody = await upstream.text();
+      response.writeHead(upstream.status, {
+        "cache-control": "no-store",
+        "content-type": upstream.headers.get("content-type") ?? "application/json",
+      });
+      response.end(upstreamBody);
+      return;
+    }
+
     if (options.staticRoot && request.method === "GET") {
       const filePath = path.join(
         options.staticRoot,
         url.pathname === "/" ? "index.html" : url.pathname,
       );
+      const isApiPath = url.pathname.startsWith("/api/") || url.pathname.startsWith("/v1/");
+      const wantsHtml = (request.headers.accept ?? "").includes("text/html");
+      if (!existsSync(filePath) && (isApiPath || !wantsHtml)) {
+        // S38a: API paths never fall back to the SPA index; a mistyped GET must be a
+        // typed 404 instead of a 200 text/html false success. Non-API navigation still
+        // gets index.html for deep links.
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
       const resolvedPath = existsSync(filePath)
         ? filePath
         : path.join(options.staticRoot, "index.html");
@@ -20410,14 +20603,22 @@ function appendRuntimeHttpTrace(
  * (its finalizers have run) and the unhandled-failure sink has not yet translated the failure to the
  * wire. That catch is the single request-lifecycle edge available in this async handler.
  *
- * R20 GAP (recorded, not approximated): the edge observes ONLY failures that ESCAPE the route
- * handlers; handled failures are translated per route and never reach it. The edge calls
- * recordError, which records every escape as the coarse code "error" - the Fail/Die/Interrupt
- * classification in observe/recordCause is not wired to this edge - and a client-caused escape
- * (a 4xx-ish BridgeHttpError that escapes a route) is still counted as a module failure. Closing
- * this needs an Effect boundary at the request entry or per-route hooks with ONE report owner,
- * plus classification and calibration; R20 remains open on those points.
+ * S365a (R20): the edge now records the CAUSE classification (Fail/Die/Interrupt via recordCause),
+ * excludes client-caused 4xx escapes from module-failure counts, and requires the explicit enabled
+ * flag AND a calibration approval before a writer is constructed. The remaining limitation: the
+ * edge observes ONLY failures that ESCAPE the route handlers; handled failures are translated per
+ * route and never reach it (an Effect boundary at the request entry is still the follow-on).
  */
+export const isClientCausedModuleHealthEscape = (error: unknown): boolean => {
+  if (typeof error !== "object" || error === null) return false;
+  // SAFETY: only an optional numeric statusCode is read; hostile accessors still throw inside the report edge.
+  const statusCode = (error as { readonly statusCode?: unknown }).statusCode;
+  return typeof statusCode === "number" && statusCode >= 400 && statusCode < 500;
+};
+
+export const moduleHealthCauseForEscape = (error: unknown): Cause.Cause<unknown> =>
+  Cause.isCause(error) ? error : Cause.fail(error);
+
 export interface ModuleHealthComposition {
   readonly reportRequestFailure: (error: unknown) => void;
   readonly source: () => LocalDiagnosticsSource;
@@ -20429,7 +20630,7 @@ export function createModuleHealthComposition(
 ): ModuleHealthComposition | undefined {
   const config = options.diagnostics ?? {};
   // DEFAULT OFF. Enablement is the R20 calibration decision; absent/false must not construct a writer.
-  if (config?.enabled !== true) return undefined;
+  if (config?.enabled !== true || config.calibration?.approved !== true) return undefined;
   const writer = makeModuleHealthWriter({
     ...(config.buildId === undefined ? {} : { buildId: config.buildId }),
     ...(config.capacity === undefined ? {} : { capacity: config.capacity }),
@@ -20438,8 +20639,12 @@ export function createModuleHealthComposition(
   });
   return {
     reportRequestFailure: (error: unknown) => {
-      writer.recordError(error);
+      // One writer-owned edge: client-caused 4xx escapes are separated and Fail/Die/Interrupt is
+      // classified from the Cause without reading hostile error properties.
+      // SAFETY: the transport reject value is an arbitrary JS throw; the writer narrows it without property reads.
+      writer.recordEscape(error as Parameters<ModuleHealthWriter["recordEscape"]>[0]);
     },
+    // S421: module diagnostics are the writer's owner-local ring buffer, never business telemetry rows.
     source: () => writer.source(),
     writer,
   };
@@ -20474,8 +20679,10 @@ export interface ModuleHealthWiring<
  * `readDiagnosticsSource` injected by identity and (b) the single report wrapper the transport catch
  * calls. When `diagnostics.enabled` is not literally `true` the options pass through unchanged and
  * the report wrapper is a no-op, so the diagnostics route keeps answering the explicit disabled
- * state. See the composition doc above for the recorded R20 gap (escaping failures only, coarse
- * `error` classification, client-caused escapes counted as module failures).
+ * state until BOTH `diagnostics.enabled === true` and the calibration approval are present. The
+ * recorded R20 limitation is now only that escaping failures are observed; their cause is classified
+ * (S365a) and client-caused 4xx escapes are excluded. The query source resolves the backend-owned
+ * storage through the storage ref (S365b'), so the same telemetry store feeds the read path.
  */
 export function wireModuleHealth<Options extends ModuleHealthWiringOptions>(
   options: Options,
@@ -20617,66 +20824,141 @@ export const recordRouteCaptureAtHostEdge = async (
   return await operations.recordLocalRouteCapture(input, signal === undefined ? {} : { signal });
 };
 
-export async function startBridgeServer(options: StartBridgeServerOptions): Promise<BridgeServer> {
-  // ONE composition edge: the listener builds the writer once for the host's lifetime and injects
-  // its source into the existing diagnostics read seam (see wireModuleHealth).
-  const requestListener = createBridgeRequestListener(options, createRequestHandler);
-  const server = createServer((request, response) => {
-    const requestStart = Date.now();
-    const requestPath = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
-    const runtimeStateRoot = options.runtimeStateRoot;
-    const runtimeChannel = options.runtimeChannel ?? "development";
-    const shouldTraceRequest =
-      typeof runtimeStateRoot === "string" &&
-      runtimeStateRoot.length > 0 &&
-      request.method === "GET" &&
-      (requestPath === "/" ||
-        requestPath === "/app" ||
-        requestPath.startsWith("/assets/") ||
-        requestPath === "/favicon.ico");
-    if (shouldTraceRequest) {
-      appendRuntimeHttpTrace(
-        runtimeStateRoot,
-        runtimeChannel,
-        `request-start method=${request.method} path=${requestPath}`,
-      );
-      response.on("finish", () => {
+/**
+ * S313 (R27): the typed transport bundle the DAG Server owner consumes. The listener factory,
+ * createServer (with the trace wrapper), listen and close construction stay in this file; the DAG owns the
+ * lifecycle ordering, identity and the no-fallback refusal, never the http construction.
+ */
+const closingServers = new WeakMap<object, Promise<void>>();
+
+export const bridgeServerTransport: ServerTransport = {
+  createListener: (options, handlerFactory) =>
+    // SAFETY: the handler factory is the host's real request handler; the DAG only passes it through,
+    // and the returned listener is only invoked by this file's createServer.
+    createBridgeRequestListener(options, handlerFactory as never) as unknown as (
+      request: unknown,
+      response: unknown,
+    ) => void,
+  createServer: (requestListener, options) =>
+    createServer((request, response) => {
+      const requestStart = Date.now();
+      const requestPath = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
+      const runtimeStateRoot = options.runtimeStateRoot;
+      const runtimeChannel = options.runtimeChannel ?? "development";
+      const shouldTraceRequest =
+        typeof runtimeStateRoot === "string" &&
+        runtimeStateRoot.length > 0 &&
+        request.method === "GET" &&
+        (requestPath === "/" ||
+          requestPath === "/app" ||
+          requestPath.startsWith("/assets/") ||
+          requestPath === "/favicon.ico");
+      if (shouldTraceRequest) {
         appendRuntimeHttpTrace(
           runtimeStateRoot,
           runtimeChannel,
-          `request-finish method=${request.method} path=${requestPath} status=${response.statusCode} duration_ms=${Date.now() - requestStart}`,
+          `request-start method=${String(request.method)} path=${requestPath}`,
         );
-      });
-      response.on("close", () => {
-        if (!response.writableEnded) {
+        response.on("finish", () => {
           appendRuntimeHttpTrace(
             runtimeStateRoot,
             runtimeChannel,
-            `request-close method=${request.method} path=${requestPath} duration_ms=${Date.now() - requestStart}`,
+            `request-finish method=${String(request.method)} path=${requestPath} status=${String(response.statusCode)} duration_ms=${String(Date.now() - requestStart)}`,
           );
-        }
-      });
-    }
-    // S10b reporting edge: the request program has settled (finalizers ran) and the failure has not
-    // yet been translated to the wire. One place, not per route.
-    requestListener(request, response);
-  });
-  const port = await listen(server, options.host, options.port);
-
-  return {
-    port,
-    async close(): Promise<void> {
-      await new Promise<void>((resolve, reject) => {
-        server.close((error) => {
-          if (error) {
-            reject(error);
-            return;
-          }
-          resolve();
         });
+        response.on("close", () => {
+          if (!response.writableEnded) {
+            appendRuntimeHttpTrace(
+              runtimeStateRoot,
+              runtimeChannel,
+              `request-close method=${String(request.method)} path=${requestPath} duration_ms=${String(Date.now() - requestStart)}`,
+            );
+          }
+        });
+      }
+      // S10b reporting edge: the request program has settled (finalizers ran) and the failure has not
+      // yet been translated to the wire. One place, not per route.
+      (requestListener as (incoming: IncomingMessage, outgoing: ServerResponse) => void)(
+        request,
+        response,
+      );
+    }),
+  listen: (server, host, port) => listen(server as Server, host, port),
+  stopAccepting: (server) => {
+    const httpServer = server as Server;
+    if (!closingServers.has(httpServer)) {
+      closingServers.set(
+        httpServer,
+        new Promise<void>((resolve) => {
+          httpServer.close(() => resolve());
+        }),
+      );
+    }
+    return Promise.resolve();
+  },
+  join: (server) => closingServers.get(server as Server) ?? Promise.resolve(),
+  interrupt: (server) => {
+    (server as Server).closeAllConnections?.();
+  },
+  close: (server) => {
+    const httpServer = server as Server;
+    const pending = closingServers.get(httpServer);
+    if (pending !== undefined) return pending;
+    return new Promise<void>((resolve, reject) => {
+      httpServer.close((error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve();
       });
-    },
-  };
+    });
+  },
+};
+
+/** S313: lifecycle inputs for the facade (tests inject the transport/handler factory/owner observer). */
+export interface BridgeServerLifecycleOptions {
+  readonly backend?: BackendOwner;
+  readonly transport?: ServerTransport;
+  readonly readiness?: import("./composition-dag.js").ReadinessContract;
+  readonly drains?: readonly import("./composition-dag.js").ShutdownDrain[];
+  readonly handlerFactory?: (options: StartBridgeServerOptions) => BridgeRequestHandler;
+  readonly onServerOwner?: (owner: ServerOwner) => void;
+  /** TEST SEAM ONLY: bare test options that never went through composeBackendOwner may get the branded
+   * testSeamBackendOwner. Production paths must pass a real composed Backend owner (or owned options). */
+  readonly allowTestSeamBackend?: boolean;
+}
+
+/**
+ * S313 (R27) facade: EVERY caller (tests, validate scripts, CLI) goes through the DAG Server owner. There is
+ * no local listen/lifecycle construction in this function; the DAG composes the owner and owns the ordering.
+ */
+export async function startBridgeServer(
+  options: StartBridgeServerOptions,
+  lifecycle?: BridgeServerLifecycleOptions,
+): Promise<BridgeServer & { readonly serverOwner?: ServerOwner }> {
+  // Production options carry the REAL composed Backend owner (composedBackendOwnerOf). The branded
+  // testSeamBackendOwner is reachable ONLY through the explicit allowTestSeamBackend flag: bare options
+  // outside the test seam fail closed instead of fabricating a production owner.
+  const realBackend = lifecycle?.backend ?? composedBackendOwnerOf(options);
+  if (realBackend === undefined && lifecycle?.allowTestSeamBackend !== true) {
+    throw new Error(
+      "Server options were not produced by composeBackendOwner; production requires the DAG-composed Backend owner " +
+        "(the branded test seam is explicit-only via allowTestSeamBackend)",
+    );
+  }
+  const backend = realBackend ?? testSeamBackendOwner(options);
+  const owner = composeServerOwner({
+    backend,
+    // SAFETY: createRequestHandler is the host's real request handler; the DAG only carries it to the transport.
+    handlerFactory: (lifecycle?.handlerFactory ?? createRequestHandler) as never,
+    transport: lifecycle?.transport ?? bridgeServerTransport,
+    ...(lifecycle?.readiness === undefined ? {} : { readiness: lifecycle.readiness }),
+    drains: lifecycle?.drains ?? [],
+  });
+  lifecycle?.onServerOwner?.(owner);
+  const started = await owner.start();
+  return { close: started.close, port: started.port, serverOwner: owner };
 }
 
 /**
@@ -20769,11 +21051,13 @@ export interface ObservabilitySnapshotReadback {
  * DELETE. Exported so the batch can pin busy_timeout=0, the predicate boundary and the deleted
  * count without booting the whole backend. nowMs is a safe integer literal (no external input).
  */
-export const openRetentionCleanupDatabase = (databasePath: string) =>
-  makeSync({
-    databasePath,
-    setup: (db) => db.exec("PRAGMA busy_timeout = 0"),
-  });
+type RetentionCleanupDatabaseFactory = (
+  databasePath: string,
+) => ReturnType<typeof makeRetentionCleanupDatabase>;
+let retentionCleanupDatabaseFactory: RetentionCleanupDatabaseFactory = makeRetentionCleanupDatabase;
+export const openRetentionCleanupDatabase = (
+  databasePath: string,
+): ReturnType<typeof makeRetentionCleanupDatabase> => retentionCleanupDatabaseFactory(databasePath);
 
 export const runRetentionCleanupAt = (
   databasePath: string,
@@ -20791,6 +21075,14 @@ export const runRetentionCleanupAt = (
   } finally {
     database.closeSync();
   }
+};
+
+/** S327: join handle for the in-flight deferred route-capture drain (shutdown phase). */
+let deferredRouteCaptureDrainJoin: (() => Promise<void>) | null = null;
+
+export const drainDeferredRouteCapture = async (): Promise<void> => {
+  const join = deferredRouteCaptureDrainJoin;
+  if (join !== null) await join();
 };
 
 export async function createRuntimeBridgeBackend(
@@ -20976,13 +21268,21 @@ export async function createRuntimeBridgeBackend(
       ...fixtureProviderPresets.providers,
     },
   };
-  const initialization = initializeSqliteMemory({
-    runtimeStateRoot: options.runtimeStateRoot,
-    scopeId: options.scopeId,
-    channel: runtimeChannel,
-  });
   const configuredTrackBOperationsEndpoint =
     options.trackBOperationsEndpoint ?? process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL?.trim();
+  const storageRef = backendStorageRefOf(options);
+  const backendStorage =
+    storageRef?.current ??
+    composeBackendStorage({
+      channel: runtimeChannel,
+      runtimeStateRoot: options.runtimeStateRoot,
+      scopeId: options.scopeId,
+      trackBOperationsEndpoint: configuredTrackBOperationsEndpoint,
+      useFixtures,
+    });
+  if (storageRef !== undefined) storageRef.current = backendStorage;
+  retentionCleanupDatabaseFactory = backendStorage.openRetentionCleanupDatabase;
+  const initialization = backendStorage.initialization;
   const runtimeTrackBOperations = createTrackBOperations({
     statePath: path.join(
       options.runtimeStateRoot,
@@ -21015,7 +21315,7 @@ export async function createRuntimeBridgeBackend(
   const scheduleDeferredRouteCaptureDrain = (): void => {
     if (!routeCaptureQueue || routeCaptureDrainActive) return;
     routeCaptureDrainActive = true;
-    void routeCaptureQueue
+    const activeDrain = routeCaptureQueue
       .drain(async (item) => {
         try {
           return await runtimeTrackBOperations.recordLocalRouteCapture({
@@ -21038,7 +21338,9 @@ export async function createRuntimeBridgeBackend(
       })
       .finally(() => {
         routeCaptureDrainActive = false;
+        deferredRouteCaptureDrainJoin = null;
       });
+    deferredRouteCaptureDrainJoin = () => activeDrain.then(() => undefined);
   };
   if (routeCaptureQueue) {
     const routeCaptureDrainTimer = setInterval(scheduleDeferredRouteCaptureDrain, 15_000);
@@ -21049,6 +21351,11 @@ export async function createRuntimeBridgeBackend(
   // starve request handling). `ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS=0` disables the snapshot.
   const routingPrepCacheTtlMs = resolveRoutingPrepCacheTtlMs(process.env);
   const routingPrepCache = createRoutingPrepCache({ ttlMs: routingPrepCacheTtlMs });
+  // S318 (R27): the DAG metadata cache owner (authority + config generation identity).
+  const metadataCacheOwner = composeMetadataCacheOwner({
+    capacity: 1024,
+    ttlMs: routingPrepCacheTtlMs,
+  });
   const recordDirectContribution = (input: DirectContributionInput): Promise<void> =>
     recordDirectContributionWith(runtimeTrackBOperations, input, {
       scopeId: options.scopeId,
@@ -21063,13 +21370,8 @@ export async function createRuntimeBridgeBackend(
       unknown
     >;
   };
-  const localGraphStore =
-    useFixtures && !configuredTrackBOperationsEndpoint
-      ? createTrackBFileGraphStore({
-          scopeId: options.scopeId,
-          rootPath: path.join(options.runtimeStateRoot, options.scopeId, "track-b-graph"),
-        })
-      : undefined;
+  const localGraphStore = backendStorage.graphStore;
+  const observationStorage = backendStorage.observationStorage;
   const recordPreExecutionFailure = async (input: {
     readonly requestId: string;
     readonly modelId: string;
@@ -21118,27 +21420,37 @@ export async function createRuntimeBridgeBackend(
       toolingUsed: input.toolingUsed,
     });
     persistFailureTelemetrySafely(() =>
-      persistRuntimeTelemetryFailure({
-        databasePath: initialization.databasePath,
-        requestId: input.requestId,
-        clientRequestId: input.clientRequestId ?? null,
-        requestClass: toPersistedTrafficClass(input.requestClass),
-        sourceType:
-          currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local",
-        endpointId: input.endpointId,
-        reasoningEffort: failureEffort.reasoningEffort,
-        effortSource: failureEffort.effortSource,
-        effortCoerced: failureEffort.coerced,
-        modelId: input.modelId,
-        requestedModelId: input.modelId,
-        requestOperation: input.requestOperation,
-        statusCode,
-        errorClass: runtimeTelemetryErrorClassFor(input.error),
-        latencyMs,
-        dimensions,
-        observation: failureObservation,
-        ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-      }),
+      observationStorage.persist(
+        () =>
+          persistRuntimeTelemetryFailure({
+            databasePath: initialization.databasePath,
+            requestId: input.requestId,
+            clientRequestId: input.clientRequestId ?? null,
+            requestClass: toPersistedTrafficClass(input.requestClass),
+            sourceType:
+              currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local",
+            endpointId: input.endpointId,
+            reasoningEffort: failureEffort.reasoningEffort,
+            effortSource: failureEffort.effortSource,
+            effortCoerced: failureEffort.coerced,
+            modelId: input.modelId,
+            requestedModelId: input.modelId,
+            requestOperation: input.requestOperation,
+            statusCode,
+            errorClass: runtimeTelemetryErrorClassFor(input.error),
+            latencyMs,
+            dimensions,
+            observation: failureObservation,
+            ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+          }),
+        async () =>
+          readRuntimeObservationBundle({
+            databasePath: initialization.databasePath,
+            requestId: input.requestId,
+            ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+          }),
+        graphObservationKey(options.scopeId, input.requestId),
+      ),
     );
     if (options.trackBPostObservation) {
       try {
@@ -21153,11 +21465,13 @@ export async function createRuntimeBridgeBackend(
   };
   const readPersistedRuntimeObservation = (requestId: string) => {
     try {
-      return readRuntimeObservationBundle({
-        databasePath: initialization.databasePath,
-        requestId,
-        ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-      });
+      return observationStorage.readHydrated(graphObservationKey(options.scopeId, requestId), () =>
+        readRuntimeObservationBundle({
+          databasePath: initialization.databasePath,
+          requestId,
+          ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+        }),
+      );
     } catch (error) {
       if (!localGraphStore && /graph artifact reader required after cutover/i.test(String(error)))
         return readRuntimeObservationStorageRecord({
@@ -25820,15 +26134,21 @@ export async function createRuntimeBridgeBackend(
             requestRecords.filter((record) => record.sourceType === "remote"),
           ),
         }
-      : readRuntimeTelemetrySourceSummaries({
-          databasePath: initialization.databasePath,
-          ...aggregateQuery,
-        });
+      : observationStorage.readHydrated(`telemetry-sources:${JSON.stringify(aggregateQuery)}`, () =>
+          readRuntimeTelemetrySourceSummaries({
+            databasePath: initialization.databasePath,
+            ...aggregateQuery,
+          }),
+        );
     return {
-      ...readRuntimeTelemetrySummary({
-        databasePath: initialization.databasePath,
-        ...aggregateQuery,
-      }),
+      ...observationStorage.readHydrated(
+        `telemetry-summary:${JSON.stringify(aggregateQuery)}`,
+        () =>
+          readRuntimeTelemetrySummary({
+            databasePath: initialization.databasePath,
+            ...aggregateQuery,
+          }),
+      ),
       sourceBreakdown: sourceSummaries,
       window: { startAtMs, endAtMs: asOfMs, asOfMs },
     };
@@ -26400,28 +26720,42 @@ export async function createRuntimeBridgeBackend(
   const readEndpointProfileData = (endpointId: string) => {
     const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
     const telemetryWindowEndMs = Date.now();
-    const telemetryScores = readLiveTaskTelemetryScoresByEndpointIds({
-      databasePath: initialization.databasePath,
-      endpointIds: [endpointId],
-      windowStartMs: Math.max(0, telemetryWindowEndMs - 7 * 24 * 60 * 60 * 1_000),
-      windowEndMs: telemetryWindowEndMs,
-      minimumSampleCount: observedDataConfig.aggregation.minSamples,
-    })[endpointId];
+    const telemetryWindowStartMs = Math.max(0, telemetryWindowEndMs - 7 * 24 * 60 * 60 * 1_000);
+    const telemetryScores = observationStorage.readHydrated(
+      liveScoresObservationKey(
+        endpointId,
+        telemetryWindowStartMs,
+        telemetryWindowEndMs,
+        observedDataConfig.aggregation.minSamples,
+      ),
+      () =>
+        readLiveTaskTelemetryScoresByEndpointIds({
+          databasePath: initialization.databasePath,
+          endpointIds: [endpointId],
+          windowStartMs: telemetryWindowStartMs,
+          windowEndMs: telemetryWindowEndMs,
+          minimumSampleCount: observedDataConfig.aggregation.minSamples,
+        }),
+    )[endpointId];
     const difficultyProfiles = Object.fromEntries(
       (["easy", "medium", "hard"] as const).map((difficultyBucket) => [
         difficultyBucket,
-        readLatestObservedProfile({
-          databasePath: initialization.databasePath,
-          endpointId,
-          difficultyBucket,
-        }),
+        observationStorage.readHydrated(`profile:${endpointId}:${difficultyBucket}`, () =>
+          readLatestObservedProfile({
+            databasePath: initialization.databasePath,
+            endpointId,
+            difficultyBucket,
+          }),
+        ),
       ]),
     ) as Record<UnifiedRuntimeDifficultyBucket, ReturnType<typeof readLatestObservedProfile>>;
 
-    const operationalProfile = readLatestObservedProfile({
-      databasePath: initialization.databasePath,
-      endpointId,
-    });
+    const operationalProfile = observationStorage.readHydrated(`profile:${endpointId}:none`, () =>
+      readLatestObservedProfile({
+        databasePath: initialization.databasePath,
+        endpointId,
+      }),
+    );
     const recentSamples = readObservedPerformanceSamples({
       databasePath: initialization.databasePath,
       endpointId,
@@ -27145,23 +27479,59 @@ export async function createRuntimeBridgeBackend(
       )
       .digest("hex")
       .slice(0, 16);
-    const routingPrepTickKey = `${routingPrepRegistryIdentity}:${
+    // S318 (R27): the live routing-prep key carries the DAG identity: authority + configuration generation
+    // + registry model identity, then the TTL bucket. A config change bumps the generation and invalidates.
+    const routingPrepConfigIdentity = metadataConfigIdentity(currentUnifiedRuntimeConfig);
+    const routingPrepGeneration =
+      metadataCacheOwner.noteConfig(routingPrepConfigIdentity).generation;
+    const routingPrepTickKey = `${metadataCacheKey({
+      authorityId: metadataCacheOwner.authorityId,
+      configGeneration: routingPrepGeneration,
+      modelId: routingPrepRegistryIdentity,
+    })}:${
       routingPrepCacheTtlMs > 0
-        ? Math.floor(routingTimeMs / routingPrepCacheTtlMs)
-        : `t${routingTimeMs}`
+        ? String(Math.floor(routingTimeMs / routingPrepCacheTtlMs))
+        : `t${String(routingTimeMs)}`
     }`;
     const observedDifficultyBucket = resolveObservedDifficultyBucketForPlan(plan);
-    const runtimeObservedProfiles = await routingPrepCache.read(
-      `observed-profiles:${routingPrepTickKey}:${observedDifficultyBucket ?? "none"}`,
-      () =>
-        readObservedProfilesForRouting({
-          databasePath: initialization.databasePath,
-          registry: executionSnapshot.registry,
-          observedDataConfig,
-          difficultyBucket: observedDifficultyBucket,
-          routingTimeMs,
-        }),
+    // S319 (R27): the DAG cache holds the REAL observed-profiles payload the routing decision reads, keyed by
+    // authority + config generation + registry identity (not an identity marker). TTL/cap come from the DAG
+    // owner configured with the routing-prep TTL; routingPrepCache keeps in-flight coalescing.
+    const observedProfilesMetadataKey = metadataCacheOwner.keyFor(
+      `observed-profiles:${routingPrepRegistryIdentity}:${String(observedDifficultyBucket ?? "none")}`,
     );
+    const cachedObservedProfilesJson = metadataCacheOwner.getSync(
+      observedProfilesMetadataKey,
+      routingTimeMs,
+    );
+    const runtimeObservedProfiles =
+      typeof cachedObservedProfilesJson === "string"
+        ? (JSON.parse(cachedObservedProfilesJson) as Awaited<
+            ReturnType<typeof readObservedProfilesForRouting>
+          >)
+        : await routingPrepCache
+            .read(
+              `observed-profiles:${routingPrepTickKey}:${observedDifficultyBucket ?? "none"}`,
+              () =>
+                readObservedProfilesForRouting(
+                  {
+                    databasePath: initialization.databasePath,
+                    registry: executionSnapshot.registry,
+                    observedDataConfig,
+                    difficultyBucket: observedDifficultyBucket,
+                    routingTimeMs,
+                  },
+                  observationStorage,
+                ),
+            )
+            .then((profiles) => {
+              metadataCacheOwner.setSync(
+                observedProfilesMetadataKey,
+                JSON.stringify(profiles),
+                routingTimeMs,
+              );
+              return profiles;
+            });
     const telemetryScoresByEndpointId = await routingPrepCache.read(
       `live-telemetry:${routingPrepTickKey}:${observedDataConfig.aggregation.minSamples}`,
       () =>
@@ -28708,88 +29078,100 @@ export async function createRuntimeBridgeBackend(
         ...(graphEvidence ? { graphEvidence } : {}),
       });
       const persisted = persistFailureTelemetrySafely(() =>
-        persistRuntimeTelemetryFailure({
-          databasePath: initialization.databasePath,
-          requestId,
-          routingDecisionId,
-          endpointId: selectedEndpointId,
-          reasoningEffort: selectedReasoningEffort,
-          effortSource: selectedEffortSource,
-          modelId: selectedModelId ?? undefined,
-          requestedModelId: executionOptions?.requestedModel ?? selectedModelId,
-          selectedModelId,
-          requestOperation: executionOptions?.requestOperation ?? "chat",
-          statusCode: error.statusCode,
-          errorClass: error.errorClass,
-          latencyMs: failureLatencyMs,
-          /**
-           * Run 101 addendum 23: the failure row must carry what the client actually received. The builder used to
-           * write a literal zero, so a response that had streamed 789 chunks was recorded (and read by this operator)
-           * as `streamTextDeltaCount: 0` - the number that made a post-content drop look like a pre-content failure
-           * for two repair cycles. This is the count of chunks that carried content or tool calls.
-           */
-          streamTextDeltaCount: deliveredSubstantiveChunkCount,
-          clientRequestId: executionOptions?.requestOptions?.clientRequestId ?? null,
-          requestClass: toPersistedTrafficClass(
-            executionOptions?.requestOptions?.executionTrafficClass,
-          ),
-          sourceType,
-          providerKind: selectedCandidate?.identity.provider_kind ?? null,
-          providerFamily: error.providerFamily,
-          vendorId: error.vendorId ?? null,
-          providerId: error.providerId,
-          providerAccountId:
-            selectedProviderAccount?.providerAccountId ??
-            selectedRuntimeEndpoint?.providerAccountId ??
-            null,
-          endpointKind: selectedCandidate?.identity.endpoint_kind ?? "remote_api",
-          servingSource:
-            selectedCandidate?.identity.serving_source ?? error.executionFamily ?? "remote-service",
-          region: selectedCandidate?.identity.region ?? null,
-          lifecycleStateAtRequest: selectedCandidate?.status ?? "unknown",
-          healthStatusAtRequest: selectedProviderAccount?.healthStatus ?? null,
-          routingMode: requestRoutingMode?.effectiveMode ?? null,
-          selectedStrategy: plan.routingRequest.strategy,
-          sourceClient,
-          executionFamily: error.executionFamily,
-          adapterFamily: error.adapterFamily,
-          requestPayloadBytes: payloadBytes.ingress,
-          ingressPayloadBytes: payloadBytes.ingress,
-          translatedPayloadBytes: payloadBytes.translated,
-          providerCanonicalPayloadBytes: payloadBytes.providerCanonical,
-          providerWirePayloadBytes: payloadBytes.providerWire,
-          responsePayloadBytes: payloadBytes.providerResponse,
-          retryCount: executionSemanticsReceipt.retryCount,
-          rerouteCount: executionSemanticsReceipt.rerouteCount,
-          cooldownDecision: executionSemanticsReceipt.cooldownDecision,
-          idempotencyDecision: "not_needed",
-          toolSideEffectState: "none",
-          toolingUsed: Boolean(plan.executionRequest.tools?.length),
-          cacheState: "unknown",
-          roleIds: telemetrySnapshot.roleIds,
-          eligibleEndpointIds,
-          eligibleModelIds,
-          candidateCostSnapshot: telemetrySnapshot.candidateCostSnapshot,
-          selectedPricingSnapshot: telemetrySnapshot.selectedPricingSnapshot,
-          selectedUncachedCostUsd: telemetrySnapshot.selectedUncachedCostUsd,
-          baselineMaxEligibleCostUsd: telemetrySnapshot.baselineMaxEligibleCostUsd,
-          routingCostSavingsUsd: telemetrySnapshot.routingCostSavingsUsd,
-          cacheCostSavingsUsd: telemetrySnapshot.cacheCostSavingsUsd,
-          totalAvoidedCostUsd: telemetrySnapshot.totalAvoidedCostUsd,
-          costBaselineSource: telemetrySnapshot.costBaselineSource,
-          costSavingsSupport: telemetrySnapshot.costSavingsSupport,
-          samplingRate: failureObservation.privacyReceipt.samplingRate,
-          retentionTtlHours: failureObservation.privacyReceipt.retentionTtlHours,
-          retainUntil: failureObservation.privacyReceipt.retainUntil,
-          redactionLevel: capturePolicy.redactionLevel,
-          retentionClass: capturePolicy.retentionClass,
-          structuredInspectionMode: capturePolicy.structuredInspectionMode,
-          rawCaptureAvailable: capturePolicy.rawCaptureAvailable,
-          structuredInspectionAvailable: capturePolicy.structuredInspectionAvailable,
-          dimensions: selectedEndpointDimensions,
-          observation: failureObservation,
-          ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-        }),
+        observationStorage.persist(
+          () =>
+            persistRuntimeTelemetryFailure({
+              databasePath: initialization.databasePath,
+              requestId,
+              routingDecisionId,
+              endpointId: selectedEndpointId,
+              reasoningEffort: selectedReasoningEffort,
+              effortSource: selectedEffortSource,
+              modelId: selectedModelId ?? undefined,
+              requestedModelId: executionOptions?.requestedModel ?? selectedModelId,
+              selectedModelId,
+              requestOperation: executionOptions?.requestOperation ?? "chat",
+              statusCode: error.statusCode,
+              errorClass: error.errorClass,
+              latencyMs: failureLatencyMs,
+              /**
+               * Run 101 addendum 23: the failure row must carry what the client actually received. The builder used to
+               * write a literal zero, so a response that had streamed 789 chunks was recorded (and read by this operator)
+               * as `streamTextDeltaCount: 0` - the number that made a post-content drop look like a pre-content failure
+               * for two repair cycles. This is the count of chunks that carried content or tool calls.
+               */
+              streamTextDeltaCount: deliveredSubstantiveChunkCount,
+              clientRequestId: executionOptions?.requestOptions?.clientRequestId ?? null,
+              requestClass: toPersistedTrafficClass(
+                executionOptions?.requestOptions?.executionTrafficClass,
+              ),
+              sourceType,
+              providerKind: selectedCandidate?.identity.provider_kind ?? null,
+              providerFamily: error.providerFamily,
+              vendorId: error.vendorId ?? null,
+              providerId: error.providerId,
+              providerAccountId:
+                selectedProviderAccount?.providerAccountId ??
+                selectedRuntimeEndpoint?.providerAccountId ??
+                null,
+              endpointKind: selectedCandidate?.identity.endpoint_kind ?? "remote_api",
+              servingSource:
+                selectedCandidate?.identity.serving_source ??
+                error.executionFamily ??
+                "remote-service",
+              region: selectedCandidate?.identity.region ?? null,
+              lifecycleStateAtRequest: selectedCandidate?.status ?? "unknown",
+              healthStatusAtRequest: selectedProviderAccount?.healthStatus ?? null,
+              routingMode: requestRoutingMode?.effectiveMode ?? null,
+              selectedStrategy: plan.routingRequest.strategy,
+              sourceClient,
+              executionFamily: error.executionFamily,
+              adapterFamily: error.adapterFamily,
+              requestPayloadBytes: payloadBytes.ingress,
+              ingressPayloadBytes: payloadBytes.ingress,
+              translatedPayloadBytes: payloadBytes.translated,
+              providerCanonicalPayloadBytes: payloadBytes.providerCanonical,
+              providerWirePayloadBytes: payloadBytes.providerWire,
+              responsePayloadBytes: payloadBytes.providerResponse,
+              retryCount: executionSemanticsReceipt.retryCount,
+              rerouteCount: executionSemanticsReceipt.rerouteCount,
+              cooldownDecision: executionSemanticsReceipt.cooldownDecision,
+              idempotencyDecision: "not_needed",
+              toolSideEffectState: "none",
+              toolingUsed: Boolean(plan.executionRequest.tools?.length),
+              cacheState: "unknown",
+              roleIds: telemetrySnapshot.roleIds,
+              eligibleEndpointIds,
+              eligibleModelIds,
+              candidateCostSnapshot: telemetrySnapshot.candidateCostSnapshot,
+              selectedPricingSnapshot: telemetrySnapshot.selectedPricingSnapshot,
+              selectedUncachedCostUsd: telemetrySnapshot.selectedUncachedCostUsd,
+              baselineMaxEligibleCostUsd: telemetrySnapshot.baselineMaxEligibleCostUsd,
+              routingCostSavingsUsd: telemetrySnapshot.routingCostSavingsUsd,
+              cacheCostSavingsUsd: telemetrySnapshot.cacheCostSavingsUsd,
+              totalAvoidedCostUsd: telemetrySnapshot.totalAvoidedCostUsd,
+              costBaselineSource: telemetrySnapshot.costBaselineSource,
+              costSavingsSupport: telemetrySnapshot.costSavingsSupport,
+              samplingRate: failureObservation.privacyReceipt.samplingRate,
+              retentionTtlHours: failureObservation.privacyReceipt.retentionTtlHours,
+              retainUntil: failureObservation.privacyReceipt.retainUntil,
+              redactionLevel: capturePolicy.redactionLevel,
+              retentionClass: capturePolicy.retentionClass,
+              structuredInspectionMode: capturePolicy.structuredInspectionMode,
+              rawCaptureAvailable: capturePolicy.rawCaptureAvailable,
+              structuredInspectionAvailable: capturePolicy.structuredInspectionAvailable,
+              dimensions: selectedEndpointDimensions,
+              observation: failureObservation,
+              ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+            }),
+          async () =>
+            readRuntimeObservationBundle({
+              databasePath: initialization.databasePath,
+              requestId,
+              ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+            }),
+          graphObservationKey(options.scopeId, requestId),
+        ),
       );
       if (options.trackBPostObservation) {
         try {
@@ -29687,13 +30069,23 @@ export async function createRuntimeBridgeBackend(
           } as never);
       try {
         markPhase("observation-persist-start");
-        persistRuntimeObservationBundle({
-          databasePath: initialization.databasePath,
-          channel: runtimeChannel,
-          observation: persistedObservation,
-          ...(artifactRef ? { artifactRef } : {}),
-          ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-        });
+        observationStorage.persist(
+          () =>
+            persistRuntimeObservationBundle({
+              databasePath: initialization.databasePath,
+              channel: runtimeChannel,
+              observation: persistedObservation,
+              ...(artifactRef ? { artifactRef } : {}),
+              ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+            }),
+          async () =>
+            readRuntimeObservationBundle({
+              databasePath: initialization.databasePath,
+              requestId,
+              ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+            }),
+          graphObservationKey(options.scopeId, requestId),
+        );
       } catch (error) {
         // Run 94 SP48 (R11): a storage failure after the provider response was produced must
         // never retroactively fail the client with a raw storage error. Record a bounded
@@ -30171,7 +30563,7 @@ export async function createRuntimeBridgeBackend(
    * last two, which reported a degraded-but-serving runtime as a fifty-three.
    */
   let sessionBootstrapState: SessionBootstrapState = bootstrapOwner.pending();
-  const backend = {
+  const backend = withBackendProviderPermits({
     operatorAuthToken: options.operatorAuthToken,
     get registry(): EndpointRegistryResult {
       return currentRegistry;
@@ -33979,7 +34371,11 @@ export async function createRuntimeBridgeBackend(
     async readBenchmarkSuite(): Promise<unknown> {
       return readRoutingCapabilityBenchmarkSuite();
     },
-    async runBenchmark(body: Record<string, unknown>): Promise<unknown> {
+    async runBenchmark(
+      body: Record<string, unknown>,
+      signal: AbortSignal,
+      runId: string,
+    ): Promise<unknown> {
       const endpointIds = Array.isArray(body.endpoint_ids)
         ? body.endpoint_ids.filter((value): value is string => typeof value === "string")
         : Array.isArray(body.endpointIds)
@@ -34023,7 +34419,6 @@ export async function createRuntimeBridgeBackend(
       if (judgeEndpointId && resolveHealthyEndpoint(judgeEndpointId)) {
         await writeBenchmarkPreferences(benchmarkPreferencesPath, { judgeEndpointId });
       }
-      const runId = randomUUID();
       const warnings: string[] = [...startGuards.warnings];
       if (preflightProbe && judgeEndpointId && resolveHealthyEndpoint(judgeEndpointId)) {
         const configuredEndpoints = await backend.listEndpoints();
@@ -34075,6 +34470,7 @@ export async function createRuntimeBridgeBackend(
       }
       void runRoutingCapabilityBenchmark(
         {
+          signal,
           databasePath: initialization.databasePath,
           benchmarkArtifactRoot,
           listConfiguredEndpoints: async () => {
@@ -34236,6 +34632,23 @@ export async function createRuntimeBridgeBackend(
       }[]
     > {
       return collectLocalModels("peer-backed");
+    },
+    /**
+     * Run 115 S57: live llama-swap vendor status for the Studio vendor proxy. The proxy must
+     * know whether the vendor is actually healthy RIGHT NOW, not a start-time snapshot.
+     */
+    readLlamaSwapVendorStatus(): {
+      healthStatus: "healthy" | "inactive" | "starting" | "stopped" | "crashed";
+      baseUrl?: string;
+    } | null {
+      const status = currentLlamaSwapVendor?.readStatus() ?? null;
+      if (status === null) {
+        return null;
+      }
+      return {
+        healthStatus: status.healthStatus,
+        ...(typeof status.baseUrl === "string" ? { baseUrl: status.baseUrl } : {}),
+      };
     },
     async listLlamaSwapLocalModels(): Promise<
       readonly {
@@ -34592,8 +35005,9 @@ export async function createRuntimeBridgeBackend(
       );
       await Promise.all([currentLlamaSwapVendor?.shutdown(), currentLiteLLMVendor?.shutdown()]);
       await supervisor?.shutdown();
+      await backendStorage.close();
     },
-  };
+  });
 
   void (async () => {
     sessionBootstrapState = {

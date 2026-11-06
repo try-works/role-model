@@ -1,0 +1,316 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s565-page-stories.scene.test.ts (51 tests | 11 failed) 874ms
+   ✓ S565 page stories — scene > Index matches its captured story 158ms
+   × S565 page stories — scene > Diagnostics matches its captured story 5ms
+     → no captured story for route tag Diagnostics: expected undefined to be defined
+   ✓ S565 page stories — scene > Observability matches its captured story 17ms
+   ✓ S565 page stories — scene > StoreReceipts matches its captured story 27ms
+   ✓ S565 page stories — scene > Queues matches its captured story 23ms
+   ✓ S565 page stories — scene > LocalLogs matches its captured story 18ms
+   ✓ S565 page stories — scene > RouterCandidates matches its captured story 13ms
+   ✓ S565 page stories — scene > Requests matches its captured story 67ms
+   × S565 page stories — scene > RequestDetail matches its captured story 1ms
+     → no captured story for route tag RequestDetail: expected undefined to be defined
+   ✓ S565 page stories — scene > RouterDecisions matches its captured story 13ms
+   × S565 page stories — scene > RouterDecisionDetail matches its captured story 1ms
+     → no captured story for route tag RouterDecisionDetail: expected undefined to be defined
+   ✓ S565 page stories — scene > LocalPeers matches its captured story 16ms
+   ✓ S565 page stories — scene > SystemPeers matches its captured story 16ms
+   ✓ S565 page stories — scene > LocalPeerModels matches its captured story 23ms
+   × S565 page stories — scene > QueuesConfiguration matches its captured story 1ms
+     → no captured story for route tag QueuesConfiguration: expected undefined to be defined
+   × S565 page stories — scene > IntegrationsDownstream matches its captured story 1ms
+     → no captured story for route tag IntegrationsDownstream: expected undefined to be defined
+   × S565 page stories — scene > IntegrationsUpstream matches its captured story 1ms
+     → no captured story for route tag IntegrationsUpstream: expected undefined to be defined
+   ✓ S565 page stories — scene > LocalChoose matches its captured story 10ms
+   × S565 page stories — scene > Studio matches its captured story 1ms
+     → no captured story for route tag Studio: expected undefined to be defined
+   ✓ S565 page stories — scene > Learning matches its captured story 17ms
+   ✓ S565 page stories — scene > LearningConfiguration matches its captured story 11ms
+   ✓ S565 page stories — scene > LearningPacks matches its captured story 14ms
+   ✓ S565 page stories — scene > LearningDecisions matches its captured story 17ms
+   ✓ S565 page stories — scene > LearningEvidence matches its captured story 13ms
+   ✓ S565 page stories — scene > LearningHistory matches its captured story 11ms
+   ✓ S565 page stories — scene > LocalLlamaSwapModels matches its captured story 13ms
+   ✓ S565 page stories — scene > LocalPolicy matches its captured story 18ms
+   ✓ S565 page stories — scene > SystemOperator matches its captured story 24ms
+   ✓ S565 page stories — scene > SystemExtensions matches its captured story 14ms
+   ✓ S565 page stories — scene > Models matches its captured story 11ms
+   ✓ S565 page stories — scene > ModelsRoles matches its captured story 18ms
+   ✓ S565 page stories — scene > Benchmark matches its captured story 19ms
+   ✓ S565 page stories — scene > StorageRetention matches its captured story 16ms
+   ✓ S565 page stories — scene > Runtime matches its captured story 15ms
+   × S565 page stories — scene > RuntimeConfig matches its captured story 1ms
+     → no captured story for route tag RuntimeConfig: expected undefined to be defined
+   ✓ S565 page stories — scene > SessionReadiness matches its captured story 15ms
+   × S565 page stories — scene > Dashboard matches its captured story 1ms
+     → no captured story for route tag Dashboard: expected undefined to be defined
+   ✓ S565 page stories — scene > LocalSwap matches its captured story 12ms
+   ✓ S565 page stories — scene > RouterStrategy matches its captured story 24ms
+   ✓ S565 page stories — scene > RouterWorkloads matches its captured story 23ms
+   ✓ S565 page stories — scene > RouterConfig matches its captured story 14ms
+   ✓ S565 page stories — scene > RouterAgentStrategy matches its captured story 22ms
+   ✓ S565 page stories — scene > ObserveActivity matches its captured story 11ms
+   ✓ S565 page stories — scene > ObserveLogs matches its captured story 12ms
+   ✓ S565 page stories — scene > ObserveRouting matches its captured story 17ms
+   ✓ S565 page stories — scene > Router matches its captured story 13ms
+   ✓ S565 page stories — scene > Providers matches its captured story 31ms
+   ✓ S565 page stories — scene > Endpoints matches its captured story 13ms
+   ✓ S565 page stories — scene > ControlController matches its captured story 12ms
+   × S565 page stories — scene > NotFound matches its captured story 1ms
+     → no captured story for route tag NotFound: expected undefined to be defined
+   × S565 page stories — scene > every route tag in the union has a captured story 6ms
+     → missing page stories: Diagnostics, RequestDetail, RouterDecisionDetail, QueuesConfiguration, IntegrationsDownstream, IntegrationsUpstream, Studio, RuntimeConfig, Dashboard, NotFound: expected [ Array(10) ] to deeply equal []
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 11 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > Diagnostics matches its captured story
+AssertionError: no captured story for route tag Diagnostics: expected undefined to be defined
+ ❯ test/s565-page-stories.scene.test.ts:105:63
+    103|     it(tag + " matches its captured story", async () => {
+    104|       const story = stories[tag];
+    105|       expect(story, "no captured story for route tag " + tag).toBeDefi…
+       |                                                               ^
+    106|       if (story === undefined) return;
+    107|       const container = await renderRoute(routeFor(tag));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/11]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > RequestDetail matches its captured story
+AssertionError: no captured story for route tag RequestDetail: expected undefined to be defined
+ ❯ test/s565-page-stories.scene.test.ts:105:63
+    103|     it(tag + " matches its captured story", async () => {
+    104|       const story = stories[tag];
+    105|       expect(story, "no captured story for route tag " + tag).toBeDefi…
+       |                                                               ^
+    106|       if (story === undefined) return;
+    107|       const container = await renderRoute(routeFor(tag));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/11]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > RouterDecisionDetail matches its captured story
+AssertionError: no captured story for route tag RouterDecisionDetail: expected undefined to be defined
+ ❯ test/s565-page-stories.scene.test.ts:105:63
+    103|     it(tag + " matches its captured story", async () => {
+    104|       const story = stories[tag];
+    105|       expect(story, "no captured story for route tag " + tag).toBeDefi…
+       |                                                               ^
+    106|       if (story === undefined) return;
+    107|       const container = await renderRoute(routeFor(tag));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/11]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > QueuesConfiguration matches its captured story
+AssertionError: no captured story for route tag QueuesConfiguration: expected undefined to be defined
+ ❯ test/s565-page-stories.scene.test.ts:105:63
+    103|     it(tag + " matches its captured story", async () => {
+    104|       const story = stories[tag];
+    105|       expect(story, "no captured story for route tag " + tag).toBeDefi…
+       |                                                               ^
+    106|       if (story === undefined) return;
+    107|       const container = await renderRoute(routeFor(tag));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/11]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > IntegrationsDownstream matches its captured story
+AssertionError: no captured story for route tag IntegrationsDownstream: expected undefined to be defined
+ ❯ test/s565-page-stories.scene.test.ts:105:63
+    103|     it(tag + " matches its captured story", async () => {
+    104|       const story = stories[tag];
+    105|       expect(story, "no captured story for route tag " + tag).toBeDefi…
+       |                                                               ^
+    106|       if (story === undefined) return;
+    107|       const container = await renderRoute(routeFor(tag));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/11]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > IntegrationsUpstream matches its captured story
+AssertionError: no captured story for route tag IntegrationsUpstream: expected undefined to be defined
+ ❯ test/s565-page-stories.scene.test.ts:105:63
+    103|     it(tag + " matches its captured story", async () => {
+    104|       const story = stories[tag];
+    105|       expect(story, "no captured story for route tag " + tag).toBeDefi…
+       |                                                               ^
+    106|       if (story === undefined) return;
+    107|       const container = await renderRoute(routeFor(tag));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/11]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > Studio matches its captured story
+AssertionError: no captured story for route tag Studio: expected undefined to be defined
+ ❯ test/s565-page-stories.scene.test.ts:105:63
+    103|     it(tag + " matches its captured story", async () => {
+    104|       const story = stories[tag];
+    105|       expect(story, "no captured story for route tag " + tag).toBeDefi…
+       |                                                               ^
+    106|       if (story === undefined) return;
+    107|       const container = await renderRoute(routeFor(tag));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/11]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > RuntimeConfig matches its captured story
+AssertionError: no captured story for route tag RuntimeConfig: expected undefined to be defined
+ ❯ test/s565-page-stories.scene.test.ts:105:63
+    103|     it(tag + " matches its captured story", async () => {
+    104|       const story = stories[tag];
+    105|       expect(story, "no captured story for route tag " + tag).toBeDefi…
+       |                                                               ^
+    106|       if (story === undefined) return;
+    107|       const container = await renderRoute(routeFor(tag));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/11]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > Dashboard matches its captured story
+AssertionError: no captured story for route tag Dashboard: expected undefined to be defined
+ ❯ test/s565-page-stories.scene.test.ts:105:63
+    103|     it(tag + " matches its captured story", async () => {
+    104|       const story = stories[tag];
+    105|       expect(story, "no captured story for route tag " + tag).toBeDefi…
+       |                                                               ^
+    106|       if (story === undefined) return;
+    107|       const container = await renderRoute(routeFor(tag));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/11]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > NotFound matches its captured story
+AssertionError: no captured story for route tag NotFound: expected undefined to be defined
+ ❯ test/s565-page-stories.scene.test.ts:105:63
+    103|     it(tag + " matches its captured story", async () => {
+    104|       const story = stories[tag];
+    105|       expect(story, "no captured story for route tag " + tag).toBeDefi…
+       |                                                               ^
+    106|       if (story === undefined) return;
+    107|       const container = await renderRoute(routeFor(tag));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/11]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > every route tag in the union has a captured story
+AssertionError: missing page stories: Diagnostics, RequestDetail, RouterDecisionDetail, QueuesConfiguration, IntegrationsDownstream, IntegrationsUpstream, Studio, RuntimeConfig, Dashboard, NotFound: expected [ Array(10) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "Diagnostics",
++   "RequestDetail",
++   "RouterDecisionDetail",
++   "QueuesConfiguration",
++   "IntegrationsDownstream",
++   "IntegrationsUpstream",
++   "Studio",
++   "RuntimeConfig",
++   "Dashboard",
++   "NotFound",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:116:68
+    114|   it("every route tag in the union has a captured story", () => {
+    115|     const missing = routeTags.filter((tag) => stories[tag] === undefin…
+    116|     expect(missing, "missing page stories: " + missing.join(", ")).toE…
+       |                                                                    ^
+    117|   });
+    118| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/11]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  11 failed | 40 passed (51)
+   Start at  20:18:50
+   Duration  8.94s (transform 3.96s, setup 0ms, collect 6.38s, tests 874ms, environment 1.07s, prepare 202ms)
+
+
+== FALSIFICATION RUN 2026-10-31: Dashboard story heading changed to 'Falsified heading'; expected RED ==
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s565-page-stories.scene.test.ts (51 tests | 1 failed) 1158ms
+   ✓ S565 page stories — scene > Index matches its captured story 209ms
+   ✓ S565 page stories — scene > Diagnostics matches its captured story 25ms
+   ✓ S565 page stories — scene > Observability matches its captured story 20ms
+   ✓ S565 page stories — scene > StoreReceipts matches its captured story 29ms
+   ✓ S565 page stories — scene > Queues matches its captured story 20ms
+   ✓ S565 page stories — scene > LocalLogs matches its captured story 21ms
+   ✓ S565 page stories — scene > RouterCandidates matches its captured story 18ms
+   ✓ S565 page stories — scene > Requests matches its captured story 85ms
+   ✓ S565 page stories — scene > RequestDetail matches its captured story 20ms
+   ✓ S565 page stories — scene > RouterDecisions matches its captured story 16ms
+   ✓ S565 page stories — scene > RouterDecisionDetail matches its captured story 25ms
+   ✓ S565 page stories — scene > LocalPeers matches its captured story 19ms
+   ✓ S565 page stories — scene > SystemPeers matches its captured story 17ms
+   ✓ S565 page stories — scene > LocalPeerModels matches its captured story 15ms
+   ✓ S565 page stories — scene > QueuesConfiguration matches its captured story 9ms
+   ✓ S565 page stories — scene > IntegrationsDownstream matches its captured story 27ms
+   ✓ S565 page stories — scene > IntegrationsUpstream matches its captured story 13ms
+   ✓ S565 page stories — scene > LocalChoose matches its captured story 10ms
+   ✓ S565 page stories — scene > Studio matches its captured story 15ms
+   ✓ S565 page stories — scene > Learning matches its captured story 15ms
+   ✓ S565 page stories — scene > LearningConfiguration matches its captured story 12ms
+   ✓ S565 page stories — scene > LearningPacks matches its captured story 25ms
+   ✓ S565 page stories — scene > LearningDecisions matches its captured story 16ms
+   ✓ S565 page stories — scene > LearningEvidence matches its captured story 15ms
+   ✓ S565 page stories — scene > LearningHistory matches its captured story 12ms
+   ✓ S565 page stories — scene > LocalLlamaSwapModels matches its captured story 14ms
+   ✓ S565 page stories — scene > LocalPolicy matches its captured story 16ms
+   ✓ S565 page stories — scene > SystemOperator matches its captured story 15ms
+   ✓ S565 page stories — scene > SystemExtensions matches its captured story 20ms
+   ✓ S565 page stories — scene > Models matches its captured story 11ms
+   ✓ S565 page stories — scene > ModelsRoles matches its captured story 19ms
+   ✓ S565 page stories — scene > Benchmark matches its captured story 32ms
+   ✓ S565 page stories — scene > StorageRetention matches its captured story 18ms
+   ✓ S565 page stories — scene > Runtime matches its captured story 16ms
+   ✓ S565 page stories — scene > RuntimeConfig matches its captured story 11ms
+   ✓ S565 page stories — scene > SessionReadiness matches its captured story 16ms
+   × S565 page stories — scene > Dashboard matches its captured story 22ms
+     → Dashboard
+sections: expected [Falsified heading] rendered [Dashboard]: expected [ Array(1) ] to deeply equal []
+   ✓ S565 page stories — scene > LocalSwap matches its captured story 13ms
+   ✓ S565 page stories — scene > RouterStrategy matches its captured story 26ms
+   ✓ S565 page stories — scene > RouterWorkloads matches its captured story 31ms
+   ✓ S565 page stories — scene > RouterConfig matches its captured story 17ms
+   ✓ S565 page stories — scene > RouterAgentStrategy matches its captured story 23ms
+   ✓ S565 page stories — scene > ObserveActivity matches its captured story 11ms
+   ✓ S565 page stories — scene > ObserveLogs matches its captured story 12ms
+   ✓ S565 page stories — scene > ObserveRouting matches its captured story 18ms
+   ✓ S565 page stories — scene > Router matches its captured story 15ms
+   ✓ S565 page stories — scene > Providers matches its captured story 23ms
+   ✓ S565 page stories — scene > Endpoints matches its captured story 22ms
+   ✓ S565 page stories — scene > ControlController matches its captured story 12ms
+   ✓ S565 page stories — scene > NotFound matches its captured story 10ms
+   ✓ S565 page stories — scene > every route tag in the union has a captured story 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > Dashboard matches its captured story
+AssertionError: Dashboard
+sections: expected [Falsified heading] rendered [Dashboard]: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "sections: expected [Falsified heading] rendered [Dashboard]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:113:58
+    111|       const container = await renderRoute(routeFor(tag));
+    112|       const failures = sceneFailures(container, story);
+    113|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+    114|       expect(normalise(container.textContent)).not.toContain("Runtime …
+    115|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 50 passed (51)
+   Start at  20:21:02
+   Duration  10.17s (transform 4.45s, setup 0ms, collect 7.18s, tests 1.16s, environment 1.12s, prepare 210ms)
+

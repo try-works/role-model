@@ -1,0 +1,20 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 package-sea D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-host-bridge
+> tsx src/package-sea.ts
+
+(node:47140) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-host-bridge\src\package-sea.ts:79
+    throw new Error(
+          ^
+
+Error: Packaged runtime requires a clean public worktree; commit or discard source changes before packaging
+    at resolvePackagedRuntimeSourceTree (D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-host-bridge\src\package-sea.ts:79:11)
+    at packageSeaRuntime (D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-host-bridge\src\package-sea.ts:967:22)
+    at <anonymous> (D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-host-bridge\src\package-sea.ts:1094:24)
+    at ModuleJob.run (node:internal/modules/esm/module_job:377:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:691:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.11.0
+ ELIFECYCLE  Command failed with exit code 1.

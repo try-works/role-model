@@ -1,0 +1,51 @@
+COMMAND: node vitest run test/s303-scoped-service.test.ts test/s303-sea-leg.test.ts (S305 RED)
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ✓ test/s303-sea-leg.test.ts (2 tests) 14391ms
+   ✓ S303 SEA supervision > starts the pinned sealed SEA, becomes healthy, stops it, and asserts its identity  14372ms
+ ❯ test/s303-scoped-service.test.ts (5 tests | 2 failed) 14418ms
+   ✓ S303 scoped process service > scope close runs every release in reverse order even when an earlier release rejects 20ms
+   ✓ S303 scoped process service > scoped vendor preserves env, cwd and logs, and close stops the child  1622ms
+   × S303 scoped process service > starting into a closed scope rolls the vendor back and kills the child 11356ms
+     → Timed out waiting for http://127.0.0.1:63617/healthz to stop responding.
+   × S303 scoped process service > two concurrent closes join one teardown instead of returning early 7ms
+     → expected 1 to be greater than or equal to 100
+   ✓ S303 scoped process service > stopping a scoped vendor kills its grandchild tree  1404ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s303-scoped-service.test.ts > S303 scoped process service > starting into a closed scope rolls the vendor back and kills the child
+Error: Timed out waiting for http://127.0.0.1:63617/healthz to stop responding.
+ ❯ waitForHttpDown test/s303-scoped-service.test.ts:66:9
+     64|     await new Promise((resolve) => setTimeout(resolve, 25));
+     65|   }
+     66|   throw new Error("Timed out waiting for " + url + " to stop respondin…
+       |         ^
+     67| }
+     68| 
+ ❯ test/s303-scoped-service.test.ts:166:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s303-scoped-service.test.ts > S303 scoped process service > two concurrent closes join one teardown instead of returning early
+AssertionError: expected 1 to be greater than or equal to 100
+ ❯ test/s303-scoped-service.test.ts:183:36
+    181|     const second = scope.close();
+    182|     await second;
+    183|     expect(Date.now() - startedAt).toBeGreaterThanOrEqual(100);
+       |                                    ^
+    184|     await first;
+    185|     expect(calls).toEqual(["fast-release", "slow-release"]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 5 passed (7)
+   Start at  02:17:18
+   Duration  17.26s (transform 570ms, setup 0ms, collect 775ms, tests 28.81s, environment 2ms, prepare 1.74s)
+
+

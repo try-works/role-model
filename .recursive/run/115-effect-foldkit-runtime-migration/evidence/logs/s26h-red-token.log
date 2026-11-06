@@ -1,0 +1,82 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s26h-stale-clear.test.ts > S26h stale clears on successful gap refetch > reads the operator token from legacy storage by default and honors readbackToken
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 28.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'loading', token: 1 },
+    readbacks: {
+      localLogs: [Object],
+      localPeers: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Observability' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 28.498199999999997,
+  thresholdMs: 8
+}
+
+ ❯ test/s26h-stale-clear.test.ts (13 tests | 1 failed | 12 skipped) 664ms
+   ↓ S26h stale clears on successful gap refetch > localLogs gap refetch clears stale
+   ↓ S26h stale clears on successful gap refetch > localPeers gap refetch clears stale
+   ↓ S26h stale clears on successful gap refetch > queues gap refetch clears stale
+   ↓ S26h stale clears on successful gap refetch > requests gap refetch clears stale
+   ↓ S26h stale clears on successful gap refetch > routerCandidates gap refetch clears stale
+   ↓ S26h stale clears on successful gap refetch > routerDecisions gap refetch clears stale
+   ↓ S26h stale clears on successful gap refetch > runtime gap refetch clears stale
+   ↓ S26h stale clears on successful gap refetch > sessionReadiness gap refetch clears stale
+   ↓ S26h stale clears on successful gap refetch > storeReceipts gap refetch clears stale
+   ↓ S26h stale clears on successful gap refetch > observability gap refetch clears stale
+   ↓ S26h stale clears on successful gap refetch > a failed gap refetch keeps stale
+   × S26h stale clears on successful gap refetch > reads the operator token from legacy storage by default and honors readbackToken 662ms
+     → expected [ 'missing' ] to deeply equal [ 'Bearer stored-token' ]
+   ↓ S26h stale clears on successful gap refetch > distinguishes 401/403 and rejects invalid 200 readback bodies
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s26h-stale-clear.test.ts > S26h stale clears on successful gap refetch > reads the operator token from legacy storage by default and honors readbackToken
+AssertionError: expected [ 'missing' ] to deeply equal [ 'Bearer stored-token' ]
+
+- Expected
++ Received
+
+  [
+-   "Bearer stored-token",
++   "missing",
+  ]
+
+ ❯ test/s26h-stale-clear.test.ts:185:21
+    183|       "stored token read",
+    184|     );
+    185|     expect(headers).toEqual(["Bearer stored-token"]);
+       |                     ^
+    186| 
+    187|     const explicit: string[] = [];
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 skipped (13)
+   Start at  08:21:26
+   Duration  7.78s (transform 3.48s, setup 0ms, collect 5.59s, tests 664ms, environment 677ms, prepare 354ms)
+

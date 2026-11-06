@@ -1,0 +1,377 @@
+{
+  "runId": "727eabaf-a7d7-4130-9365-f91753cc55a3",
+  "status": "completed",
+  "mode": "quick",
+  "startedAtMs": 1793836565678,
+  "updatedAtMs": 1793836691442,
+  "totalSteps": 60,
+  "completedSteps": 60,
+  "endpointIndex": 0,
+  "endpointCount": 2,
+  "currentEndpointId": null,
+  "currentEndpointModelId": null,
+  "caseIndex": 12,
+  "caseCount": 12,
+  "currentCaseId": "h15-max-signal-v3",
+  "currentPhase": null,
+  "runPhase": "complete",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+  "activeJudgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+  "artifactRoot": "D:\\DEV\\rm-clean\\ui-review21\\standalone-runtime-dev\\memory\\benchmark-runs",
+  "result": {
+    "runId": "727eabaf-a7d7-4130-9365-f91753cc55a3",
+    "suiteId": "routing-capability-v2",
+    "suiteVersion": "3.4",
+    "mode": "quick",
+    "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-high",
+    "startedAtMs": 1793836565677,
+    "completedAtMs": 1793836691422,
+    "artifactRoot": "D:\\DEV\\rm-clean\\ui-review21\\standalone-runtime-dev\\memory\\benchmark-runs\\727eabaf-a7d7-4130-9365-f91753cc55a3",
+    "endpointGrades": [
+      {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+        "modelId": "deepseek/deepseek-flash",
+        "sourceType": "remote",
+        "overallScore": 0.4166666666666667,
+        "byDifficulty": {
+          "easy": {
+            "cases": 0,
+            "score": 0
+          },
+          "medium": {
+            "cases": 0,
+            "score": 0
+          },
+          "hard": {
+            "cases": 12,
+            "score": 0.4166666666666667
+          }
+        },
+        "caseResults": [
+          {
+            "caseId": "p17-tools-multi-hard",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 1338,
+            "actualPreview": "This response_format type is unavailable now (request_id: 5954a1c0-89a7-4906-9732-98f15d345d48)",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "x01-max-signal",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 579,
+            "actualPreview": "This response_format type is unavailable now (request_id: be5d2e8a-0faa-450f-ba8c-05e84ae73f5e)",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h01-implement-two-sum",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable fully satisfies criteria: defines exported twoSum, uses a Map hash map, iterates nums exactly once in a single for loop, checks complement via seen.get, returns two numeric indices as [complementIndex, i], and contains no nested O(n^2) double loop.",
+            "gradingMethod": "judge",
+            "latencyMs": 2539,
+            "actualPreview": "```typescript\nexport function twoSum(nums: number[], target: number): [number, number] {\n  const seen = new Map<number, number>();\n\n  for (let i = 0; i < nums.length; i++) {\n    const complement = target - nums[i];\n    const complementIndex",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h02-fix-async-counter",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "The deliverable implements a promise-based Mutex and wraps the shared count read-yield-write section in acquire/finally-release, so the three concurrent increments serialize and the final count reliably reaches 3.",
+            "gradingMethod": "judge",
+            "latencyMs": 1565,
+            "actualPreview": "```typescript\nlet count = 0;\n\nclass Mutex {\n  private tail: Promise<void> = Promise.resolve();\n\n  async acquire(): Promise<() => void> {\n    let release!: () => void;\n    const next = new Promise<void>((resolve) => {\n      release = resolve",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h04-tool-read-router",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 520,
+            "actualPreview": "This response_format type is unavailable now (request_id: badf5200-f05f-43f9-9885-da881e95a025)",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h05-tool-grep-eligibility",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 547,
+            "actualPreview": "This response_format type is unavailable now (request_id: 96ad2912-ce38-4802-b339-4f04534eb207)",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h06-tool-apply-patch",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "The deliverable calls apply_patch exactly once, and the diff includes both '--- a/src/config.ts' and '+++ b/src/config.ts' headers. It also changes the MODE value from 'baseline' to 'difficulty', satisfying all listed criteria.",
+            "gradingMethod": "judge",
+            "latencyMs": 4605,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/config.ts\\n+++ b/src/config.ts\\n@@ -1 +1 @@\\n-const MODE = 'baseline'\\n+const MODE = 'difficulty'\"\n      }\n    }\n  ]\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h07-multi-turn-sla-guard",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "The deliverable satisfies the criteria: it uses multi-turn context by implementing remote-only alias resolution with endpoint evaluations; it explicitly references throughput_sla and sole candidate logic via denyReasons filtering and allowListed length checks; and it returns a fallback allow decision only for the soleCandidate_throughput_sla_only case, including fallbackEndpointId.",
+            "gradingMethod": "judge",
+            "latencyMs": 11624,
+            "actualPreview": "```typescript\nexport type HardDenyReason =\n  | 'throughput_sla'\n  | 'latency_sla'\n  | 'availability'\n  | 'capability_mismatch'\n  | 'quota_exceeded'\n  | 'region_restriction';\n\nexport interface EndpointEvaluation {\n  endpointId: string;\n  all",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h08-multi-turn-tool-refine",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 826,
+            "actualPreview": "This response_format type is unavailable now (request_id: 1d34da1a-543a-42f3-b156-1e3d9877ba84)",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h09-agent-metrics-chain",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 943,
+            "actualPreview": "This response_format type is unavailable now (request_id: 64b35bfd-d9ef-480e-9a64-803a83a97305)",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h10-agent-read-grep-patch",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "The deliverable includes all required tool calls: read_file on src/router.ts, grep_search for evaluateEligibility, and apply_patch with a unified diff, satisfying every checklist item.",
+            "gradingMethod": "judge",
+            "latencyMs": 5494,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    },\n    {\n ",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h15-max-signal-v3",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 580,
+            "actualPreview": "This response_format type is unavailable now (request_id: 0f719073-bb1c-4a38-aa2f-5e533d9788cc)",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          }
+        ],
+        "reasoningEffort": null
+      },
+      {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-flash-low",
+        "modelId": "deepseek/deepseek-flash",
+        "sourceType": "remote",
+        "overallScore": 0.3833333333333333,
+        "byDifficulty": {
+          "easy": {
+            "cases": 0,
+            "score": 0
+          },
+          "medium": {
+            "cases": 0,
+            "score": 0
+          },
+          "hard": {
+            "cases": 12,
+            "score": 0.3833333333333333
+          }
+        },
+        "caseResults": [
+          {
+            "caseId": "p17-tools-multi-hard",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 627,
+            "actualPreview": "This response_format type is unavailable now (request_id: 25bf3f77-85aa-4f65-8414-ddf3b3f390a2)",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "x01-max-signal",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 569,
+            "actualPreview": "This response_format type is unavailable now (request_id: f998d801-b651-4a78-a5f2-5d38f6ba3217)",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h01-implement-two-sum",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable defines twoSum, uses a Map for value-to-index lookup, iterates over nums exactly once with a single for loop, returns two numeric indices as [number, number], and contains no nested O(n^2) double loop.",
+            "gradingMethod": "judge",
+            "latencyMs": 2160,
+            "actualPreview": "```typescript\nexport function twoSum(nums: number[], target: number): [number, number] {\n  const indexByValue = new Map<number, number>();\n\n  for (let i = 0; i < nums.length; i++) {\n    const complement = target - nums[i];\n    const complem",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h02-fix-async-counter",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "The deliverable implements a promise-chain mutex and wraps the entire read-modify-write critical section in runExclusive, so the three concurrent increment calls are serialized; Promise.all then reliably reaches and logs count 3, satisfying the race-fix criterion.",
+            "gradingMethod": "judge",
+            "latencyMs": 3521,
+            "actualPreview": "```typescript\nclass Mutex {\n  private tail: Promise<void> = Promise.resolve();\n\n  async runExclusive<T>(fn: () => Promise<T> | T): Promise<T> {\n    const previous = this.tail;\n    let release!: () => void;\n\n    this.tail = new Promise<void>",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h04-tool-read-router",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 535,
+            "actualPreview": "This response_format type is unavailable now (request_id: e9257046-cdc8-42f7-94f1-29672283a0c0)",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h05-tool-grep-eligibility",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 532,
+            "actualPreview": "This response_format type is unavailable now (request_id: af91f75d-9991-4f70-a092-af366807a586)",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h06-tool-apply-patch",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Response calls apply_patch with a valid diff containing ---/+++ headers and changes MODE from 'baseline' to 'difficulty', satisfying all listed criteria.",
+            "gradingMethod": "judge",
+            "latencyMs": 2264,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/config.ts\\n+++ b/src/config.ts\\n@@ -1,3 +1,3 @@\\n-const MODE = 'baseline';\\n+const MODE = 'difficulty';\\n\"\n      }\n    }\n  ]\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h07-multi-turn-sla-guard",
+            "difficultyBucket": "hard",
+            "score": 0.6,
+            "rationale": "The deliverable uses multi-turn fields (remoteOnly, allowListed, hardDenials) and correctly checks THROUGHPUT_SLA-only hard denial, returning an explicit fallback allow result. However, it does not enforce the sole-candidate condition: it succeeds for multiple allow-listed THROUGHPUT_SLA-only candidates and selects one by priority/endpointId, so the sole-candidate guard criterion is only partially met.",
+            "gradingMethod": "judge",
+            "latencyMs": 14408,
+            "actualPreview": "```typescript\nexport type DenialCode =\n  | 'THROUGHPUT_SLA'\n  | 'MODEL_MISMATCH'\n  | 'CONTEXT_LENGTH'\n  | 'REGION'\n  | 'CAPABILITY'\n  | 'HEALTH';\n\nexport interface EndpointCandidate {\n  readonly endpointId: string;\n  readonly allowListed: b",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h08-multi-turn-tool-refine",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 616,
+            "actualPreview": "This response_format type is unavailable now (request_id: d02c01f1-933a-47df-ac71-eea675eb5986)",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h09-agent-metrics-chain",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 538,
+            "actualPreview": "This response_format type is unavailable now (request_id: 9dbf6386-e41e-410a-93e0-12f83b37f2e2)",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h10-agent-read-grep-patch",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable includes all three required tool calls: read_file for src/router.ts, grep_search for evaluateEligibility, and apply_patch with a diff modifying src/router.ts, satisfying the criteria.",
+            "gradingMethod": "judge",
+            "latencyMs": 7635,
+            "actualPreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    },\n    {\n ",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h15-max-signal-v3",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 682,
+            "actualPreview": "This response_format type is unavailable now (request_id: a6910480-e76e-4bdb-959a-b93878a06b92)",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          }
+        ],
+        "reasoningEffort": "low"
+      }
+    ]
+  }
+}

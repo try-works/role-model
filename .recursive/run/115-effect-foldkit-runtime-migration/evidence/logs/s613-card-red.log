@@ -1,0 +1,53 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s613-replay-auto-queue.test.ts (7 tests | 2 failed) 233ms
+   ✓ S613 replay auto-queue plumbing > PUTs the exact auto-queue body to the runtime config endpoint 7ms
+   ✓ S613 replay auto-queue plumbing > exposes the five auto-queue messages with the contract payloads 1ms
+   ✓ S613 replay auto-queue plumbing > hydrates the persisted auto-queue values from the runtime-config readback 14ms
+   ✓ S613 replay auto-queue plumbing > rejects a zero or over-maximum cap before any command is dispatched 6ms
+   ✓ S613 replay auto-queue plumbing > stores the toggle and cap draft in the learning auto-queue state 3ms
+   × S613 replay auto-queue Learning overview card > renders the card controls from the model state 145ms
+     → expected null not to be null
+   × S613 replay auto-queue Learning overview card > renders saved and error status states honestly 55ms
+     → expected undefined to be 'false' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s613-replay-auto-queue.test.ts > S613 replay auto-queue Learning overview card > renders the card controls from the model state
+AssertionError: expected null not to be null
+ ❯ test/s613-replay-auto-queue.test.ts:103:24
+    101|     card.innerHTML = (await renderLearning()).innerHTML;
+    102|     const toggle = card.querySelector("[data-replay-auto-queue-toggle]…
+    103|     expect(toggle).not.toBeNull();
+       |                        ^
+    104|     expect(toggle?.getAttribute("aria-pressed")).toBe("true");
+    105|     const cap = card.querySelector("[data-replay-auto-queue-cap]");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s613-replay-auto-queue.test.ts > S613 replay auto-queue Learning overview card > renders saved and error status states honestly
+AssertionError: expected undefined to be 'false' // Object.is equality
+
+- Expected: 
+"false"
+
++ Received: 
+undefined
+
+ ❯ test/s613-replay-auto-queue.test.ts:118:98
+    116|     const saved = document.createElement("div");
+    117|     saved.innerHTML = (await renderLearning({ dailyCap: "25", enabled:…
+    118|     expect(saved.querySelector("[data-replay-auto-queue-toggle]")?.get…
+       |                                                                                                  ^
+    119|     expect(saved.querySelector("[data-replay-auto-queue-status='saved'…
+    120|     const failed = document.createElement("div");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 5 passed (7)
+   Start at  21:13:13
+   Duration  15.39s (transform 6.86s, setup 0ms, collect 11.37s, tests 233ms, environment 2.56s, prepare 481ms)
+

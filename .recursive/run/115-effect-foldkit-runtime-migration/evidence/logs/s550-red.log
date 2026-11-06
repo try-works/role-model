@@ -1,0 +1,51 @@
+S551 re-RED: final s550 test against pre-S550 HEAD track-b-auto-replay-runtime.ts (full vitest output)
+VITEST_EXIT=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+
+(node:41356) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | role-model-router/apps/runtime-host-bridge/test/run115-s550-sweep-cancellation.test.ts > run115 s550 every production sweep body receives the loop abort signal
+[run104-pending] captures=0 scoped=0 first= only=none pendingCount=0 captureCount=n/a
+
+ ❯ role-model-router/apps/runtime-host-bridge/test/run115-s550-sweep-cancellation.test.ts (2 tests | 2 failed) 64ms
+   × run115 s550 every production sweep body receives the loop abort signal 20ms
+     → expected 0 to be greater than or equal to 5
+   × run115 s550 a wedged sweep is aborted by stop instead of holding the tick open 42ms
+     → expected undefined to be defined
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  role-model-router/apps/runtime-host-bridge/test/run115-s550-sweep-cancellation.test.ts > run115 s550 every production sweep body receives the loop abort signal
+AssertionError: expected 0 to be greater than or equal to 5
+ ❯ role-model-router/apps/runtime-host-bridge/test/run115-s550-sweep-cancellation.test.ts:47:28
+     45|     await loop.tick();
+     46|     loop.stop();
+     47|     expect(signals.length).toBeGreaterThanOrEqual(5);
+       |                            ^
+     48|     expect(signals.every((signal) => signal.aborted)).toBe(true);
+     49|   } finally {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  role-model-router/apps/runtime-host-bridge/test/run115-s550-sweep-cancellation.test.ts > run115 s550 a wedged sweep is aborted by stop instead of holding the tick open
+AssertionError: expected undefined to be defined
+ ❯ role-model-router/apps/runtime-host-bridge/test/run115-s550-sweep-cancellation.test.ts:76:18
+     74|     const tick = loop.tick();
+     75|     await new Promise((resolve) => setTimeout(resolve, 25));
+     76|     expect(seen).toBeDefined();
+       |                  ^
+     77|     loop.stop();
+     78|     const outcome = await Promise.race([
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  08:59:05
+   Duration  5.33s (transform 2.10s, setup 0ms, collect 3.75s, tests 64ms, environment 0ms, prepare 438ms)
+
+
+
+FINAL_TEST_SHA256=BA61B004B6B12A43140EA0C83DC52190CFDB2276AD17C57B6F997DDCA7C96FE3

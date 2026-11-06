@@ -1,0 +1,21 @@
+{
+  "slice": "s324-early-readiness",
+  "requirement": "R27 early readiness owner",
+  "contract": "DAG Readiness pending->ready|failed branded no-fallback; Server admission gate emits the existing 503 shape before the handler; host readback gate untouched.",
+  "red": "s324-red.log 5/5 failed",
+  "green": "s324-green.log 6 files / 33 tests; tsc exit 0",
+  "admissionTests": [
+    "server admission is refused with the existing 503 shape while pending, served after ready",
+    "failed readiness is refused with the message and static UI assets stay allowed"
+  ],
+  "files": {
+    "src/composition-dag.ts": "8DE6B43364B2EF2F80111B74E5450A8F1E8C14BCACBA93EF0007FFF9D0963DC1",
+    "src/index.ts": "51A1F69B34767C56A8215584E79BE73D74F6C86D3B72E354B180EC2C58061B1E",
+    "src/cli.ts": "558AB4C6546115E49C189E120491D61FBB0A64DE9E1B3154D61FADC26CD00A61",
+    "test/s324-readiness.test.ts": "420C8E33CA07E0C8537F35A2BAFC9DB6712C9E995FC9A90674DB4A45EBD723D1"
+  },
+  "lint": {
+    "dag": "174 {\"no-unknown-parameters\":3,\"no-runtime-typeof\":1,\"require-safety-comment-for-type-assertion\":165,\"no-unsafe-dictionary-type\":2,\"no-unknown-returns\":2,\"no-known-value-widening\":1}",
+    "test": "findings"
+  }
+}

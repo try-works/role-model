@@ -1,0 +1,422 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s611-r13-model-pool-honest.test.ts > S611 R13 model pool honesty > says when no benchmark profile is reported
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow view: 44.1ms (budget: 16ms), triggered by init. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'View',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 44.072000000000116,
+  thresholdMs: 16
+}
+[foldkit] Slow patch: 142.9ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 142.90100000000166,
+  thresholdMs: 8
+}
+
+stderr | test/s611-r13-model-pool-honest.test.ts > S611 R13 model pool honesty > says when no benchmark profile is reported
+[foldkit] Slow update: 9.4ms (budget: 4ms), triggered by ReadbackLoaded. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Update',
+  previousModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  nextModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: {
+    _tag: 'ReadbackLoaded',
+    key: 'overviewMetrics',
+    snapshot: {
+      detailId: '86400000',
+      message: 'Overview metrics read failed: invalid response',
+      rows: [],
+      status: 'error',
+      token: 1
+    },
+    token: 1
+  },
+  durationMs: 9.394099999997707,
+  thresholdMs: 4
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'overviewMetrics',
+  snapshot: {
+    detailId: '86400000',
+    message: 'Overview metrics read failed: invalid response',
+    rows: [],
+    status: 'error',
+    token: 1
+  },
+  token: 1
+}
+
+stderr | test/s611-r13-model-pool-honest.test.ts > S611 R13 model pool honesty > says when no benchmark profile is reported
+[foldkit] Slow patch: 16.6ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'overviewMetrics',
+      snapshot: [Object],
+      token: 1
+    }
+  },
+  durationMs: 16.64600000000064,
+  thresholdMs: 8
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'overviewMetrics',
+  snapshot: {
+    detailId: '86400000',
+    message: 'Overview metrics read failed: invalid response',
+    rows: [],
+    status: 'error',
+    token: 1
+  },
+  token: 1
+}
+
+ ❯ test/s611-r13-model-pool-honest.test.ts (1 test | 1 failed) 8132ms
+   × S611 R13 model pool honesty > says when no benchmark profile is reported 8127ms
+     → Timed out waiting for model pool honest notice (last: null)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s611-r13-model-pool-honest.test.ts > S611 R13 model pool honesty > says when no benchmark profile is reported
+Error: Timed out waiting for model pool honest notice (last: null)
+ ❯ waitFor test/s611-r13-model-pool-honest.test.ts:44:9
+     42|     await new Promise((resolve) => setTimeout(resolve, 10));
+     43|   }
+     44|   throw new Error("Timed out waiting for " + label + " (last: " + Stri…
+       |         ^
+     45| };
+     46| 
+ ❯ test/s611-r13-model-pool-honest.test.ts:50:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  12:39:58
+   Duration  31.47s (transform 11.02s, setup 0ms, collect 17.08s, tests 8.13s, environment 4.56s, prepare 630ms)
+

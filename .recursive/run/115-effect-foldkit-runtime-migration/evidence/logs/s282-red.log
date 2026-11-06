@@ -1,0 +1,162 @@
+COMMAND: node --test scripts/parity-capture.test.mjs
+CWD: public worktree root ; S282 strict RED against the zeroed contract skeleton (final test file; no setup failure)
+EXIT_CODE=1
+
+✖ S282 installs deterministic clock/random, fixed viewport/timezone and hide styles before navigating (12.8177ms)
+✖ S282 waits for fonts/images and a bounded DOM-quiet window before the first screenshot (2.1472ms)
+✖ S282 requires consecutive byte-identical screenshots and returns exact PNG bytes plus deterministic metadata (1.2145ms)
+✖ S282 fails with a bounded diagnostic error when screenshots never stabilise, and rejects non-finite deadlines (1.9625ms)
+✖ S282 fails with a bounded diagnostic error when navigation never completes (1.2592ms)
+✖ S282 surfaces in-page console errors and unexpected network instead of ignoring them (6.6453ms)
+✖ S282 surfaces CDP event-channel failures and records an unavailable channel instead of claiming clean (2.5305ms)
+✖ S282 is deterministic: two identical runs produce identical PNG, sha256 and metadata (2.0373ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 0
+ℹ fail 8
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 433.4904
+
+✖ failing tests:
+
+test at scripts\parity-capture.test.mjs:109:1
+✖ S282 installs deterministic clock/random, fixed viewport/timezone and hide styles before navigating (12.8177ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+    {
+  +   deviceScaleFactor: 0,
+  +   height: 0,
+  +   width: 0
+  -   deviceScaleFactor: 1,
+  -   height: 900,
+  -   width: 1440
+    }
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/parity-capture.test.mjs:115:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { deviceScaleFactor: 0, height: 0, width: 0 },
+    expected: { deviceScaleFactor: 1, height: 900, width: 1440 },
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\parity-capture.test.mjs:151:1
+✖ S282 waits for fonts/images and a bounded DOM-quiet window before the first screenshot (2.1472ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/parity-capture.test.mjs:168:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\parity-capture.test.mjs:177:1
+✖ S282 requires consecutive byte-identical screenshots and returns exact PNG bytes plus deterministic metadata (1.2145ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/parity-capture.test.mjs:184:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\parity-capture.test.mjs:195:1
+✖ S282 fails with a bounded diagnostic error when screenshots never stabilise, and rejects non-finite deadlines (1.9625ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/parity-capture.test.mjs:200:3)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at scripts\parity-capture.test.mjs:222:1
+✖ S282 fails with a bounded diagnostic error when navigation never completes (1.2592ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/parity-capture.test.mjs:226:3)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at scripts\parity-capture.test.mjs:236:1
+✖ S282 surfaces in-page console errors and unexpected network instead of ignoring them (6.6453ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + []
+  - [
+  -   'TypeError: boom'
+  - ]
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/parity-capture.test.mjs:247:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [],
+    expected: [ 'TypeError: boom' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\parity-capture.test.mjs:253:1
+✖ S282 surfaces CDP event-channel failures and records an unavailable channel instead of claiming clean (2.5305ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'unavailable'
+  - 'subscribed'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/parity-capture.test.mjs:263:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'unavailable',
+    expected: 'subscribed',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\parity-capture.test.mjs:277:1
+✖ S282 is deterministic: two identical runs produce identical PNG, sha256 and metadata (2.0373ms)
+  AssertionError [ERR_ASSERTION]: both runs must return the exact stable frame
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/parity-capture.test.mjs:288:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+

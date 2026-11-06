@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s565-page-stories.scene.test.ts (40 tests | 39 skipped) 233ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 39 skipped (40)
+   Start at  15:52:19
+   Duration  21.74s (transform 11.43s, setup 0ms, collect 18.05s, tests 233ms, environment 1.49s, prepare 545ms)
+

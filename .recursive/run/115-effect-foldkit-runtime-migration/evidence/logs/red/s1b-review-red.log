@@ -1,0 +1,111 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+ ❯ test/target-contract.test.ts (53 tests | 7 failed) 62ms
+   × validateVerificationTarget > rejects raw URL syntax normalized away by URL: http://127.0.0.1:4310/.. 22ms
+     → expected true to be false // Object.is equality
+   × validateVerificationTarget > rejects raw URL syntax normalized away by URL: http://127.0.0.1:4310/. 2ms
+     → expected true to be false // Object.is equality
+   × validateVerificationTarget > rejects raw URL syntax normalized away by URL: http://127.0.0.1:4310/%2e%2e 1ms
+     → expected true to be false // Object.is equality
+   × validateVerificationTarget > rejects raw URL syntax normalized away by URL: http://127.0.0.1:4310\.. 1ms
+     → expected true to be false // Object.is equality
+   × validateVerificationTarget > rejects raw URL syntax normalized away by URL: http://127.0.0.1:43
+10 1ms
+     → expected true to be false // Object.is equality
+   × validateVerificationTarget > rejects raw URL syntax normalized away by URL: http://127.0.0.1	:4310 1ms
+     → expected true to be false // Object.is equality
+   × validateVerificationTarget > rejects verification state nested inside an explicitly forbidden operator root 4ms
+     → expected [] to include 'forbidden_root'
+   ✓ validateVerificationTarget > allows a sibling of a forbidden operator root 1ms
+   ✓ validateVerificationTarget > accepts an exact loopback packaged target 1ms
+   ✓ validateVerificationTarget > canonicalizes Windows slash and case for roots 1ms
+   ✓ validateVerificationTarget > keeps POSIX root comparison case-sensitive 1ms
+   ✓ validateVerificationTarget > accepts source-qa provenance when packaged is not required 1ms
+   ✓ validateVerificationTarget > rejects protected operator ports on the intent 1ms
+   ✓ validateVerificationTarget > rejects a protected operator port on a non-loopback observation 1ms
+   ✓ validateVerificationTarget > rejects a non-loopback client host 0ms
+   ✓ validateVerificationTarget > rejects a non-loopback expected client host 1ms
+   ✓ validateVerificationTarget > rejects a loopback host that does not match the intent 0ms
+   ✓ validateVerificationTarget > rejects a port that does not match the intent 0ms
+   ✓ validateVerificationTarget > rejects userinfo in the client URL 0ms
+   ✓ validateVerificationTarget > rejects a path in the client URL 0ms
+   ✓ validateVerificationTarget > rejects a query in the client URL 0ms
+   ✓ validateVerificationTarget > rejects a fragment in the client URL 1ms
+   ✓ validateVerificationTarget > rejects a malformed client URL 1ms
+   ✓ validateVerificationTarget > rejects a nonpositive expected port 0ms
+   ✓ validateVerificationTarget > rejects an out-of-range observed port 2ms
+   ✓ validateVerificationTarget > rejects an empty source tree identifier 0ms
+   ✓ validateVerificationTarget > rejects a nonpositive expected PID 0ms
+   ✓ validateVerificationTarget > rejects a noninteger observed PID 0ms
+   ✓ validateVerificationTarget > rejects a nonhex expected artifact SHA 0ms
+   ✓ validateVerificationTarget > rejects a nonhex observed artifact SHA 0ms
+   ✓ validateVerificationTarget > rejects a relative state root 0ms
+   ✓ validateVerificationTarget > rejects a wrong PID 0ms
+   ✓ validateVerificationTarget > rejects a wrong state root 0ms
+   ✓ validateVerificationTarget > rejects a wrong config root 0ms
+   ✓ validateVerificationTarget > rejects a wrong source tree 0ms
+   ✓ validateVerificationTarget > rejects a wrong private distribution 1ms
+   ✓ validateVerificationTarget > rejects a wrong UI tree 1ms
+   ✓ validateVerificationTarget > rejects a wrong artifact SHA 0ms
+   ✓ validateVerificationTarget > rejects provisional, not-ready, and unavailable health 1ms
+   ✓ validateVerificationTarget > rejects source-qa provenance when packaged is required 1ms
+   ✓ validateVerificationTarget > rejects source-qa build mode when packaged is required 0ms
+   ✓ validateVerificationTarget > rejects an intended state root listed in the explicit forbidden roots 0ms
+   ✓ validateVerificationTarget > rejects an intended config root listed in the explicit forbidden roots 0ms
+   ✓ validateVerificationTarget > does not echo a malicious client URL or its secrets 1ms
+   ✓ evaluateVerificationOutcome > marks a pure guard pass as VERIFIED with an honest adapter limitation 1ms
+   ✓ evaluateVerificationOutcome > does not mark a NOT_RUN execution as VERIFIED 0ms
+   ✓ evaluateVerificationOutcome > does not mark a missing provider as VERIFIED 0ms
+   ✓ evaluateVerificationOutcome > does not mark an executed run with a missing provider as VERIFIED 0ms
+   ✓ evaluateVerificationOutcome > does not mark missing correlated evidence as VERIFIED 0ms
+   ✓ evaluateVerificationOutcome > marks invalid correlated evidence as FAILED 0ms
+   ✓ evaluateVerificationOutcome > marks target findings as FAILED 0ms
+   ✓ evaluateVerificationOutcome > marks a failed execution as FAILED 0ms
+   ✓ evaluateVerificationOutcome > returns only bounded static codes and no environment values 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects raw URL syntax normalized away by URL: http://127.0.0.1:4310/..
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects raw URL syntax normalized away by URL: http://127.0.0.1:4310/.
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects raw URL syntax normalized away by URL: http://127.0.0.1:4310/%2e%2e
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects raw URL syntax normalized away by URL: http://127.0.0.1:4310\..
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects raw URL syntax normalized away by URL: http://127.0.0.1:43
+10
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects raw URL syntax normalized away by URL: http://127.0.0.1	:4310
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ test/target-contract.test.ts:69:81
+     67|     "http://127.0.0.1" + String.fromCharCode(9) + ":4310",
+     68|   ])("rejects raw URL syntax normalized away by URL: %s", (clientUrl) …
+     69|     expect(validateVerificationTarget(intent(), observation({ clientUr…
+       |                                                                                 ^
+     70|   });
+     71|   it("rejects verification state nested inside an explicitly forbidden…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  test/target-contract.test.ts > validateVerificationTarget > rejects verification state nested inside an explicitly forbidden operator root
+AssertionError: expected [] to include 'forbidden_root'
+ ❯ test/target-contract.test.ts:74:36
+     72|     const stateRoot = "C:/ProgramData/RoleModel/operator/run115/state";
+     73|     const result = validateVerificationTarget(intent({ expectedStateRo…
+     74|     expect(codes(result.findings)).toContain("forbidden_root");
+       |                                    ^
+     75|   });
+     76|   it("allows a sibling of a forbidden operator root", () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  7 failed | 46 passed (53)
+   Start at  18:59:24
+   Duration  1.84s (transform 226ms, setup 0ms, collect 201ms, tests 62ms, environment 0ms, prepare 530ms)
+

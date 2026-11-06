@@ -1,0 +1,62 @@
+{
+  "slice": "s6c-migration-pins",
+  "requirement": "R23 S6b review follow-up: pin one-connection, close-on-every-path, read-only, explain timing, portability",
+  "status": "complete",
+  "seam": {
+    "why": "the three properties are not observable through the public lookups (callers precheck existsSync and the functions never write), so a counting/failing service factory seam was genuinely needed",
+    "cliChanges": [
+      "role-model-router/apps/runtime-host-bridge/src/cli.ts: openReadOnlyStateDatabase exported (used by the helper; a test writes through it and must fail)",
+      "role-model-router/apps/runtime-host-bridge/src/cli.ts: setStateDatabaseServiceFactoryForTests(undefined resets) around the helper's makeSync; production default unchanged"
+    ]
+  },
+  "pins": [
+    {
+      "property": "exactly one connection per lookup",
+      "test": "opens exactly one connection per lookup (countingFactory: 1 open/1 close, then 2/2 for a second lookup)",
+      "mutation": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6c-red-one-connection.log",
+        "change": "helper opens a second unused service per lookup",
+        "result": "expected { closes: 2, opens: 2 } to deeply equal { closes: 1, opens: 1 }"
+      }
+    },
+    {
+      "property": "close on success / thrown query / failing open",
+      "test": "closes the connection on success, on a thrown query and on a failing open (success closes 1; missing-table throw closes 1 more; failing open attempts 1 and closes nothing)",
+      "mutation": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6c-red-close.log",
+        "change": "service?.closeSync() removed from finally",
+        "result": "expected { closes: +0, opens: 1 } to deeply equal { closes: 1, opens: 1 }; the leaked handle also made the afterEach cleanup hook time out"
+      }
+    },
+    {
+      "property": "genuinely read-only open",
+      "test": "opens the state database genuinely read-only: a write through the handle fails (read succeeds; CREATE TABLE throws readonly)",
+      "mutation": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6c-red-readonly.log",
+        "change": "openReadOnlyStateDatabase uses new DatabaseSync(file) (read-write)",
+        "result": "expected [Function] to throw an error"
+      }
+    }
+  ],
+  "timing": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6c-timing.log",
+    "measurements": "busy0: open 2ms/query 31ms/close 3ms; default 5000: open 1ms/query 7384ms/close 0ms. Direct node:sqlite 5000->7423ms, 1000->1785ms, 250->753ms, 0->19ms.",
+    "explanation": "7388ms = ~1ms open + ~7384ms single-SELECT busy wait + ~0ms close. NOT 5000+100+200 open retries (open phase 1ms proves the retry path never ran) and not multiple statements. node:sqlite's 5000ms busy timeout overshoots on Windows (~1.5x); the exact internal sleep schedule is not exposed, so the RED magnitude is cited as measured, not as a computed sum."
+  },
+  "portability": "baseTemp = ROLE_MODEL_TEST_TEMP_ROOT?.trim() || path.join(tmpdir(), 'role-model-run115'); no hardcoded E:.",
+  "green": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6c-green.log",
+    "files": 3,
+    "tests": 13,
+    "passed": 13,
+    "exit": 0
+  },
+  "typecheck": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s6c-tsc.log",
+    "exit": 0
+  },
+  "files": {
+    "role-model-router/apps/runtime-host-bridge/test/s6b-cli-sqlite-service-migration.test.ts": "3 property pins + read-only write probe + temp-root override",
+    "role-model-router/apps/runtime-host-bridge/src/cli.ts": "read-only opener export + counting factory test seam (helper only)"
+  }
+}

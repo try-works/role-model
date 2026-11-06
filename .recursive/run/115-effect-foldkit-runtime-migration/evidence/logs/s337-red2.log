@@ -1,0 +1,59 @@
+COMMAND: node vitest run test/s337 (S338 RED: behavioral coverage)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/s337-observation-families.test.ts (4 tests | 3 failed) 10ms
+   × S338 observation family migration behavior > readHydrated populates the cache and a subsequent read hits it (fallback not called) 4ms
+     → storage.readHydrated is not a function
+   × S338 observation family migration behavior > a different hydration key falls back instead of serving the other key's cache 1ms
+     → storage.readHydrated is not a function
+   × S338 observation family migration behavior > live-scores key includes endpoint + window + minimumSampleCount aggregation identity 1ms
+     → (0 , liveScoresObservationKey) is not a function
+   ✓ S338 observation family migration behavior > persist families write synchronously then hydrate the same key for later reads 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s337-observation-families.test.ts > S338 observation family migration behavior > readHydrated populates the cache and a subsequent read hits it (fallback not called)
+TypeError: storage.readHydrated is not a function
+ ❯ test/s337-observation-families.test.ts:15:27
+     13|     const storage = makeObservationStorage(4);
+     14|     let fallbackCalls = 0;
+     15|     const first = storage.readHydrated("telemetry-summary:k", () => {
+       |                           ^
+     16|       fallbackCalls += 1;
+     17|       return { value: 1 };
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/s337-observation-families.test.ts > S338 observation family migration behavior > a different hydration key falls back instead of serving the other key's cache
+TypeError: storage.readHydrated is not a function
+ ❯ test/s337-observation-families.test.ts:32:13
+     30|     const storage = makeObservationStorage(4);
+     31|     let fallbackCalls = 0;
+     32|     storage.readHydrated("observed-profiles:a", () => { fallbackCalls …
+       |             ^
+     33|     await storage.drain();
+     34|     const other = storage.readHydrated("observed-profiles:b", () => { …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/s337-observation-families.test.ts > S338 observation family migration behavior > live-scores key includes endpoint + window + minimumSampleCount aggregation identity
+TypeError: (0 , liveScoresObservationKey) is not a function
+ ❯ test/s337-observation-families.test.ts:40:18
+     38| 
+     39|   test("live-scores key includes endpoint + window + minimumSampleCoun…
+     40|     const base = liveScoresObservationKey("ep-1", 1000, 2000, 10);
+       |                  ^
+     41|     expect(liveScoresObservationKey("ep-1", 1000, 2000, 11)).not.toBe(…
+     42|     expect(liveScoresObservationKey("ep-1", 1000, 3000, 10)).not.toBe(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 1 passed (4)
+   Start at  10:30:06
+   Duration  2.96s (transform 1.54s, setup 0ms, collect 2.50s, tests 10ms, environment 1ms, prepare 163ms)
+
+

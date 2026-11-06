@@ -1,0 +1,33 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s26o-contract.test.ts (30 tests) 220ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s40a-rail.test.ts [ test/s40a-rail.test.ts ]
+Error: Failed to resolve import "@role-model-router/ui/foldkit-chart" from "test/s40a-rail.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next/test/s40a-rail.test.ts:4:34
+  2  |  import path from "node:path";
+  3  |  import { afterEach, describe, expect, it } from "vitest";
+  4  |  import { view as chartView } from "@role-model-router/ui/foldkit-chart";
+     |                                     ^
+  5  |  import { mountShell } from "../src/mount";
+  6  |  const fixture = (key) => JSON.parse(readFileSync(path.join(import.meta.dirname, "fixtures", "s26o", key + ".json"), "...
+ ❯ TransformPluginContext._formatLog E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:29003:43
+ ❯ TransformPluginContext.error E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:29000:14
+ ❯ normalizeUrl E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:27123:18
+ ❯ E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:27181:32
+ ❯ TransformPluginContext.transform E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:27149:4
+ ❯ EnvironmentPluginContainer.transform E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:28801:14
+ ❯ loadAndTransform E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:22670:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  30 passed (30)
+   Start at  15:37:38
+   Duration  8.40s (transform 3.13s, setup 0ms, collect 4.93s, tests 220ms, environment 3.15s, prepare 992ms)
+

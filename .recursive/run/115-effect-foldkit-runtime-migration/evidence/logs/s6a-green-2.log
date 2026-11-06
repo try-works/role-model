@@ -1,0 +1,12 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+
+(node:42868) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ role-model-router/packages/sql-sqlite-node/test/sqlite-service.test.ts (11 tests) 155ms
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  00:13:29
+   Duration  3.74s (transform 1.59s, setup 0ms, collect 2.71s, tests 155ms, environment 0ms, prepare 283ms)
+

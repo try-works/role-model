@@ -1,0 +1,23 @@
+# S3d maintained runtime-graph test (node --test)
+✔ every built browser entry resolves against the built effect wrapper (1908.7149ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2058.0227
+EXIT_CODE: 0
+# plain node script
+
+✔ every built browser entry resolves against the built effect wrapper (1961.1467ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1968.5981
+EXIT_CODE: 0

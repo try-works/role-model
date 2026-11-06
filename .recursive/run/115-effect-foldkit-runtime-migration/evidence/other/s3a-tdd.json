@@ -1,0 +1,132 @@
+{
+  "task": ".recursive/run/115-effect-foldkit-runtime-migration/tasks/s3a-vendor-foldkit.md",
+  "run": "115-effect-foldkit-runtime-migration",
+  "slice": "S3a",
+  "requirement": "R6 (public)",
+  "model": "deepseek-flash",
+  "tdd_mode": "strict",
+  "status": "COMPLETE",
+  "finished_utc": "2026-10-24T13:54:45.814Z",
+  "disk_preflight": {
+    "c_free_bytes": 991080448,
+    "d_free_bytes": 1891745792,
+    "e_free_bytes": 480392011776,
+    "temp_root": "E:/dsh-tmp/run115-s3a",
+    "temp_verified_tmpdir": "E:\\dsh-tmp\\run115-s3a"
+  },
+  "tag_resolution": {
+    "requested_tag": "v0.169.0",
+    "requested_tag_exists": false,
+    "note": "The repository has no v0.169.0 tag. `git ls-remote --tags` shows the version under the package-name tags; foldkit@0.169.0, @foldkit/ui@0.169.0 and @foldkit/devtools@0.169.0 all resolve to the required commit.",
+    "verified_tag": "foldkit@0.169.0",
+    "ls_remote_refs": {
+      "refs/tags/foldkit@0.169.0": "7ee214268c602967937b80f6f20d1e831f2e8ab6",
+      "refs/tags/@foldkit/ui@0.169.0": "7ee214268c602967937b80f6f20d1e831f2e8ab6",
+      "refs/tags/@foldkit/devtools@0.169.0": "7ee214268c602967937b80f6f20d1e831f2e8ab6"
+    },
+    "clone_head": "7ee214268c602967937b80f6f20d1e831f2e8ab6",
+    "tag_is_lightweight": true
+  },
+  "vendored": {
+    "manifest": "vendor/foldkit/VENDORED.json",
+    "upstream_name": "foldkit",
+    "url": "https://github.com/foldkit/foldkit",
+    "tag": "foldkit@0.169.0",
+    "commit": "7ee214268c602967937b80f6f20d1e831f2e8ab6",
+    "commit_date": "2026-10-20T23:38:00Z",
+    "license": "MIT (Copyright (c) 2025 Devin Jameson)",
+    "vendored_at": "2026-10-24T13:53:19.868Z",
+    "payload_root": "vendor/foldkit",
+    "payload_includes": [
+      "packages/**",
+      "LICENSE/**",
+      "README.md"
+    ],
+    "file_count": 2020,
+    "byte_count": 12486059,
+    "content_digest": "sha256:14a19d180fd43784b1c11073d9c7c6efa3a599c43b2fb8e5bcbd64136ed8322d",
+    "tree_files_on_disk_including_manifests": 2022,
+    "tree_bytes_on_disk_including_manifests": 12489561,
+    "verify_after": {
+      "exit_code": 0,
+      "output": "vendor-upstream: foldkit verified 2020 files, 11.9 MB, sha256:14a19d18...",
+      "log": "evidence/logs/s3a-verify.log"
+    }
+  },
+  "payload_surprises": [
+    "Tag spelling: the task names v0.169.0, but the repository's tags are package-scoped; foldkit@0.169.0 resolves to the exact required commit (7ee2142...).",
+    "Release-line versions: only foldkit, @foldkit/ui and @foldkit/devtools report 0.169.0. Auxiliary packages in the same commit carry independent versions: create-foldkit-app 0.40.0, @foldkit/devtools-mcp 0.25.0, @foldkit/examples-e2e 0.0.0, @foldkit/markdown 0.14.4, @foldkit/node 0.1.0, @foldkit/oxlint-plugin 0.15.3, @foldkit/vite-plugin 0.28.0, website 0.1.0; packages/typing-game has no package.json. The pin test therefore pins the exact name->version map and asserts the three release-line packages explicitly.",
+    "Size: the LF archive export is 12,486,059 bytes, while the Windows working-tree copy of the same tree measured 12,787,413 bytes (CRLF checkout conversion) - the tool's core.autocrlf=false export is what is vendored.",
+    "Payload generation quirk (pre-existing tool behaviour): the manifest's payload.includes maps LICENSE to LICENSE/** because the tool appends /** to every entry without a dot; the bytes are the plain LICENSE file."
+  ],
+  "pin_test": {
+    "path": "scripts/foldkit-vendored.test.mjs",
+    "framework": "node:test",
+    "sha256": "75984c79588c4e8f02e91ceed063304980b8495c9f514bb7e8fb4377d31d2ca8",
+    "assertions": [
+      "VENDORED.json schema/tag/commit/licence/commitDate",
+      "payload.root and payload.includes",
+      "vendored packages name->version map equals the reviewed map; foldkit/@foldkit/ui/@foldkit/devtools are 0.169.0",
+      "content digest recomputed with the tool's algorithm equals the manifest, and two recomputations are identical",
+      "no node_modules or .git directory anywhere in vendor/foldkit",
+      "vendor-upstream.mjs UPSTREAMS.foldkit url/tag/commit match the manifest"
+    ],
+    "red_before": {
+      "exit_code": 1,
+      "tests": 6,
+      "pass": 0,
+      "fail": 6,
+      "reason": "ENOENT vendor/foldkit/VENDORED.json and missing UPSTREAMS.foldkit entry",
+      "log": "evidence/logs/s3a-red.log"
+    },
+    "green_after": {
+      "exit_code": 0,
+      "tests": 6,
+      "pass": 6,
+      "fail": 0,
+      "log": "evidence/logs/s3a-green.log"
+    }
+  },
+  "changed_files": [
+    {
+      "path": "scripts/vendor-upstream.mjs",
+      "sha256": "f193bc867d6f7bcaa37bec916135013a67e286c8e12b9d0c837e8e639cf1ee46",
+      "change": "added the foldkit UPSTREAMS entry only (the effect tag/commit hunk in the same diff is the earlier unfinalised S2 acquisition, not this slice)"
+    },
+    {
+      "path": "scripts/foldkit-vendored.test.mjs",
+      "sha256": "75984c79588c4e8f02e91ceed063304980b8495c9f514bb7e8fb4377d31d2ca8",
+      "change": "new maintained pin test"
+    },
+    {
+      "path": "vendor/foldkit/VENDORED.json",
+      "sha256": "d897c5049aaa2b16afde66f16eebc0d9d5d314ff08c891192c1f5cdfd2b21b5f",
+      "change": "generated by the vendoring tool"
+    },
+    {
+      "path": "vendor/foldkit/PROVENANCE.md",
+      "sha256": "9c5d8e0aa74cdde6333aff831b19d2ef0f49c095c6f3dab1594f145021888a0f",
+      "change": "generated by the vendoring tool"
+    },
+    {
+      "path": "vendor/foldkit/** (payload)",
+      "sha256": "sha256:14a19d180fd43784b1c11073d9c7c6efa3a599c43b2fb8e5bcbd64136ed8322d",
+      "change": "2020 files / 12,486,059 LF bytes copied verbatim, no edits"
+    }
+  ],
+  "untouched": [
+    "package.json",
+    "pnpm-lock.yaml (both were already dirty before this slice and were not modified by it)",
+    "no wrapper packages",
+    "no build wiring",
+    "Effect and effect-mq UPSTREAMS entries"
+  ],
+  "no_installs": true,
+  "no_commits": true,
+  "evidence_logs": [
+    "evidence/logs/s3a-red.log",
+    "evidence/logs/s3a-sync.log",
+    "evidence/logs/s3a-verify.log",
+    "evidence/logs/s3a-green.log"
+  ]
+}

@@ -1,0 +1,171 @@
+COMMAND: node vitest run s401 (S402 RED)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s401-provider-account-form.test.ts (11 tests | 5 failed) 51ms
+   × S396b provider account client (exact HTTP) > POSTs the exact original create payload to /accounts 19ms
+     → expected { …(17) } to deeply equal { …(18) }
+   ✓ S396b provider account client (exact HTTP) > POSTs the exact update-key body and DELETEs one encoded model 2ms
+   ✓ S396b provider account form state machine > validates without dropping the draft 1ms
+   ✓ S396b provider account form state machine > refuses a second create while one is pending (no double submit) 10ms
+   × S396b provider account form state machine > keeps the draft on a save failure 8ms
+     → expected { apiKey: 'sk-live', …(9) } to deeply equal { apiKey: 'sk-live', …(14) }
+   ✓ S396b provider account form state machine > deletes exactly one model and keeps the rest 1ms
+   ✓ S396b provider account controlled form > field changes drive the typed draft and model add/remove keeps the list 2ms
+   × S402 provider account payload branches > sends an empty baseUrlOverride when the draft is empty and the value when present 1ms
+     → expected undefined to be '' // Object.is equality
+   × S402 provider account payload branches > projects fresh api-key, oauth not connected, oauth connected and existing-account lifecycles 2ms
+     → expected [ 'disabled', …(2) ] to deeply equal [ 'active', 'healthy', 'stable' ]
+   × S402 provider account payload branches > computes non-empty role bindings from the role selection 2ms
+     → expected [ { disabledRoleIds: [], …(4) } ] to deeply equal [ { disabledRoleIds: [], …(4) } ]
+   ✓ S402 provider account payload branches > refuses update-key and delete requests while a save is in flight 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s401-provider-account-form.test.ts > S396b provider account client (exact HTTP) > POSTs the exact original create payload to /accounts
+AssertionError: expected { …(17) } to deeply equal { …(18) }
+
+- Expected
++ Received
+
+@@ -2,11 +2,10 @@
+    "accountScope": "workspace-default",
+    "allowedModels": [
+      "gpt-6",
+    ],
+    "authMode": "api-key-static",
+-   "baseUrlOverride": "",
+    "budgetPolicyRef": "budget.default",
+    "credentialRef": {
+      "backend": "env",
+      "ref": "OPENAI_API_KEY",
+    },
+
+ ❯ test/s401-provider-account-form.test.ts:72:48
+     70|     expect(calls[0]?.method).toBe("POST");
+     71|     expect(calls[0]?.url).toBe("/api/role-model/accounts");
+     72|     expect(JSON.parse(calls[0]?.body ?? "{}")).toEqual({
+       |                                                ^
+     73|       accountScope: "workspace-default",
+     74|       allowedModels: ["gpt-6"],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  test/s401-provider-account-form.test.ts > S396b provider account form state machine > keeps the draft on a save failure
+AssertionError: expected { apiKey: 'sk-live', …(9) } to deeply equal { apiKey: 'sk-live', …(14) }
+
+- Expected
++ Received
+
+@@ -1,19 +1,14 @@
+  {
+    "apiKey": "sk-live",
+    "authMode": "api-key-static",
+    "baseUrlOverride": "",
+    "credentialRef": "OPENAI_API_KEY",
+-   "existingHealthStatus": "",
+-   "existingRotationState": "",
+-   "existingStatus": "",
+    "modelInput": "",
+-   "oauthConnected": "false",
+    "providerAccountId": "openai.personal.default",
+    "providerId": "openai",
+    "providerKind": "openai",
+-   "roleIdsInput": "",
+    "selectedModelIds": [
+      "gpt-6",
+      "gpt-6",
+    ],
+    "variantId": "default",
+
+ ❯ test/s401-provider-account-form.test.ts:133:40
+    131|     expect(authOf(result.model).status).toBe("error");
+    132|     expect(authOf(result.model).error).toBe("conflict");
+    133|     expect(authOf(result.model).draft).toEqual(draft);
+       |                                        ^
+    134|   });
+    135| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  test/s401-provider-account-form.test.ts > S402 provider account payload branches > sends an empty baseUrlOverride when the draft is empty and the value when present
+AssertionError: expected undefined to be '' // Object.is equality
+
+- Expected: 
+""
+
++ Received: 
+undefined
+
+ ❯ test/s401-provider-account-form.test.ts:161:35
+    159|   it("sends an empty baseUrlOverride when the draft is empty and the v…
+    160|     const empty = createProviderAccountPayload(stateWithDraft());
+    161|     expect(empty.baseUrlOverride).toBe("");
+       |                                   ^
+    162|     const present = createProviderAccountPayload(stateWithDraft({ draf…
+    163|     expect(present.baseUrlOverride).toBe("https://api.example");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  test/s401-provider-account-form.test.ts > S402 provider account payload branches > projects fresh api-key, oauth not connected, oauth connected and existing-account lifecycles
+AssertionError: expected [ 'disabled', …(2) ] to deeply equal [ 'active', 'healthy', 'stable' ]
+
+- Expected
++ Received
+
+  [
+-   "active",
+-   "healthy",
+-   "stable",
++   "disabled",
++   "credentials-missing",
++   "in-progress",
+  ]
+
+ ❯ test/s401-provider-account-form.test.ts:171:96
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  test/s401-provider-account-form.test.ts > S402 provider account payload branches > computes non-empty role bindings from the role selection
+AssertionError: expected [ { disabledRoleIds: [], …(4) } ] to deeply equal [ { disabledRoleIds: [], …(4) } ]
+
+- Expected
++ Received
+
+  [
+    {
+      "disabledRoleIds": [],
+-     "enabledRoleIds": [
+-       "role-a",
+-       "role-b",
+-     ],
++     "enabledRoleIds": [],
+      "modelId": "gpt-6",
+      "roleAssignmentMode": "include",
+-     "roleIds": [
+-       "role-a",
+-       "role-b",
+-     ],
++     "roleIds": [],
+    },
+  ]
+
+ ❯ test/s401-provider-account-form.test.ts:179:39
+    177|   it("computes non-empty role bindings from the role selection", () =>…
+    178|     const payload = createProviderAccountPayload(stateWithDraft({ draf…
+    179|     expect(payload.modelRoleBindings).toEqual([
+       |                                       ^
+    180|       { disabledRoleIds: [], enabledRoleIds: ["role-a", "role-b"], mod…
+    181|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 6 passed (11)
+   Start at  17:05:21
+   Duration  7.03s (transform 3.23s, setup 0ms, collect 5.14s, tests 51ms, environment 703ms, prepare 358ms)
+
+

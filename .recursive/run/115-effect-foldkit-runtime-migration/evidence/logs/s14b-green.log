@@ -1,0 +1,79 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/mount.test.ts > Foldkit app shell on the wrapper stack > mounts the app into a DOM container, dispatches a click through the runtime, and unmounts without throwing
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 10.9ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: { clicks: 0, route: { _tag: 'Index' }, theme: 'light' },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 10.872600000000602,
+  thresholdMs: 8
+}
+
+stderr | test/routes.test.ts > runtime routing in the Foldkit shell > renders the route from the initial URL, including the diagnostics path parameter
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 10.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    route: { _tag: 'Diagnostics', id: 'abc' },
+    theme: 'light'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 10.822799999999916,
+  thresholdMs: 8
+}
+
+ ✓ test/mount.test.ts (1 test) 608ms
+   ✓ Foldkit app shell on the wrapper stack > mounts the app into a DOM container, dispatches a click through the runtime, and unmounts without throwing  607ms
+stderr | test/routes.test.ts > runtime routing in the Foldkit shell > renders the not-found view for an unknown URL without throwing
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/routes.test.ts > runtime routing in the Foldkit shell > pushes a URL from an in-app control and the URL, not local state, changes the view
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/routes.test.ts > runtime routing in the Foldkit shell > changes the view when history navigates back, through the runtime popstate config
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+ ✓ test/routes.test.ts (4 tests) 2171ms
+   ✓ runtime routing in the Foldkit shell > renders the route from the initial URL, including the diagnostics path parameter  571ms
+   ✓ runtime routing in the Foldkit shell > renders the not-found view for an unknown URL without throwing  521ms
+   ✓ runtime routing in the Foldkit shell > pushes a URL from an in-app control and the URL, not local state, changes the view  542ms
+   ✓ runtime routing in the Foldkit shell > changes the view when history navigates back, through the runtime popstate config  534ms
+
+ Test Files  2 passed (2)
+      Tests  5 passed (5)
+   Start at  00:41:03
+   Duration  10.30s (transform 3.89s, setup 0ms, collect 12.34s, tests 2.78s, environment 1.87s, prepare 708ms)
+

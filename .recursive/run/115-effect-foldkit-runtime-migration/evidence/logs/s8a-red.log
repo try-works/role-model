@@ -1,0 +1,38 @@
+# S8a RED: pre-fix thunk (no signal parameter) kept in place for this run only
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:54240) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run115-s8a-worker-abort-signal.test.ts (1 test | 1 failed) 1945ms
+   × Run 115 S8a: queue worker forwards the Effect AbortSignal > an attempt timeout aborts a handler that settles only on its signal 1940ms
+     → the handler must receive the Effect AbortSignal, but context.signal was undefined: expected true to be false // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run115-s8a-worker-abort-signal.test.ts > Run 115 S8a: queue worker forwards the Effect AbortSignal > an attempt timeout aborts a handler that settles only on its signal
+AssertionError: the handler must receive the Effect AbortSignal, but context.signal was undefined: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ test/run115-s8a-worker-abort-signal.test.ts:148:7
+    146|       signalMissing,
+    147|       "the handler must receive the Effect AbortSignal, but context.si…
+    148|     ).toBe(false);
+       |       ^
+    149|     expect(
+    150|       abortObserved,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  22:35:10
+   Duration  9.16s (transform 4.02s, setup 0ms, collect 6.20s, tests 1.95s, environment 1ms, prepare 357ms)
+
+EXIT_CODE: 1

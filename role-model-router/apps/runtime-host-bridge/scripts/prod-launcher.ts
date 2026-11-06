@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { createCliServerOptions } from "../src/cli.js";
 import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
 import {
   createOwnedTrackBSidecarSpec,
@@ -59,91 +60,34 @@ const composed = await createPackagedProductionRuntime({
     }),
 });
 const backend = composed.backend;
-
-const server = await startBridgeServer({
-  host: "127.0.0.1",
-  port: 3456,
-  staticRoot: path.join(repoRoot, "role-model-router", "apps", "runtime-ui", "build", "client"),
-  registry: backend.registry,
-  getRegistry: () => backend.registry,
-  executeChatCompletions: backend.executeChatCompletions,
-  executeResponses: backend.executeResponses,
-  readHealthStatus: backend.readHealthStatus,
-  getRoutableInventory: backend.getRoutableInventory,
-  readVersionInfo: backend.readVersionInfo,
-  readLogs: async () => (await backend.getLocalLogs()).logs,
-  listActivityMetrics: backend.listActivityMetrics,
-  listActivityMetricsPage: backend.listActivityMetricsPage,
-  readActivityCapture: backend.readActivityCapture,
-  readRuntimeSummary: backend.readRuntimeSummary,
-  readRuntimeConfig: backend.readRuntimeConfig,
-  updateRuntimeConfig: backend.updateRuntimeConfig,
-  readTelemetrySummary: backend.readTelemetrySummary,
-  listTelemetryComparisonRows: backend.listTelemetryComparisonRows,
-  listTelemetryRequests: backend.listTelemetryRequests,
-  listTelemetryRequestPage: backend.listTelemetryRequestPage,
-  queryTelemetryAnalytics: backend.queryTelemetryAnalytics,
-  subscribeTelemetry: backend.subscribeTelemetry,
-  listProviders: backend.listProviders,
-  listRoles: backend.listRoles,
-  listModels: backend.listModels,
-  ...createTrackBBridgeServerOptions(backend),
-  readRolePolicy: backend.readRolePolicy,
-  createRolePolicyRole: backend.createRolePolicyRole,
-  updateRolePolicyRole: backend.updateRolePolicyRole,
-  listTaskDefinitions: backend.listTaskDefinitions,
-  updateTaskDefinitions: backend.updateTaskDefinitions,
-  listAccounts: backend.listAccounts,
-  listProviderDeviceAuthorizations: backend.listProviderDeviceAuthorizations,
-  upsertProviderAccount: backend.upsertProviderAccount,
-  startProviderDeviceAuthorization: backend.startProviderDeviceAuthorization,
-  pollProviderDeviceAuthorization: backend.pollProviderDeviceAuthorization,
-  removeProviderAccountModel: backend.removeProviderAccountModel,
-  activateEndpoint: backend.activateEndpoint,
-  readControllerAssignment: backend.readControllerAssignment,
-  updateControllerAssignment: backend.updateControllerAssignment,
-  readRouterSummary: backend.readRouterSummary,
-  readRouterConfig: backend.readRouterConfig,
-  listRouterCandidates: backend.listRouterCandidates,
-  listRouterDecisions: backend.listRouterDecisions,
-  listRouterDecisionPage: backend.listRouterDecisionPage,
-  readRouterDecision: backend.readRouterDecision,
-  listEndpoints: backend.listEndpoints,
-  listRecentRequestIds: backend.listRecentRequestIds,
-  listRecentRequestObservations: backend.listRecentRequestObservations,
-  readRequestObservation: backend.readRequestObservation,
-  readEndpointProfile: backend.readEndpointProfile,
-  readBenchmarkSuite: backend.readBenchmarkSuite,
-  runBenchmark: backend.runBenchmark,
-  readBenchmarkRun: backend.readBenchmarkRun,
-  readActiveBenchmarkRun: backend.readActiveBenchmarkRun,
-  clearBenchmarkEndpointData: backend.clearBenchmarkEndpointData,
-  clearBenchmarkData: backend.clearBenchmarkData,
-  readBenchmarkSummary: backend.readBenchmarkSummary,
-  listBenchmarkRuns: backend.listBenchmarkRuns,
-  readBenchmarkSummariesByMode: backend.readBenchmarkSummariesByMode,
-  readBenchmarkPreferences: backend.readBenchmarkPreferences,
-  updateBenchmarkPreferences: backend.updateBenchmarkPreferences,
-  listLocalModels: backend.listLocalModels,
-  listPeerLocalModels: backend.listPeerLocalModels,
-  listLlamaSwapLocalModels: backend.listLlamaSwapLocalModels,
-  loadLocalModel: backend.loadLocalModel,
-  loadPeerModel: backend.loadPeerModel,
-  loadLlamaSwapModel: backend.loadLlamaSwapModel,
-  setPeerModelRoles: backend.setPeerModelRoles,
-  setLlamaSwapModelRoles: backend.setLlamaSwapModelRoles,
-  unloadPeerModel: backend.unloadPeerModel,
-  unloadLocalModel: backend.unloadLocalModel,
-  readLocalPolicy: backend.readLocalPolicy,
-  updateLocalPolicy: backend.updateLocalPolicy,
-  listSwapHistory: backend.listSwapHistory,
-  getLocalLogs: backend.getLocalLogs,
-  readModelOverrides: backend.readModelOverrides,
-  updateModelOverrides: backend.updateModelOverrides,
-  readPeers: backend.readPeers,
-  updatePeers: backend.updatePeers,
-  checkPeerHealth: backend.checkPeerHealth,
-});
+let backendOwner: import("../src/composition-dag.js").BackendOwner | undefined;
+const serverOptions = createCliServerOptions(
+  {
+    host: "127.0.0.1",
+    port: 3456,
+    staticRoot: path.join(repoRoot, "role-model-router", "apps", "runtime-ui", "build", "client"),
+    runtimeStateRoot,
+  },
+  {
+    getBackend: () => backend,
+  },
+  undefined,
+  (owner) => {
+    backendOwner = owner;
+  },
+);
+const mergedOptions = { ...serverOptions, ...createTrackBBridgeServerOptions(backend) };
+// The spread drops non-enumerable symbols; carry the backend-owner ref descriptor across the merge so the
+// explicit backend owner and the owned options stay consistent (the explicit backend is still authoritative).
+for (const symbol of Object.getOwnPropertySymbols(serverOptions)) {
+  const descriptor = Object.getOwnPropertyDescriptor(serverOptions, symbol);
+  if (descriptor !== undefined) Object.defineProperty(mergedOptions, symbol, descriptor);
+}
+// SAFETY: mergedOptions is the composed StartBridgeServerOptions plus the Track-B bridge overrides.
+const server = await startBridgeServer(
+  mergedOptions as never,
+  backendOwner === undefined ? undefined : { backend: backendOwner },
+);
 
 console.log(`Production runtime on http://127.0.0.1:${server.port}`);
 process.on("SIGINT", async () => {

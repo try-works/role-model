@@ -8,6 +8,7 @@
     "@role-model-router/bench-judge": "workspace:*"
   },
   "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "tsc -p tsconfig.json"
   }
 }

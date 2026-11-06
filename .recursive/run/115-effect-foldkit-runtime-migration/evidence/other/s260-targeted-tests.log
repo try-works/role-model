@@ -1,0 +1,17 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s251-control-dispatch-once.test.ts (2 tests) 33ms
+ ✓ test/s257-runtime-config-invalid-save.test.ts (2 tests) 40ms
+ ✓ test/s253-studio-dispatch-guard.test.ts (2 tests) 41ms
+ ✓ test/s245-scene-smoke.test.ts (1 test) 156ms
+ ✓ test/s250-control-rendering-scene.test.ts (3 tests) 192ms
+ ✓ test/s256-runtime-config-rendering-scene.test.ts (5 tests) 447ms
+ ✓ test/s255-studio-rendering-scene.test.ts (7 tests) 788ms
+   ✓ S255 studio tab rendering > renders five tabs with the chat tab selected and the idle raw response  352ms
+
+ Test Files  7 passed (7)
+      Tests  22 passed (22)
+   Start at  11:28:54
+   Duration  21.78s (transform 11.87s, setup 0ms, collect 110.87s, tests 1.70s, environment 20.27s, prepare 5.27s)
+

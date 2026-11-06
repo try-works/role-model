@@ -21,18 +21,21 @@ describe("system open-url API", () => {
       url: String(body.url ?? ""),
     }));
 
-    const server = await startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry: emptyRegistry,
-      executeChatCompletions: async () => {
-        throw new Error("unused");
+    const server = await startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry: emptyRegistry,
+        executeChatCompletions: async () => {
+          throw new Error("unused");
+        },
+        executeResponses: async () => {
+          throw new Error("unused");
+        },
+        openExternalUrl,
       },
-      executeResponses: async () => {
-        throw new Error("unused");
-      },
-      openExternalUrl,
-    });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(
@@ -68,18 +71,21 @@ describe("system open-url API", () => {
       url: String(body.url ?? ""),
     }));
 
-    const server = await startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry: emptyRegistry,
-      executeChatCompletions: async () => {
-        throw new Error("unused");
+    const server = await startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry: emptyRegistry,
+        executeChatCompletions: async () => {
+          throw new Error("unused");
+        },
+        executeResponses: async () => {
+          throw new Error("unused");
+        },
+        openExternalUrl,
       },
-      executeResponses: async () => {
-        throw new Error("unused");
-      },
-      openExternalUrl,
-    });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(

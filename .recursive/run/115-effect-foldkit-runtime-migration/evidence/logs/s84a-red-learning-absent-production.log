@@ -1,0 +1,174 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s67a-learning.test.ts > S67a learning surfaces > renders unknown, not disabled, when productionActivation is absent
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 46.4ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Learning' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 46.41599999999926,
+  thresholdMs: 8
+}
+
+stderr | test/s67a-learning.test.ts > S67a learning surfaces > renders unknown, not disabled, when productionActivation is absent
+[foldkit] Slow patch: 8.3ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Learning' },
+    theme: 'dark'
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'routerCandidates',
+      snapshot: [Object],
+      token: 1
+    }
+  },
+  durationMs: 8.333800000000338,
+  thresholdMs: 8
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'routerCandidates',
+  snapshot: {
+    message: 'Router candidates read failed: invalid response',
+    rows: [],
+    status: 'error',
+    token: 1
+  },
+  token: 1
+}
+
+ ❯ test/s67a-learning.test.ts (4 tests | 1 failed | 3 skipped) 742ms
+   ↓ S67a learning surfaces > renders three sections with honest empty job lists and the knowledge worker fields
+   ↓ S67a learning surfaces > shows loading, empty, error and ok for each of the three surfaces
+   × S67a learning surfaces > renders unknown, not disabled, when productionActivation is absent 739ms
+     → expected 'Runtime UIRuntimeModels0Requests—Requ…' to contain 'unknown (field absent)'
+   ↓ S67a learning surfaces > renders a real-shaped job row but never a fabricated id as success
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s67a-learning.test.ts > S67a learning surfaces > renders unknown, not disabled, when productionActivation is absent
+AssertionError: expected 'Runtime UIRuntimeModels0Requests—Requ…' to contain 'unknown (field absent)'
+
+Expected: "unknown (field absent)"
+Received: "Runtime UIRuntimeModels0Requests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—OverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapStudioStudioLearningLearningModelsModelsDark shellRuntimeLearningToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterStudioLearningModelsKnowledge worker, replay jobs and evaluation jobs. Empty means the capability is available but no work exists.Runtime readbackKnowledge worker7 row(s) from the live host readAvailabletrueknowledgeSchemarole-model.knowledge-worker.v1sqlite_fts5_bm25Candidates0knowledgeIndexed documents0knowledgeProduction activationdisabledknowledgeReceipts0 retrieval / 0 rollback / 0 recoveryknowledgeDegradation count0knowledgeRefresh follows the shell's single runtime subscription; this page does not open its own.Runtime readbackReplay jobsNo replay jobs.Refresh follows the shell's single runtime subscription; this page does not open its own.Runtime readbackEvaluation jobsNo evaluation jobs.Refresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ test/s67a-learning.test.ts:72:39
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  02:14:04
+   Duration  10.30s (transform 4.45s, setup 0ms, collect 7.02s, tests 742ms, environment 1.09s, prepare 437ms)
+

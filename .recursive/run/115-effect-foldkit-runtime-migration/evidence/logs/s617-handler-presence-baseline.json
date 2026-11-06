@@ -1,0 +1,360 @@
+{
+  "routes": [
+    {
+      "disabledCount": 0,
+      "elementCount": 30,
+      "route": "Index",
+      "unwired": [],
+      "wiredCount": 30
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 23,
+      "route": "Diagnostics",
+      "unwired": [],
+      "wiredCount": 23
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 30,
+      "route": "Observability",
+      "unwired": [],
+      "wiredCount": 30
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 30,
+      "route": "StoreReceipts",
+      "unwired": [],
+      "wiredCount": 30
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 29,
+      "route": "Queues",
+      "unwired": [],
+      "wiredCount": 29
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 30,
+      "route": "LocalLogs",
+      "unwired": [],
+      "wiredCount": 30
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 29,
+      "route": "RouterCandidates",
+      "unwired": [],
+      "wiredCount": 29
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 0,
+      "route": "Requests",
+      "unwired": [],
+      "wiredCount": 0
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 22,
+      "route": "RequestDetail",
+      "unwired": [],
+      "wiredCount": 22
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 29,
+      "route": "RouterDecisions",
+      "unwired": [],
+      "wiredCount": 29
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 22,
+      "route": "RouterDecisionDetail",
+      "unwired": [],
+      "wiredCount": 22
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 31,
+      "route": "LocalPeers",
+      "unwired": [],
+      "wiredCount": 31
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 28,
+      "route": "SystemPeers",
+      "unwired": [],
+      "wiredCount": 28
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 30,
+      "route": "LocalPeerModels",
+      "unwired": [],
+      "wiredCount": 30
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 22,
+      "route": "QueuesConfiguration",
+      "unwired": [],
+      "wiredCount": 22
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 25,
+      "route": "IntegrationsDownstream",
+      "unwired": [],
+      "wiredCount": 25
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 25,
+      "route": "IntegrationsUpstream",
+      "unwired": [],
+      "wiredCount": 25
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 26,
+      "route": "LocalChoose",
+      "unwired": [],
+      "wiredCount": 26
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 30,
+      "route": "Studio",
+      "unwired": [],
+      "wiredCount": 30
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 32,
+      "route": "Learning",
+      "unwired": [],
+      "wiredCount": 32
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 29,
+      "route": "LearningConfiguration",
+      "unwired": [],
+      "wiredCount": 29
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 32,
+      "route": "LearningPacks",
+      "unwired": [],
+      "wiredCount": 32
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 34,
+      "route": "LearningDecisions",
+      "unwired": [],
+      "wiredCount": 34
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 30,
+      "route": "LearningEvidence",
+      "unwired": [],
+      "wiredCount": 30
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 29,
+      "route": "LearningHistory",
+      "unwired": [],
+      "wiredCount": 29
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 32,
+      "route": "LocalLlamaSwapModels",
+      "unwired": [],
+      "wiredCount": 32
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 28,
+      "route": "LocalPolicy",
+      "unwired": [],
+      "wiredCount": 28
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 30,
+      "route": "SystemOperator",
+      "unwired": [],
+      "wiredCount": 30
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 29,
+      "route": "SystemExtensions",
+      "unwired": [],
+      "wiredCount": 29
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 28,
+      "route": "Models",
+      "unwired": [],
+      "wiredCount": 28
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 41,
+      "route": "ModelsRoles",
+      "unwired": [],
+      "wiredCount": 41
+    },
+    {
+      "disabledCount": 1,
+      "elementCount": 29,
+      "route": "Benchmark",
+      "unwired": [],
+      "wiredCount": 29
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 33,
+      "route": "StorageRetention",
+      "unwired": [],
+      "wiredCount": 33
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 30,
+      "route": "Runtime",
+      "unwired": [],
+      "wiredCount": 30
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 29,
+      "route": "RuntimeConfig",
+      "unwired": [],
+      "wiredCount": 29
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 28,
+      "route": "SessionReadiness",
+      "unwired": [],
+      "wiredCount": 28
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 22,
+      "route": "Dashboard",
+      "unwired": [],
+      "wiredCount": 22
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 30,
+      "route": "LocalSwap",
+      "unwired": [],
+      "wiredCount": 30
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 41,
+      "route": "RouterStrategy",
+      "unwired": [],
+      "wiredCount": 41
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 36,
+      "route": "RouterWorkloads",
+      "unwired": [],
+      "wiredCount": 36
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 34,
+      "route": "RouterConfig",
+      "unwired": [],
+      "wiredCount": 34
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 38,
+      "route": "RouterAgentStrategy",
+      "unwired": [],
+      "wiredCount": 38
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 29,
+      "route": "ObserveActivity",
+      "unwired": [],
+      "wiredCount": 29
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 31,
+      "route": "ObserveLogs",
+      "unwired": [],
+      "wiredCount": 31
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 37,
+      "route": "ObserveRouting",
+      "unwired": [],
+      "wiredCount": 37
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 29,
+      "route": "Router",
+      "unwired": [],
+      "wiredCount": 29
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 52,
+      "route": "Providers",
+      "unwired": [],
+      "wiredCount": 52
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 33,
+      "route": "Endpoints",
+      "unwired": [],
+      "wiredCount": 33
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 32,
+      "route": "ControlController",
+      "unwired": [],
+      "wiredCount": 32
+    },
+    {
+      "disabledCount": 0,
+      "elementCount": 23,
+      "route": "NotFound",
+      "unwired": [],
+      "wiredCount": 23
+    }
+  ],
+  "totals": {
+    "deadControls": 0,
+    "disabledControls": 1,
+    "elements": 1481,
+    "routes": 50
+  }
+}

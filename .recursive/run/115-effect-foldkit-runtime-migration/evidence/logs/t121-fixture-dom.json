@@ -1,0 +1,10 @@
+[
+  {
+    "label": "running",
+    "text": "{\"phase\":\"Phase 3 of 3 · Head-to-head compare\",\"percent\":\"82%\",\"steps\":\"49 / 60 steps\",\"caseSummary\":null,\"failure\":null,\"detailStatus\":null,\"caseRows\":0,\"failRows\":0}"
+  },
+  {
+    "label": "completed-failure",
+    "text": "{\"phase\":\"Phase 3 of 3 · Complete\",\"percent\":\"100%\",\"steps\":\"60 / 60 steps\",\"caseSummary\":\"0/12 cases executed — 12 failed\",\"failure\":\"case-0: Benchmark execution failed. · upstream error: invalid api key (401) · judge: judge unavailable: 401\",\"detailStatus\":\"Run detail · 24a89d52-f6cf-425c-a101-9e937736b342 · completed\",\"caseRows\":12,\"failRows\":12}"
+  }
+]

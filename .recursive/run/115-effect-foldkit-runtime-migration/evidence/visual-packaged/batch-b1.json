@@ -1,0 +1,35 @@
+[
+  {
+    "route": "/control/controller",
+    "status": 200,
+    "png": "_control_controller.png",
+    "title": "Controller | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Controller Toggle theme Overview Diagnostics Observability Receipts Queues Local logs Ca",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/session-readiness",
+    "status": 200,
+    "png": "_session_readiness.png",
+    "title": "Session readiness | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Session readiness Toggle theme Overview Diagnostics Observability Receipts Queues Local ",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/dashboard",
+    "status": 200,
+    "png": "_dashboard.png",
+    "title": "Dashboard | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Dashboard Toggle theme Overview Diagnostics Observability Receipts Queues Local logs Can",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  }
+]

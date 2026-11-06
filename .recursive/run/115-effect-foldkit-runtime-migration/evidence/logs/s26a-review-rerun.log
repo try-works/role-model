@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s26a-route-inventory.test.ts (2 tests) 24ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  07:15:51
+   Duration  1.54s (transform 73ms, setup 0ms, collect 58ms, tests 24ms, environment 699ms, prepare 279ms)
+
+EXIT_CODE: 0

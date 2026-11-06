@@ -1,0 +1,57 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run98-r03-learning-pass.test.ts (17 tests | 1 failed | 16 skipped) 22ms
+   ↓ run98 R3 the evidence summary counts only decisive, in-package, in-window holdout evidence
+   ↓ run99 R33 the evidence summary is keyed by task family and reports exclusions
+   ↓ run99 R33 the evidence summary decays old comparisons by the half-life
+   ↓ run98 A33 S3 the summary reports its comparison graph and the pairs it never covered
+   ↓ run99 R33 an incomparable comparison is excluded and counted by code
+   ↓ run98 A30 a judge-self-evaluated comparison is excluded and counted by code
+   ↓ run99 R33 the family carries concentration and a temporal drift dimension
+   ↓ run99 R33 the effective counts weight each comparison by its evidence class
+   ↓ run98 R3 a validated candidate is promoted and both receipts are recorded
+   ↓ run99 R33 the recorded validation receipt keeps the family evidence
+   × run98 R3 an insufficient-evidence decision is recorded without promoting 20ms
+     → expected { …(13) } to match object { …(3) }
+(35 matching properties omitted from actual)
+   ↓ run98 R3 the pass fails closed without a scoring identity or durable receipt
+   ↓ run98 R3 an externalized comparison-group list is decoded before the evidence floor runs
+   ↓ run99 R33 D4 a thin family shrinks toward the package prior and discloses the fallback level
+   ↓ run99 R33 D6 the family states its propensity coverage and qualifies the causal claim
+   ↓ run113 the pass emits the documented pack and validation-receipt artifacts when the caller names a contract state root
+   ↓ run113 a caller that does not name a contract state root emits nothing (a unit test or a fixture)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run98-r03-learning-pass.test.ts > run98 R3 an insufficient-evidence decision is recorded without promoting
+AssertionError: expected { …(13) } to match object { …(3) }
+(35 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "decision": "insufficient_evidence",
+-   "packId": null,
+-   "promoted": false,
++   "packId": "pack:1",
++   "promoted": true,
+  }
+
+ ❯ test/run98-r03-learning-pass.test.ts:668:19
+    666|   });
+    667|   const receipt = await runTrackBLearningPass(runtime, passInput());
+    668|   expect(receipt).toMatchObject({
+       |                   ^
+    669|     decision: "insufficient_evidence",
+    670|     promoted: false,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 16 skipped (17)
+   Start at  04:22:29
+   Duration  2.18s (transform 807ms, setup 0ms, collect 1.67s, tests 22ms, environment 0ms, prepare 172ms)
+

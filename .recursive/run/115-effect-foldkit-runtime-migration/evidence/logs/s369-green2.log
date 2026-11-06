@@ -1,0 +1,29 @@
+COMMAND: node vitest run (S372 residual lint repair: 6 files)
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:53824) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s341-backend-storage.test.ts (6 tests) 3573ms
+   ✓ S341 backend storage factory > composeBackendStorage returns a per-backend lifecycle with initialization, graph store and observation storage  421ms
+   ✓ S341 backend storage factory > observed-profiles read family uses the bound backend storage instance (family identity)  2785ms
+(node:49432) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s369-diagnostics-query-source.test.ts (4 tests) 171ms
+ ✓ test/module-health-writer.test.ts (13 tests) 28ms
+(node:28752) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run115-s10c-wiring-proofs.test.ts (5 tests) 17ms
+(node:46988) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run115-s10b-module-health-wiring.test.ts (2 tests) 11ms
+(node:57460) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s366-module-health-edge.test.ts (4 tests) 10ms
+
+ Test Files  6 passed (6)
+      Tests  34 passed (34)
+   Start at  14:55:51
+   Duration  19.79s (transform 5.22s, setup 0ms, collect 13.05s, tests 3.81s, environment 2ms, prepare 1.10s)
+
+

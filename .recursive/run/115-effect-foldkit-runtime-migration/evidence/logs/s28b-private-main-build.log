@@ -1,0 +1,25 @@
+▲ [WARNING] Cannot find base config file "../../tsconfig.base.json" [tsconfig.json]
+
+    ../../vendor/effect/packages/effect/tsconfig.json:3:13:
+      3 │   "extends": "../../tsconfig.base.json",
+        ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+{"status":"PASS","package":"effect","entries":["BigDecimal","ByteSize","Cache","Cause","Clock","Config","ConfigProvider","Console","Context","Crypto","Data","DateTime","Duration","Effect","ErrorReporter","ExecutionPlan","Exit","Fiber","FileSystem","Function","Graph","HashMap","Layer","Logger","Match","Metric","MutableList","Option","Path","PubSub","Queue","Random","Redacted","References","Result","Schedule","Scheduler","Schema","Scope","Semaphore","Stream","Terminal","Tracer","ai","ai/AiError","ai/Chat","ai/DecisionModel","ai/EmbeddingModel","ai/LanguageModel","ai/McpSchema","ai/McpServer","ai/Model","ai/ResponseIdTracker","ai/Telemetry","ai/Tokenizer","ai/Tool","ai/Toolkit","cli","cli/CliConfig","cli/CliOutput","cli/Prompt","cluster","cluster/ClusterCron","cluster/ClusterSchema","cluster/Entity","cluster/EntityResource","cluster/Envelope","cluster/K8sHttpClient","cluster/MessageStorage","cluster/RunnerHealth","cluster/RunnerStorage","cluster/Runners","cluster/Sharding","cluster/ShardingConfig","cluster/Snowflake","devtools","devtools/DevToolsClient","encoding","eventlog","eventlog/EventJournal","eventlog/EventLog","eventlog/EventLogEncryption","eventlog/EventLogMessage","eventlog/EventLogRemote","eventlog/EventLogServer","eventlog/EventLogServerEncrypted","eventlog/EventLogServerUnencrypted","http","http-api","http-api/HttpApi","http-api/HttpApiGroup","http-api/OpenApi","http/Cookies","http/Etag","http/FetchHttpClient","http/Headers","http/HttpClient","http/HttpEffect","http/HttpIncomingMessage","http/HttpMiddleware","http/HttpPlatform","http/HttpRouter","http/HttpServer","http/HttpServerError","http/HttpServerRequest","http/Multipart","http/UrlParams","index","net","observability","observability/OtlpExporter","observability/OtlpSerialization","persistence","persistence/KeyValueStore","persistence/PersistedQueue","persistence/Persistence","persistence/RateLimiter","persistence/Redis","process","process/ChildProcessSpawner","reactivity","reactivity/Hydration","reactivity/Reactivity","rpc","rpc/RpcClient","rpc/RpcClientError","rpc/RpcSchema","rpc/RpcSerialization","rpc/RpcServer","rpc/RpcWorker","schema/SchemaCompiler","schema/index","socket","socket/Socket","sql","sql/Migrator","sql/SqlClient","sql/SqlConnection","sql/SqlError","sql/Statement","testing","workers","workers/Transferable","workers/Worker","workers/WorkerError","workers/WorkerRunner","workflow","workflow/Activity","workflow/DurableDeferred","workflow/Workflow","workflow/WorkflowEngine"]}
+▲ [WARNING] Cannot find base config file "../../tsconfig.base.json" [tsconfig.json]
+
+    ../../vendor/effect-mq/packages/effect-mq/tsconfig.json:2:13:
+      2 │   "extends": "../../tsconfig.base.json",
+        ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+{"status":"PASS","package":"effect-mq","entries":["index","testing"]}
+▲ [WARNING] Cannot find base config file "../../../tsconfig.base.json" [tsconfig.json]
+
+    ../../vendor/effect/packages/sql/sqlite-node/tsconfig.json:3:13:
+      3 │   "extends": "../../../tsconfig.base.json",
+        ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+{"status":"PASS","package":"@effect/sql-sqlite-node","entries":["index"]}
+[vendored] built wrapper dists: effect (dist-missing), effect-mq (dist-missing), sql-sqlite-node (dist-missing)
+(node:22028) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"status":"PASS","extensionCount":13,"sidecarSha256":"e648a6f387b416fbd0962efaa008b414dccc7d493b27f9d08e96ab406ead9526"}

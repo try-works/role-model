@@ -424,6 +424,33 @@ jobs:
         shell: pwsh
         run: node scripts/run88-stage-release.mjs --stage-manifest "${{ steps.stage_candidate.outputs.stage_manifest_path }}" --verify-production-manifest "${{ github.workspace }}/role-model-router/dist/release/${{ matrix.target }}/manifest.json"
 
+      # R39: compare the accepted stage package against the production candidate, advisory under the
+      # same toggle. Fail-closed: if the stage package cannot be located the step reports NOT RUN and
+      # exits 2 (advisory), which is how the exact extraction path gets discovered by a dispatch run
+      # instead of being guessed here.
+      - name: Compare accepted stage package against the production candidate (R39)
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'production'
+        shell: pwsh
+        continue-on-error: ${{ vars.R39_VERIFY_BLOCKING != 'true' }}
+        env:
+          R39_HEALTH_TIMEOUT_MS: "120000"
+        run: |
+          $stageRoot = Join-Path $env:RUNNER_TEMP "stage-package"
+          $stageExe = Get-ChildItem -Path $stageRoot -Recurse -Filter "*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $stageExe) {
+            Write-Output "NOT RUN: no staged package executable found under $stageRoot"
+            exit 2
+          }
+          $leftState = Join-Path $env:RUNNER_TEMP "r39-left"
+          $rightState = Join-Path $env:RUNNER_TEMP "r39-right"
+          Remove-Item -Recurse -Force $leftState, $rightState -ErrorAction SilentlyContinue
+          node scripts/runtime/compare-release.mjs `
+            --fixture-root "testdata/router-runtime/fixtures" `
+            --left-exe "$($stageExe.FullName)" --left-port 5930 --left-state $leftState `
+            --right-exe "role-model-router/dist/release/${{ matrix.target }}/role-model-dev.exe" --right-port 5931 --right-state $rightState
+          if ($LASTEXITCODE -ne 0) { throw "R39 release comparison did not pass (exit $LASTEXITCODE)" }
+
+
       - name: Verify Windows standalone package
         if: matrix.target == 'win32-x64'
         shell: pwsh
@@ -489,6 +516,140 @@ jobs:
               throw "Bundled secret material is forbidden in release packages: $path"
             }
           }
+
+      # R39: run the maintained client-journey verifier against the package this job just built.
+      # Advisory by default: continue-on-error is driven by vars.R39_VERIFY_BLOCKING, so the step
+      # reports without blocking a release until a dispatch run has been green and the variable is
+      # set to "true". Exit 1 and exit 2 both fail the job once blocking is on, because a typed
+      # NOT RUN is not evidence of parity.
+      - name: Verify packaged client journeys (R39)
+        if: matrix.target == 'win32-x64'
+        shell: pwsh
+        continue-on-error: ${{ vars.R39_VERIFY_BLOCKING != 'true' }}
+        env:
+          R39_HEALTH_TIMEOUT_MS: "120000"
+        run: |
+          $packageDir = "role-model-router/dist/release/${{ matrix.target }}"
+          $stateRoot = Join-Path $env:RUNNER_TEMP "r39-state"
+          if (Test-Path $stateRoot) { Remove-Item -Recurse -Force $stateRoot }
+          node scripts/runtime/verify-client-journeys.mjs `
+            --manifest "$packageDir/manifest.json" `
+            --executable "$packageDir/role-model-dev.exe" `
+            --repo-root "$packageDir" `
+            --static-root "role-model-router/apps/runtime-ui-next/dist/client" `
+            --port 5940 `
+            --state-root $stateRoot `
+            --fixture-root "testdata/router-runtime/fixtures"
+          if ($LASTEXITCODE -eq 2) {
+            # One clean retry for an environmental NOT RUN (fresh state, different port).
+            Remove-Item -Recurse -Force $stateRoot -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 5
+            node scripts/runtime/verify-client-journeys.mjs `
+              --manifest "$packageDir/manifest.json" `
+              --executable "$packageDir/role-model-dev.exe" `
+              --repo-root "$packageDir" `
+              --static-root "role-model-router/apps/runtime-ui-next/dist/client" `
+              --port 5941 `
+              --state-root $stateRoot `
+              --fixture-root "testdata/router-runtime/fixtures"
+          }
+          if ($LASTEXITCODE -ne 0) { throw "R39 client journeys did not pass (exit $LASTEXITCODE)" }
+
+          # S193: the same package must also serve a catalogue that names a specific worker. This is
+          # the configuration path; it does not prove a live credential (see S191/S192).
+          node scripts/runtime/verify-client-journeys.mjs `
+            --manifest "$packageDir/manifest.json" `
+            --executable "$packageDir/role-model-dev.exe" `
+            --repo-root "$packageDir" `
+            --static-root "role-model-router/apps/runtime-ui-next/dist/client" `
+            --port 5944 `
+            --state-root ($stateRoot + "-workers") `
+            --fixture-root "testdata/router-runtime/fixtures-workers" `
+            --expect-model "deepseek-official/deepseek-flash"
+          if ($LASTEXITCODE -ne 0) { throw "R39 worker-catalogue journeys did not pass (exit $LASTEXITCODE)" }
+
+      # R39: rendered UI audit. The HTTP checks above cannot see an invisible control, a control
+      # named by its own options, low contrast, or an application crash banner - all four shipped in
+      # this run and were found by looking. Advisory by the same variable as the other R39 steps:
+      # a runner without a browser reports NOT RUN (exit 2), which is honest, not a pass.
+      - name: Audit rendered UI (R39)
+        if: matrix.target == 'win32-x64'
+        shell: pwsh
+        continue-on-error: ${{ vars.R39_VERIFY_BLOCKING != 'true' }}
+        env:
+          R39_READY_TIMEOUT_MS: "120000"
+        run: |
+          $packageDir = "role-model-router/dist/release/win32-x64"
+          if (-not (Test-Path $packageDir)) { throw "no package directory at $packageDir" }
+          # S199: audit the static root the PACKAGE ships when it has one, on a port no other step uses.
+          $staticRoot = if (Test-Path "$packageDir/build/client") { "$packageDir/build/client" } else { "role-model-router/apps/runtime-ui-next/dist/client" }
+          node scripts/runtime/audit-rendered-ui.mjs `
+            --exe "$packageDir/role-model-dev.exe" `
+            --static-root $staticRoot `
+            --fixture-root "testdata/router-runtime/fixtures" `
+            --port 5950 `
+            --width 1440 --height 900 `
+            --focus `
+            --seed-chat `
+            --expect-overview-cards 3 `
+            --studio-run `
+            --theme light `
+            --control-action `
+            --click-sweep
+          if ($LASTEXITCODE -eq 2) {
+            if ("${{ vars.R39_VERIFY_BLOCKING }}" -eq "true") {
+              # A skip is not evidence. Once blocking is on, "no browser" fails the job.
+              throw "R39 rendered UI audit did NOT RUN while R39_VERIFY_BLOCKING=true"
+            }
+            Write-Output "NOT RUN: no Chromium-family browser on this runner (set CHROME_PATH to enable)"
+            exit 0
+          }
+          if ($LASTEXITCODE -ne 0) { throw "R39 rendered UI audit failed (exit $LASTEXITCODE)" }
+
+          # S201: the same audit at a phone viewport. Horizontal overflow and touch-target defects
+          # only appear when the layout is allowed to reflow.
+          node scripts/runtime/audit-rendered-ui.mjs `
+            --exe "$packageDir/role-model-dev.exe" `
+            --static-root $staticRoot `
+            --fixture-root "testdata/router-runtime/fixtures" `
+            --port 5951 `
+            --width 390 --height 844 `
+            --focus `
+            --seed-chat `
+            --expect-overview-cards 1
+          if ($LASTEXITCODE -eq 2) {
+            if ("${{ vars.R39_VERIFY_BLOCKING }}" -eq "true") {
+              throw "R39 rendered UI audit (390x844) did NOT RUN while R39_VERIFY_BLOCKING=true"
+            }
+            Write-Output "NOT RUN: no Chromium-family browser on this runner (set CHROME_PATH to enable)"
+            exit 0
+          }
+          if ($LASTEXITCODE -ne 0) { throw "R39 rendered UI audit at 390x844 failed (exit $LASTEXITCODE)" }
+
+      # R14: the real React/Foldkit capture selfcheck lane (S294-S326). Advisory by the same
+      # variable as the other R39 steps: a runner without a browser reports NOT RUN (exit 2),
+      # which is honest, not a pass. PARITY_SELFCHECK_TEMP_DRIVE re-selects the runner's own
+      # temp drive so the lane's fail-fast does not require E: (S342c).
+      - name: Parity selfcheck lane (R14)
+        if: matrix.target == 'win32-x64'
+        shell: pwsh
+        continue-on-error: ${{ vars.R39_VERIFY_BLOCKING != 'true' }}
+        run: |
+          # React target prerequisite: the lane captures BOTH UIs; the React build is not
+          # otherwise part of this job.
+          corepack pnpm --filter @role-model-router/runtime-ui run build
+          if ($LASTEXITCODE -ne 0) { throw "R14 parity selfcheck: React build failed (exit $LASTEXITCODE)" }
+          $runnerDrive = (Get-Item $env:RUNNER_TEMP).PSDrive.Name + ":"
+          $env:PARITY_SELFCHECK_TEMP_DRIVE = $runnerDrive
+          node --import tsx scripts/runtime-parity.mjs --selfcheck
+          if ($LASTEXITCODE -eq 2) {
+            if ("${{ vars.R39_VERIFY_BLOCKING }}" -eq "true") {
+              throw "R14 parity selfcheck did NOT RUN while R39_VERIFY_BLOCKING=true"
+            }
+            Write-Output "NOT RUN: no Chromium-family browser on this runner (set CHROME_PATH to enable)"
+            exit 0
+          }
+          if ($LASTEXITCODE -ne 0) { throw "R14 parity selfcheck failed (exit $LASTEXITCODE)" }
 
       - name: Archive standalone package (Unix)
         if: matrix.target != 'win32-x64'

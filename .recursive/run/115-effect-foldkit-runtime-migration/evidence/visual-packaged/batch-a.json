@@ -1,0 +1,155 @@
+[
+  {
+    "route": "/",
+    "status": 200,
+    "png": "_.png",
+    "title": "Overview | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learni",
+    "states": [
+      "idle",
+      "idle",
+      "success"
+    ],
+    "alerts": [],
+    "rows": 0
+  },
+  {
+    "route": "/diagnostics/42",
+    "status": 200,
+    "png": "_diagnostics_42.png",
+    "title": "Diagnostics 42 | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learni",
+    "states": [
+      "idle",
+      "idle"
+    ],
+    "alerts": [],
+    "rows": 0
+  },
+  {
+    "route": "/observe/observability-snapshot",
+    "status": 200,
+    "png": "_observe_observability_snapshot.png",
+    "title": "Observability | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learni",
+    "states": [
+      "live",
+      "live",
+      "ok"
+    ],
+    "alerts": [],
+    "rows": 0
+  },
+  {
+    "route": "/observe/store-degradation-receipts",
+    "status": 200,
+    "png": "_observe_store_degradation_receipts.png",
+    "title": "Store receipts | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learni",
+    "states": [
+      "idle",
+      "idle",
+      "loading"
+    ],
+    "alerts": [],
+    "rows": 0
+  },
+  {
+    "route": "/observe/queues",
+    "status": 200,
+    "png": "_observe_queues.png",
+    "title": "Queues | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learni",
+    "states": [
+      "live",
+      "live",
+      "ok"
+    ],
+    "alerts": [],
+    "rows": 0
+  },
+  {
+    "route": "/local/logs",
+    "status": 200,
+    "png": "_local_logs.png",
+    "title": "Local logs | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learni",
+    "states": [
+      "live",
+      "live",
+      "empty"
+    ],
+    "alerts": [],
+    "rows": 0
+  },
+  {
+    "route": "/router/candidates",
+    "status": 200,
+    "png": "_router_candidates.png",
+    "title": "Router candidates | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learni",
+    "states": [
+      "live",
+      "live",
+      "ok"
+    ],
+    "alerts": [],
+    "rows": 0
+  },
+  {
+    "route": "/requests",
+    "status": 200,
+    "png": "_requests.png",
+    "title": "Requests | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learni",
+    "states": [
+      "live",
+      "live",
+      "empty"
+    ],
+    "alerts": [],
+    "rows": 0
+  },
+  {
+    "route": "/router/decisions",
+    "status": 200,
+    "png": "_router_decisions.png",
+    "title": "Router decisions | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learni",
+    "states": [
+      "live",
+      "live",
+      "empty"
+    ],
+    "alerts": [],
+    "rows": 0
+  },
+  {
+    "route": "/system/peers",
+    "status": 200,
+    "png": "_system_peers.png",
+    "title": "System peers | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learni",
+    "states": [
+      "live",
+      "live",
+      "empty"
+    ],
+    "alerts": [],
+    "rows": 0
+  },
+  {
+    "route": "/local/peers",
+    "status": 200,
+    "png": "_local_peers.png",
+    "title": "Local peers | RM3 Foldkit shell",
+    "text": "Runtime UI Overview Diagnostics Observability Receipts Queues Local logs Candidates Requests Decisions System peers Local peers Runtime Providers Endpoints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learni",
+    "states": [
+      "live",
+      "live",
+      "empty"
+    ],
+    "alerts": [],
+    "rows": 0
+  }
+]

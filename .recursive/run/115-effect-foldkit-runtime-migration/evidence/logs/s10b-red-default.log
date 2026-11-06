@@ -1,0 +1,50 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:53556) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run115-s10b-module-health-wiring.test.ts (2 tests | 1 failed | 1 skipped) 12ms
+   ↓ S10b module-health writer composition > enabled: a recorded failure appears through the real diagnostics read and business values are unchanged
+   × S10b module-health writer composition > default: absent or disabled enablement leaves the read path answering disabled 10ms
+     → expected { …(3) } to be undefined
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run115-s10b-module-health-wiring.test.ts > S10b module-health writer composition > default: absent or disabled enablement leaves the read path answering disabled
+AssertionError: expected { …(3) } to be undefined
+
+- Expected: 
+undefined
+
++ Received: 
+{
+  "reportRequestFailure": [Function reportRequestFailure],
+  "source": [Function source],
+  "writer": {
+    "loss": [Function loss],
+    "observe": [Function observe],
+    "outages": [Function outages],
+    "recordCause": [Function recordCause],
+    "recordError": [Function recordError],
+    "records": [Function records],
+    "source": [Function source],
+  },
+}
+
+ ❯ test/run115-s10b-module-health-wiring.test.ts:91:47
+     89| 
+     90|   it("default: absent or disabled enablement leaves the read path answ…
+     91|     expect(createModuleHealthComposition({})).toBeUndefined();
+       |                                               ^
+     92|     expect(createModuleHealthComposition({ diagnostics: {} })).toBeUnd…
+     93|     expect(createModuleHealthComposition({ diagnostics: { enabled: fal…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 skipped (2)
+   Start at  01:15:49
+   Duration  7.33s (transform 4.43s, setup 0ms, collect 6.85s, tests 12ms, environment 0ms, prepare 164ms)
+
+EXIT_CODE: 1

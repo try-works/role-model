@@ -1,0 +1,32 @@
+node:internal/modules/esm/resolve:274
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\effect-platform-browser\entries.mjs' imported from D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\foldkit\test\graph-closure.test.mjs
+    at finalizeResolution (node:internal/modules/esm/resolve:274:11)
+    at moduleResolve (node:internal/modules/esm/resolve:864:10)
+    at defaultResolve (node:internal/modules/esm/resolve:990:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20)
+    at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38)
+    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38)
+    at #link (node:internal/modules/esm/module_job:208:49) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/effect-platform-browser/entries.mjs'
+}
+
+Node.js v24.11.0
+✖ test\graph-closure.test.mjs (106.2856ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 121.2058
+
+✖ failing tests:
+
+test at test\graph-closure.test.mjs:1:1
+✖ test\graph-closure.test.mjs (106.2856ms)
+  'test failed'

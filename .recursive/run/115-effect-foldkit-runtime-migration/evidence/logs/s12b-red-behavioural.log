@@ -1,0 +1,24 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+ ❯ test/s12b-rm3-button.scene.test.ts (6 tests | 1 failed) 58ms
+   ✓ RM3 button Foldkit primitive > emits its message on click and the model observes it 28ms
+   × RM3 button Foldkit primitive > does not emit when disabled and is not clickable 19ms
+     → Expected element matching button to be disabled but it is not disabled.
+   ✓ RM3 button Foldkit primitive > keeps the RM3 variant token classes and fixed heights 4ms
+   ✓ RM3 button Foldkit primitive > keeps the primary block variant full width 1ms
+   ✓ RM3 button Foldkit primitive > uses aria-label as the accessible name for an icon-only button 1ms
+   ✓ RM3 button Foldkit primitive > refuses an icon-only button without an accessible name 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s12b-rm3-button.scene.test.ts > RM3 button Foldkit primitive > does not emit when disabled and is not clickable
+Error: Expected element matching button to be disabled but it is not disabled.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  23:33:17
+   Duration  4.43s (transform 1.84s, setup 0ms, collect 2.98s, tests 58ms, environment 692ms, prepare 237ms)
+

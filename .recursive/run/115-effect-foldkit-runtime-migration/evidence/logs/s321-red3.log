@@ -1,0 +1,69 @@
+COMMAND: node vitest run test/s321-partial-shutdown.test.ts (S322 RED: bounded join + scope finalizer)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/s321-partial-shutdown.test.ts (10 tests | 2 failed) 30052ms
+   ✓ S321 partial shutdown ordering > release-all runs every release even when an earlier one fails (AggregateError, no early exit) 4ms
+   ✓ S321 partial shutdown ordering > server shutdown order: stop admission -> join -> interrupt -> close transport -> close backend 3ms
+   ✓ S321 partial shutdown ordering > a failing dependency close does not skip later releases (backend close still runs) 3ms
+   ✓ S321 partial shutdown ordering > the facade's server.close uses the DAG owner's ordered shutdown (identity) 1ms
+   ✓ S321 partial shutdown ordering > facadeBackendOwner exposes no backend close (test seam only) 0ms
+   ✓ S321 partial shutdown ordering > production backend close runs last and exactly once when DAG shutdown then hostScope close runs 2ms
+   ✓ S321 partial shutdown ordering > production cli passes the idempotent backend close into the DAG owner (source wiring) 5ms
+   × S321 partial shutdown ordering > bounded join: a hung keep-alive connection does not block shutdown; interrupt runs after the bound 30019ms
+     → Test timed out in 30000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ✓ S321 partial shutdown ordering > packaged runtime Effect scope closes exactly once across DAG shutdown and hostScope close 2ms
+   × S321 partial shutdown ordering > production cli closes the packaged SCOPE through the onceClose finalizer (source wiring) 12ms
+     → expected 'const closePackagedRuntimeOnce = once…' to contain 'Scope.close(packagedScope'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s321-partial-shutdown.test.ts > S321 partial shutdown ordering > bounded join: a hung keep-alive connection does not block shutdown; interrupt runs after the bound
+Error: Test timed out in 30000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ test/s321-partial-shutdown.test.ts:134:3
+    132|   });
+    133| 
+    134|   test("bounded join: a hung keep-alive connection does not block shut…
+       |   ^
+    135|     const { composeBackendOwner: composeBackend, onceClose } = await i…
+    136|     const order: string[] = [];
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s321-partial-shutdown.test.ts > S321 partial shutdown ordering > production cli closes the packaged SCOPE through the onceClose finalizer (source wiring)
+AssertionError: expected 'const closePackagedRuntimeOnce = once…' to contain 'Scope.close(packagedScope'
+
+- Expected
++ Received
+
+- Scope.close(packagedScope
++ const closePackagedRuntimeOnce = onceClose(async () => {
++     if (packagedRuntime !== null) await packagedRuntime.close();
++   });
++   // R3: the post-observation handler needs the running registry's configured
++   // endpoints, but it is defined before the backend exists. The reference is filled
++   // in once the runtime is created and read on every observation.
++   const configuredEndpointIdsRef: { current: readonly string[] } = { current: [] };
++   const bootstrapState: CliBootstrapState = { status: "pending" };
++   let shutdownProm
+
+ ❯ test/s321-partial-shutdown.test.ts:186:20
+    184|     const end = cli.indexOf("\n", cli.indexOf("});", start));
+    185|     const region = cli.slice(start, end + 400);
+    186|     expect(region).toContain("Scope.close(packagedScope");
+       |                    ^
+    187|     expect(region).not.toContain("packagedRuntime.close()");
+    188|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 8 passed (10)
+   Start at  08:04:26
+   Duration  33.07s (transform 1.55s, setup 0ms, collect 2.49s, tests 30.05s, environment 0ms, prepare 208ms)
+
+

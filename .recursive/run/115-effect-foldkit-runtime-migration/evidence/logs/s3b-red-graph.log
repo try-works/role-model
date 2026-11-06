@@ -1,0 +1,41 @@
+✖ @role-model-router/foldkit: built graph has no Node builtin or Node platform-package import (114.582ms)
+✔ @role-model-router/foldkit: effect is one shared external specifier (87.8737ms)
+✔ @role-model-router/foldkit: every vendored subpath has a wrapper export backed by a built file (16.625ms)
+✔ @role-model-router/foldkit-ui: built graph has no Node builtin or Node platform-package import (55.4091ms)
+✔ @role-model-router/foldkit-ui: effect is one shared external specifier (52.9625ms)
+✔ @role-model-router/foldkit-ui: every vendored subpath has a wrapper export backed by a built file (12.0799ms)
+✔ foldkit-ui reaches its framework peer through the first-party wrapper specifier (142.4505ms)
+✔ vendored subpath coverage counts are stable and total (1.5805ms)
+✔ a published subpath whose source file is missing fails entry generation loudly (2.6362ms)
+✔ an export target outside dist/ is refused instead of guessed (0.5042ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 9
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 621.0164
+
+✖ failing tests:
+
+test at test\graph-closure.test.mjs:277:3
+✖ @role-model-router/foldkit: built graph has no Node builtin or Node platform-package import (114.582ms)
+  AssertionError [ERR_ASSERTION]: @role-model-router/foldkit: browser-graph violations
+  + actual - expected
+  
+  + [
+  +   'dist\\index.js -> node:fs'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit/test/graph-closure.test.mjs:298:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 'dist\\index.js -> node:fs' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

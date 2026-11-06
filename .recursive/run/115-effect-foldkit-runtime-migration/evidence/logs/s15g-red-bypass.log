@@ -1,0 +1,184 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the ok state and its records, and requests the operator diagnostics URL
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 12.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 's15f-ok', status: 'loading' },
+    route: { _tag: 'Diagnostics', id: 's15f-ok' },
+    theme: 'light'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 12.819099999999708,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the empty state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the disabled state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the stale state with the server's exact age and rule
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the dropped state with the server's exact loss counts
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders a 401 denial
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders a 403 rejection distinctly from a 401 denial
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders a transport failure as the error state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > constructs the REAL client with the injected fetchImpl/baseUrl/token and mounts its reader
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > mounts the reader instance returned by the client factory
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > turns a token-less same-origin 401 into the explicit trust-precondition error
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+ ❯ test/diagnostics-e2e.test.ts (11 tests | 3 failed) 10945ms
+   ✓ S15f diagnostics page over the real client > renders the ok state and its records, and requests the operator diagnostics URL  611ms
+   ✓ S15f diagnostics page over the real client > renders the empty state  516ms
+   ✓ S15f diagnostics page over the real client > renders the disabled state  547ms
+   ✓ S15f diagnostics page over the real client > renders the stale state with the server's exact age and rule  543ms
+   ✓ S15f diagnostics page over the real client > renders the dropped state with the server's exact loss counts  543ms
+   ✓ S15f diagnostics page over the real client > renders a 401 denial  542ms
+   ✓ S15f diagnostics page over the real client > renders a 403 rejection distinctly from a 401 denial  544ms
+   ✓ S15f diagnostics page over the real client > renders a transport failure as the error state  523ms
+   × S15f diagnostics page over the real client > constructs the REAL client with the injected fetchImpl/baseUrl/token and mounts its reader 552ms
+     → expected +0 to be 1 // Object.is equality
+   × S15f diagnostics page over the real client > mounts the reader instance returned by the client factory 3014ms
+     → Timed out waiting for the disabled state from the factory's reader (last value: undefined) | body: IndexDiagnostics 42Diagnostics: s15g-identityok — 0 of 0 record(s)instance: inst-s15f · build: build-s15fbounded read: 50 records / 16384 bytes / identity ≤256 B / code ≤512 BRefresh diagnosticsLight shellClicks: 0Clicked 0 time(s)Toggle theme
+   × S15f diagnostics page over the real client > turns a token-less same-origin 401 into the explicit trust-precondition error 3007ms
+     → Timed out waiting for the trust-precondition error state (last value: undefined) | body: IndexDiagnostics 42Diagnostics: s15g-trustAccess denied: this diagnostics read is not authorized (HTTP 401).instance: missing · build: missingRefresh diagnosticsLight shellClicks: 0Clicked 0 time(s)Toggle theme
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > constructs the REAL client with the injected fetchImpl/baseUrl/token and mounts its reader
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/diagnostics-e2e.test.ts:225:32
+    223| 
+    224|     await waitFor(() => stateNode("ok"), "the ok state through the con…
+    225|     expect(constructed.length).toBe(1);
+       |                                ^
+    226|     expect(constructed[0]?.fetchImpl).toBe(stub.fetchImpl);
+    227|     expect(constructed[0]?.baseUrl).toBe("http://127.0.0.1:3458");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > mounts the reader instance returned by the client factory
+Error: Timed out waiting for the disabled state from the factory's reader (last value: undefined) | body: IndexDiagnostics 42Diagnostics: s15g-identityok — 0 of 0 record(s)instance: inst-s15f · build: build-s15fbounded read: 50 records / 16384 bytes / identity ≤256 B / code ≤512 BRefresh diagnosticsLight shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/diagnostics-e2e.test.ts:107:9
+    105|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+    106|   }
+    107|   throw new Error(
+       |         ^
+    108|     `Timed out waiting for ${label} (last value: ${String(last)}) | bo…
+    109|   );
+ ❯ test/diagnostics-e2e.test.ts:238:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > turns a token-less same-origin 401 into the explicit trust-precondition error
+Error: Timed out waiting for the trust-precondition error state (last value: undefined) | body: IndexDiagnostics 42Diagnostics: s15g-trustAccess denied: this diagnostics read is not authorized (HTTP 401).instance: missing · build: missingRefresh diagnosticsLight shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/diagnostics-e2e.test.ts:107:9
+    105|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+    106|   }
+    107|   throw new Error(
+       |         ^
+    108|     `Timed out waiting for ${label} (last value: ${String(last)}) | bo…
+    109|   );
+ ❯ test/diagnostics-e2e.test.ts:247:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 8 passed (11)
+   Start at  04:49:01
+   Duration  17.39s (transform 3.17s, setup 0ms, collect 5.06s, tests 10.95s, environment 686ms, prepare 253ms)
+
+EXIT_CODE: 1

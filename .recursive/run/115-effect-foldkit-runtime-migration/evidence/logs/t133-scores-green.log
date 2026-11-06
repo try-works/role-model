@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s643-benchmark-scores-identity.test.ts (3 tests) 339ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  05:13:38
+   Duration  24.02s (transform 10.94s, setup 0ms, collect 18.20s, tests 339ms, environment 3.63s, prepare 765ms)
+

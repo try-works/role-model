@@ -1,0 +1,995 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s634-observe-requests-charts.test.ts > S634 requests charts > dispatches the nine analytics queries on the mounted route and re-queries on filter/range/ranking changes
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 223.6ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Requests' },
+    requestsCharts: { entries: [], status: 'loading', token: 1 },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 223.57880000000296,
+  thresholdMs: 8
+}
+
+stderr | test/s634-observe-requests-charts.test.ts > S634 requests charts > dispatches the nine analytics queries on the mounted route and re-queries on filter/range/ranking changes
+[foldkit] Slow update: 21.6ms (budget: 4ms), triggered by ReadbackLoaded. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Update',
+  previousModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Requests' },
+    requestsCharts: { entries: [], status: 'loading', token: 1 },
+    theme: 'dark'
+  },
+  nextModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Requests' },
+    requestsCharts: { entries: [], status: 'loading', token: 1 },
+    theme: 'dark'
+  },
+  message: {
+    _tag: 'ReadbackLoaded',
+    key: 'requests',
+    snapshot: { rows: [], status: 'empty', token: 1 },
+    token: 1
+  },
+  durationMs: 21.594100000002072,
+  thresholdMs: 4
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'requests',
+  snapshot: { rows: [], status: 'empty', token: 1 },
+  token: 1
+}
+
+stderr | test/s634-observe-requests-charts.test.ts > S634 requests charts > dispatches the nine analytics queries on the mounted route and re-queries on filter/range/ranking changes
+[foldkit] Slow patch: 16.7ms (budget: 8ms), triggered by RequestsChartsLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Requests' },
+    requestsCharts: { entries: [Array], status: 'ok', token: 1 },
+    theme: 'dark'
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'RequestsChartsLoaded',
+      entriesJson: '[{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Request volume over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Taxonomy demand by group"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Task success vs failure"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Token usage over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Cache efficiency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Effective cost over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Latency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Capability leaders"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Ranked comparison"}]',
+      token: 1
+    }
+  },
+  durationMs: 16.665200000003097,
+  thresholdMs: 8
+} {
+  _tag: 'RequestsChartsLoaded',
+  entriesJson: '[{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Request volume over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Taxonomy demand by group"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Task success vs failure"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Token usage over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Cache efficiency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Effective cost over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Latency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Capability leaders"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Ranked comparison"}]',
+  token: 1
+}
+
+stderr | test/s634-observe-requests-charts.test.ts > S634 requests charts > dispatches the nine analytics queries on the mounted route and re-queries on filter/range/ranking changes
+[foldkit] Slow update: 9.3ms (budget: 4ms), triggered by RequestsFilterChanged. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Update',
+  previousModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Requests' },
+    requestsCharts: { entries: [Array], status: 'ok', token: 1 },
+    theme: 'dark'
+  },
+  nextModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Requests' },
+    requestsCharts: { entries: [], status: 'loading', token: 2 },
+    theme: 'dark',
+    requestsFilters: {
+      breakdown: 'Total',
+      difficulty: 'All buckets',
+      expanded: false,
+      range: 'Day',
+      source: 'Local only',
+      statusFamily: 'All statuses'
+    }
+  },
+  message: {
+    _tag: 'RequestsFilterChanged',
+    field: 'source',
+    value: 'Local only'
+  },
+  durationMs: 9.257499999999709,
+  thresholdMs: 4
+} { _tag: 'RequestsFilterChanged', field: 'source', value: 'Local only' }
+
+stderr | test/s634-observe-requests-charts.test.ts > S634 requests charts > dispatches the nine analytics queries on the mounted route and re-queries on filter/range/ranking changes
+[foldkit] Slow patch: 12.2ms (budget: 8ms), triggered by RequestsChartsLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Requests' },
+    requestsCharts: { entries: [Array], status: 'ok', token: 2 },
+    theme: 'dark',
+    requestsFilters: {
+      breakdown: 'Total',
+      difficulty: 'All buckets',
+      expanded: false,
+      range: 'Day',
+      source: 'Local only',
+      statusFamily: 'All statuses'
+    }
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'RequestsChartsLoaded',
+      entriesJson: '[{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Request volume over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Taxonomy demand by group"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Task success vs failure"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Token usage over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Cache efficiency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Effective cost over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Latency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Capability leaders"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Ranked comparison"}]',
+      token: 2
+    }
+  },
+  durationMs: 12.24149999999645,
+  thresholdMs: 8
+} {
+  _tag: 'RequestsChartsLoaded',
+  entriesJson: '[{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Request volume over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Taxonomy demand by group"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Task success vs failure"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Token usage over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Cache efficiency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Effective cost over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Latency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Capability leaders"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Ranked comparison"}]',
+  token: 2
+}
+
+stderr | test/s634-observe-requests-charts.test.ts > S634 requests charts > dispatches the nine analytics queries on the mounted route and re-queries on filter/range/ranking changes
+[foldkit] Slow patch: 14.2ms (budget: 8ms), triggered by RequestsChartsLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Requests' },
+    requestsCharts: { entries: [Array], status: 'ok', token: 3 },
+    theme: 'dark',
+    requestsFilters: {
+      breakdown: 'Total',
+      difficulty: 'All buckets',
+      expanded: false,
+      range: 'Week',
+      source: 'Local only',
+      statusFamily: 'All statuses'
+    }
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'RequestsChartsLoaded',
+      entriesJson: '[{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Request volume over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Taxonomy demand by group"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Task success vs failure"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Token usage over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Cache efficiency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Effective cost over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Latency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Capability leaders"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Ranked comparison"}]',
+      token: 3
+    }
+  },
+  durationMs: 14.153599999997823,
+  thresholdMs: 8
+} {
+  _tag: 'RequestsChartsLoaded',
+  entriesJson: '[{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Request volume over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Taxonomy demand by group"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Task success vs failure"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Token usage over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Cache efficiency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Effective cost over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Latency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Capability leaders"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Ranked comparison"}]',
+  token: 3
+}
+
+stderr | test/s634-observe-requests-charts.test.ts > S634 requests charts > dispatches the nine analytics queries on the mounted route and re-queries on filter/range/ranking changes
+[foldkit] Slow view: 24.6ms (budget: 16ms), triggered by RequestsChartsLoaded. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'View',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Requests' },
+    requestsCharts: { entries: [Array], status: 'ok', token: 4 },
+    theme: 'dark',
+    requestsFilters: {
+      breakdown: 'Total',
+      difficulty: 'All buckets',
+      expanded: false,
+      range: 'Week',
+      source: 'Local only',
+      statusFamily: 'All statuses'
+    },
+    requestsRanking: {
+      metric: 'totalTokens',
+      rankingTarget: 'endpointId',
+      rows: [],
+      status: 'loading',
+      token: 1,
+      message: undefined
+    }
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'RequestsChartsLoaded',
+      entriesJson: '[{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Request volume over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Taxonomy demand by group"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Task success vs failure"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Token usage over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Cache efficiency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Effective cost over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Latency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Capability leaders"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Ranked comparison"}]',
+      token: 4
+    }
+  },
+  durationMs: 24.619299999998475,
+  thresholdMs: 16
+} {
+  _tag: 'RequestsChartsLoaded',
+  entriesJson: '[{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Request volume over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Taxonomy demand by group"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Task success vs failure"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Token usage over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Cache efficiency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Effective cost over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Latency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Capability leaders"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Ranked comparison"}]',
+  token: 4
+}
+[foldkit] Slow patch: 10.1ms (budget: 8ms), triggered by RequestsChartsLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Requests' },
+    requestsCharts: { entries: [Array], status: 'ok', token: 4 },
+    theme: 'dark',
+    requestsFilters: {
+      breakdown: 'Total',
+      difficulty: 'All buckets',
+      expanded: false,
+      range: 'Week',
+      source: 'Local only',
+      statusFamily: 'All statuses'
+    },
+    requestsRanking: {
+      metric: 'totalTokens',
+      rankingTarget: 'endpointId',
+      rows: [],
+      status: 'loading',
+      token: 1,
+      message: undefined
+    }
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'RequestsChartsLoaded',
+      entriesJson: '[{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Request volume over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Taxonomy demand by group"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Task success vs failure"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Token usage over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Cache efficiency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Effective cost over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Latency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Capability leaders"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Ranked comparison"}]',
+      token: 4
+    }
+  },
+  durationMs: 10.108099999997648,
+  thresholdMs: 8
+} {
+  _tag: 'RequestsChartsLoaded',
+  entriesJson: '[{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Request volume over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Taxonomy demand by group"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Task success vs failure"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Token usage over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Cache efficiency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Effective cost over time"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Latency trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Capability leaders"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Ranked comparison"}]',
+  token: 4
+}
+
+stderr | test/s634-observe-requests-charts.test.ts
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s634-observe-requests-charts.test.ts
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+ ✓ test/s634-observe-requests-charts.test.ts (4 tests) 2530ms
+   ✓ S634 requests charts > renders the nine cards with real series, in-plot empties and no visible chart tables  718ms
+   ✓ S634 requests charts > dispatches the nine analytics queries on the mounted route and re-queries on filter/range/ranking changes  1778ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  19:23:05
+   Duration  39.64s (transform 15.12s, setup 0ms, collect 27.61s, tests 2.53s, environment 5.39s, prepare 2.32s)
+

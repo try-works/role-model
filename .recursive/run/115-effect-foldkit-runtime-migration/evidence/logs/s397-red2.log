@@ -1,0 +1,106 @@
+COMMAND: node vitest run s397 (S398 RED)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s397-device-auth-form.test.ts (14 tests | 3 failed) 43ms
+   × S396a device-authorization client (exact HTTP) > POSTs the exact start payload to /accounts/device/start 18ms
+     → expected { allowedModels: [ 'gpt-6' ], …(10) } to deeply equal { allowedModels: [ 'gpt-6' ], …(9) }
+   ✓ S396a device-authorization client (exact HTTP) > POSTs {authRequestId} to /accounts/device/poll and GETs /accounts/device 1ms
+   ✓ S396a device-authorization client (exact HTTP) > POSTs exactly one activation per selected model 1ms
+   ✓ S396a device-authorization form state > validates provider/models/region without dropping the draft 0ms
+   ✓ S396a device-authorization form state > restores a pending session instead of starting a duplicate (conflict) 0ms
+   ✓ S396a device-authorization form state > builds the exact start payload when no pending session exists 1ms
+   ✓ S396a device-authorization form state > activates each selected model exactly once 1ms
+   ✓ S396a device-authorization update transitions > conflict restore schedules ONE poll and never a start 7ms
+   ✓ S396a device-authorization update transitions > no pending session starts once with the exact payload 2ms
+   ✓ S396a device-authorization update transitions > keeps authRequestId on retry and issues ONE poll in flight 2ms
+   × S396a device-authorization update transitions > refuses a retry while a poll is in flight and allows it once settled 2ms
+     → expected [ 'PollDeviceAuthorization' ] to deeply equal []
+   ✓ S396a device-authorization update transitions > cancel clears the session and token-fences a late poll result 1ms
+   ✓ S396a device-authorization update transitions > on connected activates ONE command per selected model 1ms
+   × S398 device-authorization retry control (DOM) > shows a retry control after a failed read and retries the device read on click 3ms
+     → createReadbackClients is not defined
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s397-device-auth-form.test.ts > S396a device-authorization client (exact HTTP) > POSTs the exact start payload to /accounts/device/start
+AssertionError: expected { allowedModels: [ 'gpt-6' ], …(10) } to deeply equal { allowedModels: [ 'gpt-6' ], …(9) }
+
+- Expected
++ Received
+
+@@ -5,20 +5,13 @@
+    "budgetPolicyRef": "budget.default",
+    "deniedModels": [],
+    "entitlementTags": [
+      "chat",
+    ],
+-   "modelRoleBindings": [
+-     {
+-       "disabledRoleIds": [],
+-       "enabledRoleIds": [],
+-       "modelId": "gpt-6",
+-       "roleAssignmentMode": "include",
+-       "roleIds": [],
+-     },
+-   ],
++   "modelRoleBindings": [],
+    "providerAccountId": "openai.personal.openai-codex-subscription",
+    "providerId": "openai",
+    "providerKind": "openai",
+    "quotaPolicyRef": "quota.default",
++   "region": "global",
+    "variantId": "openai-codex-subscription",
+  }
+
+ ❯ test/s397-device-auth-form.test.ts:77:48
+     75|     expect(calls[0]?.method).toBe("POST");
+     76|     expect(calls[0]?.url).toBe("/api/role-model/accounts/device/start"…
+     77|     expect(JSON.parse(calls[0]?.body ?? "{}")).toEqual({
+       |                                                ^
+     78|       allowedModels: ["gpt-6"],
+     79|       budgetPolicyRef: "budget.default",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/s397-device-auth-form.test.ts > S396a device-authorization update transitions > refuses a retry while a poll is in flight and allows it once settled
+AssertionError: expected [ 'PollDeviceAuthorization' ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "PollDeviceAuthorization",
++ ]
+
+ ❯ test/s397-device-auth-form.test.ts:203:35
+    201|     const inFlight = stateWithDraft({ inflight: true, session: session…
+    202|     const refused = shellUpdate(modelWith(inFlight), Message.DeviceAut…
+    203|     expect(commandNames(refused)).toEqual([]);
+       |                                   ^
+    204|     const settled = stateWithDraft({ inflight: false, session: session…
+    205|     const retried = shellUpdate(modelWith(settled), Message.DeviceAuth…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/s397-device-auth-form.test.ts > S398 device-authorization retry control (DOM) > shows a retry control after a failed read and retries the device read on click
+ReferenceError: createReadbackClients is not defined
+ ❯ test/s397-device-auth-form.test.ts:260:61
+    258|     container.id = "s398-retry";
+    259|     document.body.append(container);
+    260|     const handle = mountShell(container, { readbackReaders: createRead…
+       |                                                             ^
+    261|     mounted.push({ container, handle });
+    262|     const start = await waitFor(() => document.querySelector<HTMLEleme…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 11 passed (14)
+   Start at  16:42:19
+   Duration  7.87s (transform 3.90s, setup 0ms, collect 6.26s, tests 43ms, environment 690ms, prepare 290ms)
+
+

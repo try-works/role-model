@@ -66,17 +66,20 @@ test("run98 a43 S4: the API reports sample-backed sweeps with a state that canno
     }
     seed("run-stalled-sweep", secondEndpointId, stalledAtMs + 12_000, 12);
 
-    const server = await startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry: backend.registry,
-      getRegistry: () => backend.registry,
-      executeChatCompletions: backend.executeChatCompletions,
-      executeResponses: backend.executeResponses,
-      readRuntimeSummary: backend.readRuntimeSummary,
-      readHealthStatus: backend.readHealthStatus,
-      readBenchmarkSampleRunStates: backend.readBenchmarkSampleRunStates,
-    });
+    const server = await startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry: backend.registry,
+        getRegistry: () => backend.registry,
+        executeChatCompletions: backend.executeChatCompletions,
+        executeResponses: backend.executeResponses,
+        readRuntimeSummary: backend.readRuntimeSummary,
+        readHealthStatus: backend.readHealthStatus,
+        readBenchmarkSampleRunStates: backend.readBenchmarkSampleRunStates,
+      },
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(

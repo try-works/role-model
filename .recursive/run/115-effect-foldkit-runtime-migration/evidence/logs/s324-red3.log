@@ -1,0 +1,43 @@
+COMMAND: node vitest run test/s324-readiness.test.ts (S325 RED: byte-for-byte 503 + static-UI positive)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/s324-readiness.test.ts (7 tests | 1 failed) 40ms
+   ✓ S324 early readiness owner and admission gate > pending -> ready transition 5ms
+   ✓ S324 early readiness owner and admission gate > pending -> failed transition carries the message and never becomes ready 3ms
+   ✓ S324 early readiness owner and admission gate > server admission is refused with the existing 503 shape while pending, served after ready 6ms
+   ✓ S324 early readiness owner and admission gate > failed readiness is refused with the message and static UI assets stay allowed 3ms
+   ✓ S324 early readiness owner and admission gate > an unbranded readiness object fails closed (no fallback owner) 4ms
+   × S324 early readiness owner and admission gate > readiness refusal bytes match the host gate exactly for pending/failed/ready 12ms
+     → expected '{"error":"runtime_initializing","stat…' to be '{"error":"runtime_initializing","stat…' // Object.is equality
+   ✓ S324 early readiness owner and admission gate > failed readiness with staticRoot: static assets are SERVED while /api and /v1 return 503 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s324-readiness.test.ts > S324 early readiness owner and admission gate > readiness refusal bytes match the host gate exactly for pending/failed/ready
+AssertionError: expected '{"error":"runtime_initializing","stat…' to be '{"error":"runtime_initializing","stat…' // Object.is equality
+
+- Expected
++ Received
+
+  {"error":"runtime_initializing","status":"pending"}
+-
+
+ ❯ test/s324-readiness.test.ts:153:30
+    151|     expect(pending.out.status).toBe(503);
+    152|     expect(pending.out.headers["content-type"]).toBe("application/json…
+    153|     expect(pending.out.body).toBe('{"error":"runtime_initializing","st…
+       |                              ^
+    154|     expect(pending.out.body).toBe(startupReadinessRefusalBody({ status…
+    155|     readiness.markFailed("boom");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 passed (7)
+   Start at  08:39:03
+   Duration  3.37s (transform 1.69s, setup 0ms, collect 2.73s, tests 40ms, environment 0ms, prepare 202ms)
+
+

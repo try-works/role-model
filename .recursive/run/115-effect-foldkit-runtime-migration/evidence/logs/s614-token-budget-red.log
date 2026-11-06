@@ -1,0 +1,97 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s254-studio-request-shape.test.ts (8 tests | 2 failed) 52ms
+   ✓ S254 studio request shape per tab > chat posts to the chat completions path with the prompt as a user message 7ms
+   × S254 studio request shape per tab > every tab produces a POST with a distinct path and its own body 31ms
+     → advanced
++ actual - expected
+
+  {
+    body: {
++     max_tokens: 64,
+      messages: [
+        {
+          content: 'Hello',
+          role: 'user'
+        }
+
+   ✓ S254 studio request shape per tab > serializes the exact chat request and preserves the response 3ms
+   ✓ S254 studio request shape per tab > serializes the exact images request and preserves the response 1ms
+   ✓ S254 studio request shape per tab > serializes the exact audio request and preserves the response 0ms
+   ✓ S254 studio request shape per tab > serializes the exact rerank request and preserves the response 0ms
+   × S254 studio request shape per tab > serializes the exact advanced request and preserves the response 6ms
+     → Expected values to be strictly equal:
++ actual - expected
+
++ '{"model":"moonshot/kimi-k2.5","max_tokens":64,"messages":[{"role":"user","content":"Hello"}]}'
+- '{"model":"moonshot/kimi-k2.5","messages":[{"role":"user","content":"Hello"}]}'
+
+   ✓ S254 studio request shape per tab > advanced sends the edited JSON body verbatim 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s254-studio-request-shape.test.ts > S254 studio request shape per tab > every tab produces a POST with a distinct path and its own body
+AssertionError: advanced
++ actual - expected
+
+  {
+    body: {
++     max_tokens: 64,
+      messages: [
+        {
+          content: 'Hello',
+          role: 'user'
+        }
+
+
+- Expected
++ Received
+
+@@ -1,7 +1,8 @@
+  {
+    "body": {
++     "max_tokens": 64,
+      "messages": [
+        {
+          "content": "Hello",
+          "role": "user",
+        },
+
+ ❯ test/s254-studio-request-shape.test.ts:40:14
+     38|   it("every tab produces a POST with a distinct path and its own body"…
+     39|     for (const expected of requests) {
+     40|       assert.deepEqual(studioRequestFor(studioIdle(expected.tab)), exp…
+       |              ^
+     41|     }
+     42|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s254-studio-request-shape.test.ts > S254 studio request shape per tab > serializes the exact advanced request and preserves the response
+AssertionError: Expected values to be strictly equal:
++ actual - expected
+
++ '{"model":"moonshot/kimi-k2.5","max_tokens":64,"messages":[{"role":"user","content":"Hello"}]}'
+- '{"model":"moonshot/kimi-k2.5","messages":[{"role":"user","content":"Hello"}]}'
+
+
+Expected: "{"model":"moonshot/kimi-k2.5","messages":[{"role":"user","content":"Hello"}]}"
+Received: "{"model":"moonshot/kimi-k2.5","max_tokens":64,"messages":[{"role":"user","content":"Hello"}]}"
+
+ ❯ test/s254-studio-request-shape.test.ts:65:14
+     63|       assert.equal(call.url, "http://studio.invalid" + expected.path);
+     64|       assert.equal(call.init?.method, expected.method);
+     65|       assert.equal(call.init?.body, JSON.stringify(expected.body));
+       |              ^
+     66|       assert.deepEqual(call.init?.headers, { "content-type": "applicat…
+     67|       assert.equal(call.init?.signal, signal);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 6 passed (8)
+   Start at  19:07:31
+   Duration  17.74s (transform 4.72s, setup 0ms, collect 7.25s, tests 52ms, environment 6.06s, prepare 2.34s)
+

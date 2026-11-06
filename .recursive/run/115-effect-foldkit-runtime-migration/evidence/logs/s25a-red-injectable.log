@@ -1,0 +1,37 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui
+
+ ❯ app/lib/s25a-refresh-ownership.test.ts (4 tests | 1 failed | 3 skipped) 16ms
+   × S25a refresh ownership and event-source characterization > uses an injected RuntimeEventSourceFactory and closes it on dispose 14ms
+     → expected [] to have a length of 1 but got +0
+   ↓ S25a refresh ownership and event-source characterization > owns exactly one active subscription per start and leaks none across two start/stop cycles
+   ↓ S25a refresh ownership and event-source characterization > a later revision after a gap reaches the refresh handler (no silent continuation); no explicit gap marker exists
+   ↓ S25a refresh ownership and event-source characterization > a reused stale chart is visible as stale in the returned titles and diagnostic field
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/s25a-refresh-ownership.test.ts > S25a refresh ownership and event-source characterization > uses an injected RuntimeEventSourceFactory and closes it on dispose
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ app/lib/s25a-refresh-ownership.test.ts:59:21
+     57|       fakeFactory(sources),
+     58|     );
+     59|     expect(sources).toHaveLength(1);
+       |                     ^
+     60|     sources[0]?.listeners.get("revision.update")?.({
+     61|       data: JSON.stringify({ revision: 7 }),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  06:12:51
+   Duration  950ms (transform 121ms, setup 0ms, collect 184ms, tests 16ms, environment 0ms, prepare 188ms)
+

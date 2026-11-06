@@ -1,0 +1,3 @@
+# command: tsc --noEmit ... role-model-router/packages/core/test/run115-s7-route-decision-producer.test.ts
+# exit: 0
+

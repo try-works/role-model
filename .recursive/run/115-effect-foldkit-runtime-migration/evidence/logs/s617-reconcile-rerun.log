@@ -1,0 +1,2 @@
+{"buckets":{"matched_walker":20,"non_native_affordance":8,"scanner_gap":8,"unmatched":0,"wired_after_inventory":25},"humanTotal":61,"identities":{"allItems":true,"modelsFamily":true,"nativeOnly":true,"walker":true},"modelsFamily":{"affordance":4,"rows":17,"wired":13},"nativeTotal":53,"status":"unchanged","walkerOnly":5,"walkerTotal":25,"wrote":false}
+RECONCILE OK: committed mapping matches; no files written.

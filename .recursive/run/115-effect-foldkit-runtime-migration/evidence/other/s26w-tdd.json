@@ -1,0 +1,50 @@
+{
+  "slice": "s26w-wave5",
+  "ported": [
+    {
+      "row": "route:control-benchmark",
+      "endpoint": "GET /api/role-model/benchmark/suite",
+      "fixture": "benchmarkSuite.json",
+      "proof": "Benchmark suite renders success, empty, loading and error on the DOM"
+    },
+    {
+      "row": "route:storage-retention",
+      "endpoint": "GET /api/role-model/storage-retention",
+      "fixture": "storageRetention.json",
+      "proof": "Storage retention renders success, empty, loading and error on the DOM"
+    }
+  ],
+  "refused": [
+    {
+      "row": "component:device-authorization-card",
+      "endpoint": "GET /api/role-model/accounts/device (empty []); POST /device/start,/device/poll",
+      "reason": "side effect not dispatched; client-boundary method/path/body test not implemented"
+    },
+    {
+      "row": "component:device-authorization-modal",
+      "endpoint": "same device-auth endpoints",
+      "reason": "same boundary; no operator state"
+    },
+    {
+      "row": "component:llama-swap-setup-modal",
+      "endpoint": "no dedicated endpoint; config/models covered elsewhere",
+      "reason": "presentation-only modal"
+    }
+  ],
+  "wave5": {
+    "total": 5,
+    "verified": 2,
+    "absent": 3
+  },
+  "counts": {
+    "fullSuite": 179,
+    "files": 16,
+    "typecheck": "exit 0",
+    "overall": {
+      "absent": 44,
+      "verified": 30,
+      "wired": 1
+    }
+  },
+  "wave4": "not touched; four endpoints absent"
+}

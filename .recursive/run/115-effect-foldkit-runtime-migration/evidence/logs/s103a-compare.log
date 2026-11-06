@@ -1,0 +1,10 @@
+same /healthz (200/200)
+same /api/role-model/runtime/summary (200/200)
+same /api/role-model/models (200/200)
+same /api/role-model/endpoints (200/200)
+same /api/role-model/router/summary (200/200)
+environment-state /api/role-model/telemetry/summary (200/200)
+same /api/role-model/operator/learning (200/200)
+same /api/role-model/operator/replay/jobs (200/200)
+same /api/role-model/operator/evaluation/jobs (200/200)
+{"same":8,"environment-state":1}

@@ -2,7 +2,10 @@ import { Cause, Effect, Exit, Option, Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import { readLocalDiagnostics } from "../src/local-diagnostics-read.js";
-import { makeModuleHealthWriter } from "../src/module-health-writer.js";
+import {
+  MODULE_HEALTH_LIMITS_ENABLED,
+  makeModuleHealthWriter,
+} from "../src/module-health-writer.js";
 
 /**
  * Run 115 S10a (R20 first slice): the bounded module-health record writer.
@@ -291,6 +294,62 @@ describe("module health writer", () => {
     expect(serialized).not.toContain("SECRET");
     expect(serialized).not.toContain("fiber");
     expect(serialized).not.toContain("stack");
+  });
+
+  it("separates client-caused 4xx escapes from module failures at the writer edge", () => {
+    const writer = makeModuleHealthWriter();
+    expect(writer.recordEscape({ statusCode: 404 })).toBe(false);
+    expect(writer.recordEscape({ statusCode: 422, reason: "invalid" })).toBe(false);
+    expect(writer.records()).toHaveLength(0);
+    expect(writer.recordEscape(new Error("provider exploded"))).toBe(true);
+    expect(writer.records().map((record) => record.code)).toEqual(["cause.fail"]);
+  });
+
+  it("contains hostile client-status accessors and still records a genuine module failure", () => {
+    const secret = "SECRET-STATUS";
+    const hostile = Object.defineProperty({}, "statusCode", {
+      get: () => {
+        throw new Error(secret);
+      },
+    });
+    const writer = makeModuleHealthWriter();
+    expect(() => writer.recordEscape(hostile)).not.toThrow();
+    expect(writer.records().map((record) => record.code)).toEqual(["cause.fail"]);
+    expect(writer.outages()).toBe(0);
+    expect(JSON.stringify(writer.records())).not.toContain(secret);
+  });
+
+  it("classifies Fail/Die/Interrupt at the escape edge and preserves mixed reasons", () => {
+    const writer = makeModuleHealthWriter();
+    writer.recordEscape(Cause.fail(new Error("fail")));
+    writer.recordEscape(Cause.die(new Error("die")));
+    writer.recordEscape(Cause.interrupt(9));
+    writer.recordEscape(Cause.combine(Cause.fail(new Error("mixed-fail")), Cause.interrupt(2)));
+    expect(
+      writer
+        .records()
+        .map((record) => record.code)
+        .sort(),
+    ).toEqual(["cause.die", "cause.fail", "cause.fail", "cause.interrupt", "cause.interrupt"]);
+  });
+
+  it("does not recurse on a cyclic or reused escape object", () => {
+    const writer = makeModuleHealthWriter();
+    type CyclicEscape = { error: string; self?: CyclicEscape; statusCode?: number };
+    const cyclic: CyclicEscape = { error: "cyclic" };
+    cyclic.self = cyclic;
+    const reused = new Error("reused");
+    expect(() => {
+      writer.recordEscape(cyclic);
+      writer.recordEscape(reused);
+      writer.recordEscape(reused);
+    }).not.toThrow();
+    expect(writer.records()).toHaveLength(3);
+    expect(writer.outages()).toBe(0);
+  });
+
+  it("keeps the calibrated limits gate OFF", () => {
+    expect(MODULE_HEALTH_LIMITS_ENABLED).toBe(false);
   });
 
   it("feeds the diagnostics read contract: identity, records, loss and empty state", () => {

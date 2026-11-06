@@ -1,0 +1,140 @@
+{
+  "version": "0.0.20-649-g4a5c9faa",
+  "commit": "4a5c9faa",
+  "sha256": "9e5951f467c61476ca2b4c75ef7e65452e534e6e3c09c64624c3bc2f3d9355c7",
+  "pid": 24040,
+  "port": 3480,
+  "health": "healthy",
+  "suite": {
+    "filesPassed": 114,
+    "testsPassed": 993,
+    "exitCode": 0
+  },
+  "seed": {
+    "telemetryRecords": 320,
+    "observations": 48,
+    "liveEndpoints": 6,
+    "reviewEndpoints": 3
+  },
+  "verification": {
+    "benchmark": {
+      "rows": [
+        {
+          "id": "openai.personal.primary.us-east-1.fast",
+          "checked": false
+        },
+        {
+          "id": "anthropic.team.shared.us-east-1.default",
+          "checked": false
+        },
+        {
+          "id": "review.judge.us-east-1.gpt-5.5",
+          "checked": false
+        },
+        {
+          "id": "review.subject.alpha.us-east-1.gpt-5.4",
+          "checked": true
+        },
+        {
+          "id": "review.subject.beta.us-east-1.gpt-5.4-mini",
+          "checked": true
+        },
+        {
+          "id": "cli.local.coder",
+          "checked": false
+        }
+      ],
+      "selectedText": "2 of 6 selected",
+      "judge": "review.judge.us-east-1.gpt-5.5",
+      "mode": "quick",
+      "disabledAttribute": null,
+      "disabledProperty": false,
+      "runLabel": "Run quick benchmark (2 of 6 selected, 12 cases)",
+      "overlapWarningPresent": false,
+      "overlapWarningText": null,
+      "expectedPostBody": {
+        "endpointIds": [
+          "review.subject.alpha.us-east-1.gpt-5.4",
+          "review.subject.beta.us-east-1.gpt-5.4-mini"
+        ],
+        "judgeEndpointId": "review.judge.us-east-1.gpt-5.5",
+        "mode": "quick"
+      }
+    },
+    "sidebar": {
+      "beforeHasSelectedModel": true,
+      "afterHasSelectedModel": false,
+      "navigationBefore": 1,
+      "navigationAfter": 1
+    },
+    "advancedFilters": {
+      "url": "http://127.0.0.1:3481/observe/routing?taxRole=coder&strategy=baseline",
+      "inputCount": 11,
+      "ariaExpanded": "true",
+      "chartCount": 9,
+      "analyticsPostCount": 9,
+      "firstPostFilters": {
+        "selectedStrategies": [
+          "baseline"
+        ],
+        "taxonomyRoleIds": [
+          "coder"
+        ]
+      }
+    },
+    "systemPages": {
+      "operatorSections": [
+        "Operator controls",
+        "Operator Controls",
+        "Operator Capability Status",
+        "Trace lineage",
+        "Replay Jobs",
+        "Evaluation Jobs",
+        "Shadow Learning",
+        "Learning profile",
+        "Advisory"
+      ],
+      "extensionsSections": [
+        "Extension boundary",
+        "Readiness",
+        "Contribution posture",
+        "Recommendation ledger",
+        "Replay automation",
+        "Extension inventory"
+      ]
+    },
+    "regressions": {
+      "requests": {
+        "route": "/requests",
+        "charts": 9,
+        "tables": 9,
+        "visible": 0,
+        "srOnly": 9
+      },
+      "observeRouting": {
+        "route": "/observe/routing",
+        "charts": 9,
+        "tables": 9,
+        "visible": 0,
+        "srOnly": 9
+      },
+      "queues": {
+        "route": "/observe/queues",
+        "title": "Queues | RM3 Foldkit shell",
+        "hasQueues": true,
+        "headings": [
+          "Queue state",
+          "Queues"
+        ]
+      },
+      "routingStrategySave": [
+        {
+          "method": "PUT",
+          "url": "/api/role-model/runtime/config",
+          "body": "{\"execution_mode\":\"decision_only\",\"routing\":{\"mode\":\"baseline\",\"pin_weights\":false,\"scoring_strategy\":\"balanced\"}}",
+          "at": 1793824767430
+        }
+      ]
+    }
+  }
+}

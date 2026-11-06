@@ -664,3 +664,79 @@ export class ProcessSupervisor {
     };
   }
 }
+/**
+ * Run 115 S303 (R22): explicit scoped ownership for supervised vendors.
+ *
+ * Releases run in reverse acquisition order and EVERY registered release runs even when an earlier one
+ * rejects (the R27 rule: a finalizer failure must not skip later releases); the combined failure is surfaced
+ * as an AggregateError after all releases have run, so a stop cannot hide a partial teardown.
+ */
+export class VendorScope {
+  private readonly releases: Array<() => Promise<void>> = [];
+
+  private closed = false;
+
+  private closePromise: Promise<void> | null = null;
+
+  register(release: () => Promise<void>): void {
+    if (this.closed) {
+      throw new Error("VendorScope is closed; a release registered later could never run.");
+    }
+    this.releases.push(release);
+  }
+
+  /** Concurrent closes join ONE teardown promise; the teardown never runs twice. */
+  close(): Promise<void> {
+    if (this.closePromise === null) {
+      this.closePromise = this.runReleases();
+    }
+    return this.closePromise;
+  }
+
+  private async runReleases(): Promise<void> {
+    this.closed = true;
+    const failures: unknown[] = [];
+    for (const release of [...this.releases].reverse()) {
+      try {
+        await release();
+      } catch (error) {
+        failures.push(error);
+      }
+    }
+    this.releases.length = 0;
+    if (failures.length > 0) {
+      throw new AggregateError(
+        failures,
+        `VendorScope close failed ${String(failures.length)} release(s)`,
+      );
+    }
+  }
+}
+
+/** Starts one vendor and registers its stop as the scope's release (acquireRelease-equivalent ownership). */
+export const startScopedVendor = async (
+  supervisor: ProcessSupervisor,
+  scope: VendorScope,
+  options: StartVendorOptions,
+): Promise<ManagedVendor> => {
+  const vendor = await supervisor.startVendor(options);
+  try {
+    scope.register(async () => {
+      await vendor.stop();
+    });
+  } catch (error) {
+    // The acquire must not leak: a closed/racing scope would never own this child, so stop it now. A stop
+    // failure is NEVER swallowed: it is surfaced with the registration error as one AggregateError, so a
+    // rejecting stop cannot hide behind the acquire error.
+    try {
+      await vendor.stop();
+    } catch (stopError) {
+      throw new AggregateError(
+        [error, stopError],
+        "VendorScope acquire rollback failed: register error and stop failure",
+      );
+    }
+    throw error;
+  }
+  return vendor;
+};

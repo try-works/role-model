@@ -1,0 +1,224 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s40b-overview.test.ts > S40b overview charts and windows > rejects a fabricated 90-day response
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 55.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 55.830700000000434,
+  thresholdMs: 8
+}
+
+stderr | test/s40b-overview.test.ts > S40b overview charts and windows > rejects a fabricated 90-day response
+[foldkit] Slow view: 18.4ms (budget: 16ms), triggered by ReadbackLoaded. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'View',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'router',
+      snapshot: [Object],
+      token: 1
+    }
+  },
+  durationMs: 18.36609999999928,
+  thresholdMs: 16
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'router',
+  snapshot: { rows: [], status: 'empty', token: 1 },
+  token: 1
+}
+[foldkit] Slow patch: 35.5ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'router',
+      snapshot: [Object],
+      token: 1
+    }
+  },
+  durationMs: 35.4940000000006,
+  thresholdMs: 8
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'router',
+  snapshot: { rows: [], status: 'empty', token: 1 },
+  token: 1
+}
+
+ ❯ test/s40b-overview.test.ts (4 tests | 1 failed | 3 skipped) 3060ms
+   ↓ S40b overview charts and windows > renders latency and success/failure charts with the Day window
+   ↓ S40b overview charts and windows > switches to Week and ignores a late Day response
+   ↓ S40b overview charts and windows > renders explicit empty, loading and error states without a flat-line chart
+   × S40b overview charts and windows > rejects a fabricated 90-day response 3058ms
+     → Timed out waiting for fabricated error | Runtime UIOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterStudioLocalRemoteModelsRouterObserveConnectSystemLearningRuntimeModels0RequestslotsCache—Router—Mode—Clicks: 0Dark shellRuntimeOverviewToggle themeOverviewDiagnosticsObservabilityReceipt
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s40b-overview.test.ts > S40b overview charts and windows > rejects a fabricated 90-day response
+Error: Timed out waiting for fabricated error | Runtime UIOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterStudioLocalRemoteModelsRouterObserveConnectSystemLearningRuntimeModels0RequestslotsCache—Router—Mode—Clicks: 0Dark shellRuntimeOverviewToggle themeOverviewDiagnosticsObservabilityReceipt
+ ❯ waitFor test/s40b-overview.test.ts:14:9
+     12|     await new Promise((resolve) => setTimeout(resolve, 10));
+     13|   }
+     14|   throw new Error("Timed out waiting for " + label + " | " + (document…
+       |         ^
+     15| };
+     16| const summary = (requestCount: number, averageLatencyMs: number | null…
+ ❯ test/s40b-overview.test.ts:91:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  16:19:41
+   Duration  18.03s (transform 7.53s, setup 0ms, collect 11.87s, tests 3.06s, environment 1.31s, prepare 467ms)
+

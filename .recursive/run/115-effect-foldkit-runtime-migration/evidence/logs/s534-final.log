@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s534-families.test.ts (16 tests) 1959ms
+   ✓ S534 providers/studio/system/local structural parity > providers page has the remote-provider sections  510ms
+
+ Test Files  1 passed (1)
+      Tests  16 passed (16)
+   Start at  21:11:52
+   Duration  54.60s (transform 22.72s, setup 0ms, collect 40.89s, tests 1.96s, environment 8.41s, prepare 1.32s)
+

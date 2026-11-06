@@ -1,0 +1,39 @@
+{
+  "runId": "727eabaf-a7d7-4130-9365-f91753cc55a3",
+  "status": "completed",
+  "steps": 60,
+  "grades": [
+    {
+      "id": "deepseek.personal.deepseek-api-key.global.deepseek-flash",
+      "score": 0.4166666666666667,
+      "first": {
+        "caseId": "p17-tools-multi-hard",
+        "difficultyBucket": "hard",
+        "score": 0,
+        "rationale": "Benchmark execution failed.",
+        "gradingMethod": "heuristic",
+        "latencyMs": 1338,
+        "actualPreview": "This response_format type is unavailable now (request_id: 5954a1c0-89a7-4906-9732-98f15d345d48)",
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      }
+    },
+    {
+      "id": "deepseek.personal.deepseek-api-key.global.deepseek-flash-low",
+      "score": 0.3833333333333333,
+      "first": {
+        "caseId": "p17-tools-multi-hard",
+        "difficultyBucket": "hard",
+        "score": 0,
+        "rationale": "Benchmark execution failed.",
+        "gradingMethod": "heuristic",
+        "latencyMs": 627,
+        "actualPreview": "This response_format type is unavailable now (request_id: 25bf3f77-85aa-4f65-8414-ddf3b3f390a2)",
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      }
+    }
+  ]
+}

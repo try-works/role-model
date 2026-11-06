@@ -1,0 +1,56 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node
+
+(node:18236) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s18a-sql-truth.test.ts (8 tests | 2 failed) 434ms
+   ✓ S18a blocking measurement > blocks the event loop for the whole synchronous DatabaseSync statement (with tolerance) 224ms
+   × S18a blocking measurement > does not let other JavaScript run between the start and end of a synchronous transaction 24ms
+     → expected 9.329499999999825 to be greater than or equal to 10
+   ✓ S18a per-store PRAGMAs > pins the sql-sqlite-node service defaults (busy_timeout 5000, journal delete, synchronous FULL, FK on, auto_vacuum off) 4ms
+   ✓ S18a per-store PRAGMAs > preserves a per-store setup() PRAGMA (WAL + synchronous NORMAL) 5ms
+   ✓ S18a per-store PRAGMAs > pins the sqlite-memory initialization PRAGMAs (WAL, synchronous FULL, FK on, auto_vacuum INCREMENTAL) 74ms
+   × S18a backup/restore owner fence > characterizes restore while an owner connection is active: no logical fence, only OS file locking 87ms
+     → expected 'EPERM, Permission denied: \\?\D:\DEV\…' not to match /owner|active|drain|fence/i
+   ✓ S18a real SQL transactions, no substitute > rolls back real SQL work and exposes no Effect Ref/TxRef memory transaction 11ms
+   ✓ S18a real SQL transactions, no substitute > pins BEGIN IMMEDIATE/COMMIT/ROLLBACK and excludes a scheduled-runSync or TxRef substitute 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s18a-sql-truth.test.ts > S18a blocking measurement > does not let other JavaScript run between the start and end of a synchronous transaction
+AssertionError: expected 9.329499999999825 to be greater than or equal to 10
+ ❯ test/s18a-sql-truth.test.ts:104:38
+    102|       await timer;
+    103|       expect(ranDuring).toBe(false); // the timer ran after the transa…
+    104|       expect(finishedAt - startedAt).toBeGreaterThanOrEqual(10);
+       |                                      ^
+    105|     } finally {
+    106|       service.closeSync();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s18a-sql-truth.test.ts > S18a backup/restore owner fence > characterizes restore while an owner connection is active: no logical fence, only OS file locking
+AssertionError: expected 'EPERM, Permission denied: \\?\D:\DEV\…' not to match /owner|active|drain|fence/i
+
+- Expected: 
+/owner|active|drain|fence/i
+
++ Received: 
+"EPERM, Permission denied: \\\\?\\D:\\DEV\\dsh-temp\\role-model-s18a-AXmue8\\s18a-fence\\memory\\memory.sqlite '\\\\?\\D:\\DEV\\dsh-temp\\role-model-s18a-AXmue8\\s18a-fence\\memory\\memory.sqlite'"
+
+ ❯ test/s18a-sql-truth.test.ts:196:54
+    194|       expect(refusal).toBeInstanceOf(Error);
+    195|       expect(String((refusal as Error).message)).toMatch(/EPERM|EBUSY|…
+    196|       expect(String((refusal as Error).message)).not.toMatch(/owner|ac…
+       |                                                      ^
+    197|     }
+    198|     // After the owner is closed the restore must proceed.
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 6 passed (8)
+   Start at  02:52:54
+   Duration  4.19s (transform 1.96s, setup 0ms, collect 3.00s, tests 434ms, environment 0ms, prepare 289ms)
+

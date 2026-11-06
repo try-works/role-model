@@ -1,0 +1,44 @@
+{
+  "rows": [
+    {
+      "id": "openai.personal.primary.us-east-1.fast",
+      "checked": false
+    },
+    {
+      "id": "anthropic.team.shared.us-east-1.default",
+      "checked": false
+    },
+    {
+      "id": "review.judge.us-east-1.gpt-5.5",
+      "checked": false
+    },
+    {
+      "id": "review.subject.alpha.us-east-1.gpt-5.4",
+      "checked": true
+    },
+    {
+      "id": "review.subject.beta.us-east-1.gpt-5.4-mini",
+      "checked": true
+    },
+    {
+      "id": "cli.local.coder",
+      "checked": false
+    }
+  ],
+  "selectedText": "2 of 6 selected",
+  "judge": "review.judge.us-east-1.gpt-5.5",
+  "mode": "quick",
+  "disabledAttribute": null,
+  "disabledProperty": false,
+  "runLabel": "Run quick benchmark (2 of 6 selected, 12 cases)",
+  "overlapWarningPresent": false,
+  "overlapWarningText": null,
+  "expectedPostBody": {
+    "endpointIds": [
+      "review.subject.alpha.us-east-1.gpt-5.4",
+      "review.subject.beta.us-east-1.gpt-5.4-mini"
+    ],
+    "judgeEndpointId": "review.judge.us-east-1.gpt-5.5",
+    "mode": "quick"
+  }
+}

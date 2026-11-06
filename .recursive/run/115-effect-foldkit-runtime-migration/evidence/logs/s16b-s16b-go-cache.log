@@ -1,0 +1,29 @@
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows                              
+-------------------------------------------------------------------------------
+
+  Started : Sunday, October 25, 2026 02:16:55
+   Source : C:\Users\erikb\go\pkg\
+     Dest : E:\role-model-run115\s16-scratch\.cache\go\pkg\
+
+    Files : *.*
+	    
+  Options : *.* /NDL /NFL /S /E /DCOPY:DA /COPY:DAT /NP /MT:16 /R:1 /W:1 
+
+------------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :      4732      4732         1         0         0         0
+   Files :     28162     28162         0         0         0         0
+   Bytes :  789.28 m  789.28 m         0         0         0         0
+   Times :   0:03:13   0:00:11                       0:00:00   0:00:00
+
+
+   Speed :           69,794,683 Bytes/sec.
+   Speed :            3,993.684 MegaBytes/min.
+   Ended : Sunday, October 25, 2026 02:17:08
+

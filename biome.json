@@ -40,10 +40,24 @@
       "**/runtime-output/**",
       "**/test-results/**",
       "**/*.generated.ts",
-      "packages/dsh-role-model/lib/**"
+      "packages/dsh-role-model/lib/**",
+      "**/test/fixtures/**"
     ]
   },
   "overrides": [
+    {
+      "include": ["**/*.test.ts", "**/*.test.tsx", "**/*.test.mjs", "**/test/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNonNullAssertion": "off"
+          },
+          "suspicious": {
+            "noExportsInTest": "off"
+          }
+        }
+      }
+    },
     {
       "include": [
         "role-model-router/apps/runtime-ui/app/components/learning-live-panel.tsx",

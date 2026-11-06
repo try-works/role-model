@@ -1,0 +1,135 @@
+{
+  "slice": "s29b-journey-assertions",
+  "requirement": "Rewrite S29a journey script into an assertion harness that fails on broken runtime",
+  "identity": {
+    "manifestVersion": "0.0.20-7-gfd2a5f55",
+    "manifestCommit": "fd2a5f5581b2427832df8c49fe35803fc0cae132",
+    "manifestSourceTree": "d4095825ab0294d3b3fe7ab7d6f2954687c35508",
+    "manifestSha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87",
+    "computedExeSha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87",
+    "expected": {
+      "version": "0.0.20-7-gfd2a5f55",
+      "commit": "fd2a5f5581b2427832df8c49fe35803fc0cae132",
+      "sourceTree": "d4095825ab0294d3b3fe7ab7d6f2954687c35508",
+      "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+    }
+  },
+  "assertionSet": [
+    "manifest version/commit/source_tree equal expected candidate; computed exe sha256 equals manifest.sha256 and expected sha",
+    "J1 aliases include configured model; HTTP 200; SSE DONE; marker present; finish stop; stream.requested true",
+    "J2 tool_calls present; exact tool_call_id; follow-up HTTP 200; final marker; upstream saw tool_call_id+tool result",
+    "exactly three request ids; every HTTP id exists in runtime_observations and runtime_telemetry_records",
+    "every persisted observation has matching request/decision/endpoint and provider attempt id; HTTP attempt ids equal DB",
+    "three retention capture rows; every capture row joins a capture-* id from retention_records",
+    "artifact-store JSON parsed for tool:call index 0 and tool:result index 1 with the same tool_call_id",
+    "capture API called for every request; real statuses recorded (all 404 in this run)",
+    "state files actually searched for both markers; markerInPersisted true (capture queue WAL + deferred capture SQLite)",
+    "kill taskkill, wait for child exit and assert pid gone",
+    "restart same state root, new pid, same request ids, observations 200, capture API statuses recorded",
+    "stop/read DB again; observation, telemetry and capture id row identity unchanged",
+    "47 assertions total; any false throws"
+  ],
+  "stateQueries": [
+    "memory.sqlite: runtime_observations, runtime_telemetry_records",
+    "retention-state.sqlite: retention_captures joined to retention_records by json.r -> capture id",
+    "artifact-store.json: parsed tool call/result boundary JSON objects",
+    "state file walk: marker presence in capture-queue.sqlite-wal and deferred-route-captures.sqlite"
+  ],
+  "restartProof": {
+    "startPid": 43772,
+    "restartPid": 50480,
+    "pidChanged": true,
+    "dbRowsBefore": 3,
+    "dbRowsAfter": 3,
+    "sameLatestIds": true,
+    "captureIds": [
+      "capture-13107b608954e0893b1a4694",
+      "capture-35185778201c91f15b1de6b0",
+      "capture-b8e6abd2d0809ece12618891"
+    ],
+    "captureApiStatuses": {
+      "req-fc70af1f-75a7-4d90-9a05-898abff4e745": 404,
+      "req-0185e8cb-2967-41f3-8402-cfb6ebb7b494": 404,
+      "req-31053c27-1e3f-4051-87ab-e5a76def167f": 404
+    }
+  },
+  "markers": {
+    "j1": "S29B-J1-MVNBE5L7",
+    "j2": "S29B-J2-MVNBE5L7",
+    "toolResult": "S29B-TOOLRESULT-MVNBE5L7",
+    "toolCallId": "call_s29b_mvnbe5l7"
+  },
+  "chain": {
+    "j1": "req-31053c27-1e3f-4051-87ab-e5a76def167f",
+    "j2initial": "req-0185e8cb-2967-41f3-8402-cfb6ebb7b494",
+    "j2followup": "req-fc70af1f-75a7-4d90-9a05-898abff4e745",
+    "toolCallId": "call_s29b_mvnbe5l7",
+    "boundaries": [
+      {
+        "boundary": "tool:result",
+        "index": 1,
+        "status": "completed",
+        "toolCallId": "call_s29b_mvnbe5l7",
+        "toolId": "workspace_read",
+        "toolName": "workspace_read"
+      },
+      {
+        "boundary": "tool:call",
+        "index": 0,
+        "toolCallId": "call_s29b_mvnbe5l7",
+        "toolId": "workspace_read",
+        "toolName": "workspace_read"
+      }
+    ]
+  },
+  "mutations": [
+    {
+      "name": "replace-exe",
+      "mutation": "S29B_EXE points at the production role-model.exe (sha 20e7e894) instead of the candidate",
+      "assertion": "executable hash matches manifest sha256",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s29b-red-replace-exe.log"
+    },
+    {
+      "name": "fake-ids",
+      "mutation": "S29B_MUTATE=fake-ids replaces the J1 request id before SQLite join",
+      "assertion": "persisted provider attempt ids match request ids",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s29b-red-fake-ids.log"
+    },
+    {
+      "name": "skip-kill",
+      "mutation": "S29B_MUTATE=skip-kill skips the restart kill/wait",
+      "assertion": "skip-kill mutation must fail: previous pid still running",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s29b-red-skip-kill.log"
+    },
+    {
+      "name": "disable-captures",
+      "mutation": "S29B_MUTATE=disable-captures suppresses captured rows in the state snapshot (runtime env max-bytes did not disable writes; this is a state-level capture-write failure simulation)",
+      "assertion": "timed out waiting for three persisted captures",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s29b-red-disable-captures.log"
+    }
+  ],
+  "captureApi": {
+    "statuses": {
+      "req-fc70af1f-75a7-4d90-9a05-898abff4e745": 404,
+      "req-0185e8cb-2967-41f3-8402-cfb6ebb7b494": 404,
+      "req-31053c27-1e3f-4051-87ab-e5a76def167f": 404
+    },
+    "note": "exercised, not fabricated; all 404, so capture IDs come from retention-state.sqlite"
+  },
+  "inconclusive": [
+    {
+      "item": "dashboard/frontend/DOM/SSE resync",
+      "reason": "not exercised; this harness covers packaged HTTP plus persisted SQLite/retention state only"
+    },
+    {
+      "item": "J3/J4/J6",
+      "reason": "deferred: no cancellation/error path, endpoint/effort variant, or configured replay/evaluation/learning arms in this slice"
+    }
+  ],
+  "evidence": {
+    "script": "evidence/other/s29a-journeys.mjs",
+    "normalJson": "evidence/logs/s29a-journeys.json",
+    "normalLog": "evidence/logs/s29b-normal.log"
+  },
+  "reproducer": "node .recursive/run/115-effect-foldkit-runtime-migration/evidence/other/s29a-journeys.mjs"
+}

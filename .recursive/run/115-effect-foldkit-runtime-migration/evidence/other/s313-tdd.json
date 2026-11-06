@@ -1,0 +1,97 @@
+{
+  "slice": "s313-b6-server-owner (S314 repairs LANDED)",
+  "requirement": "R27 Server owner through composition DAG (post-Backend-extraction)",
+  "decision": "LANDED via option (b) facade semantics: the DAG Server owner is the ONE lifecycle construction site; startBridgeServer(options, lifecycle?) composes it for every caller (plain options included), so all existing call sites go through the facade. No local listen/lifecycle path remains in the facade.",
+  "moved": [
+    "composeServerOwner (DAG): consumes the composed Backend owner + typed transport + handler factory; owns listener -> createServer -> listen ordering and close = transport.close(server).",
+    "bridgeServerTransport (index listener region): typed transport bundle (createListener, createServer with trace wrapper, listen, close).",
+    "startBridgeServer facade: composes the DAG Server owner; returns {port, close, serverOwner?}; optional lifecycle {backend, transport, handlerFactory, onServerOwner} for tests.",
+    "facadeBackendOwner: brands plain StartBridgeServerOptions as a DAG Backend owner (no local construction)."
+  ],
+  "stayed": [
+    "createRequestHandler + route dependencies stay in index.ts (supplied to the DAG as the typed handler factory).",
+    "S21c Bootstrap seams stay (injection used by s21c-bootstrap-owner-wiring).",
+    "ServerHandle/ServerTransport keep the http construction in index; the DAG never imports http."
+  ],
+  "identityFallback": {
+    "identity": "test 'facade threads the real composed BackendOwner: serverOwner.backend === composedBackendOwner' — startBridgeServer(composed.options) yields serverOwner.backend === composed (the s310b owner).",
+    "fallback": "test 'a plain-options owner injected as the backend is refused (legacy brand bypass gone)' — a plain {id, options} injected as backend is refused by assertComposedBackendOwner ('composition DAG' error)."
+  },
+  "facadeCallers": "85 test startBridgeServer call sites (incl. the new test) + validate-catalog-economics.ts:301, validate-restart-rehydration.ts:159, validate-ui.ts:175, validate-vendors.ts:1564; none edited - they keep calling startBridgeServer(options) through the facade.",
+  "redGreen": {
+    "red": "s313-red3.log: 5 tests, 1 failed | 4 passed (bare options accepted)",
+    "green": "s313-green3.log: affected 8 files, 38/38; tsc exit 0"
+  },
+  "lint": {
+    "dag": "161 = 159 require-safety (157 moved + 2 boundary) + 2 boundary no-unknown-returns; new owner-ref/server region clean.",
+    "test": "disclose remaining findings as reported (safety comments on the composed-owner fixture casts)."
+  },
+  "files": {
+    "src/composition-dag.ts": "AD1780F13111115A94AADD4CEE7D9035A00E3B3256D470E4D7875D34FA02C25A",
+    "src/cli.ts": "C6AFCD7354C2E5869D03B5D794974434B2B3308D49B29E8F0C1267EC0751F60A",
+    "src/index.ts": "387DAC6E438EC0BCB9BF80D548F1C25D4039796CCAD83A60E61CB4C39352568B",
+    "scripts/prod-launcher.ts": "BF11FAB927F959761B0EC2FE1F534F80E186126CD6408C45F6D10A7CEAC9E64E",
+    "test/s313-server-owner.test.ts": "A66395C3642DE91D680CD63C322D05A663086A93A59BEEF56DDB7D59049DE84E",
+    "test/s313-caller-seam.test.ts": "10A5B88FE87D3C94B09F1B4C23C762FF7C9444C019B1AD107021F15EE5A2E765"
+  },
+  "backups": "E:/rm-tmp/s313/*.bak",
+  "remainingOwners": [
+    {
+      "owner": "Server",
+      "status": "MOVED (this slice)",
+      "note": "DAG composeServerOwner; facade startBridgeServer; identity + no-fallback proven."
+    },
+    {
+      "owner": "Refresh",
+      "status": "blocked",
+      "blocker": "refresh/reload embedded in backend closures/shared state."
+    },
+    {
+      "owner": "Drain",
+      "status": "blocked",
+      "blocker": "shutdown/drain spans backend, supervisor, queues, vendors; early readiness and partial shutdown remain named gaps."
+    },
+    {
+      "owner": "Benchmark",
+      "status": "blocked",
+      "blocker": "separate CLI/runner; cancellation/cross-process ownership not modelled."
+    },
+    {
+      "owner": "Cli",
+      "status": "blocked",
+      "blocker": "process entrypoint (args/SEA/startup)."
+    },
+    {
+      "owner": "early readiness / partial shutdown / cache identity",
+      "status": "named gaps",
+      "note": "not part of this slice."
+    }
+  ],
+  "unproven": "No whole-monolith suite; start/stop ordering is identical by construction (listener -> createServer(trace) -> listen; close = transport.close(server)) and exercised through the fake transport, not re-proved end-to-end with a real listener in this slice; no operator ports.",
+  "ownerThreading": "composeBackendOwner attaches its REAL owner to options under a non-enumerable symbol; composedBackendOwnerOf recovers it. The branded testSeamBackendOwner is reachable ONLY via the explicit allowTestSeamBackend lifecycle flag; bare production options FAIL CLOSED. cli.ts startServer and scripts/prod-launcher.ts both compose via createCliServerOptions' onBackendOwner and pass { backend: owner }.",
+  "prodLauncher": "scripts/prod-launcher.ts now imports createCliServerOptions, composes the real Backend owner (capturing onBackendOwner), merges createTrackBBridgeServerOptions(backend), and calls startBridgeServer(options, { backend: owner }) on port 3456.",
+  "refusalTest": "test/s313-server-owner.test.ts 'bare options are refused outside the explicit test seam (production-style path)' — bare options without allowTestSeamBackend reject with composeBackendOwner/test-seam error.",
+  "callerSweep": {
+    "sweep": "86 explicit { allowTestSeamBackend: true } insertions across 29 plain-options caller files (23 test files incl. benchmark-data-clear.test.ts:117 and index.test.ts, 4 src/validate-*.ts, scripts/start.ts) plus s313-server-owner.test.ts seam flag; every one-argument startBridgeServer call now carries the explicit test seam or a composed owner.",
+    "counts": "expanded suite: 34 test files / 411 tests passed (27 caller test files + s313-caller-seam + 7 affected); tsc exit 0.",
+    "regressionTest": "test/s313-caller-seam.test.ts 'every plain-options startBridgeServer caller carries the explicit test seam or a composed owner' (source guard over test/** + validate-*.ts + scripts/**).",
+    "red": "s313-red4.log: benchmark-data-clear.test.ts 3 tests, 1 failed before the sweep (fail-closed throw)."
+  },
+  "prodLauncherMerge": "mergedOptions spreads composed options + Track-B options, then copies every own symbol descriptor (including the non-enumerable backend-owner ref) from serverOptions; the explicit backend owner is still authoritative and passed as the second argument. Doc claim corrected: the symbol is preserved, not dropped.",
+  "callerGuard": {
+    "parser": "splitTopLevelArgs ignores trailing commas/depth-0 empty tails; isSafeCall requires the SECOND argument to contain 'backend' (or an allowTestSeamBackend marker anywhere), or the first argument to be createCliServerOptions( in plain or namespaced (cli./bridge.) form.",
+    "negativeFixtures": [
+      "'startBridgeServer({ host: \"127.0.0.1\", port: 0 },)' rejected",
+      "'startBridgeServer({ host: \"127.0.0.1\", port: 0 }, { handlerFactory })' rejected"
+    ],
+    "positiveFixtures": [
+      "plain createCliServerOptions first arg",
+      "cli.createCliServerOptions first arg",
+      "second arg { allowTestSeamBackend: true }",
+      "second arg { backend: owner }",
+      "conditional backend second arg"
+    ],
+    "red": "s313-red5.log: guard file 4 tests, 2 failed against the old arg-count criterion",
+    "green": "s313-green5.log: 10 files / 44 tests passed (guard + benchmark-data-clear + 8 affected); tsc exit 0"
+  }
+}

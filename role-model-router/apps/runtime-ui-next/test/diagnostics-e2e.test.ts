@@ -34,7 +34,10 @@ const responseOf = (body: unknown, status = 200): Response =>
     status,
   });
 
-const baseBody = (state: string, overrides: Record<string, unknown> = {}): Record<string, unknown> => ({
+const baseBody = (
+  state: string,
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> => ({
   bounds: {
     limit: 20,
     maxCodeBytes: 512,
@@ -56,7 +59,10 @@ const baseBody = (state: string, overrides: Record<string, unknown> = {}): Recor
   ...overrides,
 });
 
-const mounted: Array<{ readonly container: HTMLDivElement; readonly handle: { dispose: () => void } }> = [];
+const mounted: Array<{
+  readonly container: HTMLDivElement;
+  readonly handle: { dispose: () => void };
+}> = [];
 const TOKEN = "operator-read-token-0123456789";
 
 const mountAt = (
@@ -180,7 +186,9 @@ describe("S15f diagnostics page over the real client", () => {
       stubFetch(responseOf({ error: "operator_authentication_required" }, 401)).fetchImpl,
     );
     await waitFor(() => stateNode("denied"), "the 401 denied state");
-    expect(bodyText()).toContain("Access denied: this diagnostics read is not authorized (HTTP 401).");
+    expect(bodyText()).toContain(
+      "Access denied: this diagnostics read is not authorized (HTTP 401).",
+    );
   });
 
   it("renders a 403 rejection distinctly from a 401 denial", async () => {
@@ -214,7 +222,11 @@ describe("S15f diagnostics page over the real client", () => {
         }),
       ),
     );
-    const constructed: Array<{ readonly baseUrl?: string; readonly fetchImpl?: typeof fetch; readonly token?: string }> = [];
+    const constructed: Array<{
+      readonly baseUrl?: string;
+      readonly fetchImpl?: typeof fetch;
+      readonly token?: string;
+    }> = [];
     const factory = (options: Parameters<typeof createDiagnosticsClient>[0] = {}) => {
       constructed.push(options);
       return createDiagnosticsClient(options);

@@ -1,0 +1,11 @@
+# S478 RED evidence — packaged readiness
+
+Genuine pre-fix behavioral RED (S477 dirty packaged probe, evidence/other/s477-bootstrap-hang-location.md + evidence/logs/s477-bootdiag2.err.log):
+- Packaged diagnostic exe: /healthz 200, operator /api/role-model/operator/models 503 runtime_initializing.
+- bootdiag completed every packaged await and printed cli:packaged-branch-end + cli:setup-end.
+- No markReady marker/call: readinessOwner.markReady() existed only in the non-packaged else (clean HEAD cli.ts:12235-12236); packaged branch ended at 12210.
+This is the behavioral RED for S478.
+
+The new unit test (runCliBackendBranch + completeCliStartupReadiness) was written AFTER the source fix and is NOT claimed as pre-fix RED. It asserts the packaged branch transition marks readiness exactly once and clears bootstrap message, and would fail if the shared transition call were removed from runCliBackendBranch.
+
+Post-fix GREEN: evidence/logs/s478-green.log.

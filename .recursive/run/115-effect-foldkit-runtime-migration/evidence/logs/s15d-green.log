@@ -1,0 +1,211 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders the ok state with records and identity
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 13.2ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'inst-1', status: 'loading' },
+    route: { _tag: 'Diagnostics', id: 'inst-1' },
+    theme: 'light'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 13.177700000000186,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders the empty state distinctly
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders disabled as a state, not an error
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders stale with the rule and the age
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders dropped with the loss counts
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > shows independent conditions together instead of hiding one behind the other
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > shows independent conditions together instead of hiding one behind the other
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders a denied response as access denied
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders denied rather than an empty list for a denied response
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders a transport error distinctly from a denied state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > labels a missing or unknown build identity as missing, never blank
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > labels a missing or unknown build identity as missing, never blank
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > shows loading while the reader is in flight, then the command result message
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > re-reads through a Command when the refresh control is used
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > renders the refresh control and nav links with visible focus styles and the narrow layout classes
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > does not apply a resolved read for a previous route id after navigating away
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > aborts the Effect-forwarded signal when the shell disposes mid-flight
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > labels a 403 rejection by its HTTP status instead of a generic authorization failure
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics.test.ts > diagnostics page states > exposes role=status live-region semantics while loading and after settling
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+ ✓ test/diagnostics.test.ts (17 tests) 10328ms
+   ✓ diagnostics page states > renders the ok state with records and identity  593ms
+   ✓ diagnostics page states > renders the empty state distinctly  520ms
+   ✓ diagnostics page states > renders disabled as a state, not an error  548ms
+   ✓ diagnostics page states > renders stale with the rule and the age  539ms
+   ✓ diagnostics page states > renders dropped with the loss counts  545ms
+   ✓ diagnostics page states > shows independent conditions together instead of hiding one behind the other  1058ms
+   ✓ diagnostics page states > renders a denied response as access denied  544ms
+   ✓ diagnostics page states > renders denied rather than an empty list for a denied response  544ms
+   ✓ diagnostics page states > renders a transport error distinctly from a denied state  528ms
+   ✓ diagnostics page states > labels a missing or unknown build identity as missing, never blank  1087ms
+   ✓ diagnostics page states > shows loading while the reader is in flight, then the command result message  541ms
+   ✓ diagnostics page states > re-reads through a Command when the refresh control is used  561ms
+   ✓ diagnostics page states > renders the refresh control and nav links with visible focus styles and the narrow layout classes  535ms
+   ✓ diagnostics page states > does not apply a resolved read for a previous route id after navigating away  610ms
+   ✓ diagnostics page states > aborts the Effect-forwarded signal when the shell disposes mid-flight  529ms
+   ✓ diagnostics page states > labels a 403 rejection by its HTTP status instead of a generic authorization failure  520ms
+   ✓ diagnostics page states > exposes role=status live-region semantics while loading and after settling  525ms
+
+ Test Files  1 passed (1)
+      Tests  17 passed (17)
+   Start at  01:08:03
+   Duration  17.22s (transform 3.40s, setup 0ms, collect 5.49s, tests 10.33s, environment 683ms, prepare 263ms)
+
+EXIT_CODE: 0

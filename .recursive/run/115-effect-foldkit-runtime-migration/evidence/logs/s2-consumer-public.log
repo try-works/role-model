@@ -1,0 +1,35 @@
+# S2 consumer suites (public host bridge)
+COMMAND: vitest run run108-observability run101-r5-cancel-drain run101-addendum06-attempt-timeout run108-effect-entry-case-resolution run101-addendum19-stream-commit-point
+CWD: D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+TIMESTAMP: 2026-10-24T13:27:56.038Z
+EXIT_CODE: 0
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:21608) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run101-addendum06-attempt-timeout.test.ts (3 tests) 5209ms
+   ✓ @recursive:101-effect-mq-queue-rebuild addendum06 per-attempt timeout > a handler that never returns is interrupted by the timeout and consumes the attempt  5181ms
+(node:54652) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run101-r5-cancel-drain.test.ts (5 tests) 3636ms
+   ✓ run 101 R5/R9 queue admin runtime side > claims nothing while the queue is draining, and claims again once it is cleared  1558ms
+   ✓ run 101 R5/R9 queue admin runtime side > interrupts a running handler whose row is cancelled, without completing it  2007ms
+(node:40368) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run108-observability.test.ts (31 tests) 3817ms
+   ✓ run108 phase-03 F5 the R7 metric list in canonical shapes > F5-d fix (paired): the genuine materializer's written outcome records the PERSISTED rung count  3534ms
+ ✓ test/run108-effect-entry-case-resolution.test.ts (3 tests) 838ms
+(node:48920) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run101-addendum19-stream-commit-point.test.ts (4 tests) 7ms
+
+ Test Files  5 passed (5)
+      Tests  46 passed (46)
+   Start at  21:27:58
+   Duration  35.78s (transform 9.73s, setup 0ms, collect 18.75s, tests 13.51s, environment 3ms, prepare 1.34s)
+
+[exit=0]
+
+

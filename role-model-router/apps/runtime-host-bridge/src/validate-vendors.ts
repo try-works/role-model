@@ -356,6 +356,7 @@ type RuntimeValidationConfig = {
     readonly strategy: "balanced";
   };
   readonly observed_data?: {
+    readonly enabled?: boolean;
     readonly difficulty_learning?: {
       readonly override?: {
         readonly min_samples?: number;
@@ -1199,6 +1200,7 @@ export async function createRuntimeVendorValidationPlan(options: {
       remoteConfig,
       hybridConfig: {
         ...createDecisionConfig(),
+        observed_data: { enabled: false },
         difficulty_classifier: {
           enabled: true,
           rubric_version: "v1",
@@ -1279,6 +1281,7 @@ export async function createRuntimeVendorValidationPlan(options: {
     remoteConfig,
     hybridConfig: {
       ...createDecisionConfig(),
+      observed_data: { enabled: false },
       difficulty_classifier: {
         enabled: true,
         rubric_version: "v1",
@@ -1561,36 +1564,39 @@ async function startRuntimeForConfig(input: {
     });
     await backend.updateRuntimeConfig({});
   }
-  const server = await startBridgeServer({
-    host: "127.0.0.1",
-    port: 0,
-    observabilityScope,
-    registry: backend.effectiveRegistry,
-    getRegistry: () => backend.effectiveRegistry,
-    executeChatCompletions: backend.executeChatCompletions,
-    executeResponses: backend.executeResponses,
-    readRuntimeSummary: backend.readRuntimeSummary,
-    readRuntimeConfig: backend.readRuntimeConfig,
-    updateRuntimeConfig: backend.updateRuntimeConfig,
-    readHealthStatus: backend.readHealthStatus,
-    readTelemetrySummary: backend.readTelemetrySummary,
-    listTelemetryComparisonRows: backend.listTelemetryComparisonRows,
-    listTelemetryRequests: backend.listTelemetryRequests,
-    subscribeTelemetry: backend.subscribeTelemetry,
-    listProviders: backend.listProviders,
-    listRoles: backend.listRoles,
-    listAccounts: backend.listAccounts,
-    upsertProviderAccount: backend.upsertProviderAccount,
-    startProviderDeviceAuthorization: backend.startProviderDeviceAuthorization,
-    pollProviderDeviceAuthorization: backend.pollProviderDeviceAuthorization,
-    activateEndpoint: backend.activateEndpoint,
-    readControllerAssignment: backend.readControllerAssignment,
-    updateControllerAssignment: backend.updateControllerAssignment,
-    listEndpoints: backend.listEndpoints,
-    listRecentRequestObservations: backend.listRecentRequestObservations,
-    readRequestObservation: backend.readRequestObservation,
-    readEndpointProfile: backend.readEndpointProfile,
-  });
+  const server = await startBridgeServer(
+    {
+      host: "127.0.0.1",
+      port: 0,
+      observabilityScope,
+      registry: backend.effectiveRegistry,
+      getRegistry: () => backend.effectiveRegistry,
+      executeChatCompletions: backend.executeChatCompletions,
+      executeResponses: backend.executeResponses,
+      readRuntimeSummary: backend.readRuntimeSummary,
+      readRuntimeConfig: backend.readRuntimeConfig,
+      updateRuntimeConfig: backend.updateRuntimeConfig,
+      readHealthStatus: backend.readHealthStatus,
+      readTelemetrySummary: backend.readTelemetrySummary,
+      listTelemetryComparisonRows: backend.listTelemetryComparisonRows,
+      listTelemetryRequests: backend.listTelemetryRequests,
+      subscribeTelemetry: backend.subscribeTelemetry,
+      listProviders: backend.listProviders,
+      listRoles: backend.listRoles,
+      listAccounts: backend.listAccounts,
+      upsertProviderAccount: backend.upsertProviderAccount,
+      startProviderDeviceAuthorization: backend.startProviderDeviceAuthorization,
+      pollProviderDeviceAuthorization: backend.pollProviderDeviceAuthorization,
+      activateEndpoint: backend.activateEndpoint,
+      readControllerAssignment: backend.readControllerAssignment,
+      updateControllerAssignment: backend.updateControllerAssignment,
+      listEndpoints: backend.listEndpoints,
+      listRecentRequestObservations: backend.listRecentRequestObservations,
+      readRequestObservation: backend.readRequestObservation,
+      readEndpointProfile: backend.readEndpointProfile,
+    },
+    { allowTestSeamBackend: true },
+  );
 
   return {
     backend,
@@ -1931,6 +1937,7 @@ export async function runRuntimeVendorValidation(options: {
             await waitForRuntimeModelEndpointsReady(hybridRuntime.backend, [
               plan.localModelId,
               plan.remoteModelId,
+              plan.codexModelId,
             ]);
             const hybridLocal = await hybridRuntime.backend.executeResponses(
               {

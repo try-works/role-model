@@ -1,0 +1,61 @@
+
+ RUN  v3.2.4 E:/rm-tmp/s619-base/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s619-requests-observe-wiring.test.ts (3 tests | 3 failed) 840ms
+   × S619 requests/observe wiring > renders the requests time-range and filter state 701ms
+     → expected 'false' to be 'true' // Object.is equality
+   × S619 requests/observe wiring > renders the observe routing filters and sends those values through update 105ms
+     → expected undefined to be 'true' // Object.is equality
+   × S619 requests/observe wiring > wires both Refresh buttons to their read commands 20ms
+     → expected null not to be null
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s619-requests-observe-wiring.test.ts > S619 requests/observe wiring > renders the requests time-range and filter state
+AssertionError: expected 'false' to be 'true' // Object.is equality
+
+Expected: "true"
+Received: "false"
+
+ ❯ test/s619-requests-observe-wiring.test.ts:36:99
+     34|   it("renders the requests time-range and filter state", async () => {
+     35|     const container = await renderRequests({ ...filtersOf(), statusFam…
+     36|     expect(container.querySelector("[data-requests-range='Week']")?.ge…
+       |                                                                                                   ^
+     37|     expect(container.querySelector("select[aria-label='Source'] option…
+     38|     const next = update(shellModel({ route: { _tag: "Requests" } }), M…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/s619-requests-observe-wiring.test.ts > S619 requests/observe wiring > renders the observe routing filters and sends those values through update
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  06:53:31
+   Duration  44.34s (transform 20.30s, setup 0ms, collect 33.45s, tests 840ms, environment 7.19s, prepare 1.24s)
+
+AssertionError: expected undefined to be 'true' // Object.is equality
+
+- Expected: 
+"true"
+
++ Received: 
+undefined
+
+ ❯ test/s619-requests-observe-wiring.test.ts:52:99
+     50|   it("renders the observe routing filters and sends those values throu…
+     51|     const container = await renderObserve(filtersOf());
+     52|     expect(container.querySelector("[data-requests-range='Week']")?.ge…
+       |                                                                                                   ^
+     53|     expect(container.querySelector("select[aria-label='Breakdown'] opt…
+     54|     const next = update(shellModel({ route: { _tag: "ObserveRouting" }…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/s619-requests-observe-wiring.test.ts > S619 requests/observe wiring > wires both Refresh buttons to their read commands
+AssertionError: expected null not to be null
+ ❯ test/s619-requests-observe-wiring.test.ts:63:72
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+

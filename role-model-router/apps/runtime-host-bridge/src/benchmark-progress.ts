@@ -1,3 +1,8 @@
+import type {
+  BenchmarkCaseCounts,
+  BenchmarkRunOutcomeOrPending,
+  BenchmarkSkippedEndpoint,
+} from "./benchmark-outcome.js";
 import type { BenchmarkRunResult } from "./benchmark-runner.js";
 
 export type BenchmarkRunStatus = "running" | "completed" | "failed";
@@ -16,6 +21,9 @@ export interface BenchmarkRunProgressSnapshot {
   readonly completedSteps: number;
   readonly endpointIndex: number;
   readonly endpointCount: number;
+  readonly requestedEndpointCount: number;
+  readonly executedEndpointCount: number;
+  readonly skippedEndpoints: readonly BenchmarkSkippedEndpoint[];
   readonly currentEndpointId: string | null;
   readonly currentEndpointModelId: string | null;
   readonly caseIndex: number;
@@ -28,6 +36,8 @@ export interface BenchmarkRunProgressSnapshot {
   readonly artifactRoot: string | null;
   readonly errorCode?: BenchmarkRunErrorCode;
   readonly errorMessage?: string;
+  readonly caseCounts: BenchmarkCaseCounts;
+  readonly outcome: BenchmarkRunOutcomeOrPending;
   readonly result?: BenchmarkRunResult;
 }
 
@@ -55,6 +65,7 @@ export function createBenchmarkRunProgress(input: {
   readonly mode: "quick" | "full";
   readonly endpointCount: number;
   readonly caseCount: number;
+  readonly requestedEndpointCount?: number;
   readonly judgeEndpointId: string | null;
   readonly useJudge: boolean;
   readonly compareCaseCount?: number;
@@ -74,6 +85,9 @@ export function createBenchmarkRunProgress(input: {
     completedSteps: 0,
     endpointIndex: 0,
     endpointCount: input.endpointCount,
+    requestedEndpointCount: input.requestedEndpointCount ?? input.endpointCount,
+    executedEndpointCount: 0,
+    skippedEndpoints: [],
     currentEndpointId: null,
     currentEndpointModelId: null,
     caseIndex: 0,
@@ -84,6 +98,8 @@ export function createBenchmarkRunProgress(input: {
     judgeEndpointId: input.judgeEndpointId,
     activeJudgeEndpointId: input.judgeEndpointId,
     artifactRoot: input.artifactRoot ?? null,
+    caseCounts: { failed: 0, passed: 0, total: 0 },
+    outcome: null,
   };
   activeRuns.set(input.runId, snapshot);
   pruneRuns();
@@ -104,6 +120,8 @@ export function updateBenchmarkRunProgress(
       | "currentPhase"
       | "activeJudgeEndpointId"
       | "runPhase"
+      | "caseCounts"
+      | "outcome"
     >
   >,
 ): BenchmarkRunProgressSnapshot | null {
@@ -126,6 +144,9 @@ export function updateBenchmarkRunProgressPlan(
     Pick<
       BenchmarkRunProgressSnapshot,
       | "endpointCount"
+      | "requestedEndpointCount"
+      | "executedEndpointCount"
+      | "skippedEndpoints"
       | "caseCount"
       | "totalSteps"
       | "judgeEndpointId"
@@ -162,6 +183,8 @@ export function completeBenchmarkRunProgress(
     completedSteps: current.totalSteps,
     currentPhase: null,
     runPhase: "complete",
+    caseCounts: result.caseCounts,
+    outcome: result.outcome,
     result,
   };
   activeRuns.set(runId, next);
@@ -181,6 +204,7 @@ export function failBenchmarkRunProgress(
     status: "failed",
     updatedAtMs: Date.now(),
     currentPhase: null,
+    outcome: current.caseCounts.total === 0 ? null : "failed",
     errorCode,
     errorMessage:
       errorCode === "benchmark_initialization_failed"

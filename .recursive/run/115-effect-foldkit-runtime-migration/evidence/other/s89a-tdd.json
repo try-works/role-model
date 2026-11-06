@@ -1,0 +1,112 @@
+{
+  "slice": "s89a-rdc-triple",
+  "D": {
+    "version": "0.0.20-1-g9b0ca8bd",
+    "commit": "9b0ca8bdc5cc51e0628e908995e3bad753e5b841",
+    "tree": "9af34e0c8b708a117ea3cb6042d7cfb196980f4c",
+    "sha": "ef63075623944dd415d91fcf81338e79730445ed9a9d3732258fc3ecd0171991",
+    "path": "E:/rm-tmp/s89a/d",
+    "exe": "E:/rm-tmp/s89a/d-release/win32-x64/role-model-dev.exe",
+    "validate": "exit 0"
+  },
+  "C": {
+    "path": "E:/rm-tmp/s85a/release/win32-x64",
+    "version": "0.0.20-66-g91f089ec",
+    "commit": "91f089ec",
+    "tree": "b4aa6775"
+  },
+  "table": [
+    {
+      "surface": "/healthz",
+      "R": "200 JSON",
+      "D": "200 JSON",
+      "C": "200 JSON",
+      "classification": "same"
+    },
+    {
+      "surface": "runtime/summary",
+      "R": "same 17 keys",
+      "D": "same 17 keys",
+      "C": "same 17 keys",
+      "classification": "same"
+    },
+    {
+      "surface": "models",
+      "R": "2",
+      "D": "3",
+      "C": "3",
+      "classification": "environment/config"
+    },
+    {
+      "surface": "endpoints",
+      "R": "3",
+      "D": "3",
+      "C": "3",
+      "classification": "same"
+    },
+    {
+      "surface": "router/summary",
+      "R": "decision_only",
+      "D": "decision_only",
+      "C": "decision_only",
+      "classification": "same"
+    },
+    {
+      "surface": "telemetry/summary",
+      "R": "39",
+      "D": "0",
+      "C": "0",
+      "classification": "environment/state"
+    },
+    {
+      "surface": "operator/learning",
+      "R": "schema v1, candidates 253",
+      "D": "schema v1, candidates 0",
+      "C": "schema v1, candidates 0",
+      "classification": "environment/state"
+    },
+    {
+      "surface": "operator/replay/jobs",
+      "R": "[]",
+      "D": "[]",
+      "C": "[]",
+      "classification": "same"
+    },
+    {
+      "surface": "operator/evaluation/jobs",
+      "R": "256",
+      "D": "0",
+      "C": "0",
+      "classification": "environment/state"
+    },
+    {
+      "surface": "/api/role-model/version",
+      "R": "200 text/html SPA fallback",
+      "D": "200 text/html SPA fallback",
+      "C": "404 JSON",
+      "classification": "intentional approved (S38a)"
+    },
+    {
+      "surface": "UI / title+controls",
+      "R": "legacy React, title empty, 29 buttons, 0 selects",
+      "D": "legacy React, title empty, 29 buttons, 0 selects",
+      "C": "Foldkit, title 'Overview | RM3 Foldkit shell', 5 buttons, 4 selects, 50 data-nav",
+      "classification": "intentional approved (client replacement)"
+    }
+  ],
+  "counts": {
+    "same": 5,
+    "environment/config": 1,
+    "environment/state": 3,
+    "intentional approved": 2,
+    "regression": 0,
+    "pre-existing": 0,
+    "inconclusive": 0,
+    "total": 11
+  },
+  "verdict": {
+    "D": "preserves R API contract; differences are config/state only",
+    "C": "preserves D API contract; differences are intentional version 404 and UI replacement",
+    "unexplained": "none in compared surfaces"
+  }
+}

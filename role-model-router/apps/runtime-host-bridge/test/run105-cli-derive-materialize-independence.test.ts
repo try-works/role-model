@@ -27,9 +27,7 @@ describe("run105 cli derive materialize independence", () => {
     const cliSource = readFileSync(new URL("../src/cli.ts", import.meta.url), "utf8");
 
     // 1. The helper is NOT inside deriveLearnerCandidates any more.
-    const deriveStart = cliSource.indexOf(
-      "async deriveLearnerCandidates(input: Record<string, unknown> = {})",
-    );
+    const deriveStart = cliSource.indexOf("async deriveLearnerCandidates(input:");
     const deriveEnd = cliSource.indexOf("async retroFinalizeEvaluations()", deriveStart);
     expect(deriveStart).toBeGreaterThan(-1);
     const deriveBlock = cliSource.slice(deriveStart, deriveEnd);

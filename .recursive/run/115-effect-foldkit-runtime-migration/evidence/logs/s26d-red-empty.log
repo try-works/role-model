@@ -1,0 +1,57 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s26d-observability.test.ts > S26d observability page > renders the empty state for an empty metric registry
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 34.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'loading', token: 1 },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Observability' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 34.453199999999924,
+  thresholdMs: 8
+}
+
+ ❯ test/s26d-observability.test.ts (7 tests | 1 failed | 6 skipped) 4071ms
+   ↓ S26d observability client > uses the real host path with accept, token only when provisioned, and the forwarded abort signal
+   ↓ S26d observability client > omits authorization without a provisioned token and maps a non-200 to the exact error phrase
+   ↓ S26d observability page > renders the success state from the real client
+   × S26d observability page > renders the empty state for an empty metric registry 4068ms
+     → Timed out waiting for empty state (last: undefined) | body: Runtime UIOverviewDiagnosticsObservabilityStudioLocalRemoteModelsRouterObserveConnectSystemLearningClicks: 0Dark shellRuntimeObservabilityToggle themeOverviewDiagnosticsObservabilityStudioLocalRemoteModelsRouterObserveConnectSystemLearningRuntime readbackObservability snapshot0 metric row(s) in the live registryRefresh follows the shell's single runtime subscription; this page does not open its own.Clicked 0 time(s)
+   ↓ S26d observability page > renders loading while the injected read is in flight
+   ↓ S26d observability page > renders the error state with the exact host failure phrase
+   ↓ S26d observability page > refreshes through the existing single subscription, not a second owner
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s26d-observability.test.ts > S26d observability page > renders the empty state for an empty metric registry
+Error: Timed out waiting for empty state (last: undefined) | body: Runtime UIOverviewDiagnosticsObservabilityStudioLocalRemoteModelsRouterObserveConnectSystemLearningClicks: 0Dark shellRuntimeObservabilityToggle themeOverviewDiagnosticsObservabilityStudioLocalRemoteModelsRouterObserveConnectSystemLearningRuntime readbackObservability snapshot0 metric row(s) in the live registryRefresh follows the shell's single runtime subscription; this page does not open its own.Clicked 0 time(s)
+ ❯ waitFor test/s26d-observability.test.ts:29:9
+     27|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     28|   }
+     29|   throw new Error(
+       |         ^
+     30|     `Timed out waiting for ${label} (last: ${String(last)}) | body: ${…
+     31|   );
+ ❯ test/s26d-observability.test.ts:130:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 skipped (7)
+   Start at  07:38:24
+   Duration  14.48s (transform 4.90s, setup 0ms, collect 7.73s, tests 4.07s, environment 1.19s, prepare 493ms)
+

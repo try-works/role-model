@@ -1,0 +1,46 @@
+COMMAND: node vitest run s415 (S418 invalid-selection token RED, before product change)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s415-requests-ranking.test.ts (10 tests | 1 failed) 191ms
+   ✓ S413 requests ranking controls > keeps the original metric and target option sets 11ms
+   ✓ S413 requests ranking controls > builds the exact original POST /telemetry/query body 1ms
+   ✓ S413 requests ranking controls > POSTs that exact body to /telemetry/query 17ms
+   ✓ S417 freshness during loading > refences an in-flight query when the metric changes while loading 26ms
+   × S417 freshness during loading > invalidates the active token when an unsupported selection is set 77ms
+     → expected 2 to be 3 // Object.is equality
+   ✓ S417 freshness during loading > ignores a stale failure from the superseded query 24ms
+   ✓ S413 requests ranking state machine > auto-queries one token-fenced command when the metric changes 9ms
+   ✓ S413 requests ranking state machine > auto-queries when the ranking target changes and keeps the current metric 7ms
+   ✓ S413 requests ranking state machine > refuses a second submit while loading and fences stale results 5ms
+   ✓ S413 requests ranking state machine > maps empty and error results honestly while keeping the controls 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s415-requests-ranking.test.ts > S417 freshness during loading > invalidates the active token when an unsupported selection is set
+AssertionError: expected 2 to be 3 // Object.is equality
+
+- Expected
++ Received
+
+- 3
++ 2
+
+ ❯ test/s415-requests-ranking.test.ts:99:50
+     97|     expect(invalid.model.requestsRanking?.status).toBe("error");
+     98|     expect(invalid.model.requestsRanking?.message).toMatch(/supported …
+     99|     expect(invalid.model.requestsRanking?.token).toBe(3);
+       |                                                  ^
+    100|     const lateLoaded = shellUpdate(invalid.model, Message.RequestsRank…
+    101|     expect(lateLoaded.model.requestsRanking?.status).toBe("error");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  19:26:27
+   Duration  12.58s (transform 6.13s, setup 0ms, collect 9.66s, tests 191ms, environment 1.22s, prepare 443ms)
+
+

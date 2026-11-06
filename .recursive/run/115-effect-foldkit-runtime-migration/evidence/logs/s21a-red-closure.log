@@ -1,0 +1,6 @@
+src/composition-dag.ts(362,14): error TS2322: Type 'Layer<ArtifactStoreAuthority | EventLogAuthority | CaptureWalAuthority | RetentionAuthority | ... 7 more ... | Cli, never, CompositionConfig>' is not assignable to type 'Layer<CompositionServices, never, never>'.
+  Type 'CompositionServices' is not assignable to type 'ArtifactStoreAuthority | EventLogAuthority | CaptureWalAuthority | RetentionAuthority | ... 7 more ... | Cli'.
+    Type 'CompositionConfig' is not assignable to type 'ArtifactStoreAuthority | EventLogAuthority | CaptureWalAuthority | RetentionAuthority | ... 7 more ... | Cli'.
+      Type 'CompositionConfig' is not assignable to type 'Cli'.
+        Types of property 'Service' are incompatible.
+          Type 'CompositionConfigShape' is missing the following properties from type 'CliShape': id, server

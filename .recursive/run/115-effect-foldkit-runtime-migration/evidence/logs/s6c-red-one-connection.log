@@ -1,0 +1,47 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:27696) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s6b-cli-sqlite-service-migration.test.ts (7 tests | 1 failed | 6 skipped) 38ms
+   ↓ S6b/S6c cli SQLite service migration > endpoint model lookup preserves result, null fallbacks and read-only open
+   × S6b/S6c cli SQLite service migration > opens exactly one connection per lookup 36ms
+     → expected { closes: 2, opens: 2 } to deeply equal { closes: 1, opens: 1 }
+   ↓ S6b/S6c cli SQLite service migration > closes the connection on success, on a thrown query and on a failing open
+   ↓ S6b/S6c cli SQLite service migration > opens the state database genuinely read-only: a write through the handle fails
+   ↓ S6b/S6c cli SQLite service migration > preserves busy_timeout=0: an exclusive writer yields null immediately
+   ↓ S6b/S6c cli SQLite service migration > controller lookup preserves scope precedence and latest-row ordering
+   ↓ S6b/S6c cli SQLite service migration > capture receipt lookup preserves envelope/bare shapes and malformed fallbacks
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s6b-cli-sqlite-service-migration.test.ts > S6b/S6c cli SQLite service migration > opens exactly one connection per lookup
+AssertionError: expected { closes: 2, opens: 2 } to deeply equal { closes: 1, opens: 1 }
+
+- Expected
++ Received
+
+  {
+-   "closes": 1,
+-   "opens": 1,
++   "closes": 2,
++   "opens": 2,
+  }
+
+ ❯ test/s6b-cli-sqlite-service-migration.test.ts:156:20
+    154|       }),
+    155|     ).toBe("provider/model-known");
+    156|     expect(counts).toEqual({ closes: 1, opens: 1 });
+       |                    ^
+    157| 
+    158|     // Every lookup is its own single connection, not a shared or dupl…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 skipped (7)
+   Start at  05:13:11
+   Duration  8.56s (transform 5.26s, setup 0ms, collect 8.01s, tests 38ms, environment 0ms, prepare 199ms)
+
+EXIT_CODE: 1

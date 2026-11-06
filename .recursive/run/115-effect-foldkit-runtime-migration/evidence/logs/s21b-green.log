@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/s21a-composition-dag.test.ts (6 tests) 149ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  03:53:49
+   Duration  3.30s (transform 1.64s, setup 0ms, collect 2.65s, tests 149ms, environment 0ms, prepare 181ms)
+
+EXIT_CODE: 0

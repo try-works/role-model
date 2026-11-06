@@ -1,0 +1,49 @@
+{
+  "slice": "s26g-wave2-batch2",
+  "requirement": "R13 wave 2: five more read routes on the existing shared readback surface",
+  "routes": [
+    {
+      "key": "requests",
+      "path": "/requests",
+      "endpoint": "/api/role-model/telemetry/requests"
+    },
+    {
+      "key": "routerDecisions",
+      "path": "/router/decisions",
+      "endpoint": "/api/role-model/router/decisions"
+    },
+    {
+      "key": "localPeers",
+      "path": "/local/peers",
+      "endpoint": "/api/role-model/local/peers"
+    },
+    {
+      "key": "runtime",
+      "path": "/runtime",
+      "endpoint": "/api/role-model/runtime/config"
+    },
+    {
+      "key": "sessionReadiness",
+      "path": "/session-readiness",
+      "endpoint": "/api/role-model/operator/status"
+    }
+  ],
+  "sharedSurface": "Extended existing readback.ts: ReadbackKey/schema/ReadbacksState, parsers, READBACK_SPECS, createReadbackClients, renderReadbackPage, one ReadReadback Command. No new pattern or fork.",
+  "states": "Each route has DOM success/empty/loading (aria-busy)/error with exact '<Label> read failed: HTTP 503 (unavailable)'; distinct 401/403 helper phrases; invalid 200 bodies rejected.",
+  "refresh": "One fetch-count test per route through the existing single subscription.",
+  "inventory": "Five rows verified with named proofs; absent62, verified12, wired1, total75.",
+  "paths": "Added to runtime-endpoints.ts; S26f endpoint tie covers them.",
+  "redGreen": {
+    "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26g-green.log",
+    "success": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26g-red-success.log",
+    "empty": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26g-red-empty.log",
+    "busy": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26g-red-busy.log",
+    "refresh": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26g-red-refresh.log"
+  },
+  "counts": {
+    "testsAtBatch": 98,
+    "current": 111,
+    "typecheck": "exit 0",
+    "biome": "exit 0"
+  }
+}

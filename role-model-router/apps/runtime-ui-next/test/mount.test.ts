@@ -59,33 +59,35 @@ describe("Foldkit app shell on the wrapper stack", () => {
 
     const handle = mountShell(container);
 
-    const primary = await waitFor(
-      () => buttonByClass(document.body, "bg-primary"),
-      "the RM3 primary button to render",
+    // S49: the product view no longer renders the debug counter/button. Wait for the real
+    // page heading and prove the debug artifacts are absent.
+    const heading = await waitFor(
+      () =>
+        document.querySelector("h1")?.textContent === "Runtime overview"
+          ? document.querySelector("h1")
+          : undefined,
+      "the product page heading to render",
     );
-
-    expect(primary.className).toContain("h-[36px]");
-    expect(primary.className).toContain("rounded-[var(--rm-radius-field)]");
-    expect(primary.textContent).toBe("Clicked 0 time(s)");
-    expect(document.body.textContent).toContain("Clicks: 0");
-    expect(document.body.textContent).toContain("Dark shell");
-
-    primary.click();
-
+    expect(heading?.textContent).toBe("Runtime overview");
+    expect(document.body.textContent).not.toContain("Clicked");
+    expect(document.body.textContent).not.toContain("Clicks:");
     await waitFor(
-      () => (document.body.textContent?.includes("Clicks: 1") ? true : undefined),
-      "the counter to update after the primary click",
+      () =>
+        document.querySelector('button[data-slot="role-model-theme-toggle"]') ? true : undefined,
+      "the reference theme toggle to render",
     );
-    expect(primary.textContent).toBe("Clicked 1 time(s)");
 
     const themeToggle = await waitFor(
-      () => buttonByClass(document.body, "rm3-theme-toggle"),
-      "the foldkit-ui theme toggle to render",
+      () =>
+        document.querySelector<HTMLButtonElement>('button[data-slot="role-model-theme-toggle"]') ??
+        undefined,
+      "the reference theme toggle to render",
     );
+    expect(themeToggle.getAttribute("aria-label")).toBe("Switch to light mode");
     themeToggle.click();
 
     await waitFor(
-      () => (document.body.textContent?.includes("Light shell") ? true : undefined),
+      () => (themeToggle.getAttribute("aria-label") === "Switch to dark mode" ? true : undefined),
       "the theme message to reach update",
     );
 
@@ -95,8 +97,8 @@ describe("Foldkit app shell on the wrapper stack", () => {
     expect(document.getElementById("s14a-app-shell")).toBe(container);
     expect(container.childNodes.length).toBe(0);
     // The rendered content must be gone. The Document title is not body text, so asserting on it
-// would pass before dispose as well; assert on text the mounted view actually renders.
-expect(document.body.textContent).not.toContain("Clicks:");
-expect(document.body.textContent).not.toContain("Clicked");
+    // would pass before dispose as well; assert on text the mounted view actually renders.
+    expect(document.body.textContent).not.toContain("Clicks:");
+    expect(document.body.textContent).not.toContain("Clicked");
   });
 });

@@ -1,0 +1,29 @@
+task-116 benchmark Run gate + seed requirement
+
+ROOT CAUSE
+features/models/routes.ts disabled Run with !selected.has(judge); update.ts BenchmarkRunRequested
+repeated the same check. The :3456 reference (control-benchmark.tsx:527-532) only requires
+selectedCount >= 2, a non-empty runnable judge, and !running; the judge need not be a graded subject.
+
+FIX
+- routes.ts: removed !selected.has(judge); restored the overlap warning in the reference wording
+  when the judge is one of the selected subjects.
+- update.ts: BenchmarkRunRequested now rejects only <2 selected or an empty judge; accepts an
+external judge and posts it as judgeEndpointId.
+
+RED (s622-benchmark-red.log): 2 failed / 10 passed - external-judge Run was blocked and the
+overlap warning rendered for a non-overlapping judge because the fixture selected every endpoint.
+GREEN (s622-benchmark-green.log): 12/12. Covers external judge enabled + exact body, overlap warning,
+empty judge disabled, <2 subjects disabled, running disabled.
+
+SEED GAP
+benchmark endpointOptions/runnableEntries are fed ONLY by READBACK_SPECS.modelEndpoints
+(GET /api/role-model/endpoints). Models existing in /api/role-model/models or routing candidates do
+NOT populate the page. On the seeded instance that readback is empty, so the page honestly renders
+"No runnable endpoints" and "0 of 0 selected".
+
+Build-lane seed requirement (no seeder change here): seed /api/role-model/endpoints with >= 2 entries
+of shape { endpointId, modelId, sourceType, healthStatus, benchmarkEligible: true } (or
+benchmarkEligible absent + executionModeEligible != false); optional third endpoint as the dedicated
+judge. Also seed /api/role-model/benchmark/suite with at least one benchmark_eligible:true,
+quick_benchmark:true case so Quick counts are non-zero.

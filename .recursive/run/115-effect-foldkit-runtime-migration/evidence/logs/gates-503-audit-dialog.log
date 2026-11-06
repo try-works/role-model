@@ -1,0 +1,24 @@
+Node.js v24.11.0
+ ELIFECYCLE  Command failed with exit code 1.
+=== VERIFY ===
+
+FAIL ui identity: the static root is not the bytes this package ships (assets/main.css differs; assets/main.js differs; assets/main.js.map differs)
+=== AUDIT ===
+{"routes":20,"failures":0,"focus":false}
+=== DIALOG ===
+PASS: dialog aria-modal, initial focus Dismiss, Tab trapped, Escape closed, focus returned to Start device authorization
+=== COMPARE ===
+additive-shape /healthz (200/200)
+additive-shape /api/role-model/runtime/summary (200/200)
+same /api/role-model/models (200/200)
+same /api/role-model/endpoints (200/200)
+same /api/role-model/router/summary (200/200)
+environment-state /api/role-model/telemetry/summary (200/200)
+same /api/role-model/operator/learning (200/200)
+same /api/role-model/operator/replay/jobs (200/200)
+same /api/role-model/operator/evaluation/jobs (200/200)
+shape-delta keys /healthz: -runtime.release_id, -runtime.private_distribution_sha256
+shape-delta keys /api/role-model/runtime/summary: -runtime.release_id, -runtime.private_distribution_sha256
+{"additive-shape":2,"same":6,"environment-state":1}
+=== GATES DONE ===
+

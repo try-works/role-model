@@ -1,0 +1,45 @@
+# S620 roles parity — RED
+date: 2026-11-03T08:52:48.5997841+08:00
+basis: routes.ts restored from b36c123c (pre-roles-parity) while shared test/plumbing are current
+expectation: catalog/task-detail/edit controls absent; rendered-value assertions fail
+exit: 1
+--- output ---
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s620-roles-parity.test.ts (2 tests | 1 failed) 557ms
+   × S620 roles page parity > renders the catalog, task detail expansion, create options, edit values, and task allowlists 418ms
+     → expected [] to deeply equal [ 'assistant', 'capability' ]
+   ✓ S620 roles page parity > sends the exact create, update, and task allowlist bodies 130ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s620-roles-parity.test.ts > S620 roles page parity > renders the catalog, task detail expansion, create options, edit values, and task allowlists
+AssertionError: expected [] to deeply equal [ 'assistant', 'capability' ]
+
+- Expected
++ Received
+
+- [
+-   "assistant",
+-   "capability",
+- ]
++ []
+
+ ❯ test/s620-roles-parity.test.ts:104:119
+    102|     expect(container.textContent).toContain("Role task allowlists");
+    103|     expect(container.textContent).toContain("Edit selected role");
+    104|     expect([...container.querySelectorAll("#role-create-kind option")]…
+       |                                                                                                                       ^
+    105|     expect([...container.querySelectorAll("#role-create-tool-policy op…
+    106|     expect(container.querySelector("[data-role-catalog-select='coder']…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  08:52:11
+   Duration  35.48s (transform 16.19s, setup 0ms, collect 27.32s, tests 557ms, environment 4.77s, prepare 941ms)
+
+

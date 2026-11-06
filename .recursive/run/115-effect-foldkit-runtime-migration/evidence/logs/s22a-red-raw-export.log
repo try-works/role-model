@@ -1,0 +1,47 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:28796) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/run96-f160-contribution-outcome.test.ts > run 96 F160 contribution outcome > integration: the real bridge records a successful direct-path contribution once
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-run96-f160-direct alias=- model=- effort=- pass=live allow=[test.capture.chat-v1] denied=[cli.local.coder]
+
+ ❯ test/run96-f160-contribution-outcome.test.ts (12 tests | 1 failed | 11 skipped) 1446ms
+   ↓ run 96 F160 contribution outcome > records a successful contribution only for a 2xx response with no error metadata
+   ↓ run 96 F160 contribution outcome > records an explicit provider error even when the response status is 2xx
+   ↓ run 96 F160 contribution outcome > classifies cancellation and execution failure metadata without using raw messages
+   ↓ run 96 F160 contribution outcome > classifies non-2xx response statuses into bounded failure classes
+   ↓ run 96 F160 contribution outcome > skips an ambiguous or missing outcome rather than inventing a failure
+   ↓ run 96 F160 contribution outcome > bounds valid failure classes and does not expose oversized or malformed values
+   ↓ run 96 F160 contribution outcome > a transport failure on the contribution upload does not discard the completed post-observation
+   ↓ run 96 F160 contribution outcome > integration: post-observation contribution follows the observed outcome exactly once
+   ↓ run 96 F160 contribution outcome > integration: owned sidecar forwards the authorization epoch to the private runtime
+   ↓ run 96 F160 contribution outcome > integration: both production launchers bind supervised replay through the shared bridge helper
+   ↓ run 96 F160 contribution outcome > integration: the real bridge records a pre-execution no-eligible-target outcome once
+   × run 96 F160 contribution outcome > integration: the real bridge records a successful direct-path contribution once 1443ms
+     → expected '[{"requestId":"req-run96-f160-direct"…' not to contain 'direct contribution'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run96-f160-contribution-outcome.test.ts > run 96 F160 contribution outcome > integration: the real bridge records a successful direct-path contribution once
+AssertionError: expected '[{"requestId":"req-run96-f160-direct"…' not to contain 'direct contribution'
+
+Expected: "direct contribution"
+Received: "[{"requestId":"req-run96-f160-direct","correlationId":"corr-7d5529756b695a4afb9f301a","routingDecisionId":"decision-req-run96-f160-direct","endpointId":"test.capture.chat-v1","modelId":"deepseek/chat-capture-v1","reasoningEffort":null,"effortSource":"none","taskType":"direct contribution","inputTokens":32,"outputTokens":24,"success":true}]"
+
+ ❯ test/run96-f160-contribution-outcome.test.ts:461:53
+    459|         }),
+    460|       );
+    461|       expect(JSON.stringify(aggregateRequests)).not.toContain("direct …
+       |                                                     ^
+    462|     } finally {
+    463|       await backend.shutdown();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 skipped (12)
+   Start at  04:24:53
+   Duration  8.65s (transform 4.32s, setup 0ms, collect 6.71s, tests 1.45s, environment 0ms, prepare 168ms)
+

@@ -1,0 +1,136 @@
+{
+  "slice": "s12b-first-primitive",
+  "requirement": [
+    "R7",
+    "R8"
+  ],
+  "worktree": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration",
+  "status": "complete",
+  "tddMode": "strict (setup RED + behavioural RED -> GREEN)",
+  "premiseCorrection": {
+    "claimInTask": "The RM3 React button lives in role-model-router/packages/ui/src.",
+    "finding": "No React Button component exists in role-model-router/packages/ui/src, and none exists anywhere in the worktree or its git history (git ls-files has no button module; `git log --all -- role-model-router/packages/ui/src/button.tsx` is empty). The RM3 button contract in this repository lives in the runtime-ui app as token-driven class helpers rendered inline: primaryButtonClassName, primaryButtonBlockClassName, secondaryButtonClassName, compactFieldButtonClassName, compactFieldButtonEmphasisClassName, utilityButtonClassName (role-model-router/apps/runtime-ui/app/lib/design-system.ts:1247-1265), with the written grammar in role-model-router/apps/runtime-ui/DESIGN_SYSTEM.md:379-384.",
+    "whatIPorted": "The actual RM3 contract: those class helpers plus the disabled/active-scale grammar they encode. I did not invent a React-derived API.",
+    "documentedConflict": "DESIGN_SYSTEM.md:381 says primary actions use the accent blue family with pill radius and `11px 22px` padding, but the live class helpers use `rounded-[var(--rm-radius-field)]`, `h-[36px]`, `px-3.5` (primary) / `h-[34px]`, `px-4` (compact). I preserved the live helpers, because they are what the React app actually renders; the doc line is stale relative to code."
+  },
+  "contract": {
+    "preserved": [
+      "variant vocabulary: primary, secondary, compactField (RM3 compact field), compactFieldEmphasis (compact primary emphasis), utility; class strings copied verbatim from design-system.ts:1248-1265.",
+      "primary block form: primaryButtonBlockClassName's `w-full` is available as `block` and only for the primary variant (design-system.ts:1252).",
+      "size vocabulary: RM3 encodes size in the variant (36px primary/secondary/utility vs 34px compact field), so the primitive holds those fixed heights and does not invent a separate size prop; asserted by Scene class checks.",
+      "disabled behaviour: native `disabled` plus `aria-disabled`, click handler omitted entirely (mirrors vendor/foldkit/packages/ui/src/button/index.ts:45-46) and Scene refuses to click a disabled element (vendor/foldkit/packages/foldkit/src/test/scene.ts:1908-1916). Disabled styling `disabled:opacity-60` is preserved from the RM3 helpers where those helpers define it (all but utility).",
+      "accessible name: a button is named by text children; icon-only usage requires `ariaLabel`; the primitive throws rather than rendering an unnamed control. RM3's app has 46 `aria-label` usages on interactive elements (e.g. app/routes/control-benchmark.tsx:864), so icon-only naming is an existing RM3 practice.",
+      "token-driven classes: RM3 tokens appear verbatim (`--rm-radius-field`, `--rm-surface`, `--rm-panel`, `--rm-border-strong`, `bg-primary`), and the test asserts representative classes including `rounded-[var(--rm-radius-field)]`, `h-[36px]`, `h-[34px]`.",
+      "click dispatch: the caller supplies a Message and the Foldkit runtime dispatches it; the test proves a click increments the model through `Scene.click` + `Scene.expectHandled`."
+    ],
+    "notPreserved": [
+      "Loading state: RM3 has no button loading contract to preserve. There is no loading prop, and `aria-busy` appears on no button in runtime-ui (grep over app/**/*.tsx: 0 hits). The primitive does not invent an isLoading API; this is a deliberate non-port, not a gap.",
+      "Active/pressed scale: the class grammar includes `active:scale-95` (kept verbatim), but Scene does not simulate the CSS `:active` pseudo-class; only the class presence is asserted.",
+      "React prop plumbing: there is no React component to mirror, by the premise correction above. The Foldkit equivalent is: `h` builder supplied by the runtime, Message instead of onEvent props, `block`/`variant` config instead of className composition by callers."
+    ]
+  },
+  "vendoredLinesReliedOn": [
+    "vendor/foldkit/packages/foldkit/src/test/scene.ts:3033-3075 - Scene.scene({update, view}, ...steps) entry, with all-Commands/Mounts-resolved assertions at 3102-3107.",
+    "vendor/foldkit/packages/foldkit/src/test/scene.ts:944-962 - Scene.given(model).",
+    "vendor/foldkit/packages/foldkit/src/test/scene.ts:1542, :1647-1669 - expectOutMessage and expectHandled (Handled vs Ignored semantics).",
+    "vendor/foldkit/packages/foldkit/src/test/scene.ts:1878-1971 - Scene.click: propagation walk, disabled guard at 1908-1916, no-handler error at 1962-1968.",
+    "vendor/foldkit/packages/foldkit/src/test/scene.ts:2901-2935 - Scene.expect chain (toHaveAttr/toHaveClass/toHaveHandler/toBeDisabled/toHaveAccessibleName), exported as Scene.expect.",
+    "vendor/foldkit/packages/foldkit/src/test/vitest.ts:27-40 - setup() registers the Scene matchers; the test calls it once.",
+    "vendor/foldkit/packages/foldkit/src/html/index.ts:4965 - h.OnClick(message, options?) signature; :4227 and :4494 - h.Disabled / h.AriaDisabled; :4950 - h.Class; :5261 - h.Type; AriaLabel at the Attribute enum (:831).",
+    "vendor/foldkit/packages/ui/src/button/index.ts:45-46 - a disabled vendored button omits its OnClick handler (precedent for the same behaviour here)."
+  ],
+  "red": [
+    {
+      "name": "setup RED",
+      "command": "node_modules/.bin/vitest run test/s12b-rm3-button.scene.test.ts --environment happy-dom (cwd role-model-router/packages/foldkit)",
+      "exit": 1,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12b-red-missing.log",
+      "observed": "Failed to resolve import \"../../ui/src/foldkit-button\" ... Does the file exist? (the primitive module did not exist yet).",
+      "classification": "setup failure: test written first against a missing module."
+    },
+    {
+      "name": "behavioural RED",
+      "command": "same command with the primitive's first draft (variants/classes/accessible-name present, disabled handling deliberately absent)",
+      "exit": 1,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12b-red-behavioural.log",
+      "observed": "1 failed | 5 passed: 'does not emit when disabled and is not clickable' -> Error: Expected element matching button to be disabled but it is not disabled.",
+      "classification": "behavioural: the draft rendered the RM3 classes but not the disabled state; the failure is the contract assertion, not a missing module."
+    }
+  ],
+  "green": {
+    "command": "node_modules/.bin/vitest run test/s12b-rm3-button.scene.test.ts --environment happy-dom (cwd role-model-router/packages/foldkit)",
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12b-green.log",
+    "result": {
+      "testFiles": 1,
+      "tests": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    "cases": [
+      "emits its message on click and the model observes it (Scene.expectHandled + post-click text)",
+      "does not emit when disabled and is not clickable (toBeDisabled, aria-disabled, disabled:opacity-60, no click handler, Scene.click throws /disabled/)",
+      "keeps the RM3 variant token classes and fixed heights (5 variants x representative classes)",
+      "keeps the primary block variant full width",
+      "uses aria-label as the accessible name for an icon-only button",
+      "refuses an icon-only button without an accessible name (throws /accessible name/)"
+    ]
+  },
+  "regressions": [
+    {
+      "suite": "existing @role-model/ui React suite",
+      "command": "node_modules/.bin/vitest run (cwd role-model-router/packages/ui)",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12b-ui-suite.log",
+      "result": {
+        "testFiles": 7,
+        "tests": 33,
+        "passed": 33
+      }
+    },
+    {
+      "suite": "foldkit wrapper graph closure",
+      "command": "node --test test/graph-closure.test.mjs (cwd role-model-router/packages/foldkit)",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12b-graph.log",
+      "result": {
+        "tests": 14,
+        "passed": 14
+      }
+    },
+    {
+      "suite": "biome check on the three touched files",
+      "command": "node node_modules/@biomejs/biome/bin/biome check role-model-router/packages/ui/src/foldkit-button.ts role-model-router/packages/foldkit/test/s12b-rm3-button.scene.test.ts role-model-router/packages/ui/package.json",
+      "exit": 0,
+      "observed": "Checked 3 files. No fixes applied. (one --write --unsafe formatting pass first)"
+    }
+  ],
+  "typecheck": {
+    "attempted": "node node_modules/typescript/bin/tsc -p role-model-router/packages/ui/tsconfig.json --noEmit",
+    "exit": 2,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s12b-typecheck.log",
+    "finding": "Pre-existing failure unrelated to this slice: TS6059 says role-model-router/packages/ui/vitest.config.ts is not under rootDir (the tsconfig includes vitest.config.ts while rootDir is src). The new devDependency is also not installed in this session, so its type resolution could not be exercised. No installs allowed; controller owns the install/lockfile line."
+  },
+  "files": {
+    "role-model-router/packages/ui/src/foldkit-button.ts": {
+      "sha256": "3077ce2d51f27ca4dbba8eab52db6cf8f4d512d0899b4a2454c6a71400d7244d",
+      "kind": "new module (RM3 contract, Foldkit view builder, no React import)"
+    },
+    "role-model-router/packages/foldkit/test/s12b-rm3-button.scene.test.ts": {
+      "sha256": "0a5442ec508bafdeec3a87a988a9309143c9e829e98275bc5812ab0ab1a1fc41",
+      "kind": "new Scene test (6 cases, vitest + happy-dom, vendored foldkit/test/vitest matcher setup)"
+    },
+    "role-model-router/packages/ui/package.json": {
+      "sha256": "affcc7787c651dc7b3551a3e5282c106bf6ac2c25b71b8570c667df58f128317",
+      "kind": "modified: added additive `./foldkit-button` export (existing React exports unchanged) and devDependency `@role-model-router/foldkit: workspace:*` for type resolution"
+    }
+  },
+  "testLocationRationale": "The primitive lives in role-model-router/packages/ui/src per the task. Its Scene test lives in role-model-router/packages/foldkit/test because the controller installed happy-dom + vitest in packages/foldkit and that package owns the built Foldkit wrapper; packages/ui has no link to @role-model-router/foldkit and no happy-dom, so a test there could not resolve the vendored Scene harness. The test imports the wrapper's built scene/message/vitest entries by relative path and the primitive by relative path, and runs with `--environment happy-dom` like the vendored configs (vendor/foldkit/packages/foldkit/vitest.config.ts:5, packages/ui/vitest.config.ts:10).",
+  "unverified": [
+    "Typecheck of the new module: blocked by the pre-existing TS6059 in packages/ui's tsconfig and by the not-yet-installed @role-model-router/foldkit devDependency (controller-owned install/lockfile; no installs allowed here).",
+    "The Scene test is not wired into a package script: packages/foldkit/package.json is outside this slice's writable list, so it must be invoked with the documented vitest command. No test script change was made.",
+    "Loading state is intentionally not ported (RM3 defines none); if a loading contract is wanted it needs a separate source-backed decision.",
+    "Class strings are duplicated from the runtime-ui design-system module (the module lives in an app, not the ui package). Drift risk remains until the RM3 class helpers move into @role-model/ui.",
+    "No browser render or screenshot verification; behaviour is proven at the VNode/Scene level plus happy-dom."
+  ]
+}

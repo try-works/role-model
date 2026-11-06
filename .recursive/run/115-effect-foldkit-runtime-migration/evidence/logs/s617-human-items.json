@@ -1,0 +1,615 @@
+{
+  "total": 61,
+  "items": [
+    {
+      "control": "clickable model row (div)",
+      "file": "features/models/routes.ts:100",
+      "id": "H001",
+      "itemLabel": "each model display name",
+      "label": "each model display name",
+      "route": "/models",
+      "routeTag": "Models",
+      "wired": "no"
+    },
+    {
+      "control": "detail selection",
+      "file": "features/models/routes.ts:61",
+      "id": "H002",
+      "itemLabel": "hard-coded `cards[0]`; no row selection",
+      "label": "hard-coded `cards[0]`; no row selection",
+      "route": "/models",
+      "routeTag": "Models",
+      "wired": "no"
+    },
+    {
+      "control": "input ×4",
+      "file": "features/models/routes.ts:181",
+      "id": "H003",
+      "itemLabel": "Role id",
+      "label": "Role id, Name, Description, Default system instructions",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wired": "no"
+    },
+    {
+      "control": "input ×4",
+      "file": "features/models/routes.ts:181",
+      "id": "H004",
+      "itemLabel": "Name",
+      "label": "Role id, Name, Description, Default system instructions",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wired": "no"
+    },
+    {
+      "control": "input ×4",
+      "file": "features/models/routes.ts:181",
+      "id": "H005",
+      "itemLabel": "Description",
+      "label": "Role id, Name, Description, Default system instructions",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wired": "no"
+    },
+    {
+      "control": "input ×4",
+      "file": "features/models/routes.ts:181",
+      "id": "H006",
+      "itemLabel": "Default system instructions",
+      "label": "Role id, Name, Description, Default system instructions",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wired": "no"
+    },
+    {
+      "control": "select ×2",
+      "file": "features/models/routes.ts:188",
+      "id": "H007",
+      "itemLabel": "\"Kindassistant\"",
+      "label": "\"Kindassistant\", \"tool policy allowed · supported tasks co\"",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wired": "no"
+    },
+    {
+      "control": "select ×2",
+      "file": "features/models/routes.ts:188",
+      "id": "H008",
+      "itemLabel": "\"tool policy allowed · supported tasks co\"",
+      "label": "\"Kindassistant\", \"tool policy allowed · supported tasks co\"",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wired": "no"
+    },
+    {
+      "control": "button",
+      "file": "features/models/routes.ts:190",
+      "id": "H009",
+      "itemLabel": "Create role",
+      "label": "Create role",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wired": "no"
+    },
+    {
+      "control": "button",
+      "file": "features/models/routes.ts:191",
+      "id": "H010",
+      "itemLabel": "Reset",
+      "label": "Reset",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wired": "no"
+    },
+    {
+      "control": "button",
+      "file": "features/models/routes.ts:192",
+      "id": "H011",
+      "itemLabel": "Advanced policy fields",
+      "label": "Advanced policy fields",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wired": "no"
+    },
+    {
+      "control": "table rows",
+      "file": "features/models/routes.ts:196,199",
+      "id": "H012",
+      "itemLabel": "Role catalog / Role task allowlists (no row action)",
+      "label": "Role catalog / Role task allowlists (no row action)",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wired": "no"
+    },
+    {
+      "control": "table rows",
+      "file": "features/models/routes.ts:202",
+      "id": "H013",
+      "itemLabel": "Edit selected role (hard-coded field rows)",
+      "label": "Edit selected role (hard-coded field rows)",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wired": "no"
+    },
+    {
+      "control": "select ×2",
+      "file": "features/models/routes.ts:214",
+      "id": "H014",
+      "itemLabel": "Benchmark mode",
+      "label": "Benchmark mode, Judge endpoint",
+      "route": "/system/benchmark",
+      "routeTag": "Benchmark",
+      "wired": "no"
+    },
+    {
+      "control": "select ×2",
+      "file": "features/models/routes.ts:214",
+      "id": "H015",
+      "itemLabel": "Judge endpoint",
+      "label": "Benchmark mode, Judge endpoint",
+      "route": "/system/benchmark",
+      "routeTag": "Benchmark",
+      "wired": "no"
+    },
+    {
+      "control": "button",
+      "file": "features/models/routes.ts:216",
+      "id": "H016",
+      "itemLabel": "Run quick benchmark (3 models, 12 cases)",
+      "label": "Run quick benchmark (3 models, 12 cases)",
+      "route": "/system/benchmark",
+      "routeTag": "Benchmark",
+      "wired": "no"
+    },
+    {
+      "control": "button",
+      "file": "features/models/routes.ts:217",
+      "id": "H017",
+      "itemLabel": "Clear all benchmark data",
+      "label": "Clear all benchmark data",
+      "route": "/system/benchmark",
+      "routeTag": "Benchmark",
+      "wired": "no"
+    },
+    {
+      "control": "password input",
+      "file": "features/learning/routes.ts:16",
+      "id": "H018",
+      "itemLabel": "Operator token",
+      "label": "Operator token",
+      "route": "/learning",
+      "routeTag": "Learning",
+      "wired": "no"
+    },
+    {
+      "control": "password input",
+      "file": "features/learning/routes.ts:16",
+      "id": "H019",
+      "itemLabel": "Operator token",
+      "label": "Operator token",
+      "route": "/learning/configuration",
+      "routeTag": "LearningConfiguration",
+      "wired": "no"
+    },
+    {
+      "control": "password input",
+      "file": "features/learning/routes.ts:16",
+      "id": "H020",
+      "itemLabel": "Operator token",
+      "label": "Operator token",
+      "route": "/learning/packs",
+      "routeTag": "LearningPacks",
+      "wired": "no"
+    },
+    {
+      "control": "button",
+      "file": "features/learning/routes.ts:139",
+      "id": "H021",
+      "itemLabel": "Roll back active pack (scope-wide)",
+      "label": "Roll back active pack (scope-wide)",
+      "route": "/learning/packs",
+      "routeTag": "LearningPacks",
+      "wired": "no"
+    },
+    {
+      "control": "button",
+      "file": "features/learning/routes.ts:140",
+      "id": "H022",
+      "itemLabel": "Engage kill switch",
+      "label": "Engage kill switch",
+      "route": "/learning/packs",
+      "routeTag": "LearningPacks",
+      "wired": "no"
+    },
+    {
+      "control": "button",
+      "file": "features/learning/routes.ts:141",
+      "id": "H023",
+      "itemLabel": "Release kill switch",
+      "label": "Release kill switch",
+      "route": "/learning/packs",
+      "routeTag": "LearningPacks",
+      "wired": "no"
+    },
+    {
+      "control": "password input",
+      "file": "features/learning/routes.ts:16",
+      "id": "H024",
+      "itemLabel": "Operator token",
+      "label": "Operator token",
+      "route": "/learning/decisions",
+      "routeTag": "LearningDecisions",
+      "wired": "no"
+    },
+    {
+      "control": "select ×3",
+      "file": "features/learning/routes.ts:155",
+      "id": "H025",
+      "itemLabel": "Role",
+      "label": "Role, Task, Outcome",
+      "route": "/learning/decisions",
+      "routeTag": "LearningDecisions",
+      "wired": "no"
+    },
+    {
+      "control": "select ×3",
+      "file": "features/learning/routes.ts:155",
+      "id": "H026",
+      "itemLabel": "Task",
+      "label": "Role, Task, Outcome",
+      "route": "/learning/decisions",
+      "routeTag": "LearningDecisions",
+      "wired": "no"
+    },
+    {
+      "control": "select ×3",
+      "file": "features/learning/routes.ts:155",
+      "id": "H027",
+      "itemLabel": "Outcome",
+      "label": "Role, Task, Outcome",
+      "route": "/learning/decisions",
+      "routeTag": "LearningDecisions",
+      "wired": "no"
+    },
+    {
+      "control": "password input",
+      "file": "features/learning/routes.ts:16",
+      "id": "H028",
+      "itemLabel": "Operator token",
+      "label": "Operator token",
+      "route": "/learning/evidence",
+      "routeTag": "LearningEvidence",
+      "wired": "no"
+    },
+    {
+      "control": "password input",
+      "file": "features/learning/routes.ts:16",
+      "id": "H029",
+      "itemLabel": "Operator token",
+      "label": "Operator token",
+      "route": "/learning/history",
+      "routeTag": "LearningHistory",
+      "wired": "no"
+    },
+    {
+      "control": "button ×4",
+      "file": "features/observe/views.ts:155",
+      "id": "H030",
+      "itemLabel": "Day",
+      "label": "Day, Week, Month, 90 days",
+      "route": "/requests",
+      "routeTag": "Requests",
+      "wired": "no"
+    },
+    {
+      "control": "button ×4",
+      "file": "features/observe/views.ts:155",
+      "id": "H031",
+      "itemLabel": "Week",
+      "label": "Day, Week, Month, 90 days",
+      "route": "/requests",
+      "routeTag": "Requests",
+      "wired": "no"
+    },
+    {
+      "control": "button ×4",
+      "file": "features/observe/views.ts:155",
+      "id": "H032",
+      "itemLabel": "Month",
+      "label": "Day, Week, Month, 90 days",
+      "route": "/requests",
+      "routeTag": "Requests",
+      "wired": "no"
+    },
+    {
+      "control": "button ×4",
+      "file": "features/observe/views.ts:155",
+      "id": "H033",
+      "itemLabel": "90 days",
+      "label": "Day, Week, Month, 90 days",
+      "route": "/requests",
+      "routeTag": "Requests",
+      "wired": "no"
+    },
+    {
+      "control": "select",
+      "file": "features/observe/views.ts:173",
+      "id": "H034",
+      "itemLabel": "Breakdown",
+      "label": "Breakdown",
+      "route": "/requests",
+      "routeTag": "Requests",
+      "wired": "no"
+    },
+    {
+      "control": "select",
+      "file": "features/observe/views.ts:174",
+      "id": "H035",
+      "itemLabel": "Source",
+      "label": "Source",
+      "route": "/requests",
+      "routeTag": "Requests",
+      "wired": "no"
+    },
+    {
+      "control": "button",
+      "file": "features/observe/views.ts:136",
+      "id": "H036",
+      "itemLabel": "Expand (Advanced controls)",
+      "label": "Expand (Advanced controls)",
+      "route": "/requests",
+      "routeTag": "Requests",
+      "wired": "no"
+    },
+    {
+      "control": "select",
+      "file": "features/observe/views.ts:211",
+      "id": "H037",
+      "itemLabel": "Status family",
+      "label": "Status family",
+      "route": "/requests",
+      "routeTag": "Requests",
+      "wired": "no"
+    },
+    {
+      "control": "table rows",
+      "file": "features/observe/views.ts:225",
+      "id": "H038",
+      "itemLabel": "Recent telemetry requests (no row drill-in despite copy)",
+      "label": "Recent telemetry requests (no row drill-in despite copy)",
+      "route": "/requests",
+      "routeTag": "Requests",
+      "wired": "no"
+    },
+    {
+      "control": "segmented button ×2",
+      "file": "features/observe/views.ts:298",
+      "id": "H039",
+      "itemLabel": "All sources",
+      "label": "All sources, combined",
+      "route": "/observe/logs",
+      "routeTag": "ObserveLogs",
+      "wired": "no"
+    },
+    {
+      "control": "segmented button ×2",
+      "file": "features/observe/views.ts:298",
+      "id": "H040",
+      "itemLabel": "combined",
+      "label": "All sources, combined",
+      "route": "/observe/logs",
+      "routeTag": "ObserveLogs",
+      "wired": "no"
+    },
+    {
+      "control": "button ×4",
+      "file": "features/observe/views.ts:312 → 71",
+      "id": "H041",
+      "itemLabel": "Day",
+      "label": "Day, Week, Month, 90 days",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "wired": "no"
+    },
+    {
+      "control": "button ×4",
+      "file": "features/observe/views.ts:312 → 71",
+      "id": "H042",
+      "itemLabel": "Week",
+      "label": "Day, Week, Month, 90 days",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "wired": "no"
+    },
+    {
+      "control": "button ×4",
+      "file": "features/observe/views.ts:312 → 71",
+      "id": "H043",
+      "itemLabel": "Month",
+      "label": "Day, Week, Month, 90 days",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "wired": "no"
+    },
+    {
+      "control": "button ×4",
+      "file": "features/observe/views.ts:312 → 71",
+      "id": "H044",
+      "itemLabel": "90 days",
+      "label": "Day, Week, Month, 90 days",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "wired": "no"
+    },
+    {
+      "control": "select ×3",
+      "file": "features/observe/views.ts:312 → 86-88",
+      "id": "H045",
+      "itemLabel": "Breakdown",
+      "label": "Breakdown, Source, Difficulty",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "wired": "no"
+    },
+    {
+      "control": "select ×3",
+      "file": "features/observe/views.ts:312 → 86-88",
+      "id": "H046",
+      "itemLabel": "Source",
+      "label": "Breakdown, Source, Difficulty",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "wired": "no"
+    },
+    {
+      "control": "select ×3",
+      "file": "features/observe/views.ts:312 → 86-88",
+      "id": "H047",
+      "itemLabel": "Difficulty",
+      "label": "Breakdown, Source, Difficulty",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "wired": "no"
+    },
+    {
+      "control": "button",
+      "file": "features/observe/views.ts:312 → 96",
+      "id": "H048",
+      "itemLabel": "Expand",
+      "label": "Expand",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "wired": "no"
+    },
+    {
+      "control": "button",
+      "file": "features/observe/views.ts:324",
+      "id": "H049",
+      "itemLabel": "Refresh",
+      "label": "Refresh",
+      "route": "/observe/observability-snapshot",
+      "routeTag": "Observability",
+      "wired": "no"
+    },
+    {
+      "control": "button",
+      "file": "features/observe/views.ts:345",
+      "id": "H050",
+      "itemLabel": "Refresh",
+      "label": "Refresh",
+      "route": "/observe/store-degradation-receipts",
+      "routeTag": "StoreReceipts",
+      "wired": "no"
+    },
+    {
+      "control": "activity rows (div)",
+      "file": "features/observe/views.ts:257",
+      "id": "H051",
+      "itemLabel": "recent host activity; no capture drill-in",
+      "label": "recent host activity; no capture drill-in",
+      "route": "/observe/activity",
+      "routeTag": "ObserveActivity",
+      "wired": "no"
+    },
+    {
+      "control": "input",
+      "file": "families-view.ts:371",
+      "id": "H052",
+      "itemLabel": "Endpoint URL",
+      "label": "Endpoint URL",
+      "route": "/local/peers",
+      "routeTag": "LocalPeers",
+      "wired": "no"
+    },
+    {
+      "control": "password input",
+      "file": "families-view.ts:372",
+      "id": "H053",
+      "itemLabel": "Auth token (optional)",
+      "label": "Auth token (optional)",
+      "route": "/local/peers",
+      "routeTag": "LocalPeers",
+      "wired": "no"
+    },
+    {
+      "control": "table row actions",
+      "file": "families-view.ts:366",
+      "id": "H054",
+      "itemLabel": "Check health / Remove (plain text, no buttons)",
+      "label": "Check health / Remove (plain text, no buttons)",
+      "route": "/local/peers",
+      "routeTag": "LocalPeers",
+      "wired": "no"
+    },
+    {
+      "control": "input",
+      "file": "families-view.ts:383",
+      "id": "H055",
+      "itemLabel": "Model ID",
+      "label": "Model ID",
+      "route": "/local/peer-models",
+      "routeTag": "LocalPeerModels",
+      "wired": "no"
+    },
+    {
+      "control": "input",
+      "file": "families-view.ts:588",
+      "id": "H056",
+      "itemLabel": "Model ID",
+      "label": "Model ID",
+      "route": "/local/llama-swap/models",
+      "routeTag": "LocalLlamaSwapModels",
+      "wired": "no"
+    },
+    {
+      "control": "static text",
+      "file": "families-view.ts:592",
+      "id": "H057",
+      "itemLabel": "\"28 selected · click to clear\" (looks actionable)",
+      "label": "\"28 selected · click to clear\" (looks actionable)",
+      "route": "/local/llama-swap/models",
+      "routeTag": "LocalLlamaSwapModels",
+      "wired": "no"
+    },
+    {
+      "control": "password input",
+      "file": "families-view.ts:450",
+      "id": "H058",
+      "itemLabel": "Operator access token",
+      "label": "Operator access token",
+      "route": "/system/operator",
+      "routeTag": "SystemOperator",
+      "wired": "no"
+    },
+    {
+      "control": "button",
+      "file": "families-view.ts:450",
+      "id": "H059",
+      "itemLabel": "Load Operator State",
+      "label": "Load Operator State",
+      "route": "/system/operator",
+      "routeTag": "SystemOperator",
+      "wired": "no"
+    },
+    {
+      "control": "input",
+      "file": "families-view.ts:460",
+      "id": "H060",
+      "itemLabel": "Trace root id",
+      "label": "Trace root id",
+      "route": "/system/operator",
+      "routeTag": "SystemOperator",
+      "wired": "no"
+    },
+    {
+      "control": "number input",
+      "file": "families-view.ts:461",
+      "id": "H061",
+      "itemLabel": "Max requests",
+      "label": "Max requests",
+      "route": "/system/operator",
+      "routeTag": "SystemOperator",
+      "wired": "no"
+    }
+  ]
+}

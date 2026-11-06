@@ -10,20 +10,23 @@ describe("taxonomy discovery API", () => {
       lifecycleSummary: { active: 0, degraded: 0, offline: 0 },
     } as never;
 
-    const server = await startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      getRegistry: () => registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    const server = await startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        getRegistry: () => registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        executeResponses: async () => {
+          throw new Error("not used");
+        },
+        readHealthStatus: async () => ({ status: "healthy" }),
+        getRoutableInventory: () => null,
       },
-      executeResponses: async () => {
-        throw new Error("not used");
-      },
-      readHealthStatus: async () => ({ status: "healthy" }),
-      getRoutableInventory: () => null,
-    });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const baseUrl = `http://127.0.0.1:${server.port}`;
@@ -98,20 +101,23 @@ describe("taxonomy discovery API", () => {
       lifecycleSummary: { active: 0, degraded: 0, offline: 0 },
     } as never;
 
-    const server = await startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      getRegistry: () => registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    const server = await startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        getRegistry: () => registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        executeResponses: async () => {
+          throw new Error("not used");
+        },
+        readHealthStatus: async () => ({ status: "healthy" }),
+        getRoutableInventory: () => null,
       },
-      executeResponses: async () => {
-        throw new Error("not used");
-      },
-      readHealthStatus: async () => ({ status: "healthy" }),
-      getRoutableInventory: () => null,
-    });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const baseUrl = `http://127.0.0.1:${server.port}`;
@@ -197,20 +203,23 @@ describe("taxonomy discovery API", () => {
       lifecycleSummary: { active: 0, degraded: 0, offline: 0 },
     } as never;
 
-    const server = await startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      getRegistry: () => registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    const server = await startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        getRegistry: () => registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        executeResponses: async () => {
+          throw new Error("not used");
+        },
+        readHealthStatus: async () => ({ status: "healthy" }),
+        getRoutableInventory: () => null,
       },
-      executeResponses: async () => {
-        throw new Error("not used");
-      },
-      readHealthStatus: async () => ({ status: "healthy" }),
-      getRoutableInventory: () => null,
-    });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const baseUrl = `http://127.0.0.1:${server.port}`;

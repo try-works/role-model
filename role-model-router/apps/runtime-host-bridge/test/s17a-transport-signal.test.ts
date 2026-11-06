@@ -1,9 +1,10 @@
-import { Effect, Exit } from "effect";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { Effect, Exit } from "effect";
 import { describe, expect, it } from "vitest";
 
+import { recordDirectContributionWith, recordRouteCaptureAtHostEdge } from "../src/index.js";
 import {
   TrackBPrivateOperationAbortError,
   TrackBPrivateOperationError,
@@ -13,7 +14,6 @@ import {
   privateRetentionRequest,
   privateRetentionRequestEffect,
 } from "../src/track-b-operations.js";
-import { recordDirectContributionWith, recordRouteCaptureAtHostEdge } from "../src/index.js";
 
 /**
  * Run 115 S17a (R26 Transport/SSE B5 first slice), extended by S17c: AbortSignal into transport

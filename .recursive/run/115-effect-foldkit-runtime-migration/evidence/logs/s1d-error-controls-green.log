@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+ ✓ test/selfcheck.test.ts (2 tests) 25ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  19:31:48
+   Duration  2.14s (transform 479ms, setup 0ms, collect 432ms, tests 25ms, environment 1ms, prepare 740ms)
+

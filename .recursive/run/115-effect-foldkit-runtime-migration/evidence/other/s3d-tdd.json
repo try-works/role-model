@@ -1,0 +1,137 @@
+{
+  "task": ".recursive/run/115-effect-foldkit-runtime-migration/tasks/s3d-browser-smoke.md",
+  "run": "115-effect-foldkit-runtime-migration",
+  "slice": "S3d",
+  "requirement": "R5 (public): runtime graph closure + DOM smoke",
+  "model": "deepseek-flash",
+  "tdd_mode": "strict",
+  "status": "COMPLETE - DOM smoke GREEN under happy-dom, runtime graph GREEN",
+  "finished_utc": "2026-10-24T15:29:12.663Z",
+  "environment": {
+    "chosen": "happy-dom (per-file // @vitest-environment happy-dom, mirroring vendor/foldkit/packages/foldkit/vitest.config.ts line 5)",
+    "happy_dom_version": "20.14.6",
+    "vitest_version": "3.2.4",
+    "installed_as": "devDependencies of role-model-router/packages/foldkit (controller install; frozen install reported 'Lockfile is up to date')",
+    "not_a_real_browser": "happy-dom is a DOM SIMULATION: no rendering engine, no real event loop, no origin/quota enforcement, and only a subset of Web APIs. It is not a browser and CANNOT certify browser behaviour.",
+    "jsdom": "not installed and not used"
+  },
+  "browser_smoke": {
+    "file": "role-model-router/packages/foldkit/test/browser-runtime-smoke.test.mjs",
+    "command": "node node_modules/vitest/vitest.mjs run test/browser-runtime-smoke.test.mjs (from role-model-router/packages/foldkit)",
+    "exit_code": 0,
+    "files": 1,
+    "tests": 9,
+    "passed": 4,
+    "failed": 0,
+    "skipped": 5,
+    "log": "evidence/logs/s3d-browser-smoke-happydom.log",
+    "passing": [
+      "runs in a DOM environment with Web Storage: window/document/localStorage exist, document.nodeType === 9, window.document is the DOM document",
+      "imports every built browser entry: 85/85 loaded inside the Vitest runner, every namespace exposes >= 1 export, emptyNamespaces == []",
+      "exercises BrowserKeyValueStore localStorage layer for real: store.set/get round-trip plus direct globalThis.localStorage readback",
+      "exercises BrowserCrypto layer for real: crypto.randomBytes(16), crypto.digest('SHA-256') length 32, crypto.randomUUIDv4() matching the v4 UUID shape (crypto.getRandomValues + crypto.subtle.digest)"
+    ],
+    "skipped_explicitly": [
+      {
+        "service": "BrowserPersistence / IndexedDb* (indexedDB)",
+        "available": false,
+        "reason": "happy-dom 20.14.6 does not implement indexedDB"
+      },
+      {
+        "service": "Web Locks (navigator.locks)",
+        "available": false,
+        "reason": "happy-dom 20.14.6 does not implement navigator.locks"
+      },
+      {
+        "service": "Geolocation (navigator.geolocation)",
+        "available": false,
+        "reason": "happy-dom 20.14.6 does not implement navigator.geolocation"
+      },
+      {
+        "service": "Clipboard (navigator.clipboard)",
+        "available": true,
+        "reason": "happy-dom exposes a stub without OS access or a permission prompt; not exercised"
+      },
+      {
+        "service": "Permissions (navigator.permissions)",
+        "available": true,
+        "reason": "happy-dom exposes a stub without a real permission store; not exercised"
+      }
+    ],
+    "note": "the skips are explicit it.skip blocks whose names carry the reason; nothing passes silently"
+  },
+  "runtime_graph_test": {
+    "file": "role-model-router/packages/foldkit/test/runtime-graph.test.mjs",
+    "framework": "node:test (runnable both as `node --test test/runtime-graph.test.mjs` and as `node test/runtime-graph.test.mjs`)",
+    "exit_codes": {
+      "node_test": 0,
+      "plain_node": 0
+    },
+    "counts": {
+      "tests": 1,
+      "pass": 1,
+      "fail": 0
+    },
+    "log": "evidence/logs/s3d-runtime-graph-test.log",
+    "assertions": [
+      "the three wrappers publish exactly 85 built browser entries",
+      "every built entry imports and exposes at least one export",
+      "exactly one non-load is permitted: @role-model-router/foldkit./test/vitest (Vitest-runner-only), with the runner-state message asserted",
+      "any other failure fails the test and prints wrapper/subpath + the resolution error, so a future missing effect/<subpath> cannot slip through",
+      "loaded === total - permitted non-loads === 84"
+    ],
+    "harness": "role-model-router/packages/foldkit/test/runtime-graph-probe.mjs"
+  },
+  "static_claim": {
+    "log": "evidence/logs/s3d-static-graph.log",
+    "exit_code": 0,
+    "tests": 14,
+    "pass": 14,
+    "fail": 0,
+    "note": "graph-closure suite re-run after the controller's effect-wrapper fix; unchanged"
+  },
+  "history": {
+    "earlier_blocker": "jsdom was absent (optional vitest peer only) and the suite was explicitly skipped naming jsdom; no dependency was installed by S3d",
+    "earlier_runtime_red": "before the controller fix, 14/85 entries failed on missing effect wrapper dist modules (Pipeable, PlatformError, http/HttpClientError, Runtime, Deferred, Effectable); controller added the platform/browser source root to the effect wrapper's entries.mjs and rebuilt; the maintained test now guards that",
+    "controller_core_suite": "controller reports the core suite still 200/200 after the rebuild (controller-provided, not re-measured here)"
+  },
+  "what_this_proves": [
+    "module resolution of every built browser entry of the three wrappers against the BUILT effect wrapper (85/85 in the runner)",
+    "the DOM-dependent globals exist and two browser services really execute (Web Storage + Web Crypto via the built wrappers)",
+    "a future un-published effect/<subpath> fails the maintained runtime-graph test with the wrapper and subpath named"
+  ],
+  "what_this_does_not_prove": [
+    "no rendering, layout, paint, event-loop, real-browser timing or engine behaviour is exercised - happy-dom is not a browser",
+    "no browser-condition module resolution: under vitest/Node the Node resolver still handles node:* and package conditions, so node-freeness remains a static-inspection claim (graph-closure over the dist bytes)",
+    "IndexedDB/Web Locks/geolocation are absent and clipboard/permissions are stubs in happy-dom, so BrowserPersistence, IndexedDb*, Clipboard, Permissions and Geolocation are not exercised",
+    "no origin/quota/persistence, CSP, worker, HTTP module loading or bundler tree-shaking behaviour"
+  ],
+  "files": [
+    {
+      "path": "role-model-router/packages/foldkit/test/browser-runtime-smoke.test.mjs",
+      "sha256": "a1e3587bbf52069d78433989c081ad1116127db5c8179ab083417aade9f4acb0",
+      "change": "happy-dom smoke: DOM globals + 85/85 entry imports + BrowserKeyValueStore localStorage + BrowserCrypto, 5 explicit skips"
+    },
+    {
+      "path": "role-model-router/packages/foldkit/test/runtime-graph.test.mjs",
+      "sha256": "7a2e8b8ec012195946329181c6b15a6064922b73e31ec603af07614aee481dc6",
+      "change": "maintained runtime graph test (85 entries, 84 loads, one permitted runner-only non-load)"
+    },
+    {
+      "path": "role-model-router/packages/foldkit/test/runtime-graph-probe.mjs",
+      "sha256": "26cb8ae6a0207ace1fb93b7ebc185cd5c5c443947cd36b112231f57afe069fc8",
+      "change": "harness: resolves/imports every manifest entry and reports failures"
+    }
+  ],
+  "lint": "anti_slop_lint clean on all three test files (absolute targets)",
+  "package_json_change": "none by S3d (the controller added happy-dom + vitest devDependencies and ran the install)",
+  "evidence_logs": [
+    "evidence/logs/s3d-browser-smoke-happydom.log",
+    "evidence/logs/s3d-runtime-graph-test.log",
+    "evidence/logs/s3d-static-graph.log",
+    "evidence/logs/s3d-blocker.log (historical: jsdom blocker)",
+    "evidence/logs/s3d-node-import-probe.log (historical: 70/85 runtime RED before the controller fix)"
+  ],
+  "no_installs": "S3d performed no install; the controller installed the devDependencies",
+  "no_commits": true
+}

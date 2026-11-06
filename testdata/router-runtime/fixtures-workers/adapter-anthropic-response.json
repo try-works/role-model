@@ -1,0 +1,25 @@
+{
+  "id": "msg_test_01",
+  "model": "claude-3.7-sonnet",
+  "content": [
+    {
+      "type": "text",
+      "text": "Anthropic summary"
+    },
+    {
+      "type": "tool_use",
+      "id": "toolu_01",
+      "name": "lookupRegistry",
+      "input": {
+        "endpointId": "anthropic.team.shared.us-east-1.default"
+      }
+    }
+  ],
+  "stop_reason": "end_turn",
+  "usage": {
+    "input_tokens": 40,
+    "output_tokens": 18,
+    "cache_read_input_tokens": 12,
+    "cache_creation_input_tokens": 4
+  }
+}

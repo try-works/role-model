@@ -1,0 +1,44 @@
+{
+  "slice": "s31a-ship-new-client",
+  "build": {
+    "command": "node build.mjs",
+    "exit": 0,
+    "outDir": "role-model-router/apps/runtime-ui-next/dist/client",
+    "bundleBytes": 2570138,
+    "mapBytes": 4600000,
+    "format": "esm",
+    "platform": "browser"
+  },
+  "nodeImports": {
+    "staticImportsFound": 0,
+    "note": "No static `from \"node:`/`require(\"node:` in the bundle. One runtime fallback string `globalThis.process?.getBuiltinModule?.(\"node:async_hooks\")` remains inside the bundled Effect/browser platform; it is not a static import and is guarded for browsers."
+  },
+  "copySource": {
+    "from": "role-model-router/apps/runtime-ui/build/client (legacy)",
+    "to": "role-model-router/apps/runtime-ui-next/dist/client (Foldkit)",
+    "destination": "build/client",
+    "pipeline": "root runtime:package-sea now runs @role-model-router/runtime-ui-next build before host packaging"
+  },
+  "servedProof": {
+    "method": "existing packaged candidate started with --static-root pointing at new dist/client, ephemeral port",
+    "indexStatus": 200,
+    "indexHasMain": true,
+    "indexHasLegacy": false,
+    "assetStatus": 200,
+    "assetBytes": 2570138,
+    "assetHasMount": true,
+    "port": 50809
+  },
+  "packagingBlocker": "Full package rebuild is blocked by package-sea's clean-public-worktree guard: the run worktree contains the uncommitted port/control/detail changes. No artifact identity can be honestly reported until the Lead commits and the candidate is rebuilt; validate-packaging against the old artifact would not prove the new client.",
+  "doesNotChange": [
+    "HTTP API surface",
+    "runtime channel (development)",
+    "scope (standalone-runtime-dev)",
+    "host routes and persistence"
+  ],
+  "browserCheck": [
+    "/ index script is /assets/main.js",
+    "/assets/main.js is ~2.57 MB and contains the Foldkit mount error string",
+    "/control/providers, /providers etc render the Foldkit shell"
+  ]
+}

@@ -1,0 +1,11 @@
+[
+  {
+    "sessionId": "session-0402c148-3863-4617-a235-2d88898c8419",
+    "config": {
+      "provider": "deepseek-official",
+      "model": "deepseek-flash",
+      "maxTokens": 256000,
+      "reasoningEffort": "high"
+    }
+  }
+]

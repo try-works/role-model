@@ -1,0 +1,173 @@
+{
+  "task": "Phase3 S2 paired Effect acquisition (strict TDD, bounded)",
+  "run": "115-effect-foldkit-runtime-migration",
+  "slice": "S2",
+  "repository": "public",
+  "repository_root": "D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration",
+  "model": "deepseek-flash",
+  "tdd_mode": "strict",
+  "status": "BLOCKED_DISK_PREFLIGHT",
+  "run_started_utc": "2026-10-24T11:29:40.938Z",
+  "source_ids": {
+    "locked_plan": ".recursive/run/115-effect-foldkit-runtime-migration/02-to-be-plan.md",
+    "locked_plan_lock_hash": "f79220f73c04a8a8c97c8ef7c4c3d1a3e6b1ddd058d9bc151ecdf4e2fe9bfcc1",
+    "plan_prefix": "locked02planf79220f",
+    "baseline_receipt": "run115baselinef0d50fab",
+    "baseline_head": "f0d50fab083e",
+    "private_paired_root": "D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration",
+    "private_baseline_head": "16021cc5f87f"
+  },
+  "inputs": {
+    "task": ".recursive/run/115-effect-foldkit-runtime-migration/tasks/s2-paired-effect-acquisition.md",
+    "implementation_slices": ".recursive/run/115-effect-foldkit-runtime-migration/implementation-slices.md",
+    "paired_control_plane_read": [
+      ".codex/AGENTS.md",
+      ".recursive/RECURSIVE.md"
+    ]
+  },
+  "disk_preflight": {
+    "checked_at_utc": "2026-10-24T11:29:40.938Z",
+    "c_free_bytes": 87453696,
+    "c_free_mib": 83.4,
+    "c_threshold_bytes": 268435456,
+    "c_threshold_mib": 256,
+    "c_gate": "FAIL",
+    "d_free_bytes": 2008248320,
+    "d_free_mib": 1915.2,
+    "d_threshold_bytes": 1073741824,
+    "d_threshold_mib": 1024,
+    "d_gate": "PASS",
+    "temp": "E:/role-model-run115/test-temp",
+    "gate_result": "FAIL",
+    "condition": "C: free 87,453,696 bytes (83.4 MiB) < required 268,435,456 bytes (256 MiB); D: free 2,008,248,320 bytes (1915.2 MiB) >= 1,073,741,824 bytes (1 GiB)",
+    "action_taken": "Stopped before any clone, vendor sync, build, or pin change. No user data was deleted."
+  },
+  "target_pin": {
+    "upstream": "Effect-TS/effect",
+    "tag": "effect@4.0.6",
+    "commit": "3b28bf686bf26e9700edd39c025aff2744dc5303",
+    "wrapper_version": "4.0.6",
+    "sql_wrapper_version": "contingent on exact upstream @effect/sql-sqlite-node version; not inspected beyond manifests"
+  },
+  "baseline_before_change": {
+    "upstream_tag": "effect@4.0.1",
+    "upstream_commit": "460272d30457f4697d8b8c52cad41caccbcace08",
+    "upstream_commit_date": "2026-10-04T21:47:48Z",
+    "vendored_at": "2026-10-06T23:06:08.534Z",
+    "file_count": 1878,
+    "byte_count": 40357638,
+    "content_digest": "sha256:0d0028aa7de72ff9e6a8e39f4bc4232640bd1111b30aaa3440d0c53116a49749",
+    "vendor_verify_exit_code": 0,
+    "vendor_verify_log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s2-public-vendor-verify-before.log",
+    "wrapper_path": "role-model-router/packages/effect/package.json",
+    "wrapper_version": "4.0.1",
+    "wrapper_description": "Workspace entry point for the vendored Effect v4 tree (vendor/effect, effect@4.0.1). The sources are re-exported in place so a single copy of the runtime is bundled.",
+    "sql_wrapper_path": "role-model-router/packages/sql-sqlite-node/package.json",
+    "sql_wrapper_version": "4.0.1",
+    "script_default_tag": "effect@4.0.1",
+    "script_default_commit": "460272d30457f4697d8b8c52cad41caccbcace08",
+    "script_modified": false
+  },
+  "maintained_test": {
+    "path": "scripts/vendor-upstream.test.mjs",
+    "sha256": "374c86aaa0badccefd9305c963b93c15fa0404b88e542ce59370ba4385157d8d",
+    "framework": "node:test",
+    "node_version": "v24.11.0",
+    "run_command": "node --test scripts/vendor-upstream.test.mjs",
+    "asserted_surfaces": [
+      "vendor/effect/VENDORED.json upstream.tag === effect@4.0.6",
+      "vendor/effect/VENDORED.json upstream.commit === 3b28bf686bf26e9700edd39c025aff2744dc5303",
+      "vendor/effect/packages/effect/package.json version === 4.0.6",
+      "role-model-router/packages/effect/package.json version === 4.0.6",
+      "scripts/vendor-upstream.mjs default Effect tag/commit === effect@4.0.6 / 3b28bf686bf26e9700edd39c025aff2744dc5303"
+    ]
+  },
+  "red": {
+    "phase": "RED",
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s2-public-pin-red.log",
+    "exit_code": 1,
+    "tests_total": 5,
+    "tests_passed": 0,
+    "tests_failed": 5,
+    "assertion_level": true,
+    "failures": [
+      {
+        "test": "VENDORED.json records the reviewed upstream tag",
+        "actual": "effect@4.0.1",
+        "expected": "effect@4.0.6"
+      },
+      {
+        "test": "VENDORED.json records the reviewed upstream commit",
+        "actual": "460272d30457f4697d8b8c52cad41caccbcace08",
+        "expected": "3b28bf686bf26e9700edd39c025aff2744dc5303"
+      },
+      {
+        "test": "the vendored upstream effect package reports the pinned version",
+        "actual": "4.0.1",
+        "expected": "4.0.6"
+      },
+      {
+        "test": "the workspace Effect wrapper reports the pinned version",
+        "actual": "4.0.1",
+        "expected": "4.0.6"
+      },
+      {
+        "test": "vendor-upstream.mjs defaults Effect to the reviewed tag and commit",
+        "actual": "effect@4.0.1 / 460272d30457f4697d8b8c52cad41caccbcace08",
+        "expected": "effect@4.0.6 / 3b28bf686bf26e9700edd39c025aff2744dc5303"
+      }
+    ]
+  },
+  "green": {
+    "phase": "GREEN",
+    "status": "NOT_ATTEMPTED",
+    "reason": "Disk preflight gate failed; the bounded instruction requires stopping before clone/build or pin changes."
+  },
+  "writes": {
+    "performed": [
+      "scripts/vendor-upstream.test.mjs",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s2-public-pin-red.log",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s2-public-vendor-verify-before.log",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/other/s2-acquisition.json"
+    ],
+    "intentionally_not_performed": [
+      "scripts/vendor-upstream.mjs default tag/commit change",
+      "vendor/effect sync to effect@4.0.6",
+      "role-model-router/packages/effect/package.json version/description change",
+      "role-model-router/packages/sql-sqlite-node/package.json version/description change",
+      "node role-model-router/packages/effect/build.mjs",
+      "selected queue/observability entrycase/current smoke tests",
+      "root package.json / pnpm-lock.yaml edits",
+      "commits"
+    ]
+  },
+  "stop": {
+    "reason": "DISK_PREFLIGHT_FAILED",
+    "boundary": "before clone, vendor sync, build, or any pin/wrapper change",
+    "upstream_cloned_or_synced": false,
+    "builds_run": false,
+    "pin_changes_made": false,
+    "wrapper_changes_made": false,
+    "commits_made": false,
+    "children_or_goals_spawned": false,
+    "providers_dispatched": false
+  },
+  "tracked_file_guard": {
+    "new_untracked_paths_from_this_slice": [
+      "scripts/vendor-upstream.test.mjs"
+    ],
+    "pre_existing_tracked_modifications_not_touched": [
+      "package.json",
+      "pnpm-lock.yaml",
+      "scripts/ci-workflow.test.mjs"
+    ],
+    "note": "The three tracked modifications were present at session start (controller-owned). This slice made no edit to vendor/effect, scripts/vendor-upstream.mjs, any wrapper manifest, root package.json, or pnpm-lock.yaml."
+  },
+  "caveats": [
+    "No upstream bytes were acquired; the effect@4.0.6 vendor tree, file count, byte count, and digest were not observed.",
+    "No GREEN, build, smoke, typecheck, or consumer-certification evidence exists for this slice.",
+    "The maintained pin test intentionally fails on the current 4.0.1 baseline; it is the strict-TDD RED artifact and must not be reported as passing.",
+    "The disk gate is environmental: rerun after freeing C: to at least 268,435,456 bytes (256 MiB).",
+    "The prior locked baseline receipts remain authoritative; old vendor metadata above is preserved for later reconciliation."
+  ]
+}

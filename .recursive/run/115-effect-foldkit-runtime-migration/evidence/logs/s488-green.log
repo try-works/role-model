@@ -1,0 +1,14 @@
+COMMAND: node vitest run s458+s25d-request-parity; UI tsc; final
+TSC=0
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s25d-request-parity.test.ts (10 tests) 45ms
+ ✓ test/s458-local-policy.test.ts (9 tests) 56ms
+
+ Test Files  2 passed (2)
+      Tests  19 passed (19)
+   Start at  14:39:55
+   Duration  8.79s (transform 4.21s, setup 0ms, collect 6.76s, tests 101ms, environment 2.34s, prepare 995ms)
+
+

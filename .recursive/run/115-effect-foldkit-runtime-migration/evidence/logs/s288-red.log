@@ -1,0 +1,119 @@
+COMMAND: node --test scripts/studio-audit-evidence.test.mjs
+CWD: public worktree root ; S288 strict RED: 4 bounded findings against the S286 helper
+EXIT_CODE=1
+
+✔ S286 summarises only whitelisted body fields and never leaks prompt, messages, auth or tokens (4.3297ms)
+✔ S286 records a Studio POST start, phase, response status and finish with elapsed timings (2.6316ms)
+✔ S286 records the catalogue GET status and timing separately from the Studio POST (1.0979ms)
+✔ S286 tracks the LATEST catalogue GET (phase-labelled), so a final-click readiness is readable (2.8101ms)
+✔ S286 bounds collected entries and counts dropped ones instead of growing without limit (0.7531ms)
+✔ S286 classifies no POST, in-flight, http error, responded-unapplied and applied (0.7037ms)
+✔ S286 tags each request with the phase current when it started (seed vs final) (1.3199ms)
+✔ S286 formats bounded evidence lines without body content or secrets (1.5496ms)
+✖ S288/S286 reports samePathname as raw evidence but makes no no-POST causal claim (2.4015ms)
+✖ S288 catalogue ring always keeps the latest GET with total/dropped counters past the cap (2.5844ms)
+✖ S288 reserves click and outcome report lines even when more than 30 requests were collected (5.7868ms)
+✖ S288 prints model=unavailable when postData is missing, instead of null or an inferred model (1.5622ms)
+✔ S286 never presents the DOM field value as the actual model state (1.0659ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 9
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 403.272
+
+✖ failing tests:
+
+test at scripts\studio-audit-evidence.test.mjs:211:1
+✖ S288/S286 reports samePathname as raw evidence but makes no no-POST causal claim (2.4015ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /samePathname=true/. Input:
+  
+  'studio-evidence: enabledAtMs=0 phases= requests=0 dropped=0\n' +
+    'catalogue GET /api/role-model/models not observed\n' +
+    'click: buttonDisabled=true rawAtClick=loading errorAtClick=none navigatedSameUrl=true selectedModelDom=moonshot/kimi-k2.5 clickedAt=undefined\n' +
+    'note: modelStateInferred=false (selectedModelDom is the DOM field, not readback status)\n' +
+    'outcome: no-post-disabled\n' +
+    'note: same-URL navigation preserved the existing page state; the disabled Run button cannot dispatch, so no POST was observed'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/studio-audit-evidence.test.mjs:231:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'studio-evidence: enabledAtMs=0 phases= requests=0 dropped=0\ncatalogue GET /api/role-model/models not observed\nclick: buttonDisabled=true rawAtClick=loading errorAtClick=none navigatedSameUrl=true selectedModelDom=moonshot/kimi-k2.5 clickedAt=undefined\nnote: modelStateInferred=false (selectedModelDom is the DOM field, not readback status)\noutcome: no-post-disabled\nnote: same-URL navigation preserved the existing page state; the disabled Run button cannot dispatch, so no POST was observed',
+    expected: /samePathname=true/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at scripts\studio-audit-evidence.test.mjs:236:1
+✖ S288 catalogue ring always keeps the latest GET with total/dropped counters past the cap (2.5844ms)
+  AssertionError [ERR_ASSERTION]: the latest GET must always win, even after the ring wraps
+  
+  'cat-19' !== 'cat-21'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/studio-audit-evidence.test.mjs:248:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'cat-19',
+    expected: 'cat-21',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\studio-audit-evidence.test.mjs:253:1
+✖ S288 reserves click and outcome report lines even when more than 30 requests were collected (5.7868ms)
+  AssertionError [ERR_ASSERTION]: the click line is reserved
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/studio-audit-evidence.test.mjs:271:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'studio-evidence: enabledAtMs=0 phases= requests=35 dropped=0\ncatalogue GET /api/role-model/models not observed\nstudio POST /v1/chat/completions phase=unknown model=m0 stream=false messages=0 start=1ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m1 stream=false messages=0 start=2ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m2 stream=false messages=0 start=3ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m3 stream=false messages=0 start=4ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m4 stream=false messages=0 start=5ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m5 stream=false messages=0 start=6ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m6 stream=false messages=0 start=7ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m7 stream=false messages=0 start=8ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m8 stream=false messages=0 start=9ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m9 stream=false messages=0 start=10ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m10 stream=false messages=0 start=11ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m11 stream=false messages=0 start=12ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m12 stream=false messages=0 start=13ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m13 stream=false messages=0 start=14ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m14 stream=false messages=0 start=15ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m15 stream=false messages=0 start=16ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m16 stream=false messages=0 start=17ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m17 stream=false messages=0 start=18ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m18 stream=false messages=0 start=19ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m19 stream=false messages=0 start=20ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m20 stream=false messages=0 start=21ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m21 stream=false messages=0 start=22ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m22 stream=false messages=0 start=23ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m23 stream=false messages=0 start=24ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m24 stream=false messages=0 start=25ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m25 stream=false messages=0 start=26ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m26 stream=false messages=0 start=27ms status=200 duration=0ms\nstudio POST /v1/chat/completions phase=unknown model=m27 stream=false messages=0 start=28ms status=200 duration=0ms',
+    expected: /click:/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at scripts\studio-audit-evidence.test.mjs:276:1
+✖ S288 prints model=unavailable when postData is missing, instead of null or an inferred model (1.5622ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /model=unavailable/. Input:
+  
+  'studio-evidence: enabledAtMs=0 phases= requests=1 dropped=0\n' +
+    'catalogue GET /api/role-model/models not observed\n' +
+    'studio POST /v1/chat/completions phase=unknown model=null stream=null messages=null start=0ms status=200 duration=0ms\n' +
+    'click: buttonDisabled=false rawAtClick=success errorAtClick=none navigatedSameUrl=undefined selectedModelDom=moonshot/kimi-k2.5 clickedAt=undefined\n' +
+    'note: modelStateInferred=false (selectedModelDom is the DOM field, not readback status)\n' +
+    'outcome: applied'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/studio-audit-evidence.test.mjs:289:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'studio-evidence: enabledAtMs=0 phases= requests=1 dropped=0\ncatalogue GET /api/role-model/models not observed\nstudio POST /v1/chat/completions phase=unknown model=null stream=null messages=null start=0ms status=200 duration=0ms\nclick: buttonDisabled=false rawAtClick=success errorAtClick=none navigatedSameUrl=undefined selectedModelDom=moonshot/kimi-k2.5 clickedAt=undefined\nnote: modelStateInferred=false (selectedModelDom is the DOM field, not readback status)\noutcome: applied',
+    expected: /model=unavailable/,
+    operator: 'match',
+    diff: 'simple'
+  }
+

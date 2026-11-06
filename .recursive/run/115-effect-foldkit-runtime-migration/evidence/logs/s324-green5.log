@@ -1,0 +1,22 @@
+COMMAND: node vitest run (S325 micro-repair line 163: 6 files)
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:54952) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s21c-bootstrap-owner-wiring.test.ts (2 tests) 1103ms
+   ✓ S21c bootstrap owner wiring > the host calls the exact Bootstrap instance it received from the DAG  1097ms
+ ✓ test/s21a-composition-dag.test.ts (6 tests) 126ms
+ ✓ test/s321-partial-shutdown.test.ts (10 tests) 78ms
+ ✓ test/s324-readiness.test.ts (7 tests) 26ms
+ ✓ test/s318-metadata-cache.test.ts (5 tests) 16ms
+(node:44964) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s313-server-owner.test.ts (5 tests) 18ms
+
+ Test Files  6 passed (6)
+      Tests  35 passed (35)
+   Start at  08:53:48
+   Duration  20.61s (transform 7.16s, setup 0ms, collect 16.12s, tests 1.37s, environment 2ms, prepare 1.20s)
+
+

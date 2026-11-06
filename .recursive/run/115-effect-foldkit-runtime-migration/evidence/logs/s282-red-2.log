@@ -1,0 +1,124 @@
+COMMAND: node --test scripts/parity-capture.test.mjs
+CWD: public worktree root ; S285 strict RED: 6 defect tests against the S282 implementation (the 8 S282 tests must stay green)
+EXIT_CODE=1
+
+✔ S282 installs deterministic clock/random, fixed viewport/timezone and hide styles before navigating (38.0289ms)
+✔ S282 waits for fonts/images and a bounded DOM-quiet window before the first screenshot (73.9691ms)
+✔ S282 requires consecutive byte-identical screenshots and returns exact PNG bytes plus deterministic metadata (32.8618ms)
+✔ S282 fails with a bounded diagnostic error when screenshots never stabilise, and rejects non-finite deadlines (124.5845ms)
+✔ S282 fails with a bounded diagnostic error when navigation never completes (121.9732ms)
+✔ S282 surfaces in-page console errors and unexpected network instead of ignoring them (31.6658ms)
+✔ S282 surfaces CDP event-channel failures and records an unavailable channel instead of claiming clean (45.5961ms)
+✔ S282 is deterministic: two identical runs produce identical PNG, sha256 and metadata (76.5831ms)
+✖ S285 enables the Runtime/Log/Network domains and disables the cache before capture (31.8705ms)
+✖ S285 preserves callable/constructible Date semantics (bootstrap executed in node:vm) (52.2004ms)
+✖ S285 attaches the mutation observer even while documentElement is null (executed bootstrap) (43.7794ms)
+✖ S285 tracks pending fetch/XHR as readiness, not networkidle, and an SSE response cannot block it (45.9349ms)
+✖ S285 does not capture while requests are pending and times out when they never settle (39.7996ms)
+✖ S285 bounds EVERY cdp.send by the remaining deadline, including hung sends (1213.4235ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 8
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2383.2908
+
+✖ failing tests:
+
+test at scripts\parity-capture.test.mjs:344:1
+✖ S285 enables the Runtime/Log/Network domains and disables the cache before capture (31.8705ms)
+  AssertionError [ERR_ASSERTION]: Runtime.enable must be enabled or the event channel stays silent
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/parity-capture.test.mjs:351:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at scripts\parity-capture.test.mjs:361:1
+✖ S285 preserves callable/constructible Date semantics (bootstrap executed in node:vm) (52.2004ms)
+  evalmachine.<anonymous>:1
+  typeof Date()
+         ^
+  
+  TypeError: Class constructor FrozenDate cannot be invoked without 'new'
+      at evalmachine.<anonymous>:1:8
+      at Script.runInContext (node:vm:149:12)
+      at Object.runInContext (node:vm:301:6)
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/parity-capture.test.mjs:367:19)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7)
+
+test at scripts\parity-capture.test.mjs:378:1
+✖ S285 attaches the mutation observer even while documentElement is null (executed bootstrap) (43.7794ms)
+  AssertionError [ERR_ASSERTION]: the observer must still attach when documentElement is null
+  
+  0 !== 1
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/parity-capture.test.mjs:384:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\parity-capture.test.mjs:388:1
+✖ S285 tracks pending fetch/XHR as readiness, not networkidle, and an SSE response cannot block it (45.9349ms)
+  AssertionError [ERR_ASSERTION]: an unsettled fetch must be counted as pending
+  
+  undefined !== 1
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/parity-capture.test.mjs:394:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\parity-capture.test.mjs:416:1
+✖ S285 does not capture while requests are pending and times out when they never settle (39.7996ms)
+  AssertionError [ERR_ASSERTION]: capture must wait until pendingRequests reaches 0 (saw 3 readiness polls)
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/parity-capture.test.mjs:438:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at scripts\parity-capture.test.mjs:457:1
+✖ S285 bounds EVERY cdp.send by the remaining deadline, including hung sends (1213.4235ms)
+  AssertionError [ERR_ASSERTION]: a hung captureScreenshot must be bounded by the deadline
+  + actual - expected
+  
+  + 'hung'
+  - 'capture_timeout'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/parity-capture.test.mjs:469:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'hung',
+    expected: 'capture_timeout',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+

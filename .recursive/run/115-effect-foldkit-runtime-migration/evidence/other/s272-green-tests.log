@@ -1,0 +1,60 @@
+== typecheck ==
+[WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+[WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+Scope: 6 of 55 workspace projects
+[WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at D:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+[ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+
+If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+[WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+TSC_EXITCODE=0
+== targeted vitest ==
+[WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+[WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+Scope: 6 of 55 workspace projects
+[WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at D:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+[ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+
+If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+[WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s269-canonical-url.test.ts (81 tests) 1205ms
+ ✓ test/routes.test.ts (4 tests) 3915ms
+   ✓ runtime routing in the Foldkit shell > renders the route from the initial URL, including the diagnostics path parameter  1538ms
+   ✓ runtime routing in the Foldkit shell > renders the not-found view for an unknown URL without throwing  708ms
+   ✓ runtime routing in the Foldkit shell > pushes a URL from an in-app control and the URL, not local state, changes the view  851ms
+   ✓ runtime routing in the Foldkit shell > changes the view when history navigates back, through the runtime popstate config  809ms
+ ✓ test/s26b-wave1.test.ts (4 tests) 4401ms
+   ✓ S26b wave 1 shell entries > layout is a persistent primary navigation and carries the active route  1663ms
+   ✓ S26b wave 1 shell entries > index is a real success landing with working onward navigation  955ms
+   ✓ S26b wave 1 shell entries > not-found is a terminal error state with recovery navigation  692ms
+   ✓ S26b wave 1 shell entries > shell preserves theme, title, focus and scroll facts across navigation  1080ms
+ ✓ test/s269-canonical-url.scene.test.ts (10 tests) 7806ms
+   ✓ S269 mounted legacy redirects > replaces a legacy request-list URL with /requests and reads it exactly once  1360ms
+   ✓ S269 mounted legacy redirects > replaces a legacy redirect-map entry through history and reads it exactly once  728ms
+   ✓ S269 mounted legacy redirects > keeps a legacy detail ID and query through the canonical detail route  749ms
+   ✓ S269 mounted legacy redirects > selects the original Studio tab from the URL and canonicalises it as a query alias  666ms
+   ✓ S269 mounted legacy redirects > routes the legacy runtime surfaces to the implemented /runtime page  733ms
+   ✓ S269 mounted legacy redirects > preserves browser back/forward across the replace without a NotFound flash  877ms
+   ✓ S269 mounted legacy redirects > redirects an in-app URL change, not only the initial load  689ms
+   ✓ S269 mounted legacy redirects > leaves a missing original feature target NotFound instead of redirecting to a generic page  623ms
+   ✓ S269 mounted legacy redirects > keeps a bare canonical URL untouched and reads it once  663ms
+   ✓ S269 mounted legacy redirects > reads again for a genuine same-route navigation after the initial read  710ms
+ ✓ test/s25b-refresh-owner-gap.test.ts (9 tests) 8748ms
+   ✓ S25b shell refresh owner and gap resync > the real shell entry starts exactly one subscription and leaks none across two starts  2378ms
+   ✓ S25b shell refresh owner and gap resync > a revision gap 1 -> 3 with NO later event resyncs immediately, shows stale, and ignores the old revision  985ms
+   ✓ S25b shell refresh owner and gap resync > a failed snapshot resync leaves the page visibly stale  918ms
+   ✓ S25b shell refresh owner and gap resync > navigation fences a pending resync: round-trip old payload cannot overwrite fresh data  1004ms
+   ✓ S25b shell refresh owner and gap resync > a failure for route A resolving after navigation to B does not mark B stale  857ms
+   ✓ S25b shell refresh owner and gap resync > a fresh route read without a following gap does not leave the page stale  860ms
+   ✓ S25b shell refresh owner and gap resync > two resyncs in flight: the older response resolving last cannot win  852ms
+   ✓ S25b shell refresh owner and gap resync > an older FAILED resync resolving last cannot make the newer success stale  883ms
+
+ Test Files  5 passed (5)
+      Tests  108 passed (108)
+   Start at  16:01:02
+   Duration  101.66s (transform 35.66s, setup 0ms, collect 181.88s, tests 26.07s, environment 245.07s, prepare 23.51s)
+
+VITEST_EXITCODE=0

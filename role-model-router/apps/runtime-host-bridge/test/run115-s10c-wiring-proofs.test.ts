@@ -128,7 +128,12 @@ describe("S10c module-health wiring proofs", () => {
         throw fail;
       };
     };
-    const listener = createBridgeRequestListener(disabledOptions, handler, () => undefined, () => true);
+    const listener = createBridgeRequestListener(
+      disabledOptions,
+      handler,
+      () => undefined,
+      () => true,
+    );
 
     listener(request, response);
     await flush();

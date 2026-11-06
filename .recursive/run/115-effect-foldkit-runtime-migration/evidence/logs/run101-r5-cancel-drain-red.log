@@ -1,0 +1,37 @@
+# run101-r5-cancel-drain — RED evidence for the fixed-wait contract
+date: 2026-11-01T08:50:10.0645591+08:00
+command: corepack pnpm exec vitest run test/run101-r5-cancel-drain-red.test.ts (HEAD version of the test, 6 attempts)
+expectation: the old fixed-sleep contract is flaky: the drain gate is real, but the exact-once assertion races at-least-once redelivery.
+ATTEMPT 1 EXIT=1
+× run 101 R5/R9 queue admin runtime side > claims nothing while the queue is draining, and claims again once it is cleared 1567ms
+→ Expected values to be strictly deep-equal:
+'job-drained',
++   'job-drained'
+AssertionError: Expected values to be strictly deep-equal:
+'job-drained',
++   'job-drained'
+"job-drained",
++   "job-drained",
+225|       assert.deepEqual(attempts, ["job-drained"]);
+Tests  1 failed | 4 passed (5)
+ATTEMPT 2 EXIT=0
+Tests  5 passed (5)
+ATTEMPT 3 EXIT=0
+Tests  5 passed (5)
+ATTEMPT 4 EXIT=0
+Tests  5 passed (5)
+ATTEMPT 5 EXIT=1
+× run 101 R5/R9 queue admin runtime side > claims nothing while the queue is draining, and claims again once it is cleared 1554ms
+→ Expected values to be strictly deep-equal:
+'job-drained',
++   'job-drained'
+AssertionError: Expected values to be strictly deep-equal:
+'job-drained',
++   'job-drained'
+"job-drained",
++   "job-drained",
+225|       assert.deepEqual(attempts, ["job-drained"]);
+Tests  1 failed | 4 passed (5)
+ATTEMPT 6 EXIT=0
+Tests  5 passed (5)
+FAILS=2

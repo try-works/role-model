@@ -1,0 +1,32 @@
+S269 GREEN (after production implementation; raw logs under E:/rm-tmp)
+Worktree: D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+
+1) Typecheck: pnpm --filter @role-model-router/runtime-ui-next typecheck
+   Exit 0 (tsc --noEmit -p tsconfig.json, no diagnostics). Raw: E:/rm-tmp/s269-typecheck-4.log
+
+2) Targeted S269: pnpm --filter @role-model-router/runtime-ui-next exec vitest run test/s269-canonical-url.test.ts test/s269-canonical-url.scene.test.ts
+   ✓ S269 mounted legacy redirects > replaces a legacy request-list URL with /requests and reads it exactly once  1480ms
+   ✓ S269 mounted legacy redirects > keeps a legacy detail ID and query through the canonical detail route  737ms
+   ✓ S269 mounted legacy redirects > selects the original Studio tab from the URL and canonicalises it as a query alias  722ms
+   ✓ S269 mounted legacy redirects > routes the legacy runtime surfaces to the implemented /runtime page  634ms
+   ✓ S269 mounted legacy redirects > preserves browser back/forward across the replace without a NotFound flash  829ms
+   ✓ S269 mounted legacy redirects > redirects an in-app URL change, not only the initial load  825ms
+   ✓ S269 mounted legacy redirects > leaves a missing original feature target NotFound instead of redirecting to a generic page  615ms
+   ✓ S269 mounted legacy redirects > keeps a bare canonical URL untouched and reads it once  809ms
+   Test Files  2 passed (2)
+   Tests  60 passed (60)
+
+3) Regression-affected + S269: vitest run routes/s25b/s26b + s269 files
+   Test Files  5 passed (5)
+   Tests  77 passed (77)
+
+4) Full package lane: pnpm --filter @role-model-router/runtime-ui-next test
+   (tsc --noEmit && vitest run && node --test test/*.test.mjs)
+   Exit code: 0
+   Test Files  41 passed (41)
+   Tests  386 passed (386)
+   ℹ tests 20
+   ℹ pass 20
+   ℹ fail 0
+
+Raw full log: E:/rm-tmp/s269-full-app-tests-2.log

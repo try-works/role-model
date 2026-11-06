@@ -1,0 +1,63 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run115-s602-r32-domain-layers.test.ts (6 tests | 2 failed) 64ms
+   ✓ S602 R32 per-domain private Layer boundaries > composition captures no domain and every domain is Layer-provided with its own release 24ms
+   ✓ S602 R32 per-domain private Layer boundaries > each domain factory receives only its own options (no ambient cross-domain capture) 3ms
+   ✓ S602 R32 per-domain private Layer boundaries > a failed domain build aborts and releases only domains already acquired 8ms
+   ✓ S602 R32 per-domain private Layer boundaries > the domain graph layer exposes a shutdown handshake and bounded release order 3ms
+   × S602 R32 per-domain private Layer boundaries > one composed layer owns independent domain instances per build 19ms
+     → expected { build: 2, domain: 'retention' } to match object { build: 1 }
+(1 matching property omitted from actual)
+   × S602 R32 per-domain private Layer boundaries > close releases every domain even when one release rejects 4ms
+     → expected [Function] to throw error matching /r32 domain release failures/ but got 'learning release failed'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run115-s602-r32-domain-layers.test.ts > S602 R32 per-domain private Layer boundaries > one composed layer owns independent domain instances per build
+AssertionError: expected { build: 2, domain: 'retention' } to match object { build: 1 }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "build": 1,
++   "build": 2,
+  }
+
+ ❯ test/run115-s602-r32-domain-layers.test.ts:107:49
+    105|     const firstGraph = graphs[0]!;
+    106|     const secondGraph = graphs[1]!;
+    107|     expect(firstGraph.domains.retention.handle).toMatchObject({ build:…
+       |                                                 ^
+    108|     expect(secondGraph.domains.retention.handle).toMatchObject({ build…
+    109|     const firstExpected = [...R32_DOMAIN_IDS].reverse().map((id) => "r…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/run115-s602-r32-domain-layers.test.ts > S602 R32 per-domain private Layer boundaries > close releases every domain even when one release rejects
+AssertionError: expected [Function] to throw error matching /r32 domain release failures/ but got 'learning release failed'
+
+- Expected: 
+/r32 domain release failures/
+
++ Received: 
+"learning release failed"
+
+ ❯ test/run115-s602-r32-domain-layers.test.ts:128:5
+    126|       },
+    127|     }), scope));
+    128|     await expect(graph!.close()).rejects.toThrow(/r32 domain release f…
+       |     ^
+    129|     expect(events.filter((event) => event.startsWith("release:"))).toE…
+    130|       [...R32_DOMAIN_IDS].reverse().filter((id) => id !== "learning").…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 4 passed (6)
+   Start at  07:11:56
+   Duration  3.91s (transform 1.97s, setup 0ms, collect 3.18s, tests 64ms, environment 0ms, prepare 256ms)
+

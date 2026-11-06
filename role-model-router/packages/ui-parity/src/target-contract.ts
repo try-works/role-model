@@ -178,9 +178,7 @@ function canonicalRoot(value: string, platform: TargetPlatform): string | null {
     if (!/^[A-Za-z]:[\\/]/.test(value)) {
       return null;
     }
-    return stripTrailingSlash(
-      win32.normalize(value).replace(/\\/g, "/").toLowerCase(),
-    );
+    return stripTrailingSlash(win32.normalize(value).replace(/\\/g, "/").toLowerCase());
   }
   if (!value.startsWith("/")) {
     return null;
@@ -358,10 +356,7 @@ export function validateVerificationTarget(
     }
     if (!isLoopbackHost(parsedClientUrl.host)) {
       addFinding(findings, "non_loopback_host", "observation.clientUrl");
-    } else if (
-      expectedHostValid &&
-      parsedClientUrl.host !== expectedHost
-    ) {
+    } else if (expectedHostValid && parsedClientUrl.host !== expectedHost) {
       addFinding(findings, "client_host_mismatch", "observation.clientUrl.host");
     }
   }
@@ -371,8 +366,7 @@ export function validateVerificationTarget(
     addFinding(findings, "invalid_value", "observation.artifactSha256");
   } else if (
     expectedShaValid &&
-    observation.artifactSha256.toLowerCase() !==
-      intent.expectedArtifactSha256.toLowerCase()
+    observation.artifactSha256.toLowerCase() !== intent.expectedArtifactSha256.toLowerCase()
   ) {
     addFinding(findings, "artifact_sha_mismatch", "observation.artifactSha256");
   }
@@ -389,11 +383,7 @@ export function validateVerificationTarget(
     expectedPrivateValid &&
     observation.privateDistribution !== intent.expectedPrivateDistribution
   ) {
-    addFinding(
-      findings,
-      "private_distribution_mismatch",
-      "observation.privateDistribution",
-    );
+    addFinding(findings, "private_distribution_mismatch", "observation.privateDistribution");
   }
 
   if (!isNonEmptyString(observation.uiTree)) {
@@ -414,10 +404,7 @@ export function validateVerificationTarget(
     addFinding(findings, "invalid_value", "observation.stateRoot");
   } else if (isForbiddenRoot(observation.stateRoot, intent.forbiddenRoots, platform)) {
     addFinding(findings, "forbidden_root", "observation.stateRoot");
-  } else if (
-    expectedStateRoot !== null &&
-    observedStateRoot !== expectedStateRoot
-  ) {
+  } else if (expectedStateRoot !== null && observedStateRoot !== expectedStateRoot) {
     addFinding(findings, "state_root_mismatch", "observation.stateRoot");
   }
 
@@ -426,10 +413,7 @@ export function validateVerificationTarget(
     addFinding(findings, "invalid_value", "observation.configRoot");
   } else if (isForbiddenRoot(observation.configRoot, intent.forbiddenRoots, platform)) {
     addFinding(findings, "forbidden_root", "observation.configRoot");
-  } else if (
-    expectedConfigRoot !== null &&
-    observedConfigRoot !== expectedConfigRoot
-  ) {
+  } else if (expectedConfigRoot !== null && observedConfigRoot !== expectedConfigRoot) {
     addFinding(findings, "config_root_mismatch", "observation.configRoot");
   }
 
@@ -492,10 +476,7 @@ export function evaluateVerificationOutcome(
   if (executionState.provider === "missing") {
     return {
       status: "NOT_RUN",
-      findings: [
-        { code: "execution_not_run" },
-        { code: "provider_missing" },
-      ],
+      findings: [{ code: "execution_not_run" }, { code: "provider_missing" }],
     };
   }
 
@@ -514,5 +495,3 @@ export function evaluateVerificationOutcome(
     ],
   };
 }
-
-

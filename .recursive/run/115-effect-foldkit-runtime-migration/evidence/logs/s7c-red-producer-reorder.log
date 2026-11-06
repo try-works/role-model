@@ -1,0 +1,52 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/protocol-routing
+
+stdout | test/run115-s7c-routing-parity.test.ts > run115 S7c kernel/producer/wired parity > empty candidate pool: all three paths are byte-identical
+[run115] eligibility candidates=0 eligible=0 codes=none request=run115-s7c-matrix alias=- model=- effort=- pass=- allow=[] denied=[]
+
+stdout | test/run115-s7c-routing-parity.test.ts > run115 S7c kernel/producer/wired parity > tie between candidates: all three paths are byte-identical
+[run115] eligibility candidates=2 eligible=2 codes=none request=run115-s7c-tie alias=- model=- effort=- pass=- allow=[] denied=[]
+
+stdout | test/run115-s7c-routing-parity.test.ts > run115 S7c kernel/producer/wired parity > role/task/effort arm: all three paths are byte-identical
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1 request=run115-s7c-role-task-effort alias=- model=- effort=- pass=- allow=[] denied=[text.low]
+
+stdout | test/run115-s7c-routing-parity.test.ts > run115 S7c kernel/producer/wired parity > golden fixture: all three paths are byte-identical
+[run115] eligibility candidates=2 eligible=1 codes=TOOLS_UNSUPPORTED=1 request=run115-s7c-golden alias=- model=- effort=- pass=- allow=[] denied=[golden.no-tools]
+
+ ❯ test/run115-s7c-routing-parity.test.ts (4 tests | 4 failed) 113ms
+   × run115 S7c kernel/producer/wired parity > empty candidate pool: all three paths are byte-identical 50ms
+     → expected '{"app_id":"unknown-app","chosen_endpo…' to be '{"routing_decision_id":"decision-run1…' // Object.is equality
+   × run115 S7c kernel/producer/wired parity > tie between candidates: all three paths are byte-identical 20ms
+     → expected '{"app_id":"unknown-app","chosen_endpo…' to be '{"routing_decision_id":"decision-run1…' // Object.is equality
+   × run115 S7c kernel/producer/wired parity > role/task/effort arm: all three paths are byte-identical 25ms
+     → expected '{"app_id":"unknown-app","chosen_endpo…' to be '{"routing_decision_id":"decision-run1…' // Object.is equality
+   × run115 S7c kernel/producer/wired parity > golden fixture: all three paths are byte-identical 15ms
+     → expected '{"app_id":"unknown-app","chosen_endpo…' to be '{"routing_decision_id":"decision-run1…' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run115-s7c-routing-parity.test.ts > run115 S7c kernel/producer/wired parity > empty candidate pool: all three paths are byte-identical
+ FAIL  test/run115-s7c-routing-parity.test.ts > run115 S7c kernel/producer/wired parity > tie between candidates: all three paths are byte-identical
+ FAIL  test/run115-s7c-routing-parity.test.ts > run115 S7c kernel/producer/wired parity > role/task/effort arm: all three paths are byte-identical
+ FAIL  test/run115-s7c-routing-parity.test.ts > run115 S7c kernel/producer/wired parity > golden fixture: all three paths are byte-identical
+AssertionError: expected '{"app_id":"unknown-app","chosen_endpo…' to be '{"routing_decision_id":"decision-run1…' // Object.is equality
+
+Expected: "{"routing_decision_id":"decision-run115-s7c-matrix","request_id":"run115-s7c-matrix","app_id":"unknown-app","org_id":null,"policy_snapshot":{"policy_id":"balanced-policy","strategy":"balanced","compute_preference":"auto","prefer_local":false,"budget_mode":"disabled","tie_break_order":["quality","latency_ms","reliability","endpoint_id"],"required_capabilities":["text.chat"],"required_modalities":["text"],"require_tools":false,"deny_endpoints":[],"allow_endpoints":[],"deny_provider_kinds":[],"allow_provider_kinds":[],"budget":{"enabled":false,"currency":"USD"},"privacy":{"allow_remote":true},"targets":{"latency_target_ms":150,"latency_max_ms":300,"throughput_target_tps":40}},"eligibility":[],"scored_candidates":[],"chosen_endpoint_id":"","fallback_endpoint_ids":[],"selection_reasons":[],"used_measured":false,"used_declared":false,"scoring_version":"baseline-v2"}"
+Received: "{"app_id":"unknown-app","chosen_endpoint_id":"","eligibility":[],"fallback_endpoint_ids":[],"org_id":null,"policy_snapshot":{"policy_id":"balanced-policy","strategy":"balanced","compute_preference":"auto","prefer_local":false,"budget_mode":"disabled","tie_break_order":["quality","latency_ms","reliability","endpoint_id"],"required_capabilities":["text.chat"],"required_modalities":["text"],"require_tools":false,"deny_endpoints":[],"allow_endpoints":[],"deny_provider_kinds":[],"allow_provider_kinds":[],"budget":{"enabled":false,"currency":"USD"},"privacy":{"allow_remote":true},"targets":{"latency_target_ms":150,"latency_max_ms":300,"throughput_target_tps":40}},"request_id":"run115-s7c-matrix","routing_decision_id":"decision-run115-s7c-matrix","scored_candidates":[],"scoring_version":"baseline-v2","selection_reasons":[],"used_declared":false,"used_measured":false}"
+
+ ❯ test/run115-s7c-routing-parity.test.ts:273:40
+    271|       expect(producer).toEqual(kernel);
+    272|       expect(wired).toEqual(kernel);
+    273|       expect(JSON.stringify(producer)).toBe(JSON.stringify(kernel));
+       |                                        ^
+    274|       expect(JSON.stringify(wired)).toBe(JSON.stringify(kernel));
+    275|       fixture.assert(kernel);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  05:10:51
+   Duration  4.21s (transform 1.87s, setup 0ms, collect 3.37s, tests 113ms, environment 0ms, prepare 239ms)
+

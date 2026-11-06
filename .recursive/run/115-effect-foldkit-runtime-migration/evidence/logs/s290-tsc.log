@@ -1,0 +1,4 @@
+COMMAND: node ../../../node_modules/typescript/bin/tsc --noEmit -p tsconfig.json
+EXIT_CODE=0
+
+

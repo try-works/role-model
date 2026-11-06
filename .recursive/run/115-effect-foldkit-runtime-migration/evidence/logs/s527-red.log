@@ -1,0 +1,34 @@
+S527 strict RED: structural test against pre-S527 view.ts (HEAD)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s527-root-overview.test.ts (1 test | 1 failed) 233ms
+   × S527 root Runtime overview structural parity > renders all seven reference sections and the candidate-space SVG axes 230ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Model pool'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s527-root-overview.test.ts > S527 root Runtime overview structural parity > renders all seven reference sections and the candidate-space SVG axes
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Model pool'
+
+Expected: "Model pool"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeRuntime overviewToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesLast DayTime rangeDayWeekMonth90 daysBreakdownAllEndpointModelProviderSourceAllLocalRemoteStatusAllSuccessFailureUnknownDifficultyAllEasyMediumHardSource: all · Status: all · Difficulty: all · Breakdown: allModel cost stripInput cost per 1M tokens. Quality and speed axes are omitted: the host candidate body has no quality or speed score.No candidates with pricing.Token usage over timeTotal tokens per bucket for the last day.Loading chart data…Latency (ms)Average and p95 per bucket for the last day.No chart data available.Success vs failureRequest outcomes per bucket for the last day.No chart data available."
+
+ ❯ test/s527-root-overview.test.ts:29:20
+     27|     const text = container.textContent ?? "";
+     28|     for (const title of TITLES) {
+     29|       expect(text).toContain(title);
+       |                    ^
+     30|     }
+     31|     expect(container.querySelectorAll("svg").length).toBeGreaterThanOr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  21:14:21
+   Duration  11.85s (transform 5.49s, setup 0ms, collect 8.92s, tests 233ms, environment 1.11s, prepare 428ms)
+
+

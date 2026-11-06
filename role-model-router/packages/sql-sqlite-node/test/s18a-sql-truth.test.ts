@@ -56,11 +56,13 @@ const pragma = (database: DatabaseSync, name: string): Record<string, unknown> |
 
 const readSynchronous = (database: DatabaseSync): number | undefined =>
   // SAFETY: PRAGMA synchronous returns one row with the numeric column synchronous.
-  (database.prepare("PRAGMA synchronous").get() as { synchronous?: number } | undefined)?.synchronous;
+  (database.prepare("PRAGMA synchronous").get() as { synchronous?: number } | undefined)
+    ?.synchronous;
 
 const readForeignKeys = (database: DatabaseSync): number | undefined =>
   // SAFETY: PRAGMA foreign_keys returns one row with the numeric column foreign_keys.
-  (database.prepare("PRAGMA foreign_keys").get() as { foreign_keys?: number } | undefined)?.foreign_keys;
+  (database.prepare("PRAGMA foreign_keys").get() as { foreign_keys?: number } | undefined)
+    ?.foreign_keys;
 
 const readBusyTimeout = (database: DatabaseSync): number | undefined =>
   // SAFETY: PRAGMA busy_timeout returns one row with the numeric column timeout.
@@ -94,7 +96,9 @@ const measureIdleTimerBaselineMs = async (samples = 5): Promise<number> => {
  * Reads the initializer's OWN connection at the moment it closes, instead of a fresh connection whose
  * per-connection defaults prove nothing about initialization.
  */
-const captureInitializerConnection = <A>(run: () => A): {
+const captureInitializerConnection = <A>(
+  run: () => A,
+): {
   readonly snapshot: ConnectionPragmas;
   readonly value: A;
 } => {
@@ -107,12 +111,14 @@ const captureInitializerConnection = <A>(run: () => A): {
       foreign_keys: readForeignKeys(this),
       synchronous: readSynchronous(this),
     });
-    return originalClose.call(this);
+    originalClose.call(this);
   };
   try {
     const value = run();
     expect(snapshots).toHaveLength(1);
-    return { snapshot: snapshots[0]!, value };
+    const [snapshot] = snapshots;
+    if (snapshot === undefined) throw new Error("expected one captured connection snapshot");
+    return { snapshot, value };
   } finally {
     DatabaseSync.prototype.close = originalClose;
   }

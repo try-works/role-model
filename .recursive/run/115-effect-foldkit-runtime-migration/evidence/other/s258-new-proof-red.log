@@ -1,0 +1,81 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+·x··x···
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 6 passed (8)
+   Start at  10:48:05
+   Duration  8.97s (transform 3.66s, setup 0ms, collect 5.64s, tests 46ms, environment 1.67s, prepare 621ms)
+
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s254-studio-request-shape.test.ts > S254 studio request shape per tab > every tab produces a POST with a distinct path and its own body
+AssertionError: audio
++ actual - expected
+
+  {
+    body: {
+      input: 'A quiet harbour at dawn',
+      model: 'moonshot/kimi-k2.5',
+      response_format: 'mp3',
++     voice: 's258-mutant'
+-     voice: 'alloy'
+    },
+    method: 'POST',
+    path: '/v1/audio/speech',
+    tab: 'audio'
+  }
+
+
+- Expected
++ Received
+
+  {
+    "body": {
+      "input": "A quiet harbour at dawn",
+      "model": "moonshot/kimi-k2.5",
+      "response_format": "mp3",
+-     "voice": "alloy",
++     "voice": "s258-mutant",
+    },
+    "method": "POST",
+    "path": "/v1/audio/speech",
+    "tab": "audio",
+  }
+
+ ❯ test/s254-studio-request-shape.test.ts:40:14
+     38|   it("every tab produces a POST with a distinct path and its own body"…
+     39|     for (const expected of requests) {
+     40|       assert.deepEqual(studioRequestFor(studioIdle(expected.tab)), exp…
+       |              ^
+     41|     }
+     42|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s254-studio-request-shape.test.ts > S254 studio request shape per tab > serializes the exact audio request and preserves the response
+AssertionError: Expected values to be strictly equal:
++ actual - expected
+
++ '{"input":"A quiet harbour at dawn","model":"moonshot/kimi-k2.5","response_format":"mp3","voice":"s258-mutant"}'
+- '{"input":"A quiet harbour at dawn","model":"moonshot/kimi-k2.5","response_format":"mp3","voice":"alloy"}'
+
+
+Expected: "{"input":"A quiet harbour at dawn","model":"moonshot/kimi-k2.5","response_format":"mp3","voice":"alloy"}"
+Received: "{"input":"A quiet harbour at dawn","model":"moonshot/kimi-k2.5","response_format":"mp3","voice":"s258-mutant"}"
+
+ ❯ test/s254-studio-request-shape.test.ts:65:14
+     63|       assert.equal(call.url, "http://studio.invalid" + expected.path);
+     64|       assert.equal(call.init?.method, expected.method);
+     65|       assert.equal(call.init?.body, JSON.stringify(expected.body));
+       |              ^
+     66|       assert.deepEqual(call.init?.headers, { "content-type": "applicat…
+     67|       assert.equal(call.init?.signal, signal);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+exit=1

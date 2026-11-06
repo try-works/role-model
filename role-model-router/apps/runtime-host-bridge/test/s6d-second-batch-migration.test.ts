@@ -8,10 +8,17 @@ import type { SqliteService } from "@effect/sql-sqlite-node/service";
 import { initializeSqliteMemory } from "@role-model-router/sqlite-memory";
 import { afterEach, describe, expect, test } from "vitest";
 
-import { createRuntimeBridgeBackend, openRetentionCleanupDatabase, runRetentionCleanupAt } from "../src/index.js";
+import {
+  createRuntimeBridgeBackend,
+  openRetentionCleanupDatabase,
+  runRetentionCleanupAt,
+} from "../src/index.js";
 import { openReadOnly } from "../src/queue-runtime/admin.js";
 import { resolveQueueStorePath } from "../src/queue-runtime/store.js";
-import { openChallengeDispositionDatabase, openChallengeTelemetryDatabase } from "../src/route-challenge-evidence.js";
+import {
+  openChallengeDispositionDatabase,
+  openChallengeTelemetryDatabase,
+} from "../src/route-challenge-evidence.js";
 import { openCensusDatabase } from "../src/route-ladder-census.js";
 import { openDurableOutputDatabase } from "../src/track-b-runtime.js";
 

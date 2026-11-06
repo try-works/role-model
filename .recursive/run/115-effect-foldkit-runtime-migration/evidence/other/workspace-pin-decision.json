@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "decision": "INCONCLUSIVE",
+  "reason": "Source/API mapping reviewed; exact preview compile and real leaf assembly not executed. No vendor change authorized by this receipt.",
+  "referenceSourceCommit": "f3be22cfeefed437164ad614d08b16d9000e0703",
+  "installedSourceCommit": "7ee214268c602967937b80f6f20d1e831f2e8ab6",
+  "report": "s267-workspace-api-spike.md",
+  "checks": {
+    "sourceMapping": "PASS",
+    "currentDependencyReplacement": "NOT_RUN",
+    "previewTypecheck": "NOT_RUN",
+    "singleEffectBrowserBuild": "NOT_RUN",
+    "runtimeConfigLeafSceneWire": "NOT_RUN",
+    "packageParity": "NOT_RUN"
+  },
+  "nextStep": "Isolated compile-only compatibility fixture; continue required stable feature/URL implementation meanwhile.",
+  "manifestUrl": "https://foldkit-website-preview-ky42cyp8l-devin-jamesons-projects.vercel.app/preview-release.json",
+  "manifestContentSha256": "cad82a9aa78d488ab0cea2a005ebdfe36e96ab8fc00d22422b69b21be919981b",
+  "manifestHashScope": "Readable manifest JSON returned by browser_fetch (not original wire byte digest)"
+}

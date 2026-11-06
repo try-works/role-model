@@ -1,0 +1,24 @@
+COMMAND: node ../../../node_modules/vitest/vitest.mjs run
+CWD: role-model-router/packages/process-supervisor
+EXIT_CODE=0
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ✓ test/health-wait-timeout.test.ts (3 tests) 3904ms
+   ✓ process-supervisor bounded health wait > rejects within startupTimeoutMs when the health peer accepts and never responds  934ms
+   ✓ process-supervisor bounded health wait > becomes healthy when a responsive endpoint replies after about 200ms  1074ms
+   ✓ process-supervisor bounded health wait > stops polling after a health timeout and shuts down cleanly  1892ms
+ ✓ test/index.test.ts (6 tests) 5448ms
+   ✓ process-supervisor > starts a vendor process, waits for health, and reports it as healthy  1226ms
+   ✓ process-supervisor > can run supervised vendors without inheriting provider credential variables  999ms
+   ✓ process-supervisor > captures child logs and restarts an unexpectedly crashed vendor with backoff  1240ms
+   ✓ process-supervisor > forces bounded shutdown when a vendor ignores the initial termination signal  635ms
+   ✓ process-supervisor > stops spawned child processes when a managed vendor shuts down on Windows  1133ms
+
+ Test Files  2 passed (2)
+      Tests  9 passed (9)
+   Start at  20:37:09
+   Duration  6.91s (transform 282ms, setup 0ms, collect 463ms, tests 9.35s, environment 1ms, prepare 1.04s)
+
+

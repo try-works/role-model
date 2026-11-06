@@ -1,0 +1,55 @@
+{
+  "slice": "s21b-composition-repairs",
+  "requirement": "R27 composition shape (S21a HOLD repair)",
+  "status": "complete",
+  "fixes": {
+    "fix1": {
+      "resolution": "corrected the claim (no runtime exactness check added)",
+      "exactWording": "Required services are closed at the TYPE level - the Layer.Layer<CompositionServices, never, never> annotation cannot type-check if the graph still requires an ambient service. This is NOT graph exactness: because ROut is contravariant, a layer may provide EXTRA services without a type error, and an untyped Context.getUnsafe read could still reach an ambient context. Extra providers and untyped reads are NOT prevented; no runtime exactness check runs.",
+      "documentedLimitation": "mutation (b): an extra provider still typechecks; untyped Context.getUnsafe reads are ambient. Both are now stated, not prevented."
+    },
+    "fix2": {
+      "control": "one shared memo map (Layer.makeMemoMap) + one shared Scope, four builds inside that single scope: shared layer built twice -> same instance; Layer.fresh(shared) built twice -> different instances. Deleting Layer.fresh makes the 'different' assertion fail.",
+      "red": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21b-red-fresh.log",
+        "mutation": "freshLayer = sharedLayer (Layer.fresh removed)",
+        "result": "expected { …(2) } not to be { …(2) }"
+      }
+    },
+    "fix3": {
+      "bound": "total waiters are bounded: at most providerMaxWaiters callers park; beyond that a typed ProviderPermitOverflowError is returned (stats.rejected counts them). No caller waits on Semaphore's unbounded waiter list anymore.",
+      "test": "2,000 callers with providerMaxConcurrent=2 and providerMaxWaiters=2: during { active: 2, queued <= 2, rejected: 1996 }, after gate { completed: 4, rejected: 1996, active: 0, queued: 0 }, failure exits = 1996",
+      "red": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21b-red-waiter.log",
+        "mutation": "reject replaced with blocking Semaphore.take(waiterSlots) (unbounded parking again)",
+        "result": "expected +0 to be 1996"
+      }
+    },
+    "fix4": {
+      "guarantee": "withPermit keeps Effect.acquireUseRelease: the permit is released on success, typed failure and interruption; the waiter slot is released by the acquire's ensuring on every path. Failing-user test: fail then succeed, active 0/completed 1 between them. Interrupted-user test: interrupt the holder, active returns to 0/completed 1, a later withPermit succeeds.",
+      "red": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21b-red-release.log",
+        "mutation": "acquireUseRelease replaced with flatMap + success-only release",
+        "result": "failing-user test times out because the permit is never returned (second acquire blocks)"
+      }
+    },
+    "fix5": {
+      "exactWording": "Scope of the 13 services (R27): this is the OWNER SHAPE only. It names R27's owner services plus the shared authorities, but it does not model early readiness/partial shutdown, cache identity, per-run judge/throttle isolation, or benchmark cancellation. Do not read the service set as R27 complete; those behaviours still need their own shape and tests.",
+      "serviceCount": 13
+    }
+  },
+  "green": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21b-green.log",
+    "tests": 6,
+    "passed": 6,
+    "exit": 0
+  },
+  "typecheck": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21b-tsc.log",
+    "exit": 0
+  },
+  "files": {
+    "role-model-router/apps/runtime-host-bridge/src/composition-dag.ts": "corrected closure+scope docs, ProviderPermitOverflowError, rejected stats, bounded total waiters, release guarantee",
+    "role-model-router/apps/runtime-host-bridge/test/s21a-composition-dag.test.ts": "shared-memo-map fresh control, 2000-caller bound, failing-user and interrupted-user release tests"
+  }
+}

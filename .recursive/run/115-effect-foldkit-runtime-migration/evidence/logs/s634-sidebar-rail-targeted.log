@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s634-sidebar-rail-refresh.test.ts (2 tests) 313ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  02:42:47
+   Duration  29.01s (transform 14.04s, setup 0ms, collect 24.21s, tests 313ms, environment 2.98s, prepare 608ms)
+

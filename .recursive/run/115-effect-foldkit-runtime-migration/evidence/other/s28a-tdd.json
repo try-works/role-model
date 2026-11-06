@@ -1,0 +1,210 @@
+{
+  "slice": "s28a-rdc-compare",
+  "requirement": "R16 packaged release vs candidate comparison with every difference classified",
+  "artifacts": {
+    "R": {
+      "dir": "D:/role-model-router/0.0.20",
+      "version": "0.0.20",
+      "commit": "945a8906782a434e800a0ca2deb2e08ef1472e20",
+      "channel": "production",
+      "scope": "standalone-runtime",
+      "sha256": "718d71f51ea6cf4f4bcfddf82165695c52fbc6d59eaaa600a38f3c73df8e248a"
+    },
+    "C": {
+      "dir": "role-model-router/dist/release/win32-x64",
+      "version": "0.0.17-10-gf0cb76c7",
+      "commit": "f0cb76c722eccaa19f28ce4e24b683740db9725c",
+      "channel": "development",
+      "scope": "standalone-runtime-dev",
+      "sha256": "657902c3bb0852aa65c1ef5a10413a354c23f0179e66cd83af00a49699904d8b"
+    },
+    "D": {
+      "status": "absent",
+      "justification": "Not built in this worktree; no D identity or endpoints captured."
+    }
+  },
+  "method": "Both executables launched on ephemeral loopback ports with E:\\role-model-run115\\s28a-* temp state roots, shared worktree fixtures, and each manifest's own scope. Captured healthz, version identity, runtime summary, taxonomy, extensions, operator status, diagnostics. Temp roots removed; no 3456/3457/3458 bound.",
+  "rows": [
+    {
+      "field": "D artifact (desired/next)",
+      "R": "absent",
+      "C": "candidate",
+      "classification": "absent/inconclusive/environmental",
+      "justification": "No D build exists in this worktree; R-to-D-only differences cannot be separated from R-vs-C channel/build differences."
+    },
+    {
+      "field": "identity version / release_version",
+      "R": "0.0.20",
+      "C": "0.0.17-10-gf0cb76c7",
+      "classification": "known baseline defect",
+      "justification": "Candidate version string is lower than the released semver despite a newer commit; git-describe dev version derivation, not a runtime migration regression."
+    },
+    {
+      "field": "identity commit / build_date / source_tree",
+      "R": "945a890… / 2026-10-16",
+      "C": "f0cb76c7… / 2026-10-25",
+      "classification": "approved intentional change",
+      "justification": "R and C are distinct released/candidate builds; source identity is expected to differ."
+    },
+    {
+      "field": "identity executable_sha256 / core_payload_sha256",
+      "R": "718d71f5…",
+      "C": "657902c3…",
+      "classification": "approved intentional change",
+      "justification": "Different packaged bytes by construction."
+    },
+    {
+      "field": "identity channel / name / endpoint / scope_id",
+      "R": "production / role-model / :3456 / standalone-runtime",
+      "C": "development / role-model-dev / :3458 / standalone-runtime-dev",
+      "classification": "approved intentional change",
+      "justification": "C is the development-channel candidate; both run on ephemeral ports despite manifest defaults."
+    },
+    {
+      "field": "identity release_id / private_distribution_sha256",
+      "R": "present",
+      "C": "absent",
+      "classification": "approved intentional change",
+      "justification": "Dev channel does not carry the production Run88 release identity; manifest code only includes it for stage/production."
+    },
+    {
+      "field": "healthz status / ready / executionMode / vendors",
+      "R": "healthy / ready / decision_only / inactive",
+      "C": "healthy / ready / decision_only / inactive",
+      "classification": "approved intentional change",
+      "justification": "No behavioral difference after normalizing identity and timestamps; equal surface."
+    },
+    {
+      "field": "healthz sessionBootstrap timestamps/stage detail fields",
+      "R": "base counters",
+      "C": "timestamps differ; additive pendingDeferred/refresh counters",
+      "classification": "approved intentional change",
+      "justification": "Additive session-bootstrap instrumentation in the candidate; lifecycle status ready in both."
+    },
+    {
+      "field": "runtime summary providerCount/accountCount/endpointCount",
+      "R": "270 / 2 / 3",
+      "C": "270 / 2 / 3",
+      "classification": "approved intentional change",
+      "justification": "Equal counts; no migration regression in the loaded fixture surface."
+    },
+    {
+      "field": "runtime summary readiness/lifecycle",
+      "R": "counts equal",
+      "C": "counts equal",
+      "classification": "approved intentional change",
+      "justification": "Equal readiness/lifecycle projections."
+    },
+    {
+      "field": "runtime summary scopeId",
+      "R": "standalone-runtime",
+      "C": "standalone-runtime-dev",
+      "classification": "approved intentional change",
+      "justification": "Channel scope follows the manifest/profile."
+    },
+    {
+      "field": "runtime summary runtimeStateRoot / unifiedConfig path / operatorIntent path",
+      "R": "E:\\role-model-run115\\s28a-*\\…",
+      "C": "different E: temp root",
+      "classification": "absent/inconclusive/environmental",
+      "justification": "Separate temp state roots required by the comparison; paths are not product values."
+    },
+    {
+      "field": "runtime summary processMetrics",
+      "R": "own pid/rss",
+      "C": "own pid/rss",
+      "classification": "absent/inconclusive/environmental",
+      "justification": "Per-process runtime metrics."
+    },
+    {
+      "field": "runtime summary configuredMembershipReconciliation / session timestamps",
+      "R": "R run clock",
+      "C": "C run clock",
+      "classification": "absent/inconclusive/environmental",
+      "justification": "Clock-dependent projections."
+    },
+    {
+      "field": "taxonomy version / manifest",
+      "R": "equal",
+      "C": "equal",
+      "classification": "approved intentional change",
+      "justification": "Byte-equal taxonomy version/manifest payloads; no difference."
+    },
+    {
+      "field": "extensions count / id set",
+      "R": "13 / same ids",
+      "C": "13 / same ids",
+      "classification": "approved intentional change",
+      "justification": "Catalog membership is unchanged."
+    },
+    {
+      "field": "extension pid",
+      "R": "R process pid",
+      "C": "C process pid",
+      "classification": "absent/inconclusive/environmental",
+      "justification": "Runtime process identity."
+    },
+    {
+      "field": "extension channel",
+      "R": "production",
+      "C": "development",
+      "classification": "approved intentional change",
+      "justification": "Channel-scoped extension projection."
+    },
+    {
+      "field": "operator status overall / capabilities",
+      "R": "unobserved / equal",
+      "C": "unobserved / equal",
+      "classification": "approved intentional change",
+      "justification": "No capability regression."
+    },
+    {
+      "field": "operator status context channel/scope",
+      "R": "production / standalone-runtime",
+      "C": "development / standalone-runtime-dev",
+      "classification": "approved intentional change",
+      "justification": "Expected channel scope."
+    },
+    {
+      "field": "operator status observedAt/storage identifiers",
+      "R": "R clock/dynamic ids",
+      "C": "C clock/dynamic ids",
+      "classification": "absent/inconclusive/environmental",
+      "justification": "Clock and per-state-root resource identities."
+    },
+    {
+      "field": "operator diagnostics",
+      "R": "404 {error:operator route not found}",
+      "C": "200 local-diagnostics-read v1, state disabled",
+      "classification": "approved intentional change",
+      "justification": "Local diagnostics read is a new run115 endpoint absent from released 0.0.20."
+    }
+  ],
+  "equalSurfaces": [
+    "healthz healthy",
+    "executionMode decision_only",
+    "vendors inactive",
+    "provider/account/endpoint counts",
+    "readiness/lifecycle counts",
+    "taxonomy version+manifest byte-equal",
+    "13 extension ids",
+    "operator overall/capabilities"
+  ],
+  "migrationRegressions": "none observed in the compared surfaces",
+  "inconclusive": [
+    "D not built: pre-existing R-to-D rows cannot be established",
+    "C is development-channel and R production-channel, so R-vs-C behavior is not a same-channel comparison; counts/taxonomy/extension ids were equal after normalization"
+  ],
+  "reproduce": "node .recursive/run/115-effect-foldkit-runtime-migration/evidence/other/s28a-compare.mjs",
+  "logs": {
+    "raw": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s28a-compare.json",
+    "run": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s28a-compare.log"
+  },
+  "counts": {
+    "artifacts": 2,
+    "endpoints": 8,
+    "extensions": 13,
+    "rows": 22
+  },
+  "tempState": "E:\\role-model-run115\\s28a-* created and removed"
+}

@@ -1,0 +1,2 @@
+src/s21d-type-proof.ts(4,88): error TS2345: Argument of type 'ServerShape' is not assignable to parameter of type 'StartBridgeServerOptions'.
+  Type 'ServerShape' is missing the following properties from type 'StartBridgeServerOptions': host, port, registry, executeChatCompletions, executeResponses

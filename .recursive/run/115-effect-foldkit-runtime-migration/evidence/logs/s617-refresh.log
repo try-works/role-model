@@ -1,0 +1,25 @@
+{"buckets":{"matched_walker":10,"non_native_affordance":8,"scanner_gap":8,"unmatched":10,"wired_after_inventory":25},"humanTotal":61,"identities":{"allItems":true,"modelsFamily":true,"nativeOnly":true,"walker":true},"modelsFamily":{"affordance":4,"rows":17,"wired":13},"nativeTotal":53,"status":"changed","walkerOnly":5,"walkerTotal":15,"wrote":true}
+REFRESH DIFF:
+H041 bucket matched_walker -> unmatched
+H041 walkerPath div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[1]>div[1]>button[1] -> null
+H042 bucket matched_walker -> unmatched
+H042 walkerPath div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[1]>div[1]>button[2] -> null
+H043 bucket matched_walker -> unmatched
+H043 walkerPath div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[1]>div[1]>button[3] -> null
+H044 bucket matched_walker -> unmatched
+H044 walkerPath div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[1]>div[1]>button[4] -> null
+H045 bucket matched_walker -> unmatched
+H045 walkerPath div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[1]>select[1] -> null
+H046 bucket matched_walker -> unmatched
+H046 walkerPath div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[2]>select[1] -> null
+H047 bucket matched_walker -> unmatched
+H047 walkerPath div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[1]>div[2]>label[3]>select[1] -> null
+H048 bucket matched_walker -> unmatched
+H048 walkerPath div[1]>div[1]>main[1]>div[1]>section[1]>div[1]>div[2]>button[1] -> null
+H049 bucket matched_walker -> unmatched
+H049 walkerPath div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>button[1] -> null
+H050 bucket matched_walker -> unmatched
+H050 walkerPath div[1]>div[1]>main[1]>div[1]>section[1]>section[1]>div[2]>div[1]>button[1] -> null
+bucket total matched_walker 20 -> 10
+bucket total unmatched 0 -> 10
+walkerTotal 25 -> 15

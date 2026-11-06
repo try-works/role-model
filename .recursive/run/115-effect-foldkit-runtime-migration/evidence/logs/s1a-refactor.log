@@ -1,0 +1,17 @@
+timestamp_utc: 2026-10-24T10:19:22.7463130Z
+phase: REFACTOR (extracted deterministic finding constructor; no behavior change)
+cwd: role-model-router/packages/ui-parity
+command: node ../../../node_modules/vitest/vitest.mjs run test/compare.test.ts
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+ ✓ test/compare.test.ts (28 tests) 49ms
+
+ Test Files  1 passed (1)
+      Tests  28 passed (28)
+   Start at  18:19:25
+   Duration  2.70s (transform 438ms, setup 0ms, collect 462ms, tests 49ms, environment 1ms, prepare 596ms)
+
+exit_code: 0
+command: node ../../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit
+exit_code: 0

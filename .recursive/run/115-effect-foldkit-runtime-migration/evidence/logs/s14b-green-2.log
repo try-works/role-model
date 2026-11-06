@@ -1,0 +1,61 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/routes.test.ts > runtime routing in the Foldkit shell > renders the route from the initial URL, including the diagnostics path parameter
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 10.4ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    route: { _tag: 'Diagnostics', id: 'abc' },
+    theme: 'light'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 10.35490000000027,
+  thresholdMs: 8
+}
+
+stderr | test/routes.test.ts > runtime routing in the Foldkit shell > renders the not-found view for an unknown URL without throwing
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/routes.test.ts > runtime routing in the Foldkit shell > pushes a URL from an in-app control and the URL, not local state, changes the view
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/routes.test.ts > runtime routing in the Foldkit shell > changes the view when history navigates back, through the runtime popstate config
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+ ✓ test/routes.test.ts (4 tests) 2167ms
+   ✓ runtime routing in the Foldkit shell > renders the route from the initial URL, including the diagnostics path parameter  566ms
+   ✓ runtime routing in the Foldkit shell > renders the not-found view for an unknown URL without throwing  518ms
+   ✓ runtime routing in the Foldkit shell > pushes a URL from an in-app control and the URL, not local state, changes the view  534ms
+   ✓ runtime routing in the Foldkit shell > changes the view when history navigates back, through the runtime popstate config  546ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  00:39:25
+   Duration  9.49s (transform 3.55s, setup 0ms, collect 5.68s, tests 2.17s, environment 738ms, prepare 311ms)
+

@@ -1,0 +1,14 @@
+✔ the hand-written sample inventory validates (40.7404ms)
+✔ the real inventory validates against the code (195.8858ms)
+✔ the inventory covers every kind and every disposition (2.1103ms)
+✔ a deliberately wrong citation fails (357.8803ms)
+✔ duplicate ids, unknown dispositions and unknown kinds are rejected (541.7585ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1451.6977
+EXIT_CODE: 0

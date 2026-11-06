@@ -1,0 +1,26 @@
+{
+  "R": {
+    "title": "",
+    "h1": [
+      "Runtime overview"
+    ],
+    "inputs": 0,
+    "selects": 0,
+    "textareas": 0,
+    "buttons": 29,
+    "nav": 0,
+    "text": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\nDeepSeek V4.1 Flash (High)\nDeepSeek V4.1 Flash ("
+  },
+  "D": {
+    "title": "",
+    "h1": [
+      "Runtime overview"
+    ],
+    "inputs": 0,
+    "selects": 0,
+    "textareas": 0,
+    "buttons": 29,
+    "nav": 0,
+    "text": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\nclaude-3.7-sonnet\nclaude-3.7-sonnet\n0\ngpt-5.4\ngp"
+  }
+}

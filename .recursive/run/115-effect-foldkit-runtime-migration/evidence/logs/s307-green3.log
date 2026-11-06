@@ -1,0 +1,29 @@
+COMMAND: node vitest run (full sql-sqlite-node suite; S309 final)
+EXIT_CODE=0
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node
+
+(node:62032) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53168) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:67300) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:47220) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:65836) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s273-cleanup.test.ts (11 tests) 108ms
+ ✓ test/sqlite-service.test.ts (11 tests) 461ms
+ ✓ test/s268-mixed-owner.test.ts (7 tests) 435ms
+ ✓ test/s307-maintenance-owner-fence.test.ts (9 tests) 693ms
+ ✓ test/s18a-sql-truth.test.ts (10 tests) 2053ms
+   ✓ S18a blocking measurement > blocks the event loop for a whole synchronous statement whose work persists, relative to the idle timer baseline  1120ms
+
+ Test Files  5 passed (5)
+      Tests  48 passed (48)
+   Start at  03:16:46
+   Duration  14.06s (transform 6.95s, setup 0ms, collect 42.60s, tests 3.75s, environment 5ms, prepare 4.68s)
+
+

@@ -1,0 +1,20 @@
+# S442 GREEN — exact-args real-wait bridge, restored tabindex, rendered draft typing
+scope: ONLY the two auth test files; no product/source write, no s247 budget change, no clock framework.
+S247_EXIT=0
+INVARIANTS_EXIT=0
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s397-device-auth-form.test.ts (15 tests) 151ms
+ ✓ test/s425-device-auth-correctness.test.ts (17 tests) 12469ms
+   ✓ S442 pending view (scene + real client bridge) > start click restores the host pending session and renders the code + safe link  5183ms
+   ✓ S442 pending view (scene + real client bridge) > a real minimal pending poll keeps the code and link after the first poll  2063ms
+   ✓ S442 pending view (scene + real client bridge) > refuses an unsafe verification URL protocol instead of linking it  5047ms
+
+ Test Files  2 passed (2)
+      Tests  32 passed (32)
+   Start at  07:00:17
+   Duration  23.50s (transform 5.62s, setup 0ms, collect 17.04s, tests 12.62s, environment 2.35s, prepare 775ms)
+
+VITEST_EXIT=0
+TSC_EXIT=0

@@ -1,0 +1,99 @@
+✔ R32 handshake: unsupported root operator protocol version is rejected before the factory (77.5164ms)
+✖ R32 handshake: a missing real required capability is rejected before the factory (invented caps do not pass) (19.9567ms)
+✔ R32 handshake: each descriptor version must be compatible (17.2043ms)
+✔ R32 handshake: a missing required operator binding is rejected before the factory (13.1823ms)
+✔ R32 handshake: ready is false during the factory and true only after owner.add (17.7323ms)
+✖ R32 handshake: a null factory result never becomes ready and is not registered (14.8023ms)
+✔ R32 handshake: factory failure never leaves ready=true (12.0918ms)
+✖ R32 handshake: closed late open releases the late child and stays not-ready (16.2326ms)
+✖ R32 handshake: a reused handle resets prior accepted evidence before a failing open (26.8135ms)
+✖ R32 handshake: no manifest returns null without invoking a custom factory (5.6151ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 5
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1725.2249
+
+✖ failing tests:
+
+test at tests\track-b\run115-b9-operator-handshake.test.mjs:15:1
+✖ R32 handshake: a missing real required capability is rejected before the factory (invented caps do not pass) (19.9567ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-operator-handshake.test.mjs:15:505)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run115-b9-operator-handshake.test.mjs:19:1
+✖ R32 handshake: a null factory result never becomes ready and is not registered (14.8023ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-operator-handshake.test.mjs:19:337)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run115-b9-operator-handshake.test.mjs:21:1
+✖ R32 handshake: closed late open releases the late child and stays not-ready (16.2326ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be strictly unequal to: true
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-operator-handshake.test.mjs:21:434)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: true,
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run115-b9-operator-handshake.test.mjs:22:1
+✖ R32 handshake: a reused handle resets prior accepted evidence before a failing open (26.8135ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be strictly unequal to: true
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-operator-handshake.test.mjs:22:692)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: true,
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run115-b9-operator-handshake.test.mjs:23:1
+✖ R32 handshake: no manifest returns null without invoking a custom factory (5.6151ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + {
+  +   close: [AsyncFunction: close]
+  + }
+  - null
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-operator-handshake.test.mjs:23:234)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [Object],
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

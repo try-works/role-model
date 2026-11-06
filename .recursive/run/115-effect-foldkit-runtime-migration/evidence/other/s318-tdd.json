@@ -1,0 +1,39 @@
+{
+  "slice": "s318-metadata-cache",
+  "requirement": "R27 metadata-cache identity (authority/config/model, TTL/cap/invalidation, never dedupe stochastic inference)",
+  "decision": "LANDED. MetadataCache is now a DAG service keyed by metadataCacheKey(authority, configGeneration, model); the live routing-prep key site (:27302-27332) calls noteConfig(configIdentity), uses the generation identity in its keys, and reads/writes registry metadata through the DAG cache. Generation invalidation on config change (not TTL-only); TTL/cap preserved; stochastic inference is never cached.",
+  "keyContract": "metadataCacheKey(authorityId, configGeneration, modelId) = authority NUL generation NUL model; DAG owner keyFor(model) stamps the current generation; noteConfig(configIdentity) bumps generation and invalidates the previous generation when the identity changes.",
+  "generationEvidence": "test 'config change bumps the generation and invalidates the previous generation' (identity change -> new generation, invalidated >= 1, size 0, key changes).",
+  "noDedupTest": "'two distinct stochastic inference requests are not collapsed by the metadata cache' (one entry per key overwrite; two inference invocations both execute and are not cached; cache size unchanged).",
+  "wiringGuard": "'live routing prep keys by authority+generation and reads the DAG cache' (source guard over the routing-prep region: metadataCacheKey({, noteConfig, getSync, keyFor; no executeChatCompletions).",
+  "redGreen": {
+    "red": "s318-red.log: 4 tests, 3 failed against the stub/unwired state",
+    "green": "s318-green.log: 6 files, 26/26; tsc exit 0"
+  },
+  "lint": {
+    "dag": "162 findings {\"no-object-parameters\":1,\"no-unknown-returns\":2,\"require-safety-comment-for-type-assertion\":159} (moved-boundary casts; new cache-owner region incl. metadataConfigIdentity typed)",
+    "test": "findings"
+  },
+  "files": {
+    "src/composition-dag.ts": "0461E824EF03F2A23879E349FA98CDD741D6472FE72F52406D3F3C6A29776C40",
+    "src/index.ts": "AEC419BB4679AB97F2A9C59657F2EDB55FAB4D8344F5A72644BAB0330D4813FE",
+    "src/cli.ts": "C6AFCD7354C2E5869D03B5D794974434B2B3308D49B29E8F0C1267EC0751F60A",
+    "test/s318-metadata-cache.test.ts": "938B1E91971C9CF05C108230D28E8C4EAD5BEBFDB95C152E499159634CB876F8"
+  },
+  "backups": "E:/rm-tmp/s318/*.bak",
+  "unproven": "No whole-monolith suite; the routing-prep cache keeps its TTL/coalescing role and the DAG cache owns identity/generation (source guard + unit tests, not end-to-end route proof).",
+  "repair319": {
+    "liveCache": "PAYLOAD (preferred): the DAG cache now holds the observed-profiles JSON used by the routing decision (metadataCacheOwner.getSync -> JSON.parse -> decision input; miss -> routingPrepCache.read -> setSync(JSON.stringify(profiles))). The identity-marker entry was removed; docs corrected.",
+    "noDedup": "NARROWED: the test is now 'narrowed no-dedup scope: the metadata cache has no stochastic-inference dedup API' — asserts the owner has no in-flight/coalesce/dedup surface, and single-entry overwrite semantics; remaining scope recorded: the real provider stochastic path is not exercised here (no inference is cached by this owner).",
+    "lint": "metadataConfigIdentity is now generic <T extends object>(config: T | null | undefined) — no object/unknown parameter finding; DAG=161 ({\"no-unknown-returns\":2,\"require-safety-comment-for-type-assertion\":159}), test=clean.",
+    "redGreen": {
+      "red": "s318-red2.log: 5 tests, 1 failed (payload claim absent)",
+      "green": "s318-green2.log: 6 files, 26/26; tsc exit 0"
+    },
+    "files": {
+      "src/composition-dag.ts": "DAG_HASH_PLACEHOLDER",
+      "src/index.ts": "AE56B17BB3332CA221367F7F50D8BAB2E272DACB986552721EBC6305CA56DC4D",
+      "test/s318-metadata-cache.test.ts": "TEST_HASH_PLACEHOLDER"
+    }
+  }
+}

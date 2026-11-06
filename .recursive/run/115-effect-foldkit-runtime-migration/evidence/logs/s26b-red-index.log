@@ -1,0 +1,56 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s26b-wave1.test.ts > S26b wave 1 shell entries > index is a real success landing with working onward navigation
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 24.3ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 24.328599999999824,
+  thresholdMs: 8
+}
+
+ ❯ test/s26b-wave1.test.ts (4 tests | 1 failed | 3 skipped) 628ms
+   ↓ S26b wave 1 shell entries > layout is a persistent primary navigation and carries the active route
+   × S26b wave 1 shell entries > index is a real success landing with working onward navigation 626ms
+     → expected 'empty' to be 'success' // Object.is equality
+   ↓ S26b wave 1 shell entries > not-found is a terminal error state with recovery navigation
+   ↓ S26b wave 1 shell entries > shell preserves theme, title, focus and scroll facts across navigation
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s26b-wave1.test.ts > S26b wave 1 shell entries > index is a real success landing with working onward navigation
+AssertionError: expected 'empty' to be 'success' // Object.is equality
+
+Expected: "success"
+Received: "empty"
+
+ ❯ test/s26b-wave1.test.ts:85:45
+     83|       "index route",
+     84|     );
+     85|     expect(page.getAttribute("data-state")).toBe("success");
+       |                                             ^
+     86|     expect(page.querySelector("h1")?.textContent).toBe("Index page");
+     87|     expect(page.textContent).toContain("Runtime overview");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  07:19:09
+   Duration  7.73s (transform 3.37s, setup 0ms, collect 5.35s, tests 628ms, environment 724ms, prepare 363ms)
+

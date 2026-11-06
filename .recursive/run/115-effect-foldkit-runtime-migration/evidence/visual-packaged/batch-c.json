@@ -1,0 +1,37 @@
+[
+  {
+    "route": "/runtime",
+    "status": 200,
+    "png": "_runtime.png",
+    "title": "Runtime | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Runtime Toggle theme Overview Diagnostics Observability Receipts Queues Local logs Candi",
+    "states": [
+      "error"
+    ],
+    "alerts": [
+      "Runtime readback\n\nRuntime\n\nRuntime read failed: invalid response\n\nRefresh follow"
+    ]
+  },
+  {
+    "route": "/control/providers",
+    "status": 200,
+    "png": "_control_providers.png",
+    "title": "Providers | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Providers Toggle theme Overview Diagnostics Observability Receipts Queues Local logs Can",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/control/endpoints",
+    "status": 200,
+    "png": "_control_endpoints.png",
+    "title": "Endpoints | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Endpoints Toggle theme Overview Diagnostics Observability Receipts Queues Local logs Can",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  }
+]

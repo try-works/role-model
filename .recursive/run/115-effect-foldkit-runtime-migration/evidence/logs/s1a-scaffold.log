@@ -1,0 +1,12 @@
+timestamp_utc: 2026-10-24T10:16:48.5952955Z
+cwd: role-model-router/packages/ui-parity
+purpose: typed API skeleton only; compareRequestTraces returns [] and has no comparison behavior
+scope_files:
+  4630665CAB8EC3F2270254A410409E0D0A4799138379FFBF9E5B9B65E12D4B90  D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\ui-parity\package.json
+  1649C61385B1A1A977BC1FAA64C88FFA128A349E4F53CFD345AAB1D59B53125C  D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\ui-parity\tsconfig.json
+  8E6B74116138447FE2ED11E8C03B97CDD8804DA450DF4803F125768E0DF5A06D  D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\ui-parity\src\compare.ts
+  1892F9BC290DEE0E876D3F5A24420B8C37B7A8ECDC663B953E5E986F4755AEA4  D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\ui-parity\src\index.ts
+  31ABEE339255AB7492C57E647FA076C812E1C722780D1B68CB54B23B509F0EFC  D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\ui-parity\test\compare.test.ts
+test_file_written_before_production_skeleton: yes
+command: node ../../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit
+exit_code: 0

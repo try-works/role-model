@@ -1,0 +1,1 @@
+src/message.ts(5,7): error TS2742: The inferred type of 'messageCases' cannot be named without a reference to '../node_modules/@role-model-router/foldkit/dist/types/schema'. This is likely not portable. A type annotation is necessary.

@@ -1,0 +1,15 @@
+{
+  "environment": "local-dev",
+  "rawCapture": {
+    "requestHeaders": "redact-secrets",
+    "requestBody": "disabled",
+    "responseBody": "disabled"
+  },
+  "structuredInspection": {
+    "mode": "redacted",
+    "redactHeaders": ["authorization"]
+  },
+  "operatorSurface": {
+    "preserveRawCaptures": true
+  }
+}

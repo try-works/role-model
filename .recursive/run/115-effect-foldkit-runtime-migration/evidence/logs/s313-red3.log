@@ -1,0 +1,60 @@
+COMMAND: node vitest run test/s313-server-owner.test.ts (S314 r2 RED: bare-option refusal)
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:77316) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s313-server-owner.test.ts (5 tests | 1 failed) 63ms
+   ✓ S313 DAG Server owner > composeServerOwner builds the listener/server through the transport and owns close ordering 13ms
+   ✓ S313 DAG Server owner > facade startBridgeServer composes the DAG Server owner; no local listen/lifecycle path exists 3ms
+   ✓ S313 DAG Server owner > facade threads the real composed BackendOwner: serverOwner.backend === composedBackendOwner 4ms
+   ✓ S313 DAG Server owner > a plain-options owner injected as the backend is refused (legacy brand bypass gone) 6ms
+   × S313 DAG Server owner > bare options are refused outside the explicit test seam (production-style path) 31ms
+     → promise resolved "{ close: [AsyncFunction close], …(2) }" instead of rejecting
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s313-server-owner.test.ts > S313 DAG Server owner > bare options are refused outside the explicit test seam (production-style path)
+AssertionError: promise resolved "{ close: [AsyncFunction close], …(2) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "close": [Function close],
++   "port": 4242,
++   "serverOwner": {
++     "backend": {
++       "id": "backend-owner:facade",
++       "options": {
++         "host": "127.0.0.1",
++         "port": 0,
++       },
++     },
++     "id": "server-owner:run115-s21a",
++     "start": [Function start],
++     Symbol(role-model-router.server-owner): true,
++   },
+  }
+
+ ❯ test/s313-server-owner.test.ts:139:96
+    137|     // SAFETY: a plain options object with no DAG-composed Backend own…
+    138|     const plainOptions = { host: "127.0.0.1", port: 0 } as never;
+    139|     await expect(startBridgeServer(plainOptions, { handlerFactory, tra…
+       |                                                                                                ^
+    140|       .rejects.toThrow(/composeBackendOwner|test seam/);
+    141|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  05:58:22
+   Duration  21.04s (transform 12.58s, setup 0ms, collect 19.64s, tests 63ms, environment 1ms, prepare 459ms)
+
+

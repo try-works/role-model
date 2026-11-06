@@ -1,0 +1,51 @@
+{
+  "slice": "s15g-client-proofs",
+  "requirement": "R21 diagnostics client (close four S15e/S15f bypasses)",
+  "status": "complete",
+  "fix1": {
+    "what": "mountWithDiagnostics gained an explicit factory seam (createReader, default the real createDiagnosticsClient) and the e2e asserts construction: factory called once with the injected fetchImpl/baseUrl/token, and a second test returns a fake reader from the factory and proves the page renders THAT instance (stub fetch untouched).",
+    "red": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15g-red-bypass.log",
+      "mutation": "entry replaced createDiagnosticsClient with an inline fetch reader (no token, no factory)",
+      "result": "3 e2e tests fail: construction args, mounted-reader identity, and the trust-precondition path"
+    }
+  },
+  "fix2": {
+    "what": "in-flight abort proof: a fetch stub settles ONLY on abort; the read runs under Effect.timeout(30ms); asserts Exit failure, calls=1, the fetch signal aborted and the stub saw the abort event.",
+    "red": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15g-red-abort.log",
+      "mutation": "signal removed from fetch init",
+      "result": "the in-flight test fails (the stub never observes an abort)"
+    }
+  },
+  "fix3": {
+    "claimWording": "SAME-ORIGIN CLAIM (demoted, not proven): the client ASSUMES the page and the diagnostics API are served from the same origin; it does not and cannot prove that the host it reaches is the host that served the page. With an explicit baseUrl it enforces only what it can: a token-less read is refused unless the base origin is loopback AND equals the page origin. CORS/preflight behaviour, TLS and the host's socket-peer trust are NOT exercised by this module or its tests - they remain unproven without a live host.",
+    "enforcement": "createDiagnosticsClient throws for a token-less read when the base is non-loopback or (explicit base) not the page origin; tests cover non-loopback refusal, loopback-but-cross-origin refusal, and same-origin token-less allowed.",
+    "unproven": "CORS headers/preflight, browser-enforced origin checks, TLS, and the host's decision over a real socket are unproven by this suite."
+  },
+  "fix4": {
+    "preconditionWording": "TOKEN-LESS PRECONDITION (explicit): a token-less read is only meaningful when the request reaches the host from a loopback socket AND device-owner trust is on (the runtime binds 127.0.0.1/::1/localhost and does not disable trust). If the runtime binds 0.0.0.0 or trust is off, a token-less same-origin read returns 401. The client turns that specific case into DiagnosticsTrustRequiredError so the failure names the precondition instead of an opaque 'Access denied'.",
+    "error": "DiagnosticsTrustRequiredError (message names loopback device-owner trust and the 'bind to loopback or configure a read token' remedy)",
+    "tests": "client: token-less 401 -> typed error; e2e: token-less same-origin 401 renders the error state containing 'loopback device-owner trust' and 'Bind the runtime to loopback'"
+  },
+  "green": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15g-green.log",
+    "files": 5,
+    "tests": 41,
+    "passed": 41,
+    "exit": 0,
+    "clientTests": 9,
+    "e2eTests": 11
+  },
+  "typecheck": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15g-tsc.log",
+    "exit": 0
+  },
+  "remainingUnproven": "real HTTP host auth/context gate, CORS/preflight when served elsewhere, TLS, socket-peer loopback determination, 0.0.0.0/trust-off behaviour over a socket (only the 401->typed-error client mapping is tested), and deployed asset/entry wiring.",
+  "files": {
+    "role-model-router/apps/runtime-ui-next/src/diagnostics-client.ts": "refusal for token-less non-loopback/cross-origin base; DiagnosticsTrustRequiredError; demoted origin + explicit precondition docs",
+    "role-model-router/apps/runtime-ui-next/src/mount.ts": "createReader factory seam in mountWithDiagnostics",
+    "role-model-router/apps/runtime-ui-next/test/diagnostics-client.test.ts": "in-flight abort, refusal, token-less 401 typed error",
+    "role-model-router/apps/runtime-ui-next/test/diagnostics-e2e.test.ts": "construction spy, mounted-reader identity, token-less trust e2e"
+  }
+}

@@ -1,0 +1,46 @@
+COMMAND: node vitest run s475 (S475 QA invoke deadline RED, before helper)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:44900) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s475-qa-invoke-timeout.test.ts (2 tests | 2 failed) 7ms
+   × S475 packaged QA startup invoke deadline > rejects a never-settling invoke within the deadline and names the extension id 4ms
+     → (0 , runQaStartupInvoke) is not a function
+   × S475 packaged QA startup invoke deadline > returns the successful receipt unchanged and clears the timer 1ms
+     → (0 , runQaStartupInvoke) is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s475-qa-invoke-timeout.test.ts > S475 packaged QA startup invoke deadline > rejects a never-settling invoke within the deadline and names the extension id
+TypeError: (0 , runQaStartupInvoke) is not a function
+ ❯ test/s475-qa-invoke-timeout.test.ts:11:7
+      9|     const started = Date.now();
+     10|     await expect(
+     11|       runQaStartupInvoke({
+       |       ^
+     12|         extensionId: "qa.example.extension",
+     13|         invoke: () => new Promise<never>(() => {}),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s475-qa-invoke-timeout.test.ts > S475 packaged QA startup invoke deadline > returns the successful receipt unchanged and clears the timer
+TypeError: (0 , runQaStartupInvoke) is not a function
+ ❯ test/s475-qa-invoke-timeout.test.ts:23:7
+     21|     const receipt = { accepted: true, requestId: "req-1" };
+     22|     await expect(
+     23|       runQaStartupInvoke({
+       |       ^
+     24|         extensionId: "qa.example.extension",
+     25|         invoke: async () => receipt,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  12:32:03
+   Duration  9.48s (transform 6.00s, setup 0ms, collect 8.88s, tests 7ms, environment 0ms, prepare 207ms)
+
+

@@ -3,7 +3,7 @@ import { DatabaseSync } from "node:sqlite";
 /** The bind shapes node:sqlite accepts; its own SQLInputValue alias is not exported. */
 type SqlBindValue = null | number | bigint | string | NodeJS.ArrayBufferView;
 
-import { Duration, Effect, Exit, Ref, Semaphore } from "effect";
+import { Duration, Effect, Exit, Fiber, Ref, Semaphore } from "effect";
 
 /**
  * Run 115 S6a (R23/B3): a first-party SQLite service over the vendored SQLite client's
@@ -82,6 +82,101 @@ export class SqliteOpenError extends SqliteServiceError {
   }
 }
 
+export interface MaintenancePragmaSnapshot {
+  readonly [pragmaName: string]: string;
+}
+
+/** Typed refusal: a maintenance operation cannot start while another owner holds the connection. */
+export class MaintenanceBusyError extends SqliteServiceError {
+  readonly code = "MAINTENANCE_BUSY";
+  readonly owner: string;
+
+  constructor(operation: string, owner: string) {
+    super(
+      operation,
+      undefined,
+      `SQLite ${operation} refused: ${owner} owns the connection; maintenance needs the fence idle or drained.`,
+    );
+    this.name = "MaintenanceBusyError";
+    this.owner = owner;
+  }
+}
+
+/** Typed failure: the bounded drain waited for the owner and the owner never released. */
+export class MaintenanceDrainTimeoutError extends SqliteServiceError {
+  readonly code = "MAINTENANCE_DRAIN_TIMEOUT";
+  readonly timeoutMs: number;
+
+  constructor(operation: string, timeoutMs: number) {
+    super(
+      operation,
+      undefined,
+      `SQLite ${operation} drain timed out after ${timeoutMs}ms waiting for the active owner to release.`,
+    );
+    this.name = "MaintenanceDrainTimeoutError";
+    this.timeoutMs = timeoutMs;
+  }
+}
+
+/** Typed validation failure: the drain budget must be a finite, non-negative number. */
+export class MaintenanceBudgetError extends SqliteServiceError {
+  readonly code = "MAINTENANCE_INVALID_BUDGET";
+  readonly drainTimeoutMs: number;
+
+  constructor(operation: string, drainTimeoutMs: number) {
+    super(
+      operation,
+      undefined,
+      `SQLite ${operation} refused: drainTimeoutMs must be finite and >= 0 (got ${String(drainTimeoutMs)}).`,
+    );
+    this.name = "MaintenanceBudgetError";
+    this.drainTimeoutMs = drainTimeoutMs;
+  }
+}
+
+/** Typed verification failure: the store's PRAGMAs did not survive the maintenance re-apply. */
+export class MaintenancePragmaVerificationError extends SqliteServiceError {
+  readonly code = "MAINTENANCE_PRAGMA_UNVERIFIED";
+  readonly pragmas: readonly string[];
+
+  constructor(operation: string, pragmas: readonly string[]) {
+    super(
+      operation,
+      undefined,
+      `SQLite ${operation} re-applied PRAGMAs did not verify: ${pragmas.join(", ")}.`,
+    );
+    this.name = "MaintenancePragmaVerificationError";
+    this.pragmas = pragmas;
+  }
+}
+
+export interface MaintenanceOptions {
+  /** 0/absent means immediate refusal (typed busy); >0 drains up to the bound then fails typed. */
+  readonly drainTimeoutMs?: number;
+  /** Internal loss test hook: false leaves the connection's reset PRAGMAs in place. */
+  readonly reapplyPragmas?: boolean;
+  /** Internal failure-path test hook: pretend this pragma's re-apply was rejected/no-op. */
+  readonly reapplyFailurePragma?: string;
+}
+
+export interface MaintenanceResult {
+  readonly kind: "backup" | "reset" | "restore";
+  readonly durationMs: number;
+  readonly targetPath?: string;
+}
+
+/**
+ * R24 maintenance surface: backup/reset/restore are fenced against every owner (active async
+ * transaction, sync owner depth, another maintenance) and bounded-drained, and the store's actual
+ * PRAGMAs are re-applied afterwards so a maintenance cycle cannot silently change per-store behavior.
+ */
+export interface SqliteMaintenance {
+  readonly pragmas: () => MaintenancePragmaSnapshot;
+  readonly backup: (targetPath: string, options?: MaintenanceOptions) => Promise<MaintenanceResult>;
+  readonly reset: (options?: MaintenanceOptions) => Promise<MaintenanceResult>;
+  readonly restore: (options?: MaintenanceOptions) => Promise<MaintenanceResult>;
+}
+
 export interface SqliteTransaction {
   readonly query: (
     sql: string,
@@ -104,13 +199,20 @@ export interface SqliteService {
   readonly transaction: <A, E>(
     work: (tx: SqliteTransaction) => Effect.Effect<A, E>,
   ) => Effect.Effect<A, E | SqliteServiceError>;
-  /** Compatible synchronous facade (SEA startup, migrations, sync test helpers). */
+  /**
+   * Compatible synchronous facade (SEA startup, migrations, sync test helpers). While a
+   * *different* fiber's async transaction owns the connection, every sync facade operation
+   * refuses with a typed SqliteServiceError; the owning fiber keeps using the transaction
+   * handle. A sync call cannot await the semaphore without blocking the event loop, so this
+   * is an intentional ownership refusal, not asynchronous serialization.
+   */
   readonly querySync: (sql: string, params?: ReadonlyArray<unknown>) => SqliteRows;
   readonly execSync: (sql: string) => void;
   readonly transactionSync: <A>(work: (tx: SqliteTransaction) => A) => A;
   readonly close: () => Effect.Effect<void, SqliteServiceError>;
   readonly closeSync: () => void;
   readonly isOpen: () => boolean;
+  readonly maintenance: SqliteMaintenance;
 }
 
 const describeCause = (cause: unknown): string =>
@@ -272,6 +374,25 @@ const buildService = (config: SqliteServiceConfig, database: DatabaseSync): Sqli
       "nested SQLite service call inside a transaction: use the transaction handle",
     );
 
+  const syncOwnershipError = (operation: string): SqliteServiceError =>
+    new SqliteServiceError(
+      operation,
+      undefined,
+      `SQLite ${operation} refused: an active async Effect transaction owns the connection; a synchronous call cannot await the semaphore, so use the transaction handle or await the transaction`,
+    );
+
+  /**
+   * R23 mixed-owner fence: the sync facade may not touch the connection while a *different*
+   * fiber's async transaction owns it. The owner fiber (and the transaction handle) keeps
+   * working; everyone else gets the typed refusal before any prepare/exec/close.
+   */
+  const refuseUnlessTransactionOwnerSync = (operation: string): void => {
+    const owner = Ref.getUnsafe(activeTransaction);
+    if (owner !== null && Fiber.getCurrent()?.id !== owner) {
+      throw syncOwnershipError(operation);
+    }
+  };
+
   const ensureOpenSync = (operation: string): void => {
     if (!Ref.getUnsafe(openState)) {
       throw closedError(operation);
@@ -338,17 +459,24 @@ const buildService = (config: SqliteServiceConfig, database: DatabaseSync): Sqli
   const transaction = <A, E>(work: (tx: SqliteTransaction) => Effect.Effect<A, E>) =>
     serialize(
       Effect.gen(function* () {
-        yield* ensureOpenEffect("transaction");
-        const fiberId = yield* Effect.fiberId;
-        yield* Effect.sync(() => {
-          Effect.runSync(Ref.set(activeTransaction, fiberId));
-        });
+        // Set inside the protected region so every exit path (success, failure, interruption)
+        // rolls an open BEGIN back and clears ownership before the next operation.
+        let transactionOpen = false;
 
         return yield* Effect.ensuring(
           Effect.gen(function* () {
+            yield* ensureOpenEffect("transaction");
+            const fiberId = yield* Effect.fiberId;
+            yield* Effect.sync(() => {
+              Effect.runSync(Ref.set(activeTransaction, fiberId));
+            });
+
             const begin = yield* Effect.exit(
               Effect.try({
-                try: () => database.exec("BEGIN IMMEDIATE"),
+                try: () => {
+                  database.exec("BEGIN IMMEDIATE");
+                  transactionOpen = true;
+                },
                 catch: (cause) => new SqliteServiceError("begin-transaction", cause),
               }),
             );
@@ -361,48 +489,74 @@ const buildService = (config: SqliteServiceConfig, database: DatabaseSync): Sqli
             if (Exit.isSuccess(workExit)) {
               const commit = yield* Effect.exit(
                 Effect.try({
-                  try: () => database.exec("COMMIT"),
+                  try: () => {
+                    database.exec("COMMIT");
+                    transactionOpen = false;
+                  },
                   catch: (cause) => new SqliteServiceError("commit", cause),
                 }),
               );
               if (Exit.isSuccess(commit)) {
                 return workExit.value;
               }
-              // A failed commit is the primary error; rollback/close must not replace it.
-              rollbackAndMaybeClose();
+              // A failed commit is the primary error; the finalizer's rollback/close must not
+              // replace it.
               return yield* Effect.failCause(commit.cause);
             }
 
-            rollbackAndMaybeClose();
             return yield* Effect.failCause(workExit.cause);
           }),
-          Effect.sync(clearTransactionOwner),
+          Effect.sync(() => {
+            // Interruption aborts `Effect.exit(work)` before the body can roll back, so the
+            // finalizer is the single rollback authority for that path too.
+            if (transactionOpen) {
+              rollbackAndMaybeClose();
+            }
+            clearTransactionOwner();
+          }),
         );
       }),
     );
 
-  const querySync = (sql: string, params: ReadonlyArray<unknown> = []): SqliteRows => {
-    ensureOpenSync("querySync");
-    return readRows(database, sql, params);
-  };
+  let syncOwnerDepth = 0;
 
-  const execSync = (sql: string): void => {
-    ensureOpenSync("execSync");
-    runExec(database, sql);
-  };
-
-  const transactionSync = <A>(work: (tx: SqliteTransaction) => A): A => {
-    ensureOpenSync("transactionSync");
-    database.exec("BEGIN IMMEDIATE");
+  const withSyncOwner = <A>(work: () => A): A => {
+    syncOwnerDepth += 1;
     try {
-      const result = work(buildTransaction(database));
-      database.exec("COMMIT");
-      return result;
-    } catch (cause) {
-      rollbackAndMaybeClose();
-      throw cause;
+      return work();
+    } finally {
+      syncOwnerDepth -= 1;
     }
   };
+
+  const querySync = (sql: string, params: ReadonlyArray<unknown> = []): SqliteRows =>
+    withSyncOwner(() => {
+      ensureOpenSync("querySync");
+      refuseUnlessTransactionOwnerSync("querySync");
+      return readRows(database, sql, params);
+    });
+
+  const execSync = (sql: string): void =>
+    withSyncOwner(() => {
+      ensureOpenSync("execSync");
+      refuseUnlessTransactionOwnerSync("execSync");
+      runExec(database, sql);
+    });
+
+  const transactionSync = <A>(work: (tx: SqliteTransaction) => A): A =>
+    withSyncOwner(() => {
+      ensureOpenSync("transactionSync");
+      refuseUnlessTransactionOwnerSync("transactionSync");
+      database.exec("BEGIN IMMEDIATE");
+      try {
+        const result = work(buildTransaction(database));
+        database.exec("COMMIT");
+        return result;
+      } catch (cause) {
+        rollbackAndMaybeClose();
+        throw cause;
+      }
+    });
 
   const close = () =>
     serialize(
@@ -418,15 +572,175 @@ const buildService = (config: SqliteServiceConfig, database: DatabaseSync): Sqli
       }),
     );
 
-  const closeSync = (): void => {
-    if (!Ref.getUnsafe(openState)) {
-      return;
-    }
-    markClosed();
-    database.close();
-  };
+  const closeSync = (): void =>
+    withSyncOwner(() => {
+      if (!Ref.getUnsafe(openState)) {
+        return;
+      }
+      refuseUnlessTransactionOwnerSync("closeSync");
+      markClosed();
+      database.close();
+    });
 
   const isOpen = (): boolean => Ref.getUnsafe(openState);
+
+  // S307 (R24): maintenance fence + bounded drain + actual per-store PRAGMA preservation.
+  const PRAGMA_NAMES = [
+    "busy_timeout",
+    "journal_mode",
+    "synchronous",
+    "foreign_keys",
+    "cache_size",
+    "temp_store",
+    "locking_mode",
+    "auto_vacuum",
+    "wal_autocheckpoint",
+  ] as const;
+
+  const readPragmas = (): MaintenancePragmaSnapshot => {
+    const snapshot: Record<string, string> = {};
+    for (const name of PRAGMA_NAMES) {
+      const row = database.prepare(`PRAGMA ${name}`).get();
+      const first = Object.values(Object(row))[0];
+      snapshot[name] = String(first ?? "");
+    }
+    return snapshot;
+  };
+
+  const storePragmas = readPragmas();
+
+  const reapplyPragmas = (snapshot: MaintenancePragmaSnapshot, skipPragma?: string): void => {
+    for (const [name, value] of Object.entries(snapshot)) {
+      if (name === skipPragma) {
+        // The failure-path hook pretends this pragma's re-apply was rejected; verification must notice.
+        continue;
+      }
+      try {
+        database.exec(`PRAGMA ${name} = ${value}`);
+      } catch {
+        // Best-effort re-apply: a read-only pragma keeps its value; the store's primary pragmas
+        // (busy_timeout/foreign_keys/synchronous/journal_mode) are writable in this connection.
+      }
+    }
+  };
+
+  const resetConnectionPragmas = (): void => {
+    database.exec("PRAGMA busy_timeout = 1");
+    database.exec("PRAGMA foreign_keys = OFF");
+    database.exec("PRAGMA synchronous = OFF");
+  };
+
+  const quoteSqlLiteral = (value: string): string => `'${value.replaceAll("'", "''")}'`;
+
+  let maintenanceActive = false;
+
+  const drainMaintenanceOwners = async (
+    operation: string,
+    drainTimeoutMs: number,
+  ): Promise<void> => {
+    const ownerHolds = (): boolean => Ref.getUnsafe(activeTransaction) !== null;
+    if (!ownerHolds()) {
+      return;
+    }
+    if (drainTimeoutMs <= 0) {
+      throw new MaintenanceBusyError(operation, "active async transaction");
+    }
+    const deadline = Date.now() + drainTimeoutMs;
+    while (ownerHolds()) {
+      if (Date.now() >= deadline) {
+        throw new MaintenanceDrainTimeoutError(operation, drainTimeoutMs);
+      }
+      await new Promise<void>((resolve) => setTimeout(resolve, 10));
+    }
+  };
+
+  const runMaintenance = async (
+    operation: "backup" | "reset" | "restore",
+    options: MaintenanceOptions | undefined,
+    work: () => void,
+    targetPath?: string,
+  ): Promise<MaintenanceResult> => {
+    if (!Ref.getUnsafe(openState)) {
+      throw closedError(operation);
+    }
+    const drainTimeoutMs = options?.drainTimeoutMs ?? 0;
+    if (!Number.isFinite(drainTimeoutMs) || drainTimeoutMs < 0) {
+      throw new MaintenanceBudgetError(operation, drainTimeoutMs);
+    }
+    // Reserve the single maintenance slot SYNCHRONOUSLY, before any await: two concurrent callers
+    // cannot both pass the fence.
+    if (maintenanceActive) {
+      throw new MaintenanceBusyError(operation, "another maintenance operation");
+    }
+    if (syncOwnerDepth > 0) {
+      // A synchronous owner cannot release while this async maintenance runs; refuse typed, never wait.
+      throw new MaintenanceBusyError(operation, "sync facade owner");
+    }
+    maintenanceActive = true;
+    const startedAt = Date.now();
+    let primary: unknown;
+    let verification: unknown;
+    let drained = false;
+    try {
+      await drainMaintenanceOwners(operation, drainTimeoutMs);
+      drained = true;
+      work();
+    } catch (error) {
+      primary = error;
+    }
+    // A refused drain must leave the live owner's connection untouched: no re-apply, no verification
+    // (only a drained owner may be written to).
+    if (drained) {
+      try {
+        if (options?.reapplyPragmas !== false) {
+          reapplyPragmas(storePragmas, options?.reapplyFailurePragma);
+          if (primary === undefined) {
+            const after = readPragmas();
+            const drifted = Object.keys(storePragmas).filter(
+              (name) => after[name] !== storePragmas[name],
+            );
+            if (drifted.length > 0) {
+              throw new MaintenancePragmaVerificationError(operation, drifted);
+            }
+          }
+        }
+      } catch (error) {
+        verification = error;
+      }
+    }
+    maintenanceActive = false;
+    if (primary !== undefined) {
+      throw primary;
+    }
+    if (verification !== undefined) {
+      throw verification;
+    }
+    return { durationMs: Date.now() - startedAt, kind: operation, targetPath };
+  };
+
+  const maintenance: SqliteMaintenance = {
+    backup: (targetPath, options) =>
+      runMaintenance(
+        "backup",
+        options,
+        () => {
+          database.exec(`VACUUM INTO ${quoteSqlLiteral(targetPath)}`);
+        },
+        targetPath,
+      ),
+    pragmas: readPragmas,
+    reset: (options) =>
+      runMaintenance("reset", options, () => {
+        resetConnectionPragmas();
+        database.exec("VACUUM");
+      }),
+    restore: (options) =>
+      runMaintenance("restore", options, () => {
+        resetConnectionPragmas();
+        config.setup?.(database);
+        database.exec("VACUUM");
+      }),
+  };
 
   return {
     close,
@@ -434,6 +748,7 @@ const buildService = (config: SqliteServiceConfig, database: DatabaseSync): Sqli
     exec,
     execSync,
     isOpen,
+    maintenance,
     query,
     querySync,
     transaction,

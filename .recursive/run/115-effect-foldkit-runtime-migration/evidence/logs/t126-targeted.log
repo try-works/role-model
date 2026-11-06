@@ -1,0 +1,19 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s639-duplicate-chart-series.test.ts (2 tests) 851ms
+   ✓ S639 duplicate display names in chart series > keeps both /requests ranking rows and disambiguates the shared label  630ms
+ ✓ test/s640-benchmark-outcome.test.ts (6 tests) 1285ms
+   ✓ S640 benchmark host outcome fields > renders outcome and passed/total in history rows for partial, failed and passed runs  450ms
+   ✓ S640 benchmark host outcome fields > headlines passed and failed outcomes from host fields in the detail panel  342ms
+ ✓ test/s622-benchmark-parity.test.ts (12 tests) 1823ms
+   ✓ S622 benchmark parity > renders the mode options with suite-derived counts and the judge select with endpoint ids  442ms
+   ✓ S622 benchmark parity > guards Clear all benchmark data behind an explicit confirmation  310ms
+ ✓ test/s563-learningmodelsstudiolocal-layout.test.ts (21 tests) 1900ms
+   ✓ S563 learning/models/studio/local reference layout > learning overview  346ms
+
+ Test Files  4 passed (4)
+      Tests  41 passed (41)
+   Start at  08:40:01
+   Duration  26.31s (transform 11.73s, setup 0ms, collect 74.23s, tests 5.86s, environment 15.33s, prepare 2.66s)
+

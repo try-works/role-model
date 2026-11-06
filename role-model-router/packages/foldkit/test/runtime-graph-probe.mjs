@@ -49,7 +49,7 @@ export async function probeRuntimeGraph(baseDir = import.meta.dirname) {
         }
         result.loaded += 1;
       } catch (error) {
-        result.failures.push(wrapper.name + entry.subpath + ": " + String(error?.message ?? error));
+        result.failures.push(`${wrapper.name + entry.subpath}: ${String(error?.message ?? error)}`);
       }
     }
   }

@@ -1,0 +1,11 @@
+# S264 independent review of completed bounded repairs
+
+Read-only explicit deepseek-official/deepseek-flash reviewer, GPT Lead. Public cwd D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration and paired private worktree. NO product changes, no delegation, no commits. Write ONLY public evidence/other/s264-bounded-repair-review.md. These two slices started before owner requested full-goal reassessment; no broader scope expansion.
+
+Read 00-requirements R2/R3/R18/R28/R32/R33, owner-scope-decision, 00-worktree diff baseline, s258-coverage-repair.md. Bounded diffs public HEAD9ac82847 and private HEAD263f0260 -> working-tree (canonical original baselines unchanged). Worker route proof s259-s260-actual-worker-routes.json.
+
+Private changed files scripts/track-b/runtime-shadow-pipeline.mjs, tests/track-b/run96-f152-packaged-shadow.test.mjs. Read private s259-f152-repair.md and red/green logs. Does fixed journal path /scope/track-b/extensions model decoder layout accurately? Is host-owned root after spread authoritative? Does wrong-root test actually fail if reversed? Any scope/channel collision/path authority/security/cleanup regressions from fixed path-safe token? Existing real test6/6worker and6/6Lead, no full suite claims. Public decoder/store topology inspect if needed. Historical drift doesn't waive correctness.
+
+Public files test/s245,s250,s251,s253,s255,s256,s257 + support/runtime-shell.ts. Read worker s260 evidence. Do ALL assertions remain and types actually inferred? Any fake factory/cast hiding slots? Are invalid request+confirm all-commands-empty with valid control pinned? Integration tests untouched and S258 budget27 intact. anti_slop_lint tool Lead ran:8/8files clean; private test clean; private pipeline28pre-existing findings no changed-line findings. Do not substitute your shell lint for required tool.
+
+Return concrete findings prioritized, with file:line and acceptance verdict separately for each slice. Do not run full suites (Lead running). Bounded targeted tests at most if essential. Check actual diff, not report claims. ~120lines max. Avoid raw private source content in public report; safe references only. Finish in bounded review, no new plan generation.

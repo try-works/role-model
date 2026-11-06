@@ -1,0 +1,14 @@
+# S454 — evaluation handshake bounded acceptance
+
+Patch privateac809d31/public6306dc9e. Originalpaired00-worktree authority unchanged. ExistingFlashauthor s9b-eventlog and independent s9b-reviewer liveverified; productscopeevaluationboundary only, operatorcontract/runtimeoperationsserver untouched.
+
+Root+evaluation-core descriptorversion1.1.0 and actualevaluation:list-jobs capability requiredbeforefactory (not anyevaluationprefix). Manifestacceptednotready until nonnullchild+owner.add succeeds; no-manifest skipsfactory, peropenreset prevents reusedstale-ready; null/throw/closedlateownerreject notready and latechildrelease. Factory retains realartifactdigestauthority. Concurrentopens sharelastdecision slot, not percallauthoritative; not fullR32.
+
+StrictRED8behavioralfailures/9tests beforeproduct(s449-red.log); ninth originallystaticmanifestfieldpass disclosednotbehavioralRED. IndependentS452HOLD found weakened/flattenedevalunittest+deletedlatecloseerror and parse-onlyacceptance; repairedreadablefixtures retain closeorder/repeatedclose resolves/lateclosefailureoriginalopenerrorwins; actualmanifesttest nowverifieracceptedreadyfalse. No productchangesafterfreeze. GREEN54/9selectedfiles includingA48/run96 fixtures; reviewerandLead key42/7files pass,syntax0. Not actualfreshSEA/RDCproof.
+
+Finalhash layers433267bcecdd540c004b099dde28a6430b2ecea1aa002b7482b6ef0ad0bafdc2; newtest5c72f1cbac1230d1537483b3ac5d28fd6762382e777582e848b54563d1ec229e; oldtestf19716dac3ffb9b9a84a492dd4545e6904100705715331e9bc624aefc7bb9105; evalunitf6820dcc50941fb817c41e7ee891df1906e27585c51e3311bcd6eb6bdb7cc48d. Absoluteanti_slop scans1file/rules16/0each. SeeS452 finalPASS.
+
+Remaining wholeR32/R33 operationledger, concurrentevidence, actualjoinedprocesskill/liveclients/currentmatchedpackagedrelease gatesnotclosed. Unrelatedprivates345bdirty preserved.
+Subagent Capability Probe: existingTeam native liveFlash available; delegateddistinctreviewdefault.
+Delegation Decision Basis: disjointprivateauthor/evaluationreview, completeupstreaminputs in tasks/s449-repair.md and S452review.
+Audit: PASS (bounded boundary only)

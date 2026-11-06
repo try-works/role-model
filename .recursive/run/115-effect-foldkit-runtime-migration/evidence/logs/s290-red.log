@@ -1,0 +1,113 @@
+COMMAND: node ../../../node_modules/vitest/vitest.mjs run test/s290-refresh-page-lifetime.test.ts
+CWD: role-model-router/apps/runtime-ui-next ; S290 strict RED before the refresh.ts lifecycle fix
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s290-refresh-page-lifetime.test.ts (9 tests | 5 failed) 412ms
+   ✓ S290 refresh EventSource page lifetime > opens exactly one source per stream with both event listeners on it 64ms
+   × S290 refresh EventSource page lifetime > pagehide closes the one source exactly once and late callbacks from it never offer 40ms
+     → expected +0 to be 1 // Object.is equality
+   × S290 refresh EventSource page lifetime > persisted pageshow reopens exactly one fresh source with listeners and no duplicate on repeated show 46ms
+     → expected [ { …(5) } ] to have a length of 2 but got 1
+   × S290 refresh EventSource page lifetime > retired-generation callbacks stay silent even after the fresh source is active 38ms
+     → Cannot read properties of undefined (reading 'emit')
+   ✓ S290 refresh EventSource page lifetime > an ordinary pageshow (not persisted) opens no second source 31ms
+   ✓ S290 refresh EventSource page lifetime > SPA navigation events do not create another source 32ms
+   × S290 refresh EventSource page lifetime > the finalizer closes the current source, detaches page listeners and later pageshow cannot reopen 31ms
+     → Cannot read properties of undefined (reading 'closeCount')
+   × S290 refresh EventSource page lifetime > multiple hide/show cycles open one source per cycle and silence every retired generation 33ms
+     → expected [ { …(5) } ] to have a length of 3 but got 1
+   ✓ S290 refresh EventSource page lifetime > keeps revision and telemetry parsing unchanged (malformed payloads never emit) 90ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s290-refresh-page-lifetime.test.ts > S290 refresh EventSource page lifetime > pagehide closes the one source exactly once and late callbacks from it never offer
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/s290-refresh-page-lifetime.test.ts:145:33
+    143|     const source = sources[0] as FakeSource;
+    144|     lifecycle.emit("pagehide", false);
+    145|     expect(source.closeCount()).toBe(1);
+       |                                 ^
+    146|     lifecycle.emit("pagehide", true);
+    147|     expect(source.closeCount()).toBe(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  test/s290-refresh-page-lifetime.test.ts > S290 refresh EventSource page lifetime > persisted pageshow reopens exactly one fresh source with listeners and no duplicate on repeated show
+AssertionError: expected [ { …(5) } ] to have a length of 2 but got 1
+
+- Expected
++ Received
+
+- 2
++ 1
+
+ ❯ test/s290-refresh-page-lifetime.test.ts:163:21
+    161|     lifecycle.emit("pageshow", true);
+    162|     await settle();
+    163|     expect(sources).toHaveLength(2);
+       |                     ^
+    164|     const fresh = sources[1] as FakeSource;
+    165|     expect(fresh.listenerCount("revision.update")).toBe(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  test/s290-refresh-page-lifetime.test.ts > S290 refresh EventSource page lifetime > retired-generation callbacks stay silent even after the fresh source is active
+TypeError: Cannot read properties of undefined (reading 'emit')
+ ❯ test/s290-refresh-page-lifetime.test.ts:186:11
+    184|     await settle();
+    185|     const fresh = sources[1] as FakeSource;
+    186|     fresh.emit("revision.update", revisionPayload(21));
+       |           ^
+    187|     await settle();
+    188|     expect(running.messages).toHaveLength(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  test/s290-refresh-page-lifetime.test.ts > S290 refresh EventSource page lifetime > the finalizer closes the current source, detaches page listeners and later pageshow cannot reopen
+TypeError: Cannot read properties of undefined (reading 'closeCount')
+ ❯ test/s290-refresh-page-lifetime.test.ts:230:18
+    228|     const fresh = sources[1] as FakeSource;
+    229|     await running.stop();
+    230|     expect(fresh.closeCount()).toBe(1);
+       |                  ^
+    231|     expect(lifecycle.listenerCount("pagehide")).toBe(0);
+    232|     expect(lifecycle.listenerCount("pageshow")).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  test/s290-refresh-page-lifetime.test.ts > S290 refresh EventSource page lifetime > multiple hide/show cycles open one source per cycle and silence every retired generation
+AssertionError: expected [ { …(5) } ] to have a length of 3 but got 1
+
+- Expected
++ Received
+
+- 3
++ 1
+
+ ❯ test/s290-refresh-page-lifetime.test.ts:248:21
+    246|     lifecycle.emit("pageshow", true);
+    247|     await settle();
+    248|     expect(sources).toHaveLength(3);
+       |                     ^
+    249|     expect(sources[0]?.closeCount()).toBe(1);
+    250|     expect(sources[1]?.closeCount()).toBe(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 4 passed (9)
+   Start at  21:21:35
+   Duration  16.61s (transform 7.88s, setup 0ms, collect 12.12s, tests 412ms, environment 2.14s, prepare 790ms)
+
+

@@ -159,7 +159,7 @@ const bareSpecifier = /((?:from|import\()\s*)'foldkit(\/[^']*)?'/g;
 for (const file of allDeclarationFiles(typesDir)) {
   const source = await readFile(file, "utf8");
   const rewritten = source.replace(bareSpecifier, (_match, prefix, subpath) => {
-    return prefix + "'@role-model-router/foldkit" + (subpath ?? "") + "'";
+    return `${prefix}'@role-model-router/foldkit${subpath ?? ""}'`;
   });
   if (rewritten !== source) await writeFile(file, rewritten, "utf8");
 }

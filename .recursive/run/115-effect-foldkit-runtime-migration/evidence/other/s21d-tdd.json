@@ -1,0 +1,165 @@
+{
+  "slice": "s21d-server-owner",
+  "requirement": "R27 Server owner through composition DAG",
+  "decision": "STOP - Server cannot move before the Backend extraction. The DAG Server shape has no transport, routes, lifecycle or host options; constructing the current listener/routes requires the host's `StartBridgeServerOptions` object.",
+  "evidence": {
+    "dagServerShape": "composition-dag.ts:129-134: ServerShape = { id, backend: {id, artifactStore, eventLog}, providerPermits }. serverLayer (:374-382) only composes those values; it has no listener, request handler, port, close/readiness or shutdown service.",
+    "hostConstruction": "index.ts:20507 createBridgeRequestListener(options, createRequestHandler) -> :20624 createServer -> :20643 requestListener -> :20664 listen(server, options.host, options.port) -> :20666-20679 returns {port, close}; shutdown order is server.close only. readiness is a route readback (options.readStartupReadiness) and shutdown is options.shutdown.",
+    "handlerSignature": "index.ts:17393 createRequestHandler(options: StartBridgeServerOptions) closes over the host options for every route; :17418 options.host, :17398 options.observabilityScope, :17420 readHealthStatus, :17446 shutdown, :17469 readStartupReadiness, :20298 staticRoot, plus operator/telemetry/learning/queue/benchmark/model/peer routes.",
+    "optionSurface": "StartBridgeServerOptions (index.ts:3471-3824) has 183 top-level fields: 5 required (host, port, registry, executeChatCompletions, executeResponses) and 178 optional host callbacks. createRequestHandler references 181 of them; the omitted two are route-agnostic (runtimeChannel and diagnostics are consumed by the listener/health wiring).",
+    "blockingFields": {
+      "lifecycle": [
+        "host",
+        "port",
+        "runtimeStateRoot",
+        "runtimeChannel",
+        "shutdown",
+        "observabilityScope"
+      ],
+      "requiredBackend": [
+        "registry",
+        "executeChatCompletions",
+        "executeResponses"
+      ],
+      "routeCapabilities": [
+        "getRegistry",
+        "getExecutionCatalog",
+        "readStartupReadiness",
+        "readHealthStatus",
+        "readVersionInfo",
+        "listActivityMetrics",
+        "listActivityMetricsPage",
+        "readActivityCapture",
+        "recordClientLatency",
+        "readLogs",
+        "proxyVendorLogStream",
+        "readRuntimeSummary",
+        "listProviders",
+        "listModels",
+        "listExtensions",
+        "mutateExtension",
+        "readTrackB*",
+        "readOperatorStatus",
+        "listOperator*",
+        "listReplayJobs",
+        "createReplayJob",
+        "cancelReplayJob",
+        "readReplayJob",
+        "readReplayResults",
+        "listEvaluation*",
+        "cancelEvaluationJob",
+        "retryEvaluationJob",
+        "readLearning*",
+        "updateLearningMode",
+        "rollbackLearning",
+        "readQueues",
+        "readQueue*",
+        "setQueueConfig",
+        "retryQueueJob",
+        "cancelQueueJob",
+        "setQueueDrain",
+        "subscribeTelemetry",
+        "queryTelemetryAnalytics",
+        "listTelemetry*",
+        "readBenchmark*",
+        "runBenchmark",
+        "listBenchmark*",
+        "updateBenchmarkPreferences",
+        "listLocalModels",
+        "loadLocalModel",
+        "listPeerLocalModels",
+        "loadPeerModel",
+        "unload*",
+        "readRouter*",
+        "listRouter*",
+        "listEndpoints",
+        "activateEndpoint*",
+        "removeEndpoint",
+        "readRuntimeConfig",
+        "updateRuntimeConfig",
+        "readControllerAssignment",
+        "updateControllerAssignment",
+        "readPeers",
+        "updatePeers",
+        "checkPeerHealth",
+        "getRoutableInventory",
+        "readDiagnosticsSource",
+        "diagnostics",
+        "staticRoot",
+        "operatorAuthToken",
+        "operatorContext"
+      ],
+      "note": "The optional callbacks are not optional for behaviour parity: each backs an existing route. Injecting a DAG Server without them would make routes 404 or change semantics; fabricating them is a parallel backend."
+    },
+    "typeProof": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21d-red-server-from-dag.log",
+      "command": "temporary `startBridgeServer(serverShape)` assignment, tsc -p tsconfig.json --noEmit",
+      "error": "TS2345: ServerShape is not assignable to StartBridgeServerOptions; missing host, port, registry, executeChatCompletions, executeResponses",
+      "note": "Only the five REQUIRED fields are named by structural assignability; the 178 optional route callbacks are equally needed for behaviour parity but are not required by the type."
+    },
+    "startStopOrder": "Current order: build request listener (module-health composition) -> createServer -> attach trace handlers -> listen (host/port) -> return close. The DAG owns no start/close lifecycle, so moving Server also requires an explicit start/stop owner plus readiness/partial-shutdown ordering. That is beyond a construction move.",
+    "backendBlocker": "The DAG BackendShape is only {id, artifactStore, eventLog}; the real backend has the option object and all route capabilities. Backend must be extracted first or expose the complete handler/lifecycle bundle to Server."
+  },
+  "redGreen": {
+    "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21d-red-server-from-dag.log (type-level construction attempt fails; no runtime server started)",
+    "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21d-characterization.log (existing S21a 6/6 + S21c 2/2)",
+    "identityFallback": "Not applicable: no Server construction was moved, so there is no DAG Server instance for the host to identify and no legacy fallback to reject. Inventing one would require the options object this slice declines to duplicate."
+  },
+  "remainingOwners": [
+    {
+      "owner": "Backend",
+      "status": "blocked",
+      "blocker": "Entire host backend/options object; extracting the service boundary is a design step."
+    },
+    {
+      "owner": "Server",
+      "status": "blocked (this slice)",
+      "blocker": "StartBridgeServerOptions: 183 fields (5 required: host, port, registry, executeChatCompletions, executeResponses; 178 optional route/readback callbacks), plus listener/routes/close/readiness ordering. Needs Backend extraction first."
+    },
+    {
+      "owner": "Refresh",
+      "status": "blocked",
+      "blocker": "refresh/reload embedded in backend closures/shared state; needs read/write handoff and atomic publication."
+    },
+    {
+      "owner": "Drain",
+      "status": "blocked",
+      "blocker": "shutdown/drain spans backend, supervisor, queues, vendors; needs R27 partial-shutdown order/finalizers."
+    },
+    {
+      "owner": "Benchmark",
+      "status": "blocked",
+      "blocker": "separate CLI/runner; cancellation/overlap/cross-process ownership not modelled."
+    },
+    {
+      "owner": "Cli",
+      "status": "blocked",
+      "blocker": "process entrypoint (args/SEA/startup), not a runtime service."
+    },
+    {
+      "owner": "ProviderPermits pilot",
+      "status": "shape only",
+      "blocker": "not connected to provider dispatch; concurrency defaults unreviewed."
+    },
+    {
+      "owner": "ArtifactStore/EventLog/CaptureWal/Retention leaves",
+      "status": "shape only",
+      "blocker": "real stores retain PRAGMAs/ownership; crosses R28/R30."
+    }
+  ],
+  "counts": {
+    "tests": 8,
+    "passed": 8,
+    "failed": 0,
+    "typecheck": "tsc -p apps/runtime-host-bridge/tsconfig.json --noEmit: exit 0",
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21d-characterization.log"
+  },
+  "files": {
+    "role-model-router/apps/runtime-host-bridge/src/composition-dag.ts": "a54abe58832bdfb3855f3c95013c410bd5e5c20a47e43319fe826ca92b591514",
+    "role-model-router/apps/runtime-host-bridge/src/index.ts": "e0014cc41f943d1b85254273e2d147a5aaf6bc4d6a86885cad2c52d09eb4c990"
+  },
+  "changedProductFiles": "none",
+  "tempTypeProofRemoved": true,
+  "ephemeralPorts": "No runtime server or listener started; no operator ports touched.",
+  "unproven": "No Server wiring; no start/stop identity or fallback test because the move was rejected. A future Backend extraction must expose the handler/lifecycle bundle before Server can move."
+}

@@ -1,0 +1,53 @@
+{
+  "slice": "s88a-j6-execution",
+  "classification": "NOT RUN",
+  "reason": "replay-core refuses creation: authoritative trace root resolver required; chat produced request/decision ids but no trace root, /operator/trace-roots is empty",
+  "acceptedPostBody": null,
+  "attemptedBodies": [
+    "{traceRootId, budget:{maxRequests:1}} -> 409 identity/intent/trace root/scope required",
+    "{idempotencyKey,intent:'same_route',traceRootId,scope:'global',candidatePackages,budget:{maxRequests:1}} -> 403 operator_context_mismatch scope",
+    "same with scope:'standalone-runtime-dev' -> 409 bounded ReplayJobV1 budget required",
+    "same with full budget {maxCandidates:1,maxProviderCalls:1,maxCostMicros:1000000,maxBytes:100000,deadlineMs:30000,maxConcurrency:1} -> 409 extension replay-core failed: authoritative trace root resolver required"
+  ],
+  "assertions": [
+    {
+      "name": "chat request",
+      "result": "PASS",
+      "detail": "200; requestId req-a6d785a4-0ebd-4289-ae68-61aecbf78273; decisionId decision-req-a6d785a4-..."
+    },
+    {
+      "name": "request id captured",
+      "result": "PASS"
+    },
+    {
+      "name": "POST replay accepted",
+      "result": "FAIL",
+      "detail": "409 authoritative trace root resolver required"
+    },
+    {
+      "name": "job id in list",
+      "result": "NOT RUN"
+    },
+    {
+      "name": "terminal lifecycle",
+      "result": "NOT RUN"
+    },
+    {
+      "name": "results same request/decision ids",
+      "result": "NOT RUN"
+    },
+    {
+      "name": "mock called again",
+      "result": "FAIL",
+      "detail": "upstreamCallsTotal 2 after chat and after attempts"
+    }
+  ],
+  "mock": {
+    "callsAfterChat": 2,
+    "callsAfterReplayAttempt": 2
+  },
+  "artifacts": {
+    "script": "evidence/journeys/s88a/j6-execution.mjs",
+    "log": "evidence/journeys/s88a/j6-execution.log"
+  }
+}

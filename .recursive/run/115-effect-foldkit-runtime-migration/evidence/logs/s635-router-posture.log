@@ -1,0 +1,24 @@
+# S635 routing-strategy untouched-save hydration
+
+date: 2026-11-04
+HEAD: 9e75fc44
+
+## Reproduction
+- Packaged host at http://127.0.0.1:3480/router/strategy rendered Routing mode=baseline, Scoring strategy=balanced, Execution scope=remote_only, Measured-latency override=off.
+- Untouched Save (through a logging proxy on :3490 forwarding to the packaged :3480 host) captured:
+  {"execution_mode":"remote_only","routing":{"mode":"baseline","pin_weights":false,"scoring_strategy":"balanced"}}
+  Host accepted: data-router-posture-status=saved, "Routing posture saved."
+- Mounted tests also capture the exact PUT body; both baseline and a non-default hybrid/cost/decision_only posture are covered.
+
+## Root-cause repair
+- ReadbackLoaded("routerConfig") now hydrates model.routerPosture from routing.mode/strategy, routing.scoringStrategy, executionMode, pinWeights, and routing.weights, falling back to the host defaults baseline/balanced/decision_only when rows are absent. Existing non-empty drafts are preserved.
+- Save still has a defensive readback/default fallback, so an untouched save cannot post null even if the readback arrives late.
+
+## TDD
+- RED s635-router-posture-red.log: with only the hydration block reversed, the model remains undefined after ReadbackLoaded; 1 failed / 2 passed.
+- GREEN: s635 3/3 (hydration/defaults + untouched baseline body + non-default body); s584 1/1; tsc 0.
+- Packaged-host POST capture above is the live proof.
+
+## Scope / commit attribution
+- Source fix: the routerConfig hydration block landed in 252c851d (the concurrent S634 commit picked up the working-tree update.ts hunk). It is present at HEAD.
+- This task's commit bac87257 adds test/s635-router-posture-hydration.test.ts, the 2-site S247 budget entry, and this evidence log. No unrelated source changes were committed by bac87257.

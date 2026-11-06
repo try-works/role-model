@@ -1,0 +1,54 @@
+{
+  "slice": "s5b-process-lifecycle",
+  "requirement": "R22 Supervisor B2/B2a damage paths (00-requirements.md:207-213)",
+  "status": "3 behaviors verified; force escalation is POSIX-only, Windows is reported as a gap",
+  "files": {
+    "role-model-router/packages/process-supervisor/src/index.ts": "defc544c3bb4ba43eab8cb56521bcfe4c3ab02a5e26ed56806536d858de3b4c5",
+    "role-model-router/packages/process-supervisor/test/s5b-process-lifecycle.test.ts": "c4aad108cb89f5c2f212139923e30e77111c6fe6a69691a7f8f6f2bbe136feff"
+  },
+  "behaviors": [
+    {
+      "id": "repeated-stop",
+      "status": "verified",
+      "proof": "stopVendor shares record.stopPromise (src/index.ts:451-463). Concurrent and repeated stop calls settle on one lifecycle; a shared gracefulRequests counter records one request (:325-336). New test asserts both concurrent stops resolve, a third resolves, status is gone, trace.gracefulRequests is 1.",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5b-red-dedupe.log (removed dedupe: expected 2 to be 1)"
+    },
+    {
+      "id": "force-escalation",
+      "status": "POSIX implemented; Windows gap, not claimed PASS",
+      "schedule": "SIGTERM at stop; wait shutdownTimeoutMs (default 10000); if still alive SIGKILL and record escapedGraceful=true, forceSignal=SIGKILL, escalatedAfterMs. Prompt SIGTERM exit records escapedGraceful=false, forceSignal=null. Trace at src/index.ts:446-449, implementation :466-516.",
+      "windows": "requestGracefulStop on win32 is taskkill /T /F immediately (:325-333), trace mode force-only (:473-496). No console graceful signal exists for these Node children: taskkill /T without /F returns 128 can only be terminated forcefully; process.kill SIGINT exits code 1 without the handler. Two POSIX tests are skipped on this Windows host; no RED/GREEN for the grace schedule was executable."
+    },
+    {
+      "id": "windows-grandchild",
+      "status": "verified on Windows by the existing real-tree test",
+      "test": "test/index.test.ts:259-309: detached grandchild with its own HTTP endpoint; stop parent; assert endpoint gone.",
+      "mechanism": "requestWindowsTermination runs taskkill /PID <pid> /T /F (:317-323); /T kills the descendant tree.",
+      "limits": "External process-tree enumeration, not a Job Object. A grandchild that breaks away/reparents, appears after the walk, is access-denied, or races PID reuse can escape; supervisor crash has no kill-on-job-close. POSIX stop only signals the direct child.",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5b-red-grandchild.log (removed /T: grandchild HTTP stayed up)"
+    },
+    {
+      "id": "partial-startup",
+      "status": "verified",
+      "proof": "waitForHealth races probe against record.exitPromise (:212-246); stderr-bearing startup exit throws startupExitError with captured stderr (:112-131). New test child prints startup stderr marker and exits 3 while health is unreachable: rejects in ~258ms with code 3 + stderr, not the readiness timeout. External/no-stderr kill preserves the readiness-timeout path for the accepted bounded-health test.",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5b-red-startup.log (old generic error lacked stderr/code distinction)"
+    }
+  ],
+  "testRuns": [
+    "vitest test/index.test.ts + health-wait-timeout.test.ts + s5b-process-lifecycle.test.ts: 14 total, 12 passed, 2 skipped, exit 0",
+    "new s5b suite: 5 total, 3 passed, 2 skipped (POSIX escalation), exit 0",
+    "tsc -p tsconfig.json --noEmit: exit 0",
+    "biome check src/index.ts test/s5b-process-lifecycle.test.ts: exit 0"
+  ],
+  "logs": {
+    "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5b-green.log",
+    "typecheck": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5b-typecheck.log",
+    "biome": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5b-biome-check.log",
+    "reds": [
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5b-red-dedupe.log",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5b-red-startup.log",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5b-red-grandchild.log"
+    ]
+  },
+  "unproven": "POSIX escalation timing and prompt-no-escalation tests are skipped on Windows. Windows graceful stop does not exist for console Node children. Grandchild coverage relies on taskkill /T tree enumeration, not a Job Object."
+}

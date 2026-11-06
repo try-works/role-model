@@ -44,6 +44,26 @@ to lives in `vendor/effect/packages/effect/*.md` (`SCHEMA.md`, `CONFIG.md`, `HTT
 `ARBITRARY.md`), and `role-model-router/packages/effect/src` is the workspace package published as `effect`. Use
 `.agents/skills/effect-v3-to-v4/SKILL.md` for v3-to-v4 migrations.
 
+## Foldkit
+
+The runtime UI is being rebuilt on Foldkit, an Elm-architecture framework built on Effect-TS. The
+framework source is vendored read-only at `vendor/foldkit` (pinned by `vendor/foldkit/VENDORED.json`
+at tag `foldkit@0.169.0`, commit `7ee214268c602967937b80f6f20d1e831f2e8ab6`); application code
+imports the first-party wrappers `@role-model-router/foldkit` and
+`@role-model-router/foldkit-ui` (built from that tree under `role-model-router/packages`), never
+the vendored tree itself.
+
+Before writing or reviewing Foldkit code, read `.agents/skills/foldkit/SKILL.md`. It records the
+conventions in force here, the deterministic wrapper build, and the canonical references: the
+framework source at `vendor/foldkit/packages/foldkit/src`, the vendored production apps
+(`vendor/foldkit/packages/typing-game/client/src`, `vendor/foldkit/packages/website/src`), and the
+live app shell at `role-model-router/apps/runtime-ui-next`. Upstream `examples/**` is not vendored
+here; use the production apps as the reference.
+
+The repository-root `.mcp.json` registers the `foldkit-devtools` MCP server
+(`npx -y @foldkit/devtools-mcp`). It only exposes `foldkit_*` tools while the Foldkit dev server is
+running with the app open in a browser.
+
 ## recursive-mode
 
 When starting or resuming recursive-mode work, read `.codex/AGENTS.md` and the canonical `.recursive/RECURSIVE.md` before acting. Durable workflow memory lives under `.recursive/memory/`.

@@ -304,7 +304,7 @@ describe("runtime-host-bridge executable packaging", () => {
     expect(copies).toEqual(
       expect.arrayContaining([
         {
-          sourceRelativePath: "role-model-router/apps/runtime-ui/build/client",
+          sourceRelativePath: "role-model-router/apps/runtime-ui-next/dist/client",
           destinationRelativePath: "build/client",
         },
         {
@@ -456,7 +456,8 @@ describe("runtime-host-bridge executable packaging", () => {
 
     expect(cliText).toContain('"listRecentRequestIds"');
     expect(startText).toContain("listRecentRequestIds");
-    expect(prodLauncherText).toContain("listRecentRequestIds");
+    // The launch wiring is centralized in createCliServerOptions; the packaged launcher only composes it.
+    expect(prodLauncherText).toContain("createCliServerOptions");
   });
 
   test("packaged runtime validation exercises account activation and routed request flows", async () => {

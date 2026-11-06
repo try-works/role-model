@@ -1,0 +1,4 @@
+COMMAND: node node_modules/typescript/bin/tsc -p apps/runtime-host-bridge/tsconfig.json --noEmit (post-revert, S310 characterization)
+EXIT_CODE=0
+
+

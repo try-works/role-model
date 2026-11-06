@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:48496) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s15h-live-socket-diagnostics.test.ts (8 tests) 184ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  05:39:48
+   Duration  7.71s (transform 4.49s, setup 0ms, collect 7.04s, tests 184ms, environment 0ms, prepare 177ms)
+
+EXIT_CODE: 0

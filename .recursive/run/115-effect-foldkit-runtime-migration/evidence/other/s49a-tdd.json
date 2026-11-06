@@ -1,0 +1,30 @@
+{
+  "slice": "s49a-layout",
+  "shell": "One aside, flex-col; grouped nav sections Overview/Observe/Router/System/Studio via data-nav-group; counts rail at top of same aside; no second sidebar.",
+  "debug": "Removed Clicked counter button and Clicks text entirely; mount test now waits for heading and asserts no Clicked/Clicks.",
+  "cards": "Overview has Observability eyebrow, Runtime overview h1, Last Day, Time range filter row, two 8px-radius surface cards (Latency, Success vs failure) each with title/description/chart/accessible table. Duplicated card title removed so chart title is the card title.",
+  "tokens": "bg-surface, border --rm-border, rounded-[8px], p-4, gap-4; sidebar w-60.",
+  "tests": {
+    "mount": "heading + no debug",
+    "s26b": "nav-group >=5, links >=20, Runtime overview, filter chips",
+    "s40b": "filter row after layout",
+    "routes": "Runtime overview/data-shell-route"
+  },
+  "counts": {
+    "clientFull": 197,
+    "files": 20,
+    "fourFiles": 14,
+    "typecheck": "exit 0",
+    "hostSuite": "not completed - still running after 20+ minutes, no summary"
+  },
+  "screenshots": {
+    "after": "E:/rm-tmp/s48a/layout-final2.png",
+    "reference": "E:/rm-tmp/s48a/reference-app.png"
+  },
+  "remaining": [
+    "top header still shows RUNTIME / Overview above the Runtime overview page title (reference has a single page title)",
+    "only Time range filter; Breakdown/Source filter omitted because host summary does not accept them",
+    "charts are single-window/aggregate cards, not reference model-pool visualization",
+    "sidebar rail appears above grouped nav rather than at the bottom"
+  ]
+}

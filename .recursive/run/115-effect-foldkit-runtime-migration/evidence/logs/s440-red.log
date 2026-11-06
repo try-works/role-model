@@ -1,0 +1,80 @@
+# S440 RED — S247 click invariant baseline BEFORE editing
+command: node --test test/s247-click-budget.test.mjs (cwd role-model-router/apps/runtime-ui-next)
+✖ S247: no test may exceed its recorded synthetic-click budget (107.7754ms)
+✖ S247: every file with clicks is recorded in the budget (94.0971ms)
+✖ S247: the total click count does not grow (121.5071ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 0
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 504.8314
+
+✖ failing tests:
+
+test at test\s247-click-budget.test.mjs:43:1
+✖ S247: no test may exceed its recorded synthetic-click budget (107.7754ms)
+  AssertionError [ERR_ASSERTION]: lower the site count with a scene/story conversion instead of adding clicks
+  + actual - expected
+  
+  + [
+  +   [
+  +     's397-device-auth-form.test.ts',
+  +     2
+  +   ],
+  +   [
+  +     's425-device-auth-correctness.test.ts',
+  +     2
+  +   ]
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next/test/s247-click-budget.test.mjs:46:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ [ 's397-device-auth-form.test.ts', 2 ], [ 's425-device-auth-correctness.test.ts', 2 ] ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\s247-click-budget.test.mjs:49:1
+✖ S247: every file with clicks is recorded in the budget (94.0971ms)
+  AssertionError [ERR_ASSERTION]: record a new click site in BUDGET with its justification
+  + actual - expected
+  
+  + [
+  +   's397-device-auth-form.test.ts',
+  +   's425-device-auth-correctness.test.ts'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next/test/s247-click-budget.test.mjs:52:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 's397-device-auth-form.test.ts', 's425-device-auth-correctness.test.ts' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\s247-click-budget.test.mjs:55:1
+✖ S247: the total click count does not grow (121.5071ms)
+  AssertionError [ERR_ASSERTION]: synthetic clicks 31 > budget 27
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next/test/s247-click-budget.test.mjs:59:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+EXIT=1

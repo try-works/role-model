@@ -1,0 +1,35 @@
+COMMAND: node vitest run s412 (S412 RED)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s412-learning-ranking.test.ts [ test/s412-learning-ranking.test.ts ]
+Error: Failed to resolve import "../src/learning-ranking" from "test/s412-learning-ranking.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next/test/s412-learning-ranking.test.ts:8:7
+  5  |    learningRollbackPayload,
+  6  |    parseLearningLadderPayload
+  7  |  } from "../src/learning-ranking";
+     |          ^
+  8  |  import { Message } from "../src/message";
+  9  |  import { shellModel, shellUpdate } from "./support/runtime-shell";
+ ❯ TransformPluginContext._formatLog E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:29003:43
+ ❯ TransformPluginContext.error E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:29000:14
+ ❯ normalizeUrl E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:27123:18
+ ❯ E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:27181:32
+ ❯ TransformPluginContext.transform E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:27149:4
+ ❯ EnvironmentPluginContainer.transform E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:28801:14
+ ❯ loadAndTransform E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:22670:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  18:11:45
+   Duration  1.46s (transform 35ms, setup 0ms, collect 0ms, tests 0ms, environment 688ms, prepare 272ms)
+
+

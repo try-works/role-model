@@ -1,6 +1,6 @@
 import { Subscription } from "@role-model-router/foldkit";
 import type { Subscriptions } from "@role-model-router/foldkit/subscription";
-import { Effect, Queue, Schema, Stream } from "effect";
+import { Effect, Option, Queue, Schedule, Schema, Stream } from "effect";
 
 import { Message } from "./message";
 import type { Model } from "./model";
@@ -19,6 +19,12 @@ export interface RuntimeEventSourceLike {
 }
 
 export type RuntimeEventSourceFactory = (url: string) => RuntimeEventSourceLike;
+
+/** The browser page lifecycle surface the stream owns; injectable so tests need no global mock. */
+export interface RuntimePageLifecycle {
+  addEventListener(type: "pagehide" | "pageshow", listener: (event: Event) => void): void;
+  removeEventListener(type: "pagehide" | "pageshow", listener: (event: Event) => void): void;
+}
 
 export const REFRESH_STREAM_URL = "/api/role-model/telemetry/stream";
 
@@ -47,6 +53,34 @@ export const initialRuntimeRefreshState = (): RuntimeRefreshState => ({
   status: "idle",
 });
 
+/**
+ * S278 (R12): the real telemetry event contract (`runtime-api.ts:693-698`): eventName,
+ * emittedAtMs and the persisted request. It carries NO revision, so this decoder can only ever
+ * produce a route invalidation — never a topology revision number.
+ */
+const RuntimeTelemetryEvent = Schema.Struct({
+  emittedAtMs: Schema.Number,
+  eventName: Schema.Literals(["telemetry.update"]),
+  request: Schema.Struct({ requestId: Schema.String }),
+});
+
+const decodeTelemetry = (
+  event: MessageEvent<string>,
+): { readonly emittedAtMs: number; readonly requestId: string } | null => {
+  try {
+    const decoded = Schema.decodeUnknownOption(RuntimeTelemetryEvent)(JSON.parse(event.data));
+    if (Option.isNone(decoded)) return null;
+    const { emittedAtMs, request } = decoded.value;
+    // `Schema.Number` only proves the value is a number: JSON.parse turns 1e999 into Infinity, and a
+    // fractional timestamp is not a real emittedAtMs either. Require the same bounded integer the
+    // revision decoder requires, and an identity that can invalidate something honestly.
+    if (!Number.isSafeInteger(emittedAtMs)) return null;
+    return request.requestId.length === 0 ? null : { emittedAtMs, requestId: request.requestId };
+  } catch {
+    return null;
+  }
+};
+
 const decodeRevision = (event: MessageEvent<string>): number | null => {
   try {
     const parsed = JSON.parse(event.data) as { revision?: unknown };
@@ -58,22 +92,126 @@ const decodeRevision = (event: MessageEvent<string>): number | null => {
   }
 };
 
+interface RefreshGeneration {
+  readonly source: RuntimeEventSourceLike;
+  active: boolean;
+}
+
+interface EventPersisted extends Event {
+  readonly persisted: boolean;
+}
+
+const isPersistedPageshow = (event: Event): event is EventPersisted =>
+  "persisted" in event && event.persisted === true;
+
 export const refreshRevisionStream = (
   factory: RuntimeEventSourceFactory,
+  pageLifecycle?: RuntimePageLifecycle,
 ): Stream.Stream<Message, never> =>
   Stream.callback<Message>((queue) =>
     Effect.acquireRelease(
       Effect.sync(() => {
-        const source = factory(REFRESH_STREAM_URL);
-        source.addEventListener("revision.update", (event) => {
-          const revision = decodeRevision(event);
-          if (revision !== null) {
-            Queue.offerUnsafe(queue, Message.RuntimeRevisionReceived({ revision }));
+        const target = pageLifecycle ?? (typeof window === "undefined" ? undefined : window);
+        // S290: the stream owns ONE browser connection at a time. Each opened generation carries its
+        // own active guard, so a retired source that still invokes its listeners can never publish
+        // after a persisted pageshow reopened the connection, and the acquireRelease owner is the only
+        // place that closes it.
+        let current: RefreshGeneration | null = null;
+        let disposed = false;
+        const closeCurrent = (): void => {
+          const generation = current;
+          current = null;
+          if (generation === null) return;
+          generation.active = false;
+          try {
+            generation.source.close();
+          } catch {
+            // A source that already closed itself must not fail the owner; the guard is retired above.
           }
-        });
-        return source;
+        };
+        const open = (announceRestore: boolean): void => {
+          const generation: RefreshGeneration = {
+            active: true,
+            source: factory(REFRESH_STREAM_URL),
+          };
+          current = generation;
+          const publish = (message: Message): void => {
+            if (generation.active) Queue.offerUnsafe(queue, message);
+          };
+          try {
+            generation.source.addEventListener("revision.update", (event) => {
+              const revision = decodeRevision(event);
+              if (revision !== null) publish(Message.RuntimeRevisionReceived({ revision }));
+            });
+            // S278 (R12): the same one source also carries newly persisted telemetry requests. A
+            // malformed event is ignored rather than classified as a revision, so the watermark and the
+            // gap/resync token can never be polluted by a telemetry payload.
+            generation.source.addEventListener("telemetry.update", (event) => {
+              const telemetry = decodeTelemetry(event);
+              if (telemetry !== null) {
+                publish(
+                  Message.RuntimeTelemetryReceived({
+                    emittedAtMs: telemetry.emittedAtMs,
+                    requestId: telemetry.requestId,
+                  }),
+                );
+              }
+            });
+          } catch (error) {
+            // A partially attached generation must not leak: retire and close it, then propagate.
+            generation.active = false;
+            if (current === generation) current = null;
+            try {
+              generation.source.close();
+            } catch {
+              // The attach failure is the error worth propagating.
+            }
+            throw error;
+          }
+          if (announceRestore) publish(Message.RuntimePageRestored({}));
+        };
+        open(false);
+        // BFCache-safe: pagehide always releases the connection (a persisted page may be suspended for
+        // an unbounded time); only a persisted pageshow may reopen it, and only once per suspension.
+        const onPagehide = (): void => {
+          if (!disposed) closeCurrent();
+        };
+        const reportRestoreFailure = (error: unknown): void => {
+          try {
+            console.error("[refresh] persisted pageshow restore failed", error);
+          } catch {
+            // Reporting must never turn a failed restore into a thrown page callback.
+          }
+        };
+        const onPageshow = (event: Event): void => {
+          if (disposed || current !== null || !isPersistedPageshow(event)) return;
+          // A factory failure must not escape a page callback: report it, keep the owner usable and
+          // let the next persisted pageshow retry the reopen.
+          try {
+            open(true);
+          } catch (error) {
+            reportRestoreFailure(error);
+          }
+        };
+        try {
+          target?.addEventListener("pagehide", onPagehide);
+          target?.addEventListener("pageshow", onPageshow);
+        } catch (error) {
+          target?.removeEventListener("pagehide", onPagehide);
+          target?.removeEventListener("pageshow", onPageshow);
+          closeCurrent();
+          throw error;
+        }
+        return {
+          dispose: (): void => {
+            disposed = true;
+            closeCurrent();
+            target?.removeEventListener("pagehide", onPagehide);
+            target?.removeEventListener("pageshow", onPageshow);
+          },
+        };
       }),
-      (source) => Effect.sync(() => source.close()),
+      ({ dispose }) => Effect.sync(dispose),
     ),
   );
 
@@ -81,6 +219,19 @@ export const refreshRevisionStream = (
 export const makeRefreshSubscriptions = (
   factory: RuntimeEventSourceFactory,
 ): Subscriptions<Model, Message> =>
-  Subscription.make<Model, Message>()(() => ({
+  Subscription.make<Model, Message>()((entry) => ({
+    localLogsAutoRefresh: entry(
+      { enabled: Schema.Boolean },
+      {
+        modelToDependencies: (model: Model) => ({ enabled: model.localLogsAutoRefresh === true }),
+        dependenciesToStream: ({ enabled }) =>
+          enabled
+            ? Stream.fromEffectSchedule(
+                Effect.succeed(Message.LocalLogsRefreshRequested({})),
+                Schedule.spaced("3 seconds"),
+              )
+            : Stream.empty,
+      },
+    ),
     refresh: Subscription.persistentEntry(refreshRevisionStream(factory)),
   }));

@@ -35,11 +35,12 @@ async function startHealthy(
   supervisor: ProcessSupervisor,
   vendorId: string,
   shutdownTimeoutMs: number,
+  script = healthyChildScript,
 ): Promise<number> {
   const port = await allocatePort();
   await supervisor.startVendor({
     command: process.execPath,
-    args: ["-e", healthyChildScript],
+    args: ["-e", script],
     env: { PORT: String(port) },
     healthCheckUrl: `http://127.0.0.1:${port}/healthz`,
     required: true,
@@ -51,6 +52,11 @@ async function startHealthy(
 }
 
 describe("S5c supervisor repairs", () => {
+  // A bound of 1ms is shorter than process teardown on Linux CI, so the supervisor would be right to
+  // escalate; give the child a real prompt exit and a bound that a prompt exit always meets.
+  const promptExitChildScript =
+    'const http=require("node:http");const port=Number(process.env.PORT);const server=http.createServer((req,res)=>{res.statusCode=req.url==="/healthz"?200:404;res.end("ok");});server.listen(port,"127.0.0.1");process.on("SIGTERM",()=>server.close(()=>process.exit(0)));';
+
   posixOnly(
     "a prompt SIGTERM exit is never SIGKILLed across repeated short-bound stops",
     async () => {
@@ -58,7 +64,7 @@ describe("S5c supervisor repairs", () => {
       supervisors.push(supervisor);
       for (let run = 0; run < 5; run += 1) {
         const vendorId = `s5c-prompt-${run}`;
-        await startHealthy(supervisor, vendorId, 1);
+        await startHealthy(supervisor, vendorId, 1000, promptExitChildScript);
         await supervisor.stopVendor(vendorId);
         const trace = supervisor.getStopTrace(vendorId);
         expect(trace?.escapedGraceful, `run ${run} escalated a prompt exit`).toBe(false);

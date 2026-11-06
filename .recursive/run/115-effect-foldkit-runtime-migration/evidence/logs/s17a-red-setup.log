@@ -1,0 +1,97 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/s17a-transport-signal.test.ts (6 tests | 6 failed) 12ms
+   × private operations transport signal > cancels the underlying fetch when the enclosing fiber times out (request does not keep running) 5ms
+     → (0 , privateRetentionRequestEffect) is not a function
+   × private operations transport signal > counts scoped releases on the status-failure path 1ms
+     → (0 , privateRetentionRequest) is not a function
+   × private operations transport signal > counts scoped releases on the caller-abort path and does not retry 1ms
+     → (0 , privateRetentionRequest) is not a function
+   × private operations transport signal > pins the exact connection-retry schedule 250/1000/2500/5000ms 1ms
+     → (0 , privateRetentionRequest) is not a function
+   × private operations transport signal > does not retry a caller abort 1ms
+     → (0 , privateRetentionRequest) is not a function
+   × private operations transport signal > keeps timeout, status, protocol and abort failures distinct and non-retried 1ms
+     → (0 , privateRetentionRequest) is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s17a-transport-signal.test.ts > private operations transport signal > cancels the underlying fetch when the enclosing fiber times out (request does not keep running)
+TypeError: (0 , privateRetentionRequestEffect) is not a function
+ ❯ test/s17a-transport-signal.test.ts:48:9
+     46|     const exit = await Effect.runPromiseExit(
+     47|       Effect.timeout(
+     48|         privateRetentionRequestEffect(ENDPOINT, TOKEN, "probe", {}, 10…
+       |         ^
+     49|           fetchImpl: stalledUntilAbortedFetch(state),
+     50|         }),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  test/s17a-transport-signal.test.ts > private operations transport signal > counts scoped releases on the status-failure path
+TypeError: (0 , privateRetentionRequest) is not a function
+ ❯ test/s17a-transport-signal.test.ts:63:27
+     61|     const releases: string[] = [];
+     62|     const controller = new AbortController();
+     63|     const failure = await privateRetentionRequest(
+       |                           ^
+     64|       ENDPOINT,
+     65|       TOKEN,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  test/s17a-transport-signal.test.ts > private operations transport signal > counts scoped releases on the caller-abort path and does not retry
+TypeError: (0 , privateRetentionRequest) is not a function
+ ❯ test/s17a-transport-signal.test.ts:94:21
+     92|       return new Response(body, { status: 200 });
+     93|     }) as typeof fetch;
+     94|     const pending = privateRetentionRequest(ENDPOINT, TOKEN, "abort", …
+       |                     ^
+     95|       fetchImpl,
+     96|       onRelease: (resource) => releases.push(resource),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  test/s17a-transport-signal.test.ts > private operations transport signal > pins the exact connection-retry schedule 250/1000/2500/5000ms
+TypeError: (0 , privateRetentionRequest) is not a function
+ ❯ test/s17a-transport-signal.test.ts:110:27
+    108|     const sleeps: number[] = [];
+    109|     let calls = 0;
+    110|     const failure = await privateRetentionRequest(ENDPOINT, TOKEN, "re…
+       |                           ^
+    111|       fetchImpl: (async () => {
+    112|         calls += 1;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  test/s17a-transport-signal.test.ts > private operations transport signal > does not retry a caller abort
+TypeError: (0 , privateRetentionRequest) is not a function
+ ❯ test/s17a-transport-signal.test.ts:131:27
+    129|     let calls = 0;
+    130|     const sleeps: number[] = [];
+    131|     const failure = await privateRetentionRequest(ENDPOINT, TOKEN, "pr…
+       |                           ^
+    132|       fetchImpl: (async () => {
+    133|         calls += 1;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  test/s17a-transport-signal.test.ts > private operations transport signal > keeps timeout, status, protocol and abort failures distinct and non-retried
+TypeError: (0 , privateRetentionRequest) is not a function
+ ❯ test/s17a-transport-signal.test.ts:148:27
+    146| 
+    147|   it("keeps timeout, status, protocol and abort failures distinct and …
+    148|     const timeout = await privateRetentionRequest(ENDPOINT, TOKEN, "ti…
+       |                           ^
+    149|       fetchImpl: ((_url: string | URL | Request, init?: RequestInit) =>
+    150|         new Promise<Response>((_resolve, reject) => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed (6)
+   Start at  01:43:15
+   Duration  3.93s (transform 1.90s, setup 0ms, collect 3.46s, tests 12ms, environment 0ms, prepare 165ms)
+

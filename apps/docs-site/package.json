@@ -24,6 +24,7 @@
     ]
   },
   "scripts": {
+    "typecheck": "react-router typegen && fumadocs-mdx && tsc --noEmit",
     "build": "react-router build && npm run types:check && node ./scripts/materialize-search-index.mjs",
     "docs:taxonomy-v1-check": "node ./scripts/check-taxonomy-v1-docs.mjs",
     "dev": "react-router dev",

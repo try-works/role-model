@@ -1,0 +1,16 @@
+COMMAND: node vitest run s439+s404+s425+s397; plus UI tsc noEmit (post lint-comment freeze)
+TSC_EXIT=0
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s404-endpoint-admission.test.ts (9 tests) 70ms
+ ✓ test/s439-endpoint-completion.test.ts (8 tests) 160ms
+ ✓ test/s397-device-auth-form.test.ts (15 tests) 342ms
+ ✓ test/s425-device-auth-correctness.test.ts (16 tests) 727ms
+
+ Test Files  4 passed (4)
+      Tests  48 passed (48)
+   Start at  06:42:49
+   Duration  14.20s (transform 7.97s, setup 0ms, collect 40.79s, tests 1.30s, environment 6.56s, prepare 2.01s)
+
+

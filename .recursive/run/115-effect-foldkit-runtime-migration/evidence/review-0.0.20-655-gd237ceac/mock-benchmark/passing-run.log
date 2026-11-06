@@ -1,0 +1,41 @@
+{
+  "runId": "42947605-c528-49ca-8139-027ba03f3a4a",
+  "status": "completed",
+  "steps": 60,
+  "grades": [
+    {
+      "id": "mock.local.alpha.us-east-1.gpt-4.1-mini-fast",
+      "score": 0.6833333333333335,
+      "first": {
+        "caseId": "p17-tools-multi-hard",
+        "difficultyBucket": "hard",
+        "score": 0.82,
+        "rationale": "Mock judge: the deliverable addresses the requested capability.",
+        "gradingMethod": "judge",
+        "latencyMs": 796,
+        "actualPreview": "{\n  \"tool_calls\": []\n}",
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      }
+    },
+    {
+      "id": "mock.local.beta.us-east-1.gpt-4.1-mini-fast",
+      "score": 0.6833333333333335,
+      "first": {
+        "caseId": "p17-tools-multi-hard",
+        "difficultyBucket": "hard",
+        "score": 0.82,
+        "rationale": "Mock judge: the deliverable addresses the requested capability.",
+        "gradingMethod": "judge",
+        "latencyMs": 371,
+        "actualPreview": "{\n  \"tool_calls\": []\n}",
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      }
+    }
+  ]
+}

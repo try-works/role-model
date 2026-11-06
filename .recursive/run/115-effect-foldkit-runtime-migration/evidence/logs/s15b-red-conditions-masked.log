@@ -1,0 +1,64 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/diagnostics.test.ts > diagnostics page states > shows independent conditions together instead of hiding one behind the other
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 12.6ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 'inst-1', status: 'loading' },
+    route: { _tag: 'Diagnostics', id: 'inst-1' },
+    theme: 'light'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 12.621500000000196,
+  thresholdMs: 8
+}
+
+ ❯ test/diagnostics.test.ts (13 tests | 1 failed | 12 skipped) 602ms
+   ↓ diagnostics page states > renders the ok state with records and identity
+   ↓ diagnostics page states > renders the empty state distinctly
+   ↓ diagnostics page states > renders disabled as a state, not an error
+   ↓ diagnostics page states > renders stale with the rule and the age
+   ↓ diagnostics page states > renders dropped with the loss counts
+   × diagnostics page states > shows independent conditions together instead of hiding one behind the other 600ms
+     → expected 'IndexDiagnostics 42Diagnostics: inst-…' to contain 'also dropped'
+   ↓ diagnostics page states > renders a denied response as access denied
+   ↓ diagnostics page states > renders denied rather than an empty list for a denied response
+   ↓ diagnostics page states > renders a transport error distinctly from a denied state
+   ↓ diagnostics page states > labels a missing or unknown build identity as missing, never blank
+   ↓ diagnostics page states > shows loading while the reader is in flight, then the command result message
+   ↓ diagnostics page states > re-reads through a Command when the refresh control is used
+   ↓ diagnostics page states > keeps controls reachable with visible focus styles and a narrow layout
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/diagnostics.test.ts > diagnostics page states > shows independent conditions together instead of hiding one behind the other
+AssertionError: expected 'IndexDiagnostics 42Diagnostics: inst-…' to contain 'also dropped'
+
+Expected: "also dropped"
+Received: "IndexDiagnostics 42Diagnostics: inst-1Stale: the newest record is 15m old (rule 5m).rule 5m · age 15mwarnqueue.retry×3instance: inst-1 · build: build-9bounded read: 50 records / 16384 bytes / identity ≤256 B / code ≤512 BRefresh diagnosticsLight shellClicks: 0Clicked 0 time(s)Toggle theme"
+
+ ❯ test/diagnostics.test.ts:233:24
+    231|     expect(bodyText()).toContain("15m");
+    232|     expect(bodyText()).toContain("5m");
+    233|     expect(bodyText()).toContain("also dropped");
+       |                        ^
+    234|     expect(bodyText()).toContain("4");
+    235| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 skipped (13)
+   Start at  00:58:12
+   Duration  7.11s (transform 3.07s, setup 0ms, collect 4.87s, tests 602ms, environment 766ms, prepare 342ms)
+

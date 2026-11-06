@@ -1,0 +1,60 @@
+COMMAND: node vitest run test/s313-caller-seam.test.ts (S314 r4 RED: guard criterion defect)
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/s313-caller-seam.test.ts (3 tests | 2 failed) 222ms
+   ✓ S314 caller seam sweep > every plain-options startBridgeServer caller carries the explicit test seam or a composed owner 185ms
+   × S314 caller seam sweep > S314 guard negative fixtures > trailing comma and handler-only second arg are rejected 29ms
+     → expected true to be false // Object.is equality
+   × S314 caller seam sweep > S314 guard negative fixtures > composed options and explicit backend/seam second args are accepted 3ms
+     → expected false to be true // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s313-caller-seam.test.ts > S314 caller seam sweep > S314 guard negative fixtures > trailing comma and handler-only second arg are rejected
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ test/s313-caller-seam.test.ts:106:33
+    104|     ];
+    105|     for (const fixture of fixtures) {
+    106|       expect(OLD_SAFE(fixture)).toBe(false);
+       |                                 ^
+    107|     }
+    108|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s313-caller-seam.test.ts > S314 caller seam sweep > S314 guard negative fixtures > composed options and explicit backend/seam second args are accepted
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/s313-caller-seam.test.ts:117:33
+    115|     ];
+    116|     for (const fixture of fixtures) {
+    117|       expect(OLD_SAFE(fixture)).toBe(true);
+       |                                 ^
+    118|     }
+    119|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  06:36:50
+   Duration  1.08s (transform 113ms, setup 0ms, collect 125ms, tests 222ms, environment 1ms, prepare 274ms)
+
+

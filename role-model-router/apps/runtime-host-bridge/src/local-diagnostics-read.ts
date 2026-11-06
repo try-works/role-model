@@ -174,7 +174,10 @@ const serializedBytes = (value: LocalDiagnosticsReadBody): number =>
   Buffer.byteLength(JSON.stringify(value), "utf8");
 
 /** Keep exactly the four scalar fields; the code is a bounded label, never a message blob. */
-const boundedRecord = (record: LocalDiagnosticRecord, fallbackAtMs: number): LocalDiagnosticRecord => ({
+const boundedRecord = (
+  record: LocalDiagnosticRecord,
+  fallbackAtMs: number,
+): LocalDiagnosticRecord => ({
   atMs: boundedTime(record.atMs, fallbackAtMs),
   level: boundedLevel(record.level),
   code: boundedUtf8(record.code, CODE_BYTE_CAP),
@@ -239,7 +242,8 @@ export function readLocalDiagnostics(input: {
   const limit = Math.min(queriedLimit ?? 20, MAX_DIAGNOSTICS_RECORDS);
 
   const cursor = input.query?.cursor;
-  const offset = cursor === undefined || cursor === null || cursor === "" ? 0 : decodeCursor(cursor);
+  const offset =
+    cursor === undefined || cursor === null || cursor === "" ? 0 : decodeCursor(cursor);
   if (offset === null) return errorResult(400, "diagnostics_cursor_invalid");
 
   const identity: LocalDiagnosticsIdentity = {
@@ -254,15 +258,17 @@ export function readLocalDiagnostics(input: {
   // DEFECT C (S15c): never take all[0] - the source may be oldest-first. Prefer the collector's
   // authoritative timestamp, otherwise find the newest record by max(atMs).
   const newestAtMs = all.reduce(
-    (newest, record) => (Number.isFinite(record.atMs) && record.atMs > newest ? record.atMs : newest),
+    (newest, record) =>
+      Number.isFinite(record.atMs) && record.atMs > newest ? record.atMs : newest,
     Number.NEGATIVE_INFINITY,
   );
   const authoredLastAt = source.lastRecordAtMs?.() ?? null;
-  const lastAt = authoredLastAt !== null && Number.isFinite(authoredLastAt)
-    ? authoredLastAt
-    : Number.isFinite(newestAtMs)
-      ? newestAtMs
-      : null;
+  const lastAt =
+    authoredLastAt !== null && Number.isFinite(authoredLastAt)
+      ? authoredLastAt
+      : Number.isFinite(newestAtMs)
+        ? newestAtMs
+        : null;
   const ageMs = lastAt === null ? null : Math.max(0, nowMs - lastAt);
   const stale = ageMs !== null && ageMs > DIAGNOSTICS_STALENESS_MS;
 
@@ -300,8 +306,13 @@ export function readLocalDiagnostics(input: {
   // The cursor is added after selection, so a possible cursor is reserved while shrinking records.
   const page: LocalDiagnosticRecord[] = [];
   for (let index = start; index < total && page.length < limit; index += 1) {
-    page.push(boundedRecord(all[index]!, nowMs));
-    if (serializedBytes(buildBody(page, null)) + CURSOR_BYTE_RESERVE > MAX_DIAGNOSTICS_RESPONSE_BYTES) {
+    const record = all[index];
+    if (record === undefined) break;
+    page.push(boundedRecord(record, nowMs));
+    if (
+      serializedBytes(buildBody(page, null)) + CURSOR_BYTE_RESERVE >
+      MAX_DIAGNOSTICS_RESPONSE_BYTES
+    ) {
       page.pop();
       break;
     }

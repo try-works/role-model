@@ -1,0 +1,228 @@
+{
+  "task": "Phase3 S1a request parity comparator (strict TDD)",
+  "run": "115-effect-foldkit-runtime-migration",
+  "slice": "S1a",
+  "tdd_mode": "strict",
+  "inputs": {
+    "locked_plan": ".recursive/run/115-effect-foldkit-runtime-migration/02-to-be-plan.md",
+    "locked_plan_lock_hash": "f79220f73c04a8a8c97c8ef7c4c3d1a3e6b1ddd058d9bc151ecdf4e2fe9bfcc1",
+    "implementation_slices": ".recursive/run/115-effect-foldkit-runtime-migration/implementation-slices.md",
+    "task": ".recursive/run/115-effect-foldkit-runtime-migration/tasks/s1-request-comparator.md",
+    "source_section": "source-proposal.md §6.3 comparators/request log",
+    "requirements": ["R12", "R14", "R39"]
+  },
+  "scope": {
+    "allowed_writes": [
+      "role-model-router/packages/ui-parity/package.json",
+      "role-model-router/packages/ui-parity/tsconfig.json",
+      "role-model-router/packages/ui-parity/src/compare.ts",
+      "role-model-router/packages/ui-parity/src/index.ts",
+      "role-model-router/packages/ui-parity/test/compare.test.ts",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1a-*.log",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/other/s1a-tdd.json"
+    ],
+    "actual_product_writes": [
+      "role-model-router/packages/ui-parity/package.json",
+      "role-model-router/packages/ui-parity/tsconfig.json",
+      "role-model-router/packages/ui-parity/src/compare.ts",
+      "role-model-router/packages/ui-parity/src/index.ts",
+      "role-model-router/packages/ui-parity/test/compare.test.ts"
+    ],
+    "not_modified": [
+      "root package.json",
+      "pnpm-workspace.yaml",
+      "pnpm-lock.yaml",
+      "CI workflows",
+      "private repository",
+      "runtime/operator state",
+      "any tracked pre-existing file"
+    ],
+    "installs": "none",
+    "commits": "none",
+    "children_or_goals": "none"
+  },
+  "final_files_sha256": {
+    "role-model-router/packages/ui-parity/package.json": "4630665CAB8EC3F2270254A410409E0D0A4799138379FFBF9E5B9B65E12D4B90",
+    "role-model-router/packages/ui-parity/tsconfig.json": "1649C61385B1A1A977BC1FAA64C88FFA128A349E4F53CFD345AAB1D59B53125C",
+    "role-model-router/packages/ui-parity/src/compare.ts": "E2E206C75C14053311AF1040A8886B4B98127D7F4D2A9301D319B1E7190D91C0",
+    "role-model-router/packages/ui-parity/src/index.ts": "1892F9BC290DEE0E876D3F5A24420B8C37B7A8ECDC663B953E5E986F4755AEA4",
+    "role-model-router/packages/ui-parity/test/compare.test.ts": "0AFDC3BBA0C7859E15F3FA7CDFA14C2515F32B311D2A2BF550453C5694208D87"
+  },
+  "scaffold": {
+    "timestamp_utc": "2026-10-24T10:16:48.5952955Z",
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1a-scaffold.log",
+    "note": "test/compare.test.ts was written first; the production file was then a typed API skeleton whose compareRequestTraces returned an empty array. No comparison behavior existed. Missing import was not RED.",
+    "typecheck_command": "node ../../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+    "typecheck_exit_code": 0
+  },
+  "red": {
+    "timestamp_utc": "2026-10-24T10:17:03.3232908Z",
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1a-red.log",
+    "command": "node ../../../node_modules/vitest/vitest.mjs run test/compare.test.ts",
+    "cwd": "role-model-router/packages/ui-parity",
+    "tests_total": 28,
+    "tests_passed": 7,
+    "tests_failed": 21,
+    "exit_code": 1,
+    "assertion_level": true,
+    "representative_failures": [
+      "changed body",
+      "missing duplicate read",
+      "changed method",
+      "causal write reorder",
+      "changed status",
+      "changed terminal error",
+      "changed auth header",
+      "changed dependency"
+    ],
+    "positive_tests_that_pass_on_no_op": [
+      "identical captures",
+      "two empty captures",
+      "volatile request ids ignored",
+      "method/header/query canonicalization",
+      "authorization scheme case-insensitive",
+      "independent read order and duplicates retained",
+      "tool/turn stable causal labels"
+    ]
+  },
+  "green_attempt_1": {
+    "timestamp_utc": "2026-10-24T10:17:42.2055553Z",
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1a-green.log",
+    "tests_total": 28,
+    "tests_passed": 27,
+    "tests_failed": 1,
+    "exit_code": 1,
+    "failure": "reports a changed event kind",
+    "disposition": "test-fixture bug, not a production behavior failure: the kind case also changed method from GET to POST, so the implementation correctly reported both kind_mismatch and method_mismatch. The fixture was repaired to keep method/body/dependency equal and change only kind."
+  },
+  "test_repair": {
+    "file": "role-model-router/packages/ui-parity/test/compare.test.ts",
+    "change": "changed-kind case now uses two causal traces with the same method, path, body, and dependency, differing only in kind (mutation vs turn)",
+    "behavior_contract_changed": false,
+    "red2": {
+      "timestamp_utc": "2026-10-24T10:18:20.7638956Z",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1a-red2.log",
+      "note": "repaired tests were re-run against the typed empty/no-op scaffold before restoring the implementation",
+      "command": "node ../../../node_modules/vitest/vitest.mjs run test/compare.test.ts",
+      "tests_total": 28,
+      "tests_passed": 7,
+      "tests_failed": 21,
+      "exit_code": 1,
+      "assertion_level": true
+    }
+  },
+  "green": {
+    "timestamp_utc": "2026-10-24T10:18:45.0120642Z",
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1a-green2.log",
+    "command": "node ../../../node_modules/vitest/vitest.mjs run test/compare.test.ts",
+    "cwd": "role-model-router/packages/ui-parity",
+    "tests_total": 28,
+    "tests_passed": 28,
+    "tests_failed": 0,
+    "exit_code": 0
+  },
+  "typecheck": {
+    "timestamp_utc": "2026-10-24T10:18:56.7111791Z",
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1a-tsc.log",
+    "command": "node ../../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+    "exit_code": 0
+  },
+  "refactor": {
+    "timestamp_utc": "2026-10-24T10:19:22.7463130Z",
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1a-refactor.log",
+    "change": "extracted a deterministic finding(code, index, step) constructor and reused it for all findings; no behavior change",
+    "test_command": "node ../../../node_modules/vitest/vitest.mjs run test/compare.test.ts",
+    "tests_total": 28,
+    "tests_passed": 28,
+    "tests_failed": 0,
+    "test_exit_code": 0,
+    "typecheck_command": "node ../../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+    "typecheck_exit_code": 0,
+    "followup": {
+      "timestamp_utc": "2026-10-24T10:21:55.4380347Z",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s1a-refactor2.log",
+      "change": "causal-order finding index is now the original expected event position instead of an indexOf lookup, so duplicate causal labels report an exact index; no behavior change for existing tests",
+      "test_command": "node ../../../node_modules/vitest/vitest.mjs run test/compare.test.ts",
+      "tests_total": 28,
+      "tests_passed": 28,
+      "tests_failed": 0,
+      "test_exit_code": 0,
+      "typecheck_command": "node ../../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+      "typecheck_exit_code": 0
+    }
+  },
+  "contract": {
+    "entrypoint": "compareRequestTraces(expected: readonly RequestTrace[], actual: readonly RequestTrace[]): readonly TraceDifference[]",
+    "named_interfaces": ["RequestTrace", "Header", "TraceDifference"],
+    "supporting_types": ["TraceKind", "TerminalStream", "QueryPair", "TraceDifferenceCode"],
+    "identity": "expected/actual events are matched by stable `step` labels; volatile `requestId` is present in the model but never compared; duplicated step labels are paired by occurrence count and missing/extra occurrences are reported",
+    "reads": "independent reads are order-insensitive because list order is never compared; duplicate reads are preserved by occurrence count rather than collapsed",
+    "causal": "mutation/tool/turn events keep expected causal order and explicit non-null `dependency` labels; pure causal reordering (same step multiset, different sequence) reports one causal_order_mismatch; writes are not sorted by endpoint",
+    "canonicalization": "method is uppercased; query keys are sorted while repeated-value order is retained; header names are lowercased, headers are grouped/sorted by name while repeated-value order is retained",
+    "body": "capture-normalized string or null; compared byte-for-byte without trimming or reserialization; never emitted in a finding",
+    "auth": "authorization/proxy-authorization compare lowercased scheme plus capture-normalized credential; x-api-key/api-key are auth-sensitive; values are never emitted in a finding",
+    "findings": "deterministic { code, index, step } only; one finding per mismatched field per compared event; no console logging and no throwing on content mismatch",
+    "required_mismatch_codes": [
+      "method_mismatch",
+      "path_mismatch",
+      "query_mismatch",
+      "header_mismatch",
+      "auth_header_mismatch",
+      "body_mismatch",
+      "status_mismatch",
+      "terminal_stream_mismatch",
+      "error_mismatch",
+      "dependency_mismatch",
+      "causal_order_mismatch"
+    ]
+  },
+  "test_coverage": {
+    "positive": [
+      "identical captures return no differences",
+      "two empty captures return no differences",
+      "volatile request ids are ignored",
+      "method case, header case/order, and query key order are canonicalized",
+      "authorization scheme is case-insensitive",
+      "independent read order is ignored while duplicate reads are retained",
+      "tool/turn dependencies match by stable causal labels"
+    ],
+    "negative": [
+      "repeated query value order",
+      "repeated header value order",
+      "changed method",
+      "changed path",
+      "changed query value",
+      "null body vs empty body",
+      "changed body without leaking bytes",
+      "changed status",
+      "changed terminal stream",
+      "changed terminal error",
+      "changed non-auth header without leaking value",
+      "changed authorization scheme",
+      "changed authorization credential without leaking it",
+      "changed api key as auth-sensitive",
+      "changed causal dependency",
+      "missing explicit dependency on a mutation",
+      "missing duplicate read",
+      "extra independent read",
+      "causal write reorder at the same endpoint",
+      "bounded one-finding-per-field behavior",
+      "changed event kind"
+    ],
+    "test_style": "no mocks; fixtures built independently of the implementation; assertions compare literal { code, index, step } findings",
+    "forbidden_constructs_absent_from_source": ["unknown returns/params", "type assertions", "runtime typeof checks", "module mocks", "console logging"]
+  },
+  "requirement_notes": {
+    "R12": "comparator preserves method/path/query/body/header/status/stream semantics, multiplicity, and causal write/tool/turn order; full client API/refresh work remains S14a",
+    "R14": "this slice supplies the pure request comparator and its maintained tests only; React selfcheck, mutation sensitivity, double-run determinism, pixel/ARIA and packaged lanes remain open",
+    "R39": "no runtime:verify-client-journeys or runtime:compare-release script is implemented in this slice; root/CI wiring is controller-owned and untouched"
+  },
+  "limitations": [
+    "Only the pure request comparator is implemented; no runner, capture normalization, pixel/ARIA comparator, live client lane, or packaged parity is claimed.",
+    "packages/ui-parity is not registered in the root workspace/lockfile/CI in this slice; the controller owns those writes and no install/lock change was made.",
+    "Auth header comparison assumes the capture supplies a stable, capture-normalized credential (for example a redaction marker or digest); the comparator itself does not redact raw input.",
+    "Tests were executed from the package cwd against the root installed vitest/typescript; no fresh install was performed.",
+    "The remaining S1 work (runner/selfcheck scripts, scripts/runtime-parity.mjs, verify-client-journeys.mjs, compare-release.mjs, root/CI wiring) stays open.",
+    "No commit was created; the controller must perform independent code/test review before acceptance."
+  ]
+}

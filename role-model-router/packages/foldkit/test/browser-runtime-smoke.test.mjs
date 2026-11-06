@@ -84,7 +84,9 @@ describe("s3d browser runtime smoke", () => {
 
     expect(observed.bytes).toBe(16);
     expect(observed.digest).toBe(32, "SHA-256 digest length comes from crypto.subtle.digest");
-    expect(observed.uuid).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    expect(observed.uuid).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
   });
 });
 

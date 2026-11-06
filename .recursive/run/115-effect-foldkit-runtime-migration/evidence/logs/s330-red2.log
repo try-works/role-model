@@ -1,0 +1,25 @@
+COMMAND: node vitest run test/s331-benchmark-behavior.test.ts (S331 behavioral tests)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:34648) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s331-benchmark-behavior.test.ts (2 tests | 1 failed) 113ms
+   ✓ S331 benchmark route behavior > route: first run accepted 202 with forwarded signal/runId, concurrent run 409, failure releases the slot 104ms
+   × S331 benchmark route behavior > runner: a pre-aborted signal throws BenchmarkCancelledError at a loop boundary (no upstream call) 7ms
+     → The instanceof assertion needs a constructor but undefined was given.
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s331-benchmark-behavior.test.ts > S331 benchmark route behavior > runner: a pre-aborted signal throws BenchmarkCancelledError at a loop boundary (no upstream call)
+AssertionError: The instanceof assertion needs a constructor but undefined was given.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  09:32:50
+   Duration  7.39s (transform 4.38s, setup 0ms, collect 6.79s, tests 113ms, environment 0ms, prepare 168ms)
+
+

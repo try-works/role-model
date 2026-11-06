@@ -1,0 +1,379 @@
+{
+  "runId": "88e065d8-d1e5-4591-a117-4b02b229d9b4",
+  "status": "completed",
+  "mode": "quick",
+  "startedAtMs": 1793826540680,
+  "updatedAtMs": 1793826577398,
+  "totalSteps": 60,
+  "completedSteps": 60,
+  "endpointIndex": 0,
+  "endpointCount": 2,
+  "currentEndpointId": null,
+  "currentEndpointModelId": null,
+  "caseIndex": 12,
+  "caseCount": 12,
+  "currentCaseId": "h15-max-signal-v3",
+  "currentPhase": null,
+  "runPhase": "complete",
+  "judgeEndpointId": "mock.local.judge.us-east-1.gpt-4.1-mini-fast",
+  "activeJudgeEndpointId": "mock.local.judge.us-east-1.gpt-4.1-mini-fast",
+  "artifactRoot": "D:\\DEV\\rm-clean\\ui-review19\\standalone-runtime-dev\\memory\\benchmark-runs",
+  "result": {
+    "runId": "88e065d8-d1e5-4591-a117-4b02b229d9b4",
+    "suiteId": "routing-capability-v2",
+    "suiteVersion": "3.4",
+    "mode": "quick",
+    "judgeEndpointId": "mock.local.judge.us-east-1.gpt-4.1-mini-fast",
+    "startedAtMs": 1793826540679,
+    "completedAtMs": 1793826577381,
+    "artifactRoot": "D:\\DEV\\rm-clean\\ui-review19\\standalone-runtime-dev\\memory\\benchmark-runs\\88e065d8-d1e5-4591-a117-4b02b229d9b4",
+    "endpointGrades": [
+      {
+        "endpointId": "mock.local.alpha.us-east-1.gpt-4.1-mini-fast",
+        "modelId": "openai/gpt-4.1-mini-fast",
+        "sourceType": "remote",
+        "overallScore": 0.6833333333333335,
+        "byDifficulty": {
+          "easy": {
+            "cases": 0,
+            "score": 0
+          },
+          "medium": {
+            "cases": 0,
+            "score": 0
+          },
+          "hard": {
+            "cases": 12,
+            "score": 0.6833333333333335
+          }
+        },
+        "caseResults": [
+          {
+            "caseId": "p17-tools-multi-hard",
+            "difficultyBucket": "hard",
+            "score": 0.82,
+            "rationale": "Mock judge: the deliverable addresses the requested capability.",
+            "gradingMethod": "judge",
+            "latencyMs": 617,
+            "actualPreview": "{\n  \"tool_calls\": []\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "x01-max-signal",
+            "difficultyBucket": "hard",
+            "score": 0.82,
+            "rationale": "Mock judge: the deliverable addresses the requested capability.",
+            "gradingMethod": "judge",
+            "latencyMs": 604,
+            "actualPreview": "{\n  \"tool_calls\": []\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h01-implement-two-sum",
+            "difficultyBucket": "hard",
+            "score": 0.82,
+            "rationale": "Mock judge: the deliverable addresses the requested capability.",
+            "gradingMethod": "judge",
+            "latencyMs": 445,
+            "actualPreview": "mock answer for benchmark proof",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h02-fix-async-counter",
+            "difficultyBucket": "hard",
+            "score": 0.82,
+            "rationale": "Mock judge: the deliverable addresses the requested capability.",
+            "gradingMethod": "judge",
+            "latencyMs": 457,
+            "actualPreview": "mock answer for benchmark proof",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h04-tool-read-router",
+            "difficultyBucket": "hard",
+            "score": 0.82,
+            "rationale": "Mock judge: the deliverable addresses the requested capability.",
+            "gradingMethod": "judge",
+            "latencyMs": 583,
+            "actualPreview": "{\n  \"tool_calls\": []\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h05-tool-grep-eligibility",
+            "difficultyBucket": "hard",
+            "score": 0.82,
+            "rationale": "Mock judge: the deliverable addresses the requested capability.",
+            "gradingMethod": "judge",
+            "latencyMs": 548,
+            "actualPreview": "{\n  \"tool_calls\": []\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h06-tool-apply-patch",
+            "difficultyBucket": "hard",
+            "score": 0.82,
+            "rationale": "Mock judge: the deliverable addresses the requested capability.",
+            "gradingMethod": "judge",
+            "latencyMs": 501,
+            "actualPreview": "{\n  \"tool_calls\": []\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h07-multi-turn-sla-guard",
+            "difficultyBucket": "hard",
+            "score": 0.82,
+            "rationale": "Mock judge: the deliverable addresses the requested capability.",
+            "gradingMethod": "judge",
+            "latencyMs": 443,
+            "actualPreview": "mock answer for benchmark proof",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h08-multi-turn-tool-refine",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "[grounded_truth_mismatch] expected read_file path state/runtime-config.yaml. Mock judge: the deliverable addresses the requested capability.",
+            "gradingMethod": "judge",
+            "latencyMs": 817,
+            "actualPreview": "{\n  \"tool_calls\": []\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h09-agent-metrics-chain",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "[grounded_truth_mismatch] expected list_endpoints call before latency comparison. Mock judge: the deliverable addresses the requested capability.",
+            "gradingMethod": "judge",
+            "latencyMs": 774,
+            "actualPreview": "{\n  \"tool_calls\": []\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h10-agent-read-grep-patch",
+            "difficultyBucket": "hard",
+            "score": 0.82,
+            "rationale": "Mock judge: the deliverable addresses the requested capability.",
+            "gradingMethod": "judge",
+            "latencyMs": 539,
+            "actualPreview": "{\n  \"tool_calls\": []\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h15-max-signal-v3",
+            "difficultyBucket": "hard",
+            "score": 0.82,
+            "rationale": "Mock judge: the deliverable addresses the requested capability.",
+            "gradingMethod": "judge",
+            "latencyMs": 496,
+            "actualPreview": "{\n  \"tool_calls\": []\n}",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          }
+        ],
+        "reasoningEffort": null
+      },
+      {
+        "endpointId": "mock.local.fail2.us-east-1.gpt-4.1-mini-fast",
+        "modelId": "openai/gpt-4.1-mini-fast",
+        "sourceType": "remote",
+        "overallScore": 0,
+        "byDifficulty": {
+          "easy": {
+            "cases": 0,
+            "score": 0
+          },
+          "medium": {
+            "cases": 0,
+            "score": 0
+          },
+          "hard": {
+            "cases": 12,
+            "score": 0
+          }
+        },
+        "caseResults": [
+          {
+            "caseId": "p17-tools-multi-hard",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 113,
+            "actualPreview": "mock upstream failure",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "x01-max-signal",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 104,
+            "actualPreview": "mock upstream failure",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h01-implement-two-sum",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 107,
+            "actualPreview": "mock upstream failure",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h02-fix-async-counter",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 110,
+            "actualPreview": "mock upstream failure",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h04-tool-read-router",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 107,
+            "actualPreview": "mock upstream failure",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h05-tool-grep-eligibility",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 117,
+            "actualPreview": "mock upstream failure",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h06-tool-apply-patch",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 105,
+            "actualPreview": "mock upstream failure",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h07-multi-turn-sla-guard",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 99,
+            "actualPreview": "mock upstream failure",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h08-multi-turn-tool-refine",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 105,
+            "actualPreview": "mock upstream failure",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h09-agent-metrics-chain",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 102,
+            "actualPreview": "mock upstream failure",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h10-agent-read-grep-patch",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 103,
+            "actualPreview": "mock upstream failure",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h15-max-signal-v3",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 100,
+            "actualPreview": "mock upstream failure",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          }
+        ],
+        "reasoningEffort": null
+      }
+    ]
+  }
+}

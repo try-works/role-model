@@ -1,0 +1,367 @@
+{
+  "runId": "24a89d52-f6cf-425c-a101-9e937736b342",
+  "status": "completed",
+  "mode": "quick",
+  "startedAtMs": 1793825739414,
+  "updatedAtMs": 1793825748330,
+  "totalSteps": 60,
+  "completedSteps": 60,
+  "endpointIndex": 0,
+  "endpointCount": 2,
+  "currentEndpointId": null,
+  "currentEndpointModelId": null,
+  "caseIndex": 12,
+  "caseCount": 12,
+  "currentCaseId": "h15-max-signal-v3",
+  "currentPhase": null,
+  "runPhase": "complete",
+  "judgeEndpointId": "review.judge.us-east-1.gpt-5.5",
+  "activeJudgeEndpointId": "review.judge.us-east-1.gpt-5.5",
+  "artifactRoot": "D:\\DEV\\rm-clean\\ui-review18\\standalone-runtime-dev\\memory\\benchmark-runs",
+  "result": {
+    "runId": "24a89d52-f6cf-425c-a101-9e937736b342",
+    "suiteId": "routing-capability-v2",
+    "suiteVersion": "3.4",
+    "mode": "quick",
+    "judgeEndpointId": "review.judge.us-east-1.gpt-5.5",
+    "startedAtMs": 1793825739414,
+    "completedAtMs": 1793825748316,
+    "artifactRoot": "D:\\DEV\\rm-clean\\ui-review18\\standalone-runtime-dev\\memory\\benchmark-runs\\24a89d52-f6cf-425c-a101-9e937736b342",
+    "endpointGrades": [
+      {
+        "endpointId": "review.subject.alpha.us-east-1.gpt-5.4",
+        "modelId": "chatgpt/gpt-5.4",
+        "sourceType": "remote",
+        "overallScore": 0,
+        "byDifficulty": {
+          "easy": {
+            "cases": 0,
+            "score": 0
+          },
+          "medium": {
+            "cases": 0,
+            "score": 0
+          },
+          "hard": {
+            "cases": 12,
+            "score": 0
+          }
+        },
+        "caseResults": [
+          {
+            "caseId": "p17-tools-multi-hard",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 435,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "x01-max-signal",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 325,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h01-implement-two-sum",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 143,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h02-fix-async-counter",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 142,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h04-tool-read-router",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 155,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h05-tool-grep-eligibility",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 117,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h06-tool-apply-patch",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 142,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h07-multi-turn-sla-guard",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 127,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h08-multi-turn-tool-refine",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 135,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h09-agent-metrics-chain",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 119,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h10-agent-read-grep-patch",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 153,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h15-max-signal-v3",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 129,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          }
+        ],
+        "reasoningEffort": null
+      },
+      {
+        "endpointId": "review.subject.beta.us-east-1.gpt-5.4-mini",
+        "modelId": "chatgpt/gpt-5.4-mini",
+        "sourceType": "remote",
+        "overallScore": 0,
+        "byDifficulty": {
+          "easy": {
+            "cases": 0,
+            "score": 0
+          },
+          "medium": {
+            "cases": 0,
+            "score": 0
+          },
+          "hard": {
+            "cases": 12,
+            "score": 0
+          }
+        },
+        "caseResults": [
+          {
+            "caseId": "p17-tools-multi-hard",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 141,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "x01-max-signal",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 118,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h01-implement-two-sum",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 109,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h02-fix-async-counter",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 111,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h04-tool-read-router",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 117,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h05-tool-grep-eligibility",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 181,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h06-tool-apply-patch",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 127,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h07-multi-turn-sla-guard",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 130,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h08-multi-turn-tool-refine",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 114,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h09-agent-metrics-chain",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 133,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h10-agent-read-grep-patch",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 128,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h15-max-signal-v3",
+            "difficultyBucket": "hard",
+            "score": 0,
+            "rationale": "Benchmark execution failed.",
+            "gradingMethod": "heuristic",
+            "latencyMs": 99,
+            "actualPreview": "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.",
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          }
+        ],
+        "reasoningEffort": null
+      }
+    ]
+  }
+}

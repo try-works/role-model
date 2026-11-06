@@ -1,0 +1,175 @@
+COMMAND: node --test scripts/runtime/parity-selfcheck.test.mjs
+CWD: public worktree ; S297 strict RED: mutation-check contract against the zeroed skeleton
+EXIT_CODE=1
+
+✔ S294 PASSED when both builds are deterministic, clean and the dual comparison is recorded (5.4802ms)
+✔ S294 a React-vs-Foldkit difference is classified, never forced equal (0.7088ms)
+✔ S294 FAILED when a build is nondeterministic across the two runs (0.9263ms)
+✔ S294 FAILED when a capture surfaces console or network issues (0.6469ms)
+✔ S294 FAILED (not NOT_RUN) when a build target is unavailable (0.5855ms)
+✔ S294 NOT_RUN with exit 2 only when no browser is available (0.4185ms)
+✔ S294 runSelfcheck captures every target twice (two runs) and evaluates the result (3.1388ms)
+✔ S294 partitions favicon harness noise out of the capture issues while recording it (0.9178ms)
+✔ S295 FAILED when a target has fewer than exactly two captures (0.6937ms)
+✔ S295 FAILED when a target entry is missing from the plan (1.1524ms)
+✔ S295 emits per-target ignoredIssues and an ignored count in the JSON (1.1576ms)
+✔ S295 emits comparisons on the FAILED path and computes reactVsReact from the two react shas (0.6061ms)
+✔ S295 evidence.targets lists both run PNGs per target and echoes executable/temp roots (0.5359ms)
+✔ S295 runSelfcheck contains a capture failure as a FAILED JSON result, not a rejection (0.8074ms)
+✔ S295 r2 FAILED unless there are exactly two runs and one capture per target per run (0.5178ms)
+✔ S295 r2 enforces the required temp drive (E: passes, another drive fails) (0.8627ms)
+✔ S295 r2 launchChrome kills its child when the DevTools endpoint never appears (211.2452ms)
+✔ S295 r2 main emits FAILED JSON when the injected launch rejects (no uncaught rejection) (1107.4891ms)
+✔ S295 r3 launchChrome rejects a spawn error and kills the child (no orphan, no uncaught error) (23.0112ms)
+✖ S297 PASSED when the one-class mutant changes the capture and the unchanged pair is identical (3.4855ms)
+✖ S297 FAILED when the mutant capture is identical to the baseline (blind harness) (0.8251ms)
+✖ S297 FAILED when the harness reports detected:false although the shas differ (0.6709ms)
+✖ S297 FAILED when the unchanged baseline pair itself differs (0.5308ms)
+✖ S297 FAILED on capture issues and NOT_RUN (exit 2) without a browser (0.6874ms)
+✖ S297 runMutationCheck captures baseline twice and the mutant once via the adapter (0.9673ms)
+✔ S294 planTargets names the React and Foldkit static roots from the repo root (1.0933ms)
+ℹ tests 26
+ℹ suites 0
+ℹ pass 20
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1650.2062
+
+✖ failing tests:
+
+test at scripts\runtime\parity-selfcheck.test.mjs:328:1
+✖ S297 PASSED when the one-class mutant changes the capture and the unchanged pair is identical (3.4855ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'NOT_RUN'
+  - 'PASSED'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:334:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'NOT_RUN',
+    expected: 'PASSED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\runtime\parity-selfcheck.test.mjs:345:1
+✖ S297 FAILED when the mutant capture is identical to the baseline (blind harness) (0.8251ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'NOT_RUN'
+  - 'FAILED'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:351:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'NOT_RUN',
+    expected: 'FAILED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\runtime\parity-selfcheck.test.mjs:356:1
+✖ S297 FAILED when the harness reports detected:false although the shas differ (0.6709ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'NOT_RUN'
+  - 'FAILED'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:363:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'NOT_RUN',
+    expected: 'FAILED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\runtime\parity-selfcheck.test.mjs:367:1
+✖ S297 FAILED when the unchanged baseline pair itself differs (0.5308ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'NOT_RUN'
+  - 'FAILED'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:373:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'NOT_RUN',
+    expected: 'FAILED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\runtime\parity-selfcheck.test.mjs:377:1
+✖ S297 FAILED on capture issues and NOT_RUN (exit 2) without a browser (0.6874ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'NOT_RUN'
+  - 'FAILED'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:384:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'NOT_RUN',
+    expected: 'FAILED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\runtime\parity-selfcheck.test.mjs:391:1
+✖ S297 runMutationCheck captures baseline twice and the mutant once via the adapter (0.9673ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'NOT_RUN'
+  - 'PASSED'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:402:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'NOT_RUN',
+    expected: 'PASSED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+

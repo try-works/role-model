@@ -1,0 +1,5 @@
+COMMAND: node ../../../node_modules/typescript/bin/tsc --noEmit -p tsconfig.json
+CWD: role-model-router/apps/runtime-ui-next
+EXIT_CODE=0
+
+

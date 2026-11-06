@@ -1,0 +1,43 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/module-health-writer.test.ts (13 tests | 1 failed | 12 skipped) 16ms
+   ↓ module health writer > keeps a bounded ring buffer and counts every overflow instead of growing
+   ↓ module health writer > distinguishes Fail, Die and Interrupt and leaves each original cause intact
+   ↓ module health writer > bounds one cause's reasons and counts the rest instead of growing
+   ↓ module health writer > records a plain error without reading hostile accessors
+   ↓ module health writer > contains a throwing reporter so the business result is unchanged
+   ↓ module health writer > contains a cause whose reasons accessor throws
+   ↓ module health writer > does not recurse on a cyclic error or a reused error
+   ↓ module health writer > records a nested/mixed cause without merging the kinds or recursing
+   ↓ module health writer > preserves an acquire/finalizer mixed exit with and without the writer
+   ↓ module health writer > keeps the business value/error identity identical with and without the writer
+   ↓ module health writer > is a single report owner: one write per observed exit and none for success or inner failures
+   × module health writer > redacts: only four bounded scalars leave the writer, never a message or fiber dump 14ms
+     → expected '{"records":[{"atMs":1792861692399,"co…' not to contain 'SECRET'
+   ↓ module health writer > feeds the diagnostics read contract: identity, records, loss and empty state
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/module-health-writer.test.ts > module health writer > redacts: only four bounded scalars leave the writer, never a message or fiber dump
+AssertionError: expected '{"records":[{"atMs":1792861692399,"co…' not to contain 'SECRET'
+
+Expected: "SECRET"
+Received: "{"records":[{"atMs":1792861692399,"code":"cause.interrupt","count":1,"level":"warn"},{"atMs":1792861692399,"code":"cause.fail:SECRET-TOKEN-","count":1,"level":"error"}],"loss":{"dropped":0,"windowMs":0},"source":{"buildId":"unknown","enabled":true,"instanceId":"unknown"}}"
+
+ ❯ test/module-health-writer.test.ts:291:28
+    289|     }
+    290|     const serialized = JSON.stringify({ records, loss: writer.loss(), …
+    291|     expect(serialized).not.toContain("SECRET");
+       |                            ^
+    292|     expect(serialized).not.toContain("fiber");
+    293|     expect(serialized).not.toContain("stack");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 skipped (13)
+   Start at  01:08:09
+   Duration  3.17s (transform 1.64s, setup 0ms, collect 2.63s, tests 16ms, environment 0ms, prepare 209ms)
+

@@ -57,14 +57,17 @@ const READ_ROUTES = [
 ];
 
 test("run112 every Learning readback answers without a private operations endpoint", async () => {
-  const server = await startBridgeServer({
-    host: "127.0.0.1",
-    port: 0,
-    registry: { revision: 0, endpoints: [] },
-    anonymousLearningReads: "on",
-    operatorContext,
-    ...learningCallbacks,
-  });
+  const server = await startBridgeServer(
+    {
+      host: "127.0.0.1",
+      port: 0,
+      registry: { revision: 0, endpoints: [] },
+      anonymousLearningReads: "on",
+      operatorContext,
+      ...learningCallbacks,
+    },
+    { allowTestSeamBackend: true },
+  );
   try {
     const failures: string[] = [];
     for (const route of READ_ROUTES) {
@@ -83,14 +86,17 @@ test("run112 every Learning readback answers without a private operations endpoi
 });
 
 test("run112 the profile readback answers the bounded state, not the transport projection", async () => {
-  const server = await startBridgeServer({
-    host: "127.0.0.1",
-    port: 0,
-    registry: { revision: 0, endpoints: [] },
-    anonymousLearningReads: "on",
-    operatorContext,
-    ...learningCallbacks,
-  });
+  const server = await startBridgeServer(
+    {
+      host: "127.0.0.1",
+      port: 0,
+      registry: { revision: 0, endpoints: [] },
+      anonymousLearningReads: "on",
+      operatorContext,
+      ...learningCallbacks,
+    },
+    { allowTestSeamBackend: true },
+  );
   try {
     const response = await fetch(
       `http://127.0.0.1:${server.port}/api/role-model/operator/learning/profile?scopeId=standalone-runtime-stage`,
@@ -107,15 +113,18 @@ test("run112 the profile readback answers the bounded state, not the transport p
 });
 
 test("run112 a Learning readback the runtime does not provide is the only acceptable 503", async () => {
-  const server = await startBridgeServer({
-    host: "127.0.0.1",
-    port: 0,
-    registry: { revision: 0, endpoints: [] },
-    anonymousLearningReads: "on",
-    operatorContext,
-    ...learningCallbacks,
-    readLearningAdvisory: undefined,
-  });
+  const server = await startBridgeServer(
+    {
+      host: "127.0.0.1",
+      port: 0,
+      registry: { revision: 0, endpoints: [] },
+      anonymousLearningReads: "on",
+      operatorContext,
+      ...learningCallbacks,
+      readLearningAdvisory: undefined,
+    },
+    { allowTestSeamBackend: true },
+  );
   try {
     const response = await fetch(
       `http://127.0.0.1:${server.port}/api/role-model/operator/learning/advisory`,

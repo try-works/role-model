@@ -1,0 +1,82 @@
+[
+  {
+    "route": "/router/decisions",
+    "status": 200,
+    "png": "f_router_decisions.png",
+    "title": "Router decisions | RM3 Foldkit shell",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/system/peers",
+    "status": 200,
+    "png": "f_system_peers.png",
+    "title": "System peers | RM3 Foldkit shell",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/local/peers",
+    "status": 200,
+    "png": "f_local_peers.png",
+    "title": "Local peers | RM3 Foldkit shell",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/runtime",
+    "status": 200,
+    "png": "f_runtime.png",
+    "title": "Runtime | RM3 Foldkit shell",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/control/providers",
+    "status": 200,
+    "png": "f_control_providers.png",
+    "title": "Providers | RM3 Foldkit shell",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/control/endpoints",
+    "status": 200,
+    "png": "f_control_endpoints.png",
+    "title": "Endpoints | RM3 Foldkit shell",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/control/controller",
+    "status": 200,
+    "png": "f_control_controller.png",
+    "title": "Controller | RM3 Foldkit shell",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/session-readiness",
+    "status": 200,
+    "png": "f_session_readiness.png",
+    "title": "Session readiness | RM3 Foldkit shell",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  }
+]

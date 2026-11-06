@@ -1,0 +1,110 @@
+RED-EVIDENCE-METHOD: the seven UI wiring files (message/commands/update/app/view/families-view/model) were temporarily replaced with their pre-operator-wiring content from commit 8d3bb5ce in the SAME worktree (deps intact), the operator-learning test was run, and the files were restored from backups. The failure is behavioral: the learning-mode select is absent, so the test cannot proceed. GREEN follows on the wired tree (s597-holdfix-green.log).
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s595-storage-retention.test.ts > S595 storage retention and control wiring > updates and rolls back the operator shadow learning state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 39.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'SystemOperator' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 39.125200000000405,
+  thresholdMs: 8
+}
+
+ ❯ test/s595-storage-retention.test.ts (5 tests | 1 failed | 4 skipped) 674ms
+   ↓ S595 storage retention and control wiring > saves the retention policy to the host
+   ↓ S595 storage retention and control wiring > runs dry-run and execute against the host
+   ↓ S595 storage retention and control wiring > reasons every remaining handler-less control and wires the logs refresh
+   ↓ S595 storage retention and control wiring > marks every remaining handler-less control with an accessible reason
+   × S595 storage retention and control wiring > updates and rolls back the operator shadow learning state 672ms
+     → learning mode select missing: expected null not to be null
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s595-storage-retention.test.ts > S595 storage retention and control wiring > updates and rolls back the operator shadow learning state
+AssertionError: learning mode select missing: expected null not to be null
+ ❯ test/s595-storage-retention.test.ts:135:56
+    133|     await waitFor(() => document.querySelector("[data-route='system-op…
+    134|     const select = document.querySelector<HTMLSelectElement>("[data-le…
+    135|     expect(select, "learning mode select missing").not.toBeNull();
+       |                                                        ^
+    136|     select!.value = "off";
+    137|     select!.dispatchEvent(new Event("change", { bubbles: true }));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 skipped (5)
+   Start at  23:17:25
+   Duration  8.57s (transform 3.82s, setup 0ms, collect 6.05s, tests 674ms, environment 1.21s, prepare 208ms)
+

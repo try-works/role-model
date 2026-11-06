@@ -1,0 +1,19 @@
+{
+  "route": "/observe/routing",
+  "title": "Observe routing | RM3 Foldkit shell",
+  "charts": 9,
+  "tables": 9,
+  "visibleTables": 0,
+  "srOnlyTables": 9,
+  "chartTitles": [
+    "Cost avoided by routing",
+    "Routing decision volume",
+    "Routing volume by taxonomy role",
+    "Avoided cost by taxonomy task",
+    "Difficulty distribution",
+    "Strategy selection trend",
+    "Capability routing mix",
+    "Tool class routing mix",
+    "Model selection"
+  ]
+}

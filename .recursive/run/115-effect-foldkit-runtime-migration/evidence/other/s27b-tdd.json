@@ -1,0 +1,50 @@
+{
+  "slice": "s27b-validator-scope",
+  "requirement": "Packaging validation launches with the packaged channel scope; enforcement intact",
+  "mismatch": {
+    "validatorBefore": "--scope-id runtime-sea-validation (hardcoded in validate-packaging.ts)",
+    "packagedExpected": "standalone-runtime-dev (development channel profile; manifest.scope_id); negotiateRuntimeChannelStartup compares writerContext.scopeId === readerContext.scopeId and throws 'runtime channel context scope mismatch' otherwise",
+    "proof": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s27b-red-hardcoded.log (full validator times out at /healthz with the old hardcoded scope)"
+  },
+  "fix": {
+    "scope": "read manifest.json scope_id; optional requested scope must equal it or resolvePackagedValidationScope throws",
+    "artifact": "resolveExistingPackagedArtifact prefers role-model-router/dist/release/<platform>-<arch>/manifest.json + executable, so the existing artifact is validated and not deleted; packageSeaRuntime remains a fallback only when absent",
+    "enforcement": "product negotiateRuntimeChannelStartup untouched; foreign reader context test still throws scope mismatch"
+  },
+  "proofs": {
+    "compatible": {
+      "test": "full runtime:validate-packaging equivalent against existing artifact",
+      "result": {
+        "healthStatus": "healthy",
+        "scopeId": "standalone-runtime-dev",
+        "modelCount": 8,
+        "roleDefinitionCount": 28,
+        "taxonomyVersion": "1.0.0-alpha.1",
+        "contentRevision": "taxonomy-v1-alpha.1",
+        "securityTaskCount": 10,
+        "extensionCount": 13,
+        "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
+        "chatOutputText": "packaged env endpoint summary",
+        "responsesOutputText": "packaged env endpoint summary"
+      },
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s27b-validation.log"
+    },
+    "foreign": {
+      "test": "resolvePackagedValidationScope(manifest,'runtime-sea-validation') throws; product negotiation with foreign readerContext throws",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s27b-red-foreign.log"
+    }
+  },
+  "counts": {
+    "tests": 4,
+    "passed": 4,
+    "typecheck": "tsc -p apps/runtime-host-bridge/tsconfig.json --noEmit: exit 0",
+    "validation": "exit 0",
+    "commit": "none",
+    "distRelease": "existing artifact retained"
+  },
+  "files": [
+    "role-model-router/apps/runtime-host-bridge/src/validate-packaging.ts",
+    "role-model-router/apps/runtime-host-bridge/test/s27b-validator-scope.test.ts"
+  ],
+  "unproven": "Validation exercises the existing win32-x64 development artifact; other channels/targets and a rebuild from a clean worktree were not run."
+}

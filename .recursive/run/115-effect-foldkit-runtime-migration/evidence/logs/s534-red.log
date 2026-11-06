@@ -1,0 +1,344 @@
+# S534 RED — regenerated against the CURRENT refrozen test
+provenance test/s534-families.test.ts sha256: 378531770cb411ef22e53d3f21db4a5813608fe8406eb85349307b756baf1825
+provenance RED view.ts: pre-S534 HEAD version, sha256 5b7005b2d23cfff3dd38b74531366dd6783183b0698f895d33c509c93582bb5c (temporary; restored byte-exact afterwards)
+provenance HEAD: 3dd5d2c56ffa691c0f375d585816c8a5e4e55bb8
+method: byte-copy current view.ts aside, replace it with the pre-S534 registry stubs (raw readback / finalFamilyPage / old Local choose stub / providersRoute; no families-view wiring, no studio workspace labels, no policy titles), run the CURRENT s534 test, then restore the byte copy.
+command: vitest run test/s534-families.test.ts (cwd role-model-router/apps/runtime-ui-next)
+expected: 16/16 failures on the REFERENCE titles now asserted (Operator controls, Peer topology, Storage & retention, Choose local backend, Local endpoints, Llama-swap logs, Llama-swap swap history, Llama-swap models, Llama-swap host policy, plus providers/extensions/studio workspace labels).
+---
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s534-families.test.ts (16 tests | 16 failed) 1160ms
+   × S534 providers/studio/system/local structural parity > providers page has the remote-provider sections 279ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Remote providers'
+   × S534 providers/studio/system/local structural parity > studio chat workspace 116ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Chat workspace'
+   × S534 providers/studio/system/local structural parity > studio images workspace 70ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Image request modes'
+   × S534 providers/studio/system/local structural parity > studio audio workspace 75ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Audio mode and request'
+   × S534 providers/studio/system/local structural parity > studio rerank workspace 82ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Rerank request'
+   × S534 providers/studio/system/local structural parity > studio advanced workspace 72ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Advanced workspace'
+   × S534 providers/studio/system/local structural parity > system extensions sections 53ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Extension boundary'
+   × S534 providers/studio/system/local structural parity > system operator sections 48ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Operator controls'
+   × S534 providers/studio/system/local structural parity > system peers table 46ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Peer topology'
+   × S534 providers/studio/system/local structural parity > storage retention table 44ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Storage & retention'
+   × S534 providers/studio/system/local structural parity > local choose peer-backed models 51ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Choose local backend'
+   × S534 providers/studio/system/local structural parity > local peers table 45ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Local endpoints'
+   × S534 providers/studio/system/local structural parity > local logs history 56ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Llama-swap logs'
+   × S534 providers/studio/system/local structural parity > local swap ledger 43ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Llama-swap swap history'
+   × S534 providers/studio/system/local structural parity > llama-swap models load/loaded 35ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Llama-swap models'
+   × S534 providers/studio/system/local structural parity > llama-swap policy title 41ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Llama-swap host policy'
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 16 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s534-families.test.ts > S534 providers/studio/system/local structural parity > providers page has the remote-provider sections
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Remote providers'
+
+Expected: "Remote providers"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeProvidersToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime controlProvidersWaiting for the providers read.Reconnect providerProvider connectionProviderProvider kindVariantAuth modeRegionModelAdd modelStart device authorizationProvider accountAccount idProviderProvider kindVariantAuth modeCredential refAPI keyBase URL overrideRole ids (comma separated)OAuth connected (true/false)ModelAdd modelSave provider accountUpdate API key"
+
+ ❯ expectTitles test/s534-families.test.ts:32:44
+     30|   const container = await render(tag, overrides);
+     31|   const text = container.textContent ?? "";
+     32|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     33|   if (tables > 0) expect(container.querySelectorAll("table").length).t…
+     34|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s534-families.test.ts:39:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/16]⎯
+
+ FAIL  test/s534-families.test.ts > S534 providers/studio/system/local structural parity > studio chat workspace
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Chat workspace'
+
+Expected: "Chat workspace"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeStudioToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesStudioChatImagesAudioRerankAdvanced APIsModelPromptRunRAW RESPONSERun a Studio request to see the raw response."
+
+ ❯ expectTitles test/s534-families.test.ts:32:44
+     30|   const container = await render(tag, overrides);
+     31|   const text = container.textContent ?? "";
+     32|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     33|   if (tables > 0) expect(container.querySelectorAll("table").length).t…
+     34|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s534-families.test.ts:42:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/16]⎯
+
+ FAIL  test/s534-families.test.ts > S534 providers/studio/system/local structural parity > studio images workspace
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Image request modes'
+
+Expected: "Image request modes"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeStudioToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesStudioChatImagesAudioRerankAdvanced APIsModeModelPromptSizeRunRAW RESPONSERun a Studio request to see the raw response."
+
+ ❯ expectTitles test/s534-families.test.ts:32:44
+     30|   const container = await render(tag, overrides);
+     31|   const text = container.textContent ?? "";
+     32|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     33|   if (tables > 0) expect(container.querySelectorAll("table").length).t…
+     34|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s534-families.test.ts:45:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/16]⎯
+
+ FAIL  test/s534-families.test.ts > S534 providers/studio/system/local structural parity > studio audio workspace
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Audio mode and request'
+
+Expected: "Audio mode and request"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeStudioToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesStudioChatImagesAudioRerankAdvanced APIsModelPromptRunRAW RESPONSERun a Studio request to see the raw response."
+
+ ❯ expectTitles test/s534-families.test.ts:32:44
+     30|   const container = await render(tag, overrides);
+     31|   const text = container.textContent ?? "";
+     32|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     33|   if (tables > 0) expect(container.querySelectorAll("table").length).t…
+     34|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s534-families.test.ts:48:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/16]⎯
+
+ FAIL  test/s534-families.test.ts > S534 providers/studio/system/local structural parity > studio rerank workspace
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Rerank request'
+
+- Expected
++ Received
+
+- Rerank request
++ Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeStudioToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesStudioChatImagesAudioRerankAdvanced APIsModelQueryDocuments (one per line)first document
++ second documentRunRAW RESPONSERun a Studio request to see the raw response.
+
+ ❯ expectTitles test/s534-families.test.ts:32:44
+     30|   const container = await render(tag, overrides);
+     31|   const text = container.textContent ?? "";
+     32|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     33|   if (tables > 0) expect(container.querySelectorAll("table").length).t…
+     34|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s534-families.test.ts:51:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/16]⎯
+
+ FAIL  test/s534-families.test.ts > S534 providers/studio/system/local structural parity > studio advanced workspace
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Advanced workspace'
+
+- Expected
++ Received
+
+- Advanced workspace
++ Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeStudioToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesStudioChatImagesAudioRerankAdvanced APIsJSON body{
++   "model": "moonshot/kimi-k2.5",
++   "max_tokens": 64,
++   "messages": [{ "role": "user", "content": "Hello" }]
++ }RunRAW RESPONSERun a Studio request to see the raw response.
+
+ ❯ expectTitles test/s534-families.test.ts:32:44
+     30|   const container = await render(tag, overrides);
+     31|   const text = container.textContent ?? "";
+     32|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     33|   if (tables > 0) expect(container.querySelectorAll("table").length).t…
+     34|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s534-families.test.ts:54:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/16]⎯
+
+ FAIL  test/s534-families.test.ts > S534 providers/studio/system/local structural parity > system extensions sections
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Extension boundary'
+
+Expected: "Extension boundary"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeExtensionsToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesExtensionsExtensionsRuntime readbackExtensions1 row(s) from the live host readFirst rowreadyhostRefresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ expectTitles test/s534-families.test.ts:32:44
+     30|   const container = await render(tag, overrides);
+     31|   const text = container.textContent ?? "";
+     32|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     33|   if (tables > 0) expect(container.querySelectorAll("table").length).t…
+     34|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s534-families.test.ts:57:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/16]⎯
+
+ FAIL  test/s534-families.test.ts > S534 providers/studio/system/local structural parity > system operator sections
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Operator controls'
+
+Expected: "Operator controls"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeOperatorToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesOperatorOperator statusRuntime readbackOperator status1 row(s) from the live host readFirst rowreadyhostRefresh follows the shell's single runtime subscription; this page does not open its own.Trace rootsRuntime readbackOperator trace roots1 row(s) from the live host readFirst rowreadyhostRefresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ expectTitles test/s534-families.test.ts:32:44
+     30|   const container = await render(tag, overrides);
+     31|   const text = container.textContent ?? "";
+     32|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     33|   if (tables > 0) expect(container.querySelectorAll("table").length).t…
+     34|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s534-families.test.ts:60:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/16]⎯
+
+ FAIL  test/s534-families.test.ts > S534 providers/studio/system/local structural parity > system peers table
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Peer topology'
+
+Expected: "Peer topology"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeSystem peersToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime readbackSystem peers1 row(s) from the live host readFirst rowreadyhostRefresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ expectTitles test/s534-families.test.ts:32:44
+     30|   const container = await render(tag, overrides);
+     31|   const text = container.textContent ?? "";
+     32|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     33|   if (tables > 0) expect(container.querySelectorAll("table").length).t…
+     34|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s534-families.test.ts:63:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/16]⎯
+
+ FAIL  test/s534-families.test.ts > S534 providers/studio/system/local structural parity > storage retention table
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Storage & retention'
+
+Expected: "Storage & retention"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeStorage retentionToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime readbackStorage retention1 row(s) from the live host readFirst rowreadyhostRefresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ expectTitles test/s534-families.test.ts:32:44
+     30|   const container = await render(tag, overrides);
+     31|   const text = container.textContent ?? "";
+     32|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     33|   if (tables > 0) expect(container.querySelectorAll("table").length).t…
+     34|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s534-families.test.ts:66:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/16]⎯
+
+ FAIL  test/s534-families.test.ts > S534 providers/studio/system/local structural parity > local choose peer-backed models
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Choose local backend'
+
+Expected: "Choose local backend"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeLocal chooseToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesLocal chooseChoose peer-backed models or llama-swap models."
+
+ ❯ expectTitles test/s534-families.test.ts:32:44
+     30|   const container = await render(tag, overrides);
+     31|   const text = container.textContent ?? "";
+     32|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     33|   if (tables > 0) expect(container.querySelectorAll("table").length).t…
+     34|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s534-families.test.ts:69:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/16]⎯
+
+ FAIL  test/s534-families.test.ts > S534 providers/studio/system/local structural parity > local peers table
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Local endpoints'
+
+Expected: "Local endpoints"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeLocal peersToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime readbackLocal peers1 row(s) from the live host readFirst rowreadyhostRefresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ expectTitles test/s534-families.test.ts:32:44
+     30|   const container = await render(tag, overrides);
+     31|   const text = container.textContent ?? "";
+     32|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     33|   if (tables > 0) expect(container.querySelectorAll("table").length).t…
+     34|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s534-families.test.ts:72:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/16]⎯
+
+ FAIL  test/s534-families.test.ts > S534 providers/studio/system/local structural parity > local logs history
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Llama-swap logs'
+
+Expected: "Llama-swap logs"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeLocal logsToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime readbackLocal logs1 row(s) from the live host readFirst rowreadyhostRefresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ expectTitles test/s534-families.test.ts:32:44
+     30|   const container = await render(tag, overrides);
+     31|   const text = container.textContent ?? "";
+     32|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     33|   if (tables > 0) expect(container.querySelectorAll("table").length).t…
+     34|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s534-families.test.ts:75:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/16]⎯
+
+ FAIL  test/s534-families.test.ts > S534 providers/studio/system/local structural parity > local swap ledger
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Llama-swap swap history'
+
+Expected: "Llama-swap swap history"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeLocal swapToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime readbackLocal swap1 row(s) from the live host readFirst rowreadyhostRefresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ expectTitles test/s534-families.test.ts:32:44
+     30|   const container = await render(tag, overrides);
+     31|   const text = container.textContent ?? "";
+     32|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     33|   if (tables > 0) expect(container.querySelectorAll("table").length).t…
+     34|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s534-families.test.ts:78:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/16]⎯
+
+ FAIL  test/s534-families.test.ts > S534 providers/studio/system/local structural parity > llama-swap models load/loaded
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Llama-swap models'
+
+Expected: "Llama-swap models"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimellama-swap modelsToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesllama-swap modelsModelsRuntime readbackllama-swap models1 row(s) from the live host readFirst rowreadyhostRefresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ expectTitles test/s534-families.test.ts:32:44
+     30|   const container = await render(tag, overrides);
+     31|   const text = container.textContent ?? "";
+     32|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     33|   if (tables > 0) expect(container.querySelectorAll("table").length).t…
+     34|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s534-families.test.ts:81:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/16]⎯
+
+ FAIL  test/s534-families.test.ts > S534 providers/studio/system/local structural parity > llama-swap policy title
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Llama-swap host policy'
+
+- Expected
++ Received
+
+- Llama-swap host policy
++ Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeLocal policyToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesLocal policyEdit runtime behavior for local model loading and unloading.TTL (seconds)Max concurrencyAuto-unload idle models: onRelease a model after its TTL expires so inactive weights are not pinned indefinitely.Save policyResetOpen modelsRaw policy{
++   "autoUnload": true,
++   "maxConcurrency": 1,
++   "ttl": 300
++ }
+
+ ❯ expectTitles test/s534-families.test.ts:32:44
+     30|   const container = await render(tag, overrides);
+     31|   const text = container.textContent ?? "";
+     32|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     33|   if (tables > 0) expect(container.querySelectorAll("table").length).t…
+     34|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s534-families.test.ts:85:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/16]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  16 failed (16)
+   Start at  05:01:35
+   Duration  16.42s (transform 7.57s, setup 0ms, collect 12.21s, tests 1.16s, environment 903ms, prepare 643ms)
+
+VITEST_EXIT=1

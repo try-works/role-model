@@ -1,0 +1,62 @@
+
+> role-model@0.0.0 runtime:build-test-deps E:\role-model-run115\s16-scratch
+> pnpm exec turbo run build --filter=@role-model/protocol-types --filter=@role-model-router/catalog --filter=effect --filter=@effect/sql-sqlite-node --filter=@role-model-router/profile-aggregator
+
+[WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+[WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+Scope: all 55 workspace projects
+[WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+[WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+[WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+[ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+
+If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+[WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+ WARNING  Circular package dependency detected: @role-model-router/provider-openai, @role-model-router/provider-anthropic, @role-model-router/adapter-execution
+
+   • turbo 2.11.7
+   • Packages in scope: @effect/sql-sqlite-node, @role-model-router/catalog, @role-model-router/profile-aggregator, @role-model/protocol-types, effect
+   • Running build in 5 packages
+   • Remote caching disabled
+
+@role-model/protocol-types:build: cache miss, executing f87da6cbe6894d11
+@effect/sql-sqlite-node:build: cache miss, executing 7a5aafc348106410
+@role-model-router/catalog:build: cache miss, executing ee6203750f3aabf1
+@role-model-router/profile-aggregator:build: cache miss, executing 50f7d31308f73189
+effect:build: cache miss, executing 8e89b749a923949f
+@role-model/protocol-types:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model/protocol-types:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model/protocol-types:build: $ tsc -p tsconfig.json
+@effect/sql-sqlite-node:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@effect/sql-sqlite-node:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@effect/sql-sqlite-node:build: $ node build.mjs && tsc -p tsconfig.service.json
+@role-model-router/catalog:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/catalog:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/catalog:build: $ tsc -p tsconfig.json
+@role-model-router/profile-aggregator:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/profile-aggregator:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/profile-aggregator:build: $ tsc -p tsconfig.json
+@effect/sql-sqlite-node:build: ▲ [WARNING] Cannot find base config file "../../../tsconfig.base.json" [tsconfig.json]
+@effect/sql-sqlite-node:build: 
+@effect/sql-sqlite-node:build:     ../../../vendor/effect/packages/sql/sqlite-node/tsconfig.json:3:13:
+@effect/sql-sqlite-node:build:       3 │   "extends": "../../../tsconfig.base.json",
+@effect/sql-sqlite-node:build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@effect/sql-sqlite-node:build: 
+@effect/sql-sqlite-node:build: {"status":"PASS","package":"@effect/sql-sqlite-node","entries":["index"]}
+effect:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+effect:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+effect:build: $ node build.mjs
+effect:build: ▲ [WARNING] Cannot find base config file "../../tsconfig.base.json" [tsconfig.json]
+effect:build: 
+effect:build:     ../../../vendor/effect/packages/effect/tsconfig.json:3:13:
+effect:build:       3 │   "extends": "../../tsconfig.base.json",
+effect:build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+effect:build: 
+effect:build: {"status":"PASS","package":"effect","entries":["Array","BigDecimal","ByteSize","Cache","Cause","Clock","Config","ConfigProvider","Console","Context","Crypto","Data","DateTime","Deferred","Duration","Effect","Effectable","ErrorReporter","ExecutionPlan","Exit","Fiber","FileSystem","Function","Graph","HashMap","Inspectable","Layer","Logger","ManagedRuntime","Match","Metric","MutableList","MutableRef","Option","Path","Pipeable","PlatformError","PubSub","Queue","Random","Record","Redacted","References","Result","Runtime","Schedule","Scheduler","Schema","SchemaIssue","SchemaParser","Scope","SemVer","SemVerRange","Semaphore","Stream","Struct","Terminal","Tracer","Types","Utils","ai","ai/AiError","ai/Chat","ai/DecisionModel","ai/EmbeddingModel","ai/LanguageModel","ai/McpClient","ai/McpClientError","ai/McpSchema","ai/McpServer","ai/Model","ai/ResponseIdTracker","ai/Telemetry","ai/Tokenizer","ai/Tool","ai/Toolkit","cli","cli/CliConfig","cli/CliOutput","cli/Prompt","cli/TerminalCapabilities","cluster","cluster/ClusterCron","cluster/ClusterSchema","cluster/Entity","cluster/EntityResource","cluster/Envelope","cluster/K8sHttpClient","cluster/MessageStorage","cluster/RunnerHealth","cluster/RunnerStorage","cluster/Runners","cluster/Sharding","cluster/ShardingConfig","cluster/Snowflake","devtools","devtools/DevToolsClient","encoding","encoding/Tar","encoding/Zip","eventlog","eventlog/EventJournal","eventlog/EventLog","eventlog/EventLogEncryption","eventlog/EventLogMessage","eventlog/EventLogRemote","eventlog/EventLogServer","eventlog/EventLogServerUnencrypted","graphql","graphql/GraphQLClientError","graphql/GraphQLProtocol","graphql/GraphQLResolver","http","http-api","http-api/HttpApi","http-api/HttpApiGroup","http-api/HttpApiGroup/","http-api/OpenApi","http/Cookies","http/Etag","http/FetchHttpClient","http/Headers","http/HttpClient","http/HttpClientError","http/HttpClientRequest","http/HttpClientResponse","http/HttpEffect","http/HttpIncomingMessage","http/HttpMiddleware","http/HttpPlatform","http/HttpRouter","http/HttpServer","http/HttpServerError","http/HttpServerRequest","http/Multipart","http/MultipartParser","http/MultipartParser/HeadersParser","http/UrlParams","index","net","net/AddressResolver","net/Dns","observability","observability/OtlpExporter","observability/OtlpSerialization","persistence","persistence/KeyValueStore","persistence/PersistedQueue","persistence/Persistence","persistence/RateLimiter","persistence/Redis","process","process/ChildProcessSpawner","reactivity","reactivity/Hydration","reactivity/Reactivity","rpc","rpc/Rpc","rpc/RpcClient","rpc/RpcClientError","rpc/RpcSchema","rpc/RpcSerialization","rpc/RpcServer","rpc/RpcWorker","schema/SchemaCompiler","schema/index","socket","socket/DatagramSocket","socket/Socket","sql","sql/Migrator","sql/SqlClient","sql/SqlConnection","sql/SqlError","sql/Statement","testing","workers","workers/Transferable","workers/Worker","workers/WorkerError","workers/WorkerRunner","workflow","workflow/Activity","workflow/DurableDeferred","workflow/Workflow","workflow/WorkflowEngine"],"rekeyed":[{"subpath":"schema","key":"schema/index","shadows":"Schema"}],"types":"E:\\role-model-run115\\s16-scratch\\role-model-router\\packages\\effect\\dist\\types"}
+
+ Tasks:    5 successful, 5 total
+Cached:    0 cached, 5 total
+  Time:    24.605s 
+

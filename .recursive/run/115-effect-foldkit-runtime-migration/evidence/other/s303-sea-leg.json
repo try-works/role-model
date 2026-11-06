@@ -1,0 +1,13 @@
+{
+  "candidate": {
+    "path": "E:/role-model-run115/package-s293-public/role-model-router/dist/release/win32-x64/role-model-dev.exe",
+    "sha256": "d2bc6231f5b5751f4f0b8bc4a970a7593d27a63497b0f7bfa1e41d53beccd67b",
+    "size": 104880640,
+    "version": "0.0.20-269-g35103383"
+  },
+  "result": "PASSED",
+  "runtimeStateRoot": "E:\\tmp\\s303-sea-state-yIEzug",
+  "startupMs": 27916,
+  "stopMs": 2120,
+  "vendorPid": 48644
+}

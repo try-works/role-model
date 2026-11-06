@@ -1,0 +1,10 @@
+{
+  "route": "/observe/queues",
+  "title": "Queues | RM3 Foldkit shell",
+  "hasQueues": true,
+  "headings": [
+    "Queue state",
+    "Queues"
+  ],
+  "body": "Skip to content\nrole-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\nCACHE\n53%\nROUTER ENDPOINT\n127.0.0.1:3458/v1\n—\nQueue state\nRequests\nRouting\nQueues\nDegradation receipts\nObservability\nActivity\nLogs\nQueues\n\nQueue truth from the shared store: depth, activity, retries and stalls per queue, with job drill-in.\n\nQUEUE\tMODE\tWAITING\tACTIVE\tDELAYED\tFAILED\tSTALLED\tOLDEST WAITING\tP50\tP95\tLAST ERROR\tDRAIN\nreplay.dispatch\twaiting 0 · failed 0\t—\t0\t—\t—\t—\t—\t—\t—\t—\t—\nevaluation.score\twaiting 0 · failed 0\t—\t0\t—\t—\t—\t—\t—\t—\t—\t—\nlearner.derive\twaiting 0 · failed 0\t—\t0\t—\t—\t—\t—\t—\t—\t—\t—\nlearner.promote\twaiting 0 · failed 0\t—\t0\t—\t—\t—\t—\t—\t—\t—\t—\nreplay.disposition\twaiting 0 · failed 0\t—\t0\t—\t—\t—\t—\t—\t—\t—\t—"
+}

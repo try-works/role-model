@@ -14,6 +14,9 @@ describe("OpenAI provider upstream model identity", () => {
     // published as `deepseek-flash` (no `deepseek-v4-` segment) while the pro
     // slot keeps `deepseek-v4-pro`. A legacy catalog id must not be sent
     // verbatim, because the provider no longer lists or accepts it.
+    expect(resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-v4.1-flash")).toBe(
+      "deepseek-flash",
+    );
     expect(resolveOpenAIProviderUpstreamModelId("deepseek/deepseek-v4-flash")).toBe(
       "deepseek-flash",
     );
@@ -82,6 +85,85 @@ describe("OpenAI provider adapter", () => {
       temperature: 0,
       response_format: { type: "json_object" },
     });
+  });
+
+  test("DeepSeek uses json_object instead of json_schema and reports json-fallback", () => {
+    const target = {
+      endpointId: "deepseek.personal.primary",
+      modelId: "deepseek/deepseek-flash",
+      providerId: "deepseek",
+      providerKind: "provider-openai",
+      providerAccountId: "deepseek.personal.primary",
+      adapterFamily: "ai-sdk-openai",
+      authFamily: "api-key",
+      apiBase: "https://api.deepseek.test/v1",
+      requestShapeHints: { providerShape: "openai.chat.completions", bodyKeys: [], headerKeys: [] },
+      candidate: {
+        identity: {
+          endpoint_id: "deepseek.personal.primary",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: { credentialRef: { backend: "env", ref: "DEEPSEEK_API_KEY" } },
+    };
+    const structured = {
+      name: "verdict",
+      schema: { type: "object", properties: { ok: { type: "boolean" } }, required: ["ok"] },
+    };
+    const executionRequest = {
+      messages: [{ role: "user", content: "Return JSON with an ok boolean." }],
+      stream: false,
+      structuredOutput: structured,
+    };
+    const adapter = createOpenAIProviderAdapter();
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({ target, executionRequest, capabilities });
+    expect(capabilities.structuredOutputs).toBe("json-fallback");
+    expect(requestCapture.body.response_format).toEqual({ type: "json_object" });
+    expect(JSON.stringify(requestCapture.body)).not.toContain("json_schema");
+    const normalized = normalizeOpenAIResponse({
+      target,
+      executionRequest,
+      requestCapture,
+      capabilities,
+      responseCapture: {
+        providerFamily: "deepseek",
+        endpointId: target.endpointId,
+        statusCode: 200,
+        vendorMetadata: { vendorId: "deepseek", latencyMs: 20 },
+        body: {
+          choices: [
+            { finish_reason: "stop", message: { role: "assistant", content: '{"ok":true}' } },
+          ],
+          usage: { prompt_tokens: 5, completion_tokens: 2 },
+        },
+      },
+    });
+    expect(normalized.outputText).toBe('{"ok":true}');
+    expect(normalized.structuredOutputMode).toBe("json-fallback");
+    const upstream = (
+      body: Record<string, unknown>,
+    ): { readonly ok: true; readonly json: string } => {
+      if ((body.response_format as { readonly type?: string } | undefined)?.type === "json_schema")
+        throw new Error("This response_format type is unavailable now");
+      return { ok: true, json: '{"ok":true}' };
+    };
+    expect(() => upstream({ response_format: { type: "json_schema" } })).toThrow("unavailable");
+    const accepted = upstream(requestCapture.body as Record<string, unknown>);
+    expect(JSON.parse(accepted.json)).toEqual({ ok: true });
+    const explicit = buildOpenAIRequest({
+      target,
+      executionRequest: {
+        messages: [{ role: "user", content: "Return JSON." }],
+        stream: false,
+        responseFormat: {
+          type: "json_schema",
+          json_schema: { name: "verdict", schema: {}, strict: true },
+        },
+      },
+      capabilities,
+    });
+    expect(explicit.body.response_format).toEqual({ type: "json_object" });
   });
 
   test("builds an OpenAI responses request and normalizes text, usage, and tool calls", () => {

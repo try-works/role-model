@@ -1,0 +1,64 @@
+Scope: all 50 workspace projects
+(node:52236) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ WARN  There are cyclic workspace dependencies: D:\DEV\role-model\.worktrees\baseline-0.0.20-main\role-model-router\packages\adapter-execution, D:\DEV\role-model\.worktrees\baseline-0.0.20-main\role-model-router\packages\provider-anthropic
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +681
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 681, reused 182, downloaded 0, added 0
+Progress: resolved 681, reused 530, downloaded 0, added 0
+Progress: resolved 681, reused 673, downloaded 0, added 9
+Progress: resolved 681, reused 674, downloaded 0, added 37
+Progress: resolved 681, reused 674, downloaded 0, added 94
+Progress: resolved 681, reused 674, downloaded 0, added 131
+Progress: resolved 681, reused 674, downloaded 0, added 167
+Progress: resolved 681, reused 674, downloaded 0, added 170
+Progress: resolved 681, reused 674, downloaded 0, added 179
+Progress: resolved 681, reused 674, downloaded 0, added 215
+Progress: resolved 681, reused 674, downloaded 0, added 238
+Progress: resolved 681, reused 674, downloaded 0, added 254
+Progress: resolved 681, reused 674, downloaded 0, added 277
+Progress: resolved 681, reused 674, downloaded 0, added 321
+Progress: resolved 681, reused 674, downloaded 0, added 371
+Progress: resolved 681, reused 674, downloaded 0, added 378
+Progress: resolved 681, reused 674, downloaded 0, added 427
+Progress: resolved 681, reused 674, downloaded 0, added 478
+Progress: resolved 681, reused 674, downloaded 0, added 505
+Progress: resolved 681, reused 674, downloaded 0, added 520
+Progress: resolved 681, reused 674, downloaded 0, added 529
+Progress: resolved 681, reused 674, downloaded 0, added 553
+Progress: resolved 681, reused 674, downloaded 0, added 566
+Progress: resolved 681, reused 674, downloaded 0, added 570
+Progress: resolved 681, reused 674, downloaded 0, added 574
+Progress: resolved 681, reused 674, downloaded 0, added 607
+Progress: resolved 681, reused 674, downloaded 0, added 617
+Progress: resolved 681, reused 674, downloaded 0, added 630
+Progress: resolved 681, reused 674, downloaded 0, added 654
+Progress: resolved 681, reused 674, downloaded 0, added 670
+Progress: resolved 681, reused 674, downloaded 0, added 675
+Progress: resolved 681, reused 674, downloaded 0, added 676
+Progress: resolved 681, reused 674, downloaded 0, added 677
+Progress: resolved 681, reused 674, downloaded 0, added 678
+Progress: resolved 681, reused 674, downloaded 0, added 679
+Progress: resolved 681, reused 674, downloaded 0, added 680
+Progress: resolved 681, reused 674, downloaded 0, added 681
+Progress: resolved 681, reused 674, downloaded 0, added 681, done
+
+devDependencies:
++ @biomejs/biome 1.9.4
++ @types/node 22.19.17
++ ajv 8.18.0
++ ajv-formats 3.0.1
++ commander 13.1.0
++ esbuild 0.25.12
++ json-schema-to-typescript 15.0.4
++ postject 1.0.0-alpha.6
++ tsx 4.21.0
++ turbo 2.11.7
++ typescript 5.9.3
++ vitest 3.2.4
+
+╭ Warning ─────────────────────────────────────────────────────────────────────╮│                                                                              ││   Ignored build scripts: @biomejs/biome, @google/genai, esbuild,             ││   protobufjs, sharp, workerd.                                                ││   Run "pnpm approve-builds" to pick which dependencies should be allowed     ││   to run scripts.                                                            ││                                                                              │╰──────────────────────────────────────────────────────────────────────────────╯
+
+Done in 53.2s using pnpm v10.6.5

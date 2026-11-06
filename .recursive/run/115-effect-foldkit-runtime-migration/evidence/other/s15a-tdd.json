@@ -1,0 +1,94 @@
+{
+  "slice": "s15a-local-diagnostics-read",
+  "requirement": "R21 server half",
+  "status": "complete",
+  "task": ".recursive/run/115-effect-foldkit-runtime-migration/tasks/s15a-diagnostics-endpoint.md",
+  "reusedAuthMachinery": {
+    "gate": "index.ts authorizeOperatorRequest (:17234) is now the ONE gate: the /api/role-model/operator/* dispatch uses it, and handleLocalDiagnosticsRead (:17079) calls the same function",
+    "credential": "readOperatorBearerToken (:16883) + operatorTokenMatches (:16892 - sha256 digests + timingSafeEqual)",
+    "deviceOwner": "resolveDeviceOwnerTrust (:17202) + isLoopbackOperatorClient (:17218 - request.socket.remoteAddress only, Host/Origin/forwarded headers never consulted)",
+    "context": "readOperatorHeader (:16910) rejects multi-value headers; validateOperatorRequestContext (:16958) enforces channel/scope/authorizationEpoch/capability",
+    "cors": "setCorsHeaders is SKIPPED for LOCAL_DIAGNOSTICS_PATH (:17480-:17481) and the route removes Access-Control-* headers (:17606-:17617); the handler result carries none"
+  },
+  "contract": [
+    {
+      "item": "1 bounded query",
+      "tests": "S15a R21.1 (3 tests)",
+      "evidence": "identity/build, loss counters, opaque base64url cursor, MAX 50 records, 16 KiB response cap (15 KiB record budget), 300000 ms staleness rule, four scalar fields per record, no fibers field",
+      "red": "state/identity/records absent on the stub",
+      "green": "3/3"
+    },
+    {
+      "item": "2 reused authorization + forwarded-owner rejection + CORS",
+      "tests": "S15a R21.2 (5 tests)",
+      "evidence": "401 without the existing credential off-loopback; 200 with it; 403 diagnostics_owner_header_forbidden for x-role-model-device-owner (and the other owner-claim headers); spoofed Host header grants nothing; no access-control-* header and no reflection with an evil Origin",
+      "red": "5/5 failed on the stub",
+      "green": "5/5"
+    },
+    {
+      "item": "3 no business/live aggregate contamination",
+      "tests": "S15a R21.3 (1 test)",
+      "evidence": "collectObservabilitySnapshot(scope) is deep-equal before/after three authorized reads; the source record array is unchanged",
+      "red": "read did not return ok/2 records",
+      "green": "1/1"
+    },
+    {
+      "item": "4 distinct states",
+      "tests": "S15a R21.4 (5 tests)",
+      "evidence": "disabled = 200 (absent source and enabled:false), stale = 200 with ruleMs/ageMs/stale, dropped = 200 with loss counters, empty = 200 zero records, ok = fresh records; denied = the handler's 401 (R21.2)",
+      "red": "stale/dropped/empty/ok failed on the stub; disabled already passed",
+      "green": "5/5"
+    }
+  ],
+  "red": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15a-red.log",
+    "exit": 1,
+    "files": 1,
+    "tests": 14,
+    "failed": 13,
+    "note": "stub returned only the disabled state; the disabled case passing is expected"
+  },
+  "green": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15a-green.log",
+    "exit": 0,
+    "files": 1,
+    "tests": 14,
+    "passed": 14
+  },
+  "regression": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15a-regression.log",
+    "exit": 0,
+    "files": 7,
+    "tests": 41,
+    "passed": 41,
+    "note": "the pre-existing operator auth suites (device owner, store-degradation readback, observability snapshot, learning readback, operator surfaces/controls) confirm the extracted gate behaves identically; they use ephemeral in-process ports inside vitest, no server was started by this slice"
+  },
+  "typecheck": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s15a-tsc.log",
+    "command": "node node_modules/typescript/bin/tsc -p role-model-router/apps/runtime-host-bridge/tsconfig.json --noEmit",
+    "exit": 0
+  },
+  "lint": {
+    "module": "clean (0 findings)",
+    "test": "clean (0 findings)"
+  },
+  "blocked": [
+    "R21 page half (Foldkit page, mobile/focus tests) is NOT built - task scope is the server half only.",
+    "The diagnostic RECORD WRITER is R20's boundary. This slice reads an injected LocalDiagnosticsSource and answers the explicit disabled state when the runtime has none; it claims no writer/retention semantics.",
+    "No socket-level proof by design: the route is typechecked and the handler is exercised directly; the route's CORS skip/header removal is code-reviewed, not exercised through a live port.",
+    "Redaction is by construction: a record is four scalar fields with a bounded code label (4096-byte slice); no message/log capture or fiber dump path is added."
+  ],
+  "deferred": [
+    {
+      "item": "diagnostic record source (writer)",
+      "reason": "No runtime composition root supplies readDiagnosticsSource today, so outside tests the authorized route answers the explicit disabled state. The writer (what is recorded, retention and loss accounting) is R20's module-health/Cause boundary; wiring it is deferred to that slice rather than fabricated here. Recorded in src/local-diagnostics-read.ts and evidence/other/s15c-tdd.json."
+    }
+  ],
+  "repairs": [
+    {
+      "slice": "s15c-diagnostics-repairs",
+      "evidence": "evidence/other/s15c-tdd.json",
+      "summary": "byte-cap whole-body accounting, disabled-before-query, max(atMs) staleness, conditions {stale,dropped}, cursor-past-end empty, diagnostics route owns all statuses/headers"
+    }
+  ]
+}

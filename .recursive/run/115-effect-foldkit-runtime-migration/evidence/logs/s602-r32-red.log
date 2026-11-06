@@ -1,0 +1,129 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run115-s602-r32-domain-layers.test.ts (4 tests | 4 failed) 47ms
+   × S602 R32 per-domain private Layer boundaries > composition captures no domain and every domain is Layer-provided with its own release 18ms
+     → expected undefined to be defined
+   × S602 R32 per-domain private Layer boundaries > each domain factory receives only its own options (no ambient cross-domain capture) 10ms
+     → expected [] to deeply equal [ 'retention', 'evaluation', …(6) ]
+   × S602 R32 per-domain private Layer boundaries > a failed domain build aborts and releases only domains already acquired 12ms
+     → promise resolved "{ _id: 'Context', …(1) }" instead of rejecting
+   × S602 R32 per-domain private Layer boundaries > the domain graph layer exposes a shutdown handshake and bounded release order 2ms
+     → expected undefined to deeply equal [ 'diagnostics', 'knowledge', …(6) ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run115-s602-r32-domain-layers.test.ts > S602 R32 per-domain private Layer boundaries > composition captures no domain and every domain is Layer-provided with its own release
+AssertionError: expected undefined to be defined
+ ❯ test/run115-s602-r32-domain-layers.test.ts:33:28
+     31|     expect(events()).toEqual([]);
+     32|     await Effect.runPromise(Layer.buildWithScope(layer, scope));
+     33|     expect(graph?.domains).toBeDefined();
+       |                            ^
+     34|     for (const id of R32_DOMAIN_IDS) {
+     35|       expect(graph?.domains[id]?.id).toBe(id);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/run115-s602-r32-domain-layers.test.ts > S602 R32 per-domain private Layer boundaries > each domain factory receives only its own options (no ambient cross-domain capture)
+AssertionError: expected [] to deeply equal [ 'retention', 'evaluation', …(6) ]
+
+- Expected
++ Received
+
+- [
+-   "retention",
+-   "evaluation",
+-   "artifacts",
+-   "eventLog",
+-   "capture",
+-   "learning",
+-   "knowledge",
+-   "diagnostics",
+- ]
++ []
+
+ ❯ test/run115-s602-r32-domain-layers.test.ts:54:18
+     52|     });
+     53|     await Effect.runPromise(Layer.buildWithScope(layer, scope));
+     54|     expect(seen).toEqual([...R32_DOMAIN_IDS]);
+       |                  ^
+     55|     await Effect.runPromise(Scope.close(scope, Exit.void));
+     56|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/run115-s602-r32-domain-layers.test.ts > S602 R32 per-domain private Layer boundaries > a failed domain build aborts and releases only domains already acquired
+AssertionError: promise resolved "{ _id: 'Context', …(1) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "_id": "Context",
++   "services": [
++     {
++       "key": "R32DomainGraph",
++       "value": {
++         "close": [Function close],
++         "domains": {},
++         "ready": false,
++         "shutdownOrder": [],
++       },
++     },
++     {
++       "key": "effect/Layer/CurrentMemoMap",
++       "value": MemoMapImpl {
++         "map": Map {},
++         "parent": undefined,
++       },
++     },
++   ],
+  }
+
+ ❯ test/run115-s602-r32-domain-layers.test.ts:64:71
+     62|       failOn: "capture",
+     63|     });
+     64|     await expect(Effect.runPromise(Layer.buildWithScope(layer, scope))…
+       |                                                                       ^
+     65|     expect(acquired()).toContain("eventLog");
+     66|     expect(acquired()).not.toContain("capture");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/run115-s602-r32-domain-layers.test.ts > S602 R32 per-domain private Layer boundaries > the domain graph layer exposes a shutdown handshake and bounded release order
+AssertionError: expected undefined to deeply equal [ 'diagnostics', 'knowledge', …(6) ]
+
+- Expected: 
+[
+  "diagnostics",
+  "knowledge",
+  "learning",
+  "capture",
+  "eventLog",
+  "artifacts",
+  "evaluation",
+  "retention",
+]
+
++ Received: 
+undefined
+
+ ❯ test/run115-s602-r32-domain-layers.test.ts:77:34
+     75|     const scope = Effect.runSync(Scope.make());
+     76|     await Effect.runPromise(Layer.buildWithScope(composeR32DomainLayer…
+     77|     expect(graph?.shutdownOrder).toEqual([...R32_DOMAIN_IDS].reverse()…
+       |                                  ^
+     78|     expect(graph?.ready).toBe(true);
+     79|     const close = graph?.close();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  07:09:24
+   Duration  4.60s (transform 2.26s, setup 0ms, collect 3.62s, tests 47ms, environment 0ms, prepare 325ms)
+

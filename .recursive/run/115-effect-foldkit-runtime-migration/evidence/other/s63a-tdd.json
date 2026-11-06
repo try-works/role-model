@@ -1,0 +1,18 @@
+{
+  "slice": "s63a-step1",
+  "resource": "src/host-runtime-resource.ts: HostRuntimeResource backend+server+packagedRuntime; acquire backend -> server (real bind) -> packaged; release inverse packaged -> server -> backend via one Scope; close idempotent Ref; failed acquisition closes scope; finalizer failure surfaces",
+  "tests": {
+    "file": "test/cli-composition-scope.test.ts",
+    "count": 4,
+    "realPort": true,
+    "reds": {
+      "order": "s63a-red-order.log",
+      "cleanup": "s63a-red-cleanup.log",
+      "throw": "s63a-red-throw.log"
+    },
+    "doubleCloseRed": "NOT CAPTURED - Effect Scope.close is itself idempotent, so removing the Ref still processes releases once; the test remains a guard but no mutation reproduced a failure"
+  },
+  "hostTsc": "exit 0",
+  "indexTests": "not run: no CLI/startBridgeServer change",
+  "step2": "CLI is server-first at cli.ts:5625; backend created at cli.ts:9322. Step 2 must acquire server first, then backend+packaged into the same scope, replace process.exit(0) at :5609 with close/finalizer completion, keep old shutdown as fallback until proven."
+}

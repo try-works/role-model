@@ -1,0 +1,44 @@
+[
+  {
+    "route": "/local/choose",
+    "status": 200,
+    "png": "new__local_choose.png",
+    "title": "Local choose | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Local choose Toggle theme Overview Diagnostics O",
+    "states": [],
+    "alerts": []
+  },
+  {
+    "route": "/integrations/downstream",
+    "status": 200,
+    "png": "new__integrations_downstream.png",
+    "title": "Downstream integration | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Downstream integration Toggle theme Overview Dia",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/integrations/upstream",
+    "status": 200,
+    "png": "new__integrations_upstream.png",
+    "title": "Upstream integration | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Upstream integration Toggle theme Overview Diagn",
+    "states": [
+      "loading"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/observe/queues",
+    "status": 200,
+    "png": "new__observe_queues.png",
+    "title": "Queues | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Queues Toggle theme Overview Diagnostics Observa",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  }
+]

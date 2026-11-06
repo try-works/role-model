@@ -1,0 +1,88 @@
+# S622 benchmark parity - resume completion
+
+Date: 2026-11-03. HEAD at completion: b9d3a838 (models repairs 5e33bd7c + lead rolePolicy wiring b9d3a838), worktree branch recursive/115-effect-foldkit-runtime-migration.
+
+## What changed in this resume
+- benchmarkRoute now also renders the runnable-endpoint table with the reference's title-case headers (Model, Path, Scope, Status) from the endpoint readback, because the :3456 capture (S565 Benchmark story) requires that table.
+- Kept the legacy uppercase inventory tables the reference layout contract expects while the parity tables stay title-case: Benchmark scores adds MODEL/SCOPE/STATUS, Taxonomy dimensions is DIMENSION/VALUE/SCORE, Run history is RUN/MODE/CASES/MODELS/COMPLETED/SUITE.
+- Run is disabled (not dead: it carries an explicit Disabled state) when there is no judge or no runnable endpoint.
+- Endpoint inventory evidence (s26a-route-inventory.json) now declares /api/role-model/benchmark/summary in addition to suite and runs, satisfying the S26f client/host tie.
+- s26e Benchmark case: successText now "Quick (12 hard cases)" (the parity page no longer lists raw case ids) and initialReads: 3 (suite + summary + runs).
+- s563 benchmark fixture now supplies three quick cases and two endpoints and asserts the dynamic label "Run quick benchmark (2 models, 3 cases)".
+
+## Run history
+- Run 1 (before these fixes): vitest 92 files / 901 tests with 5 failures: s26e Benchmark success text + single-subscription count, s26f inventory row for /summary, s563 old uppercase/columns expectations, s565 Benchmark story missing [Model,Path,Scope,Status].
+- Affected suites after fixes: s26e-readback-routes, s26f-client-host-tie, s563 layout, s565 page stories, s617 handler presence, s618 models wiring, s622 benchmark parity -> all PASS.
+- Run 2 (final): corepack pnpm test -> tsc 0, vitest 92 files / 901 tests PASS, node --test invariants PASS; SUITE_EXIT=0.
+
+## S247 click budget
+No synthetic clicks were added by this task (the new s622 tests render SSR HTML and call update/client functions directly; they never click a mounted DOM). The S247 invariant lane passed in the final suite run and its budget file was not modified.
+
+## Handler-presence ratchet
+s617-handler-presence 9/9 green in the final run; the benchmark route adds only wired controls (selects, Run, Clear) and the Run disabled state, so the dead-control ratchet has no new entries and the baseline was not regenerated.
+
+## Final parity review against apps/runtime-ui/app/routes/control-benchmark.tsx
+Delivered: mode options with suite-derived counts, judge endpoint select from the endpoint readback (endpointId values, model + source labels), Run label with model/case counts, Run disabled without judge/endpoints, Clear all benchmark data (DELETE /api/role-model/benchmark/data), Benchmark scores (Model/Overall/Profile/Easy/Medium/Hard/p50/p95/Scope + Last run/Suite/Judge), Taxonomy dimensions, Run history (Run/Mode/Cases/Models/Completed/Suite), runnable endpoint table (Model/Path/Scope/Status), and the three readbacks (suite/summary/runs) planned on route entry.
+Not ported (honest remaining gaps if full :3456 parity is required later): per-endpoint selection checkboxes and "N of M selected" gating; the per-model Clear action (DELETE /api/role-model/benchmark/endpoints/{id}/data); judge preference persistence (PUT /api/role-model/benchmark/preferences); active-run progress polling (runs/active, runs/{id}); taxonomy role/task/capability filter selects; real p50/p95 latencies (the summary readback does not carry them, so the columns honestly render "—").
+
+
+## Lead HOLD items (recorded while the models repair lane holds the shared plumbing)
+
+(1) RUN GATING DIFFERENCE - RECORDED, NOT SILENT: :3456 requires a judge, at least two SELECTED benchmark
+subjects, and not-running before Run is enabled. The Foldkit port currently disables Run only when the judge
+is empty or zero runnable endpoints exist (routes.ts benchmarkRoute). The per-subject selection UI is not
+built yet (so "selected" would mean all runnable endpoints) and there is no active-run/progress state, so the
+>=2-selected and non-running conditions are DEFERRED until the models repair lands. Planned enforcement:
+Disable Run when judge is empty OR runnable endpoints < 2; the running condition follows only with active-run
+state. This is an honest recorded difference, not a claim of parity.
+
+(2) EXACT BODY ASSERTIONS (done): the ClearBenchmark assertions in s618 and s622 now use exact toEqual with
+the DELETE body {} (method DELETE, path /api/role-model/benchmark/data). s620 create/update/task-allowlist
+assertions now compare the exact request body to the command payload (JSON.parse(draftJson)) instead of a
+subset toMatchObject. Targeted suites s622 + s618 + s620: 25/25 pass.
+
+(3) RAW FULL-SUITE LOG: PENDING. The shared main worktree is currently contended by the models-repair lane
+(routes.ts carries their in-flight edits and a transient tsc error in modelsRoute), so the clean 92/901 raw
+run (vitest + node --test invariants, full output) will be produced from a clean detached worktree at the
+final commit after that repair lands, and committed raw - not just summarised.
+
+
+## FINAL (resumed completion at 458b787e)
+
+- Run gating enforced: Run is disabled when the judge is empty OR fewer than two runnable benchmark subjects
+  exist. Because the per-subject selection UI is not built, "selected" means all runnable endpoints. The
+  running-state condition is STILL a recorded difference (there is no active-run/progress state yet).
+- Targeted verification: tsc 0; s622 + s618 + s620 + s617 = 34/34 (s622-benchmark-final-targeted.log).
+- RAW full-suite evidence committed, not a summary: evidence/logs/s622-benchmark-full-suite-raw-458b787e.log
+  is the complete output of `corepack pnpm test` (tsc + vitest + node --test invariants) from a clean
+  detached worktree at HEAD 458b787e: 93 test files / 910 tests PASS.
+  CLAIM NARROWED (HOLD 1): the piped command output ends at the vitest summary; the process exit code was
+  echoed OUTSIDE the Tee pipe and is now ALSO recorded in a clearly-labelled provenance footer appended to
+  the log (SUITE_EXIT=0, job pwsh-0ac1c1121ded40dc). The footer is marked as appended-after-the-run, so the
+  body remains the unedited command output.
+- Method note (honest): the first junction-based clean run produced 93/910 with 3 environment-only failures
+  (S48a build resolved the workspace packages through the junction into the main checkout; S26f/S40b timed
+  out under load). Replacing junctions with a real offline pnpm install plus copied built workspace dists
+  (the dists are untracked build artifacts) made the clean run green: S48a needed the local dists and a warm
+  build cache to finish inside its 20s timeout; S26f/S40b then passed.
+- The suite is now 93 files / 910 tests (not 92/901) because the models repair added the S623 per-route
+  verification matrix (1 file, 9 tests).
+
+
+## HOLD 2 (benchmark review - shared plumbing released 24261ebb)
+
+(a) CLEAR-ALL CONFIRMATION GUARD IMPLEMENTED (replaces :3456 window.confirm): BenchmarkClearRequested no longer
+dispatches DELETE; it arms modelsView.benchmarkClearPending. The route then renders the reference warning
+("Clear all benchmark data? This removes every benchmark run, artifact, and routing profile sample. This cannot
+be undone.") with "Confirm clear" (BenchmarkClearConfirmed -> ClearBenchmark DELETE) and "Cancel"
+(BenchmarkClearCancelled -> no command). s622 asserts both rendered states plus the arm/confirm/cancel update
+semantics; s618 updated for the two-step flow. Targeted s622+s618+s620+s617 = 36/36, tsc 0.
+
+(b) RUNNABLE-CANDIDATE FILTER IMPLEMENTED WITH THE REFERENCE RULE: endpoints and judge options are filtered by
+isBenchmarkRunnableCandidate semantics (benchmarkEligible !== false when present, else
+executionModeEligible !== false), and a judge saved against a now-non-runnable endpoint falls back to the first
+runnable one. DATA LIMITATION NAMED EXPLICITLY (not hidden): the host /api/role-model/endpoints readback does
+not currently emit benchmarkEligible/executionModeEligible (the parser now passes both through if added), and
+the router-candidates readback parser exposes routingEligible but not benchmark eligibility. Until the host
+surfaces those flags, the filter is a no-op and non-runnable endpoints can still appear; the route rule engages
+automatically once the flags exist. Unit coverage synthesises both flags to prove the rule and the exclusion.

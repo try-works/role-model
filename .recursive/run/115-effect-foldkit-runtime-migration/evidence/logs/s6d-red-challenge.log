@@ -1,0 +1,89 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:39276) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run105-review-challenge-evidence.test.ts (27 tests | 1 failed | 26 skipped) 11811ms
+   ↓ genuine finalize/list/read wrappers and real replay job yield actual winner and sibling time
+   ↓ no borrowing evidence for mismatched request {"captureRef":"other"}
+   ↓ no borrowing evidence for mismatched request {"roleId":"other"}
+   ↓ no borrowing evidence for mismatched request {"taskTypeId":"other"}
+   ↓ no borrowing evidence for mismatched request {"newEndpointId":"other"}
+   ↓ unknown sibling time stays pending despite fabricated result date
+   ↓ provider completion alone is not finalized evidence
+   ↓ mismatched listed winner cannot replace actual readback
+   ↓ unknown or mismatched effort remains pending
+   ↓ fresh cutoff never borrows a previous comparison
+   ↓ real evidence behind a continuation page is reached
+   ↓ cyclic or malformed pages are unavailable rather than claimed complete
+   ↓ enumerable durable evidence carries winning-member confidence and exact capture; cutoff refuses old evidence
+   ↓ execute production CLI callbacks over genuine evaluation/replay wrappers with auth envelope and transfer decode
+   ↓ genuine retained terminal-disposition capture is enumerated from real live telemetry and exact capsule read
+   ↓ history fails closed for wrong capsule scope/readiness/identity/classification and excludes replay output
+   × history index unavailable and 501 matching ids are null, never a truncated complete corpus 3495ms
+     → expected [ { …(10) } ] to be null
+   ↓ CLI history callback must actually bind supported exact read operation
+   ↓ pending restart reads actual authenticated ReplayCore job plus complete real empty queue
+   ↓ fresh queue store with no rows is a complete empty pending-dispatch projection
+   ↓ terminal replay jobs do not poison pending-dispatch projection
+   ↓ malformed active replay jobs still fail closed
+   ↓ genuine pre-replay queue row preserves actual queue ID and never invents a replayJobId
+   ↓ execute fourth production callback against actual replay and pre-replay Effect queue records
+   ↓ exact same capture/pair with two genuine finalized groups uses explicit excluded group IDs, not arbitrary winner
+   ↓ CLI must bind pending restart to authenticated replay reads AND actual queue read authority
+   ↓ CLI finalized and enumerable callbacks actually bind authenticated extension reads
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-review-challenge-evidence.test.ts > history index unavailable and 501 matching ids are null, never a truncated complete corpus
+AssertionError: expected [ { …(10) } ] to be null
+
+- Expected: 
+null
+
++ Received: 
+[
+  {
+    "captureRef": "req-history-real",
+    "hasRecordedToolResults": false,
+    "messages": [
+      {
+        "content": "Summarize the actual retained request",
+        "nodeId": "9106f8bf6dd56ea41c2d59ff265f4ebcb7160a1719d9b2a06c66201362efd828",
+        "occurrenceId": "trace-history-real:message:0",
+        "predecessorOccurrenceId": "trace-history-real:root",
+        "role": "user",
+      },
+    ],
+    "replayDispositionSettled": true,
+    "replayProduced": false,
+    "requirements": {
+      "requiredCapabilities": [],
+      "requiredModalities": [
+        "text",
+      ],
+      "source": "inferred",
+    },
+    "roleId": "role:operator",
+    "sourceClass": null,
+    "sourceEndpointId": "endpoint:source",
+    "taskTypeId": "task:summarize",
+  },
+]
+
+ ❯ test/run105-review-challenge-evidence.test.ts:775:9
+    773|           },
+    774|         }),
+    775|       ).toBeNull();
+       |         ^
+    776|       expect(reads).toBe(0);
+    777|     } finally {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 26 skipped (27)
+   Start at  05:49:09
+   Duration  17.68s (transform 9.09s, setup 0ms, collect 5.37s, tests 11.81s, environment 0ms, prepare 170ms)
+

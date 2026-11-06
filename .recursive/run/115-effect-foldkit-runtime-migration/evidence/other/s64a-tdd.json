@@ -1,0 +1,38 @@
+{
+  "slice": "s64a-corrected",
+  "corrections": [
+    "J6 operator endpoints are 200, not 404; prior probe used un-prefixed paths",
+    "J4 effort rejection is correct: no configured endpoint advertises reasoningEffort; not a defect",
+    "J3 cancel now exercised on fresh endpoint with 10s mock"
+  ],
+  "J3": {
+    "classification": "PASS",
+    "drove": "fresh state; 10s mock; abort at 500ms",
+    "before": 2,
+    "after": 3,
+    "delta": 1,
+    "result": "AbortError",
+    "evidence": "s64a-corrected.log"
+  },
+  "J4": {
+    "classification": "PASS",
+    "precondition": "an endpoint with non-empty reasoningEffort/reasoningEffortLevels is required to exercise effort honoring",
+    "honesty": "400 no_eligible_target; no-effort success decision reasoningEffort null/effortSource none",
+    "ids": {
+      "requestId": "req-7b5d9d51-ad21-4043-8529-17aa2c82bdd9"
+    },
+    "evidence": "s64a-corrected.log"
+  },
+  "J6": {
+    "classification": "PASS_API / UI NOT RUN",
+    "endpoints": "operator/replay/jobs 200 [], operator/evaluation/jobs 200 [], operator/learning 200 candidates:0",
+    "noSeededRows": true,
+    "execution": "NOT RUN - no jobs",
+    "ui": "/learning is NotFound in the packaged client; no seeded rows shown, but no empty/disabled page exists"
+  },
+  "assertions": "throwing script; see corrected.log",
+  "evidence": {
+    "script": "s64a-corrected.mjs",
+    "log": "s64a-corrected.log"
+  }
+}

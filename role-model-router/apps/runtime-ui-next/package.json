@@ -14,7 +14,12 @@
     "./view": "./src/view.ts"
   },
   "scripts": {
-    "test": "vitest run"
+    "test": "tsc --noEmit -p tsconfig.json && vitest run && node --test test/*.test.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test:invariants": "node --test test/*.test.mjs",
+    "build": "node build.mjs",
+    "test:handler-presence": "vitest run test/s617-handler-presence.test.ts",
+    "handler-presence:reconcile": "node --import tsx test/tools/handler-presence-reconcile.ts"
   },
   "devDependencies": {
     "happy-dom": "^20.0.0",
@@ -25,6 +30,7 @@
     "@role-model-router/foldkit": "workspace:*",
     "@role-model-router/foldkit-ui": "workspace:*",
     "@role-model/ui": "workspace:*",
+    "@tanstack/charts": "1.1.0",
     "effect": "workspace:*"
   }
 }

@@ -1,0 +1,18 @@
+COMMAND: node vitest run test/s21a-composition-dag.test.ts test/s21c-bootstrap-owner-wiring.test.ts (S310 characterization)
+EXIT_CODE=0
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:32656) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s21c-bootstrap-owner-wiring.test.ts (2 tests) 3024ms
+   ✓ S21c bootstrap owner wiring > the host calls the exact Bootstrap instance it received from the DAG  3008ms
+ ✓ test/s21a-composition-dag.test.ts (6 tests) 299ms
+
+ Test Files  2 passed (2)
+      Tests  8 passed (8)
+   Start at  03:31:51
+   Duration  45.13s (transform 19.85s, setup 0ms, collect 37.58s, tests 3.32s, environment 1ms, prepare 2.22s)
+
+

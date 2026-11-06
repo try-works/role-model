@@ -1,0 +1,44 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:17932) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s15h-live-socket-diagnostics.test.ts (8 tests | 1 failed | 7 skipped) 45ms
+   × S15h/S15i diagnostics over a real loopback socket > starts with port option 0, so an ephemeral operator-free port is by construction 43ms
+     → expected 8080 to be +0 // Object.is equality
+   ↓ S15h/S15i diagnostics over a real loopback socket > token-less loopback read answers the explicit disabled state with no writer enabled
+   ↓ S15h/S15i diagnostics over a real loopback socket > loopback owner trust is explicit: with trust off, missing and wrong credentials are 401 and the configured token is accepted
+   ↓ S15h/S15i diagnostics over a real loopback socket > a wrong token of the SAME length is still rejected (not a length-only comparison)
+   ↓ S15h/S15i diagnostics over a real loopback socket > every owner-claim header is rejected by the diagnostics handler (generic gate already authorized) with no CORS
+   ↓ S15h/S15i diagnostics over a real loopback socket > 500, OPTIONS, context-mismatch 403 and 404 responses carry no access-control headers
+   ↓ S15h/S15i diagnostics over a real loopback socket > close() releases the listener: a fetch to the closed port refuses
+   ↓ S15h/S15i diagnostics over a real loopback socket > error responses from a real socket never carry access-control headers either
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s15h-live-socket-diagnostics.test.ts > S15h/S15i diagnostics over a real loopback socket > starts with port option 0, so an ephemeral operator-free port is by construction
+AssertionError: expected 8080 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 8080
+
+ ❯ test/s15h-live-socket-diagnostics.test.ts:105:41
+    103|   test("starts with port option 0, so an ephemeral operator-free port …
+    104|     const server = await startDiagnosticsServer();
+    105|     expect(startedOptions.at(-1)?.port).toBe(0);
+       |                                         ^
+    106|     expect(server.port).toBeGreaterThan(0);
+    107|     expect([3456, 3457, 3458]).not.toContain(server.port);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 skipped (8)
+   Start at  05:39:10
+   Duration  7.08s (transform 4.26s, setup 0ms, collect 6.53s, tests 45ms, environment 0ms, prepare 181ms)
+
+EXIT_CODE: 1

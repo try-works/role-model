@@ -1,0 +1,134 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/diagnostics-client.test.ts (8 tests) 72ms
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the ok state and its records, and requests the operator diagnostics URL
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 16.6ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: 's15f-ok', status: 'loading' },
+    route: { _tag: 'Diagnostics', id: 's15f-ok' },
+    theme: 'light'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 16.572699999999713,
+  thresholdMs: 8
+}
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the empty state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the disabled state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the stale state with the server's exact age and rule
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders the dropped state with the server's exact loss counts
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders a 401 denial
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders a 403 rejection distinctly from a 401 denial
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > renders a transport failure as the error state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > constructs the REAL client with the injected fetchImpl/baseUrl/token and mounts its reader
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > mounts the reader instance returned by the client factory
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+stderr | test/diagnostics-e2e.test.ts > S15f diagnostics page over the real client > turns a token-less same-origin 401 into the explicit trust-precondition error
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+
+ ✓ test/diagnostics-e2e.test.ts (11 tests) 6002ms
+   ✓ S15f diagnostics page over the real client > renders the ok state and its records, and requests the operator diagnostics URL  612ms
+   ✓ S15f diagnostics page over the real client > renders the empty state  519ms
+   ✓ S15f diagnostics page over the real client > renders the disabled state  549ms
+   ✓ S15f diagnostics page over the real client > renders the stale state with the server's exact age and rule  542ms
+   ✓ S15f diagnostics page over the real client > renders the dropped state with the server's exact loss counts  543ms
+   ✓ S15f diagnostics page over the real client > renders a 401 denial  544ms
+   ✓ S15f diagnostics page over the real client > renders a 403 rejection distinctly from a 401 denial  527ms
+   ✓ S15f diagnostics page over the real client > renders a transport failure as the error state  543ms
+   ✓ S15f diagnostics page over the real client > constructs the REAL client with the injected fetchImpl/baseUrl/token and mounts its reader  545ms
+   ✓ S15f diagnostics page over the real client > mounts the reader instance returned by the client factory  546ms
+   ✓ S15f diagnostics page over the real client > turns a token-less same-origin 401 into the explicit trust-precondition error  531ms
+
+ Test Files  2 passed (2)
+      Tests  19 passed (19)
+   Start at  04:48:36
+   Duration  12.67s (transform 3.48s, setup 0ms, collect 7.97s, tests 6.07s, environment 1.55s, prepare 541ms)
+
+EXIT_CODE: 0

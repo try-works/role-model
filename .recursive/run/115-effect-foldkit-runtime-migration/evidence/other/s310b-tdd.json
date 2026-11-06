@@ -1,0 +1,40 @@
+{
+  "slice": "s310b-backend-owner (S311 repair, LANDED)",
+  "requirement": "R27 Backend owner through composition DAG",
+  "decision": "LANDED with S311 repairs: restored getRoutableInventory + conditional anonymousLearningReads (181-name ledger reconciled), provider permits applied at the backend construction so the raw judge handle is bounded too, lint classified.",
+  "ledger": {
+    "old": 181,
+    "current": 181,
+    "generated": 157,
+    "base": 13,
+    "conditional": 4,
+    "overrides": 7,
+    "missing": [],
+    "extra": [],
+    "reconciled": true,
+    "file": "evidence/other/s310b-field-ledger.json"
+  },
+  "restored": [
+    "getRoutableInventory (DAG base: () => resolveBackend()?.getEffectiveRoutableInventory?.() ?? null)",
+    "conditional anonymousLearningReads passed through to the owner when set"
+  ],
+  "permitPath": "withBackendProviderPermits wraps the runtime backend object at index.ts createRuntimeBridgeBackend (const backend = withBackendProviderPermits({...})); the DAG options bind that wrapped backend, so both the route path and the raw judge handle (cli input.backend.executeChatCompletions) run under the same ProviderPermits (4/16 defaults). Tests cover chat+responses, 6-way concurrency <= 4, and permit release after a rejection.",
+  "seams": "S21c Bootstrap seams kept: s21c-bootstrap-owner-wiring.test.ts injects them; Bootstrap owner remains separate from the Backend owner.",
+  "redGreen": {
+    "red": "s310-red4.log: getter-mutation test failed (stale effectiveRegistry)",
+    "green": "s310-green4.log: affected 7 files 33/33; tsc exit 0"
+  },
+  "lint": {
+    "dag": "161 findings: 159 require-safety-comment-for-type-assertion (157 = moved literal's verbatim per-field casts, group-justified as moved-boundary; 2 = boundary casts at the options/owner construction) + 2 no-unknown-returns (readBootstrapState/projectCliStartupReadiness boundary types). New helper/identity/wrapper findings fixed: unknown-return helpers typed, object-param/typeof/dictionary removed, conditional spreads via named empty override, mutable double-cast removed, wrapper casts carry SAFETY comments.",
+    "test": "1 residual: line 54 no-known-value-widening on the double's return object (typed-boundary note in the task doc); all casts go through one asNever helper with a SAFETY comment."
+  },
+  "files": {
+    "src/composition-dag.ts": "D75508BEC0226CAC7FEC2BA28C95D6152D3CC6DEB1BA0AD8B8C0C837B3432DE7",
+    "src/cli.ts": "3C6396FEECA75F57F4D6E644BF6530B13956F5F02E7EAA51755AA5C01E297F6E",
+    "src/index.ts": "ED1BC8757E39BFBEB0A836325D5DE5EB9EE3465E93A9F94C5E80C2E71661E960",
+    "test/s310b-backend-owner.test.ts": "DE9AC1E54E5CC9AF2774239A51168637CF7DD523E34055CE216C4FEE1B07DDE6"
+  },
+  "backups": "E:/rm-tmp/s310b/*.bak",
+  "unproven": "No whole-monolith suite; start/close/readiness ordering untouched but not re-proved end-to-end; no operator ports.",
+  "wrapper": "withBackendProviderPermits uses Object.create(backend) + defineProperty for the two provider methods: inherited getters (registry/effectiveRegistry) evaluate live; the getter-mutation test mutates execution mode and observes the new effectiveRegistry."
+}

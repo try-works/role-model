@@ -4,13 +4,7 @@
     "noEmit": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ]
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
-  "include": [
-    "src/foldkit-*.ts"
-  ]
+  "include": ["src/foldkit-*.ts"]
 }

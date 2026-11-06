@@ -1,0 +1,33 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:59352) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s341-backend-storage.test.ts (6 tests) 8368ms
+   ✓ S341 backend storage factory > composeBackendStorage returns a per-backend lifecycle with initialization, graph store and observation storage  503ms
+   ✓ S341 backend storage factory > observed-profiles read family uses the bound backend storage instance (family identity)  7363ms
+(node:72144) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s421-diagnostics-isolation.test.ts (5 tests) 780ms
+(node:65992) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s369-diagnostics-query-source.test.ts (4 tests) 481ms
+(node:60004) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s374-defect-readback.test.ts (5 tests) 389ms
+ ✓ test/module-health-writer.test.ts (13 tests) 96ms
+(node:4556) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run115-s10c-wiring-proofs.test.ts (5 tests) 37ms
+(node:71636) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s366-module-health-edge.test.ts (4 tests) 21ms
+(node:15300) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run115-s10b-module-health-wiring.test.ts (2 tests) 47ms
+
+ Test Files  8 passed (8)
+      Tests  44 passed (44)
+   Start at  21:05:49
+   Duration  72.28s (transform 17.42s, setup 0ms, collect 50.86s, tests 10.22s, environment 7ms, prepare 4.74s)
+

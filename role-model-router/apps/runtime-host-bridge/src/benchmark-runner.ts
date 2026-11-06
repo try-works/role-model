@@ -46,6 +46,7 @@ import {
   writeBenchmarkRunManifest,
 } from "./benchmark-artifacts.js";
 
+import { benchmarkOutcomeFields } from "./benchmark-outcome.js";
 import { writeBenchmarkRunResult } from "./benchmark-summary.js";
 
 import {
@@ -257,13 +258,27 @@ export interface BenchmarkRunResult {
   readonly artifactRoot: string;
 
   readonly endpointGrades: readonly BenchmarkRunEndpointGrade[];
+
+  readonly caseCounts: import("./benchmark-outcome.js").BenchmarkCaseCounts;
+
+  readonly outcome: import("./benchmark-outcome.js").BenchmarkRunOutcomeOrPending;
+
+  readonly requestedEndpointCount: number;
+
+  readonly executedEndpointCount: number;
+
+  readonly skippedEndpoints: readonly import("./benchmark-outcome.js").BenchmarkSkippedEndpoint[];
 }
 
 export interface BenchmarkRunEndpointGrade extends BenchmarkEndpointGrade {
   readonly reasoningEffort: string | null;
 }
 
+import { BenchmarkCancelledError } from "./benchmark-gate.js";
+
 export interface BenchmarkRunnerDependencies {
+  /** S330: gate cancellation signal. */
+  readonly signal?: AbortSignal;
   readonly databasePath: string;
 
   readonly benchmarkArtifactRoot?: string;
@@ -372,7 +387,7 @@ async function executeBenchmarkTurn(
   const requestId = `bench-${caseItem.case_id}-${endpoint.endpointId}-${requestSuffix}-${randomUUID()}`;
 
   const omitTools = options?.omitTools === true;
-  const responseFormat = buildTextDeliverableResponseFormat(caseItem) as
+  const responseFormat:
     | {
         readonly type: "json_schema";
         readonly json_schema: {
@@ -381,7 +396,19 @@ async function executeBenchmarkTurn(
           readonly strict?: boolean;
         };
       }
-    | undefined;
+    | { readonly type: "json_object" }
+    | undefined = isDeepSeekBenchmarkModel(endpoint.modelId)
+    ? { type: "json_object" }
+    : (buildTextDeliverableResponseFormat(caseItem) as
+        | {
+            readonly type: "json_schema";
+            readonly json_schema: {
+              readonly name: string;
+              readonly schema: Record<string, unknown>;
+              readonly strict?: boolean;
+            };
+          }
+        | undefined);
   const usesResponsesExecution =
     typeof deps.executeResponses === "function" &&
     Boolean(caseItem.tools?.length) &&
@@ -393,7 +420,7 @@ async function executeBenchmarkTurn(
         model: endpoint.modelId,
         input: messages,
         ...(caseItem.tools && !omitTools ? { tools: caseItem.tools } : {}),
-        ...(responseFormat
+        ...(responseFormat?.type === "json_schema"
           ? {
               text: {
                 format: {
@@ -612,6 +639,9 @@ async function runCaseOnEndpoint(
   }
 }
 
+const isDeepSeekBenchmarkModel = (modelId: string): boolean =>
+  modelId.startsWith("deepseek/") || /^deepseek-(flash|v4-pro)$/.test(modelId);
+
 const JUDGE_RESPONSE_FORMAT = {
   type: "json_schema",
 
@@ -705,7 +735,13 @@ async function executeJudgeRequest(
       model: judgeEndpoint.modelId,
       messages,
       temperature: 0,
-      ...(structuredOutput ? { response_format: JUDGE_RESPONSE_FORMAT } : {}),
+      ...(structuredOutput
+        ? {
+            response_format: isDeepSeekBenchmarkModel(judgeEndpoint.modelId)
+              ? { type: "json_object" as const }
+              : JUDGE_RESPONSE_FORMAT,
+          }
+        : {}),
     };
 
     const result = await deps.executeChatCompletions(
@@ -1361,7 +1397,9 @@ async function gradeCompareAcrossModels(input: {
 
           temperature: 0,
 
-          response_format: COMPARE_RESPONSE_FORMAT,
+          response_format: isDeepSeekBenchmarkModel(input.judgeEndpoint.modelId)
+            ? { type: "json_object" }
+            : COMPARE_RESPONSE_FORMAT,
         },
 
         requestId,
@@ -1645,6 +1683,10 @@ export async function runRoutingCapabilityBenchmark(
   const cases = selectBenchmarkCases(suite, { mode, caseIds: request.caseIds });
 
   const runId = request.runId ?? randomUUID();
+  const throwIfCancelled = (): void => {
+    if (deps.signal?.aborted) throw new BenchmarkCancelledError(runId);
+  };
+  throwIfCancelled();
 
   const startedAtMs = Date.now();
 
@@ -1656,6 +1698,8 @@ export async function runRoutingCapabilityBenchmark(
     mode,
 
     endpointCount: request.endpointIds?.length ?? 0,
+
+    requestedEndpointCount: request.endpointIds?.length ?? 0,
 
     caseCount: cases.length,
 
@@ -1674,8 +1718,24 @@ export async function runRoutingCapabilityBenchmark(
     | "benchmark_membership_drifted" = "benchmark_initialization_failed";
 
   try {
-    const endpoints = (await deps.listConfiguredEndpoints()).filter((endpoint) =>
+    const configuredEndpoints = await deps.listConfiguredEndpoints();
+    const endpoints = configuredEndpoints.filter((endpoint) =>
       isHealthyEndpoint(endpoint.healthStatus),
+    );
+    const requestedEndpointIds = request.endpointIds?.length
+      ? [...new Set(request.endpointIds)]
+      : configuredEndpoints.map((endpoint) => endpoint.endpointId);
+    const skippedEndpoints: ReadonlyArray<
+      import("./benchmark-outcome.js").BenchmarkSkippedEndpoint
+    > = requestedEndpointIds.flatMap(
+      (endpointId): ReadonlyArray<import("./benchmark-outcome.js").BenchmarkSkippedEndpoint> => {
+        if (!configuredEndpoints.some((endpoint) => endpoint.endpointId === endpointId)) {
+          return [{ endpointId, reason: "not_configured" as const }];
+        }
+        return endpoints.some((endpoint) => endpoint.endpointId === endpointId)
+          ? []
+          : [{ endpointId, reason: "unhealthy" as const }];
+      },
     );
 
     const targetEligibility = evaluateBenchmarkTargetEligibility({
@@ -1687,9 +1747,15 @@ export async function runRoutingCapabilityBenchmark(
       throw new Error(targetEligibility.warnings[0] ?? "benchmark_endpoint_ineligible");
     }
 
-    const targetEndpoints = request.endpointIds?.length
-      ? endpoints.filter((endpoint) => request.endpointIds?.includes(endpoint.endpointId))
+    const targetEndpoints = requestedEndpointIds.length
+      ? endpoints.filter((endpoint) => requestedEndpointIds.includes(endpoint.endpointId))
       : endpoints;
+
+    updateBenchmarkRunProgressPlan(runId, {
+      requestedEndpointCount: requestedEndpointIds.length,
+      executedEndpointCount: targetEndpoints.length,
+      skippedEndpoints,
+    });
 
     if (targetEndpoints.length === 0) {
       throw new Error("No healthy configured endpoints available for benchmarking.");
@@ -1739,6 +1805,9 @@ export async function runRoutingCapabilityBenchmark(
 
     updateBenchmarkRunProgressPlan(runId, {
       endpointCount: targetEndpoints.length,
+      requestedEndpointCount: requestedEndpointIds.length,
+      executedEndpointCount: targetEndpoints.length,
+      skippedEndpoints,
       caseCount: cases.length,
       totalSteps:
         executionSteps + (useJudge ? targetEndpoints.length * cases.length : 0) + compareCaseCount,
@@ -1754,14 +1823,22 @@ export async function runRoutingCapabilityBenchmark(
     }
 
     for (const [endpointIndex, endpoint] of targetEndpoints.entries()) {
+      throwIfCancelled();
       const endpointExecutions = new Map<string, BenchmarkCaseExecution>();
 
       executionByEndpoint.set(endpoint.endpointId, endpointExecutions);
 
       for (const [caseIndex, caseItem] of cases.entries()) {
+        throwIfCancelled();
         const requestId = `bench-${runId}-${caseItem.case_id}-${endpoint.endpointId}`;
 
+        // The step counter is the authoritative progress position at case start:
+        // completedSteps == (endpointIndex - 1) * caseCount + (caseIndex - 1) in 1-based terms.
+        const stepsAtCaseStart = endpointIndex * cases.length + caseIndex;
+        completedSteps = stepsAtCaseStart;
+
         updateBenchmarkRunProgress(runId, {
+          completedSteps: stepsAtCaseStart,
           runPhase: "execution",
 
           endpointIndex: endpointIndex + 1,
@@ -1835,7 +1912,7 @@ export async function runRoutingCapabilityBenchmark(
           answerTurns: execution.answerTurns,
         });
 
-        completedSteps += 1;
+        completedSteps = stepsAtCaseStart + 1;
 
         updateBenchmarkRunProgress(runId, { completedSteps, currentPhase: null });
       }
@@ -1920,6 +1997,7 @@ export async function runRoutingCapabilityBenchmark(
     >();
 
     for (const [endpointIndex, endpoint] of gradingEndpoints.entries()) {
+      throwIfCancelled();
       const caseResults: Array<BenchmarkEndpointGrade["caseResults"][number]> = [];
 
       const endpointExecutions = executionByEndpoint.get(endpoint.endpointId);
@@ -2096,9 +2174,15 @@ export async function runRoutingCapabilityBenchmark(
       }
 
       caseResultsByEndpoint.set(endpoint.endpointId, caseResults);
+
+      const live = benchmarkOutcomeFields(
+        [...caseResultsByEndpoint.values()].map((results) => ({ caseResults: results })),
+      );
+      updateBenchmarkRunProgress(runId, live);
     }
 
     for (const endpoint of targetEndpoints) {
+      throwIfCancelled();
       const caseResults = caseResultsByEndpoint.get(endpoint.endpointId) ?? [];
 
       endpointGrades.push({
@@ -2254,6 +2338,14 @@ export async function runRoutingCapabilityBenchmark(
       artifactRoot: path.join(artifactRoot, runId),
 
       endpointGrades,
+
+      ...benchmarkOutcomeFields(endpointGrades),
+
+      requestedEndpointCount: requestedEndpointIds.length,
+
+      executedEndpointCount: targetEndpoints.length,
+
+      skippedEndpoints,
     };
 
     const caseTaxonomyTags: Record<

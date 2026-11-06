@@ -1,0 +1,40 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+ ❯ test/s13b-foldkit-chart.test.ts (13 tests | 2 failed) 101ms
+   ✓ RM3 chart primitive > renders a pure SVG with axes, one token-coloured path per series, points and an accessible name 30ms
+   ✓ RM3 chart primitive > renders a numeric HTML text alternative with a caption, headers and every value 7ms
+   × RM3 chart primitive > keeps every ragged-series point in the table and associates values by label, not index 20ms
+     → I could not parse the selector at ":nth-child(1)".
+
+Supported selectors: tag name, #id, .class, [attr], [attr="value"], [attr^="prefix"] (values in double or single quotes, whitespace allowed), :not(<compound selector>), and descendant combinators (whitespace).
+   × RM3 chart primitive > does not put a differently-labelled series value under the first series label 2ms
+     → I could not parse the selector at ":nth-child(1)".
+
+Supported selectors: tag name, #id, .class, [attr], [attr="value"], [attr^="prefix"] (values in double or single quotes, whitespace allowed), :not(<compound selector>), and descendant combinators (whitespace).
+   ✓ RM3 chart primitive > a ready render whose series have no usable points collapses to the documented empty state 3ms
+   ✓ RM3 chart primitive > renders an explicit empty state instead of an empty chart 1ms
+   ✓ RM3 chart states and render policy > loading is its own state: a live status message, no chart and no table 2ms
+   ✓ RM3 chart states and render policy > error is its own state with a bounded, single-line reason 3ms
+   ✓ RM3 chart states and render policy > stale is its own state: data stays, with the caller-supplied age and rule 4ms
+   ✓ RM3 chart states and render policy > truncated is its own state: the chart stays and the dropped point count is visible 4ms
+   ✓ RM3 chart states and render policy > no-data is its own explicit state, not a loading spinner or an empty chart 1ms
+   ✓ RM3 chart states and render policy > ready is explicit and still renders the chart 3ms
+   ✓ RM3 chart states and render policy > is deterministic: the same (series, state) renders the same markup twice, with no ids 19ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s13b-foldkit-chart.test.ts > RM3 chart primitive > keeps every ragged-series point in the table and associates values by label, not index
+ FAIL  test/s13b-foldkit-chart.test.ts > RM3 chart primitive > does not put a differently-labelled series value under the first series label
+Error: I could not parse the selector at ":nth-child(1)".
+
+Supported selectors: tag name, #id, .class, [attr], [attr="value"], [attr^="prefix"] (values in double or single quotes, whitespace allowed), :not(<compound selector>), and descendant combinators (whitespace).
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 11 passed (13)
+   Start at  01:44:36
+   Duration  4.63s (transform 1.81s, setup 0ms, collect 2.89s, tests 101ms, environment 791ms, prepare 370ms)
+
+EXIT_CODE: 1

@@ -1,0 +1,4 @@
+# S1b finite repair recheck
+
+Read current target-contract.ts/tests, controller-repair.md and prior s1b-independent-review-result.md. Verify6rawURLcases+operatornestedroot realRED7/53 thenGREEN53/53, current58tests characterization/tsc0/anti_sloptoolclean5files16rules. Root semantics explicitly forbid supplied boundary+descendants, preserve operator2sibling, no guessing/realpathclaim. Verify Windowsdrive/POSIXroot boundary code.
+Original stricttestfirst chronology is raw transcript, savedredlogpostgreenreplay now honestly labelled. Worker laterhardening afterGREEN provenance disclosed; impossibleplatform branch removed and new5testscharacterize existing behavior no fakeRED. Any blocking strictTDD residue give exact minimal permitted reset/replay repair, do not approve misleading chronology. No wholeharness acceptance. Max6reads+1test,final<=700words, no edits/children/provider. Current actual code/test hashes in final, PASS/HOLD onlyS1b.

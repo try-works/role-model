@@ -17,6 +17,7 @@ tmp-role-model-launch.log
 .cursor/session.md
 role-model-router/apps/runtime-ui/build/
 role-model-router/apps/runtime-ui/test-results/
+scripts/quality/oxlint-report.json
 /.recursive/config/recursive-router-discovered.json
 # CI paired-checkout directory (checkout of try-works/role-model-internal nested by the track-b lane)
 _private/

@@ -1,0 +1,29 @@
+# S425 lint evidence — anti_slop_lint (vendored 15 generic rules), ABSOLUTE targets, filesScanned>0
+worktree: D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+baseline: HEAD blob of src/device-auth.ts extracted to a OS-temp copy (S420 F4 recorded 19 findings)
+
+file: role-model-router/apps/runtime-ui-next/src/device-auth.ts
+  status: findings; filesScanned: 1; rulesRun: 15; findings: 13
+  rules: {"no-unknown-returns":2,"no-unknown-parameters":4,"no-unsafe-dictionary-type":2,"no-runtime-typeof":1,"require-safety-comment-for-type-assertion":1,"no-known-value-widening":1,"no-conditional-empty-object-spread":2}
+  lines: 228:no-unknown-returns, 234:no-unknown-parameters, 234:no-unsafe-dictionary-type, 235:no-runtime-typeof, 236:require-safety-comment-for-type-assertion, 236:no-unsafe-dictionary-type, 263:no-unknown-parameters, 281:no-unknown-parameters, 298:no-known-value-widening, 301:no-conditional-empty-object-spread, 303:no-unknown-parameters, 303:no-unknown-returns, 305:no-conditional-empty-object-spread
+
+file: role-model-router/apps/runtime-ui-next/src/control-view.ts
+  status: clean; filesScanned: 1; rulesRun: 15; findings: 0
+  rules: {}
+  lines: 
+
+file: role-model-router/apps/runtime-ui-next/src/update.ts
+  status: findings; filesScanned: 1; rulesRun: 15; findings: 10
+  rules: {"no-unsafe-dictionary-type":2,"require-safety-comment-for-type-assertion":4,"no-runtime-typeof":1,"no-known-value-widening":2,"no-conditional-empty-object-spread":1}
+  lines: 170:no-unsafe-dictionary-type, 172:require-safety-comment-for-type-assertion, 172:no-runtime-typeof, 172:no-known-value-widening, 172:require-safety-comment-for-type-assertion, 172:no-unsafe-dictionary-type, 173:no-known-value-widening, 568:require-safety-comment-for-type-assertion, 595:require-safety-comment-for-type-assertion, 604:no-conditional-empty-object-spread
+
+file: role-model-router/apps/runtime-ui-next/test/s425-device-auth-correctness.test.ts
+  status: clean; filesScanned: 1; rulesRun: 15; findings: 0
+  rules: {}
+  lines: 
+
+baseline device-auth.ts (HEAD copy): 19 findings; rules {"no-unknown-returns":2,"no-unknown-parameters":4,"no-unsafe-dictionary-type":2,"no-runtime-typeof":4,"require-safety-comment-for-type-assertion":1,"no-conditional-empty-object-spread":5,"no-known-value-widening":1}
+NEW vs baseline: device-auth.ts 13 vs 19 baseline -> NEW=0 (rewrite removed 6 pre-existing)
+control-view.ts: 0 findings (clean; new DEVICE-AUTH render adds none).
+update.ts: findings only on pre-existing lines; none on the S425 DeviceAuthPolled/DeviceAuthCancelled lines.
+test file: clean (0 findings).

@@ -1,0 +1,59 @@
+{
+  "slice": "s46a-studio",
+  "tabs": {
+    "chat": {
+      "fields": [
+        "model",
+        "prompt"
+      ],
+      "dispatch": "POST /v1/chat/completions",
+      "body": "{model,messages:[{role:'user',content}],stream:false}"
+    },
+    "images": {
+      "fields": [
+        "mode",
+        "model",
+        "prompt",
+        "size"
+      ],
+      "dispatch": "POST /v1/images/generations",
+      "body": "{mode,model,prompt,size}"
+    },
+    "audio": {
+      "fields": [
+        "model",
+        "prompt"
+      ],
+      "dispatch": "POST /v1/audio/speech",
+      "body": "{input,model,response_format:'mp3',voice:'alloy'}"
+    },
+    "rerank": {
+      "fields": [
+        "model",
+        "query",
+        "documents"
+      ],
+      "dispatch": "POST /v1/rerank",
+      "body": "{documents,model,query,top_n:5}"
+    },
+    "advanced": {
+      "fields": [
+        "advancedBody"
+      ],
+      "dispatch": "POST /v1/messages",
+      "body": "parsed JSON object"
+    }
+  },
+  "states": "idle/loading/success/error; persistent RAW RESPONSE pane; 404/400 raw body in role=alert",
+  "referenceAbsence": "images/audio/rerank/messages endpoints are absent in reference 0.0.20 too; packaged 404 JSON is honest",
+  "reds": {
+    "fabricated404": "s46a-red-404-success.log",
+    "doubleDispatch": "not captured - disabled button prevents the second click; guard remains in update but UI test cannot reach it"
+  },
+  "counts": {
+    "fullSuite": 195,
+    "files": 19,
+    "typecheck": "exit 0"
+  },
+  "limits": "form inputs render but are not editable (defaults drive dispatch); chat real-host round trip not run against a configured upstream"
+}

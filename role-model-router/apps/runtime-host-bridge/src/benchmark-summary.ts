@@ -6,6 +6,11 @@ import type { TaxonomyDimensionScoreMap } from "@role-model/protocol-types";
 
 import type { BenchmarkCompareRecord, BenchmarkRunManifest } from "./benchmark-artifacts.js";
 import { resolveBenchmarkRunArtifactDir } from "./benchmark-artifacts.js";
+import {
+  type BenchmarkCaseCounts,
+  type BenchmarkRunOutcomeOrPending,
+  benchmarkOutcomeFields,
+} from "./benchmark-outcome.js";
 
 interface CompletedBenchmarkRun {
   readonly runId: string;
@@ -19,6 +24,8 @@ export interface BenchmarkRunListEntry {
   readonly completedAtMs: number;
   readonly suiteId: string;
   readonly caseCount: number;
+  readonly caseCounts: BenchmarkCaseCounts;
+  readonly outcome: BenchmarkRunOutcomeOrPending;
   readonly endpointIds: readonly string[];
 }
 
@@ -113,6 +120,8 @@ export interface BenchmarkSummaryResponse {
   readonly judgeModelId: string | null;
   readonly artifactRoot: string | null;
   readonly subjects: readonly BenchmarkSummarySubject[];
+  readonly caseCounts: BenchmarkCaseCounts;
+  readonly outcome: BenchmarkRunOutcomeOrPending;
   readonly caseComparisons: readonly BenchmarkCaseComparison[];
   readonly caseAudits: readonly BenchmarkCaseAuditEntry[];
   readonly manifest: {
@@ -368,6 +377,8 @@ export const EMPTY_BENCHMARK_SUMMARY: BenchmarkSummaryResponse = {
   judgeModelId: null,
   artifactRoot: null,
   subjects: [],
+  caseCounts: { failed: 0, passed: 0, total: 0 },
+  outcome: null,
   caseComparisons: [],
   caseAudits: [],
   manifest: null,
@@ -485,6 +496,7 @@ async function buildBenchmarkSummaryResponse(input: {
 }): Promise<BenchmarkSummaryResponse> {
   const { manifest, result, runId } = input;
   const subjects: BenchmarkSummarySubject[] = [];
+  const outcomeFields = benchmarkOutcomeFields(result?.endpointGrades ?? []);
 
   if (result) {
     for (const grade of result.endpointGrades) {
@@ -545,6 +557,7 @@ async function buildBenchmarkSummaryResponse(input: {
     judgeModelId: judgeEndpointId ? input.resolveModelId(judgeEndpointId) : null,
     artifactRoot: runId,
     subjects,
+    ...outcomeFields,
     caseComparisons,
     caseAudits,
     manifest: {
@@ -561,17 +574,21 @@ export async function listBenchmarkRuns(
 ): Promise<readonly BenchmarkRunListEntry[]> {
   const runs = await listCompletedBenchmarkRuns(artifactRoot);
   return runs
-    .map(({ runId, manifest, result }) => ({
-      runId,
-      mode: manifest.mode ?? result?.mode ?? "full",
-      completedAtMs: manifest.gradingCompletedAtMs ?? result?.completedAtMs ?? 0,
-      suiteId: manifest.suiteId ?? result?.suiteId ?? "",
-      caseCount: resolveRunCaseCount(manifest, result),
-      endpointIds:
-        manifest.endpointIds.length > 0
-          ? manifest.endpointIds
-          : (result?.endpointGrades.map((grade) => grade.endpointId) ?? []),
-    }))
+    .map(({ runId, manifest, result }) => {
+      const outcomeFields = benchmarkOutcomeFields(result?.endpointGrades ?? []);
+      return {
+        runId,
+        mode: manifest.mode ?? result?.mode ?? "full",
+        completedAtMs: manifest.gradingCompletedAtMs ?? result?.completedAtMs ?? 0,
+        suiteId: manifest.suiteId ?? result?.suiteId ?? "",
+        caseCount: resolveRunCaseCount(manifest, result),
+        ...outcomeFields,
+        endpointIds:
+          manifest.endpointIds.length > 0
+            ? manifest.endpointIds
+            : (result?.endpointGrades.map((grade) => grade.endpointId) ?? []),
+      };
+    })
     .sort((left, right) => right.completedAtMs - left.completedAtMs);
 }
 

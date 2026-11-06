@@ -1,0 +1,26 @@
+{
+  "slice": "s56a-gap-packaging-a11y",
+  "gitDiff": "build.mjs, message.ts, update.ts, view.ts, style-build.mjs, s40b, s46a, s48a, foldkit-chart.ts",
+  "gap": "ChartPoint.value now number|null; null breaks path segment and omits circle; bucketsFor emits all window buckets, empty ones null, table shows dash; test asserts 02:00 row dashes, no 02:00 circle, >=2 M segments",
+  "packaging": {
+    "fonts": "copied from runtime-ui/public/assets/fonts, no legacy build/client dependency",
+    "buildGuard": "style-build.mjs fails with actionable message if runtime-ui vite/tailwind deps missing; build test asserts public font path and absent legacy build font path",
+    "remaining": "CSS generation still resolves Vite/Tailwind from runtime-ui/node_modules; not fully self-contained, no clean-without-node_modules proof"
+  },
+  "a11y": {
+    "tabs": "role=tablist/tab/tabpanel, aria-selected, aria-controls, tabindex, ArrowLeft/Right/Home/End",
+    "points": "model cost circles tabindex=0 + aria-label value",
+    "rail": "dash includes sr-only reason text plus aria-label"
+  },
+  "studioE2E": "not newly run against mock upstream; packaged chat 400 path previously observed",
+  "reds": {
+    "gap": "s56a-red-gap-bridge.log",
+    "tokens": "s55a-red-token-sum.log",
+    "cost": "s55a-red-cost-axis.log"
+  },
+  "counts": {
+    "clientFull": 199,
+    "files": 20,
+    "typecheck": "exit 0"
+  }
+}

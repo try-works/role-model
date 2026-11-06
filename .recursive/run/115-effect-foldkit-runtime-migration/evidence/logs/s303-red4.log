@@ -1,0 +1,37 @@
+COMMAND: node vitest run test/s303-scoped-service.test.ts (weak reportedHealthIssue)
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ❯ test/s303-scoped-service.test.ts (7 tests | 1 failed) 4081ms
+   ✓ S303 scoped process service > scope close runs every release in reverse order even when an earlier release rejects 19ms
+   ✓ S303 scoped process service > scoped vendor preserves env, cwd and logs, and close stops the child  1676ms
+   ✓ S303 scoped process service > starting into a closed scope rolls the vendor back and kills the child  1045ms
+   ✓ S303 scoped process service > a rejecting stop during the rollback is surfaced, never swallowed 2ms
+   ✓ S303 scoped process service > two concurrent closes join one teardown instead of returning early 129ms
+   × S303 scoped process service > a vendor reporting a non-loopback health URL is rejected (negative harness test) 22ms
+     → .toMatch() expects to receive a string, but got object
+   ✓ S303 scoped process service > stopping a scoped vendor kills its grandchild tree  1182ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s303-scoped-service.test.ts > S303 scoped process service > a vendor reporting a non-loopback health URL is rejected (negative harness test)
+TypeError: .toMatch() expects to receive a string, but got object
+ ❯ test/s303-scoped-service.test.ts:240:86
+    238|     const port = await allocatePort();
+    239|     // A vendor double that reports 0.0.0.0 (and a LAN address) must b…
+    240|     expect(reportedHealthIssue("http://0.0.0.0:" + String(port) + "/he…
+       |                                                                                      ^
+    241|     expect(reportedHealthIssue("http://192.168.1.10:" + String(port) +…
+    242|     // A mismatched port is rejected even on a loopback host.
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 passed (7)
+   Start at  02:35:21
+   Duration  6.74s (transform 414ms, setup 0ms, collect 414ms, tests 4.08s, environment 1ms, prepare 809ms)
+
+

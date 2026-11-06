@@ -1,0 +1,32 @@
+[
+  {
+    "name": "s266-plan-review",
+    "sessionId": "session-58910f8a-466a-4958-9ce9-f4335c816916",
+    "provider": "deepseek-official",
+    "model": "deepseek-flash"
+  },
+  {
+    "name": "s266-plan-recheck",
+    "sessionId": "session-25916bcc-3098-48c4-9247-2bb615c76f13",
+    "provider": "deepseek-official",
+    "model": "deepseek-flash"
+  },
+  {
+    "name": "s267-workspace-api-spike",
+    "sessionId": "session-726c36ee-1375-4a19-95c3-bb867150ac0c",
+    "provider": "deepseek-official",
+    "model": "deepseek-flash"
+  },
+  {
+    "name": "s268-sql-owner",
+    "sessionId": "session-f1c431cd-3472-4e1c-91cd-611d82fdde45",
+    "provider": "deepseek-official",
+    "model": "deepseek-flash"
+  },
+  {
+    "name": "s269-canonical-url",
+    "sessionId": "session-8d87b531-617a-40e2-97dd-d210afbc1276",
+    "provider": "deepseek-official",
+    "model": "deepseek-flash"
+  }
+]

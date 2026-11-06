@@ -1,0 +1,32 @@
+✔ @role-model-router/foldkit: built graph has no Node builtin or Node platform-package import (68.4391ms)
+✔ @role-model-router/foldkit: effect is one shared external specifier (44.3305ms)
+✔ @role-model-router/foldkit: every vendored subpath has a wrapper export backed by a built file (17.1963ms)
+✔ @role-model-router/foldkit-ui: built graph has no Node builtin or Node platform-package import (33.5794ms)
+✔ @role-model-router/foldkit-ui: effect is one shared external specifier (33.9687ms)
+✔ @role-model-router/foldkit-ui: every vendored subpath has a wrapper export backed by a built file (13.1122ms)
+✔ vendored subpath coverage counts are stable and total (1.6313ms)
+✖ a published subpath whose source file is missing fails entry generation loudly (2.601ms)
+✔ an export target outside dist/ is refused instead of guessed (1.5278ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 8
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 370.1032
+
+✖ failing tests:
+
+test at test\graph-closure.test.mjs:200:1
+✖ a published subpath whose source file is missing fails entry generation loudly (2.601ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit/test/graph-closure.test.mjs:209:3)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'rejects',
+    diff: 'simple'
+  }

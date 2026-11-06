@@ -11,9 +11,7 @@ import {
 const SHA_A = "a".repeat(64);
 const SHA_B = "b".repeat(64);
 
-function intent(
-  overrides: Partial<VerificationTargetIntent> = {},
-): VerificationTargetIntent {
+function intent(overrides: Partial<VerificationTargetIntent> = {}): VerificationTargetIntent {
   return {
     platform: "windows",
     expectedClientHost: "127.0.0.1",
@@ -58,36 +56,53 @@ function codes(findings: readonly { readonly code: string }[]): readonly string[
 }
 
 describe("validateVerificationTarget", () => {
-  it.each(["http://127.0.0.1:4310?", "http://127.0.0.1:4310#"]) ("rejects empty raw URL suffix %s", (clientUrl) => {
-    expect(validateVerificationTarget(intent(), observation({ clientUrl })).ok).toBe(false);
-  });
+  it.each(["http://127.0.0.1:4310?", "http://127.0.0.1:4310#"])(
+    "rejects empty raw URL suffix %s",
+    (clientUrl) => {
+      expect(validateVerificationTarget(intent(), observation({ clientUrl })).ok).toBe(false);
+    },
+  );
   it("rejects an invalid forbidden-root entry", () => {
-    expect(validateVerificationTarget(intent({ forbiddenRoots: ["relative"] }), observation()).ok).toBe(false);
+    expect(
+      validateVerificationTarget(intent({ forbiddenRoots: ["relative"] }), observation()).ok,
+    ).toBe(false);
   });
   it("rejects a relative config root", () => {
-    expect(validateVerificationTarget(intent({ expectedConfigRoot: "config" }), observation()).ok).toBe(false);
+    expect(
+      validateVerificationTarget(intent({ expectedConfigRoot: "config" }), observation()).ok,
+    ).toBe(false);
   });
   it("rejects an empty expected host", () => {
-    expect(validateVerificationTarget(intent({ expectedClientHost: "" }), observation()).ok).toBe(false);
+    expect(validateVerificationTarget(intent({ expectedClientHost: "" }), observation()).ok).toBe(
+      false,
+    );
   });
   it.each([
     "http://127.0.0.1:4310/..",
     "http://127.0.0.1:4310/.",
     "http://127.0.0.1:4310/%2e%2e",
-    "http://127.0.0.1:4310" + String.fromCharCode(92) + "..",
-    "http://127.0.0.1:43" + String.fromCharCode(10) + "10",
-    "http://127.0.0.1" + String.fromCharCode(9) + ":4310",
+    `http://127.0.0.1:4310${String.fromCharCode(92)}..`,
+    `http://127.0.0.1:43${String.fromCharCode(10)}10`,
+    `http://127.0.0.1${String.fromCharCode(9)}:4310`,
   ])("rejects raw URL syntax normalized away by URL: %s", (clientUrl) => {
     expect(validateVerificationTarget(intent(), observation({ clientUrl })).ok).toBe(false);
   });
   it("rejects verification state nested inside an explicitly forbidden operator root", () => {
     const stateRoot = "C:/ProgramData/RoleModel/operator/run115/state";
-    const result = validateVerificationTarget(intent({ expectedStateRoot: stateRoot }), observation({ stateRoot }));
+    const result = validateVerificationTarget(
+      intent({ expectedStateRoot: stateRoot }),
+      observation({ stateRoot }),
+    );
     expect(codes(result.findings)).toContain("forbidden_root");
   });
   it("allows a sibling of a forbidden operator root", () => {
     const stateRoot = "C:/ProgramData/RoleModel/operator2/run115/state";
-    expect(validateVerificationTarget(intent({ expectedStateRoot: stateRoot }), observation({ stateRoot })).ok).toBe(true);
+    expect(
+      validateVerificationTarget(
+        intent({ expectedStateRoot: stateRoot }),
+        observation({ stateRoot }),
+      ).ok,
+    ).toBe(true);
   });
   it("accepts an exact loopback packaged target", () => {
     expect(validateVerificationTarget(intent(), observation())).toEqual({
@@ -170,10 +185,7 @@ describe("validateVerificationTarget", () => {
 
   it("rejects a non-loopback client host", () => {
     expect(
-      validateVerificationTarget(
-        intent(),
-        observation({ clientUrl: "http://example.com:4310" }),
-      ),
+      validateVerificationTarget(intent(), observation({ clientUrl: "http://example.com:4310" })),
     ).toEqual({
       ok: false,
       findings: [{ code: "non_loopback_host", field: "observation.clientUrl" }],
@@ -182,10 +194,7 @@ describe("validateVerificationTarget", () => {
 
   it("rejects a non-loopback expected client host", () => {
     expect(
-      validateVerificationTarget(
-        intent({ expectedClientHost: "example.com" }),
-        observation(),
-      ),
+      validateVerificationTarget(intent({ expectedClientHost: "example.com" }), observation()),
     ).toEqual({
       ok: false,
       findings: [{ code: "non_loopback_host", field: "intent.expectedClientHost" }],
@@ -194,10 +203,7 @@ describe("validateVerificationTarget", () => {
 
   it("rejects a loopback host that does not match the intent", () => {
     expect(
-      validateVerificationTarget(
-        intent(),
-        observation({ clientUrl: "http://127.0.0.2:4310" }),
-      ),
+      validateVerificationTarget(intent(), observation({ clientUrl: "http://127.0.0.2:4310" })),
     ).toEqual({
       ok: false,
       findings: [{ code: "client_host_mismatch", field: "observation.clientUrl.host" }],
@@ -206,10 +212,7 @@ describe("validateVerificationTarget", () => {
 
   it("rejects a port that does not match the intent", () => {
     expect(
-      validateVerificationTarget(
-        intent(),
-        observation({ clientUrl: "http://127.0.0.1:4311" }),
-      ),
+      validateVerificationTarget(intent(), observation({ clientUrl: "http://127.0.0.1:4311" })),
     ).toEqual({
       ok: false,
       findings: [{ code: "client_port_mismatch", field: "observation.clientUrl.port" }],
@@ -265,24 +268,14 @@ describe("validateVerificationTarget", () => {
   });
 
   it("rejects a malformed client URL", () => {
-    expect(
-      validateVerificationTarget(
-        intent(),
-        observation({ clientUrl: "not-a-url" }),
-      ),
-    ).toEqual({
+    expect(validateVerificationTarget(intent(), observation({ clientUrl: "not-a-url" }))).toEqual({
       ok: false,
       findings: [{ code: "invalid_value", field: "observation.clientUrl" }],
     });
   });
 
   it("rejects a nonpositive expected port", () => {
-    expect(
-      validateVerificationTarget(
-        intent({ expectedClientPort: 0 }),
-        observation(),
-      ),
-    ).toEqual({
+    expect(validateVerificationTarget(intent({ expectedClientPort: 0 }), observation())).toEqual({
       ok: false,
       findings: [{ code: "invalid_value", field: "intent.expectedClientPort" }],
     });
@@ -290,10 +283,7 @@ describe("validateVerificationTarget", () => {
 
   it("rejects an out-of-range observed port", () => {
     expect(
-      validateVerificationTarget(
-        intent(),
-        observation({ clientUrl: "http://127.0.0.1:70000" }),
-      ),
+      validateVerificationTarget(intent(), observation({ clientUrl: "http://127.0.0.1:70000" })),
     ).toEqual({
       ok: false,
       findings: [{ code: "invalid_value", field: "observation.clientUrl" }],
@@ -301,36 +291,21 @@ describe("validateVerificationTarget", () => {
   });
 
   it("rejects an empty source tree identifier", () => {
-    expect(
-      validateVerificationTarget(
-        intent({ expectedSourceTree: "" }),
-        observation(),
-      ),
-    ).toEqual({
+    expect(validateVerificationTarget(intent({ expectedSourceTree: "" }), observation())).toEqual({
       ok: false,
       findings: [{ code: "invalid_value", field: "intent.expectedSourceTree" }],
     });
   });
 
   it("rejects a nonpositive expected PID", () => {
-    expect(
-      validateVerificationTarget(
-        intent({ expectedPid: 0 }),
-        observation(),
-      ),
-    ).toEqual({
+    expect(validateVerificationTarget(intent({ expectedPid: 0 }), observation())).toEqual({
       ok: false,
       findings: [{ code: "invalid_value", field: "intent.expectedPid" }],
     });
   });
 
   it("rejects a noninteger observed PID", () => {
-    expect(
-      validateVerificationTarget(
-        intent(),
-        observation({ pid: 1.5 }),
-      ),
-    ).toEqual({
+    expect(validateVerificationTarget(intent(), observation({ pid: 1.5 }))).toEqual({
       ok: false,
       findings: [{ code: "invalid_value", field: "observation.pid" }],
     });
@@ -338,10 +313,7 @@ describe("validateVerificationTarget", () => {
 
   it("rejects a nonhex expected artifact SHA", () => {
     expect(
-      validateVerificationTarget(
-        intent({ expectedArtifactSha256: "not-a-sha" }),
-        observation(),
-      ),
+      validateVerificationTarget(intent({ expectedArtifactSha256: "not-a-sha" }), observation()),
     ).toEqual({
       ok: false,
       findings: [{ code: "invalid_value", field: "intent.expectedArtifactSha256" }],
@@ -350,10 +322,7 @@ describe("validateVerificationTarget", () => {
 
   it("rejects a nonhex observed artifact SHA", () => {
     expect(
-      validateVerificationTarget(
-        intent(),
-        observation({ artifactSha256: "zz".repeat(32) }),
-      ),
+      validateVerificationTarget(intent(), observation({ artifactSha256: "zz".repeat(32) })),
     ).toEqual({
       ok: false,
       findings: [{ code: "invalid_value", field: "observation.artifactSha256" }],
@@ -362,10 +331,7 @@ describe("validateVerificationTarget", () => {
 
   it("rejects a relative state root", () => {
     expect(
-      validateVerificationTarget(
-        intent({ expectedStateRoot: "state" }),
-        observation(),
-      ),
+      validateVerificationTarget(intent({ expectedStateRoot: "state" }), observation()),
     ).toEqual({
       ok: false,
       findings: [{ code: "invalid_value", field: "intent.expectedStateRoot" }],
@@ -373,9 +339,7 @@ describe("validateVerificationTarget", () => {
   });
 
   it("rejects a wrong PID", () => {
-    expect(
-      validateVerificationTarget(intent(), observation({ pid: 9999 })),
-    ).toEqual({
+    expect(validateVerificationTarget(intent(), observation({ pid: 9999 }))).toEqual({
       ok: false,
       findings: [{ code: "pid_mismatch", field: "observation.pid" }],
     });
@@ -407,10 +371,7 @@ describe("validateVerificationTarget", () => {
 
   it("rejects a wrong source tree", () => {
     expect(
-      validateVerificationTarget(
-        intent(),
-        observation({ sourceTree: "source-tree-b" }),
-      ),
+      validateVerificationTarget(intent(), observation({ sourceTree: "source-tree-b" })),
     ).toEqual({
       ok: false,
       findings: [{ code: "source_tree_mismatch", field: "observation.sourceTree" }],
@@ -419,10 +380,7 @@ describe("validateVerificationTarget", () => {
 
   it("rejects a wrong private distribution", () => {
     expect(
-      validateVerificationTarget(
-        intent(),
-        observation({ privateDistribution: "private-dist-b" }),
-      ),
+      validateVerificationTarget(intent(), observation({ privateDistribution: "private-dist-b" })),
     ).toEqual({
       ok: false,
       findings: [
@@ -435,36 +393,22 @@ describe("validateVerificationTarget", () => {
   });
 
   it("rejects a wrong UI tree", () => {
-    expect(
-      validateVerificationTarget(
-        intent(),
-        observation({ uiTree: "ui-tree-b" }),
-      ),
-    ).toEqual({
+    expect(validateVerificationTarget(intent(), observation({ uiTree: "ui-tree-b" }))).toEqual({
       ok: false,
       findings: [{ code: "ui_tree_mismatch", field: "observation.uiTree" }],
     });
   });
 
   it("rejects a wrong artifact SHA", () => {
-    expect(
-      validateVerificationTarget(
-        intent(),
-        observation({ artifactSha256: SHA_B }),
-      ),
-    ).toEqual({
+    expect(validateVerificationTarget(intent(), observation({ artifactSha256: SHA_B }))).toEqual({
       ok: false,
-      findings: [
-        { code: "artifact_sha_mismatch", field: "observation.artifactSha256" },
-      ],
+      findings: [{ code: "artifact_sha_mismatch", field: "observation.artifactSha256" }],
     });
   });
 
   it("rejects provisional, not-ready, and unavailable health", () => {
     for (const health of ["provisional", "not_ready", "unavailable"] as const) {
-      expect(
-        validateVerificationTarget(intent(), observation({ health })),
-      ).toEqual({
+      expect(validateVerificationTarget(intent(), observation({ health }))).toEqual({
         ok: false,
         findings: [{ code: "health_not_ready", field: "observation.health" }],
       });
@@ -472,30 +416,16 @@ describe("validateVerificationTarget", () => {
   });
 
   it("rejects source-qa provenance when packaged is required", () => {
-    expect(
-      validateVerificationTarget(
-        intent(),
-        observation({ provenance: "source_qa" }),
-      ),
-    ).toEqual({
+    expect(validateVerificationTarget(intent(), observation({ provenance: "source_qa" }))).toEqual({
       ok: false,
-      findings: [
-        { code: "packaged_artifact_required", field: "observation.provenance" },
-      ],
+      findings: [{ code: "packaged_artifact_required", field: "observation.provenance" }],
     });
   });
 
   it("rejects source-qa build mode when packaged is required", () => {
-    expect(
-      validateVerificationTarget(
-        intent(),
-        observation({ buildMode: "source_qa" }),
-      ),
-    ).toEqual({
+    expect(validateVerificationTarget(intent(), observation({ buildMode: "source_qa" }))).toEqual({
       ok: false,
-      findings: [
-        { code: "build_mode_not_packaged", field: "observation.buildMode" },
-      ],
+      findings: [{ code: "build_mode_not_packaged", field: "observation.buildMode" }],
     });
   });
 
@@ -542,7 +472,10 @@ describe("validateVerificationTarget", () => {
       intent(),
       observation({ clientUrl: "http://user:secret@127.0.0.1:4310" }),
     );
-    expect(result.findings).toContainEqual({ code: "invalid_value", field: "observation.clientUrl" });
+    expect(result.findings).toContainEqual({
+      code: "invalid_value",
+      field: "observation.clientUrl",
+    });
     const serialized = JSON.stringify(result);
 
     expect(serialized).not.toContain("http");
@@ -553,9 +486,7 @@ describe("validateVerificationTarget", () => {
 
 describe("evaluateVerificationOutcome", () => {
   const targetPass: readonly [] = [];
-  const targetFailure = [
-    { code: "pid_mismatch", field: "observation.pid" },
-  ] as const;
+  const targetFailure = [{ code: "pid_mismatch", field: "observation.pid" }] as const;
 
   it("marks a pure guard pass as VERIFIED with an honest adapter limitation", () => {
     expect(
@@ -595,10 +526,7 @@ describe("evaluateVerificationOutcome", () => {
       ),
     ).toEqual({
       status: "NOT_RUN",
-      findings: [
-        { code: "execution_not_run" },
-        { code: "provider_missing" },
-      ],
+      findings: [{ code: "execution_not_run" }, { code: "provider_missing" }],
     });
   });
 
@@ -611,10 +539,7 @@ describe("evaluateVerificationOutcome", () => {
       ),
     ).toEqual({
       status: "NOT_RUN",
-      findings: [
-        { code: "execution_not_run" },
-        { code: "provider_missing" },
-      ],
+      findings: [{ code: "execution_not_run" }, { code: "provider_missing" }],
     });
   });
 
@@ -658,13 +583,7 @@ describe("evaluateVerificationOutcome", () => {
   });
 
   it("marks a failed execution as FAILED", () => {
-    expect(
-      evaluateVerificationOutcome(
-        targetPass,
-        { kind: "failed" },
-        "complete",
-      ),
-    ).toEqual({
+    expect(evaluateVerificationOutcome(targetPass, { kind: "failed" }, "complete")).toEqual({
       status: "FAILED",
       findings: [{ code: "execution_failed" }],
     });
@@ -685,6 +604,3 @@ describe("evaluateVerificationOutcome", () => {
     expect(serialized).not.toContain("secret");
   });
 });
-
-
-

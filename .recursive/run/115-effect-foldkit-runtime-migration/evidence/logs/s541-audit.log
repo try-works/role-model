@@ -1,0 +1,21 @@
+# S541 route-dump density audit (packaged dev exe, 5s settle, existing dev-state data)
+server: role-model-dev.exe --repo-root <temp release> --runtime-state-root C:/Users/erikb/AppData/Local/role-model-runtime --scope-id standalone-runtime-dev --host 127.0.0.1 --port 52381 --static-root <release>/build/client
+UI static: rebuilt from runtime-ui-next build.mjs (BUILD_EXIT=0) into the temporary release build/client
+tool: D:/DEV/rm-clean/tools/route-dump-5s.mjs (route-dump with wait(5000) after load instead of 1500; 5s settle per S539 methodology)
+FIXTURE-TRAFFIC DISCLOSURE: attempted the S538-style seed of 60 offline fixture chat requests; /v1/models returned only routing aliases (baseline.*/controller.*/default.* etc.) and all 60 POST /v1/chat/completions attempts returned HTTP 503 (no configured upstream endpoint for those aliases in the dev state). The audit therefore measures the EXISTING dev-state telemetry/learning data after the 5s settle; it is NOT the 60-request fixture seed from S538.
+STUDIO COVERAGE DISCLOSURE: /studio is state-selected (no URL tab), so only the default Chat workspace is URL-dumpable. Images/Audio/Rerank/Advanced (4 of the 11 target pages) are covered by the renderToString structural test (reference headings/CTA/result-stage labels) and are NOT in this text-len table.
+
+| route | key | refLen | portLen | ratio% |
+|---|---|---|---|---|
+| /learning | _app_learning | 797 | 1181 | 148.2 |
+| /learning/packs | _app_learning_packs | 887 | 1045 | 117.8 |
+| /learning/evidence | _app_learning_evidence | 1375 | 1449 | 105.4 |
+| /learning/decisions | _app_learning_decisions | 639 | 840 | 131.5 |
+| /learning/history | _app_learning_history | 503 | 729 | 144.9 |
+| /models | _app_models | 1570 | 1166 | 74.3 |
+| /studio (chat) | _app_studio_chat | 130 | 215 | 165.4 |
+
+STRUCTURAL: reference headings present on every dumped route (checked against each ref JSON headings array; no missing entries).
+TEXT GATE: 6/7 URL-dumped routes are >=90% of reference text with data present (learning 148.2%, packs 117.8%, evidence 105.4%, decisions 131.5%, history 144.9%, studio chat 165.4%). /models is 74.3% because the role/task data is empty in this dev state (reference has 28 role task counts); it is NOT claimed as 0.9x. The 4 studio tabs are structural-only (see disclosure). Coverage: 7/11 target pages URL-dumped; 11/11 target pages covered by the structural/density tests.
+
+LIMITATIONS: no 60-request fixture traffic (503 aliases); studio tabs not URL-dumpable; audit server stopped after capture.

@@ -1,0 +1,12 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s48a-build.test.ts (1 test) 13591ms
+   ✓ S48a styled client build > builds a linked non-empty stylesheet and Geist fonts  13582ms
+ ✓ test/s415-requests-ranking.test.ts (10 tests) 162ms
+
+ Test Files  2 passed (2)
+      Tests  11 passed (11)
+   Start at  19:47:02
+   Duration  43.32s (transform 18.52s, setup 0ms, collect 31.17s, tests 13.75s, environment 20.60s, prepare 1.38s)
+

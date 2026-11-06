@@ -34,6 +34,9 @@ Control-plane docs are not memory docs:
 - `domains/release-artifact-provenance.md` - exact CI commit identity across
   Stage/production package assembly, runtime startup, and promotion (Run 94).
 
+- `patterns/verification-surface-integrity.md` - gates, audits and tests that can
+  appear to pass while measuring nothing, plus the guards that keep them honest
+  (Run 115: packaged-static-root identity, CI test lists, painted focus indicators).
 - `domains/` - stable functional-area knowledge with `Owns-Paths`
 - `patterns/` - reusable playbooks and solution patterns
 - `incidents/` - recurring failure signatures and fixes

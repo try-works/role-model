@@ -1,0 +1,69 @@
+{
+  "slice": "s26d-wave2-first",
+  "requirement": "R13 wave 2: one read route ported end to end",
+  "route": {
+    "chosen": "route:observability-snapshot",
+    "legacyPath": "/app/observe/observability-snapshot",
+    "newPath": "/observe/observability-snapshot",
+    "category": "read",
+    "hostEndpoint": "/api/role-model/operator/observability-snapshot",
+    "hostCorrelation": "Present in the host route table per S26c; requiresHostEndpoint=false. No host change."
+  },
+  "clientContract": {
+    "module": "src/observability.ts",
+    "request": "GET /api/role-model/operator/observability-snapshot; accept: application/json; cache:no-store; Authorization: Bearer <token> only when a token is provisioned; the caller AbortSignal is forwarded.",
+    "response": "200 JSON {schemaVersion, metrics}; rows sorted by name; empty metrics -> empty; non-200 -> error using observabilityErrorMessage(status, reason); invalid metrics -> 'Observability read failed: invalid response'.",
+    "injection": "ShellOptions.readObservability (ObservabilityReader); default createObservabilityClient() with the real fetch. Tests inject fetch and assert URL, headers, token absence/presence and signal identity."
+  },
+  "states": {
+    "success": "data-observability-state=ok; metric rows with name/count/incremental; document title Observability | RM3 Foldkit shell.",
+    "empty": "data-observability-state=empty; 'No metrics recorded yet.'",
+    "loading": "data-observability-state=loading; aria-busy; 'Loading observability snapshot…'; resolves to empty.",
+    "error": "data-observability-state=error; role=alert; exact phrase 'Observability read failed: HTTP 503 (unavailable)'."
+  },
+  "refresh": "The page does not create an owner. A contiguous RuntimeRevisionReceived on the route dispatches ReadObservability through the shell's existing runtime subscription; the test observes one fake source, a fetch count 1->2 after revision 1, and a new count rendered. No second EventSource/subscription is added.",
+  "inventory": {
+    "row": "route:observability-snapshot",
+    "before": "absent",
+    "after": "verified",
+    "proofTest": "apps/runtime-ui-next/test/s26d-observability.test.ts",
+    "proofTestName": "renders the success state from the real client",
+    "counts": {
+      "absent": 71,
+      "wired": 1,
+      "verified": 3,
+      "scaffolded": 0,
+      "newOnlyVerified": 1,
+      "total": 75
+    }
+  },
+  "redGreen": {
+    "success": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26d-red-success.log",
+    "empty": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26d-red-empty.log",
+    "loading": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26d-red-loading.log",
+    "error": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26d-red-error.log",
+    "refresh": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26d-red-refresh.log",
+    "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26d-green.log"
+  },
+  "counts": {
+    "tests": 75,
+    "passed": 75,
+    "failed": 0,
+    "typecheck": "tsc -p apps/runtime-ui-next/tsconfig.json --noEmit: exit 0",
+    "biome": "biome check src + test: exit 0"
+  },
+  "files": [
+    "src/observability.ts",
+    "src/commands.ts",
+    "src/init.ts",
+    "src/message.ts",
+    "src/model.ts",
+    "src/route.ts",
+    "src/update.ts",
+    "src/view.ts",
+    "src/app.ts",
+    "test/s26d-observability.test.ts",
+    "evidence/other/s26a-route-inventory.json"
+  ],
+  "unproven": "No real browser network/socket run; refresh is proved with the existing fake event source and injected fetch. The observability read is one route, not the whole wave."
+}

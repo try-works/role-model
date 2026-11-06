@@ -1,0 +1,59 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s26a-route-inventory.test.ts (2 tests | 2 failed) 50ms
+   × S26a route inventory drift > validates every row and covers every legacy route/component file 41ms
+     → expected [ Array(1) ] to deeply equal []
+   × S26a route inventory drift > detects a fake route file that has no inventory row 6ms
+     → expected [ …(2) ] to deeply equal [ Array(1) ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s26a-route-inventory.test.ts > S26a route inventory drift > validates every row and covers every legacy route/component file
+AssertionError: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "role-model-router/apps/runtime-ui/app/routes/__s26a_fake_route__.tsx",
++ ]
+
+ ❯ test/s26a-route-inventory.test.ts:92:66
+     90|     const routeFiles = listTsx(inventory.scan.routesDir);
+     91|     const componentFiles = listTsx(inventory.scan.componentsDir);
+     92|     expect(findUncovered(inventory, routeFiles, componentFiles)).toEqu…
+       |                                                                  ^
+     93|     expect(routeFiles).toHaveLength(51);
+     94|     expect(componentFiles).toHaveLength(21);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s26a-route-inventory.test.ts > S26a route inventory drift > detects a fake route file that has no inventory row
+AssertionError: expected [ …(2) ] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+  [
+    "role-model-router/apps/runtime-ui/app/routes/__s26a_fake_route__.tsx",
++   "role-model-router/apps/runtime-ui/app/routes/__s26a_fake_route__.tsx",
+  ]
+
+ ❯ test/s26a-route-inventory.test.ts:105:123
+    103|     const inventory = JSON.parse(readFileSync(inventoryPath, "utf8")) …
+    104|     const fake = path.posix.join(inventory.scan.routesDir, "__s26a_fak…
+    105|     expect(findUncovered(inventory, [...listTsx(inventory.scan.routesD…
+       |                                                                                                                           ^
+    106|       fake,
+    107|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  07:09:07
+   Duration  2.33s (transform 113ms, setup 0ms, collect 76ms, tests 50ms, environment 988ms, prepare 508ms)
+

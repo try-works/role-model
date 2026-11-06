@@ -1,0 +1,15 @@
+timestamp_utc: 2026-10-24T10:18:45.0120642Z
+phase: GREEN-2 (repaired tests; minimal behavior implemented)
+cwd: role-model-router/packages/ui-parity
+command: node ../../../node_modules/vitest/vitest.mjs run test/compare.test.ts
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+ ✓ test/compare.test.ts (28 tests) 25ms
+
+ Test Files  1 passed (1)
+      Tests  28 passed (28)
+   Start at  18:18:47
+   Duration  1.94s (transform 343ms, setup 0ms, collect 302ms, tests 25ms, environment 1ms, prepare 793ms)
+
+exit_code: 0

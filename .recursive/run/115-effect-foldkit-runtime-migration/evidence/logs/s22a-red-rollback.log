@@ -1,0 +1,58 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run105-c-route-advisory-ladder-source.test.ts (6 tests | 1 failed | 5 skipped) 23ms
+   ↓ run105 C route advisory ladder source > reads one role-task ladder and returns rank-sorted status-filtered rungs
+   ↓ run105 C route advisory ladder source > an all-unavailable ladder is unavailable and never invents a preferred endpoint
+   ↓ run105 C route advisory ladder source > an empty or absent ladder is unavailable with the same bounded reason
+   × run105 C route advisory ladder source > a rolled-back ladder is refused before any rung is offered 21ms
+     → expected { …(12) } to match object { advisoryState: 'unavailable', …(2) }
+(9 matching properties omitted from actual)
+   ↓ run105 C route advisory ladder source > a store failure degrades to unavailable, never to influence
+   ↓ run105 C route advisory ladder source > a missing role or task id refuses the read instead of querying the store
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run105-c-route-advisory-ladder-source.test.ts > run105 C route advisory ladder source > a rolled-back ladder is refused before any rung is offered
+AssertionError: expected { …(12) } to match object { advisoryState: 'unavailable', …(2) }
+(9 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "advisoryLadder": [],
+-   "advisoryState": "unavailable",
+-   "preferredRoutePackage": null,
++   "advisoryLadder": [
++     {
++       "endpointId": "endpoint-b",
++       "rank": 2,
++       "status": "available",
++     },
++     {
++       "endpointId": "endpoint-c",
++       "rank": 3,
++       "status": "available",
++     },
++   ],
++   "advisoryState": "fresh",
++   "preferredRoutePackage": "endpoint-b",
+  }
+
+ ❯ test/run105-c-route-advisory-ladder-source.test.ts:234:20
+    232|     );
+    233|     const result = await readTrackBRouteAdvisoryFromRollout(ctx as nev…
+    234|     expect(result).toMatchObject({
+       |                    ^
+    235|       advisoryState: "unavailable",
+    236|       preferredRoutePackage: null,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 skipped (6)
+   Start at  04:21:52
+   Duration  576ms (transform 101ms, setup 0ms, collect 106ms, tests 23ms, environment 0ms, prepare 168ms)
+

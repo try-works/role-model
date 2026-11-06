@@ -1,0 +1,20 @@
+PHASE: S1b minimal GREEN
+TIMESTAMP: 2026-10-24T10:50:39.8059532Z
+CWD: D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\ui-parity
+COMMAND: node ../../../node_modules/vitest/vitest.mjs run test/target-contract.test.ts
+EXIT: 0
+TEST_SHA256: 1eb479857d371f94e6911a3f7bcdd562ce580192900f99fc119e640470fe3519
+SOURCE_SHA256: 7ce0aff34c713d06a67649eb1fac22d2d522a70384a85a01884a07e283265103
+RESULT: 45 passed
+
+OUTPUT:
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+ ✓ test/target-contract.test.ts (45 tests) 42ms
+
+ Test Files  1 passed (1)
+      Tests  45 passed (45)
+   Start at  18:50:34
+   Duration  1.99s (transform 288ms, setup 0ms, collect 295ms, tests 42ms, environment 0ms, prepare 564ms)
+

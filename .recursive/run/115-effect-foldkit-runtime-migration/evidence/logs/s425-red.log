@@ -1,0 +1,673 @@
+# S425 RED — device-auth correctness (strict behavioral RED before product edit)
+command: vitest run test/s425-device-auth-correctness.test.ts (cwd role-model-router/apps/runtime-ui-next)
+host contract basis: runtime-host-bridge/src/index.ts:7603-7623, :21951-21974, :33195-33295 (status pending|connected|expired|failed, retryAfterSeconds, lastError)
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s425-device-auth-correctness.test.ts > S425 pending view (mounted) > renders the host user code and a keyboard-focusable safe verification link while pending
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow view: 27.0ms (budget: 16ms), triggered by init. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'View',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Providers' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 26.980100000000675,
+  thresholdMs: 16
+}
+[foldkit] Slow patch: 118.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Providers' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 118.80429999999978,
+  thresholdMs: 8
+}
+
+stderr | test/s425-device-auth-correctness.test.ts > S425 pending view (mounted) > renders the host user code and a keyboard-focusable safe verification link while pending
+[foldkit] Slow patch: 14.5ms (budget: 8ms), triggered by DeviceAuthSessionsLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Providers' },
+    theme: 'dark',
+    deviceAuth: {
+      draft: [Object],
+      inflight: true,
+      status: 'pending',
+      token: 2,
+      error: undefined,
+      session: [Object],
+      sessions: [Array]
+    }
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: { _tag: 'DeviceAuthSessionsLoaded', sessions: [Array], token: 1 }
+  },
+  durationMs: 14.484700000000885,
+  thresholdMs: 8
+} {
+  _tag: 'DeviceAuthSessionsLoaded',
+  sessions: [
+    {
+      authRequestId: 'auth-pending',
+      intervalSeconds: 5,
+      providerAccountId: 'openai.personal.openai-codex-subscription',
+      status: 'pending',
+      userCode: 'ABCD-EFGH',
+      verificationUriComplete: 'https://auth.openai.com/device?user_code=ABCD-EFGH'
+    }
+  ],
+  token: 1
+}
+
+stderr | test/s425-device-auth-correctness.test.ts > S425 pending view (mounted) > renders the host user code and a keyboard-focusable safe verification link while pending
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+stderr | test/s425-device-auth-correctness.test.ts > S425 pending view (mounted) > renders the host user code and a keyboard-focusable safe verification link while pending
+[foldkit] Slow patch: 8.5ms (budget: 8ms), triggered by ControlFailed. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Providers' },
+    theme: 'dark',
+    deviceAuth: {
+      draft: [Object],
+      inflight: true,
+      status: 'pending',
+      token: 2,
+      error: undefined,
+      session: [Object],
+      sessions: [Array]
+    }
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ControlFailed',
+      key: 'providers',
+      message: 'Providers read failed: HTTP 0 (Failed to execute "fetch()" on "Window" with URL "http://localhost:3000/api/role-model/accounts": )',
+      token: 1
+    }
+  },
+  durationMs: 8.505199999999604,
+  thresholdMs: 8
+} {
+  _tag: 'ControlFailed',
+  key: 'providers',
+  message: 'Providers read failed: HTTP 0 (Failed to execute "fetch()" on "Window" with URL "http://localhost:3000/api/role-model/accounts": )',
+  token: 1
+}
+
+stderr | test/s425-device-auth-correctness.test.ts > S425 pending view (mounted) > refuses an unsafe verification URL protocol instead of linking it
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 78.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Providers' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 78.4523999999983,
+  thresholdMs: 8
+}
+
+stderr | test/s425-device-auth-correctness.test.ts > S425 pending view (mounted) > refuses an unsafe verification URL protocol instead of linking it
+AggregateError: 
+    at internalConnectMultiple (node:net:1134:18)
+    at afterConnectMultiple (node:net:1715:7) {
+  code: 'EACCES',
+  [errors]: [
+    Error: connect EACCES ::1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4092,
+      code: 'EACCES',
+      syscall: 'connect',
+      address: '::1',
+      port: 3000
+    },
+    Error: connect ECONNREFUSED 127.0.0.1:3000
+        at createConnectionError (node:net:1678:14)
+        at afterConnectMultiple (node:net:1708:16) {
+      errno: -4078,
+      code: 'ECONNREFUSED',
+      syscall: 'connect',
+      address: '127.0.0.1',
+      port: 3000
+    }
+  ]
+}
+
+ ❯ test/s425-device-auth-correctness.test.ts (10 tests | 9 failed) 7766ms
+   × S425 host device poll parsing > keeps a real host failed poll status instead of normalizing it to pending 44ms
+     → expected { authRequestId: 'auth-failed', …(2) } to match object { status: 'failed', …(1) }
+(2 matching properties omitted from actual)
+   × S425 host device poll parsing > keeps a real host expired poll status and its reason 4ms
+     → expected { authRequestId: 'auth-expired', …(2) } to match object { status: 'expired', …(1) }
+(2 matching properties omitted from actual)
+   × S425 host device poll parsing > keeps the transient pending reason and honors the host retry interval 4ms
+     → expected { …(3) } to match object { status: 'pending', …(1) }
+(2 matching properties omitted from actual)
+   ✓ S425 host device poll parsing > keeps the readback user code and verification URL the pending view needs 2ms
+   × S425 failed/expired poll transitions > surfaces the host failure reason and stops polling 25ms
+     → expected [ 'PollDeviceAuthorization' ] to deeply equal []
+   × S425 failed/expired poll transitions > surfaces the expired reason instead of a connected claim 7ms
+     → expected [ 'PollDeviceAuthorization' ] to deeply equal []
+   × S425 failed/expired poll transitions > uses the host retry interval for the next pending poll 6ms
+     → expected { …(4) } to match object { delayMs: 7000, intervalMs: 7000 }
+(2 matching properties omitted from actual)
+   × S425 cancel clears inflight and fences stale results > permits a new start after cancel while a late poll stays fenced 5ms
+     → expected true to be false // Object.is equality
+   × S425 pending view (mounted) > renders the host user code and a keyboard-focusable safe verification link while pending 4009ms
+     → Timed out waiting for pending user code
+   × S425 pending view (mounted) > refuses an unsafe verification URL protocol instead of linking it 3654ms
+     → Timed out waiting for verification unavailable notice
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s425-device-auth-correctness.test.ts > S425 host device poll parsing > keeps a real host failed poll status instead of normalizing it to pending
+AssertionError: expected { authRequestId: 'auth-failed', …(2) } to match object { status: 'failed', …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "lastError": "Codex Subscription login could not be completed (access denied). Reconnect to continue.",
+-   "status": "failed",
++   "status": "pending",
+  }
+
+ ❯ test/s425-device-auth-correctness.test.ts:95:20
+     93|   it("keeps a real host failed poll status instead of normalizing it t…
+     94|     const parsed = await clientFor(failedPoll).poll("auth-failed");
+     95|     expect(parsed).toMatchObject({ status: "failed", lastError: failed…
+       |                    ^
+     96|   });
+     97| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  test/s425-device-auth-correctness.test.ts > S425 host device poll parsing > keeps a real host expired poll status and its reason
+AssertionError: expected { authRequestId: 'auth-expired', …(2) } to match object { status: 'expired', …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "lastError": "Device code expired.",
+-   "status": "expired",
++   "status": "pending",
+  }
+
+ ❯ test/s425-device-auth-correctness.test.ts:100:20
+     98|   it("keeps a real host expired poll status and its reason", async () …
+     99|     const parsed = await clientFor(expiredPoll).poll("auth-expired");
+    100|     expect(parsed).toMatchObject({ status: "expired", lastError: expir…
+       |                    ^
+    101|   });
+    102| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  test/s425-device-auth-correctness.test.ts > S425 host device poll parsing > keeps the transient pending reason and honors the host retry interval
+AssertionError: expected { …(3) } to match object { status: 'pending', …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "lastError": "Codex Subscription device authorization is waiting on the network (socket reset).",
+    "status": "pending",
+  }
+
+ ❯ test/s425-device-auth-correctness.test.ts:105:20
+    103|   it("keeps the transient pending reason and honors the host retry int…
+    104|     const parsed = await clientFor(transientPoll).poll("auth-transient…
+    105|     expect(parsed).toMatchObject({ status: "pending", lastError: trans…
+       |                    ^
+    106|     expect(deviceAuthPollDelayMs(parsed)).toBe(7_000);
+    107|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  test/s425-device-auth-correctness.test.ts > S425 failed/expired poll transitions > surfaces the host failure reason and stops polling
+AssertionError: expected [ 'PollDeviceAuthorization' ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "PollDeviceAuthorization",
++ ]
+
+ ❯ test/s425-device-auth-correctness.test.ts:126:34
+    124|     const state = { ...initialDeviceAuthState(), draft, session: sessi…
+    125|     const result = shellUpdate(modelWith(state), Message.DeviceAuthPol…
+    126|     expect(commandNames(result)).toEqual([]);
+       |                                  ^
+    127|     const next = authOf(result.model);
+    128|     expect(next.status).toBe("error");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  test/s425-device-auth-correctness.test.ts > S425 failed/expired poll transitions > surfaces the expired reason instead of a connected claim
+AssertionError: expected [ 'PollDeviceAuthorization' ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "PollDeviceAuthorization",
++ ]
+
+ ❯ test/s425-device-auth-correctness.test.ts:138:34
+    136|     const state = { ...initialDeviceAuthState(), draft, session: sessi…
+    137|     const result = shellUpdate(modelWith(state), Message.DeviceAuthPol…
+    138|     expect(commandNames(result)).toEqual([]);
+       |                                  ^
+    139|     expect(authOf(result.model).status).toBe("error");
+    140|     expect(authOf(result.model).error).toBe(expiredPoll.lastError);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  test/s425-device-auth-correctness.test.ts > S425 failed/expired poll transitions > uses the host retry interval for the next pending poll
+AssertionError: expected { …(4) } to match object { delayMs: 7000, intervalMs: 7000 }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "delayMs": 7000,
+-   "intervalMs": 7000,
++   "delayMs": 5000,
++   "intervalMs": 5000,
+  }
+
+ ❯ test/s425-device-auth-correctness.test.ts:148:46
+    146|     const result = shellUpdate(modelWith(state), Message.DeviceAuthPol…
+    147|     expect(commandNames(result)).toEqual(["PollDeviceAuthorization"]);
+    148|     expect((result.commands ?? [])[0]?.args).toMatchObject({ delayMs: …
+       |                                              ^
+    149|   });
+    150| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  test/s425-device-auth-correctness.test.ts > S425 cancel clears inflight and fences stale results > permits a new start after cancel while a late poll stays fenced
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ test/s425-device-auth-correctness.test.ts:156:46
+    154|     const state = { ...initialDeviceAuthState(), draft, inflight: true…
+    155|     const cancelled = shellUpdate(modelWith(state), Message.DeviceAuth…
+    156|     expect(authOf(cancelled.model).inflight).toBe(false);
+       |                                              ^
+    157|     expect(authOf(cancelled.model).status).toBe("draft");
+    158|     expect(authOf(cancelled.model).session).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  test/s425-device-auth-correctness.test.ts > S425 pending view (mounted) > renders the host user code and a keyboard-focusable safe verification link while pending
+Error: Timed out waiting for pending user code
+ ❯ waitFor test/s425-device-auth-correctness.test.ts:184:11
+    182|       await new Promise((resolve) => setTimeout(resolve, 10));
+    183|     }
+    184|     throw new Error("Timed out waiting for " + label);
+       |           ^
+    185|   };
+    186| 
+ ❯ test/s425-device-auth-correctness.test.ts:246:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  test/s425-device-auth-correctness.test.ts > S425 pending view (mounted) > refuses an unsafe verification URL protocol instead of linking it
+Error: Timed out waiting for verification unavailable notice
+ ❯ waitFor test/s425-device-auth-correctness.test.ts:184:11
+    182|       await new Promise((resolve) => setTimeout(resolve, 10));
+    183|     }
+    184|     throw new Error("Timed out waiting for " + label);
+       |           ^
+    185|   };
+    186| 
+ ❯ test/s425-device-auth-correctness.test.ts:265:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  9 failed | 1 passed (10)
+   Start at  05:27:27
+   Duration  26.09s (transform 9.37s, setup 0ms, collect 14.52s, tests 7.77s, environment 1.69s, prepare 483ms)
+
+VITEST_EXIT=1
+TSC_EXIT=1
+CORRECTION: the line 'tsc_exit=1' above came from a non-existent UI-local tsc.cmd (command not found), not from TypeScript errors.
+Re-run at RED state with the real compiler: node_modules/.bin/tsc.cmd --noEmit -p role-model-router/apps/runtime-ui-next/tsconfig.json -> TSC_EXIT=0 (the new test compiles; the 9 behavioral failures above are runtime assertions).
+corrected_tsc_exit=0

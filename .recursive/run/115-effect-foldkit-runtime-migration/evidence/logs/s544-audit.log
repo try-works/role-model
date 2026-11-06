@@ -1,0 +1,14 @@
+# S544 /models density + studio tab depth audit
+
+Method: /models audited with audit-rendered-ui 5s settle against local packaged :51970 with dev fixture traffic. Studio tabs measured with route-dump-5s.mjs?tab=<tab> (5s settle); reference lengths from audit/ref/_app_studio_*.json.
+
+| target | refLen | portLen | ratio | reference headings present | svg | tables | controls |
+|---|---:|---:|---:|---|---:|---:|---|
+| /models | 1570 | 2342 | 149.2% | Configured models, Model inventory | 1 | 5 | Make primary controller, Open Roles (role=button link), Open Benchmark (role=button link), Eject controller; seeded role/task table has 28 rows |
+| /studio?tab=chat | 130 | 215 | 165.4% | Chat workspace, Request, Result workspace | 1 | 0 | Run request |
+| /studio?tab=images | 297 | 367 | 123.6% | Images workspace, Image request modes, Image result stage | 1 | 0 | Run image request |
+| /studio?tab=audio | 309 | 478 | 154.7% | Audio workspace, Audio mode and request, Audio result stage | 1 | 0 | Run audio request, Voice select |
+| /studio?tab=rerank | 276 | 371 | 134.4% | Rerank workspace, Rerank request, Ranked results | 1 | 0 | Submit rerank request |
+| /studio?tab=advanced | 343 | 527 | 153.6% | Advanced workspace, Endpoint family, Response workspace | 1 | 0 | Submit advanced request |
+
+/models is now above the 0.9 gate WITH real data: the live endpoint readback carries all 28 role ids, and the role table renders reference task counts (analyst 47, writer 85, etc.). No fake rows for this measurement.

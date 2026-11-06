@@ -1,0 +1,14 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:31576) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run115-s8a-worker-abort-signal.test.ts (1 test) 1926ms
+   ✓ Run 115 S8a: queue worker forwards the Effect AbortSignal > an attempt timeout aborts a handler that settles only on its signal  1922ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  22:35:22
+   Duration  11.09s (transform 5.06s, setup 0ms, collect 7.69s, tests 1.93s, environment 1ms, prepare 493ms)
+
+EXIT_CODE: 0

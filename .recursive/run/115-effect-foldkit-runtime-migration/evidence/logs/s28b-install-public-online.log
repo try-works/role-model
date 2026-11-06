@@ -1,0 +1,33 @@
+Scope: all 50 workspace projects
+(node:49568) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ WARN  There are cyclic workspace dependencies: D:\DEV\role-model\.worktrees\baseline-effect-foldkit-20261024\role-model-router\packages\adapter-execution, D:\DEV\role-model\.worktrees\baseline-effect-foldkit-20261024\role-model-router\packages\provider-anthropic
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +681
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 681, reused 213, downloaded 0, added 0
+Progress: resolved 681, reused 659, downloaded 0, added 0
+Progress: resolved 681, reused 672, downloaded 0, added 0
+Progress: resolved 681, reused 672, downloaded 1, added 0
+Progress: resolved 681, reused 672, downloaded 1, added 1
+Progress: resolved 681, reused 672, downloaded 2, added 1
+Progress: resolved 681, reused 672, downloaded 2, added 2, done
+
+devDependencies:
++ @biomejs/biome 1.9.4
++ @types/node 22.19.17
++ ajv 8.18.0
++ ajv-formats 3.0.1
++ commander 13.1.0
++ esbuild 0.25.12
++ json-schema-to-typescript 15.0.4
++ postject 1.0.0-alpha.6
++ tsx 4.21.0
++ turbo 2.11.7
++ typescript 5.9.3
++ vitest 3.2.4
+
+╭ Warning ─────────────────────────────────────────────────────────────────────╮│                                                                              ││   Ignored build scripts: @biomejs/biome, @google/genai, esbuild,             ││   protobufjs, sharp, workerd.                                                ││   Run "pnpm approve-builds" to pick which dependencies should be allowed     ││   to run scripts.                                                            ││                                                                              │╰──────────────────────────────────────────────────────────────────────────────╯
+
+Done in 20s using pnpm v10.6.5

@@ -1,0 +1,99 @@
+{
+  "slice": "s26e-wave2-batch",
+  "requirement": "R13 wave 2 batch: four read routes through the S26d pattern with shared client/renderer",
+  "routes": [
+    {
+      "key": "storeReceipts",
+      "path": "/observe/store-degradation-receipts",
+      "legacy": "/app/observe/store-degradation-receipts",
+      "endpoint": "/api/role-model/operator/store-degradation-receipts",
+      "empty": "No store degradation receipts yet.",
+      "error": "Store receipts read failed: HTTP 503 (unavailable)"
+    },
+    {
+      "key": "queues",
+      "path": "/observe/queues",
+      "legacy": "/app/observe/queues",
+      "endpoint": "/api/role-model/operator/queues",
+      "empty": "No queues configured yet.",
+      "error": "Queues read failed: HTTP 503 (unavailable)"
+    },
+    {
+      "key": "localLogs",
+      "path": "/local/logs",
+      "legacy": "/app/local/llama-swap/logs",
+      "endpoint": "/api/role-model/local/logs",
+      "empty": "No local logs recorded yet.",
+      "error": "Local logs read failed: HTTP 503 (unavailable)"
+    },
+    {
+      "key": "routerCandidates",
+      "path": "/router/candidates",
+      "legacy": "/app/router/candidates",
+      "endpoint": "/api/role-model/router/candidates",
+      "empty": "No router candidates yet.",
+      "error": "Router candidates read failed: HTTP 503 (unavailable)"
+    }
+  ],
+  "sharedSurface": {
+    "module": "src/readback.ts",
+    "client": "createReadbackClients(options) builds one injectable-fetch reader per route; shared accept/Authorization-only-when-token/cache-no-store/signal forwarding.",
+    "command": "defineReadReadback (one Command, key + token, per-route readers) in src/commands.ts.",
+    "renderer": "renderReadbackPage(spec,state,h) renders shared success/empty/loading/error DOM with per-route labels; per-route wrappers only supply parsers/specs."
+  },
+  "states": "Each route: success rows; empty text; loading with aria-busy; error role=alert with exact phrase listed above. Routes are data reads; all four states apply.",
+  "refresh": "One fetch-count test per route; each uses the shell's existing single runtime subscription (revision.update) and never creates a second source.",
+  "clientContract": "Shared client test asserts all four host paths in order, GET, authorization bearer only when provisioned, and abort signal identity.",
+  "inventory": [
+    {
+      "id": "route:store-degradation-receipts",
+      "proof": "Store receipts renders success, empty, loading and error on the DOM"
+    },
+    {
+      "id": "route:observe-queues",
+      "proof": "Queues renders success, empty, loading and error on the DOM"
+    },
+    {
+      "id": "route:local-logs",
+      "proof": "Local logs renders success, empty, loading and error on the DOM"
+    },
+    {
+      "id": "route:router-candidates",
+      "proof": "Router candidates renders success, empty, loading and error on the DOM"
+    }
+  ],
+  "statusAfter": {
+    "absent": 67,
+    "verified": 7,
+    "wired": 1,
+    "total": 75
+  },
+  "redGreen": {
+    "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26e-green.log",
+    "success": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26e-red-success.log",
+    "empty": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26e-red-empty.log",
+    "loading": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26e-red-loading.log",
+    "error": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26e-red-error.log",
+    "refresh": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26e-red-refresh.log",
+    "client-auth": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26e-red-client-auth.log"
+  },
+  "counts": {
+    "batch": 84,
+    "currentAfterS26f": 88,
+    "typecheck": "tsc: exit 0",
+    "biome": "exit 0"
+  },
+  "files": [
+    "src/readback.ts",
+    "src/runtime-endpoints.ts",
+    "src/commands.ts",
+    "src/init.ts",
+    "src/update.ts",
+    "src/view.ts",
+    "src/app.ts",
+    "src/route.ts",
+    "src/model.ts",
+    "src/message.ts",
+    "test/s26e-readback-routes.test.ts"
+  ]
+}

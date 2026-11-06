@@ -1,0 +1,68 @@
+(node:45812) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ S472: a hanging contribution aggregate endpoint settles at the bounded flush deadline (5360.993ms)
+(node:28876) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ semantic integration: completeness requires every mandatory local/cloud/return hop (7.663ms)
+✔ semantic regression: missing, mixed-identity, duplicate-span, and privacy-bearing observations fail (4.4238ms)
+✔ RUN88-U-PRIV-R8-AC02 live stage journey creates candidate-bound correlation and aggregate-only evidence (5.9569ms)
+✔ RUN88-I-PRIV-R8-AC01 runtime contribution derives the cloud header from the actual routed request (358.5251ms)
+✔ RUN88-U-PRIV-R8-AC02 Workers.dev probes retain closure evidence without a raw endpoint (1.3905ms)
+✔ RUN88-I-PRIV-R8-AC02 Workers.dev probe evidence survives binder sanitization (1.0055ms)
+✔ RUN88-R-PRIV-R8-AC02 raw Workers.dev endpoint keys remain rejected (0.6062ms)
+✔ Run 94 cloud diagnostic consumes bounded live evidence and cannot manufacture cloud outcomes (6.5337ms)
+✔ RUN88-U-PRIV-R8-AC01 runtime aggregate upload headers preserve the validated release correlation (0.8474ms)
+✔ RUN88-I-PRIV-R8-AC01 authorized runtime aggregate reaches its fetch boundary with candidate correlation (217.916ms)
+✔ RUN88-R-PRIV-R8-AC01 queued aggregate retry preserves journey identity and records a distinct persisted delivery attempt (265.0174ms)
+✔ RUN88-R-PRIV-R8-AC02 opt-out aborts and fences an in-flight aggregate without retaining retry state (244.4916ms)
+{"batchSize":1,"configuredChannel":"development","duplicateCount":0,"event":"recommendation_queue_decision","invalidCount":1,"invalidReasons":[{"count":1,"reason":"recommendation history D1 binding is unavailable"}],"level":"info","retriedCount":0,"runtimeChannel":"development","selectedCount":0,"service":"recommendation-service","suppressedCount":0,"suppressedReasons":[]}
+{"channel":"development","event":"ingest_rejected","level":"warn","reason":"invalid_aggregate_shape","runtimeChannel":"development","service":"aggregate-ingestion"}
+{"channel":"development","event":"ingest_rejected","level":"warn","reason":"invalid_aggregate_shape","runtimeChannel":"development","service":"aggregate-ingestion"}
+(node:43964) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run 91 recommendation queue rejects endpoint-preference evidence without candidateEndpointId before durable access (12.2556ms)
+✔ Run 91 HTTP recommendation publication refuses model-only endpoint preference without R2 or D1 mutation (16.1921ms)
+✔ Run 91 recommendation publication rejects endpoint evidence without explicit effort lineage before R2 or D1 mutation (2.5305ms)
+✔ Run 91 aggregate ingress rejects recommendation hints without candidateEndpointId before parquet or durable mutation (8.2419ms)
+✔ Run 91 aggregate ingress rejects recommendation hints without explicit effort lineage before Parquet, R2, D1, or Queue access (2.2015ms)
+✔ Run 91 history queue rejects recommendation hints without candidateEndpointId before R2 or D1 access (5.2078ms)
+✔ Run 91 contribution aggregation fails closed before outbox or event-log mutation when identity is incomplete (701.3573ms)
+✔ Run 91 contribution authorization binds explicit effort lineage before cloud upload (233.9451ms)
+✔ Run 91 assembly source does not invent routing decision ids (3.8878ms)
+✔ Run 91 correlation identity rejects placeholders and accepts an explicit provider-default effort (2.728ms)
+(node:59816) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ TB07-COHORT-AUTH binds a rotating contributor pseudonym into the destination signature (62.9099ms)
+✔ TB07-TEST-UNIT fresh production defaults to aggregate-only Advanced (4.9465ms)
+✔ TB07-REVIEW-DEFAULTS preserves persisted upgrade/reinstall and fails closed for ambiguous legacy (1.454ms)
+✔ TB07-REVIEW-TRANSITIONS resets with receipt, enforces managed restriction, and reauthorizes after opt-out (4.0041ms)
+✔ TB07-TEST-CONTRACT authorization binds exact bytes and destination (3.8064ms)
+✔ TB07-REGRESSION contribution client isolates the configured development channel (2.7612ms)
+✔ TB07-REGRESSION live development trust material is temporary and reconstructs one authority (29.9077ms)
+✔ TB07-TEST-INTEGRATION allowlists aggregate fields (0.8175ms)
+✔ TB07-REVIEW-PRIVACY rejects raw data hidden inside aggregate containers (1.0752ms)
+✔ TB07-REVIEW-INTEROP produces an Ed25519 envelope accepted by TB08 (17.9056ms)
+✔ TB07-REGRESSION destination verifier accepts Cloudflare base64 SPKI trust material (1.3142ms)
+✔ TB07-TEST-REGRESSION client cannot self-issue destination authorization (1.5382ms)
+✔ TB07-TEST-LOAD enforces the aggregate source cap (0.4947ms)
+✔ TB07-TEST-PRIVACY only independent authority signatures can release disclosed aggregates (1.9988ms)
+✔ TB07-TEST-FALSE-SUCCESS rejects undisclosed transfer (1.3288ms)
+✔ TB07-TEST-ROLLBACK revocation cancels queued sends (1.7858ms)
+✔ TB07-TEST-HEALTH reports a bounded available outbox (0.8324ms)
+✔ TB07-TEST-COMMAND-04 rejects expired authorization (1.8086ms)
+✔ TB07-TEST-CROWDSOURCED-LEARNING-PACKAGE binds schema and policy identifiers (1.9382ms)
+✔ TB07-TEST-TRACK-A-EXCLUSION payload is aggregate-only (0.4275ms)
+✔ TB07-REVIEW-SECURITY rejects payload mutation after authorization (1.8467ms)
+✔ TB07-REVIEW-SECURITY binds destination channel and epoch immutably (1.3223ms)
+✔ TB07-REVIEW-CONTRACT binds the full destination authorization tuple (3.3501ms)
+✔ TB07-REVIEW-RECOVERY persists a bounded outbox and revocation clears it (82.7993ms)
+✔ TB07-REVIEW-DISCLOSURE cannot be self-asserted by preview or authorize (2.3121ms)
+✔ TB07-REGRESSION runtime operations boundary blocks before disclosure, uploads aggregates, queues outages, and revokes durably (2221.4759ms)
+ℹ tests 49
+ℹ suites 0
+ℹ pass 49
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6537.8109

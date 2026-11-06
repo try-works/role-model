@@ -1,0 +1,317 @@
+COMMAND: node vitest run s386 (S379c RED)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s386-learning-family.test.ts > S379c Learning family pages (real per-panel readbacks) > renders loading then ok on the decisions panel
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 37.6ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'NotFound', path: '/learning/decisions' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 37.5603000000001,
+  thresholdMs: 8
+}
+
+stderr | test/s386-learning-family.test.ts > S379c Learning family pages (real per-panel readbacks) > renders error honestly when a panel readback fails
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 19.8ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'NotFound', path: '/learning/decisions' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 19.800600000000486,
+  thresholdMs: 8
+}
+
+stderr | test/s386-learning-family.test.ts > S379c Learning family pages (real per-panel readbacks) > renders the history panel from its own readback
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 20.9ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'NotFound', path: '/learning/history' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 20.876900000001115,
+  thresholdMs: 8
+}
+
+ ❯ test/s386-learning-family.test.ts (7 tests | 6 failed) 9107ms
+   × S379c Learning family canonical URLs > parses the five canonical Learning child routes as typed routes 20ms
+     → expected 'NotFound' to be 'LearningConfiguration' // Object.is equality
+   × S379c Learning family canonical URLs > canonicalises the original /app/learning/* URLs with query/hash and one replace Command 3ms
+     → expected undefined to be '/learning/configuration' // Object.is equality
+   × S379c Learning family canonical URLs > drops exactly the five landed families from MISSING; the rest stay NotFound 5ms
+     → expected [ { …(2) }, { …(2) }, { …(2) }, …(7) ] to have a length of 5 but got 10
+   ✓ S379c Learning family canonical URLs > leaves the requestId families unchanged 5ms
+   × S379c Learning family pages (real per-panel readbacks) > renders loading then ok on the decisions panel 3031ms
+     → Timed out waiting for decisions loading (last: null | path: /learning/decisions)
+   × S379c Learning family pages (real per-panel readbacks) > renders error honestly when a panel readback fails 3018ms
+     → Timed out waiting for decisions error (last: null | path: /learning/decisions)
+   × S379c Learning family pages (real per-panel readbacks) > renders the history panel from its own readback 3024ms
+     → Timed out waiting for history ok (last: null | path: /learning/history)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s386-learning-family.test.ts > S379c Learning family canonical URLs > parses the five canonical Learning child routes as typed routes
+AssertionError: expected 'NotFound' to be 'LearningConfiguration' // Object.is equality
+
+Expected: "LearningConfiguration"
+Received: "NotFound"
+
+ ❯ test/s386-learning-family.test.ts:51:65
+     49| describe("S379c Learning family canonical URLs", () => {
+     50|   it("parses the five canonical Learning child routes as typed routes"…
+     51|     expect(routeFromUrl(urlOf("/learning/configuration"))._tag).toBe("…
+       |                                                                 ^
+     52|     expect(routeFromUrl(urlOf("/learning/packs"))._tag).toBe("Learning…
+     53|     expect(routeFromUrl(urlOf("/learning/decisions"))._tag).toBe("Lear…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  test/s386-learning-family.test.ts > S379c Learning family canonical URLs > canonicalises the original /app/learning/* URLs with query/hash and one replace Command
+AssertionError: expected undefined to be '/learning/configuration' // Object.is equality
+
+- Expected: 
+"/learning/configuration"
+
++ Received: 
+undefined
+
+ ❯ test/s386-learning-family.test.ts:68:66
+     66|     ];
+     67|     for (const [original, href, tag] of expectations) {
+     68|       expect(module.legacyRedirectForUrl(urlOf(original))?.href).toBe(…
+       |                                                                  ^
+     69|       expect(routeFromUrl(urlOf(original))._tag).toBe(tag);
+     70|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  test/s386-learning-family.test.ts > S379c Learning family canonical URLs > drops exactly the five landed families from MISSING; the rest stay NotFound
+AssertionError: expected [ { …(2) }, { …(2) }, { …(2) }, …(7) ] to have a length of 5 but got 10
+
+- Expected
++ Received
+
+- 5
++ 10
+
+ ❯ test/s386-learning-family.test.ts:82:45
+
+     80|   it("drops exactly the five landed families from MISSING; the rest st…
+     81|     const module = await legacy();
+     82|     expect(module.MISSING_ORIGINAL_TARGETS).toHaveLength(5);
+       |                                             ^
+     83|     const paths = module.MISSING_ORIGINAL_TARGETS.map((entry) => entry…
+     84|     for (const landed of [
+ Test Files  1 failed (1)
+      Tests  6 failed | 1 passed (7)
+   Start at  15:50:55
+   Duration  16.25s (transform 3.47s, setup 0ms, collect 5.54s, tests 9.11s, environment 693ms, prepare 305ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  test/s386-learning-family.test.ts > S379c Learning family pages (real per-panel readbacks) > renders loading then ok on the decisions panel
+Error: Timed out waiting for decisions loading (last: null | path: /learning/decisions)
+ ❯ waitForRouteState test/s386-learning-family.test.ts:42:9
+     40|     await new Promise((resolve) => setTimeout(resolve, 10));
+     41|   }
+     42|   throw new Error("Timed out waiting for " + label + " (last: " + Stri…
+       |         ^
+     43| };
+     44| afterEach(() => {
+ ❯ test/s386-learning-family.test.ts:112:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  test/s386-learning-family.test.ts > S379c Learning family pages (real per-panel readbacks) > renders error honestly when a panel readback fails
+Error: Timed out waiting for decisions error (last: null | path: /learning/decisions)
+ ❯ waitForRouteState test/s386-learning-family.test.ts:42:9
+     40|     await new Promise((resolve) => setTimeout(resolve, 10));
+     41|   }
+     42|   throw new Error("Timed out waiting for " + label + " (last: " + Stri…
+       |         ^
+     43| };
+     44| afterEach(() => {
+ ❯ test/s386-learning-family.test.ts:120:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  test/s386-learning-family.test.ts > S379c Learning family pages (real per-panel readbacks) > renders the history panel from its own readback
+Error: Timed out waiting for history ok (last: null | path: /learning/history)
+ ❯ waitForRouteState test/s386-learning-family.test.ts:42:9
+     40|     await new Promise((resolve) => setTimeout(resolve, 10));
+     41|   }
+     42|   throw new Error("Timed out waiting for " + label + " (last: " + Stri…
+       |         ^
+     43| };
+     44| afterEach(() => {
+ ❯ test/s386-learning-family.test.ts:126:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+

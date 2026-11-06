@@ -1,0 +1,56 @@
+{
+  "port": 55795,
+  "state": "E:/rm-tmp/s64a/cstate-temp",
+  "endpoints": [
+    "openai.personal.primary.us-east-1.fast",
+    "anthropic.team.shared.us-east-1.default",
+    "deepseek.personal.primary.global.kimi-k2.5",
+    "moonshot.personal.primary.global.kimi-k2.5",
+    "cli.local.coder"
+  ],
+  "initial": {
+    "scope": "global",
+    "endpointId": "openai.personal.primary.us-east-1.fast",
+    "modelId": "openai/gpt-4.1-mini-fast",
+    "displayName": "Gpt 4.1 Mini Fast",
+    "upstreamModelId": "openai/gpt-4.1-mini-fast",
+    "reasoningEffort": null,
+    "sourceType": "remote"
+  },
+  "patchStatus": 200,
+  "patchBody": {
+    "scope": "global",
+    "endpointId": "anthropic.team.shared.us-east-1.default",
+    "modelId": "claude-3.7-sonnet",
+    "displayName": "Claude 3.7 Sonnet",
+    "upstreamModelId": "claude-3.7-sonnet",
+    "reasoningEffort": null,
+    "sourceType": "remote",
+    "updatedAtMs": 1792945819729
+  },
+  "after": {
+    "scope": "global",
+    "endpointId": "anthropic.team.shared.us-east-1.default",
+    "modelId": "claude-3.7-sonnet",
+    "sourceType": "remote",
+    "updatedAtMs": 1792945819732
+  },
+  "patchBackStatus": 200,
+  "patchBackBody": {
+    "scope": "global",
+    "endpointId": "openai.personal.primary.us-east-1.fast",
+    "modelId": "openai/gpt-4.1-mini-fast",
+    "displayName": "Gpt 4.1 Mini Fast",
+    "upstreamModelId": "openai/gpt-4.1-mini-fast",
+    "reasoningEffort": null,
+    "sourceType": "remote",
+    "updatedAtMs": 1792945819752
+  },
+  "final": {
+    "scope": "global",
+    "endpointId": "openai.personal.primary.us-east-1.fast",
+    "modelId": "openai/gpt-4.1-mini-fast",
+    "sourceType": "remote",
+    "updatedAtMs": 1792945819757
+  }
+}

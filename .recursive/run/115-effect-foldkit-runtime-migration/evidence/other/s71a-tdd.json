@@ -1,0 +1,42 @@
+{
+  "slice": "s71a-title-models",
+  "invariant": {
+    "file": "test/s71a-single-title.test.ts",
+    "routes": 35,
+    "red": "s71a-red-single-title.log",
+    "redFailures": "9 routes had two h1s before fix",
+    "fix": "all content h1 -> h2; top bar h1 retained"
+  },
+  "models": {
+    "route": "/models",
+    "fields": [
+      "id/displayName",
+      "providerId",
+      "endpointId",
+      "healthStatus/status",
+      "reasoningEffort or unavailable",
+      "roleIds"
+    ],
+    "sources": [
+      "/api/role-model/models",
+      "/api/role-model/endpoints"
+    ],
+    "fixtures": [
+      "models-real.json",
+      "model-endpoints-real.json"
+    ],
+    "states": [
+      "loading",
+      "empty",
+      "error",
+      "success"
+    ],
+    "nav": "Models group",
+    "screenshot": "E:/rm-tmp/s64a/models.png"
+  },
+  "counts": {
+    "clientFull": 239,
+    "files": 23,
+    "typecheck": 0
+  }
+}

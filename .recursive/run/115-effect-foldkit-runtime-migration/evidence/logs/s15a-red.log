@@ -1,0 +1,259 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:37420) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts (14 tests | 13 failed) 39ms
+   × S15a R21.1 bounded diagnostics query > returns identity, loss, cursor, staleness rule and records bounded by the record cap 13ms
+     → expected 'disabled' to be 'ok' // Object.is equality
+   × S15a R21.1 bounded diagnostics query > pages with the opaque cursor and stops at the end 2ms
+     → expected undefined to be 2 // Object.is equality
+   × S15a R21.1 bounded diagnostics query > applies the byte cap before the record cap 3ms
+     → actual value must be number or bigint, received "undefined"
+   × S15a R21.2 reused authorization, forwarded-owner rejection and CORS > denies a non-loopback request without the existing read credential 2ms
+     → expected 200 to be 401 // Object.is equality
+   × S15a R21.2 reused authorization, forwarded-owner rejection and CORS > accepts the existing operator bearer credential from a remote peer 1ms
+     → expected 'disabled' to be 'ok' // Object.is equality
+   × S15a R21.2 reused authorization, forwarded-owner rejection and CORS > rejects a spoofed forwarded owner header instead of trusting it 1ms
+     → expected 200 to be 403 // Object.is equality
+   × S15a R21.2 reused authorization, forwarded-owner rejection and CORS > does not grant device-owner trust from a spoofed Host header 1ms
+     → expected 200 to be 401 // Object.is equality
+   × S15a R21.2 reused authorization, forwarded-owner rejection and CORS > never emits wildcard or reflected CORS, even with an Origin header 1ms
+     → expected 'disabled' to be 'ok' // Object.is equality
+   × S15a R21.3 diagnostics cannot contaminate business/live aggregates > leaves the observability aggregate and the source unchanged after a read 6ms
+     → expected 'disabled' to be 'ok' // Object.is equality
+   ✓ S15a R21.4 disabled/denied/stale/dropped/empty are distinct states > disabled is an explicit 200 state, not an error 1ms
+   × S15a R21.4 disabled/denied/stale/dropped/empty are distinct states > stale reports its age against the stated rule 2ms
+     → expected 'disabled' to be 'stale' // Object.is equality
+   × S15a R21.4 disabled/denied/stale/dropped/empty are distinct states > dropped reports the loss counters as its own state 1ms
+     → expected 'disabled' to be 'dropped' // Object.is equality
+   × S15a R21.4 disabled/denied/stale/dropped/empty are distinct states > empty is a successful read with zero records 1ms
+     → expected 'disabled' to be 'empty' // Object.is equality
+   × S15a R21.4 disabled/denied/stale/dropped/empty are distinct states > ok is fresh records without loss 1ms
+     → expected 'disabled' to be 'ok' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 13 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run115-s15a-local-diagnostics-read.test.ts > S15a R21.1 bounded diagnostics query > returns identity, loss, cursor, staleness rule and records bounded by the record cap
+AssertionError: expected 'disabled' to be 'ok' // Object.is equality
+
+Expected: "ok"
+Received: "disabled"
+
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts:85:31
+     83|     expect(result.status).toBe(200);
+     84|     expect(result.body.schemaVersion).toBe("role-model.local-diagnosti…
+     85|     expect(result.body.state).toBe("ok");
+       |                               ^
+     86|     expect(result.body.identity).toEqual({ instanceId: "instance-a", b…
+     87|     expect(result.body.loss).toEqual({ dropped: 0, windowMs: 60_000 });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/13]⎯
+
+ FAIL  test/run115-s15a-local-diagnostics-read.test.ts > S15a R21.1 bounded diagnostics query > pages with the opaque cursor and stops at the end
+AssertionError: expected undefined to be 2 // Object.is equality
+
+- Expected: 
+2
+
++ Received: 
+undefined
+
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts:102:40
+    100|     const options = { ...baseOptions, ...offline, source: source(recor…
+    101|     const firstPage = handleLocalDiagnosticsRead(request(tokenHeaders,…
+    102|     expect(firstPage.body.recordCount).toBe(2);
+       |                                        ^
+    103|     expect(firstPage.body.truncated).toBe(true);
+    104|     const cursor = firstPage.body.cursor as string;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/13]⎯
+
+ FAIL  test/run115-s15a-local-diagnostics-read.test.ts > S15a R21.1 bounded diagnostics query > applies the byte cap before the record cap
+TypeError: actual value must be number or bigint, received "undefined"
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts:124:37
+    122|     });
+    123|     expect(result.status).toBe(200);
+    124|     expect(result.body.recordCount).toBeGreaterThan(0);
+       |                                     ^
+    125|     expect(result.body.recordCount).toBeLessThan(MAX_DIAGNOSTICS_RECOR…
+    126|     expect(result.body.truncated).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/13]⎯
+
+ FAIL  test/run115-s15a-local-diagnostics-read.test.ts > S15a R21.2 reused authorization, forwarded-owner rejection and CORS > denies a non-loopback request without the existing read credential
+AssertionError: expected 200 to be 401 // Object.is equality
+
+- Expected
++ Received
+
+- 401
++ 200
+
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts:138:27
+    136|       source: source([record(0)]),
+    137|     });
+    138|     expect(result.status).toBe(401);
+       |                           ^
+    139|     expect(result.body).toMatchObject({ error: "operator_authenticatio…
+    140|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/13]⎯
+
+ FAIL  test/run115-s15a-local-diagnostics-read.test.ts > S15a R21.2 reused authorization, forwarded-owner rejection and CORS > accepts the existing operator bearer credential from a remote peer
+AssertionError: expected 'disabled' to be 'ok' // Object.is equality
+
+Expected: "ok"
+Received: "disabled"
+
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts:149:31
+    147|     });
+    148|     expect(result.status).toBe(200);
+    149|     expect(result.body.state).toBe("ok");
+       |                               ^
+    150|   });
+    151| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/13]⎯
+
+ FAIL  test/run115-s15a-local-diagnostics-read.test.ts > S15a R21.2 reused authorization, forwarded-owner rejection and CORS > rejects a spoofed forwarded owner header instead of trusting it
+AssertionError: expected 200 to be 403 // Object.is equality
+
+- Expected
++ Received
+
+- 403
++ 200
+
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts:157:27
+    155|       { ...baseOptions, ...offline, source: source([record(0)]) },
+    156|     );
+    157|     expect(result.status).toBe(403);
+       |                           ^
+    158|     expect(result.body).toMatchObject({ error: "diagnostics_owner_head…
+    159|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/13]⎯
+
+ FAIL  test/run115-s15a-local-diagnostics-read.test.ts > S15a R21.2 reused authorization, forwarded-owner rejection and CORS > does not grant device-owner trust from a spoofed Host header
+AssertionError: expected 200 to be 401 // Object.is equality
+
+- Expected
++ Received
+
+- 401
++ 200
+
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts:166:27
+    164|       { ...baseOptions, ...offline, source: source([record(0)]) },
+    165|     );
+    166|     expect(result.status).toBe(401);
+       |                           ^
+    167|   });
+    168| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/13]⎯
+
+ FAIL  test/run115-s15a-local-diagnostics-read.test.ts > S15a R21.2 reused authorization, forwarded-owner rejection and CORS > never emits wildcard or reflected CORS, even with an Origin header
+AssertionError: expected 'disabled' to be 'ok' // Object.is equality
+
+Expected: "ok"
+Received: "disabled"
+
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts:175:31
+    173|     );
+    174|     expect(result.status).toBe(200);
+    175|     expect(result.body.state).toBe("ok");
+       |                               ^
+    176|     expect(result.body.recordCount).toBe(1);
+    177|     for (const [name, value] of Object.entries(result.headers)) {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/13]⎯
+
+ FAIL  test/run115-s15a-local-diagnostics-read.test.ts > S15a R21.3 diagnostics cannot contaminate business/live aggregates > leaves the observability aggregate and the source unchanged after a read
+AssertionError: expected 'disabled' to be 'ok' // Object.is equality
+
+Expected: "ok"
+Received: "disabled"
+
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts:196:31
+    194|       const read = handleLocalDiagnosticsRead(request(tokenHeaders, "2…
+    195|       expect(read.status).toBe(200);
+    196|       expect(read.body.state).toBe("ok");
+       |                               ^
+    197|       expect(read.body.recordCount).toBe(2);
+    198|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/13]⎯
+
+ FAIL  test/run115-s15a-local-diagnostics-read.test.ts > S15a R21.4 disabled/denied/stale/dropped/empty are distinct states > stale reports its age against the stated rule
+AssertionError: expected 'disabled' to be 'stale' // Object.is equality
+
+Expected: "stale"
+Received: "disabled"
+
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts:232:31
+    230|     });
+    231|     expect(result.status).toBe(200);
+    232|     expect(result.body.state).toBe("stale");
+       |                               ^
+    233|     expect(result.body.staleness).toMatchObject({
+    234|       ruleMs: DIAGNOSTICS_STALENESS_MS,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/13]⎯
+
+ FAIL  test/run115-s15a-local-diagnostics-read.test.ts > S15a R21.4 disabled/denied/stale/dropped/empty are distinct states > dropped reports the loss counters as its own state
+AssertionError: expected 'disabled' to be 'dropped' // Object.is equality
+
+Expected: "dropped"
+Received: "disabled"
+
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts:247:31
+    245|     });
+    246|     expect(result.status).toBe(200);
+    247|     expect(result.body.state).toBe("dropped");
+       |                               ^
+    248|     expect(result.body.loss).toEqual({ dropped: 7, windowMs: 60_000 });
+    249|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/13]⎯
+
+ FAIL  test/run115-s15a-local-diagnostics-read.test.ts > S15a R21.4 disabled/denied/stale/dropped/empty are distinct states > empty is a successful read with zero records
+AssertionError: expected 'disabled' to be 'empty' // Object.is equality
+
+Expected: "empty"
+Received: "disabled"
+
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts:258:31
+    256|     });
+    257|     expect(result.status).toBe(200);
+    258|     expect(result.body.state).toBe("empty");
+       |                               ^
+    259|     expect(result.body.recordCount).toBe(0);
+    260|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/13]⎯
+
+ FAIL  test/run115-s15a-local-diagnostics-read.test.ts > S15a R21.4 disabled/denied/stale/dropped/empty are distinct states > ok is fresh records without loss
+AssertionError: expected 'disabled' to be 'ok' // Object.is equality
+
+Expected: "ok"
+Received: "disabled"
+
+ ❯ test/run115-s15a-local-diagnostics-read.test.ts:269:31
+    267|     });
+    268|     expect(result.status).toBe(200);
+    269|     expect(result.body.state).toBe("ok");
+       |                               ^
+    270|   });
+    271| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/13]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  13 failed | 1 passed (14)
+   Start at  00:38:10
+   Duration  8.81s (transform 5.27s, setup 0ms, collect 8.26s, tests 39ms, environment 0ms, prepare 180ms)
+
+EXIT_CODE: 1

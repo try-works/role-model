@@ -479,6 +479,48 @@ describe("benchmark-runner judge remediation", () => {
     }
   });
 
+  test("DeepSeek subjects receive json_object and the case grades", async () => {
+    artifactRoot = await mkdtemp(path.join(os.tmpdir(), "bench-runner-deepseek-response-format-"));
+    const databasePath = path.join(artifactRoot, "state", "memory.db");
+    await mkdir(path.dirname(databasePath), { recursive: true });
+    initBenchmarkDatabase(databasePath);
+    const endpoint = {
+      endpointId: "deepseek.personal.deepseek-flash",
+      modelId: "deepseek/deepseek-flash",
+      sourceType: "remote" as const,
+      healthStatus: "healthy",
+    };
+    const subjectBodies: Array<Record<string, unknown>> = [];
+    const deps: BenchmarkRunnerDependencies = {
+      databasePath,
+      benchmarkArtifactRoot: artifactRoot,
+      listConfiguredEndpoints: async () => [endpoint],
+      deriveEndpointVersion: () => "v1",
+      executeChatCompletions: async (body: Record<string, unknown>) => {
+        subjectBodies.push(body);
+        if ((body.response_format as { readonly type?: string }).type === "json_schema")
+          throw new Error("This response_format type is unavailable now");
+        return {
+          contentText: '{"answer":"createRouter"}',
+          toolCalls: [
+            { function: { name: "read_file", arguments: '{"path":"state/runtime-config.yaml"}' } },
+          ],
+        };
+      },
+    };
+    const summary = await runRoutingCapabilityBenchmark(deps, {
+      endpointIds: [endpoint.endpointId],
+      mode: "quick",
+      caseIds: ["h04-tool-read-router"],
+      useJudge: false,
+    });
+    expect(subjectBodies.length).toBeGreaterThan(0);
+    for (const body of subjectBodies) expect(body.response_format).toEqual({ type: "json_object" });
+    const caseResult = summary.endpointGrades[0]?.caseResults[0];
+    expect(caseResult?.rationale).not.toBe("Benchmark execution failed.");
+    expect(caseResult?.score).toBeGreaterThan(0);
+  });
+
   test("routes Codex tool-bearing benchmark subject turns through executeResponses", async () => {
     artifactRoot = await mkdtemp(path.join(os.tmpdir(), "bench-runner-codex-responses-"));
     const databasePath = path.join(artifactRoot, "state", "memory.db");

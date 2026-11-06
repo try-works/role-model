@@ -1,0 +1,57 @@
+(node:3752) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ @recursive:101-effect-mq-queue-rebuild @sp9 R9: an admin action against an absent store answers not_found and creates nothing (18.4287ms)
+✔ @recursive:101-effect-mq-queue-rebuild @sp9 R9: an unknown queue and an unknown job answer named reasons and write no receipt (103.7334ms)
+✔ @recursive:101-effect-mq-queue-rebuild @sp9 R9: retry revives a failed job in place and a second retry is not_terminal (121.8634ms)
+✔ @recursive:101-effect-mq-queue-rebuild @sp9 R9: a cancelled pending job is terminal and no worker can claim it (2560.3545ms)
+✔ @recursive:101-effect-mq-queue-rebuild @sp9 R9: cancelling a job a worker is running is receipted as active and survives the worker's own ack (648.9067ms)
+✔ @recursive:101-effect-mq-queue-rebuild @sp9 R9: cancelling a completed job answers already_terminal (125.6564ms)
+✔ @recursive:101-effect-mq-queue-rebuild @sp9 R9: the drain flag is stored in the queue database and read back per queue (68.5596ms)
+✔ @recursive:101-effect-mq-queue-rebuild @sp9 R9: the receipt journal is newest-first, complete and bounded (63.8078ms)
+✔ @recursive:101-effect-mq-queue-rebuild @sp9 R9: the operator surface exposes the admin actions and refuses without a state root (227.8786ms)
+✔ @recursive:101-effect-mq-queue-rebuild @sp9 R9: the four admin routes answer over the operator HTTP surface (349.0285ms)
+✔ R32 evaluation: descriptor protocol version incompatibility is rejected before the factory (49.3594ms)
+✔ R32 evaluation: required evaluation:list-jobs is enforced, not any evaluation:* (11.9274ms)
+✔ R32 evaluation: ready is false during the factory and true only after owner.add (12.2392ms)
+✔ R32 evaluation: null factory result never becomes ready (9.4815ms)
+✔ R32 evaluation: factory failure never leaves ready=true (9.625ms)
+✔ R32 evaluation: closed late open releases the late child and stays not-ready (8.252ms)
+✔ R32 evaluation: a reused handle resets accepted evidence before a failing open (11.129ms)
+✔ R32 evaluation: no manifest returns null without invoking a custom factory (1.3469ms)
+✔ R32 evaluation: the actual packaged evaluation manifest is accepted by the verifier but not ready before the factory (5.2457ms)
+✔ R32 handshake: unsupported root operator protocol version is rejected before the factory (49.1984ms)
+✔ R32 handshake: a missing real required capability is rejected before the factory (invented caps do not pass) (11.1147ms)
+✔ R32 handshake: each descriptor version must be compatible (9.2541ms)
+✔ R32 handshake: a missing required operator binding is rejected before the factory (9.7664ms)
+✔ R32 handshake: ready is false during the factory and true only after owner.add (12.1382ms)
+✔ R32 handshake: a null factory result never becomes ready and is not registered (7.2015ms)
+✔ R32 handshake: factory failure never leaves ready=true (9.0117ms)
+✔ R32 handshake: closed late open releases the late child and stays not-ready (9.7464ms)
+✔ R32 handshake: a reused handle resets prior accepted evidence before a failing open (11.9139ms)
+✔ R32 handshake: no manifest returns null without invoking a custom factory (1.0549ms)
+(node:50264) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ S469: healthz becomes ready only when all six packaged operator workers are ready (89.5341ms)
+✔ S469: healthz stays honestly degraded when a packaged worker is not ready (17.9855ms)
+✔ R32/B9 repair: the sidecar main starts with the operator scope declared and stops without a ReferenceError (1395.131ms)
+(node:53012) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ R32/B9 repair: the sidecar close path closes the passed evaluation host scope (283.808ms)
+✔ R32/B9 repair: the REAL packaged-evaluation owner is closed by server.close (205.7356ms)
+✔ R32/B9 repair: evaluationProcess without a scope still closes directly (retained fallback) (180.6893ms)
+✔ R32/B9: the REAL packaged-operator owner is closed by server.close exactly once (194.2997ms)
+✔ R32/B9: operatorProcess without a scope still closes directly (retained fallback) (164.9558ms)
+(node:69876) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Run96 R12-05/R13 process boundary: runner failure releases a durable lease (571.5836ms)
+✔ Run96 R12/R15 process boundary: v3 creation fails closed without a trusted resolver (484.203ms)
+✔ Run96 F69 process boundary: operator evaluation succeeds, survives host restart, and fails closed without its owner (720.1229ms)
+✔ Run96 F69 packaged CLI: default sidecar owns Evaluation Core through the packaged ExtensionHost (2811.1096ms)
+ℹ tests 41
+ℹ suites 0
+ℹ pass 41
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5847.2203

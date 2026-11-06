@@ -1,0 +1,43 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:39532) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s15h-live-socket-diagnostics.test.ts (8 tests) 176ms
+   ✓ S15h/S15i diagnostics over a real loopback socket > starts with port option 0, so an ephemeral operator-free port is by construction 30ms
+   ✓ S15h/S15i diagnostics over a real loopback socket > token-less loopback read answers the explicit disabled state with no writer enabled 52ms
+   ✓ S15h/S15i diagnostics over a real loopback socket > loopback owner trust is explicit: with trust off, missing and wrong credentials are 401 and the configured token is accepted 21ms
+   ✓ S15h/S15i diagnostics over a real loopback socket > a wrong token of the SAME length is still rejected (not a length-only comparison) 9ms
+   ✓ S15h/S15i diagnostics over a real loopback socket > every owner-claim header is rejected by the diagnostics handler (generic gate already authorized) with no CORS 14ms
+   ✓ S15h/S15i diagnostics over a real loopback socket > 500, OPTIONS, context-mismatch 403 and 404 responses carry no access-control headers 18ms
+   ✓ S15h/S15i diagnostics over a real loopback socket > close() releases the listener: a fetch to the closed port refuses 6ms
+   ✓ S15h/S15i diagnostics over a real loopback socket > error responses from a real socket never carry access-control headers either 15ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s15h-live-socket-diagnostics.test.ts [ test/s15h-live-socket-diagnostics.test.ts ]
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ test/s15h-live-socket-diagnostics.test.ts:50:30
+     48|   // No leftover temp dir: cleanup on every path also removes the crea…
+     49|   for (const root of createdRoots) {
+     50|     expect(existsSync(root)).toBe(false);
+       |                              ^
+     51|   }
+     52| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  8 passed (8)
+   Start at  05:39:27
+   Duration  7.32s (transform 4.26s, setup 0ms, collect 6.67s, tests 176ms, environment 0ms, prepare 163ms)
+
+EXIT_CODE: 1

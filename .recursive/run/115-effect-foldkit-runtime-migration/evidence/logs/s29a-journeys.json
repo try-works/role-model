@@ -1,0 +1,476 @@
+{
+  "mutate": "",
+  "identity": {
+    "exe": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\role-model-router\\dist\\release\\win32-x64\\role-model-dev.exe",
+    "manifest": {
+      "executable": "role-model-dev.exe",
+      "platform": "win32",
+      "arch": "x64",
+      "target": "win32-x64",
+      "sha256": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87",
+      "executable_sha256": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87",
+      "core_payload_sha256": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87",
+      "source_tree": "d4095825ab0294d3b3fe7ab7d6f2954687c35508",
+      "version": "0.0.20-7-gfd2a5f55",
+      "commit": "fd2a5f5581b2427832df8c49fe35803fc0cae132",
+      "build_date": "2026-10-25T02:22:41.769Z",
+      "schema_version": 1,
+      "channel": "development",
+      "name": "role-model-dev",
+      "host": "127.0.0.1",
+      "port": 3458,
+      "state_root_name": "role-model-runtime-dev",
+      "scope_id": "standalone-runtime-dev",
+      "endpoint": "http://127.0.0.1:3458",
+      "track_b_runtime": {
+        "manifest": "track-b-runtime/track-b-runtime-manifest.json",
+        "sidecar": "track-b-runtime/runtime-operations-server.mjs",
+        "sidecar_sha256": "eab56d1d5144e9667da6d4e65e3b965ebf18f79177f3b54550fcefef4de2a445",
+        "manifest_sha256": "bd0e083f8302ec8721255ce1e8b779dba497b52a13ab15c6edf047d38311a256",
+        "compatibility_generation": "N",
+        "public_source_tree": "d4095825ab0294d3b3fe7ab7d6f2954687c35508",
+        "extension_count": 13
+      },
+      "artifact_closure": {
+        "schema_version": 1,
+        "runtime_ui": {
+          "kind": "tree",
+          "path": "build/client",
+          "sha256": "1c65bd6d55e0aa1ee0524877f77d63d68206d23547ab5780b1342fd6aa16b0fd"
+        },
+        "track_b_runtime": {
+          "manifest": {
+            "kind": "file",
+            "path": "track-b-runtime/track-b-runtime-manifest.json",
+            "sha256": "bd0e083f8302ec8721255ce1e8b779dba497b52a13ab15c6edf047d38311a256"
+          },
+          "sidecar": {
+            "kind": "file",
+            "path": "track-b-runtime/runtime-operations-server.mjs",
+            "sha256": "eab56d1d5144e9667da6d4e65e3b965ebf18f79177f3b54550fcefef4de2a445"
+          },
+          "public_runtime_adapter": {
+            "kind": "file",
+            "path": "track-b-runtime/public-runtime-adapter.mjs",
+            "sha256": "b3b55b773f60490e8e91a90a9700a58e88c12a5bb3439f83fb97e394e0d8d41b"
+          },
+          "public_extension_host": {
+            "kind": "file",
+            "path": "track-b-runtime/public-extension-host.mjs",
+            "sha256": "5a079ea129429fe67b4923f0d05dc732f83aa66adf80d579fce5c953abfa6aac"
+          },
+          "worker": {
+            "kind": "file",
+            "path": "track-b-runtime/worker-runtime.mjs",
+            "sha256": "0277de1fb738a28fe322cc9ae88e2d89965af18a14d5d0d136242ba5c0ab49c6"
+          },
+          "router_assets": [
+            {
+              "kind": "file",
+              "path": "track-b-runtime/public-router/migrations/0001_tb04_legacy_graph_performance.sql",
+              "sha256": "375da274ec8d594afec3286d1a9d0e9eea96993f82d659d0e82290659e675e71"
+            },
+            {
+              "kind": "file",
+              "path": "track-b-runtime/public-router/migrations/0002_compact_stub_enforcement.sql",
+              "sha256": "b0e11f67521dee4db650511baf8042a7a7c878bed74b6e0e1c409a34bec2d146"
+            },
+            {
+              "kind": "file",
+              "path": "track-b-runtime/public-router/migrations/registry.json",
+              "sha256": "ac83d2129b7e59b48779b1121de4003729fb973f4163e56cd85c8165c29e3654"
+            }
+          ],
+          "source_authority_fixtures": [
+            {
+              "kind": "file",
+              "path": "fixtures/source-authority/crowdsourced-evals-docs/guidance/capacity-slo-contracts.json",
+              "sha256": "47bb9b1c59eea7c4990c672dc4b61ee0c9f9c9c683a99f301ae77bc41fa95b72"
+            },
+            {
+              "kind": "file",
+              "path": "fixtures/source-authority/crowdsourced-evals-docs/guidance/product-defaults.json",
+              "sha256": "01d35147e3ec3d71d3ee156cee34591b75d3a04fc48df6bc4bbc0dcadc439ea6"
+            },
+            {
+              "kind": "file",
+              "path": "fixtures/source-authority/crowdsourced-evals-docs/guidance/retention-policies.json",
+              "sha256": "3319467406f964ff4b894524e373ad76ed8539f063da778d8363c4dc89393983"
+            }
+          ],
+          "extensions": [
+            {
+              "kind": "file",
+              "path": "track-b-runtime/extensions/artifact-store.mjs",
+              "sha256": "198d930cfa579985267261f06472179208ce71585fee766586a8d335d9592c44",
+              "id": "artifact-store"
+            },
+            {
+              "kind": "file",
+              "path": "track-b-runtime/extensions/event-log.mjs",
+              "sha256": "77c57fdc3638032d22f64daeef23747c31623eabfeeb589ca16a196832112e2e",
+              "id": "event-log"
+            },
+            {
+              "kind": "file",
+              "path": "track-b-runtime/extensions/repository-context.mjs",
+              "sha256": "758a74e817f03de6763a9f0ecb97a030a61b5b6e2e6dfb41d451d5e6fe833faa",
+              "id": "repository-context"
+            },
+            {
+              "kind": "file",
+              "path": "track-b-runtime/extensions/background-evidence-scheduler.mjs",
+              "sha256": "12490f3e6c8a21ea1961f28f6d7175c85ec37902c565cfedeb1a31b8418f1ccf",
+              "id": "background-evidence-scheduler"
+            },
+            {
+              "kind": "file",
+              "path": "track-b-runtime/extensions/memory-store.mjs",
+              "sha256": "7e02011ea2d2cc388ffd07e771ffa854c4cf9fbd5eaeceae5e685df2a3b243a4",
+              "id": "memory-store"
+            },
+            {
+              "kind": "file",
+              "path": "track-b-runtime/extensions/knowledge-store.mjs",
+              "sha256": "2449ccce4790a3c9548734ff7d1df8c4d96a54b254423cccbbf2e103776c8afa",
+              "id": "knowledge-store"
+            },
+            {
+              "kind": "file",
+              "path": "track-b-runtime/extensions/evaluation-core.mjs",
+              "sha256": "bff3d0cc8232460981900203aee4293a01f05f3703a2a9a32ac15095ed739f30",
+              "id": "evaluation-core"
+            },
+            {
+              "kind": "file",
+              "path": "track-b-runtime/extensions/crowdsourced-learning.mjs",
+              "sha256": "35b51bbaadfa0422b7674e440351ffd0c32bfd34e30c9a0d33615f027dbf323e",
+              "id": "crowdsourced-learning"
+            },
+            {
+              "kind": "file",
+              "path": "track-b-runtime/extensions/replay-core.mjs",
+              "sha256": "c12fbbac6d25d0abecb5e8f56a36beba7ded3970b7d91c793d0ddd54e266f11d",
+              "id": "replay-core"
+            },
+            {
+              "kind": "file",
+              "path": "track-b-runtime/extensions/evaluation-runner-local.mjs",
+              "sha256": "8584048a0b84764becafb9d9ac7fd9e4a9f5f6ca620769eb7319adac7f7a11d1",
+              "id": "evaluation-runner-local"
+            },
+            {
+              "kind": "file",
+              "path": "track-b-runtime/extensions/trajectory-signals.mjs",
+              "sha256": "d15bbf0a88e24e10bf4543c4c7b546330c6a991446725fa96a56c78a288c6fad",
+              "id": "trajectory-signals"
+            },
+            {
+              "kind": "file",
+              "path": "track-b-runtime/extensions/profile-learner.mjs",
+              "sha256": "ae023c018ad6b8ae4e408608a486f7a64160de0d330293649de68436c7857366",
+              "id": "profile-learner"
+            },
+            {
+              "kind": "file",
+              "path": "track-b-runtime/extensions/knowledge-worker.mjs",
+              "sha256": "de90f1ee3e83050b366156f46ed9033d32eab52862156d396c9b20a03a498dca",
+              "id": "knowledge-worker"
+            }
+          ]
+        }
+      }
+    },
+    "computedSha256": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87",
+    "expected": {
+      "version": "0.0.20-7-gfd2a5f55",
+      "commit": "fd2a5f5581b2427832df8c49fe35803fc0cae132",
+      "sourceTree": "d4095825ab0294d3b3fe7ab7d6f2954687c35508",
+      "sha": "468bdc503ca44b7f0db6eb9d4d15ea8edd789c8ceba0eae0b94ea85717a73c87"
+    }
+  },
+  "markers": {
+    "j1": "S29B-J1-MVNBE5L7",
+    "j2": "S29B-J2-MVNBE5L7",
+    "toolResult": "S29B-TOOLRESULT-MVNBE5L7",
+    "toolCallId": "call_s29b_mvnbe5l7"
+  },
+  "assertions": [
+    {
+      "message": "manifest version matches expected candidate",
+      "ok": true
+    },
+    {
+      "message": "manifest commit matches expected candidate",
+      "ok": true
+    },
+    {
+      "message": "manifest source_tree matches expected candidate",
+      "ok": true
+    },
+    {
+      "message": "executable hash matches manifest sha256",
+      "ok": true
+    },
+    {
+      "message": "executable hash matches expected candidate sha256",
+      "ok": true
+    },
+    {
+      "message": "discovered aliases include the configured model",
+      "ok": true
+    },
+    {
+      "message": "J1 HTTP 200",
+      "ok": true
+    },
+    {
+      "message": "J1 SSE terminal DONE",
+      "ok": true
+    },
+    {
+      "message": "J1 stream contains marker",
+      "ok": true
+    },
+    {
+      "message": "J1 stream finish stop",
+      "ok": true
+    },
+    {
+      "message": "J2 tool_calls present",
+      "ok": true
+    },
+    {
+      "message": "J2 tool_call_id is the expected synthetic id",
+      "ok": true
+    },
+    {
+      "message": "J2 follow-up HTTP 200",
+      "ok": true
+    },
+    {
+      "message": "J2 follow-up returns final marker",
+      "ok": true
+    },
+    {
+      "message": "upstream saw matching tool_call_id and tool result",
+      "ok": true
+    },
+    {
+      "message": "exactly three requests observed",
+      "ok": true
+    },
+    {
+      "message": "HTTP observation exists for req-fc70af1f-75a7-4d90-9a05-898abff4e745",
+      "ok": true
+    },
+    {
+      "message": "HTTP observation exists for req-0185e8cb-2967-41f3-8402-cfb6ebb7b494",
+      "ok": true
+    },
+    {
+      "message": "HTTP observation exists for req-31053c27-1e3f-4051-87ab-e5a76def167f",
+      "ok": true
+    },
+    {
+      "message": "J1/J2 requests classify uniquely",
+      "ok": true
+    },
+    {
+      "message": "capture API statuses are real 200/404",
+      "ok": true
+    },
+    {
+      "message": "runtime process exited after kill",
+      "ok": true
+    },
+    {
+      "message": "runtime pid is gone after kill",
+      "ok": true
+    },
+    {
+      "message": "three persisted observation rows",
+      "ok": true
+    },
+    {
+      "message": "three persisted telemetry rows",
+      "ok": true
+    },
+    {
+      "message": "three persisted capture rows",
+      "ok": true
+    },
+    {
+      "message": "all HTTP request ids exist in runtime_observations",
+      "ok": true
+    },
+    {
+      "message": "all HTTP request ids exist in runtime_telemetry_records",
+      "ok": true
+    },
+    {
+      "message": "every capture row joins a capture id",
+      "ok": true
+    },
+    {
+      "message": "persisted provider attempt ids match request ids",
+      "ok": true
+    },
+    {
+      "message": "J1 provider attempts match HTTP and DB",
+      "ok": true
+    },
+    {
+      "message": "artifact JSON has call and result boundaries",
+      "ok": true
+    },
+    {
+      "message": "persisted call boundary has tool_call_id",
+      "ok": true
+    },
+    {
+      "message": "persisted result boundary has tool_call_id",
+      "ok": true
+    },
+    {
+      "message": "call boundary index is 0",
+      "ok": true
+    },
+    {
+      "message": "result boundary index is 1",
+      "ok": true
+    },
+    {
+      "message": "restart uses a new pid",
+      "ok": true
+    },
+    {
+      "message": "three request ids after restart",
+      "ok": true
+    },
+    {
+      "message": "request ids survive restart",
+      "ok": true
+    },
+    {
+      "message": "observation survives restart for req-fc70af1f-75a7-4d90-9a05-898abff4e745",
+      "ok": true
+    },
+    {
+      "message": "observation survives restart for req-0185e8cb-2967-41f3-8402-cfb6ebb7b494",
+      "ok": true
+    },
+    {
+      "message": "observation survives restart for req-31053c27-1e3f-4051-87ab-e5a76def167f",
+      "ok": true
+    },
+    {
+      "message": "runtime process exited after kill",
+      "ok": true
+    },
+    {
+      "message": "runtime pid is gone after kill",
+      "ok": true
+    },
+    {
+      "message": "observation row identity unchanged after restart",
+      "ok": true
+    },
+    {
+      "message": "telemetry row identity unchanged after restart",
+      "ok": true
+    },
+    {
+      "message": "capture id identity unchanged after restart",
+      "ok": true
+    }
+  ],
+  "before": {
+    "observations": 0,
+    "telemetry": 0,
+    "captures": 0,
+    "latest": []
+  },
+  "after": {
+    "observations": 3,
+    "telemetry": 3,
+    "captures": 3
+  },
+  "j1": {
+    "aliases": [
+      "anthropic.team.shared.us-east-1.default",
+      "claude-3.7-sonnet",
+      "cli.local.coder",
+      "gpt-5.4",
+      "moonshot.personal.primary.global.kimi-k2.5",
+      "moonshot/kimi-k2.5",
+      "openai.personal.primary.us-east-1.fast",
+      "openai/gpt-4.1-mini-fast"
+    ],
+    "requestId": "req-31053c27-1e3f-4051-87ab-e5a76def167f",
+    "streamRequested": true,
+    "finishReason": "stop",
+    "tokens": {
+      "input": 11,
+      "output": 4
+    }
+  },
+  "j2": {
+    "initialRequestId": "req-0185e8cb-2967-41f3-8402-cfb6ebb7b494",
+    "followUpRequestId": "req-fc70af1f-75a7-4d90-9a05-898abff4e745",
+    "toolCallId": "call_s29b_mvnbe5l7",
+    "persistedToolBoundaries": [
+      {
+        "boundary": "tool:result",
+        "index": 1,
+        "status": "completed",
+        "toolCallId": "call_s29b_mvnbe5l7",
+        "toolId": "workspace_read",
+        "toolName": "workspace_read"
+      },
+      {
+        "boundary": "tool:call",
+        "index": 0,
+        "toolCallId": "call_s29b_mvnbe5l7",
+        "toolId": "workspace_read",
+        "toolName": "workspace_read"
+      }
+    ]
+  },
+  "j5": {
+    "restarted": true,
+    "startPid": 43772,
+    "restartPid": 50480,
+    "sameLatestIds": true,
+    "dbRows": {
+      "before": 3,
+      "after": 3
+    },
+    "captureIds": [
+      "capture-13107b608954e0893b1a4694",
+      "capture-35185778201c91f15b1de6b0",
+      "capture-b8e6abd2d0809ece12618891"
+    ]
+  },
+  "inconclusive": [
+    {
+      "item": "dashboard/frontend/DOM/SSE resync",
+      "reason": "not exercised; this harness covers packaged HTTP plus persisted SQLite/retention state only"
+    },
+    {
+      "item": "J3/J4/J6",
+      "reason": "deferred: no cancellation/error path, endpoint/effort variant, or configured replay/evaluation/learning arms in this slice"
+    }
+  ],
+  "captureApiStatuses": {
+    "req-fc70af1f-75a7-4d90-9a05-898abff4e745": 404,
+    "req-0185e8cb-2967-41f3-8402-cfb6ebb7b494": 404,
+    "req-31053c27-1e3f-4051-87ab-e5a76def167f": 404
+  },
+  "markerFiles": [
+    "standalone-runtime-dev\\track-b\\capture-queue.sqlite-wal",
+    "standalone-runtime-dev\\track-b\\deferred-route-captures.sqlite"
+  ],
+  "markerInPersisted": true,
+  "ok": true
+}

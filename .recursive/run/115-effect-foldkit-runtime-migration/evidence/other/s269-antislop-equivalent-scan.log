@@ -1,0 +1,36 @@
+S269 anti-slop disclosure and equivalent manual scan
+
+anti_slop_lint tool: UNAVAILABLE in this harness. No binary, script, or package entry for
+anti_slop_lint exists in the worktree (s138 records the same limitation and s260 used an
+equivalent manual scan). The real tool was NOT run and must be run by the Lead.
+
+Files reviewed (7):
+- role-model-router/apps/runtime-ui-next/src/legacy-redirects.ts (new)
+- role-model-router/apps/runtime-ui-next/src/route.ts
+- role-model-router/apps/runtime-ui-next/src/init.ts
+- role-model-router/apps/runtime-ui-next/src/update.ts
+- role-model-router/apps/runtime-ui-next/src/studio.ts
+- role-model-router/apps/runtime-ui-next/test/s269-canonical-url.test.ts (new)
+- role-model-router/apps/runtime-ui-next/test/s269-canonical-url.scene.test.ts (new)
+
+Findings:
+- New product code (legacy-redirects.ts, route.ts resolveAppUrl/sameRoute, studio tab helper,
+  redirect branches in init.ts/update.ts): no `as` casts, no `any`, no `unknown` API surface,
+  no `@ts-*` suppression, no runtime `typeof` narrowing, no `*Shape` names. 0 findings.
+- `as` occurrences:
+  * import aliases only: `fromString as urlFromString`, `toString as urlToString` in
+    legacy-redirects.ts, and pre-existing `Return as UpdateReturn` in init.ts/update.ts.
+  * pre-existing, not introduced by S269: `readbackKey as ReadbackKey` (init.ts:146) and the
+    runtime-config JSON casts in update.ts:118,428,455.
+  * `as const` literals in tests and pre-existing update/init literals (compile-time, not casts).
+- `typeof` occurrences: type-level only (`typeof routeCases`, `typeof AppRoute.Type`,
+  `typeof StudioTabSchema.Type`, `typeof shellUpdate` in tests). No runtime typeof added.
+- Test-only `body: unknown` in the fetch stub is an input boundary of the test harness, not a
+  service API.
+- No `*Shape` identifiers in changed files.
+
+Positive control: a temporary probe (`E:/rm-tmp/s269-antislop-probe.ts`) containing
+`const probe = {} as never;` matched the same unsafe-cast scan (1 match), so the scan is not
+vacuously clean.
+
+Conclusion: no new anti-slop findings in the S269 diff, but anti_slop_lint is NOT RUN.

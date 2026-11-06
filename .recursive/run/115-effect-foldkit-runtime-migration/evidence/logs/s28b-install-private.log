@@ -1,0 +1,22 @@
+Scope: all 17 workspace projects
+(node:34284) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +6
+++++++
+Progress: resolved 6, reused 6, downloaded 0, added 6, done
+
+dependencies:
++ hyparquet-writer 0.12.3
+
+devDependencies:
++ @effect/sql-sqlite-node 4.0.1 <- shared\sql-sqlite-node
++ effect 4.0.1 <- shared\effect
++ effect-mq 0.7.0 <- shared\effect-mq
++ esbuild 0.25.12
++ turbo 2.11.7
+
+╭ Warning ─────────────────────────────────────────────────────────────────────╮│                                                                              ││   Ignored build scripts: esbuild.                                            ││   Run "pnpm approve-builds" to pick which dependencies should be allowed     ││   to run scripts.                                                            ││                                                                              │╰──────────────────────────────────────────────────────────────────────────────╯
+
+Done in 1.6s using pnpm v10.6.5

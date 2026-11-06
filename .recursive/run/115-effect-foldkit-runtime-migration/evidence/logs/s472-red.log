@@ -1,0 +1,30 @@
+(node:40672) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✖ S472: a hanging contribution aggregate endpoint settles at the bounded flush deadline (9178.5138ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9941.4601
+
+✖ failing tests:
+
+test at tests\track-b\run115-b9-contribution-flush-timeout.test.mjs:12:1
+✖ S472: a hanging contribution aggregate endpoint settles at the bounded flush deadline (9178.5138ms)
+  AssertionError [ERR_ASSERTION]: a hanging flush must settle by the bounded deadline, not hang until revocation
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-contribution-flush-timeout.test.mjs:48:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

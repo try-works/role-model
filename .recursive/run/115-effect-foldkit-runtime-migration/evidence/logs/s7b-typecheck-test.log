@@ -1,0 +1,5 @@
+# command: tsc --noEmit ... role-model-router/packages/protocol-routing/test/run115-s7b-route-decision-wiring.test.ts
+# exit: 2
+role-model-router/packages/protocol-routing/test/test-catalog-fixture.ts(15,5): error TS2739: Type '{ modelId: string; providerId: string; providerKind: string; authFamily: string; displayName: string; version: string; capabilities: string[]; modalities: string[]; contextWindow: number; maxOutputTokens: number; ... 6 more ...; upstreamProvenance: { ...; }; }' is missing the following properties from type 'NormalizedCatalogModel': reasoningEffortLevels, reasoningOptionKinds
+role-model-router/packages/protocol-routing/test/test-catalog-fixture.ts(38,5): error TS2739: Type '{ modelId: string; providerId: string; providerKind: string; authFamily: string; displayName: string; version: string; capabilities: string[]; modalities: string[]; contextWindow: number; maxOutputTokens: number; ... 6 more ...; upstreamProvenance: { ...; }; }' is missing the following properties from type 'NormalizedCatalogModel': reasoningEffortLevels, reasoningOptionKinds
+

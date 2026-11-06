@@ -1,0 +1,34 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:50980) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run115-s10b-module-health-wiring.test.ts (2 tests) 14ms
+(node:7052) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run96-operator-surfaces.test.ts (7 tests) 209ms
+(node:36212) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run96-operator-controls.test.ts (5 tests) 186ms
+(node:52504) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run108-addendum01-a2-store-degradation-receipts-readback.test.ts (3 tests) 100ms
+(node:2128) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run108-addendum01-a52-observability-snapshot-readback.test.ts (4 tests) 136ms
+(node:7868) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run99-learning-readback-auth.test.ts (5 tests) 131ms
+(node:22948) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run98-a46-device-owner-trust.test.ts (3 tests) 98ms
+(node:28840) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run115-s15a-local-diagnostics-read.test.ts (20 tests) 30ms
+
+ Test Files  8 passed (8)
+      Tests  49 passed (49)
+   Start at  01:16:08
+   Duration  25.69s (transform 5.47s, setup 0ms, collect 21.15s, tests 905ms, environment 2ms, prepare 1.36s)
+
+EXIT_CODE: 0

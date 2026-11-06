@@ -1,0 +1,75 @@
+# S18b mutation 2: transactionSync is a no-op, the callback never runs
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node
+
+(node:31788) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s18a-sql-truth.test.ts (10 tests | 2 failed) 986ms
+   ✓ S18a blocking measurement > blocks the event loop for a whole synchronous statement whose work persists, relative to the idle timer baseline  495ms
+   × S18a blocking measurement > blocks through a whole synchronous transaction whose rows commit, relative to the idle timer baseline 131ms
+     → expected undefined to deeply equal [ { c: 20000 } ]
+   ✓ S18a per-store PRAGMAs > pins the sql-sqlite-node service defaults on the service's own connection (busy_timeout 5000, journal delete, synchronous FULL, FK on, auto_vacuum off) 6ms
+   ✓ S18a per-store PRAGMAs > preserves a per-store setup() PRAGMA (WAL + synchronous NORMAL) 11ms
+   ✓ S18a sqlite-memory PRAGMAs split by persistence scope > file-level initialization settings (WAL, auto_vacuum) survive on a new connection 109ms
+   ✓ S18a sqlite-memory PRAGMAs split by persistence scope > connection-level settings are read from the initializer's OWN connection and do not transfer to a fresh one 99ms
+   ✓ S18a backup/restore owner fence > characterizes restore while an owner connection is active: no logical fence, only OS file locking 106ms
+   × S18a real SQL transactions, no substitute > behaviourally commits real SQL and exposes it inside the transaction (a no-op or Ref buffer fails) 10ms
+     → expected undefined to deeply equal [ { c: 1 } ]
+   ✓ S18a real SQL transactions, no substitute > behaviourally rolls back real SQL work (the failed insert is gone) 14ms
+   ✓ S18a real SQL transactions, no substitute > secondary static guard (not the proof): the real transaction statements are present 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s18a-sql-truth.test.ts > S18a blocking measurement > blocks through a whole synchronous transaction whose rows commit, relative to the idle timer baseline
+AssertionError: expected undefined to deeply equal [ { c: 20000 } ]
+
+- Expected: 
+[
+  {
+    "c": 20000,
+  },
+]
+
++ Received: 
+undefined
+
+ ❯ test/s18a-sql-truth.test.ts:190:27
+    188| 
+    189|       // The work assertion: the callback ran and every row persisted …
+    190|       expect(insideCount).toEqual([{ c: 20_000 }]);
+       |                           ^
+    191|       expect(service.querySync("SELECT COUNT(*) AS c FROM t")).toEqual…
+    192|       expect(ranDuring).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s18a-sql-truth.test.ts > S18a real SQL transactions, no substitute > behaviourally commits real SQL and exposes it inside the transaction (a no-op or Ref buffer fails)
+AssertionError: expected undefined to deeply equal [ { c: 1 } ]
+
+- Expected: 
+[
+  {
+    "c": 1,
+  },
+]
+
++ Received: 
+undefined
+
+ ❯ test/s18a-sql-truth.test.ts:348:26
+    346|       });
+    347|       // The row is visible to SQL INSIDE the transaction and persists…
+    348|       expect(insideSync).toEqual([{ c: 1 }]);
+       |                          ^
+    349|       expect(service.querySync("SELECT COUNT(*) AS c FROM t")).toEqual…
+    350| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 8 passed (10)
+   Start at  03:24:30
+   Duration  5.64s (transform 2.30s, setup 0ms, collect 3.45s, tests 986ms, environment 1ms, prepare 407ms)
+
+EXIT_CODE: 1

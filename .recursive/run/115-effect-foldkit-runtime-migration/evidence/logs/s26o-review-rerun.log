@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s26o-contract.test.ts (19 tests) 53ms
+
+ Test Files  1 passed (1)
+      Tests  19 passed (19)
+   Start at  14:07:21
+   Duration  6.16s (transform 2.57s, setup 0ms, collect 4.15s, tests 53ms, environment 813ms, prepare 364ms)
+
+EXIT_CODE: 0

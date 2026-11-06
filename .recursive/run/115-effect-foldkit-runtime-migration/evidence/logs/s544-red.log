@@ -1,0 +1,232 @@
+S544 strict RED against pre-S544 HEAD view.ts; FINAL s544 test
+VITEST_EXIT=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s544-models-studio-depth.test.ts (6 tests | 4 failed) 846ms
+   ✓ S544 models density and studio tab depth > models renders role/task rows and controller actions from endpoint data  321ms
+   ✓ S544 models density and studio tab depth > studio chat renders reference depth 95ms
+   × S544 models density and studio tab depth > studio images renders reference depth 103ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'GENERATED IMAGES'
+   × S544 models density and studio tab depth > studio audio renders reference depth 97ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'VOICE INVENTORY'
+   × S544 models density and studio tab depth > studio rerank renders reference depth 94ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'CONTRACT DETAILS'
+   × S544 models density and studio tab depth > studio advanced renders reference depth 129ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'REQUEST TEMPLATE'
+ ❯ test/s541-density.test.ts (11 tests | 6 failed) 1882ms
+   × S541 learning/models/studio density envelope > learning overview carries the reference envelope 88ms
+     → Cannot read properties of undefined (reading 'section')
+   ✓ S541 learning/models/studio density envelope > learning packs carries the ladder-index envelope  364ms
+   ✓ S541 learning/models/studio density envelope > learning evidence carries the cohort metric block 199ms
+   ✓ S541 learning/models/studio density envelope > learning decisions carries the receipts envelope 284ms
+   ✓ S541 learning/models/studio density envelope > learning history carries the durable-state envelope 298ms
+   ✓ S541 learning/models/studio density envelope > models carries the inventory/benchmark/roles envelope 206ms
+   × S541 learning/models/studio density envelope > studio chat workspace envelope 104ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Run request'
+   × S541 learning/models/studio density envelope > studio images workspace envelope 105ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Run image request'
+   × S541 learning/models/studio density envelope > studio audio workspace envelope 79ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Run audio request'
+   × S541 learning/models/studio density envelope > studio rerank workspace envelope 80ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Contract /v1/rerank'
+   × S541 learning/models/studio density envelope > studio advanced workspace envelope 66ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Submit advanced request'
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s541-density.test.ts > S541 learning/models/studio density envelope > learning overview carries the reference envelope
+TypeError: Cannot read properties of undefined (reading 'section')
+ ❯ learningOverviewRoute src/features/learning/routes.ts:54:12
+     52| export const learningOverviewRoute = (readback: ReadbackState, replayJ…
+     53|   const rows = readback.rows.map((row) => [row.label, row.value, row.m…
+     54|   return h.section([h.Class("rm3-next-route mt-4"), h.DataAttribute("r…
+       |            ^
+     55|     h.p([h.Class("text-[11px] font-semibold uppercase tracking-[0.18em…
+     56|     operatorTokenEnvelope(h),
+ ❯ Learning src/view.ts:1002:21
+ ❯ routeContent src/view.ts:1073:10
+ ❯ view src/view.ts:1295:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  test/s541-density.test.ts > S541 learning/models/studio density envelope > studio chat workspace envelope
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Run request'
+
+Expected: "Run request"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeStudioToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesStudioChat workspaceRequestResult workspaceStudioChatImagesAudioRerankAdvanced APIsModelPromptRunRAW RESPONSERun a Studio request to see the raw response."
+
+ ❯ expectTitles test/s541-density.test.ts:61:44
+     59| const expectTitles = async (tag: AppRoute["_tag"], titles: readonly st…
+     60|   const text = await renderText(tag, readbacks, studioTab);
+     61|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     62| };
+     63| 
+ ❯ test/s541-density.test.ts:90:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+ FAIL  test/s541-density.test.ts > S541 learning/models/studio density envelope > studio images workspace envelope
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Run image request'
+
+Expected: "Run image request"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeStudioToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesStudioImages workspaceImage request modesImage result stageStudioChatImagesAudioRerankAdvanced APIsModeModelPromptSizeRunRAW RESPONSERun a Studio request to see the raw response."
+
+ ❯ expectTitles test/s541-density.test.ts:61:44
+     59| const expectTitles = async (tag: AppRoute["_tag"], titles: readonly st…
+     60|   const text = await renderText(tag, readbacks, studioTab);
+     61|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     62| };
+     63| 
+ ❯ test/s541-density.test.ts:94:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+ FAIL  test/s541-density.test.ts > S541 learning/models/studio density envelope > studio audio workspace envelope
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Run audio request'
+
+Expected: "Run audio request"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeStudioToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesStudioAudio workspaceAudio mode and requestAudio result stageStudioChatImagesAudioRerankAdvanced APIsModelPromptRunRAW RESPONSERun a Studio request to see the raw response."
+
+ ❯ expectTitles test/s541-density.test.ts:61:44
+     59| const expectTitles = async (tag: AppRoute["_tag"], titles: readonly st…
+     60|   const text = await renderText(tag, readbacks, studioTab);
+     61|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     62| };
+     63| 
+ ❯ test/s541-density.test.ts:98:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+ FAIL  test/s541-density.test.ts > S541 learning/models/studio density envelope > studio rerank workspace envelope
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Contract /v1/rerank'
+
+- Expected
++ Received
+
+- Contract /v1/rerank
++ Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeStudioToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesStudioRerank workspaceRerank requestRanked resultsStudioChatImagesAudioRerankAdvanced APIsModelQueryDocuments (one per line)first document
++ second documentRunRAW RESPONSERun a Studio request to see the raw response.
+
+ ❯ expectTitles test/s541-density.test.ts:61:44
+     59| const expectTitles = async (tag: AppRoute["_tag"], titles: readonly st…
+     60|   const text = await renderText(tag, readbacks, studioTab);
+     61|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     62| };
+     63| 
+ ❯ test/s541-density.test.ts:102:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯
+
+ FAIL  test/s541-density.test.ts > S541 learning/models/studio density envelope > studio advanced workspace envelope
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Submit advanced request'
+
+- Expected
++ Received
+
+- Submit advanced request
++ Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeStudioToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesStudioAdvanced workspaceEndpoint familyResponse workspaceStudioChatImagesAudioRerankAdvanced APIsJSON body{
++   "model": "moonshot/kimi-k2.5",
++   "max_tokens": 64,
++   "messages": [{ "role": "user", "content": "Hello" }]
++ }RunRAW RESPONSERun a Studio request to see the raw response.
+
+ ❯ expectTitles test/s541-density.test.ts:61:44
+     59| const expectTitles = async (tag: AppRoute["_tag"], titles: readonly st…
+     60|   const text = await renderText(tag, readbacks, studioTab);
+     61|   for (const title of titles) expect(text).toContain(title);
+       |                                            ^
+     62| };
+     63| 
+ ❯ test/s541-density.test.ts:106:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/10]⎯
+
+ FAIL  test/s544-models-studio-depth.test.ts > S544 models density and studio tab depth > studio images renders reference depth
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'GENERATED IMAGES'
+
+Expected: "GENERATED IMAGES"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeStudioToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesStudioImages workspaceImage request modesImage result stageStudioChatImagesAudioRerankAdvanced APIsModeModelPromptSizeRunRAW RESPONSERun a Studio request to see the raw response."
+
+ ❯ test/s544-models-studio-depth.test.ts:47:48
+     45|       const container = await renderModel({ studio: { ...studioIdle(),…
+     46|       const text = container.textContent ?? "";
+     47|       for (const label of labels) expect(text).toContain(label);
+       |                                                ^
+     48|     });
+     49|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/10]⎯
+
+ FAIL  test/s544-models-studio-depth.test.ts > S544 models density and studio tab depth > studio audio renders reference depth
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'VOICE INVENTORY'
+
+Expected: "VOICE INVENTORY"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeStudioToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesStudioAudio workspaceAudio mode and requestAudio result stageStudioChatImagesAudioRerankAdvanced APIsModelPromptRunRAW RESPONSERun a Studio request to see the raw response."
+
+ ❯ test/s544-models-studio-depth.test.ts:47:48
+     45|       const container = await renderModel({ studio: { ...studioIdle(),…
+     46|       const text = container.textContent ?? "";
+     47|       for (const label of labels) expect(text).toContain(label);
+       |                                                ^
+     48|     });
+     49|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/10]⎯
+
+ FAIL  test/s544-models-studio-depth.test.ts > S544 models density and studio tab depth > studio rerank renders reference depth
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'CONTRACT DETAILS'
+
+- Expected
++ Received
+
+- CONTRACT DETAILS
++ Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeStudioToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesStudioRerank workspaceRerank requestRanked resultsStudioChatImagesAudioRerankAdvanced APIsModelQueryDocuments (one per line)first document
++ second documentRunRAW RESPONSERun a Studio request to see the raw response.
+
+ ❯ test/s544-models-studio-depth.test.ts:47:48
+     45|       const container = await renderModel({ studio: { ...studioIdle(),…
+     46|       const text = container.textContent ?? "";
+     47|       for (const label of labels) expect(text).toContain(label);
+       |                                                ^
+     48|     });
+     49|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/10]⎯
+
+ FAIL  test/s544-models-studio-depth.test.ts > S544 models density and studio tab depth > studio advanced renders reference depth
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'REQUEST TEMPLATE'
+
+- Expected
++ Received
+
+- REQUEST TEMPLATE
++ Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeStudioToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesStudioAdvanced workspaceEndpoint familyResponse workspaceStudioChatImagesAudioRerankAdvanced APIsJSON body{
++   "model": "moonshot/kimi-k2.5",
++   "max_tokens": 64,
++   "messages": [{ "role": "user", "content": "Hello" }]
++ }RunRAW RESPONSERun a Studio request to see the raw response.
+
+ ❯ test/s544-models-studio-depth.test.ts:47:48
+     45|       const container = await renderModel({ studio: { ...studioIdle(),…
+     46|       const text = container.textContent ?? "";
+     47|       for (const label of labels) expect(text).toContain(label);
+       |                                                ^
+     48|     });
+     49|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/10]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  10 failed | 7 passed (17)
+   Start at  07:59:52
+   Duration  15.27s (transform 6.40s, setup 0ms, collect 20.28s, tests 2.73s, environment 2.75s, prepare 1.03s)
+
+
+
+FINAL_TEST_SHA256=1FD561AC480427BA51A6A3465221A9DB026AADB8A478103AB7E4FFE1E396A922

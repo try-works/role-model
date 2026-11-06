@@ -1,0 +1,94 @@
+{
+  "capturedAt": "2026-11-03T19:55:18.007Z",
+  "route": "http://127.0.0.1:3480/",
+  "preFix": {
+    "svgs": 8,
+    "chartPaths": [
+      {
+        "title": "Token usage over time",
+        "paths": 1
+      },
+      {
+        "title": "Cache efficiency trend",
+        "paths": 0
+      },
+      {
+        "title": "Cost avoided over time",
+        "paths": 0
+      }
+    ],
+    "requests": [
+      "/api/metrics/page?windowMs=86400000",
+      "/api/role-model/telemetry/summary?windowMs="
+    ]
+  },
+  "reference3456": {
+    "url": "http://127.0.0.1:3456/app",
+    "note": "production window had no request items; all charts there render the empty copy (no series paths), so the expected behaviour with data is a real series and without data an explicit empty state.",
+    "chartSvgsWithPaths": 0
+  },
+  "after": {
+    "url": "http://127.0.0.1:3484/",
+    "overviewState": "success",
+    "overviewBuckets": "1",
+    "overviewItems": "1",
+    "cards": [
+      {
+        "title": "Model pool",
+        "paths": 0,
+        "rects": 0,
+        "emptyInsidePlot": null
+      },
+      {
+        "title": "Token usage over time",
+        "paths": 3,
+        "rects": 0,
+        "emptyInsidePlot": null
+      },
+      {
+        "title": "Cache efficiency trend",
+        "paths": 2,
+        "rects": 0,
+        "emptyInsidePlot": null
+      },
+      {
+        "title": "Effective cost over time",
+        "paths": 0,
+        "rects": 0,
+        "emptyInsidePlot": "No request costs have been recorded for this slice yet."
+      },
+      {
+        "title": "Cost avoided over time",
+        "paths": 0,
+        "rects": 0,
+        "emptyInsidePlot": "No routing or cache savings have been recorded yet."
+      },
+      {
+        "title": "Latency trend",
+        "paths": 2,
+        "rects": 0,
+        "emptyInsidePlot": null
+      },
+      {
+        "title": "Success vs failure volume",
+        "paths": 0,
+        "rects": 2,
+        "emptyInsidePlot": null
+      }
+    ],
+    "requests": {
+      "metrics": "http://127.0.0.1:3484/api/metrics/page?windowMs=86400000",
+      "summary": "http://127.0.0.1:3484/api/role-model/telemetry/summary?windowMs=86400000"
+    }
+  },
+  "observeRouting": {
+    "url": "http://127.0.0.1:3484/observe/routing",
+    "volumeEmptyInsidePlot": "No routing analytics volume recorded yet.",
+    "emptyCount": 1
+  },
+  "requests": {
+    "url": "http://127.0.0.1:3484/requests",
+    "volumeEmptyInsidePlot": "No request volume data recorded yet.",
+    "emptyCount": 1
+  }
+}

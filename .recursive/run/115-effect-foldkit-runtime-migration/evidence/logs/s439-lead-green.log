@@ -1,0 +1,15 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s404-endpoint-admission.test.ts (9 tests) 75ms
+ ✓ test/s439-endpoint-completion.test.ts (8 tests) 230ms
+ ✓ test/s397-device-auth-form.test.ts (15 tests) 489ms
+   ✓ S398 device-authorization retry control (scene + real client) > start click dispatches the read, its real client result renders retry, and retry click re-dispatches it  383ms
+ ✓ test/s425-device-auth-correctness.test.ts (16 tests) 960ms
+   ✓ S440 pending view (scene + real client) > start click restores the host pending session and renders the code + safe link  438ms
+
+ Test Files  4 passed (4)
+      Tests  48 passed (48)
+   Start at  06:42:20
+   Duration  17.83s (transform 9.86s, setup 0ms, collect 52.23s, tests 1.75s, environment 8.42s, prepare 2.41s)
+

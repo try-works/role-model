@@ -38,8 +38,10 @@ export class RouteDecisionProducer extends Context.Service<
   /** Live implementation backed by the pure kernel; build it once and reuse it. */
   static readonly layer = Layer.effect(
     RouteDecisionProducer,
+    // biome-ignore lint/correctness/useYield: the layer builds synchronously; nothing needs to be yielded.
     Effect.gen(function* () {
       // Untraced: a synchronous pure kernel is not a useful tracing boundary on its own.
+      // biome-ignore lint/correctness/useYield: the kernel is synchronous and returns its decision directly.
       const decide = Effect.fnUntraced(function* (input: RouteRequestInput) {
         return routeRequest(input);
       });

@@ -1,0 +1,23 @@
+# S2 SQL consumer suite (public)
+COMMAND: vitest run test/run101-r2-public-queue-store.test.ts
+CWD: D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+TIMESTAMP: 2026-10-24T13:38:37.346Z
+EXIT_CODE: 0
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:51976) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run101-r2-public-queue-store.test.ts (4 tests) 1829ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp2 R2 public queue store > lets only one claimer hold a job while the lock is live  404ms
+   ✓ @recursive:101-effect-mq-queue-rebuild @sp2 R2 public queue store > re-claims a job whose holder died without acknowledging  1349ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  21:38:40
+   Duration  5.71s (transform 2.09s, setup 0ms, collect 3.27s, tests 1.83s, environment 0ms, prepare 211ms)
+
+[exit=0]
+
+

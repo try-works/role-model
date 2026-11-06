@@ -1,0 +1,5 @@
+timestamp_utc: 2026-10-24T10:18:56.7111791Z
+phase: typecheck (production source, includes repaired implementation)
+cwd: role-model-router/packages/ui-parity
+command: node ../../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit
+exit_code: 0

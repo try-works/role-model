@@ -1,0 +1,54 @@
+{
+  "liveCount": 6,
+  "reviewCount": 3,
+  "endpoints": [
+    {
+      "endpointId": "openai.personal.primary.us-east-1.fast",
+      "modelId": "openai/gpt-4.1-mini-fast",
+      "sourceType": "remote",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true,
+      "routingEligible": true
+    },
+    {
+      "endpointId": "anthropic.team.shared.us-east-1.default",
+      "modelId": "claude-3.7-sonnet",
+      "sourceType": "remote",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true,
+      "routingEligible": true
+    },
+    {
+      "endpointId": "review.judge.us-east-1.gpt-5.5",
+      "modelId": "chatgpt/gpt-5.5",
+      "sourceType": "remote",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true,
+      "routingEligible": true
+    },
+    {
+      "endpointId": "review.subject.alpha.us-east-1.gpt-5.4",
+      "modelId": "chatgpt/gpt-5.4",
+      "sourceType": "remote",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true,
+      "routingEligible": true
+    },
+    {
+      "endpointId": "review.subject.beta.us-east-1.gpt-5.4-mini",
+      "modelId": "chatgpt/gpt-5.4-mini",
+      "sourceType": "remote",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true,
+      "routingEligible": true
+    },
+    {
+      "endpointId": "cli.local.coder",
+      "modelId": "gpt-5.4",
+      "sourceType": "local",
+      "healthStatus": "healthy",
+      "benchmarkEligible": true,
+      "routingEligible": true
+    }
+  ]
+}

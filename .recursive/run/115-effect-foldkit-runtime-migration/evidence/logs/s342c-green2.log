@@ -1,0 +1,42 @@
+COMMAND: node --test scripts/runtime/parity-selfcheck.test.mjs (S343c GREEN)
+EXIT_CODE=0
+✔ S294 PASSED when both builds are deterministic, clean and the dual comparison is recorded (3.0264ms)
+✔ S294 a React-vs-Foldkit difference is classified, never forced equal (0.38ms)
+✔ S294 FAILED when a build is nondeterministic across the two runs (0.5103ms)
+✔ S294 FAILED when a capture surfaces console or network issues (0.3696ms)
+✔ S294 FAILED (not NOT_RUN) when a build target is unavailable (0.3311ms)
+✔ S294 NOT_RUN with exit 2 only when no browser is available (0.2197ms)
+✔ S294 runSelfcheck captures every target twice (two runs) and evaluates the result (1.7029ms)
+✔ S294 partitions favicon harness noise out of the capture issues while recording it (0.5868ms)
+✔ S295 FAILED when a target has fewer than exactly two captures (0.419ms)
+✔ S295 FAILED when a target entry is missing from the plan (0.381ms)
+✔ S295 emits per-target ignoredIssues and an ignored count in the JSON (0.3651ms)
+✔ S295 emits comparisons on the FAILED path and computes reactVsReact from the two react shas (0.2813ms)
+✔ S295 evidence.targets lists both run PNGs per target and echoes executable/temp roots (0.302ms)
+✔ S295 runSelfcheck contains a capture failure as a FAILED JSON result, not a rejection (0.3875ms)
+✔ S295 r2 FAILED unless there are exactly two runs and one capture per target per run (0.3263ms)
+✔ S295 r2 enforces the required temp drive (E: passes, another drive fails) (0.3959ms)
+✔ S295 r2 launchChrome kills its child when the DevTools endpoint never appears (206.0677ms)
+✔ S295 r2 main emits FAILED JSON when the injected launch rejects (no uncaught rejection) (537.8963ms)
+✔ S295 r3 launchChrome rejects a spawn error and kills the child (no orphan, no uncaught error) (21.012ms)
+✔ S297 PASSED when the one-class mutant changes the capture and the unchanged pair is identical (0.8755ms)
+✔ S297 FAILED when the mutant capture is identical to the baseline (blind harness) (0.227ms)
+✔ S297 FAILED when the harness reports detected:false although the shas differ (0.2343ms)
+✔ S297 FAILED when the unchanged baseline pair itself differs (0.1881ms)
+✔ S297 FAILED on capture issues and NOT_RUN (exit 2) without a browser (0.2281ms)
+✔ S297 runMutationCheck captures baseline twice and the mutant once via the adapter (0.5397ms)
+✔ S298 mutation JSON carries ignoredIssues/ignoredCount, baseline run identity and PNG evidence (0.3615ms)
+✔ S294 planTargets names the React and Foldkit static roots from the repo root (0.373ms)
+✔ S342c PARITY_SELFCHECK_TEMP_DRIVE selects the required drive for the selfcheck path (1.316ms)
+✔ S342c an unavailable PARITY_SELFCHECK_TEMP_DRIVE keeps the existing fail-fast (0.7229ms)
+✔ S343c an EMPTY PARITY_SELFCHECK_TEMP_DRIVE still applies the default E: guard (0.3316ms)
+✔ S342c the default required drive stays E: when the env override is absent (0.2825ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 31
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 922.6945
+

@@ -19,6 +19,8 @@ import {
   type EvaluationScoreJob,
   makeEvaluationScoreQueue,
 } from "./evaluation.js";
+import type { AttemptEvidence, AttemptFenceStore, AttemptLease, FencePayload } from "./fence.js";
+import { AttemptFenceRejectedError } from "./fence.js";
 import {
   LEARNER_DERIVE_QUEUE,
   LEARNER_PROMOTE_QUEUE,
@@ -44,8 +46,20 @@ import { storeLayerForQueuePolicy } from "./store.js";
  * cancel real I/O. Handlers with cancellable work must forward it; handlers whose work is not
  * signal-capable must say so at their call site instead of accepting it and ignoring it.
  */
+export interface QueueAttemptFenceContext {
+  readonly leaseId: string;
+  /** Persists this attempt's evidence; on success the worker may let the queue ack. */
+  readonly recordEvidence: (payload: FencePayload) => AttemptEvidence;
+}
+
 export interface QueueAttemptContext {
   readonly attempt: number;
+  /**
+   * Run 115 R30: when the worker has a durable attempt fence, the handler records
+   * its evidence here. The worker rejects the completion ack if it is missing, so
+   * evidence-before-ack is enforced by the queue boundary rather than by convention.
+   */
+  readonly fence?: QueueAttemptFenceContext;
   readonly signal?: AbortSignal;
 }
 
@@ -53,10 +67,7 @@ export interface ReplayDispatchWorkerOptions {
   readonly stateRoot: string;
   readonly policy: ResolvedQueuePolicy;
   /** Runs one attempt for one job; throwing makes the attempt retryable. */
-  readonly handler: (
-    job: ReplayDispatchJob,
-    context: QueueAttemptContext,
-  ) => Promise<void>;
+  readonly handler: (job: ReplayDispatchJob, context: QueueAttemptContext) => Promise<void>;
   /** Called after a failed attempt, before the store's backoff elapses. */
   readonly onAttemptFailure?: (error: unknown, job: ReplayDispatchJob) => void;
   /** Run 101 addendum 08: the attempt outcome (attempt, budget, willRetry) the guide's onJobFailure carries. */
@@ -73,6 +84,8 @@ export interface ReplayDispatchWorkerOptions {
   readonly killSwitchPollIntervalMs?: number;
   /** How often a running attempt re-reads its row for an operator cancel. Defaults to 1 s. */
   readonly cancellationPollIntervalMs?: number;
+  /** Run 115 R30: durable attempt fence (evidence-before-ack, kill/lease fences). */
+  readonly fence?: AttemptFenceStore;
 }
 
 export interface ReplayDispatchWorker {
@@ -88,10 +101,7 @@ export interface EvaluationScoreWorkerOptions {
    * it writes (or updates) the evaluation evidence row before returning, and a
    * throw leaves the job claimable so the store retries it.
    */
-  readonly handler: (
-    job: EvaluationScoreJob,
-    context: QueueAttemptContext,
-  ) => Promise<void>;
+  readonly handler: (job: EvaluationScoreJob, context: QueueAttemptContext) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: EvaluationScoreJob) => void;
   /** Run 101 addendum 08: the attempt outcome (attempt, budget, willRetry) the guide's onJobFailure carries. */
   readonly onAttemptOutcome?: (outcome: {
@@ -104,6 +114,8 @@ export interface EvaluationScoreWorkerOptions {
   readonly shippedRoot?: string;
   readonly killSwitchPollIntervalMs?: number;
   readonly cancellationPollIntervalMs?: number;
+  /** Run 115 R30: durable attempt fence (evidence-before-ack, kill/lease fences). */
+  readonly fence?: AttemptFenceStore;
 }
 
 export interface LearnerDeriveWorkerOptions {
@@ -128,16 +140,15 @@ export interface LearnerDeriveWorkerOptions {
   readonly shippedRoot?: string;
   readonly killSwitchPollIntervalMs?: number;
   readonly cancellationPollIntervalMs?: number;
+  /** Run 115 R30: durable attempt fence (evidence-before-ack, kill/lease fences). */
+  readonly fence?: AttemptFenceStore;
 }
 
 export interface LearnerPromoteWorkerOptions {
   readonly stateRoot: string;
   readonly policy: ResolvedQueuePolicy;
   /** Promotes one candidate; serialized by the queue's concurrency. */
-  readonly handler: (
-    job: LearnerPromoteJob,
-    context: QueueAttemptContext,
-  ) => Promise<void>;
+  readonly handler: (job: LearnerPromoteJob, context: QueueAttemptContext) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: LearnerPromoteJob) => void;
   /** Run 101 addendum 08: the attempt outcome (attempt, budget, willRetry) the guide's onJobFailure carries. */
   readonly onAttemptOutcome?: (outcome: {
@@ -150,6 +161,8 @@ export interface LearnerPromoteWorkerOptions {
   readonly shippedRoot?: string;
   readonly killSwitchPollIntervalMs?: number;
   readonly cancellationPollIntervalMs?: number;
+  /** Run 115 R30: durable attempt fence (evidence-before-ack, kill/lease fences). */
+  readonly fence?: AttemptFenceStore;
 }
 
 /**
@@ -169,6 +182,7 @@ function runClaimLoopWorker<Job>({
   onAttemptOutcome,
   killSwitchPollIntervalMs,
   cancellationPollIntervalMs,
+  fence,
 }: {
   readonly stateRoot: string;
   readonly shippedRoot?: string;
@@ -203,6 +217,7 @@ function runClaimLoopWorker<Job>({
   }) => void;
   readonly killSwitchPollIntervalMs?: number;
   readonly cancellationPollIntervalMs?: number;
+  readonly fence?: AttemptFenceStore;
 }): ReplayDispatchWorker {
   const layer = storeLayerForQueuePolicy({ stateRoot, policy });
   const pollMs = killSwitchPollIntervalMs ?? 1_000;
@@ -266,8 +281,56 @@ function runClaimLoopWorker<Job>({
        */
       const runAttempt = Effect.fnUntraced(
         function* (job: Job, info: { readonly id: string; readonly attempts: number }) {
+          /**
+           * Run 115 R30: the fence lease is taken before the handler runs and its completion is
+           * required after the handler succeeds. The queue's own ack is the success of this effect,
+           * so a missing evidence row or a fenced lease prevents that ack and the store retries.
+           */
+          const lease: AttemptLease | undefined =
+            fence === undefined
+              ? undefined
+              : yield* Effect.try({
+                  try: () =>
+                    fence.beginAttempt({
+                      attempt: info.attempts,
+                      jobId: String(info.id),
+                      leaseMs: policy.lockExpirationMs,
+                      owner: `${process.pid}:${queueName}`,
+                    }),
+                  catch: (error) => error,
+                });
+          if (lease?.completed === true) {
+            /**
+             * The fence completed before the queue ack landed, so this retry is the idempotent
+             * replay of work already durable: success here lets the queue record its ack without
+             * rerunning the handler.
+             */
+            return;
+          }
+          const context: QueueAttemptContext = {
+            attempt: info.attempts,
+            ...(lease === undefined || fence === undefined
+              ? {}
+              : {
+                  fence: {
+                    leaseId: lease.leaseId,
+                    recordEvidence: (payload: FencePayload) => fence.recordEvidence(lease, payload),
+                  },
+                }),
+          };
           return yield* Effect.tryPromise({
-            try: (signal) => handler(job, { attempt: info.attempts, signal }),
+            try: async (signal) => {
+              await handler(job, { ...context, signal });
+              if (lease !== undefined && fence !== undefined) {
+                const completion = fence.complete(lease);
+                if (!completion.accepted) {
+                  throw new AttemptFenceRejectedError(
+                    completion.reason,
+                    `${queueName} attempt fence rejected ${completion.reason} for ${String(info.id).slice(0, 48)}`,
+                  );
+                }
+              }
+            },
             catch: (error) => {
               onAttemptFailure?.(error, job);
               const outcome = {
@@ -307,6 +370,9 @@ function runClaimLoopWorker<Job>({
           const watch = Effect.gen(function* () {
             for (;;) {
               yield* Effect.sleep(Duration.millis(cancelPollMs));
+              if (fence?.isKilled(String(info.id))) {
+                return yield* Effect.fail(new AttemptFenceRejectedError("killed"));
+              }
               const row = readQueueJobState({
                 stateRoot,
                 queue: queueName,
@@ -382,6 +448,7 @@ export function runLearnerDeriveWorker(options: LearnerDeriveWorkerOptions): Rep
     shippedRoot: options.shippedRoot,
     policy: options.policy,
     queueName: LEARNER_DERIVE_QUEUE,
+    fence: options.fence,
     makeQueue: makeLearnerDeriveQueue as never,
     handler: options.handler,
     onAttemptFailure: options.onAttemptFailure,
@@ -399,6 +466,7 @@ export function runLearnerPromoteWorker(
     shippedRoot: options.shippedRoot,
     policy: options.policy,
     queueName: LEARNER_PROMOTE_QUEUE,
+    fence: options.fence,
     makeQueue: makeLearnerPromoteQueue as never,
     handler: options.handler,
     onAttemptFailure: options.onAttemptFailure,
@@ -420,6 +488,7 @@ export function runEvaluationScoreWorker(
     shippedRoot: options.shippedRoot,
     policy: options.policy,
     queueName: EVALUATION_SCORE_QUEUE,
+    fence: options.fence,
     makeQueue: makeEvaluationScoreQueue as never,
     handler: options.handler,
     onAttemptFailure: options.onAttemptFailure,
@@ -442,6 +511,7 @@ export function runReplayDispatchWorker(
     shippedRoot: options.shippedRoot,
     policy: options.policy,
     queueName: REPLAY_DISPATCH_QUEUE,
+    fence: options.fence,
     makeQueue: makeReplayDispatchQueue as never,
     handler: options.handler,
     onAttemptFailure: options.onAttemptFailure,

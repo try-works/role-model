@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s618-models-wiring.test.ts (11 tests) 2842ms
+   ✓ S618 models route wiring > renders every model as a real selectable control and selects the state model  1329ms
+   ✓ S618 models route wiring > renders benchmark judge options from endpoint ids and stores the selected id  786ms
+   ✓ S618 models route wiring > renders the remove flow and controller footer actions for the selected model  400ms
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  07:44:49
+   Duration  155.50s (transform 84.69s, setup 0ms, collect 136.53s, tests 2.84s, environment 11.25s, prepare 1.57s)
+

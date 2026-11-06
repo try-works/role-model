@@ -1,0 +1,80 @@
+✖ S247: no test may exceed its recorded synthetic-click budget (740.3723ms)
+✖ S247: every file with clicks is recorded in the budget (574.0963ms)
+✖ S247: the total click count does not grow (640.2523ms)
+✔ S247: every recorded budget entry names the user path it exercises (4.2111ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 1
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2427.5866
+
+✖ failing tests:
+
+test at test\s247-click-budget.test.mjs:75:1
+✖ S247: no test may exceed its recorded synthetic-click budget (740.3723ms)
+  AssertionError [ERR_ASSERTION]: lower the site count with a scene/story conversion instead of adding clicks
+  + actual - expected
+  
+  + [
+  +   [
+  +     's628-charts-data-binding.test.ts',
+  +     1
+  +   ]
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///D:/DEV/rm-clean/wt-7a7134ac/role-model-router/apps/runtime-ui-next/test/s247-click-budget.test.mjs:78:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ [ 's628-charts-data-binding.test.ts', 1 ] ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\s247-click-budget.test.mjs:81:1
+✖ S247: every file with clicks is recorded in the budget (574.0963ms)
+  AssertionError [ERR_ASSERTION]: record a new click site in BUDGET with its justification
+  + actual - expected
+  
+  + [
+  +   's628-charts-data-binding.test.ts'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///D:/DEV/rm-clean/wt-7a7134ac/role-model-router/apps/runtime-ui-next/test/s247-click-budget.test.mjs:84:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 's628-charts-data-binding.test.ts' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\s247-click-budget.test.mjs:87:1
+✖ S247: the total click count does not grow (640.2523ms)
+  AssertionError [ERR_ASSERTION]: synthetic clicks 37 > budget 36
+      at TestContext.<anonymous> (file:///D:/DEV/rm-clean/wt-7a7134ac/role-model-router/apps/runtime-ui-next/test/s247-click-budget.test.mjs:91:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+--- PROVENANCE ---
+cwd: D:\DEV\rm-clean\wt-7a7134ac\role-model-router\apps\runtime-ui-next
+tree: 7a7134acd11aa3a8d61eb50110958d7ab73be0ca
+commit: 7a7134ac
+exit: 1
+command: node --test test/s247-click-budget.test.mjs

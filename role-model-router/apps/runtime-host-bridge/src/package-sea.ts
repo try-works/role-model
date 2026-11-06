@@ -9,6 +9,7 @@ import {
   readdir,
   rename,
   rm,
+  stat,
   utimes,
   writeFile,
 } from "node:fs/promises";
@@ -151,7 +152,7 @@ const buildTargets: readonly BuildTarget[] = [
 
 const standaloneReleaseCopies = [
   {
-    sourceRelativePath: "role-model-router/apps/runtime-ui/build/client",
+    sourceRelativePath: "role-model-router/apps/runtime-ui-next/dist/client",
     destinationRelativePath: "build/client",
   },
   {
@@ -846,7 +847,7 @@ async function writeSha256(filePath: string): Promise<string> {
   return sha;
 }
 
-async function bundleSeaEntrypoint(): Promise<void> {
+async function bundleSeaEntrypoint(buildIdentity: string): Promise<void> {
   const seaEntryPath = path.join(distRoot, "sea", "cli.cjs");
   await mkdir(path.dirname(seaEntryPath), { recursive: true });
   await buildBundle({
@@ -858,6 +859,11 @@ async function bundleSeaEntrypoint(): Promise<void> {
     target: "node24",
     conditions: ["runtime"],
     sourcemap: false,
+    // S624: a SEA built from byte-identical host code must still carry the build it
+    // represents. Without this stamp the executable sha stayed at the 514 value while the
+    // manifest version moved through 534/548, so a manifest sha could not identify the build.
+    // Commit identity (not wall-clock time) keeps same-input builds reproducible.
+    banner: { js: `globalThis.__RM_PACKAGE_BUILD_ID__ = ${JSON.stringify(buildIdentity)};` },
   });
 }
 
@@ -980,6 +986,7 @@ export async function packageSeaRuntime(): Promise<{
           : packageBuildDateIso,
     },
   });
+  const buildIdentity = `${versionInfo.version}@${versionInfo.commit}`;
   const releaseTarget = `${buildTarget.platform}-${buildTarget.arch}`;
   runOrThrow(
     process.execPath,
@@ -992,7 +999,7 @@ export async function packageSeaRuntime(): Promise<{
   );
   await buildLlamaSwapAsset(buildTarget);
   await mkdir(distRoot, { recursive: true });
-  await bundleSeaEntrypoint();
+  await bundleSeaEntrypoint(buildIdentity);
   const seaConfigPath = await writeSeaConfig(buildTarget);
   try {
     runOrThrow(process.execPath, ["--experimental-sea-config", seaConfigPath], routerRoot);
@@ -1012,6 +1019,21 @@ export async function packageSeaRuntime(): Promise<{
   await injectSeaBlob(outputPath, blobPath);
 
   await stageStandaloneReleaseFiles(releaseDir);
+  // S624: the packaged client is an input to the executable's identity. If the release
+  // directory still carries an executable older than the client it ships, the review build is
+  // mixing generations; fail instead of publishing a manifest that names a stale binary.
+  const packagedClientRoot = path.join(releaseDir, "build", "client");
+  const exeStat = await stat(outputPath);
+  try {
+    const clientStat = await stat(path.join(packagedClientRoot, "assets", "main.js"));
+    if (exeStat.mtimeMs + 5_000 < clientStat.mtimeMs) {
+      throw new Error(
+        `packaged executable is older than the client bundle it ships (${path.basename(outputPath)} ${exeStat.mtime.toISOString()} < ${clientStat.mtime.toISOString()})`,
+      );
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
   const trackBDistributionRoot = process.env.ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT?.trim();
   const trackBRuntime = trackBDistributionRoot
     ? await stageTrackBRuntimeDistribution({
@@ -1052,6 +1074,7 @@ export async function packageSeaRuntime(): Promise<{
         core_payload_sha256: sha256,
         source_tree: sourceTree,
         version: versionInfo.version,
+        package_build_id: buildIdentity,
         commit: versionInfo.commit,
         build_date: versionInfo.build_date,
         ...profile,

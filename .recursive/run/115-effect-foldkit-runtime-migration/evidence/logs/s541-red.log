@@ -1,0 +1,21 @@
+# S541 RED — strict per-page density RED before the implementation
+
+provenance test/s541-density.test.ts sha256: d9e40cbc6ec91f73235128d1cbb133bd957dc0bcc80d7b89068f7ea4c8a8358b
+state: the density test was written first and run against the HEAD implementation of the learning/models/studio pages (before the reference envelopes were added in this slice).
+command: vitest run test/s541-density.test.ts (cwd role-model-router/apps/runtime-ui-next)
+observed result: Test Files 1 failed (1) | Tests 11 failed (11) | VITEST_EXIT=1
+
+Failures per page (reference sub-section labels absent on HEAD):
+- learning: "This machine's owner is trusted", "Reading live replay and evaluation state", "The newest replay decisions among the last 0 observations"
+- learning packs: "One row per role · task", "top three ranked endpoints"
+- learning evidence: "PAIRED HOLDOUT TASKS", "BASELINE SAMPLES", "ADVISORY SAMPLES", "GUARDRAIL", "Evidence loss by reason"
+- learning decisions: "This machine's owner is trusted", "Advisory state", "Observation origin"
+- learning history: "This machine's owner is trusted", "What the replay, evaluation and learning loop did over the window"
+- models: "MODELS", "Make primary controller", "Open Roles", "Open Benchmark", "Live latency p50", "Live failure rate", "Difficulty mix"
+- studio chat: "Run request", "Result workspace"
+- studio images: "Images workspace", "Image request modes", "Run image request", "Image result stage", "GENERATED IMAGES"
+- studio audio: "Audio workspace", "Audio mode and request", "Run audio request", "Audio result stage", "VOICE INVENTORY"
+- studio rerank: "Rerank workspace", "Contract /v1/rerank", "Submit rerank request", "Ranked results", "CONTRACT DETAILS"
+- studio advanced: "Advanced workspace", "Endpoint family", "Submit advanced request", "Response workspace", "REQUEST TEMPLATE"
+
+Honesty note: the raw per-test transcript was captured to the run console at RED time; this file records the observed summary from that run (11/11 failed, exit 1). It was NOT produced by re-running after the implementation.

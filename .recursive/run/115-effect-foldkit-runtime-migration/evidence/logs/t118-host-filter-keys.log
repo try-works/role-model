@@ -1,0 +1,5 @@
+POST /api/role-model/telemetry/query status=200
+appliedQuery.filters={"sourceTypes":["local"],"reasoningEfforts":["high"],"effortSources":["variant"],"requestedRoleIds":["role-x"],"selectedStrategies":["baseline"],"difficultyBuckets":["easy"],"taxonomyGroupIds":["engineering"],"taxonomyRoleIds":["coder"],"taxonomyTaskTypes":["coder.review"],"taxonomyTaskVariants":["deep-audit"],"taxonomyCapabilityIds":["cap-1","cap-2"],"taxonomyModalityIds":["text"],"taxonomyToolClassIds":["read_file"]}
+keys=sourceTypes,reasoningEfforts,effortSources,requestedRoleIds,selectedStrategies,difficultyBuckets,taxonomyGroupIds,taxonomyRoleIds,taxonomyTaskTypes,taxonomyTaskVariants,taxonomyCapabilityIds,taxonomyModalityIds,taxonomyToolClassIds
+
+# Probed against the production :3456 host: every reference taxonomy/strategy/effort/source key is accepted and echoed in appliedQuery.filters.

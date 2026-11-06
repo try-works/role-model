@@ -1,0 +1,72 @@
+{
+  "version": "0.0.20-657-g7f8e420e",
+  "commit": "7f8e420e",
+  "sha256": "771063c4def0ff2de6b8a8833f129028e3ab6e76d188048daccd240150387787",
+  "pid": 484,
+  "mainHost": "3480",
+  "health": "healthy",
+  "suite": {
+    "files": 115,
+    "tests": 1000,
+    "exitCode": 0,
+    "source": "pnpm --filter runtime-ui-next test at 7f8e420e (VITEST_MAX_THREADS=1)"
+  },
+  "benchmark": {
+    "runId": "81fa44ab-f52d-4c16-a7c1-af5658448e8a",
+    "phaseSamples": "Phase 1 0/0 -> Phase 1 20% 12/60 model 3/2 case 2/12 -> Phase 3 80% 48/60 -> Phase 3 Complete 60/60",
+    "terminal": "0/24 cases executed — 24 failed",
+    "terminalText": "Phase 3 of 3 · Complete\n\n100%\n\n60 / 60 steps\n\nfinal scores recorded\n\nCompleted · 81fa44ab-f52d-4c16-a7c1-af5658448e8a\n\n0/24 cases executed — 24 failed\n\np17-tools-multi-hard: Benchmark execution failed. · Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.\n\nchatgpt/gpt-5.4 — overall 0% · 0/12 cases passed\n\nchatgpt/gpt-5.4-mini — overall 0% · 0/12 cases passed",
+    "detail": {
+      "cases": "0/24 cases passed — 24 failed",
+      "rows": 24,
+      "fails": 24,
+      "firstFail": "p17-tools-multi-hard\thard\t0%\tFAIL\tBenchmark execution failed.\tCodex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.\t—"
+    }
+  },
+  "mockPassing": {
+    "runId": "b8aa0786-9690-4db7-8c4c-8308be657f2b",
+    "status": "completed",
+    "detail": {
+      "cases": "20/24 cases passed — 4 failed",
+      "rows": 24,
+      "passes": 20,
+      "fails": 4,
+      "firstRow": "p17-tools-multi-hard\thard\t82%\tPASS\tMock judge: the deliverable addresses the requested capability.\t{ \"tool_calls\": [] }\t—"
+    }
+  },
+  "regressions": {
+    "requests": {
+      "route": "/requests",
+      "title": "Requests | RM3 Foldkit shell",
+      "charts": 9,
+      "tables": 9,
+      "visible": 0,
+      "srOnly": 9,
+      "hasQueues": true,
+      "railModels": true
+    },
+    "observeRouting": {
+      "route": "/observe/routing",
+      "title": "Observe routing | RM3 Foldkit shell",
+      "charts": 9,
+      "tables": 9,
+      "visible": 0,
+      "srOnly": 9,
+      "hasQueues": true,
+      "railModels": true
+    },
+    "queues": {
+      "route": "/observe/queues",
+      "title": "Queues | RM3 Foldkit shell",
+      "charts": 0,
+      "tables": 0,
+      "visible": 0,
+      "srOnly": 0,
+      "hasQueues": true,
+      "railModels": true
+    },
+    "sidebarRailModels": true
+  },
+  "openQuestion": "OPEN: host reports status=completed for a run where 12/12 cases on one endpoint failed and 24/24 UI cases failed; should terminal completed require all cases executed successfully, or expose failed/partial?",
+  "observedIssue": "On the mock root (two endpoints with the same displayName), /requests crashed with Foldkit duplicate-series 'duplicate Gpt 5.4 / requestCount'; clean review root renders 9 charts. UI should dedupe series by endpoint id."
+}

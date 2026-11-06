@@ -1,0 +1,61 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+ ❯ test/s13b-foldkit-chart.test.ts (10 tests | 6 failed) 97ms
+   ✓ RM3 chart primitive > renders a pure SVG with axes, one token-coloured path per series, points and an accessible name 30ms
+   ✓ RM3 chart primitive > renders a numeric HTML text alternative with a caption, headers and every value 6ms
+   ✓ RM3 chart primitive > renders an explicit empty state instead of an empty chart 2ms
+   × RM3 chart states and render policy > loading is its own state: a live status message, no chart and no table 19ms
+     → Expected element matching "[data-chart-status="loading"]" to exist but it does not.
+   × RM3 chart states and render policy > error is its own state with a bounded, single-line reason 2ms
+     → (0 , boundedChartReason) is not a function
+   × RM3 chart states and render policy > stale is its own state: data stays, with the caller-supplied age and rule 2ms
+     → Expected element matching "[data-chart-status="stale"]" to exist but it does not.
+   × RM3 chart states and render policy > truncated is its own state: the chart stays and the dropped point count is visible 2ms
+     → Expected element matching "[data-chart-status="truncated"]" to exist but it does not.
+   × RM3 chart states and render policy > no-data is its own explicit state, not a loading spinner or an empty chart 1ms
+     → Expected element matching "[data-chart-status="empty"]" to exist but it does not.
+   × RM3 chart states and render policy > ready is explicit and still renders the chart 1ms
+     → Expected element matching "[data-chart-status="ready"]" to exist but it does not.
+   ✓ RM3 chart states and render policy > is deterministic: the same (series, state) renders the same markup twice, with no ids 29ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s13b-foldkit-chart.test.ts > RM3 chart states and render policy > loading is its own state: a live status message, no chart and no table
+Error: Expected element matching "[data-chart-status="loading"]" to exist but it does not.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  test/s13b-foldkit-chart.test.ts > RM3 chart states and render policy > error is its own state with a bounded, single-line reason
+TypeError: (0 , boundedChartReason) is not a function
+ ❯ test/s13b-foldkit-chart.test.ts:154:21
+    152|   it("error is its own state with a bounded, single-line reason", () =…
+    153|     const hostile = `first line\nsecond\tline ${"x".repeat(400)}`;
+    154|     const bounded = boundedChartReason(hostile);
+       |                     ^
+    155|     expect(bounded).not.toContain("\n");
+    156|     expect(bounded.length).toBeLessThanOrEqual(160);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  test/s13b-foldkit-chart.test.ts > RM3 chart states and render policy > stale is its own state: data stays, with the caller-supplied age and rule
+Error: Expected element matching "[data-chart-status="stale"]" to exist but it does not.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  test/s13b-foldkit-chart.test.ts > RM3 chart states and render policy > truncated is its own state: the chart stays and the dropped point count is visible
+Error: Expected element matching "[data-chart-status="truncated"]" to exist but it does not.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  test/s13b-foldkit-chart.test.ts > RM3 chart states and render policy > no-data is its own explicit state, not a loading spinner or an empty chart
+Error: Expected element matching "[data-chart-status="empty"]" to exist but it does not.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  test/s13b-foldkit-chart.test.ts > RM3 chart states and render policy > ready is explicit and still renders the chart
+Error: Expected element matching "[data-chart-status="ready"]" to exist but it does not.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 4 passed (10)
+   Start at  01:32:14
+   Duration  4.55s (transform 1.81s, setup 0ms, collect 2.91s, tests 97ms, environment 805ms, prepare 229ms)
+

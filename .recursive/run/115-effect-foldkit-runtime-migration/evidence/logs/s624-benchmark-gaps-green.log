@@ -1,0 +1,51 @@
+# S624 benchmark remaining gaps — GREEN evidence
+
+date: 2026-11-04
+
+## Host contracts verified in runtime-host-bridge
+- GET /api/role-model/benchmark/runs/active (index.ts 19634) -> active run progress; poll GET /benchmark/runs/:id (19699).
+- POST /api/role-model/benchmark/runs (19719) accepts {mode, endpointIds, judgeEndpointId}.
+- DELETE /api/role-model/benchmark/endpoints/:id/data (19673) clears one endpoint.
+- GET/PUT /api/role-model/benchmark/preferences (19772/19781); PUT body {judgeEndpointId}.
+- GET /api/role-model/benchmark/summary carries caseAudits (latencyMs) used for p50/p95.
+
+## Gap 1 — subject selection
+- Per-endpoint checkboxes; persisted benchmarkSelectedEndpointIds; default all runnable endpoints.
+- Rendered "N of M selected"; Run disabled unless >=2 selected, judge is selected, and no run is active.
+- Run body now carries endpointIds (exact-body asserted).
+- s624 test: "renders subject checkboxes, N of M selected, and >=2-selected Run gating".
+
+## Gap 2 — per-model clear
+- Row Clear arms inline Confirm clear/Cancel; confirmation dispatches DELETE /api/role-model/benchmark/endpoints/{id}/data with body {}.
+- s624: rendered confirmation + exact DELETE body/path.
+
+## Gap 3 — judge preference persistence
+- New benchmarkPreferences readback on route entry; ReadbackLoaded hydrates benchmarkJudge.
+- Judge change dispatches SaveBenchmarkPreferences; PUT body {"judgeEndpointId": ...}; saved/failed messages.
+- s624: exact PUT body/path + hydration test.
+
+## Gap 4 — active-run progress polling
+- New benchmarkActiveRun readback; running active run starts PollBenchmarkRun.
+- Poll command sleeps 1500 ms, GET /benchmark/runs/:id; running result re-schedules polling; completed/failed stops and refreshes summary/runs/active.
+- s624: poll GET path, progress state, re-poll on running, no poll on completion.
+
+## Gap 5 — taxonomy filters
+- Role/Task/Capability selects persisted in benchmarkTaxonomyFilters; taxonomy table filtered to the selected dimension; real host taxonomyScores shape ({byRole,byTask,byCapability}) used.
+- s624: role/capability filtering and filter message state.
+
+## Gap 6 — real p50/p95
+- Summary parser carries caseAudits; route computes p50/p95 per endpoint with the reference percentile rule.
+- Rendered as "120 ms"/"200 ms" when present and an honest em dash when absent.
+- s624: exact percentile values + no-audits em dash.
+
+## Verification (raw transcripts committed alongside this summary)
+- Raw full suite at 7a7134ac (detached worktree, junctioned node_modules, clean app cwd): s624-benchmark-full-raw.log.
+  - Test Files 104 passed (104), Tests 952 passed (952) from the vitest stage.
+  - Process exit: 1, because the final node --test test/*.test.mjs stage hits the pre-existing S247 failure from s628-charts-data-binding.test.ts (1 unrecorded click; synthetic clicks 37 > budget 36). That test belongs to another lane and was already present at 7a7134ac; this task added no click sites.
+- UI tsc --noEmit at 7a7134ac: s624-benchmark-tsc-raw.log, exit 0.
+- S247 invariant tail at 7a7134ac: s624-benchmark-invariants-raw.log, exit 1 (same s628 unrecorded click).
+- Targeted s624 7/7; s622 8/8; s618 11/11; s26e/s26f/s563/s623 updated and passing.
+- RED: s624-benchmark-gaps-red.log (benchmark route restored from 1132911f; 4 UI-gap tests fail).
+
+## View wiring note (honest)
+benchmarkRoute accepts optional benchmarkPreferences/benchmarkActiveRun readbacks as the 8th/9th args. The live shell works without view changes because ReadbackLoaded hydrates judge preference and starts active-run polling. The SSR initial render does NOT have preferences/active-run until that update arrives; passing the two readbacks in view.ts is what closes that first-render gap. No product view file was changed by this task.

@@ -1,0 +1,8 @@
+{
+  "judge": "anthropic.team.shared.us-east-1.default",
+  "selectedText": "2 of 3 selected",
+  "disabledAttribute": null,
+  "runLabel": "Run quick benchmark (2 of 3 selected, 12 cases)",
+  "overlapWarningPresent": true,
+  "overlapWarningText": "Judge endpoint is also a benchmark subject. Expect slower grading and higher judge failure risk — prefer a dedicated judge when available."
+}

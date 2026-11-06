@@ -1,0 +1,248 @@
+[WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+[WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+Scope: 6 of 55 workspace projects
+[WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at D:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+[ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+
+If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+[WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s269-canonical-url.test.ts (81 tests | 6 failed) 1230ms
+   ✓ S269 typed resolution of original /app URLs > resolves the original request list to the real Requests route, not NotFound 52ms
+   ✓ S269 typed resolution of original /app URLs > resolves original detail URLs with their real ID 15ms
+   ✓ S269 typed resolution of original /app URLs > keeps existing bare URLs as the canonical compatible aliases 18ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app to Index at / 13ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/remote/providers to Providers at /control/providers 11ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/router/controller to ControlController at /control/controller 10ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/connect/downstream to IntegrationsDownstream at /integrations/downstream 7ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/connect/upstream to IntegrationsUpstream at /integrations/upstream 7ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/local/llama-swap/logs to LocalLogs at /local/logs 9ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/local/llama-swap/swap to LocalSwap at /local/swap 8ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/models to Models at /models 6ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/learning to Learning at /learning 11ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/system/runtime to Runtime at /runtime 10ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/system/runtime-config to Runtime at /runtime 9ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/system/session-readiness to SessionReadiness at /session-readiness 8ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/system/peers to SystemPeers at /system/peers 9ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/system/storage-retention to StorageRetention at /system/storage-retention 8ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/observe/activity to ObserveActivity at /observe/activity 8ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/observe/logs to ObserveLogs at /observe/logs 11ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/observe/queues to Queues at /observe/queues 7ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/observe/routing to ObserveRouting at /observe/routing 12ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/observe/store-degradation-receipts to StoreReceipts at /observe/store-degradation-receipts 7ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/observe/observability-snapshot to Observability at /observe/observability-snapshot 9ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/router to Router at /router 7ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/router/candidates to RouterCandidates at /router/candidates 10ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/router/decisions to RouterDecisions at /router/decisions 8ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/local/choose to LocalChoose at /local/choose 9ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/local/models to LocalChoose at /local/choose 10ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/local/peer-models to LocalPeerModels at /local/peer-models 7ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/local/endpoints to LocalPeers at /local/peers 7ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/observe/requests to Requests at /requests 6ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/observe/requests/req-1 to RequestDetail at /requests/req-1 10ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/router/decisions/dec-1 to RouterDecisionDetail at /router/decisions/dec-1 11ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/models/benchmark to Benchmark at /system/benchmark 9ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/connect to Endpoints at /control/endpoints 10ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/studio/chat to Studio at /studio?tab=chat 13ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/studio/images to Studio at /studio?tab=images 9ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/studio/audio to Studio at /studio?tab=audio 14ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/studio/rerank to Studio at /studio?tab=rerank 15ms
+   ✓ S269 typed resolution of original /app URLs > resolves /app/studio/advanced to Studio at /studio?tab=advanced 13ms
+   ✓ S269 typed resolution of original /app URLs > preserves an original query string across the redirect 5ms
+   ✓ S269 typed resolution of original /app URLs > sends both original runtime surfaces through the one implemented Runtime route 4ms
+   ✓ S269 explicit missing original targets > lists every unimplemented original feature target explicitly 2ms
+   ✓ S269 explicit missing original targets > leaves each missing target NotFound with no redirect to a generic success page 114ms
+   ✓ S269 redirect/route inventory > reconciles the 20 redirect route entries with the 22 legacy map strings 11ms
+   ✓ S269 redirect/route inventory > classifies every redirect entry against an actual implemented target 12ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > pins exactly the 16 resolvable and 4 missing redirect route entries 3ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > redirects /app/local/swap to /local/swap as LocalSwap with a replace Command 27ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > redirects /app/local/logs to /local/logs as LocalLogs with a replace Command 8ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > redirects /app/local/peers to /local/peers as LocalPeers with a replace Command 15ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > redirects /app/control/providers to /control/providers as Providers with a replace Command 13ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > redirects /app/control/runtime-config to /runtime as Runtime with a replace Command 15ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > redirects /app/control/controller to /control/controller as ControlController with a replace Command 12ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > redirects /app/endpoints to /control/endpoints as Endpoints with a replace Command 10ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > redirects /app/control/endpoints to /control/endpoints as Endpoints with a replace Command 15ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > redirects /app/control/benchmark to /system/benchmark as Benchmark with a replace Command 15ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > redirects /app/control/models to /models as Models with a replace Command 15ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > redirects /app/observe to /requests as Requests with a replace Command 13ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > redirects /app/endpoints/downstream to /integrations/downstream as IntegrationsDownstream with a replace Command 11ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > redirects /app/integrations/downstream to /integrations/downstream as IntegrationsDownstream with a replace Command 12ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > redirects /app/endpoints/upstream to /integrations/upstream as IntegrationsUpstream with a replace Command 12ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > redirects /app/integrations/upstream to /integrations/upstream as IntegrationsUpstream with a replace Command 10ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > redirects /app/control/session-readiness to /session-readiness as SessionReadiness with a replace Command 12ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > keeps the missing redirect entry /app/local/policy NotFound without a replace Command 12ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > keeps the missing redirect entry /app/local/matrix NotFound without a replace Command 10ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > keeps the missing redirect entry /app/control/routing-strategy NotFound without a replace Command 14ms
+   ✓ S269 original redirect entries: 16 resolvable targets + 4 missing > keeps the missing redirect entry /app/control/roles NotFound without a replace Command 17ms
+   ✓ S269 53-pattern partition > partitions 37 supported original paths + / + 15 missing into the 53 original patterns 16ms
+   ✓ S269 redirect Commands and exactly-once reads > emits one route read and one replace Command for a legacy list URL 13ms
+   × S269 redirect Commands and exactly-once reads > consumes exactly one pending replace echo, then reads a genuine same-route navigation 58ms
+     → expected [] to have a length of 1 but got +0
+   × S269 redirect Commands and exactly-once reads > does not suppress a same-route navigation whose query changed 23ms
+     → expected [] to have a length of 1 but got +0
+   ✓ S269 redirect Commands and exactly-once reads > does not let a stale detail redirect echo suppress a different detail instance 35ms
+   × S269 redirect Commands and exactly-once reads > reads repeated diagnostics navigation for the same and a different id 31ms
+     → expected [] to have a length of 1 but got +0
+   ✓ S269 redirect Commands and exactly-once reads > clears a pending echo when a real navigation intervenes, then reads the late echo 20ms
+   × S269 redirect Commands and exactly-once reads > does not silently drop a genuine navigation that matches the pending echo 26ms
+     → expected [] to have a length of 1 but got +0
+   × S269 redirect Commands and exactly-once reads > resets the Studio tab to chat when navigating from a tabbed URL to the bare /studio alias 21ms
+     → expected 'images' to be 'chat' // Object.is equality
+   × S269 redirect Commands and exactly-once reads > reads and reselects the tab for a genuine same-route Studio tab change 19ms
+     → expected [] to have a length of 1 but got +0
+   ✓ S269 redirect Commands and exactly-once reads > does not emit a replace Command for an already-canonical bare URL 8ms
+   ✓ S269 redirect Commands and exactly-once reads > preserves the detail ID in both the read and the replace target 11ms
+   ✓ S269 initial load > sets the Studio tab from the original URL and emits the replace Command 57ms
+   ✓ S269 initial load > emits no replace Command when the initial URL is already canonical 13ms
+ ❯ test/s269-canonical-url.scene.test.ts (10 tests | 1 failed) 12010ms
+   ✓ S269 mounted legacy redirects > replaces a legacy request-list URL with /requests and reads it exactly once  1216ms
+   ✓ S269 mounted legacy redirects > replaces a legacy redirect-map entry through history and reads it exactly once  795ms
+   ✓ S269 mounted legacy redirects > keeps a legacy detail ID and query through the canonical detail route  702ms
+   ✓ S269 mounted legacy redirects > selects the original Studio tab from the URL and canonicalises it as a query alias  720ms
+   ✓ S269 mounted legacy redirects > routes the legacy runtime surfaces to the implemented /runtime page  681ms
+   ✓ S269 mounted legacy redirects > preserves browser back/forward across the replace without a NotFound flash  902ms
+   ✓ S269 mounted legacy redirects > redirects an in-app URL change, not only the initial load  711ms
+   ✓ S269 mounted legacy redirects > leaves a missing original feature target NotFound instead of redirecting to a generic page  625ms
+   ✓ S269 mounted legacy redirects > keeps a bare canonical URL untouched and reads it once  620ms
+   × S269 mounted legacy redirects > reads again for a genuine same-route navigation after the initial read 5030ms
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s269-canonical-url.scene.test.ts > S269 mounted legacy redirects > reads again for a genuine same-route navigation after the initial read
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ test/s269-canonical-url.scene.test.ts:292:3
+    290|   });
+    291| 
+    292|   it("reads again for a genuine same-route navigation after the initia…
+       |   ^
+    293|     mountAt("/requests");
+    294| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  test/s269-canonical-url.test.ts > S269 redirect Commands and exactly-once reads > consumes exactly one pending replace echo, then reads a genuine same-route navigation
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/s269-canonical-url.test.ts:439:35
+    437|       Message.ChangedUrl({ url: urlOf("/requests") }),
+    438|     );
+    439|     expect(readCommands(genuine)).toHaveLength(1);
+       |                                   ^
+    440|     expect(commandNames(genuine)).toContain("ScrollShellToTop");
+    441|     expect(genuine.model.refresh.message).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  test/s269-canonical-url.test.ts > S269 redirect Commands and exactly-once reads > does not suppress a same-route navigation whose query changed
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/s269-canonical-url.test.ts:461:35
+    459|       Message.ChangedUrl({ url: urlOf("/requests?status=ok") }),
+    460|     );
+    461|     expect(readCommands(changed)).toHaveLength(1);
+       |                                   ^
+    462| 
+    463|     const repeated = shellUpdate(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  test/s269-canonical-url.test.ts > S269 redirect Commands and exactly-once reads > reads repeated diagnostics navigation for the same and a different id
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/s269-canonical-url.test.ts:511:47
+    509|       Message.ChangedUrl({ url: urlOf("/diagnostics/7") }),
+    510|     );
+    511|     expect(diagnosticsReadCommands(repeated)).toHaveLength(1);
+       |                                               ^
+    512|   });
+    513| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  test/s269-canonical-url.test.ts > S269 redirect Commands and exactly-once reads > does not silently drop a genuine navigation that matches the pending echo
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/s269-canonical-url.test.ts:550:36
+    548|       Message.ChangedUrl({ url: urlOf("/requests") }),
+    549|     );
+    550|     expect(readCommands(realEcho)).toHaveLength(1);
+       |                                    ^
+    551|   });
+    552| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  test/s269-canonical-url.test.ts > S269 redirect Commands and exactly-once reads > resets the Studio tab to chat when navigating from a tabbed URL to the bare /studio alias
+AssertionError: expected 'images' to be 'chat' // Object.is equality
+
+Expected: "chat"
+Received: "images"
+
+ ❯ test/s269-canonical-url.test.ts:556:38
+    554|     const initial = shellModel({ route: { _tag: "Studio" }, studio: st…
+    555|     const result = shellUpdate(initial, Message.ChangedUrl({ url: urlO…
+    556|     expect(result.model.studio?.tab).toBe("chat");
+       |                                      ^
+    557|   });
+    558| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  test/s269-canonical-url.test.ts > S269 redirect Commands and exactly-once reads > reads and reselects the tab for a genuine same-route Studio tab change
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/s269-canonical-url.test.ts:563:34
+    561|     const result = shellUpdate(initial, Message.ChangedUrl({ url: urlO…
+    562|     expect(result.model.studio?.tab).toBe("audio");
+    563|     expect(readCommands(result)).toHaveLength(1);
+       |                                  ^
+    564|   });
+    565| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  7 failed | 84 passed (91)
+   Start at  15:50:38
+   Duration  37.39s (transform 14.83s, setup 0ms, collect 38.97s, tests 13.24s, environment 6.36s, prepare 1.71s)
+
+undefined
+D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-ui-next:
+[ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL] Command failed with exit code 1: vitest run "--silent=true" test/s269-canonical-url.test.ts test/s269-canonical-url.scene.test.ts

@@ -1,0 +1,27 @@
+{
+  "slice": "s44a-buckets-models",
+  "rule": {
+    "Day": "24 hourly buckets (3600000ms); label HH:00",
+    "Week": "7 daily buckets (86400000ms); label MM-DD",
+    "Month": "30 daily buckets; label MM-DD",
+    "90 days": "weekly buckets (604800000ms), ceil(range/7d); label MM-DD"
+  },
+  "math": "avg per bucket over duration_ms; p95 nearest-rank sorted[floor(0.95*n)]; success 2xx/3xx, failure otherwise; item exactly at end clamps to last bucket; empty buckets omitted (no zero points)",
+  "models": "same items grouped by modelId; top 3 rail rows; fallback to total Models when overview metrics unavailable",
+  "fixtures": {
+    "real": "overview-real-items.json (S26p temp host /api/metrics/page, one item)",
+    "boundary": "overview-boundary-items.json (start boundary, two in 01:00, empty 02:00, end boundary 23:00)"
+  },
+  "reds": {
+    "offByOne": "s44a-red-off-by-one.log",
+    "emptyAsZero": "s44a-red-empty-as-zero.log",
+    "mergedModel": "s44a-red-merged-model.log"
+  },
+  "stale": "overviewMetrics token still guards late Day after Week",
+  "counts": {
+    "fullSuite": 191,
+    "files": 18,
+    "typecheck": "exit 0"
+  },
+  "limitation": "single-item page + client aggregation; host page size may truncate larger windows"
+}

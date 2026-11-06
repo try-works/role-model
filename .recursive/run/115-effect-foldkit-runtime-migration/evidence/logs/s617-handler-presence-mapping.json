@@ -1,0 +1,637 @@
+{
+  "buckets": {
+    "matched_walker": 0,
+    "non_native_affordance": 8,
+    "scanner_gap": 8,
+    "unmatched": 0,
+    "wired_after_inventory": 45
+  },
+  "humanTotal": 61,
+  "identities": {
+    "allItems": true,
+    "modelsFamily": true,
+    "nativeOnly": true,
+    "walker": true
+  },
+  "items": [
+    {
+      "control": "clickable model row (div)",
+      "id": "H001",
+      "label": "each model display name",
+      "route": "/models",
+      "routeTag": "Models",
+      "wiredEvidence": null,
+      "walkerPath": null,
+      "bucket": "non_native_affordance"
+    },
+    {
+      "control": "detail selection",
+      "id": "H002",
+      "label": "hard-coded `cards[0]`; no row selection",
+      "route": "/models",
+      "routeTag": "Models",
+      "wiredEvidence": null,
+      "walkerPath": null,
+      "bucket": "non_native_affordance"
+    },
+    {
+      "control": "input ×4",
+      "id": "H003",
+      "label": "Role id",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wiredEvidence": "S618 models wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "input ×4",
+      "id": "H004",
+      "label": "Name",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wiredEvidence": "S618 models wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "input ×4",
+      "id": "H005",
+      "label": "Description",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wiredEvidence": "S618 models wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "input ×4",
+      "id": "H006",
+      "label": "Default system instructions",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wiredEvidence": "S618 models wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "select ×2",
+      "id": "H007",
+      "label": "\"Kindassistant\"",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wiredEvidence": "S618 models wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "select ×2",
+      "id": "H008",
+      "label": "\"tool policy allowed · supported tasks co\"",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wiredEvidence": "S618 models wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "button",
+      "id": "H009",
+      "label": "Create role",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wiredEvidence": "S618 models wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "button",
+      "id": "H010",
+      "label": "Reset",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wiredEvidence": "S618 models wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "button",
+      "id": "H011",
+      "label": "Advanced policy fields",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wiredEvidence": "S618 models wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "table rows",
+      "id": "H012",
+      "label": "Role catalog / Role task allowlists (no row action)",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wiredEvidence": null,
+      "walkerPath": null,
+      "bucket": "non_native_affordance"
+    },
+    {
+      "control": "table rows",
+      "id": "H013",
+      "label": "Edit selected role (hard-coded field rows)",
+      "route": "/models/roles",
+      "routeTag": "ModelsRoles",
+      "wiredEvidence": null,
+      "walkerPath": null,
+      "bucket": "non_native_affordance"
+    },
+    {
+      "control": "select ×2",
+      "id": "H014",
+      "label": "Benchmark mode",
+      "route": "/system/benchmark",
+      "routeTag": "Benchmark",
+      "wiredEvidence": "S618 models wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "select ×2",
+      "id": "H015",
+      "label": "Judge endpoint",
+      "route": "/system/benchmark",
+      "routeTag": "Benchmark",
+      "wiredEvidence": "S618 models wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "button",
+      "id": "H016",
+      "label": "Run quick benchmark (3 models, 12 cases)",
+      "route": "/system/benchmark",
+      "routeTag": "Benchmark",
+      "wiredEvidence": "S618 models wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "button",
+      "id": "H017",
+      "label": "Clear all benchmark data",
+      "route": "/system/benchmark",
+      "routeTag": "Benchmark",
+      "wiredEvidence": "S618 models wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "password input",
+      "id": "H018",
+      "label": "Operator token",
+      "route": "/learning",
+      "routeTag": "Learning",
+      "wiredEvidence": "S619 learning wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "password input",
+      "id": "H019",
+      "label": "Operator token",
+      "route": "/learning/configuration",
+      "routeTag": "LearningConfiguration",
+      "wiredEvidence": "S619 learning wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "password input",
+      "id": "H020",
+      "label": "Operator token",
+      "route": "/learning/packs",
+      "routeTag": "LearningPacks",
+      "wiredEvidence": "S619 learning wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "button",
+      "id": "H021",
+      "label": "Roll back active pack (scope-wide)",
+      "route": "/learning/packs",
+      "routeTag": "LearningPacks",
+      "wiredEvidence": "S619 learning wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "button",
+      "id": "H022",
+      "label": "Engage kill switch",
+      "route": "/learning/packs",
+      "routeTag": "LearningPacks",
+      "wiredEvidence": "S619 learning wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "button",
+      "id": "H023",
+      "label": "Release kill switch",
+      "route": "/learning/packs",
+      "routeTag": "LearningPacks",
+      "wiredEvidence": "S619 learning wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "password input",
+      "id": "H024",
+      "label": "Operator token",
+      "route": "/learning/decisions",
+      "routeTag": "LearningDecisions",
+      "wiredEvidence": "S619 learning wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "select ×3",
+      "id": "H025",
+      "label": "Role",
+      "route": "/learning/decisions",
+      "routeTag": "LearningDecisions",
+      "wiredEvidence": "S619 learning wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "select ×3",
+      "id": "H026",
+      "label": "Task",
+      "route": "/learning/decisions",
+      "routeTag": "LearningDecisions",
+      "wiredEvidence": "S619 learning wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "select ×3",
+      "id": "H027",
+      "label": "Outcome",
+      "route": "/learning/decisions",
+      "routeTag": "LearningDecisions",
+      "wiredEvidence": "S619 learning wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "password input",
+      "id": "H028",
+      "label": "Operator token",
+      "route": "/learning/evidence",
+      "routeTag": "LearningEvidence",
+      "wiredEvidence": "S619 learning wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "password input",
+      "id": "H029",
+      "label": "Operator token",
+      "route": "/learning/history",
+      "routeTag": "LearningHistory",
+      "wiredEvidence": "S619 learning wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "button ×4",
+      "id": "H030",
+      "label": "Day",
+      "route": "/requests",
+      "routeTag": "Requests",
+      "wiredEvidence": null,
+      "walkerPath": null,
+      "bucket": "scanner_gap"
+    },
+    {
+      "control": "button ×4",
+      "id": "H031",
+      "label": "Week",
+      "route": "/requests",
+      "routeTag": "Requests",
+      "wiredEvidence": null,
+      "walkerPath": null,
+      "bucket": "scanner_gap"
+    },
+    {
+      "control": "button ×4",
+      "id": "H032",
+      "label": "Month",
+      "route": "/requests",
+      "routeTag": "Requests",
+      "wiredEvidence": null,
+      "walkerPath": null,
+      "bucket": "scanner_gap"
+    },
+    {
+      "control": "button ×4",
+      "id": "H033",
+      "label": "90 days",
+      "route": "/requests",
+      "routeTag": "Requests",
+      "wiredEvidence": null,
+      "walkerPath": null,
+      "bucket": "scanner_gap"
+    },
+    {
+      "control": "select",
+      "id": "H034",
+      "label": "Breakdown",
+      "route": "/requests",
+      "routeTag": "Requests",
+      "wiredEvidence": null,
+      "walkerPath": null,
+      "bucket": "scanner_gap"
+    },
+    {
+      "control": "select",
+      "id": "H035",
+      "label": "Source",
+      "route": "/requests",
+      "routeTag": "Requests",
+      "wiredEvidence": null,
+      "walkerPath": null,
+      "bucket": "scanner_gap"
+    },
+    {
+      "control": "button",
+      "id": "H036",
+      "label": "Expand (Advanced controls)",
+      "route": "/requests",
+      "routeTag": "Requests",
+      "wiredEvidence": null,
+      "walkerPath": null,
+      "bucket": "scanner_gap"
+    },
+    {
+      "control": "select",
+      "id": "H037",
+      "label": "Status family",
+      "route": "/requests",
+      "routeTag": "Requests",
+      "wiredEvidence": null,
+      "walkerPath": null,
+      "bucket": "scanner_gap"
+    },
+    {
+      "control": "table rows",
+      "id": "H038",
+      "label": "Recent telemetry requests (no row drill-in despite copy)",
+      "route": "/requests",
+      "routeTag": "Requests",
+      "wiredEvidence": null,
+      "walkerPath": null,
+      "bucket": "non_native_affordance"
+    },
+    {
+      "control": "segmented button ×2",
+      "id": "H039",
+      "label": "All sources",
+      "route": "/observe/logs",
+      "routeTag": "ObserveLogs",
+      "wiredEvidence": "S624 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "segmented button ×2",
+      "id": "H040",
+      "label": "combined",
+      "route": "/observe/logs",
+      "routeTag": "ObserveLogs",
+      "wiredEvidence": "S624 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "button ×4",
+      "id": "H041",
+      "label": "Day",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "button ×4",
+      "id": "H042",
+      "label": "Week",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "button ×4",
+      "id": "H043",
+      "label": "Month",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "button ×4",
+      "id": "H044",
+      "label": "90 days",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "select ×3",
+      "id": "H045",
+      "label": "Breakdown",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "select ×3",
+      "id": "H046",
+      "label": "Source",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "select ×3",
+      "id": "H047",
+      "label": "Difficulty",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "button",
+      "id": "H048",
+      "label": "Expand",
+      "route": "/observe/routing",
+      "routeTag": "ObserveRouting",
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "button",
+      "id": "H049",
+      "label": "Refresh",
+      "route": "/observe/observability-snapshot",
+      "routeTag": "Observability",
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "button",
+      "id": "H050",
+      "label": "Refresh",
+      "route": "/observe/store-degradation-receipts",
+      "routeTag": "StoreReceipts",
+      "wiredEvidence": "S619 requests/observe wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "activity rows (div)",
+      "id": "H051",
+      "label": "recent host activity; no capture drill-in",
+      "route": "/observe/activity",
+      "routeTag": "ObserveActivity",
+      "wiredEvidence": null,
+      "walkerPath": null,
+      "bucket": "non_native_affordance"
+    },
+    {
+      "control": "input",
+      "id": "H052",
+      "label": "Endpoint URL",
+      "route": "/local/peers",
+      "routeTag": "LocalPeers",
+      "wiredEvidence": "S626 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "password input",
+      "id": "H053",
+      "label": "Auth token (optional)",
+      "route": "/local/peers",
+      "routeTag": "LocalPeers",
+      "wiredEvidence": "S626 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "table row actions",
+      "id": "H054",
+      "label": "Check health / Remove (plain text, no buttons)",
+      "route": "/local/peers",
+      "routeTag": "LocalPeers",
+      "wiredEvidence": null,
+      "walkerPath": null,
+      "bucket": "non_native_affordance"
+    },
+    {
+      "control": "input",
+      "id": "H055",
+      "label": "Model ID",
+      "route": "/local/peer-models",
+      "routeTag": "LocalPeerModels",
+      "wiredEvidence": "S627 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "input",
+      "id": "H056",
+      "label": "Model ID",
+      "route": "/local/llama-swap/models",
+      "routeTag": "LocalLlamaSwapModels",
+      "wiredEvidence": "S628 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "static text",
+      "id": "H057",
+      "label": "\"28 selected · click to clear\" (looks actionable)",
+      "route": "/local/llama-swap/models",
+      "routeTag": "LocalLlamaSwapModels",
+      "wiredEvidence": null,
+      "walkerPath": null,
+      "bucket": "non_native_affordance"
+    },
+    {
+      "control": "password input",
+      "id": "H058",
+      "label": "Operator access token",
+      "route": "/system/operator",
+      "routeTag": "SystemOperator",
+      "wiredEvidence": "S629 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "button",
+      "id": "H059",
+      "label": "Load Operator State",
+      "route": "/system/operator",
+      "routeTag": "SystemOperator",
+      "wiredEvidence": "S629 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "input",
+      "id": "H060",
+      "label": "Trace root id",
+      "route": "/system/operator",
+      "routeTag": "SystemOperator",
+      "wiredEvidence": "S629 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    },
+    {
+      "control": "number input",
+      "id": "H061",
+      "label": "Max requests",
+      "route": "/system/operator",
+      "routeTag": "SystemOperator",
+      "wiredEvidence": "S629 task-102 wiring",
+      "walkerPath": null,
+      "bucket": "wired_after_inventory"
+    }
+  ],
+  "modelsFamily": {
+    "affordance": 4,
+    "rows": 17,
+    "wired": 13
+  },
+  "nativeTotal": 53,
+  "unmatched": [],
+  "walkerOnly": [],
+  "walkerTotal": 0
+}

@@ -1,0 +1,31 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+
+(node:20180) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ role-model-router/apps/runtime-host-bridge/test/s610-r23-residuals.test.ts (3 tests | 1 failed) 410ms
+   ✓ S610 R23 residual clauses > a failed graph hydration never installs a partial cache entry 139ms
+   ✓ S610 R23 residual clauses > rich graph hydration is cached only after the async job settles 131ms
+   × S610 R23 residual clauses > transaction-owned cleanup databases are closed by the backend storage lifecycle 137ms
+     → expected [Function] to throw an error
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  role-model-router/apps/runtime-host-bridge/test/s610-r23-residuals.test.ts > S610 R23 residual clauses > transaction-owned cleanup databases are closed by the backend storage lifecycle
+AssertionError: expected [Function] to throw an error
+ ❯ role-model-router/apps/runtime-host-bridge/test/s610-r23-residuals.test.ts:48:47
+     46|     expect(first.querySync("SELECT 1 AS ok")[0]).toEqual({ ok: 1 });
+     47|     await storage.close();
+     48|     expect(() => first.querySync("SELECT 1")).toThrow();
+       |                                               ^
+     49|     expect(() => second.querySync("SELECT 1")).toThrow();
+     50|     await storage.close();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  06:47:22
+   Duration  7.87s (transform 3.44s, setup 0ms, collect 5.90s, tests 410ms, environment 0ms, prepare 441ms)
+

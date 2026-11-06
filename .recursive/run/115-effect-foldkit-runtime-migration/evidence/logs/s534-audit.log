@@ -1,0 +1,25 @@
+# S534 route-dump structure gate (packaged dev exe, temporary release copy, empty dev state)
+server: role-model-dev.exe --repo-root <temp release> --runtime-state-root <temp> --scope-id standalone-runtime-dev --host 127.0.0.1 --port 52380 --static-root <release>/build/client
+UI static: rebuilt from runtime-ui-next build.mjs (BUILD_EXIT=0) into the temporary release build/client
+reference: D:/DEV/rm-clean/audit/ref/<key>.json (React 0.0.20, live telemetry)
+GATE: expected titles are the REFERENCE <key>.json headings (not the port labels); missing lists reference headings absent from the port text.
+HONESTY: the packaged dev state is empty; data-dependent pages cannot reach 0.9x reference length without live rows. No 0.9x claim is made where data is empty.
+STUDIO LIMITATION: /studio is state-selected (no URL tab); only the default Chat workspace is dumpable without interaction. The other four tab structures are covered by the s534 renderToString structural test.
+
+| route | key | refLen | portLen | ratio% | refHeadings | tables | svgs | buttons | reference headings missing |
+|---|---|---|---|---|---|---|---|---|---|
+| /control/providers | _app_control_providers | 692 | 565 | 81.6 | 3 | 0 | 1 | 7 | none |
+| /studio | _app_studio_chat | 130 | 168 | 129.2 | 3 | 0 | 1 | 7 | none |
+| /system/extensions | _app_system_extensions | 838 | 17006 | 2029.4 | 5 | 1 | 1 | 1 | none |
+| /system/operator | _app_system_operator | 1456 | 2392 | 164.3 | 6 | 4 | 1 | 1 | none |
+| /system/peers | _app_system_peers | 684 | 554 | 81 | 4 | 1 | 1 | 1 | none |
+| /system/storage-retention | _app_system_storage_retention | 1012 | 897 | 88.6 | 4 | 1 | 1 | 1 | none |
+| /local/choose | _app_local_choose | 590 | 724 | 122.7 | 3 | 1 | 1 | 1 | none |
+| /local/peers | _app_local_endpoints | 431 | 452 | 104.9 | 3 | 1 | 1 | 1 | none |
+| /local/logs | _app_local_llama_swap_logs | 78784 | 622 | 0.8 | 3 | 1 | 1 | 1 | none |
+| /local/swap | _app_local_llama_swap_swap | 807 | 511 | 63.3 | 3 | 1 | 1 | 1 | none |
+| /local/llama-swap/models | _app_local_llama_swap_models | 911 | 488 | 53.6 | 3 | 1 | 1 | 1 | none |
+| /local/llama-swap/policy | _app_local_llama_swap_policy | 690 | 407 | 59 | 3 | 0 | 1 | 4 | none |
+
+STRUCTURAL GATE (reference headings): 12/12 routes contain every reference heading; SVG>=1: 12/12.
+TEXT-LEN: 5/12 routes are >=90% of reference length with the empty dev state; the remainder are data-dependent and are NOT claimed as 0.9x.

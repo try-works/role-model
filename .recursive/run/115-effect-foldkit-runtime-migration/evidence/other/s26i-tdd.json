@@ -1,0 +1,67 @@
+{
+  "slice": "s26i-wave2-finish",
+  "requirement": "R13 wave 2: six more read routes on the shared readback surface",
+  "routes": [
+    {
+      "key": "dashboard",
+      "path": "/dashboard",
+      "endpoint": "/api/role-model/telemetry/summary"
+    },
+    {
+      "key": "localSwap",
+      "path": "/local/swap",
+      "endpoint": "/api/role-model/local/swap"
+    },
+    {
+      "key": "observeActivity",
+      "path": "/observe/activity",
+      "endpoint": "/api/role-model/operator/status"
+    },
+    {
+      "key": "observeLogs",
+      "path": "/observe/logs",
+      "endpoint": "/api/role-model/local/logs"
+    },
+    {
+      "key": "observeRouting",
+      "path": "/observe/routing",
+      "endpoint": "/api/role-model/telemetry/rows"
+    },
+    {
+      "key": "router",
+      "path": "/router",
+      "endpoint": "/api/role-model/router/summary"
+    }
+  ],
+  "sharedSurface": "Extended readback.ts only: ReadbackKey schema/state, six parsers/specs, client map, route-key map, renderer branches. Same Command and DOM renderer; no new pattern.",
+  "hostPaths": "Added to runtime-endpoints.ts; all six are in the parsed host registrations and inventory hostEndpoints. S26f tie covers 16 shared paths.",
+  "states": "Each route has DOM success/empty/loading(aria-busy)/error with exact '<Label> read failed: HTTP 503 (unavailable)'. 401/403 and invalid-200 guards are shared (tested on requests).",
+  "refresh": "One fetch-count refresh test per route through the existing single runtime subscription.",
+  "inventory": "Six rows verified with named proofs. Totals: absent56, verified18, wired1, total75.",
+  "redGreen": {
+    "success": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26i-red-success.log",
+    "refresh": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26i-red-refresh.log",
+    "sharedStates": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26g-red-success.log",
+    "sharedBusy": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26g-red-busy.log",
+    "authInvalid": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26h-red-401-readback.log",
+    "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26i-green.log"
+  },
+  "counts": {
+    "tests": 123,
+    "passed": 123,
+    "failed": 0,
+    "typecheck": "exit 0",
+    "biome": "exit 0"
+  },
+  "files": [
+    "src/readback.ts",
+    "src/runtime-endpoints.ts",
+    "src/route.ts",
+    "src/view.ts",
+    "src/update.ts",
+    "src/init.ts",
+    "src/message.ts",
+    "test/s26e-readback-routes.test.ts",
+    "evidence/other/s26a-route-inventory.json"
+  ]
+}

@@ -178,6 +178,18 @@ describe("run 101 R5/R9 queue admin runtime side", () => {
       killSwitch: false,
       policyVersion: 1,
     };
+    // The drain flag must exist before the worker's first control read: the worker caches
+    // the control state for a poll interval, so creating it afterwards races the read.
+    const database = new DatabaseSync(path.join(stateRoot, "track-b", "queues", "queues.sqlite"));
+    try {
+      database.exec(
+        `CREATE TABLE IF NOT EXISTS queue_control (queue_name TEXT PRIMARY KEY, draining INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL);
+         INSERT OR REPLACE INTO queue_control VALUES ('${EVALUATION_SCORE_QUEUE}', 1, CURRENT_TIMESTAMP);`,
+      );
+    } finally {
+      database.close();
+    }
+
     const attempts: string[] = [];
     const worker = runEvaluationScoreWorker({
       stateRoot,
@@ -190,16 +202,6 @@ describe("run 101 R5/R9 queue admin runtime side", () => {
       cancellationPollIntervalMs: 50,
     });
     try {
-      // Drain first: the offer must sit unclaimed.
-      const database = new DatabaseSync(path.join(stateRoot, "track-b", "queues", "queues.sqlite"));
-      try {
-        database.exec(
-          `CREATE TABLE IF NOT EXISTS queue_control (queue_name TEXT PRIMARY KEY, draining INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL);
-           INSERT OR REPLACE INTO queue_control VALUES ('${EVALUATION_SCORE_QUEUE}', 1, CURRENT_TIMESTAMP);`,
-        );
-      } finally {
-        database.close();
-      }
       await Effect.runPromise(
         Effect.gen(function* () {
           const queue = yield* makeEvaluationScoreQueue(policy);
@@ -209,7 +211,9 @@ describe("run 101 R5/R9 queue admin runtime side", () => {
           });
         }).pipe(Effect.provide(workerStoreLayer({ stateRoot, policy })), Effect.scoped),
       );
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Drain is observed from the first control read, so a short settle is enough to prove
+      // the offer sits unclaimed; the old fixed 500 ms sleep only made this race narrower.
+      await new Promise((resolve) => setTimeout(resolve, 300));
       assert.deepEqual(attempts, [], "a draining queue claims nothing");
 
       // Clear the flag: the same job is claimed, so the gate is a gate and not a loss.
@@ -221,8 +225,18 @@ describe("run 101 R5/R9 queue admin runtime side", () => {
       } finally {
         reopen.close();
       }
-      await new Promise((resolve) => setTimeout(resolve, 900));
-      assert.deepEqual(attempts, ["job-drained"]);
+      // Wait for the cached control read to expire and the claim to land instead of pinning
+      // one fixed sleep. Delivery is at-least-once, so a redelivery of the same job after the
+      // gate opens is legal; the contract here is no claim while draining and a claim after.
+      const deadline = Date.now() + 3_000;
+      while (attempts.length === 0 && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+      assert.ok(attempts.length > 0, "clearing the drain flag must let the job be claimed");
+      assert.ok(
+        attempts.every((attempt) => attempt === "job-drained"),
+        "only the offered job may be claimed",
+      );
     } finally {
       await worker.stop();
     }

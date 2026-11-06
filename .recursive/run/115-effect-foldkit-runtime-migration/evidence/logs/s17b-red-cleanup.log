@@ -1,0 +1,43 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:35136) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s17b-sse-cleanup.test.ts (7 tests | 1 failed | 6 skipped) 14ms
+   × S17b SSE scoped cleanup > releases the reader, decoder scope and abort listener on success 12ms
+     → expected false to be true // Object.is equality
+   ↓ S17b SSE scoped cleanup > releases on a protocol failure and cancels the stream
+   ↓ S17b SSE scoped cleanup > releases on caller abort, cancels the stalled stream and reports the typed abort
+   ↓ S17b SSE scoped cleanup > stops a stalled stream when the enclosing fiber times out (abort reaches the read)
+   ↓ S17b SSE typed failures are distinct > separates abort, mid-frame EOF, protocol violation and transport read failure
+   ↓ S17b SSE typed failures are distinct > drains a valid final frame and reports [DONE] once without forwarding it as data
+   ↓ S17b SSE frame preservation > preserves tool/reasoning/fragmentation/drain/first-substantive/finish/DONE/error order exactly
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s17b-sse-cleanup.test.ts > S17b SSE scoped cleanup > releases the reader, decoder scope and abort listener on success
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/s17b-sse-cleanup.test.ts:104:35
+    102|     expect(transcript).toBe(frame({ n: 1 }));
+    103|     expect(payloads).toEqual([JSON.stringify({ n: 1 })]);
+    104|     expect(stream.state.released).toBe(true);
+       |                                   ^
+    105|     expect(stream.state.canceled).toBe(false);
+    106|     expect(cleanup.releases.sort()).toEqual(cleanupExpectation);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 skipped (7)
+   Start at  02:01:29
+   Duration  7.54s (transform 4.61s, setup 0ms, collect 7.04s, tests 14ms, environment 0ms, prepare 165ms)
+
+EXIT_CODE: 1

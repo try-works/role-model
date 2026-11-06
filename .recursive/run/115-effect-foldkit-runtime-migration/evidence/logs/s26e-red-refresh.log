@@ -1,0 +1,194 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > storeReceipts refreshes through the existing single subscription
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 27.7ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'StoreReceipts' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 27.68029999999999,
+  thresholdMs: 8
+}
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > queues refreshes through the existing single subscription
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 11.6ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Queues' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 11.621600000000399,
+  thresholdMs: 8
+}
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > localLogs refreshes through the existing single subscription
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 13.3ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'LocalLogs' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 13.332699999999022,
+  thresholdMs: 8
+}
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > routerCandidates refreshes through the existing single subscription
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 11.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      localLogs: [Object],
+      queues: [Object],
+      routerCandidates: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'RouterCandidates' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 11.52900000000227,
+  thresholdMs: 8
+}
+
+ ❯ test/s26e-readback-routes.test.ts (9 tests | 4 failed | 5 skipped) 18350ms
+   ↓ S26e shared readback client > uses each declared host path, sends the bearer only when provisioned, and forwards abort
+   ↓ S26e shared readback routes > Store receipts renders success, empty, loading and error on the DOM
+   × S26e shared readback routes > storeReceipts refreshes through the existing single subscription 4656ms
+     → Timed out waiting for storeReceipts refresh (last: undefined) | body: Runtime UIOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesStudioLocalRemoteModelsRouterObserveConnectSystemLearningClicks: 0Dark shellRuntimeStore receiptsToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesStudioLocalRemoteModelsRouterObserveConnectSystemLearningRuntime readbackStore receiptsLoading store receipts…Refresh follows the shell's single runtime subscription; this page does not open its own.Clicked 0 time(s)
+   ↓ S26e shared readback routes > Queues renders success, empty, loading and error on the DOM
+   × S26e shared readback routes > queues refreshes through the existing single subscription 4568ms
+     → Timed out waiting for queues refresh (last: undefined) | body: Runtime UIOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesStudioLocalRemoteModelsRouterObserveConnectSystemLearningClicks: 0Dark shellRuntimeQueuesToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesStudioLocalRemoteModelsRouterObserveConnectSystemLearningRuntime readbackQueuesLoading queues…Refresh follows the shell's single runtime subscription; this page does not open its own.Clicked 0 time(s)
+   ↓ S26e shared readback routes > Local logs renders success, empty, loading and error on the DOM
+   × S26e shared readback routes > localLogs refreshes through the existing single subscription 4578ms
+     → Timed out waiting for localLogs refresh (last: undefined) | body: Runtime UIOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesStudioLocalRemoteModelsRouterObserveConnectSystemLearningClicks: 0Dark shellRuntimeLocal logsToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesStudioLocalRemoteModelsRouterObserveConnectSystemLearningRuntime readbackLocal logsLoading local logs…Refresh follows the shell's single runtime subscription; this page does not open its own.Clicked 0 time(s)
+   ↓ S26e shared readback routes > Router candidates renders success, empty, loading and error on the DOM
+   × S26e shared readback routes > routerCandidates refreshes through the existing single subscription 4546ms
+     → Timed out waiting for routerCandidates refresh (last: undefined) | body: Runtime UIOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesStudioLocalRemoteModelsRouterObserveConnectSystemLearningClicks: 0Dark shellRuntimeRouter candidatesToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesStudioLocalRemoteModelsRouterObserveConnectSystemLearningRuntime readbackRouter candidatesLoading router candidates…Refresh follows the shell's single runtime subscription; this page does not open its own.Clicked 0 time(s)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s26e-readback-routes.test.ts > S26e shared readback routes > storeReceipts refreshes through the existing single subscription
+Error: Timed out waiting for storeReceipts refresh (last: undefined) | body: Runtime UIOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesStudioLocalRemoteModelsRouterObserveConnectSystemLearningClicks: 0Dark shellRuntimeStore receiptsToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesStudioLocalRemoteModelsRouterObserveConnectSystemLearningRuntime readbackStore receiptsLoading store receipts…Refresh follows the shell's single runtime subscription; this page does not open its own.Clicked 0 time(s)
+ ❯ waitFor test/s26e-readback-routes.test.ts:21:9
+     19|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     20|   }
+     21|   throw new Error(
+       |         ^
+     22|     `Timed out waiting for ${label} (last: ${String(last)}) | body: ${…
+     23|   );
+ ❯ test/s26e-readback-routes.test.ts:246:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/s26e-readback-routes.test.ts > S26e shared readback routes > queues refreshes through the existing single subscription
+Error: Timed out waiting for queues refresh (last: undefined) | body: Runtime UIOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesStudioLocalRemoteModelsRouterObserveConnectSystemLearningClicks: 0Dark shellRuntimeQueuesToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesStudioLocalRemoteModelsRouterObserveConnectSystemLearningRuntime readbackQueuesLoading queues…Refresh follows the shell's single runtime subscription; this page does not open its own.Clicked 0 time(s)
+ ❯ waitFor test/s26e-readback-routes.test.ts:21:9
+     19|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     20|   }
+     21|   throw new Error(
+       |         ^
+     22|     `Timed out waiting for ${label} (last: ${String(last)}) | body: ${…
+     23|   );
+ ❯ test/s26e-readback-routes.test.ts:246:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/s26e-readback-routes.test.ts > S26e shared readback routes > localLogs refreshes through the existing single subscription
+Error: Timed out waiting for localLogs refresh (last: undefined) | body: Runtime UIOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesStudioLocalRemoteModelsRouterObserveConnectSystemLearningClicks: 0Dark shellRuntimeLocal logsToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesStudioLocalRemoteModelsRouterObserveConnectSystemLearningRuntime readbackLocal logsLoading local logs…Refresh follows the shell's single runtime subscription; this page does not open its own.Clicked 0 time(s)
+ ❯ waitFor test/s26e-readback-routes.test.ts:21:9
+     19|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     20|   }
+     21|   throw new Error(
+       |         ^
+     22|     `Timed out waiting for ${label} (last: ${String(last)}) | body: ${…
+     23|   );
+ ❯ test/s26e-readback-routes.test.ts:246:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/s26e-readback-routes.test.ts > S26e shared readback routes > routerCandidates refreshes through the existing single subscription
+Error: Timed out waiting for routerCandidates refresh (last: undefined) | body: Runtime UIOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesStudioLocalRemoteModelsRouterObserveConnectSystemLearningClicks: 0Dark shellRuntimeRouter candidatesToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesStudioLocalRemoteModelsRouterObserveConnectSystemLearningRuntime readbackRouter candidatesLoading router candidates…Refresh follows the shell's single runtime subscription; this page does not open its own.Clicked 0 time(s)
+ ❯ waitFor test/s26e-readback-routes.test.ts:21:9
+     19|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     20|   }
+     21|   throw new Error(
+       |         ^
+     22|     `Timed out waiting for ${label} (last: ${String(last)}) | body: ${…
+     23|   );
+ ❯ test/s26e-readback-routes.test.ts:246:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 5 skipped (9)
+   Start at  07:53:55
+   Duration  27.36s (transform 4.52s, setup 0ms, collect 7.45s, tests 18.35s, environment 685ms, prepare 336ms)
+

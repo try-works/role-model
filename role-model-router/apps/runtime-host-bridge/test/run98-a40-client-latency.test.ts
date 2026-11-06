@@ -42,18 +42,21 @@ test("a40 L1: the handler reports the client-visible duration after the response
   const calls: Array<{ readonly requestId: string; readonly requestLatencyMs: number }> = [];
   const server = await (
     bridge as unknown as { startBridgeServer: StartBridgeServer }
-  ).startBridgeServer({
-    host: "127.0.0.1",
-    port: 0,
-    registry: emptyRegistry,
-    executeChatCompletions: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 60));
-      return stubChatResult();
+  ).startBridgeServer(
+    {
+      host: "127.0.0.1",
+      port: 0,
+      registry: emptyRegistry,
+      executeChatCompletions: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 60));
+        return stubChatResult();
+      },
+      recordClientLatency: (input) => {
+        calls.push(input);
+      },
     },
-    recordClientLatency: (input) => {
-      calls.push(input);
-    },
-  });
+    { allowTestSeamBackend: true },
+  );
 
   try {
     const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -80,18 +83,21 @@ test("a40 L1: a request whose execution fails still reports the duration the cli
   const calls: Array<{ readonly requestId: string; readonly requestLatencyMs: number }> = [];
   const server = await (
     bridge as unknown as { startBridgeServer: StartBridgeServer }
-  ).startBridgeServer({
-    host: "127.0.0.1",
-    port: 0,
-    registry: emptyRegistry,
-    executeChatCompletions: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 30));
-      throw new Error("provider refused");
+  ).startBridgeServer(
+    {
+      host: "127.0.0.1",
+      port: 0,
+      registry: emptyRegistry,
+      executeChatCompletions: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 30));
+        throw new Error("provider refused");
+      },
+      recordClientLatency: (input) => {
+        calls.push(input);
+      },
     },
-    recordClientLatency: (input) => {
-      calls.push(input);
-    },
-  });
+    { allowTestSeamBackend: true },
+  );
 
   try {
     const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {

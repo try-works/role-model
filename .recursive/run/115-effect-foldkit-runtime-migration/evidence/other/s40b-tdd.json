@@ -1,0 +1,22 @@
+{
+  "slice": "s40b-latency-fix",
+  "mapping": {
+    "average": "summary.averageLatencyMs",
+    "p95": "summary.p95LatencyMs",
+    "omitted": "averageRequestLatencyMs/p95RequestLatencyMs are host-exposed but not this latency pair; omitted explicitly",
+    "series": "one Latency series with two points Average/p95 so both table cells have values"
+  },
+  "table": "Average=10, p95=90 from dashboard-latency-split.json; no dash",
+  "fixture": {
+    "path": "test/fixtures/s26o/dashboard-latency-split.json",
+    "provenance": "regression fixture real summary schema average=10 p95=90",
+    "hostReal": "packaged 5786 average=34 p95=34"
+  },
+  "red": "s40b-red-latency-swap.log",
+  "counts": {
+    "fullSuite": 190,
+    "files": 18,
+    "typecheck": "exit 0"
+  },
+  "limitation": "single-window aggregate; no per-bucket reference series"
+}

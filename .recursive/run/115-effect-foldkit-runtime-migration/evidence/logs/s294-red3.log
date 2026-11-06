@@ -1,0 +1,92 @@
+COMMAND: node --test scripts/runtime/parity-selfcheck.test.mjs
+CWD: public worktree ; S295 round2 strict RED: provenance shape, temp drive, launch orphan
+EXIT_CODE=1
+
+✔ S294 PASSED when both builds are deterministic, clean and the dual comparison is recorded (10.1509ms)
+✔ S294 a React-vs-Foldkit difference is classified, never forced equal (1.3897ms)
+✔ S294 FAILED when a build is nondeterministic across the two runs (1.8147ms)
+✔ S294 FAILED when a capture surfaces console or network issues (1.0838ms)
+✔ S294 FAILED (not NOT_RUN) when a build target is unavailable (1.0294ms)
+✔ S294 NOT_RUN with exit 2 only when no browser is available (0.4976ms)
+✔ S294 runSelfcheck captures every target twice (two runs) and evaluates the result (5.2661ms)
+✔ S294 partitions favicon harness noise out of the capture issues while recording it (1.2581ms)
+✔ S295 FAILED when a target has fewer than exactly two captures (2.2177ms)
+✔ S295 FAILED when a target entry is missing from the plan (1.2817ms)
+✔ S295 emits per-target ignoredIssues and an ignored count in the JSON (1.2152ms)
+✔ S295 emits comparisons on the FAILED path and computes reactVsReact from the two react shas (0.9781ms)
+✔ S295 evidence.targets lists both run PNGs per target and echoes executable/temp roots (1.073ms)
+✔ S295 runSelfcheck contains a capture failure as a FAILED JSON result, not a rejection (1.3983ms)
+✖ S295 r2 FAILED unless there are exactly two runs and one capture per target per run (3.9629ms)
+✖ S295 r2 enforces the required temp drive (E: passes, another drive fails) (1.4426ms)
+✖ S295 r2 launchChrome kills its child when the DevTools endpoint never appears (203.9811ms)
+✔ S294 planTargets names the React and Foldkit static roots from the repo root (1.5702ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 15
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 576.7293
+
+✖ failing tests:
+
+test at scripts\runtime\parity-selfcheck.test.mjs:223:1
+✖ S295 r2 FAILED unless there are exactly two runs and one capture per target per run (3.9629ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  'PASSED' !== 'FAILED'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:233:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'PASSED',
+    expected: 'FAILED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\runtime\parity-selfcheck.test.mjs:244:1
+✖ S295 r2 enforces the required temp drive (E: passes, another drive fails) (1.4426ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:246:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\runtime\parity-selfcheck.test.mjs:251:1
+✖ S295 r2 launchChrome kills its child when the DevTools endpoint never appears (203.9811ms)
+  AssertionError [ERR_ASSERTION]: a launch failure must kill the child
+  
+  false !== true
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:272:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+

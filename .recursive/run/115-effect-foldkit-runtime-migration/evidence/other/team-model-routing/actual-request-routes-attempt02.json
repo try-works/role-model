@@ -1,0 +1,24 @@
+[
+  {
+    "role": "requirements",
+    "sessionId": "session-202df7b1-9078-4c32-9e02-a8d7dfba6876",
+    "seq": 12,
+    "config": {
+      "provider": "deepseek-official",
+      "model": "deepseek-flash",
+      "maxTokens": 256000,
+      "reasoningEffort": "high"
+    }
+  },
+  {
+    "role": "baseline",
+    "sessionId": "session-1bd04a0a-57dd-49dd-b636-8a789e9952cf",
+    "seq": 12,
+    "config": {
+      "provider": "deepseek-official",
+      "model": "deepseek-flash",
+      "maxTokens": 256000,
+      "reasoningEffort": "high"
+    }
+  }
+]

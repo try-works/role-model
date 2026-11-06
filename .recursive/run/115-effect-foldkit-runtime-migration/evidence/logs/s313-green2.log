@@ -1,0 +1,31 @@
+COMMAND: node vitest run (S314 affected 8 files; final)
+EXIT_CODE=0
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:62248) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s313-server-owner.test.ts (4 tests) 29ms
+(node:57908) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s21c-bootstrap-owner-wiring.test.ts (2 tests) 2714ms
+   ✓ S21c bootstrap owner wiring > the host calls the exact Bootstrap instance it received from the DAG  2700ms
+(node:59224) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s6b-cli-sqlite-service-migration.test.ts (7 tests) 390ms
+(node:60188) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/cli-startup-readiness.test.ts (3 tests) 257ms
+(node:76876) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s310b-backend-owner.test.ts (5 tests) 522ms
+ ✓ test/s21a-composition-dag.test.ts (6 tests) 306ms
+ ✓ test/cli-composition-scope.test.ts (7 tests) 155ms
+ ✓ test/s128-scope-owned-server.test.ts (3 tests) 29ms
+
+ Test Files  8 passed (8)
+      Tests  37 passed (37)
+   Start at  05:44:49
+   Duration  58.49s (transform 13.69s, setup 0ms, collect 45.53s, tests 4.40s, environment 6ms, prepare 3.33s)
+
+

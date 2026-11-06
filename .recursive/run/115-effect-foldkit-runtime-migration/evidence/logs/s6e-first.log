@@ -1,0 +1,14 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:35516) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s6d-second-batch-migration.test.ts (3 tests) 1063ms
+   ✓ S6d/S6e second batch migration > removes the expired row and leaves the live row in the real backend startup  1012ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  06:02:55
+   Duration  9.51s (transform 5.10s, setup 0ms, collect 7.93s, tests 1.06s, environment 0ms, prepare 173ms)
+
+EXIT_CODE: 0

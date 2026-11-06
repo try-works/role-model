@@ -1,0 +1,6 @@
+COMMAND: node scripts/runtime/parity-selfcheck.mjs --mutation (CHROME_PATH set; same port for baseline pair + mutant)
+CWD: public worktree ; S297 real Chrome one-class mutation check
+EXIT_CODE=0
+
+{"chromeUserDataRoot":"E:\\rm-tmp\\s294-chrome-03TXLq","executable":{"path":"D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\role-model-router\\dist\\release\\win32-x64\\role-model-dev.exe","sha256":"e3181d507a6ccd757407024dda25b1813329dd6e7895ae5d4e52b4f84c63e7a7","version":"0.0.20-231-gd61c32dc"},"scope":"browser-parity","tempRoot":"E:\\rm-tmp","classMutation":{"file":"assets/root-Bljja8hb.css","from":"display:flex","selector":".flex","to":"display:block"},"mode":"mutation","mutationCheck":{"applied":"one-class","baselineSha":"1096eb95169138baef9b3999fd28a0919a47040562421fac630f7cfe7184408a","classMutation":{"file":"assets/root-Bljja8hb.css","from":"display:flex","selector":".flex","to":"display:block"},"detected":true,"mutatedDiffers":true,"mutatedSha":"a5db448839ebab474e80bd9819ceb3eb27ec58610979966d387b8602c9cd2079","noFalseMutation":true},"status":"PASSED","evidenceDir":"D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\.recursive\\run\\115-effect-foldkit-runtime-migration\\evidence\\other\\s294-captures","exitCode":0}
+

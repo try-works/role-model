@@ -1,0 +1,43 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui
+
+ ❯ app/lib/s25a-refresh-ownership.test.ts (4 tests | 1 failed | 3 skipped) 21ms
+   ↓ S25a refresh ownership and event-source characterization > uses an injected RuntimeEventSourceFactory and closes it on dispose
+   ↓ S25a refresh ownership and event-source characterization > owns exactly one active subscription per start and leaks none across two start/stop cycles
+   ↓ S25a refresh ownership and event-source characterization > a later revision after a gap reaches the refresh handler (no silent continuation); no explicit gap marker exists
+   × S25a refresh ownership and event-source characterization > a reused stale chart is visible as stale in the returned titles and diagnostic field 19ms
+     → expected { routeId: 'dashboard', …(4) } to match object { chartTitle: 'Chart A', …(2) }
+(2 matching properties omitted from actual)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/s25a-refresh-ownership.test.ts > S25a refresh ownership and event-source characterization > a reused stale chart is visible as stale in the returned titles and diagnostic field
+AssertionError: expected { routeId: 'dashboard', …(4) } to match object { chartTitle: 'Chart A', …(2) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "chartTitle": "Chart A",
+    "routeId": "dashboard",
+-   "staleDataReused": true,
++   "staleDataReused": false,
+  }
+
+ ❯ app/lib/s25a-refresh-ownership.test.ts:168:28
+    166|     const diagnostics = getStaleRefreshDiagnostics();
+    167|     expect(diagnostics).toHaveLength(1);
+    168|     expect(diagnostics[0]).toMatchObject({
+       |                            ^
+    169|       chartTitle: "Chart A",
+    170|       routeId: "dashboard",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  06:13:06
+   Duration  947ms (transform 122ms, setup 0ms, collect 196ms, tests 21ms, environment 0ms, prepare 265ms)
+

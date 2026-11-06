@@ -1,0 +1,199 @@
+S540 strict RED: system/local density test against pre-S540 view.ts (HEAD)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s540-system-local-density.test.ts (11 tests | 10 failed) 1650ms
+   × S540 system/local density > session readiness 464ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Session bootstrap'
+   × S540 system/local density > endpoints 198ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Available models & endpoints'
+   × S540 system/local density > runtime 115ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Runtime topology'
+   × S540 system/local density > agent strategy 120ms
+     → expected 0 to be greater than or equal to 1
+   × S540 system/local density > queues 84ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Queue state'
+   × S540 system/local density > system peers 117ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'PROXY'
+   × S540 system/local density > workloads 110ms
+     → expected 0 to be greater than or equal to 1
+   × S540 system/local density > llama-swap models 125ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Role summary'
+   × S540 system/local density > llama-swap policy 118ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Raw policy'
+   ✓ S540 system/local density > llama-swap swap 105ms
+   × S540 system/local density > local peers 84ms
+     → expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Peer topology'
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s540-system-local-density.test.ts > S540 system/local density > session readiness
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Session bootstrap'
+
+Expected: "Session bootstrap"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeSession readinessToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime readbackSession readinessWaiting for the session readiness read.Refresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ check test/s540-system-local-density.test.ts:18:44
+     16|   container.innerHTML = rendered.html;
+     17|   const text = container.textContent ?? "";
+     18|   for (const label of labels) expect(text).toContain(label);
+       |                                            ^
+     19|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+     20|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s540-system-local-density.test.ts:24:41
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯
+
+ FAIL  test/s540-system-local-density.test.ts > S540 system/local density > endpoints
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Available models & endpoints'
+
+Expected: "Available models & endpoints"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeEndpointsToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime controlEndpointsWaiting for the endpoints read.Endpoint admissionProvider accountRegionReasoning effortBatch mode (true/false)Activation batch idModelAdd modelActivate endpoints"
+
+ ❯ check test/s540-system-local-density.test.ts:18:44
+     16|   container.innerHTML = rendered.html;
+     17|   const text = container.textContent ?? "";
+     18|   for (const label of labels) expect(text).toContain(label);
+       |                                            ^
+     19|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+     20|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s540-system-local-density.test.ts:25:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯
+
+ FAIL  test/s540-system-local-density.test.ts > S540 system/local density > runtime
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Runtime topology'
+
+Expected: "Runtime topology"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeRuntimeToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime readbackRuntimeWaiting for the runtime read.Refresh follows the shell's single runtime subscription; this page does not open its own.Runtime configEdit the JSON config, review the changed top-level keys, then confirm. Save sends PUT and re-reads the applied snapshot.Load runtime configRuntime config not loaded. Click Load runtime config first."
+
+ ❯ check test/s540-system-local-density.test.ts:18:44
+     16|   container.innerHTML = rendered.html;
+     17|   const text = container.textContent ?? "";
+     18|   for (const label of labels) expect(text).toContain(label);
+       |                                            ^
+     19|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+     20|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s540-system-local-density.test.ts:26:31
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯
+
+ FAIL  test/s540-system-local-density.test.ts > S540 system/local density > agent strategy
+AssertionError: expected 0 to be greater than or equal to 1
+ ❯ check test/s540-system-local-density.test.ts:19:54
+     17|   const text = container.textContent ?? "";
+     18|   for (const label of labels) expect(text).toContain(label);
+     19|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+       |                                                      ^
+     20|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+     21| };
+ ❯ test/s540-system-local-density.test.ts:27:38
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯
+
+ FAIL  test/s540-system-local-density.test.ts > S540 system/local density > queues
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Queue state'
+
+Expected: "Queue state"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeQueuesToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesRuntime readbackQueuesWaiting for the queues read.Refresh follows the shell's single runtime subscription; this page does not open its own."
+
+ ❯ check test/s540-system-local-density.test.ts:18:44
+     16|   container.innerHTML = rendered.html;
+     17|   const text = container.textContent ?? "";
+     18|   for (const label of labels) expect(text).toContain(label);
+       |                                            ^
+     19|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+     20|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s540-system-local-density.test.ts:28:30
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯
+
+ FAIL  test/s540-system-local-density.test.ts > S540 system/local density > system peers
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'PROXY'
+
+Expected: "PROXY"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeSystem peersToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesPeer topologyPeer-backed model groups observed in the current runtime listing.Peer inventoryRuntime readbackSystem peersWaiting for the system peers read.Refresh follows the shell's single runtime subscription; this page does not open its own.NameValueMetaNo system peers configured yet.Peer configProxy targets and auth posture are configured on the host.No separate host readback is published for this section yet.Contract fieldsPeer readback fields: id, url, auth and readiness.No separate host readback is published for this section yet."
+
+ ❯ check test/s540-system-local-density.test.ts:18:44
+     16|   container.innerHTML = rendered.html;
+     17|   const text = container.textContent ?? "";
+     18|   for (const label of labels) expect(text).toContain(label);
+       |                                            ^
+     19|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+     20|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s540-system-local-density.test.ts:29:36
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/10]⎯
+
+ FAIL  test/s540-system-local-density.test.ts > S540 system/local density > workloads
+AssertionError: expected 0 to be greater than or equal to 1
+ ❯ check test/s540-system-local-density.test.ts:19:54
+     17|   const text = container.textContent ?? "";
+     18|   for (const label of labels) expect(text).toContain(label);
+     19|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+       |                                                      ^
+     20|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+     21| };
+ ❯ test/s540-system-local-density.test.ts:30:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/10]⎯
+
+ FAIL  test/s540-system-local-density.test.ts > S540 system/local density > llama-swap models
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Role summary'
+
+Expected: "Role summary"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimellama-swap modelsToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesLlama-swap modelsLoad a runtime-config-declared model, assign route roles, and manage the in-memory llama-swap inventory.Load modelModel must already be declared in runtime config. Loading triggers the managed swap.No separate host readback is published for this section yet.Loaded modelsRuntime readbackllama-swap modelsWaiting for the llama-swap models read.Refresh follows the shell's single runtime subscription; this page does not open its own.NameValueMetaNo llama-swap models rows."
+
+ ❯ check test/s540-system-local-density.test.ts:18:44
+     16|   container.innerHTML = rendered.html;
+     17|   const text = container.textContent ?? "";
+     18|   for (const label of labels) expect(text).toContain(label);
+       |                                            ^
+     19|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+     20|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s540-system-local-density.test.ts:31:41
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/10]⎯
+
+ FAIL  test/s540-system-local-density.test.ts > S540 system/local density > llama-swap policy
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Raw policy'
+
+Expected: "Raw policy"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeLocal policyToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesLlama-swap host policyPolicy configurationEdit runtime behavior for local model loading and unloading.No local policy readback is available."
+
+ ❯ check test/s540-system-local-density.test.ts:18:44
+     16|   container.innerHTML = rendered.html;
+     17|   const text = container.textContent ?? "";
+     18|   for (const label of labels) expect(text).toContain(label);
+       |                                            ^
+     19|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+     20|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s540-system-local-density.test.ts:32:41
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/10]⎯
+
+ FAIL  test/s540-system-local-density.test.ts > S540 system/local density > local peers
+AssertionError: expected 'Skip to contentRuntime UIRuntimeModel…' to contain 'Peer topology'
+
+Expected: "Peer topology"
+Received: "Skip to contentRuntime UIRuntimeModels—Model count unavailable: models read is loading or failedRequests—Request count unavailable: telemetry summary is loading or failedCache—Cache percentage unavailable: no requests in the window or telemetry is loadingRouter—Router endpoint unavailable: health read is loading or failedMode—Execution mode unavailable: health/router read is loading or failedOverviewOverviewDiagnosticsObservabilityObserveReceiptsQueuesLocal logsRequestsActivityObserve logsObserve routingRouterCandidatesDecisionsProvidersEndpointsControllerRouterSystemSystem peersLocal peersRuntimeReadinessDashboardSwapOtherRouter strategyWorkloadsRouter configAgent strategyLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModel rolesStudioStudioLearningLearningModelsModelsDark shellRuntimeLocal peersToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterRouter strategyWorkloadsRouter configAgent strategyStudioLearningLearning configurationLearning packsLearning decisionsLearning evidenceLearning historyllama-swap modelsOperatorExtensionsModelsModel rolesLocal endpointsrole-model probes each server at /v1/models before peer models can be registered.Endpoint inventoryRuntime readbackLocal peersWaiting for the local peers read.Refresh follows the shell's single runtime subscription; this page does not open its own.NameValueMetaNo local peers configured yet.Add peer endpointRegister a peer server URL to use peer-backed local models.No separate host readback is published for this section yet."
+
+ ❯ check test/s540-system-local-density.test.ts:18:44
+     16|   container.innerHTML = rendered.html;
+     17|   const text = container.textContent ?? "";
+     18|   for (const label of labels) expect(text).toContain(label);
+       |                                            ^
+     19|   expect(container.querySelectorAll("table").length).toBeGreaterThanOr…
+     20|   expect(container.querySelectorAll("svg").length).toBeGreaterThanOrEq…
+ ❯ test/s540-system-local-density.test.ts:34:35
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/10]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  10 failed | 1 passed (11)
+   Start at  05:54:50
+   Duration  28.84s (transform 14.77s, setup 0ms, collect 22.98s, tests 1.65s, environment 1.97s, prepare 572ms)
+
+

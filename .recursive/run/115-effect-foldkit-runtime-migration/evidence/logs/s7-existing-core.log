@@ -1,0 +1,33 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/core
+
+ ✓ test/taxonomy-data-files.test.ts (5 tests) 388ms
+ ✓ test/taxonomy-catalog.test.ts (9 tests) 445ms
+   ✓ canonical taxonomy catalog > validates task naming, references, and classifier guidance  316ms
+ ✓ test/taxonomy-docs.test.ts (2 tests) 17ms
+ ✓ test/run105-d-route-ladder-dispatch.test.ts (37 tests) 90ms
+ ✓ test/run106-effort-source-vocabulary.test.ts (5 tests) 20ms
+ ✓ test/run106-non-inferiority.test.ts (4 tests) 22ms
+ ✓ test/run106-non-inferiority-ranking.test.ts (1 test) 41ms
+ ✓ test/observed-data-decay-policy.test.ts (5 tests) 66ms
+ ✓ test/run106-phase35-review-fixes.test.ts (6 tests) 148ms
+ ✓ test/run98-a57-code-capability-implication.test.ts (4 tests) 39ms
+ ✓ test/run98-r05-advisory-considered.test.ts (5 tests) 160ms
+ ✓ test/run105-c-router-ladder-walk.test.ts (9 tests) 98ms
+ ✓ test/run106-canonical-decision-provenance.test.ts (7 tests) 64ms
+ ✓ test/run115-s7-route-decision-producer.test.ts (6 tests) 155ms
+ ✓ test/run99-r33-family-scoped-advisory.test.ts (8 tests) 26ms
+ ✓ test/run105-review-router-safety.test.ts (31 tests) 203ms
+ ✓ test/routing-intent.test.ts (36 tests) 297ms
+ ✓ test/run98-a58-taxonomy-totality.test.ts (7 tests) 875ms
+   ✓ run98 addendum 58 — taxonomy totality at the router > every task/role pair the taxonomy declares is accepted with the role on the request  591ms
+ ✓ test/d1-focus-completed-family.test.ts (4 tests) 25ms
+ ✓ src/taxonomy/index.test.ts (1 test) 12ms
+ ✓ test/run106-effort-union-intersection.test.ts (4 tests) 11ms
+ ✓ test/run106-borrowed-quality-prior.test.ts (4 tests) 8ms
+
+ Test Files  22 passed (22)
+      Tests  200 passed (200)
+   Start at  21:26:19
+   Duration  14.01s (transform 7.47s, setup 0ms, collect 125.23s, tests 3.21s, environment 18ms, prepare 13.29s)
+

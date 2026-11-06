@@ -1,0 +1,63 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s622-benchmark-parity.test.ts (12 tests | 2 failed) 2237ms
+   ✓ S622 benchmark parity > renders the mode options with suite-derived counts and the judge select with endpoint ids  844ms
+   ✓ S622 benchmark parity > renders the Run label with the selected model, case counts and the clear-all control  317ms
+   ✓ S622 benchmark parity > guards Clear all benchmark data behind an explicit confirmation  301ms
+   ✓ S622 benchmark parity > applies the reference runnable-candidate filter to endpoints and the judge select 98ms
+   ✓ S622 benchmark parity > renders the scores, taxonomy and run-history tables from the readbacks 107ms
+   ✓ S622 benchmark parity > stores the mode/judge and dispatches the exact RunBenchmark/ClearBenchmark contract 11ms
+   × S622 benchmark parity > enables Run with 2 subjects and an external judge, warning only on overlap 135ms
+     → expected <p data-benchmark-judge-overlap …(1)></p> to be null
+   ✓ S622 benchmark parity > disables Run for empty judge, fewer than two subjects, and a running benchmark  350ms
+   × S622 benchmark parity > dispatches the exact external-judge body with 2 subjects 8ms
+     → Cannot read properties of undefined (reading 'name')
+   ✓ S622 benchmark parity > sends the exact host contracts for the run and clear commands 14ms
+   ✓ S622 benchmark parity > plans the suite, summary and runs readback queries on route entry 33ms
+   ✓ S622 benchmark parity > parses the three benchmark readbacks with their host paths 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s622-benchmark-parity.test.ts > S622 benchmark parity > enables Run with 2 subjects and an external judge, warning only on overlap
+AssertionError: expected <p data-benchmark-judge-overlap …(1)></p> to be null
+
+- Expected: 
+null
+
++ Received: 
+<p
+  class="mt-3 text-xs leading-4 text-[var(--rm-warning,#b45309)]"
+  data-benchmark-judge-overlap=""
+>
+  Judge endpoint is also a benchmark subject. Expect slower grading and higher judge failure risk — prefer a dedicated judge when available.
+</p>
+
+ ❯ test/s622-benchmark-parity.test.ts:214:70
+    212|     const externalButton = external.querySelector("[data-benchmark-run…
+    213|     expect(externalButton?.hasAttribute("disabled")).toBe(false);
+    214|     expect(external.querySelector("[data-benchmark-judge-overlap]")).t…
+       |                                                                      ^
+    215|     const overlap = await render({ benchmarkJudge: "ep-a" }, { modelEn…
+    216|     expect(overlap.querySelector("[data-benchmark-run]")?.hasAttribute…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s622-benchmark-parity.test.ts > S622 benchmark parity > dispatches the exact external-judge body with 2 subjects
+TypeError: Cannot read properties of undefined (reading 'name')
+ ❯ test/s622-benchmark-parity.test.ts:243:20
+    241|     const next = shellUpdate({ ...base, modelsView: { ...base.modelsVi…
+    242|     const command = (next.commands ?? [])[0] as unknown as { readonly …
+    243|     expect(command.name).toBe("RunBenchmark");
+       |                    ^
+    244|     expect(JSON.parse(command.args.endpointIdsJson)).toEqual(["ep-a", …
+    245|     expect(command.args.judgeEndpointId).toBe("ep-c");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 10 passed (12)
+   Start at  20:34:43
+   Duration  42.82s (transform 17.69s, setup 0ms, collect 28.89s, tests 2.24s, environment 7.83s, prepare 1.25s)
+

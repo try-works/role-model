@@ -1,0 +1,81 @@
+{
+  "capturedAt": "2026-11-04T11:50:42.079Z",
+  "host": "isolated packaged host http://127.0.0.1:3484 (seeded via scripts/runtime/seed-review-telemetry.mjs, stopped after capture)",
+  "route": "/requests",
+  "cardCount": 9,
+  "titles": [
+    "Request volume over time",
+    "Taxonomy demand by group",
+    "Task success vs failure",
+    "Token usage over time",
+    "Cache efficiency trend",
+    "Effective cost over time",
+    "Latency trend",
+    "Capability leaders",
+    "Ranked comparison"
+  ],
+  "cards": [
+    {
+      "title": "Request volume over time",
+      "paths": 0,
+      "rects": 24,
+      "empty": null
+    },
+    {
+      "title": "Taxonomy demand by group",
+      "paths": 0,
+      "rects": 24,
+      "empty": null
+    },
+    {
+      "title": "Task success vs failure",
+      "paths": 0,
+      "rects": 48,
+      "empty": null
+    },
+    {
+      "title": "Token usage over time",
+      "paths": 3,
+      "rects": 0,
+      "empty": null
+    },
+    {
+      "title": "Cache efficiency trend",
+      "paths": 2,
+      "rects": 0,
+      "empty": null
+    },
+    {
+      "title": "Effective cost over time",
+      "paths": 3,
+      "rects": 0,
+      "empty": null
+    },
+    {
+      "title": "Latency trend",
+      "paths": 2,
+      "rects": 0,
+      "empty": null
+    },
+    {
+      "title": "Capability leaders",
+      "paths": 0,
+      "rects": 2,
+      "empty": null
+    },
+    {
+      "title": "Ranked comparison",
+      "paths": 0,
+      "rects": 4,
+      "empty": null
+    }
+  ],
+  "visibleChartTables": 0,
+  "srOnlyChartTables": 9,
+  "analyticsPosts": 9,
+  "reference3456": {
+    "note": "Reference /app/observe/requests uses buildObserveRequestsChartDefinitions with the same nine titles; its Week view renders the charts without visible tables (s629-reference-3456-requests.png).",
+    "screenshot": "s629-reference-3456-requests.png"
+  },
+  "screenshot": "s634-requests-charts-seeded-3484.png"
+}

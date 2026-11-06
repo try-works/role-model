@@ -1,0 +1,145 @@
+# R30 evidence-before-ack + kill/lease fence — genuine behavioural RED
+date: 2026-11-01T06:37:34.3013031+08:00
+setup: fence seam present as a no-op stub (complete always accepts; recordEvidence is not durable) and workers.ts reverted to 544c6705^ (pre-fence claim loop).
+command: corepack pnpm exec vitest run test/s594-r30-evidence-fence.test.ts
+exit: 1
+expectation: collected tests fail behaviourally because completions are acked without evidence, kill/lease fences are ignored, and the queue worker ignores the fence option.
+--- output ---
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:26380) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s594-r30-evidence-fence.test.ts (6 tests | 6 failed) 12224ms
+   × R30 attempt fence > does not acknowledge an attempt until its evidence is durable 17ms
+     → expected { accepted: true } to deeply equal { accepted: false, …(1) }
+   × R30 attempt fence > fences evidence and completion after a kill 2ms
+     → expected function to throw an error, but it didn't
+   × R30 attempt fence > fences a late completion after lease expiry and admits only the new lease 3ms
+     → expected { accepted: true } to deeply equal { accepted: false, …(1) }
+   × R30 attempt fence > refuses a second active lease for the same attempt 5ms
+     → expected [Function] to throw an error
+   × R30 attempt fence > acks a persisted-queue job only after the handler records durable evidence 144ms
+     → expected undefined to deeply equal { captureRef: 'req-fence-ack', …(1) }
+   × R30 attempt fence > leaves the persisted-queue job unacknowledged when the handler records no evidence 12051ms
+     → timed out waiting for req-fence-missing to reach failed (last: completed)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s594-r30-evidence-fence.test.ts > R30 attempt fence > does not acknowledge an attempt until its evidence is durable
+AssertionError: expected { accepted: true } to deeply equal { accepted: false, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "accepted": false,
+-   "reason": "evidence_missing",
++   "accepted": true,
+  }
+
+ ❯ test/s594-r30-evidence-fence.test.ts:83:35
+     81|     const lease = fence.beginAttempt({ jobId: "job-evidence", attempt:…
+     82| 
+     83|     expect(fence.complete(lease)).toEqual({ accepted: false, reason: "…
+       |                                   ^
+     84|     expect(fence.readAttempt("job-evidence", 1)).toMatchObject({ state…
+     85| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  test/s594-r30-evidence-fence.test.ts > R30 attempt fence > fences evidence and completion after a kill
+AssertionError: expected function to throw an error, but it didn't
+ ❯ test/s594-r30-evidence-fence.test.ts:105:67
+    103|     fence.kill("job-killed");
+    104| 
+    105|     expect(() => fence.recordEvidence(lease, { output: "late" })).toTh…
+       |                                                                   ^
+    106|     expect(fence.complete(lease)).toEqual({ accepted: false, reason: "…
+    107|     expect(() =>
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  test/s594-r30-evidence-fence.test.ts > R30 attempt fence > fences a late completion after lease expiry and admits only the new lease
+AssertionError: expected { accepted: true } to deeply equal { accepted: false, …(1) }
+
+- Expected
++ Received
+
+  {
+-   "accepted": false,
+-   "reason": "lease_expired",
++   "accepted": true,
+  }
+
+ ❯ test/s594-r30-evidence-fence.test.ts:118:35
+    116| 
+    117|     clock.now = 1_101;
+    118|     expect(fence.complete(first)).toEqual({ accepted: false, reason: "…
+       |                                   ^
+    119|     expect(() => fence.recordEvidence(first, { output: "late" })).toTh…
+    120| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  test/s594-r30-evidence-fence.test.ts > R30 attempt fence > refuses a second active lease for the same attempt
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ test/s594-r30-evidence-fence.test.ts:137:7
+    135|     expect(() =>
+    136|       fence.beginAttempt({ jobId: "job-held", attempt: 1, owner: "work…
+    137|     ).toThrow(/lease|held/);
+       |       ^
+    138| 
+    139|     clock.now += 60_001;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  test/s594-r30-evidence-fence.test.ts > R30 attempt fence > acks a persisted-queue job only after the handler records durable evidence
+AssertionError: expected undefined to deeply equal { captureRef: 'req-fence-ack', …(1) }
+
+- Expected: 
+{
+  "captureRef": "req-fence-ack",
+  "output": "accepted",
+}
+
++ Received: 
+undefined
+
+ ❯ test/s594-r30-evidence-fence.test.ts:170:63
+    168|       });
+    169|       await waitForQueueState("req-fence-ack", "completed");
+    170|       expect(fence.readEvidence("req-fence-ack", 1)?.payload).toEqual({
+       |                                                               ^
+    171|         captureRef: "req-fence-ack",
+    172|         output: "accepted",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  test/s594-r30-evidence-fence.test.ts > R30 attempt fence > leaves the persisted-queue job unacknowledged when the handler records no evidence
+Error: timed out waiting for req-fence-missing to reach failed (last: completed)
+ ❯ waitForQueueState test/s594-r30-evidence-fence.test.ts:75:9
+     73|     await new Promise((resolve) => setTimeout(resolve, 20));
+     74|   }
+     75|   throw new Error("timed out waiting for " + jobId + " to reach " + st…
+       |         ^
+     76| };
+     77| 
+ ❯ test/s594-r30-evidence-fence.test.ts:199:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed (6)
+   Start at  06:37:16
+   Duration  17.16s (transform 2.64s, setup 0ms, collect 4.13s, tests 12.22s, environment 0ms, prepare 286ms)
+
+

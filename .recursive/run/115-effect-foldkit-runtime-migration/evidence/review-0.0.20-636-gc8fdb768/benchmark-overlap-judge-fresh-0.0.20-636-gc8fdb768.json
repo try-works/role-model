@@ -1,0 +1,6 @@
+{
+  "selectedText": "3 of 6 selected",
+  "judge": "review.judge.us-east-1.gpt-5.5",
+  "overlapWarningPresent": true,
+  "overlapWarningText": "Judge endpoint is also a benchmark subject. Expect slower grading and higher judge failure risk — prefer a dedicated judge when available."
+}

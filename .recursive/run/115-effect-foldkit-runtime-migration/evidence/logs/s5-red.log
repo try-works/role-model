@@ -1,0 +1,57 @@
+COMMAND: node ../../../node_modules/vitest/vitest.mjs run test/health-wait-timeout.test.ts
+CWD: role-model-router/packages/process-supervisor
+SOURCE UNDER TEST: git HEAD:role-model-router/packages/process-supervisor/src/index.ts (pre-fix; materialized file sha256 FFC623F2DCF4DE55070E6D6D5197A5FBAD311572C6496B919BC289930132C8B9)
+TEST FILE: final test/health-wait-timeout.test.ts sha256 87F81D8A036A4A29D050B89428596A8016408D4004027A218FF842BA7793E946
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ❯ test/health-wait-timeout.test.ts (3 tests | 2 failed) 32047ms
+   × process-supervisor bounded health wait > rejects within startupTimeoutMs when the health peer accepts and never responds 15113ms
+     → waitForHealth must reject instead of hanging when the health peer accepts and never responds: expected 'hung' to be 'rejected' // Object.is equality
+   ✓ process-supervisor bounded health wait > becomes healthy when a responsive endpoint replies after about 200ms  989ms
+   × process-supervisor bounded health wait > stops polling after a health timeout and shuts down cleanly 15940ms
+     → waitForHealth must reject instead of hanging when the health peer accepts and never responds: expected 'hung' to be 'rejected' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/health-wait-timeout.test.ts > process-supervisor bounded health wait > rejects within startupTimeoutMs when the health peer accepts and never responds
+AssertionError: waitForHealth must reject instead of hanging when the health peer accepts and never responds: expected 'hung' to be 'rejected' // Object.is equality
+
+Expected: "rejected"
+Received: "hung"
+
+ ❯ test/health-wait-timeout.test.ts:266:7
+    264|       outcome.kind,
+    265|       "waitForHealth must reject instead of hanging when the health pe…
+    266|     ).toBe("rejected");
+       |       ^
+    267|     if (outcome.kind !== "rejected") {
+    268|       return;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/health-wait-timeout.test.ts > process-supervisor bounded health wait > stops polling after a health timeout and shuts down cleanly
+AssertionError: waitForHealth must reject instead of hanging when the health peer accepts and never responds: expected 'hung' to be 'rejected' // Object.is equality
+
+Expected: "rejected"
+Received: "hung"
+
+ ❯ test/health-wait-timeout.test.ts:323:7
+    321|       outcome.kind,
+    322|       "waitForHealth must reject instead of hanging when the health pe…
+    323|     ).toBe("rejected");
+       |       ^
+    324|     if (outcome.kind !== "rejected") {
+    325|       return;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  20:36:04
+   Duration  33.82s (transform 195ms, setup 0ms, collect 183ms, tests 32.05s, environment 2ms, prepare 613ms)
+
+

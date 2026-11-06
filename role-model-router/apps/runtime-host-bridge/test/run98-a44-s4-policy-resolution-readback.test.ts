@@ -40,22 +40,25 @@ const rootWithPolicy = (content: string | null): string => {
 const registry = { endpoints: [] } as never;
 
 const startServer = async (options: Record<string, unknown>) => {
-  const server = await startBridgeServer({
-    host: "127.0.0.1",
-    port: 0,
-    registry,
-    getRegistry: () => registry,
-    executeChatCompletions: async () => {
-      throw new Error("not used");
-    },
-    executeResponses: async () => {
-      throw new Error("not used");
-    },
-    readRuntimeSummary: async () => ({ status: "ok" }),
-    readHealthStatus: async () => ({ status: "ok" }),
-    operatorContext: { channel: "stage", scope: "run98-a44-s4", authorizationEpoch: 1 },
-    ...options,
-  } as never);
+  const server = await startBridgeServer(
+    {
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      getRegistry: () => registry,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+      executeResponses: async () => {
+        throw new Error("not used");
+      },
+      readRuntimeSummary: async () => ({ status: "ok" }),
+      readHealthStatus: async () => ({ status: "ok" }),
+      operatorContext: { channel: "stage", scope: "run98-a44-s4", authorizationEpoch: 1 },
+      ...options,
+    } as never,
+    { allowTestSeamBackend: true },
+  );
   return server;
 };
 

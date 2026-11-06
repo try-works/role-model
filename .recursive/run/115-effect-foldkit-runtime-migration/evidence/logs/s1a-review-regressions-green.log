@@ -1,0 +1,70 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+ ❯ test/compare.test.ts (31 tests | 1 failed) 77ms
+   ✓ compareRequestTraces > matches repeated same-step independent read variants as a multiset 9ms
+   ✓ compareRequestTraces > rejects a dependent read moved before its mutation predecessor 2ms
+   ✓ compareRequestTraces > rejects a write moved before the read that authorizes it 1ms
+   ✓ compareRequestTraces > returns no differences for identical captures 1ms
+   ✓ compareRequestTraces > returns no differences for two empty captures 1ms
+   ✓ compareRequestTraces > ignores volatile request ids and matches on stable step labels 1ms
+   ✓ compareRequestTraces > canonicalizes method case, header name case/order, and query key order 1ms
+   ✓ compareRequestTraces > preserves repeated query value order 1ms
+   ✓ compareRequestTraces > preserves repeated header value order 1ms
+   ✓ compareRequestTraces > reports a changed method 1ms
+   ✓ compareRequestTraces > reports a changed path 1ms
+   ✓ compareRequestTraces > reports a changed query value 0ms
+   ✓ compareRequestTraces > distinguishes a missing body from an empty body 0ms
+   ✓ compareRequestTraces > reports a changed body without leaking its bytes 1ms
+   ✓ compareRequestTraces > reports a changed status 1ms
+   ✓ compareRequestTraces > reports a changed terminal stream 1ms
+   ✓ compareRequestTraces > reports a changed terminal error 1ms
+   ✓ compareRequestTraces > reports a changed non-auth header without leaking its value 1ms
+   ✓ compareRequestTraces > compares an authorization scheme case-insensitively 1ms
+   ✓ compareRequestTraces > reports a changed authorization scheme 1ms
+   ✓ compareRequestTraces > reports a changed authorization credential without leaking it 1ms
+   ✓ compareRequestTraces > reports a changed api key as an auth-sensitive header 1ms
+   ✓ compareRequestTraces > reports a changed causal dependency 0ms
+   ✓ compareRequestTraces > requires an explicit dependency label for mutations 1ms
+   ✓ compareRequestTraces > ignores independent read order and keeps duplicate reads 1ms
+   ✓ compareRequestTraces > reports a missing duplicate read 1ms
+   ✓ compareRequestTraces > reports an extra independent read 1ms
+   ✓ compareRequestTraces > matches tool and turn dependencies by stable causal labels 1ms
+   × compareRequestTraces > preserves causal write order instead of sorting writes by endpoint 39ms
+     → expected [ { …(3) } ] to deeply equal [ { …(3) } ]
+   ✓ compareRequestTraces > bounds findings to one per mismatched field 1ms
+   ✓ compareRequestTraces > reports a changed event kind 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > preserves causal write order instead of sorting writes by endpoint
+AssertionError: expected [ { …(3) } ] to deeply equal [ { …(3) } ]
+
+- Expected
++ Received
+
+  [
+    {
+      "code": "causal_order_mismatch",
+      "index": 1,
+-     "step": "write-a",
++     "step": "write-b",
+    },
+  ]
+
+ ❯ test/compare.test.ts:508:52
+    506|     ];
+    507| 
+    508|     expect(compareRequestTraces(expected, actual)).toEqual([
+       |                                                    ^
+    509|       { code: "causal_order_mismatch", index: 1, step: "write-a" },
+    510|     ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 30 passed (31)
+   Start at  18:29:51
+   Duration  1.75s (transform 325ms, setup 0ms, collect 350ms, tests 77ms, environment 1ms, prepare 534ms)
+

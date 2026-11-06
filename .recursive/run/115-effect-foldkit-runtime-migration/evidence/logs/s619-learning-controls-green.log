@@ -1,0 +1,32 @@
+# S619 Learning route family wiring — GREEN evidence
+
+date: 2026-11-03
+
+## Wired controls (features/learning/routes.ts)
+- Operator-token password input on every Learning route (overview, configuration, packs, decisions, evidence x2, history): input value from model.learningOperatorToken, OnInput -> LearningOperatorTokenChanged; the handler persists to role-model.learning.operator-token and readbacks resolve the bearer at request time (readback tokenProvider).
+- LearningPacks actions: Roll back active pack (scope-wide) -> POST /api/role-model/operator/learning/rollback-pack body {scopeId, reason:"operator_ui_rollback"}; Engage kill switch -> POST /api/role-model/operator/learning/kill-switch body {scopeId}; Release kill switch -> same route body {scopeId, engaged:false}. Commands carry the readback scope and token.
+- LearningDecisions selects (Role, Task, Outcome, Advisory state, Observation origin): OnChange -> LearningDecisionFilterChanged, persisted in model.learningDecisionFilters.
+- Action status rendered via data-learning-action-status; token/action/filter state lives in model.ts and commands/update/app plumbing.
+
+## RED
+test/s619-learning-controls.test.ts before wiring: 2 failed (rollback click dispatched no fetch; engage/release no fetch). Log: s619-learning-controls-red.log.
+
+## GREEN
+- s619-learning-controls.test.ts: 4 passed
+- s617-handler-presence.test.ts: 9 passed (Learning dead controls now wired; contract updated)
+- Full UI suite: 88 files, 879 tests passed (rerun; first run had one module-load flake in handler-presence-reconcile that passes isolated and on rerun)
+- UI tsc --noEmit: 0
+
+## S247 click budget
+Added s619-learning-controls.test.ts: 3 with rationale "Scope-wide pack rollback with operator token; engage then release the learning kill switch".
+Budget total: 32 -> 35. S247 lane 4/4 passed.
+
+## Lead view wiring still required (view.ts is lead-owned)
+Pass model state to the learning routes:
+- Learning: learningOverviewRoute(..., h, model.learningOperatorToken)
+- LearningConfiguration: learningConfigurationPage(..., h, model.learningOperatorToken, model.learningPackAction)
+- LearningPacks: learningPacksPage(..., h, model.learningOperatorToken, model.learningPackAction)
+- LearningDecisions: learningDecisionsPage(..., h, model.learningOperatorToken, model.learningDecisionFilters)
+- LearningEvidence: learningEvidencePage(..., h, model.learningOperatorToken, model.learningPackAction)
+- LearningHistory: learningHistoryPage(..., h, model.learningOperatorToken, model.learningPackAction)
+Without these args the controls dispatch correctly but render initial values/status from defaults.

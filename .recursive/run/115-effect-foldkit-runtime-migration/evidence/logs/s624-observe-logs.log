@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s624-observe-logs-wiring.test.ts (2 tests) 385ms
+   ✓ S624 observe logs source filter > renders the labelled filter with the active value and dispatches on selection  339ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  15:30:05
+   Duration  45.67s (transform 21.14s, setup 0ms, collect 35.67s, tests 385ms, environment 6.33s, prepare 997ms)
+

@@ -1,0 +1,40 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/module-health-writer.test.ts (13 tests | 1 failed | 12 skipped) 14ms
+   ↓ module health writer > keeps a bounded ring buffer and counts every overflow instead of growing
+   ↓ module health writer > distinguishes Fail, Die and Interrupt and leaves each original cause intact
+   ↓ module health writer > bounds one cause's reasons and counts the rest instead of growing
+   ↓ module health writer > records a plain error without reading hostile accessors
+   × module health writer > contains a throwing reporter so the business result is unchanged 11ms
+     → getOrThrow called on a None
+   ↓ module health writer > contains a cause whose reasons accessor throws
+   ↓ module health writer > does not recurse on a cyclic error or a reused error
+   ↓ module health writer > records a nested/mixed cause without merging the kinds or recursing
+   ↓ module health writer > preserves an acquire/finalizer mixed exit with and without the writer
+   ↓ module health writer > keeps the business value/error identity identical with and without the writer
+   ↓ module health writer > is a single report owner: one write per observed exit and none for success or inner failures
+   ↓ module health writer > redacts: only four bounded scalars leave the writer, never a message or fiber dump
+   ↓ module health writer > feeds the diagnostics read contract: identity, records, loss and empty state
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/module-health-writer.test.ts > module health writer > contains a throwing reporter so the business result is unchanged
+Error: getOrThrow called on a None
+ ❯ errorOf test/module-health-writer.test.ts:17:10
+     15| 
+     16| const errorOf = (exit: Exit.Exit<unknown, unknown>): unknown =>
+     17|   Option.getOrThrow(Exit.findErrorOption(exit));
+       |          ^
+     18| 
+     19| const defectOf = (exit: Exit.Exit<unknown, unknown>): unknown =>
+ ❯ test/module-health-writer.test.ts:140:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 skipped (13)
+   Start at  01:07:41
+   Duration  3.16s (transform 1.69s, setup 0ms, collect 2.67s, tests 14ms, environment 0ms, prepare 170ms)
+

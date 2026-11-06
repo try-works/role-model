@@ -1,0 +1,40 @@
+COMMAND: node vitest run s448 (S448 entry/navigation/telemetry authority read RED5, before init/update multi-read)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s448-learning-scope.test.ts (11 tests | 1 failed) 115ms
+   ✓ S448 learning mutation scope authority > reads the authoritative records scopeId from the learning/records payload 7ms
+   ✓ S448 learning mutation scope authority > uses the loaded scope in the rollback payload instead of standalone-runtime-stage 17ms
+   ✓ S448 learning mutation scope authority > fails closed with an honest error when the loaded scope is missing 3ms
+   ✓ S448 learning mutation scope authority > invalidates the old confirmation at the accepted learningPacks readback and reconfirms the new scope 8ms
+   ✓ S448 learning mutation scope authority > loading or error readback clears the active scope and fails closed instead of using stale authority 3ms
+   ✓ S448 learning mutation scope authority > a pending old-scope result cannot refresh or mutate the new-scope row 3ms
+   ✓ S448 learning mutation scope authority > RED: loading/failed records cannot fall back to a stale state scope on the second click 3ms
+   ✓ S448 learning mutation scope authority > production command.effect carries the captured scope identity and exact payload to the reducer 12ms
+   ✓ S448 learning mutation scope authority > RED: A->B->A never reuses an old pending token (late result cannot settle the new scope row) 3ms
+   × S448 learning mutation scope authority > direct Learning entry reads the records packs authority, and navigation/telemetry refresh both sources 49ms
+     → expected [ 'learning', 'replayJobs', …(1) ] to include 'learningPacks'
+   ✓ S448 learning mutation scope authority > actual records readback supplies the scope used by the next two-click mutation 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s448-learning-scope.test.ts > S448 learning mutation scope authority > direct Learning entry reads the records packs authority, and navigation/telemetry refresh both sources
+AssertionError: expected [ 'learning', 'replayJobs', …(1) ] to include 'learningPacks'
+ ❯ test/s448-learning-scope.test.ts:209:72
+    207|     );
+    208|     const entry = init(Option.getOrThrow(Url.fromString("http://localh…
+    209|     expect((entry.commands ?? []).map((command) => command.args?.key))…
+       |                                                                        ^
+    210|     expect(entry.model.readbacks.learningPacks.status).toBe("loading");
+    211| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 passed (11)
+   Start at  08:07:34
+   Duration  18.24s (transform 8.79s, setup 0ms, collect 13.37s, tests 115ms, environment 2.68s, prepare 626ms)
+
+

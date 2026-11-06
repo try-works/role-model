@@ -1,0 +1,61 @@
+{
+  "slice": "s13d-chart-alt-repair",
+  "requirement": "R10 (chart accessible alternative)",
+  "status": "complete",
+  "task": ".recursive/run/115-effect-foldkit-runtime-migration/tasks/s13d-chart-alt-repair.md",
+  "fixChoice": {
+    "choice": "ordered label union with per-series label lookup (not rejection)",
+    "why": "The primitive's job is to display caller-supplied series; sparse/ragged series are a legitimate shape, and throwing would break callers for data that can be represented exactly. The union keeps every rendered point in the table, and the per-series lookup associates each value with its own label. The same union drives the SVG x-domain, so geometry and the accessible table cannot disagree.",
+    "duplicatePolicy": "A duplicate label inside one series keeps its first value (one union position; later duplicates are not separately tabulated). Documented in the module comment."
+  },
+  "defects": [
+    {
+      "id": "D1-ragged",
+      "input": "A=[{a:1}], B=[{a:2},{b:3}]",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13d-red-table.log",
+      "redMessage": "old chartTable produced one row (tbody text 'a12'); new test requires two rows and 'a12b—3' (B's b=3 present, A '—' at b)",
+      "test": "keeps every ragged-series point in the table and associates values by label, not index"
+    },
+    {
+      "id": "D1-misaligned",
+      "input": "A=[09:00:1,09:05:2], B=[10:00:3,10:05:4]",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13d-red-table.log",
+      "redMessage": "old table built rows from A's labels and indexed B by position (09:00->3); new test requires 4 union rows, tbody '09:001—09:052—10:00—310:05—4', and both 09:00 and 10:00 on the SVG x-axis",
+      "test": "does not put a differently-labelled series value under the first series label"
+    },
+    {
+      "id": "D2-caption",
+      "mutation": "captionSuffix forced to empty string",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13d-red-caption.log",
+      "redMessage": "Expected element matching 'caption' to have text 'Requests per minute data (showing 2 of 5 points; 3 dropped)' but received 'Requests per minute data'.",
+      "test": "exact caption assertion added to the truncation test"
+    },
+    {
+      "id": "D3-stale",
+      "mutation": "formatAge(ageMs) and formatAge(ruleMs) swapped in the stale notice and the caption",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13d-red-stale.log",
+      "redMessage": "Expected ... to have text 'Stale: data is 12s old (rule 5m).' but received 'Stale: data is 5m old (rule 12s).'.",
+      "test": "exact phrase assertion added to the stale test"
+    }
+  ],
+  "emptyCollapse": {
+    "documented": "foldkit-chart.ts module comment: usable = points.length > 0; ready + no usable series normalizes to empty and drops the SVG, notices and legend.",
+    "frozenBy": "a ready render whose series have no usable points collapses to the documented empty state (asserts data-chart-status=empty, the empty message, no svg, no ul.rm3-chart-legend)"
+  },
+  "green": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13d-green.log",
+    "tests": 13,
+    "passed": 13,
+    "exit": 0
+  },
+  "typecheck": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13d-tsc.log",
+    "command": "node <root>/node_modules/typescript/bin/tsc -p tsconfig.foldkit.json --noEmit (cwd packages/ui)",
+    "exit": 0
+  },
+  "existingOutputChanged": "No change for aligned series: orderedLabels reproduces series[0]'s label order, and xFor(index, union.length) plus per-series lookup by label are identical to the previous index math when labels line up. Output changes only where series differ (the defect). All 13 existing Scene assertions pass unchanged.",
+  "files": {
+    "role-model-router/packages/ui/src/foldkit-chart.ts": "orderedLabels + seriesValueLookup, union-driven x-axis/paths/points, label-based table cells, doc comment for alignment and empty collapse",
+    "role-model-router/packages/foldkit/test/s13b-foldkit-chart.test.ts": "2 failing-input tests, exact stale phrase, exact truncation caption, empty-collapse freeze"
+  }
+}

@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/provider-openai
+
+ ✓ test/index.test.ts (36 tests) 121ms
+
+ Test Files  1 passed (1)
+      Tests  36 passed (36)
+   Start at  20:04:08
+   Duration  6.20s (transform 1.31s, setup 0ms, collect 1.52s, tests 121ms, environment 1ms, prepare 2.60s)
+

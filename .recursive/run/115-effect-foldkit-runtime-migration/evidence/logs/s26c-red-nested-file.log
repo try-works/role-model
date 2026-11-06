@@ -1,0 +1,61 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s26a-route-inventory.test.ts (4 tests | 2 failed) 65ms
+   × S26a route inventory drift > validates every row, scans app/** recursively and correlates host endpoints 43ms
+     → expected [ Array(1) ] to deeply equal []
+   × S26a route inventory drift > detects a nested route file that has no inventory row 5ms
+     → expected [ …(2) ] to deeply equal [ Array(1) ]
+   ✓ S26a route inventory drift > detects a routes.ts-only path that has no inventory row 4ms
+   ✓ S26a route inventory drift > detects a declared endpoint that is absent from the host route table 11ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s26a-route-inventory.test.ts > S26a route inventory drift > validates every row, scans app/** recursively and correlates host endpoints
+AssertionError: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "role-model-router/apps/runtime-ui/app/lib/__s26a_fake_nested__.tsx",
++ ]
+
+ ❯ test/s26a-route-inventory.test.ts:153:45
+    151| 
+    152|     const files = listTsx(inventory.scan.appDir);
+    153|     expect(findUncovered(inventory, files)).toEqual([]);
+       |                                             ^
+    154|     expect(files).toHaveLength(75);
+    155| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s26a-route-inventory.test.ts > S26a route inventory drift > detects a nested route file that has no inventory row
+AssertionError: expected [ …(2) ] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+  [
+    "role-model-router/apps/runtime-ui/app/lib/__s26a_fake_nested__.tsx",
++   "role-model-router/apps/runtime-ui/app/lib/__s26a_fake_nested__.tsx",
+  ]
+
+ ❯ test/s26a-route-inventory.test.ts:180:81
+    178|     const inventory = JSON.parse(readFileSync(inventoryPath, "utf8")) …
+    179|     const fake = path.posix.join(inventory.scan.appDir, "lib/__s26a_fa…
+    180|     expect(findUncovered(inventory, [...listTsx(inventory.scan.appDir)…
+       |                                                                                 ^
+    181|   });
+    182| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  07:27:12
+   Duration  1.68s (transform 106ms, setup 0ms, collect 68ms, tests 65ms, environment 739ms, prepare 380ms)
+

@@ -1,0 +1,25 @@
+✔ @role-model-router/foldkit: built graph has no Node builtin or Node platform-package import (156.6371ms)
+✔ @role-model-router/foldkit: effect is one shared external specifier (92.4429ms)
+✔ @role-model-router/foldkit: every vendored subpath has a wrapper export backed by a built file (18.3093ms)
+✔ @role-model-router/foldkit-ui: built graph has no Node builtin or Node platform-package import (60.2335ms)
+✔ @role-model-router/foldkit-ui: effect is one shared external specifier (68.1082ms)
+✔ @role-model-router/foldkit-ui: every vendored subpath has a wrapper export backed by a built file (15.441ms)
+✔ @role-model-router/effect-platform-browser: built graph has no Node builtin or Node platform-package import (26.3315ms)
+✔ @role-model-router/effect-platform-browser: effect is one shared external specifier (26.2419ms)
+✔ @role-model-router/effect-platform-browser: every vendored subpath has a wrapper export backed by a built file (10.8471ms)
+✔ foldkit-ui reaches its framework peer through the first-party wrapper specifier (152.2989ms)
+✔ the foldkit browser-platform peer resolves to the workspace wrapper (89.7297ms)
+✔ wrapper subpath coverage is total and stable for every wrapper package (19.9074ms)
+✔ emitted declarations name the first-party wrappers, never the upstream packages (483.2492ms)
+✔ a published subpath whose source file is missing fails entry generation loudly (2.5802ms)
+✔ an export target outside dist/ is refused instead of guessed (0.3305ms)
+✔ every built browser entry resolves against the built effect wrapper (2074.8715ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2257.7376
+EXIT_CODE: 0

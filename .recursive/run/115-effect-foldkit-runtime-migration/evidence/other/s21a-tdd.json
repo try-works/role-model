@@ -1,0 +1,112 @@
+{
+  "slice": "s21a-composition-dag",
+  "requirement": "R27 Public composition B6 first slice (shape + closure + memoisation + bounded permit/waiter pilot)",
+  "status": "complete; additive only, nothing rewired",
+  "files": {
+    "role-model-router/apps/runtime-host-bridge/src/composition-dag.ts": {
+      "sha256": "b5ada63eac3ded46d3747c1b3e2ba4d7e990f1c2c6ffacf8f9c6c82003f318aa"
+    },
+    "role-model-router/apps/runtime-host-bridge/test/s21a-composition-dag.test.ts": {
+      "sha256": "b7100b154c23350ac5a0f62033703a351934cb64317c77a2765619bc68ab7ced"
+    }
+  },
+  "dag": {
+    "services": [
+      "CompositionConfig",
+      "ArtifactStoreAuthority",
+      "EventLogAuthority",
+      "CaptureWalAuthority",
+      "RetentionAuthority",
+      "ProviderPermits",
+      "Backend",
+      "Server",
+      "Bootstrap",
+      "Refresh",
+      "Drain",
+      "Benchmark",
+      "Cli"
+    ],
+    "edges": [
+      "CompositionConfig -> ArtifactStoreAuthority | EventLogAuthority | CaptureWalAuthority | RetentionAuthority | ProviderPermits",
+      "ArtifactStoreAuthority + EventLogAuthority -> Backend",
+      "ArtifactStoreAuthority -> Bootstrap",
+      "EventLogAuthority -> Refresh",
+      "CaptureWalAuthority + RetentionAuthority -> Drain",
+      "ProviderPermits -> Benchmark",
+      "Backend + ProviderPermits -> Server",
+      "Server -> Cli",
+      "ProviderPermits -> per-provider permit/waiter pilot (R27 explicitly names provider permits)"
+    ],
+    "closedLayer": "CompositionLayer: Layer.Layer<CompositionServices, never, never> (composition-dag.ts:363-365)",
+    "composition": "leafLayers are built once and provided via Layer.provideMerge to the owner layers (dependencyLayer :350, server/benchmark/cli composition :354-359); makeCompositionLayer(config) is the same shape with a custom config (:368-372)."
+  },
+  "closureArgument": {
+    "typed": "The final layer is annotated Layer.Layer<CompositionServices, never, never>; every leaf is constructed inside dependencyLayer (Layer.provideMerge(leafLayers, configLayer(...))). A missing provider makes the annotation fail to type-check.",
+    "compileRed": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21a-red-closure.log",
+      "mutation": "removed the configLayer provideMerge",
+      "error": "Type 'Layer<... | Cli, never, CompositionConfig>' is not assignable to type 'Layer<CompositionServices, never, never>'"
+    },
+    "runtime": "test builds the whole graph with Effect.provide(program, CompositionLayer) only - no ambient service - and yields all 13 services."
+  },
+  "memoisation": {
+    "proof": "one shared leaf instance: context ArtifactStoreAuthority === Backend.artifactStore === Bootstrap.artifactStore === Server.backend.artifactStore (test 'gives every consumer of one shared leaf the same instance')",
+    "negativeControl": "Layer.fresh(artifactAuthorityLayer) built twice produces different instances (test 'rebuilding the leaf per consumer produces different instances')",
+    "red": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21a-red-memo.log",
+      "mutation": "Bootstrap constructed its own ArtifactStoreAuthority instead of using the shared leaf",
+      "failure": "expected the shared object identity, got a rebuilt instance"
+    },
+    "api": "Layer.provideMerge builds the provided dependency once and retains it (Layer.ts:1582-1617); Layer.fresh forces a rebuild (Layer.ts:2207)."
+  },
+  "boundedPilot": {
+    "service": "ProviderPermits - chosen because R27 explicitly requires provider permits process-owned with separate bounded waiters.",
+    "shape": "permit Semaphore (maxConcurrent, default 4) + waiter-slot Semaphore (maxWaiters, default 16) + Explicit active/queued/started/completed counters; callers beyond both bounds wait for a waiter slot rather than being rejected.",
+    "test": "custom graph maxConcurrent=2, maxWaiters=2, 12 callers; after scheduling: active==2, maxQueued in (0,2], started==2; after gate release all 12 complete, active==0, queued==0, completed==12.",
+    "red": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21a-red-waiter.log",
+      "mutation": "removed the waiter-slot semaphore and waited directly on the permit semaphore",
+      "failure": "queued stayed 0; the explicit waiter bound was not enforced"
+    },
+    "api": "Semaphore.make :369; takeIfAvailable :538-541; take :510-513; release :572-575; withPermits :420-426; Ref.make/get/update Ref.ts:178, :206, :587."
+  },
+  "redGreen": {
+    "green": {
+      "command": "cd role-model-router/apps/runtime-host-bridge && vitest run test/s21a-composition-dag.test.ts",
+      "tests": 4,
+      "passed": 4,
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21a-green.log"
+    },
+    "typecheck": {
+      "command": "cd role-model-router/apps/runtime-host-bridge && tsc -p tsconfig.json --noEmit",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21a-typecheck.log"
+    },
+    "biome": {
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21a-biome-check.log"
+    },
+    "reds": [
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21a-red-closure.log",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21a-red-memo.log",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21a-red-waiter.log"
+    ]
+  },
+  "additive": "index.ts was not edited and does not import composition-dag (grep count 0); the existing construction and behaviour are untouched. index.ts already had pre-existing run-115 modifications before this slice; the two new paths are the only files this slice created.",
+  "apiCitations": [
+    "Context.Service class form: vendor/effect/packages/effect/src/Context.ts:103-134; Service.useSync :107.",
+    "Layer.succeed :827-835; Layer.effect :1039-1052; Layer.mergeAll :1275; Layer.provide :1463-1493; Layer.provideMerge :1582-1617; Layer.fresh :2207; Layer.build :717.",
+    "Semaphore.make :369; takeIfAvailable :538-541; take :510-513; release :572-575; withPermits :420-426.",
+    "Ref.make :178; Ref.get :206; Ref.update :587."
+  ],
+  "r27Remaining": [
+    "actual ownership rewiring: CLI/backend/server/bootstrap/refresh/drains/benchmarks into the closed graph, removing legacy construction from index.ts",
+    "early readiness and partial shutdown: stop admission, join/drain/interrupt tasks before dependencies; finalizer failure cannot skip later releases",
+    "cache identity keys (authority/config/model, TTL/cap/invalidation) and never deduplicating distinct stochastic inference",
+    "per-run sequential judge/throttle isolation; benchmark cancellation and overlap isolation before concurrency increases",
+    "process-owned provider permits with separate bounded waiter queues integrated with real provider calls; preserve reviewed concurrency defaults",
+    "partial layer acquire/build failure cleanup and packaging/SEA implications; tests for overlapping shutdown/refresh/benchmark paths"
+  ],
+  "unproven": "Shape only: the services are typed stand-ins, not the real CLI/backend/server/bootstrap/refresh/drain/benchmark implementations; no existing behaviour was rewired, and no real provider call exercises the permit pilot."
+}

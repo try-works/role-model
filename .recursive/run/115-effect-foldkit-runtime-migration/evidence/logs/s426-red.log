@@ -1,0 +1,93 @@
+✖ R32 handshake: unsupported operator protocol version is rejected before the factory (80.4853ms)
+✖ R32 handshake: a required operator extension without a domain capability is rejected before the factory (18.426ms)
+✖ R32 handshake: a missing required operator binding is rejected before the factory (16.1324ms)
+✖ R32 handshake: accepted operator evidence is not ready until the real factory succeeds (13.7636ms)
+✔ R32 handshake: a factory failure never leaves ready=true (13.8843ms)
+✖ R32 handshake: no manifest preserves honest null semantics (2.3129ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 1
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1804.4779
+
+✖ failing tests:
+
+test at tests\track-b\run115-b9-operator-handshake.test.mjs:30:1
+✖ R32 handshake: unsupported operator protocol version is rejected before the factory (80.4853ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-operator-handshake.test.mjs:35:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run115-b9-operator-handshake.test.mjs:40:1
+✖ R32 handshake: a required operator extension without a domain capability is rejected before the factory (18.426ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-operator-handshake.test.mjs:47:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run115-b9-operator-handshake.test.mjs:52:1
+✖ R32 handshake: a missing required operator binding is rejected before the factory (16.1324ms)
+  AssertionError [ERR_ASSERTION]: Missing expected rejection.
+      at async TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-operator-handshake.test.mjs:59:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run115-b9-operator-handshake.test.mjs:64:1
+✖ R32 handshake: accepted operator evidence is not ready until the real factory succeeds (13.7636ms)
+  AssertionError [ERR_ASSERTION]: the accepted decision is not ready during factory invocation
+  + actual - expected
+  
+  + undefined
+  - false
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-operator-handshake.test.mjs:73:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\run115-b9-operator-handshake.test.mjs:90:1
+✖ R32 handshake: no manifest preserves honest null semantics (2.3129ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - null
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/tests/track-b/run115-b9-operator-handshake.test.mjs:96:12)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

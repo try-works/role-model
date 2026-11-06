@@ -1,0 +1,5 @@
+COMMAND: node node_modules/typescript/bin/tsc -p apps/runtime-host-bridge/tsconfig.json --noEmit (with TEMP S310 type proof in index.ts)
+EXIT_CODE=2
+
+src/index.ts(35457,32): error TS2739: Type 'BackendContract' is missing the following properties from type 'StartBridgeServerOptions': host, port, registry, executeChatCompletions, executeResponses
+

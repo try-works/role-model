@@ -1,0 +1,3 @@
+# command: node node_modules/typescript/bin/tsc -p role-model-router/packages/core/tsconfig.json --noEmit
+# exit: 0
+

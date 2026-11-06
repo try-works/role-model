@@ -1,0 +1,36 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node
+
+(node:23864) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s18a-sql-truth.test.ts (8 tests | 1 failed | 7 skipped) 16ms
+   × S18a blocking measurement > blocks the event loop for the whole synchronous DatabaseSync statement (with tolerance) 14ms
+     → expected 3.1323999999999614 to be greater than or equal to 10
+   ↓ S18a blocking measurement > does not let other JavaScript run between the start and end of a synchronous transaction
+   ↓ S18a per-store PRAGMAs > pins the sql-sqlite-node service defaults (busy_timeout 5000, journal delete, synchronous FULL, FK on, auto_vacuum off)
+   ↓ S18a per-store PRAGMAs > preserves a per-store setup() PRAGMA (WAL + synchronous NORMAL)
+   ↓ S18a per-store PRAGMAs > pins the sqlite-memory initialization PRAGMAs (WAL, synchronous FULL, FK on, auto_vacuum INCREMENTAL)
+   ↓ S18a backup/restore owner fence > characterizes restore while an owner connection is active: no logical fence, only OS file locking
+   ↓ S18a real SQL transactions, no substitute > rolls back real SQL work and exposes no Effect Ref/TxRef memory transaction
+   ↓ S18a real SQL transactions, no substitute > pins BEGIN IMMEDIATE/COMMIT/ROLLBACK and excludes a scheduled-runSync or TxRef substitute
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s18a-sql-truth.test.ts > S18a blocking measurement > blocks the event loop for the whole synchronous DatabaseSync statement (with tolerance)
+AssertionError: expected 3.1323999999999614 to be greater than or equal to 10
+ ❯ test/s18a-sql-truth.test.ts:74:28
+     72|       // The timer cannot have fired while the synchronous statement o…
+     73|       expect(ranDuringStatement).toBe(false);
+     74|       expect(timerDelayMs).toBeGreaterThanOrEqual(Math.max(10, stateme…
+       |                            ^
+     75|       expect(statementMs).toBeGreaterThanOrEqual(20);
+     76|     } finally {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 skipped (8)
+   Start at  02:54:10
+   Duration  3.61s (transform 1.86s, setup 0ms, collect 2.89s, tests 16ms, environment 0ms, prepare 278ms)
+

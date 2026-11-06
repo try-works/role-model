@@ -1,0 +1,473 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s565-page-stories.scene.test.ts (40 tests | 15 failed) 3254ms
+   × S565 page stories — scene (captured from :3456) > Benchmark matches its :3456 story 420ms
+     → Benchmark
+table: missing columns [Model, Path, Scope, Status]
+control: missing [Quick (12 hard cases)]
+control: missing [Deepseek Flash (High) (remote)]: expected [ …(3) ] to deeply equal []
+   ✓ S565 page stories — scene (captured from :3456) > ControlController matches its :3456 story 84ms
+   × S565 page stories — scene (captured from :3456) > Endpoints matches its :3456 story 126ms
+     → Endpoints
+table: missing columns [Provider, Connection, Model, Endpoint, Effort, Source, Health, Readiness]: expected [ Array(1) ] to deeply equal []
+   × S565 page stories — scene (captured from :3456) > Index matches its :3456 story 247ms
+     → Index
+control: missing [By endpoint variant]
+control: missing [All sources]
+control: missing [All statuses]
+control: missing [All buckets]: expected [ …(4) ] to deeply equal []
+   ✓ S565 page stories — scene (captured from :3456) > Learning matches its :3456 story 82ms
+   ✓ S565 page stories — scene (captured from :3456) > LearningConfiguration matches its :3456 story 74ms
+   × S565 page stories — scene (captured from :3456) > LearningDecisions matches its :3456 story 95ms
+     → LearningDecisions
+control: missing [all roles]
+control: missing [all tasks]
+control: missing [all outcomes]: expected [ Array(3) ] to deeply equal []
+   × S565 page stories — scene (captured from :3456) > LearningEvidence matches its :3456 story 63ms
+     → LearningEvidence
+table: missing columns [Guardrail, Bound, Observed, Verdict]: expected [ Array(1) ] to deeply equal []
+   ✓ S565 page stories — scene (captured from :3456) > LearningHistory matches its :3456 story 58ms
+   ✓ S565 page stories — scene (captured from :3456) > LearningPacks matches its :3456 story 106ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalChoose matches its :3456 story 109ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalLlamaSwapModels matches its :3456 story 126ms
+   × S565 page stories — scene (captured from :3456) > LocalLogs matches its :3456 story 84ms
+     → LocalLogs
+table: missing columns [Time, Source, Level, Message, Request]: expected [ Array(1) ] to deeply equal []
+   ✓ S565 page stories — scene (captured from :3456) > LocalPeerModels matches its :3456 story 44ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalPeers matches its :3456 story 54ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalPolicy matches its :3456 story 61ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalSwap matches its :3456 story 44ms
+   × S565 page stories — scene (captured from :3456) > Models matches its :3456 story 39ms
+     → Models
+sections: expected [Model inventory] rendered [Configured models]: expected [ Array(1) ] to deeply equal []
+   × S565 page stories — scene (captured from :3456) > ModelsRoles matches its :3456 story 30ms
+     → ModelsRoles
+sections: expected [Create role | Role catalog | Role task allowlists | Edit selected role] rendered [Runtime roles]
+control: missing [assistant]
+control: missing [allowed]: expected [ …(3) ] to deeply equal []
+   ✓ S565 page stories — scene (captured from :3456) > Observability matches its :3456 story 82ms
+   ✓ S565 page stories — scene (captured from :3456) > ObserveActivity matches its :3456 story 60ms
+   ✓ S565 page stories — scene (captured from :3456) > ObserveLogs matches its :3456 story 59ms
+   × S565 page stories — scene (captured from :3456) > ObserveRouting matches its :3456 story 64ms
+     → ObserveRouting
+control: missing [By endpoint variant]
+control: missing [All sources]
+control: missing [All buckets]: expected [ …(3) ] to deeply equal []
+   × S565 page stories — scene (captured from :3456) > Providers matches its :3456 story 63ms
+     → Providers
+control: missing [302.AI]
+control: missing [302.AI API Key]
+control: missing [Select a model…]: expected [ 'control: missing [302.AI]', …(2) ] to deeply equal []
+   ✓ S565 page stories — scene (captured from :3456) > Queues matches its :3456 story 43ms
+   × S565 page stories — scene (captured from :3456) > Requests matches its :3456 story 190ms
+     → Requests
+control: missing [Total]
+control: missing [All sources]
+control: missing [Average latency]
+control: missing [Endpoint variants]
+control: missing [All statuses]: expected [ 'control: missing [Total]', …(4) ] to deeply equal []
+   × S565 page stories — scene (captured from :3456) > Router matches its :3456 story 35ms
+     → Router
+table: missing columns [Alias, Mode, Effective models, Candidate expansion, Readiness]
+table: missing columns [Model, Endpoint, Source, Health, Routing]: expected [ …(2) ] to deeply equal []
+   × S565 page stories — scene (captured from :3456) > RouterAgentStrategy matches its :3456 story 113ms
+     → RouterAgentStrategy
+control: missing [Quality]
+control: missing [Baseline]
+control: missing [remote]: expected [ 'control: missing [Quality]', …(2) ] to deeply equal []
+   ✓ S565 page stories — scene (captured from :3456) > RouterCandidates matches its :3456 story 29ms
+   ✓ S565 page stories — scene (captured from :3456) > RouterConfig matches its :3456 story 51ms
+   ✓ S565 page stories — scene (captured from :3456) > RouterDecisions matches its :3456 story 35ms
+   ✓ S565 page stories — scene (captured from :3456) > RouterStrategy matches its :3456 story 53ms
+   ✓ S565 page stories — scene (captured from :3456) > RouterWorkloads matches its :3456 story 60ms
+   × S565 page stories — scene (captured from :3456) > Runtime matches its :3456 story 59ms
+     → Runtime
+sections: expected [Config editor | Applied snapshot | Page actions] rendered [Runtime | Runtime config | Runtime topology | Applied runtime policy | Execution readiness | Controller posture | Version facts | Runtime topology]: expected [ Array(1) ] to deeply equal []
+   ✓ S565 page stories — scene (captured from :3456) > SessionReadiness matches its :3456 story 95ms
+   ✓ S565 page stories — scene (captured from :3456) > StorageRetention matches its :3456 story 29ms
+   ✓ S565 page stories — scene (captured from :3456) > StoreReceipts matches its :3456 story 33ms
+   ✓ S565 page stories — scene (captured from :3456) > SystemExtensions matches its :3456 story 35ms
+   × S565 page stories — scene (captured from :3456) > SystemOperator matches its :3456 story 43ms
+     → SystemOperator
+sections: expected [Operator Controls | Trace lineage | Replay Jobs | Evaluation Jobs | Shadow Learning] rendered [Operator controls | Operator status | Operator status | Trace lineage | Operator trace roots | Replay Jobs | Replay jobs | Evaluation Jobs | Evaluation jobs | Shadow Learning]: expected [ Array(1) ] to deeply equal []
+   ✓ S565 page stories — scene (captured from :3456) > SystemPeers matches its :3456 story 57ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 15 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > Benchmark matches its :3456 story
+AssertionError: Benchmark
+table: missing columns [Model, Path, Scope, Status]
+control: missing [Quick (12 hard cases)]
+control: missing [Deepseek Flash (High) (remote)]: expected [ …(3) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "table: missing columns [Model, Path, Scope, Status]",
++   "control: missing [Quick (12 hard cases)]",
++   "control: missing [Deepseek Flash (High) (remote)]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:97:58
+     95|       const container = await renderRoute(routeFor(tag));
+     96|       const failures = sceneFailures(container, story);
+     97|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     98|       expect(normalise(container.textContent)).not.toContain("Runtime …
+     99|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/15]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > Endpoints matches its :3456 story
+AssertionError: Endpoints
+table: missing columns [Provider, Connection, Model, Endpoint, Effort, Source, Health, Readiness]: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "table: missing columns [Provider, Connection, Model, Endpoint, Effort, Source, Health, Readiness]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:97:58
+     95|       const container = await renderRoute(routeFor(tag));
+     96|       const failures = sceneFailures(container, story);
+     97|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     98|       expect(normalise(container.textContent)).not.toContain("Runtime …
+     99|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/15]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > Index matches its :3456 story
+AssertionError: Index
+control: missing [By endpoint variant]
+control: missing [All sources]
+control: missing [All statuses]
+control: missing [All buckets]: expected [ …(4) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "control: missing [By endpoint variant]",
++   "control: missing [All sources]",
++   "control: missing [All statuses]",
++   "control: missing [All buckets]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:97:58
+     95|       const container = await renderRoute(routeFor(tag));
+     96|       const failures = sceneFailures(container, story);
+     97|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     98|       expect(normalise(container.textContent)).not.toContain("Runtime …
+     99|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/15]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > LearningDecisions matches its :3456 story
+AssertionError: LearningDecisions
+control: missing [all roles]
+control: missing [all tasks]
+control: missing [all outcomes]: expected [ Array(3) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "control: missing [all roles]",
++   "control: missing [all tasks]",
++   "control: missing [all outcomes]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:97:58
+     95|       const container = await renderRoute(routeFor(tag));
+     96|       const failures = sceneFailures(container, story);
+     97|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     98|       expect(normalise(container.textContent)).not.toContain("Runtime …
+     99|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/15]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > LearningEvidence matches its :3456 story
+AssertionError: LearningEvidence
+table: missing columns [Guardrail, Bound, Observed, Verdict]: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "table: missing columns [Guardrail, Bound, Observed, Verdict]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:97:58
+     95|       const container = await renderRoute(routeFor(tag));
+     96|       const failures = sceneFailures(container, story);
+     97|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     98|       expect(normalise(container.textContent)).not.toContain("Runtime …
+     99|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/15]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > LocalLogs matches its :3456 story
+AssertionError: LocalLogs
+table: missing columns [Time, Source, Level, Message, Request]: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "table: missing columns [Time, Source, Level, Message, Request]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:97:58
+     95|       const container = await renderRoute(routeFor(tag));
+     96|       const failures = sceneFailures(container, story);
+     97|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     98|       expect(normalise(container.textContent)).not.toContain("Runtime …
+     99|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/15]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > Models matches its :3456 story
+AssertionError: Models
+sections: expected [Model inventory] rendered [Configured models]: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "sections: expected [Model inventory] rendered [Configured models]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:97:58
+     95|       const container = await renderRoute(routeFor(tag));
+     96|       const failures = sceneFailures(container, story);
+     97|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     98|       expect(normalise(container.textContent)).not.toContain("Runtime …
+     99|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/15]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > ModelsRoles matches its :3456 story
+AssertionError: ModelsRoles
+sections: expected [Create role | Role catalog | Role task allowlists | Edit selected role] rendered [Runtime roles]
+control: missing [assistant]
+control: missing [allowed]: expected [ …(3) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "sections: expected [Create role | Role catalog | Role task allowlists | Edit selected role] rendered [Runtime roles]",
++   "control: missing [assistant]",
++   "control: missing [allowed]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:97:58
+     95|       const container = await renderRoute(routeFor(tag));
+     96|       const failures = sceneFailures(container, story);
+     97|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     98|       expect(normalise(container.textContent)).not.toContain("Runtime …
+     99|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/15]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > ObserveRouting matches its :3456 story
+AssertionError: ObserveRouting
+control: missing [By endpoint variant]
+control: missing [All sources]
+control: missing [All buckets]: expected [ …(3) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "control: missing [By endpoint variant]",
++   "control: missing [All sources]",
++   "control: missing [All buckets]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:97:58
+     95|       const container = await renderRoute(routeFor(tag));
+     96|       const failures = sceneFailures(container, story);
+     97|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     98|       expect(normalise(container.textContent)).not.toContain("Runtime …
+     99|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/15]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > Providers matches its :3456 story
+AssertionError: Providers
+control: missing [302.AI]
+control: missing [302.AI API Key]
+control: missing [Select a model…]: expected [ 'control: missing [302.AI]', …(2) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "control: missing [302.AI]",
++   "control: missing [302.AI API Key]",
++   "control: missing [Select a model…]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:97:58
+     95|       const container = await renderRoute(routeFor(tag));
+     96|       const failures = sceneFailures(container, story);
+     97|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     98|       expect(normalise(container.textContent)).not.toContain("Runtime …
+     99|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/15]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > Requests matches its :3456 story
+AssertionError: Requests
+control: missing [Total]
+control: missing [All sources]
+control: missing [Average latency]
+control: missing [Endpoint variants]
+control: missing [All statuses]: expected [ 'control: missing [Total]', …(4) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "control: missing [Total]",
++   "control: missing [All sources]",
++   "control: missing [Average latency]",
++   "control: missing [Endpoint variants]",
++   "control: missing [All statuses]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:97:58
+     95|       const container = await renderRoute(routeFor(tag));
+     96|       const failures = sceneFailures(container, story);
+     97|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     98|       expect(normalise(container.textContent)).not.toContain("Runtime …
+     99|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/15]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > Router matches its :3456 story
+AssertionError: Router
+table: missing columns [Alias, Mode, Effective models, Candidate expansion, Readiness]
+table: missing columns [Model, Endpoint, Source, Health, Routing]: expected [ …(2) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "table: missing columns [Alias, Mode, Effective models, Candidate expansion, Readiness]",
++   "table: missing columns [Model, Endpoint, Source, Health, Routing]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:97:58
+     95|       const container = await renderRoute(routeFor(tag));
+     96|       const failures = sceneFailures(container, story);
+     97|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     98|       expect(normalise(container.textContent)).not.toContain("Runtime …
+     99|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/15]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > RouterAgentStrategy matches its :3456 story
+AssertionError: RouterAgentStrategy
+control: missing [Quality]
+control: missing [Baseline]
+control: missing [remote]: expected [ 'control: missing [Quality]', …(2) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "control: missing [Quality]",
++   "control: missing [Baseline]",
++   "control: missing [remote]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:97:58
+     95|       const container = await renderRoute(routeFor(tag));
+     96|       const failures = sceneFailures(container, story);
+     97|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     98|       expect(normalise(container.textContent)).not.toContain("Runtime …
+     99|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/15]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > Runtime matches its :3456 story
+AssertionError: Runtime
+sections: expected [Config editor | Applied snapshot | Page actions] rendered [Runtime | Runtime config | Runtime topology | Applied runtime policy | Execution readiness | Controller posture | Version facts | Runtime topology]: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "sections: expected [Config editor | Applied snapshot | Page actions] rendered [Runtime | Runtime config | Runtime topology | Applied runtime policy | Execution readiness | Controller posture | Version facts | Runtime topology]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:97:58
+     95|       const container = await renderRoute(routeFor(tag));
+     96|       const failures = sceneFailures(container, story);
+     97|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     98|       expect(normalise(container.textContent)).not.toContain("Runtime …
+     99|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/15]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > SystemOperator matches its :3456 story
+AssertionError: SystemOperator
+sections: expected [Operator Controls | Trace lineage | Replay Jobs | Evaluation Jobs | Shadow Learning] rendered [Operator controls | Operator status | Operator status | Trace lineage | Operator trace roots | Replay Jobs | Replay jobs | Evaluation Jobs | Evaluation jobs | Shadow Learning]: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "sections: expected [Operator Controls | Trace lineage | Replay Jobs | Evaluation Jobs | Shadow Learning] rendered [Operator controls | Operator status | Operator status | Trace lineage | Operator trace roots | Replay Jobs | Replay jobs | Evaluation Jobs | Evaluation jobs | Shadow Learning]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:97:58
+     95|       const container = await renderRoute(routeFor(tag));
+     96|       const failures = sceneFailures(container, story);
+     97|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     98|       expect(normalise(container.textContent)).not.toContain("Runtime …
+     99|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/15]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  15 failed | 25 passed (40)
+   Start at  15:13:46
+   Duration  31.44s (transform 14.52s, setup 0ms, collect 22.72s, tests 3.25s, environment 2.30s, prepare 812ms)
+

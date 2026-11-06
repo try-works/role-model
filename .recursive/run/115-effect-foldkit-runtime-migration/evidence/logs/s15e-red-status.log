@@ -1,0 +1,40 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/diagnostics-client.test.ts (6 tests | 1 failed | 5 skipped) 17ms
+   ↓ S15e diagnostics fetch client > builds the operator diagnostics URL and sends the expected bearer credential
+   ↓ S15e diagnostics fetch client > sends no credential header and no spoofable owner/operator-context headers
+   ↓ S15e diagnostics fetch client > passes every 200 state through unchanged
+   × S15e diagnostics fetch client > distinguishes a 401 denial from a 403 rejection 15ms
+     → expected 401 to be 403 // Object.is equality
+   ↓ S15e diagnostics fetch client > surfaces a transport rejection and a non-JSON 200 body as failures
+   ↓ S15e diagnostics fetch client > forwards the caller AbortSignal into the fetch call
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/diagnostics-client.test.ts > S15e diagnostics fetch client > distinguishes a 401 denial from a 403 rejection
+AssertionError: expected 401 to be 403 // Object.is equality
+
+- Expected
++ Received
+
+- 403
++ 401
+
+ ❯ test/diagnostics-client.test.ts:120:29
+    118|       stubFetch(jsonResponse({ error: "diagnostics_owner_header_forbid…
+    119|     )(input);
+    120|     expect(rejected.status).toBe(403);
+       |                             ^
+    121|     const rejectedSnapshot = parseDiagnosticsSnapshot("route-s15e", re…
+    122|     expect(rejectedSnapshot.status).toBe("denied");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 skipped (6)
+   Start at  04:16:44
+   Duration  3.91s (transform 1.55s, setup 0ms, collect 2.48s, tests 17ms, environment 689ms, prepare 207ms)
+
+EXIT_CODE: 1

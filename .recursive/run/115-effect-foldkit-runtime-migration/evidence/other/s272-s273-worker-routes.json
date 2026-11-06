@@ -1,0 +1,24 @@
+[
+  {
+    "name": "s272-url-review-repair",
+    "jobId": "pwsh-d1260c4ced9d4f45",
+    "sessionId": "session-a0c4b5da-be9f-4ccc-920c-2328956c99db",
+    "provider": "deepseek-official",
+    "model": "deepseek-flash",
+    "configSha256": "45d765ce089ffcc27853f0505de6c80d8e5a3dacf72627333925d2ac13647380",
+    "requestHeaderEvidence": "owned durable session.v4.jsonl.zstd data.header.config",
+    "output": "evidence/router/s272-url-review-repair.jsonl",
+    "status": "running"
+  },
+  {
+    "name": "s273-sql-cleanup-repair",
+    "jobId": "pwsh-8b9e33071d0f4f8b",
+    "sessionId": "session-39416658-0a0c-4ca5-86f0-d48d409a135f",
+    "provider": "deepseek-official",
+    "model": "deepseek-flash",
+    "configSha256": "45d765ce089ffcc27853f0505de6c80d8e5a3dacf72627333925d2ac13647380",
+    "requestHeaderEvidence": "owned durable session.v4.jsonl.zstd data.header.config",
+    "output": "evidence/router/s273-sql-cleanup-repair.jsonl",
+    "status": "running"
+  }
+]

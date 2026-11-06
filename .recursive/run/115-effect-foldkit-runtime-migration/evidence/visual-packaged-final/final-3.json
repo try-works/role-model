@@ -1,0 +1,138 @@
+[
+  {
+    "route": "/dashboard",
+    "status": 200,
+    "png": "f_dashboard.png",
+    "title": "Dashboard | RM3 Foldkit shell",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/local/swap",
+    "status": 200,
+    "png": "f_local_swap.png",
+    "title": "Local swap | RM3 Foldkit shell",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/observe/activity",
+    "status": 200,
+    "png": "f_observe_activity.png",
+    "title": "Activity | RM3 Foldkit shell",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/observe/logs",
+    "status": 200,
+    "png": "f_observe_logs.png",
+    "title": "Observe logs | RM3 Foldkit shell",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/observe/routing",
+    "status": 200,
+    "png": "f_observe_routing.png",
+    "title": "Observe routing | RM3 Foldkit shell",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/router",
+    "status": 200,
+    "png": "f_router.png",
+    "title": "Router | RM3 Foldkit shell",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/local/choose",
+    "status": 200,
+    "png": "f_local_choose.png",
+    "title": "Local choose | RM3 Foldkit shell",
+    "states": [],
+    "alerts": []
+  },
+  {
+    "route": "/local/matrix",
+    "status": 200,
+    "png": "f_local_matrix.png",
+    "title": "Not found: /local/matrix | RM3 Foldkit shell",
+    "states": [
+      "error"
+    ],
+    "alerts": [
+      "Not found\n\nNot found: /local/matrix\n\nThis runtime route does not exist"
+    ]
+  },
+  {
+    "route": "/router/config",
+    "status": 200,
+    "png": "f_router_config.png",
+    "title": "Not found: /router/config | RM3 Foldkit shell",
+    "states": [
+      "error"
+    ],
+    "alerts": [
+      "Not found\n\nNot found: /router/config\n\nThis runtime route does not exis"
+    ]
+  },
+  {
+    "route": "/requests/abc",
+    "status": 200,
+    "png": "f_requests_abc.png",
+    "title": "Request abc | RM3 Foldkit shell",
+    "states": [
+      "error"
+    ],
+    "alerts": [
+      "Runtime readback\n\nRequest detail\n\nRequest detail read failed: HTTP 404"
+    ]
+  },
+  {
+    "route": "/nonexistent-route",
+    "status": 200,
+    "png": "f_nonexistent_route.png",
+    "title": "Not found: /nonexistent-route | RM3 Foldkit shell",
+    "states": [
+      "error"
+    ],
+    "alerts": [
+      "Not found\n\nNot found: /nonexistent-route\n\nThis runtime route does not "
+    ]
+  },
+  {
+    "route": "/system/benchmark",
+    "status": 200,
+    "png": "f_system_benchmark.png",
+    "title": "Benchmark | RM3 Foldkit shell",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/system/storage-retention",
+    "status": 200,
+    "png": "f_system_storage_retention.png",
+    "title": "Storage retention | RM3 Foldkit shell",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  }
+]

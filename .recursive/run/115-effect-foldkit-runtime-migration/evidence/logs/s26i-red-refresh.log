@@ -1,0 +1,98 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s26e-readback-routes.test.ts > S26e shared readback routes > dashboard refreshes through the existing single subscription
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 43.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Dashboard' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 43.086599999998725,
+  thresholdMs: 8
+}
+
+ ❯ test/s26e-readback-routes.test.ts (31 tests | 1 failed | 30 skipped) 4734ms
+   ↓ S26e shared readback client > uses each declared host path, sends the bearer only when provisioned, and forwards abort
+   ↓ S26e shared readback routes > Store receipts renders success, empty, loading and error on the DOM
+   ↓ S26e shared readback routes > storeReceipts refreshes through the existing single subscription
+   ↓ S26e shared readback routes > Queues renders success, empty, loading and error on the DOM
+   ↓ S26e shared readback routes > queues refreshes through the existing single subscription
+   ↓ S26e shared readback routes > Local logs renders success, empty, loading and error on the DOM
+   ↓ S26e shared readback routes > localLogs refreshes through the existing single subscription
+   ↓ S26e shared readback routes > Router candidates renders success, empty, loading and error on the DOM
+   ↓ S26e shared readback routes > routerCandidates refreshes through the existing single subscription
+   ↓ S26e shared readback routes > Requests renders success, empty, loading and error on the DOM
+   ↓ S26e shared readback routes > requests refreshes through the existing single subscription
+   ↓ S26e shared readback routes > Router decisions renders success, empty, loading and error on the DOM
+   ↓ S26e shared readback routes > routerDecisions refreshes through the existing single subscription
+   ↓ S26e shared readback routes > Local peers renders success, empty, loading and error on the DOM
+   ↓ S26e shared readback routes > localPeers refreshes through the existing single subscription
+   ↓ S26e shared readback routes > Runtime renders success, empty, loading and error on the DOM
+   ↓ S26e shared readback routes > runtime refreshes through the existing single subscription
+   ↓ S26e shared readback routes > Session readiness renders success, empty, loading and error on the DOM
+   ↓ S26e shared readback routes > sessionReadiness refreshes through the existing single subscription
+   ↓ S26e shared readback routes > Dashboard renders success, empty, loading and error on the DOM
+   × S26e shared readback routes > dashboard refreshes through the existing single subscription 4731ms
+     → Timed out waiting for dashboard refresh (last: undefined) | body: Runtime UIOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsLocal peersRuntimeReadinessDashboardSwapActivityObserve logsObserve routingRouterStudioLocalRemoteModelsRouterObserveConnectSystemLearningClicks: 0Dark shellRuntimeDashboardToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsLocal peersRuntimeReadinessDashboardSwapActivityObserve logsObserve routingRouterStudioLocalRemoteModelsRouterObserveConnectSystemLearningRuntime readbackDashboardLoading dashboard…Refresh follows the shell's single runtime subscription; t
+   ↓ S26e shared readback routes > Local swap renders success, empty, loading and error on the DOM
+   ↓ S26e shared readback routes > localSwap refreshes through the existing single subscription
+   ↓ S26e shared readback routes > Observe activity renders success, empty, loading and error on the DOM
+   ↓ S26e shared readback routes > observeActivity refreshes through the existing single subscription
+   ↓ S26e shared readback routes > Observe logs renders success, empty, loading and error on the DOM
+   ↓ S26e shared readback routes > observeLogs refreshes through the existing single subscription
+   ↓ S26e shared readback routes > Observe routing renders success, empty, loading and error on the DOM
+   ↓ S26e shared readback routes > observeRouting refreshes through the existing single subscription
+   ↓ S26e shared readback routes > Router renders success, empty, loading and error on the DOM
+   ↓ S26e shared readback routes > router refreshes through the existing single subscription
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s26e-readback-routes.test.ts > S26e shared readback routes > dashboard refreshes through the existing single subscription
+Error: Timed out waiting for dashboard refresh (last: undefined) | body: Runtime UIOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsLocal peersRuntimeReadinessDashboardSwapActivityObserve logsObserve routingRouterStudioLocalRemoteModelsRouterObserveConnectSystemLearningClicks: 0Dark shellRuntimeDashboardToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsLocal peersRuntimeReadinessDashboardSwapActivityObserve logsObserve routingRouterStudioLocalRemoteModelsRouterObserveConnectSystemLearningRuntime readbackDashboardLoading dashboard…Refresh follows the shell's single runtime subscription; t
+ ❯ waitFor test/s26e-readback-routes.test.ts:22:9
+     20|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     21|   }
+     22|   throw new Error(
+       |         ^
+     23|     `Timed out waiting for ${label} (last: ${String(last)}) | body: ${…
+     24|   );
+ ❯ test/s26e-readback-routes.test.ts:381:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 30 skipped (31)
+   Start at  08:33:24
+   Duration  15.56s (transform 5.44s, setup 0ms, collect 8.74s, tests 4.73s, environment 916ms, prepare 480ms)
+

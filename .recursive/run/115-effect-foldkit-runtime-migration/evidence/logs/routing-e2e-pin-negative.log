@@ -1,0 +1,11 @@
+# S601 packaged routing E2E
+head=1c5da484
+exe=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\dist\release\win32-x64\role-model-dev.exe
+fixture_root=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\testdata\router-runtime\fixtures
+log=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\.recursive\run\115-effect-foldkit-runtime-migration\evidence\logs\routing-e2e-pin-negative.log
+started_at=2026-10-31T22:18:59.489Z
+
+exe_sha256=184ab88c790401cfb7938efdf06d7816a397eb80519d6a1893c41fce2e6f4114
+manifest_version=0.0.20-453-gfbab6294
+manifest_sha256=184ab88c790401cfb7938efdf06d7816a397eb80519d6a1893c41fce2e6f4114
+NOT RUN: manifest version 0.0.20-453-gfbab6294 does not match --expect-version 0.0.20-000-wrong

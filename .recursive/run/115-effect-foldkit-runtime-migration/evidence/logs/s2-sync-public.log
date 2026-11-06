@@ -1,0 +1,9 @@
+# S2 sync public to effect@4.0.6
+COMMAND: TMP=TEMP=E:\dsh-tmp\run115-s2 node scripts/vendor-upstream.mjs --name effect --sync --tag effect@4.0.6 --commit 3b28bf686bf26e9700edd39c025aff2744dc5303
+CWD: D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+TIMESTAMP: 2026-10-24T13:23:46.425Z
+EXIT_CODE: 0
+
+vendor-upstream: effect synced effect@4.0.6 (3b28bf686bf26e9700edd39c025aff2744dc5303) into vendor/effect (LF bytes)
+[exit=0]
+

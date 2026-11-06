@@ -1,0 +1,69 @@
+COMMAND: node vitest run (full suite; both TMP/TEMP conditions; ACTUAL reported health URL assertions)
+ENV=E-drive TMP=E:\rm-tmp EXIT=0
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ✓ test/s5c-supervisor-repairs.test.ts (2 tests | 1 skipped) 2128ms
+   ✓ S5c supervisor repairs > a failed taskkill rejects within the stop bound instead of hanging  2121ms
+ ✓ test/s5b-process-lifecycle.test.ts (5 tests | 2 skipped) 4166ms
+   ✓ S5b process lifecycle damage paths > repeated and concurrent stops settle once, signal once, and resolve after deletion  1867ms
+   ✓ S5b process lifecycle damage paths > a child that dies during startup surfaces the startup failure with stderr, not a readiness timeout  666ms
+   ✓ S5b process lifecycle damage paths > Windows records the force-only stop limitation for a console child  1626ms
+ ✓ test/health-wait-timeout.test.ts (3 tests) 4652ms
+   ✓ process-supervisor bounded health wait > rejects within startupTimeoutMs when the health peer accepts and never responds  717ms
+   ✓ process-supervisor bounded health wait > becomes healthy when a responsive endpoint replies after about 200ms  1415ms
+   ✓ process-supervisor bounded health wait > stops polling after a health timeout and shuts down cleanly  2513ms
+ ✓ test/s303-scoped-service.test.ts (7 tests) 5593ms
+   ✓ S303 scoped process service > scoped vendor preserves env, cwd and logs, and close stops the child  1954ms
+   ✓ S303 scoped process service > starting into a closed scope rolls the vendor back and kills the child  1774ms
+   ✓ S303 scoped process service > stopping a scoped vendor kills its grandchild tree  1678ms
+ ✓ test/index.test.ts (6 tests) 11149ms
+   ✓ process-supervisor > starts a vendor process, waits for health, and reports it as healthy  1874ms
+   ✓ process-supervisor > can run supervised vendors without inheriting provider credential variables  1822ms
+   ✓ process-supervisor > tracks crash callbacks when a managed vendor exits unexpectedly  1434ms
+   ✓ process-supervisor > captures child logs and restarts an unexpectedly crashed vendor with backoff  2276ms
+   ✓ process-supervisor > forces bounded shutdown when a vendor ignores the initial termination signal  1380ms
+   ✓ process-supervisor > stops spawned child processes when a managed vendor shuts down on Windows  2356ms
+ ✓ test/s303-sea-leg.test.ts (2 tests) 16913ms
+   ✓ S303 SEA supervision > starts the pinned sealed SEA, becomes healthy, stops it, and asserts its identity  16897ms
+
+ Test Files  6 passed (6)
+      Tests  22 passed | 3 skipped (25)
+   Start at  02:35:48
+   Duration  20.09s (transform 1.51s, setup 0ms, collect 3.28s, tests 44.60s, environment 9ms, prepare 5.23s)
+
+
+ENV=default-dsh-temp TMP=D:\DEV\dsh-temp EXIT=0
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ✓ test/s5c-supervisor-repairs.test.ts (2 tests | 1 skipped) 2267ms
+   ✓ S5c supervisor repairs > a failed taskkill rejects within the stop bound instead of hanging  2260ms
+ ✓ test/s5b-process-lifecycle.test.ts (5 tests | 2 skipped) 4200ms
+   ✓ S5b process lifecycle damage paths > repeated and concurrent stops settle once, signal once, and resolve after deletion  2048ms
+   ✓ S5b process lifecycle damage paths > a child that dies during startup surfaces the startup failure with stderr, not a readiness timeout  528ms
+   ✓ S5b process lifecycle damage paths > Windows records the force-only stop limitation for a console child  1611ms
+ ✓ test/health-wait-timeout.test.ts (3 tests) 4797ms
+   ✓ process-supervisor bounded health wait > rejects within startupTimeoutMs when the health peer accepts and never responds  727ms
+   ✓ process-supervisor bounded health wait > becomes healthy when a responsive endpoint replies after about 200ms  1515ms
+   ✓ process-supervisor bounded health wait > stops polling after a health timeout and shuts down cleanly  2545ms
+ ✓ test/s303-scoped-service.test.ts (7 tests) 5595ms
+   ✓ S303 scoped process service > scoped vendor preserves env, cwd and logs, and close stops the child  2055ms
+   ✓ S303 scoped process service > starting into a closed scope rolls the vendor back and kills the child  1613ms
+   ✓ S303 scoped process service > stopping a scoped vendor kills its grandchild tree  1749ms
+ ✓ test/index.test.ts (6 tests) 11799ms
+   ✓ process-supervisor > starts a vendor process, waits for health, and reports it as healthy  2017ms
+   ✓ process-supervisor > can run supervised vendors without inheriting provider credential variables  1673ms
+   ✓ process-supervisor > tracks crash callbacks when a managed vendor exits unexpectedly  1444ms
+   ✓ process-supervisor > captures child logs and restarts an unexpectedly crashed vendor with backoff  2376ms
+   ✓ process-supervisor > forces bounded shutdown when a vendor ignores the initial termination signal  1533ms
+   ✓ process-supervisor > stops spawned child processes when a managed vendor shuts down on Windows  2748ms
+ ✓ test/s303-sea-leg.test.ts (2 tests) 18468ms
+   ✓ S303 SEA supervision > starts the pinned sealed SEA, becomes healthy, stops it, and asserts its identity  18444ms
+
+ Test Files  6 passed (6)
+      Tests  22 passed | 3 skipped (25)
+   Start at  02:36:11
+   Duration  21.30s (transform 1.01s, setup 0ms, collect 3.14s, tests 47.13s, environment 7ms, prepare 5.29s)
+
+

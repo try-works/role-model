@@ -1,0 +1,72 @@
+COMMAND: node ../../../node_modules/vitest/vitest.mjs run test/s290-refresh-page-lifetime.test.ts
+CWD: role-model-router/apps/runtime-ui-next ; S291 strict RED: factory-reopen-throw retry + pageshow-registration cleanup
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s290-refresh-page-lifetime.test.ts (14 tests | 2 failed) 609ms
+   ✓ S290 refresh EventSource page lifetime > opens exactly one source per stream with both event listeners on it 43ms
+   ✓ S290 refresh EventSource page lifetime > pagehide closes the one source exactly once and late callbacks from it never offer 52ms
+   ✓ S290 refresh EventSource page lifetime > persisted pageshow reopens exactly one fresh source with listeners and no duplicate on repeated show 62ms
+   ✓ S290 refresh EventSource page lifetime > retired-generation callbacks stay silent even after the fresh source is active 61ms
+   ✓ S290 refresh EventSource page lifetime > an ordinary pageshow (not persisted) opens no second source 30ms
+   ✓ S290 refresh EventSource page lifetime > SPA navigation events do not create another source 31ms
+   ✓ S290 refresh EventSource page lifetime > the finalizer closes the current source, detaches page listeners and later pageshow cannot reopen 46ms
+   ✓ S290 refresh EventSource page lifetime > multiple hide/show cycles open one source per cycle and silence every retired generation 61ms
+   ✓ S290 refresh EventSource page lifetime > keeps revision and telemetry parsing unchanged (malformed payloads never emit) 62ms
+   ✓ S290 refresh EventSource page lifetime > emits exactly one RuntimePageRestored after a successful persisted reopen only 78ms
+   ✓ S290 refresh EventSource page lifetime > closes the new generation before propagating when a listener attach fails 6ms
+   × S290 refresh EventSource page lifetime > a failed reopen from the factory is reported and a later persisted pageshow retries successfully 36ms
+     → expected [Function] to not throw an error but 'Error: factory reopen boom' was thrown
+   × S290 refresh EventSource page lifetime > cleans the pagehide listener and source when pageshow registration throws 9ms
+     → expected +0 to be 1 // Object.is equality
+   ✓ S290 refresh EventSource page lifetime > restore re-reads the current Index route with its selected window and filters, never the watermark 25ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s290-refresh-page-lifetime.test.ts > S290 refresh EventSource page lifetime > a failed reopen from the factory is reported and a later persisted pageshow retries successfully
+AssertionError: expected [Function] to not throw an error but 'Error: factory reopen boom' was thrown
+
+- Expected: 
+undefined
+
++ Received: 
+"Error: factory reopen boom"
+
+ ❯ test/s290-refresh-page-lifetime.test.ts:376:58
+    374|     try {
+    375|       lifecycle.emit("pagehide", true);
+    376|       expect(() => lifecycle.emit("pageshow", true)).not.toThrow();
+       |                                                          ^
+    377|       await settle();
+    378|       expect(restoreMessages(running.messages)).toHaveLength(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s290-refresh-page-lifetime.test.ts > S290 refresh EventSource page lifetime > cleans the pagehide listener and source when pageshow registration throws
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ test/s290-refresh-page-lifetime.test.ts:400:38
+    398|     const stream = refreshRevisionStream(factory, lifecycle);
+    399|     await expect(Effect.runPromise(Stream.runCollect(stream))).rejects…
+    400|     expect(sources[0]?.closeCount()).toBe(1);
+       |                                      ^
+    401|     expect(lifecycle.listenerCount("pagehide")).toBe(0);
+    402|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 12 passed (14)
+   Start at  21:35:18
+   Duration  15.11s (transform 7.03s, setup 0ms, collect 11.04s, tests 609ms, environment 1.32s, prepare 631ms)
+
+

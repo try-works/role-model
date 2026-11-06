@@ -1,0 +1,47 @@
+COMMAND: node vitest run test/s310b-backend-owner.test.ts (stub DAG owner, legacy cli)
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:52540) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s310b-backend-owner.test.ts (2 tests | 2 failed) 76ms
+   × S310b DAG Backend owner > the host uses the DAG-built Backend owner by identity (and a legacy construction is rejected) 18ms
+     → expected undefined to be defined
+   × S310b DAG Backend owner > executeChatCompletions runs under the DAG ProviderPermits bound (defaults preserved) 53ms
+     → expected 6 to be less than or equal to 4
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s310b-backend-owner.test.ts > S310b DAG Backend owner > the host uses the DAG-built Backend owner by identity (and a legacy construction is rejected)
+AssertionError: expected undefined to be defined
+ ❯ test/s310b-backend-owner.test.ts:47:22
+     45|       },
+     46|     );
+     47|     expect(captured).toBeDefined();
+       |                      ^
+     48|     expect(options).toBe(captured?.options);
+     49|     expect(isComposedBackendOwner(captured)).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s310b-backend-owner.test.ts > S310b DAG Backend owner > executeChatCompletions runs under the DAG ProviderPermits bound (defaults preserved)
+AssertionError: expected 6 to be less than or equal to 4
+ ❯ test/s310b-backend-owner.test.ts:58:31
+     56|     const options = createCliServerOptions({ host: "127.0.0.1", port: …
+     57|     await Promise.all(Array.from({ length: 6 }, () => options.executeC…
+     58|     expect(stats().maxActive).toBeLessThanOrEqual(4);
+       |                               ^
+     59|     expect(stats().maxActive).toBeGreaterThan(1);
+     60|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  03:45:58
+   Duration  20.97s (transform 13.17s, setup 0ms, collect 19.92s, tests 76ms, environment 1ms, prepare 308ms)
+
+

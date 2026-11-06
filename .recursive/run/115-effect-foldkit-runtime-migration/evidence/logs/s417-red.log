@@ -1,0 +1,64 @@
+COMMAND: node vitest run s415 (S417 loading-freshness RED, before product change)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s415-requests-ranking.test.ts (9 tests | 2 failed) 176ms
+   ✓ S413 requests ranking controls > keeps the original metric and target option sets 12ms
+   ✓ S413 requests ranking controls > builds the exact original POST /telemetry/query body 2ms
+   ✓ S413 requests ranking controls > POSTs that exact body to /telemetry/query 18ms
+   × S417 freshness during loading > refences an in-flight query when the metric changes while loading 88ms
+     → expected [] to deeply equal [ 'QueryRequestsRanking' ]
+   × S417 freshness during loading > ignores a stale failure from the superseded query 28ms
+     → expected 'error' to be 'loading' // Object.is equality
+   ✓ S413 requests ranking state machine > auto-queries one token-fenced command when the metric changes 6ms
+   ✓ S413 requests ranking state machine > auto-queries when the ranking target changes and keeps the current metric 3ms
+   ✓ S413 requests ranking state machine > refuses a second submit while loading and fences stale results 7ms
+   ✓ S413 requests ranking state machine > maps empty and error results honestly while keeping the controls 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s415-requests-ranking.test.ts > S417 freshness during loading > refences an in-flight query when the metric changes while loading
+AssertionError: expected [] to deeply equal [ 'QueryRequestsRanking' ]
+
+- Expected
++ Received
+
+- [
+-   "QueryRequestsRanking",
+- ]
++ []
+
+ ❯ test/s415-requests-ranking.test.ts:79:69
+     77|     const loading = modelWith(stateWith({ metric: "averageLatencyMs", …
+     78|     const changed = shellUpdate(loading, Message.RequestsRankingFieldC…
+     79|     expect((changed.commands ?? []).map((command) => command.name)).to…
+       |                                                                     ^
+     80|     const payload = JSON.parse(String((changed.commands ?? [])[0]?.arg…
+     81|     expect(payload.metrics).toEqual(["requestCount"]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s415-requests-ranking.test.ts > S417 freshness during loading > ignores a stale failure from the superseded query
+AssertionError: expected 'error' to be 'loading' // Object.is equality
+
+Expected: "loading"
+Received: "error"
+
+ ❯ test/s415-requests-ranking.test.ts:96:49
+     94|     const changed = shellUpdate(loading, Message.RequestsRankingFieldC…
+     95|     const stale = shellUpdate(changed.model, Message.RequestsRankingFa…
+     96|     expect(stale.model.requestsRanking?.status).toBe("loading");
+       |                                                 ^
+     97|     expect(stale.model.requestsRanking?.message).toBeUndefined();
+     98|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 7 passed (9)
+   Start at  19:10:36
+   Duration  16.04s (transform 7.53s, setup 0ms, collect 11.61s, tests 176ms, environment 2.03s, prepare 829ms)
+
+

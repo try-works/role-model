@@ -1,0 +1,29 @@
+# S592 story coverage — GREEN evidence
+
+## Run A — with only the task change applied (clean src)
+Command: `corepack pnpm exec tsc --noEmit -p tsconfig.json` then
+`corepack pnpm exec vitest run test/s565-page-stories.scene.test.ts test/s567-reference-titles.scene.test.ts`
+Result: tsc EXIT=0; 2 test files / 97 tests passed (s565 51 = 50 route tags + 1 coverage test, s567 46).
+
+## Run B — final verification, taken while another workstream (S591 router weights) had uncommitted src edits
+The only tsc errors in Run B are in `src/router-family-view.ts` weight-field typing (S591-owned). Nothing in
+`test/s565-page-stories.scene.test.ts` or `test/support/page-stories.ts` fails to typecheck. The scene test
+itself is green.
+
+== FINAL GREEN RUN 2026-10-31 ==
+
+src/router-family-view.ts(414,34): error TS2345: Argument of type 'string' is not assignable to parameter of type '"weightQuality" | "weightLatency" | "weightThroughput" | "weightCost" | "weightReliability" | "weightPreference"'.
+src/router-family-view.ts(415,34): error TS2345: Argument of type 'string' is not assignable to parameter of type '"weightQuality" | "weightLatency" | "weightThroughput" | "weightCost" | "weightReliability" | "weightPreference"'.
+src/router-family-view.ts(416,37): error TS2345: Argument of type 'string' is not assignable to parameter of type '"weightQuality" | "weightLatency" | "weightThroughput" | "weightCost" | "weightReliability" | "weightPreference"'.
+src/router-family-view.ts(417,31): error TS2345: Argument of type 'string' is not assignable to parameter of type '"weightQuality" | "weightLatency" | "weightThroughput" | "weightCost" | "weightReliability" | "weightPreference"'.
+src/router-family-view.ts(418,38): error TS2345: Argument of type 'string' is not assignable to parameter of type '"weightQuality" | "weightLatency" | "weightThroughput" | "weightCost" | "weightReliability" | "weightPreference"'.
+src/router-family-view.ts(419,37): error TS2345: Argument of type 'string' is not assignable to parameter of type '"weightQuality" | "weightLatency" | "weightThroughput" | "weightCost" | "weightReliability" | "weightPreference"'.
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s565-page-stories.scene.test.ts (51 tests) 1529ms
+
+ Test Files  1 passed (1)
+      Tests  51 passed (51)
+   Start at  20:21:41
+   Duration  11.28s (transform 4.69s, setup 0ms, collect 7.53s, tests 1.53s, environment 1.41s, prepare 257ms)

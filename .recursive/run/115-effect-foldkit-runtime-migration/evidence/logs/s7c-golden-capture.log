@@ -1,0 +1,39 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/protocol-routing
+
+stdout | test/run115-s7c-routing-parity.test.ts > run115 S7c kernel/producer/wired parity > golden fixture: all three paths are byte-identical
+[run115] eligibility candidates=2 eligible=1 codes=TOOLS_UNSUPPORTED=1 request=run115-s7c-golden alias=- model=- effort=- pass=- allow=[] denied=[golden.no-tools]
+S7C_GOLDEN {"decisionDigest":"sha256:869e4c7f06b0a5839292bfe64bbeede186a13c8eb22d3b55544e8d2d5b4c7756","chosen_endpoint_id":"golden.only","selection_reasons":["BEST_TOTAL_SCORE","DECLARED_PROFILE_USED","DEFAULT_PROFILE_USED","CACHE_AFFINITY_APPLIED"],"eligibilityCodes":[{"endpoint_id":"golden.no-tools","code":"TOOLS_UNSUPPORTED"}]}
+
+ ❯ test/run115-s7c-routing-parity.test.ts (4 tests | 1 failed | 3 skipped) 30ms
+   ↓ run115 S7c kernel/producer/wired parity > empty candidate pool: all three paths are byte-identical
+   ↓ run115 S7c kernel/producer/wired parity > tie between candidates: all three paths are byte-identical
+   ↓ run115 S7c kernel/producer/wired parity > role/task/effort arm: all three paths are byte-identical
+   × run115 S7c kernel/producer/wired parity > golden fixture: all three paths are byte-identical 28ms
+     → expected 'golden.only' to be 'PENDING' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run115-s7c-routing-parity.test.ts > run115 S7c kernel/producer/wired parity > golden fixture: all three paths are byte-identical
+AssertionError: expected 'golden.only' to be 'PENDING' // Object.is equality
+
+Expected: "PENDING"
+Received: "golden.only"
+
+ ❯ Object.assert test/run115-s7c-routing-parity.test.ts:247:43
+    245|       );
+    246|       console.log("S7C_GOLDEN", JSON.stringify({ decisionDigest: diges…
+    247|       expect(decision.chosen_endpoint_id).toBe(fixture.chosen_endpoint…
+       |                                           ^
+    248|       expect(decision.selection_reasons).toEqual(fixture.selection_rea…
+    249|       expect(eligibilityCodes).toEqual(fixture.eligibilityCodes);
+ ❯ test/run115-s7c-routing-parity.test.ts:276:15
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  05:10:07
+   Duration  4.16s (transform 1.89s, setup 0ms, collect 3.42s, tests 30ms, environment 0ms, prepare 241ms)
+

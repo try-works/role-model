@@ -1,0 +1,18 @@
+{
+  "port": 64881,
+  "chatStatus": 200,
+  "chatId": "chatcmpl-role-model",
+  "requestId": "req-a6d785a4-0ebd-4289-ae68-61aecbf78273",
+  "traceRootId": "req-a6d785a4-0ebd-4289-ae68-61aecbf78273",
+  "decisionId": "decision-req-a6d785a4-0ebd-4289-ae68-61aecbf78273",
+  "upstreamCallsAfterChat": 2,
+  "create": {
+    "status": 409,
+    "body": "{\"error\":\"extension replay-core failed: authoritative trace root resolver required\"}\n"
+  },
+  "list": [],
+  "listCount": 0,
+  "lifecycle": [],
+  "results": null,
+  "upstreamCallsTotal": 2
+}

@@ -1,0 +1,55 @@
+
+ RUN  v3.2.4 E:/rm-tmp/s613-base/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s613-replay-auto-queue.test.ts (3 tests | 3 failed) 19ms
+   × S613 replay auto-queue plumbing > PUTs the exact auto-queue body to the runtime config endpoint 7ms
+     → client.patchReplayAutoQueue is not a function
+   × S613 replay auto-queue plumbing > exposes the five auto-queue messages with the contract payloads 1ms
+     → Message.ReplayAutoQueueToggleChanged is not a function
+   × S613 replay auto-queue plumbing > stores the toggle and cap draft in the learning auto-queue state 8ms
+     → Message.ReplayAutoQueueToggleChanged is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s613-replay-auto-queue.test.ts > S613 replay auto-queue plumbing > PUTs the exact auto-queue body to the runtime config endpoint
+TypeError: client.patchReplayAutoQueue is not a function
+ ❯ test/s613-replay-auto-queue.test.ts:21:33
+     19|       },
+     20|     });
+     21|     const result = await client.patchReplayAutoQueue({ dailyCap: 25, e…
+       |                                 ^
+     22|     expect(result.status).toBe(200);
+     23|     expect(calls).toEqual([{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/s613-replay-auto-queue.test.ts > S613 replay auto-queue plumbing > exposes the five auto-queue messages with the contract payloads
+TypeError: Message.ReplayAutoQueueToggleChanged is not a function
+ ❯ test/s613-replay-auto-queue.test.ts:31:20
+     29| 
+     30|   it("exposes the five auto-queue messages with the contract payloads"…
+     31|     expect(Message.ReplayAutoQueueToggleChanged({ value: "off" })._tag…
+       |                    ^
+     32|     expect(Message.ReplayAutoQueueCapChanged({ value: "25" })._tag).to…
+     33|     expect(Message.ReplayAutoQueueSaveRequested()._tag).toBe("ReplayAu…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/s613-replay-auto-queue.test.ts > S613 replay auto-queue plumbing > stores the toggle and cap draft in the learning auto-queue state
+TypeError: Message.ReplayAutoQueueToggleChanged is not a function
+ ❯ test/s613-replay-auto-queue.test.ts:41:43
+     39|     const update = createUpdate(defineReadDiagnostics(async () => ({ b…
+     40|     const model = shellModel({ route: { _tag: "Learning" } });
+     41|     const toggled = update(model, Message.ReplayAutoQueueToggleChanged…
+       |                                           ^
+     42|     expect(toggled.model.learningReplayAutoQueue).toMatchObject({ enab…
+     43|     const capped = update(toggled.model, Message.ReplayAutoQueueCapCha…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  20:24:29
+   Duration  14.15s (transform 6.69s, setup 0ms, collect 10.56s, tests 19ms, environment 2.38s, prepare 351ms)
+

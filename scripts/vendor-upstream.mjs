@@ -123,22 +123,6 @@ const UPSTREAMS = {
   },
 };
 
-const args = process.argv.slice(2);
-const flag = (name) => {
-  const index = args.indexOf(name);
-  return index === -1 ? null : (args[index + 1] ?? null);
-};
-const has = (name) => args.includes(name);
-
-const fail = (message) => {
-  console.error(`vendor-upstream: ${message}`);
-  process.exit(1);
-};
-
-const name = flag("--name") ?? "effect";
-const upstream = UPSTREAMS[name];
-if (!upstream) fail(`unknown upstream "${name}"; known: ${Object.keys(UPSTREAMS).join(", ")}`);
-const vendorDir = path.join(REPO_ROOT, upstream.dir);
 const MANIFEST_FILES = ["VENDORED.json", "PROVENANCE.md"];
 
 const walk = (dir, out = []) => {
@@ -154,12 +138,18 @@ const walk = (dir, out = []) => {
   return out;
 };
 
-const digestTree = () => {
-  const files = walk(vendorDir);
+/**
+ * Stable content digest of a vendored directory tree: sorted lines of <relative path NUL size NUL sha256>,
+ * hashed once more. VENDORED.json and PROVENANCE.md describe the tree, so they are not part of its digest.
+ * Exported so the tamper test (scripts/vendor-verify.test.mjs) can prove a one-byte edit changes the
+ * digest without mutating vendor/**.
+ */
+export const computeVendorDigest = (dir) => {
+  const files = walk(dir);
   let bytes = 0;
   const lines = [];
   for (const file of files) {
-    const relative = path.relative(vendorDir, file).split(path.sep).join("/");
+    const relative = path.relative(dir, file).split(path.sep).join("/");
     if (MANIFEST_FILES.includes(relative)) continue;
     const size = statSync(file).size;
     bytes += size;
@@ -185,29 +175,59 @@ const digestTree = () => {
   };
 };
 
-const repoName = JSON.parse(readFileSync(path.join(REPO_ROOT, "package.json"), "utf8")).name;
-
-const writeProvenance = ({ tag, commit, commitDate, digest }) => {
-  const manifest = {
-    schemaVersion: "role-model.vendored-upstream.v1",
-    upstream: { name, url: upstream.url, tag, commit, commitDate, license: upstream.license },
-    vendoredInto: repoName,
-    vendoredAt: new Date().toISOString(),
-    payload: {
-      root: upstream.dir,
-      includes: upstream.payload.map((p) => `${p}${p.includes(".") ? "" : "/**"}`),
-      excludes: upstream.excludes,
-    },
-    fileCount: digest.fileCount,
-    byteCount: digest.byteCount,
-    contentDigest: digest.contentDigest,
-    wiring:
-      "not a workspace package and not imported by any build; a lint-ignored source drop only",
+/**
+ * Recompute a vendored tree's digest and compare it with the digest recorded in VENDORED.json.
+ * Returns both sides so the CLI reports exactly what it compared.
+ */
+export const verifyVendorDigest = (dir, recorded) => {
+  const actual = computeVendorDigest(dir);
+  return {
+    ok: actual.contentDigest === recorded.contentDigest && actual.fileCount === recorded.fileCount,
+    actual,
+    recorded,
   };
-  writeFileSync(path.join(vendorDir, "VENDORED.json"), `${JSON.stringify(manifest, null, 2)}\n`);
-  writeFileSync(
-    path.join(vendorDir, "PROVENANCE.md"),
-    `# Vendored upstream: ${name}
+};
+
+const runCli = () => {
+  const args = process.argv.slice(2);
+  const flag = (name) => {
+    const index = args.indexOf(name);
+    return index === -1 ? null : (args[index + 1] ?? null);
+  };
+  const has = (name) => args.includes(name);
+
+  const fail = (message) => {
+    console.error(`vendor-upstream: ${message}`);
+    process.exit(1);
+  };
+
+  const name = flag("--name") ?? "effect";
+  const upstream = UPSTREAMS[name];
+  if (!upstream) fail(`unknown upstream "${name}"; known: ${Object.keys(UPSTREAMS).join(", ")}`);
+  const vendorDir = path.join(REPO_ROOT, upstream.dir);
+  const repoName = JSON.parse(readFileSync(path.join(REPO_ROOT, "package.json"), "utf8")).name;
+
+  const writeProvenance = ({ tag, commit, commitDate, digest }) => {
+    const manifest = {
+      schemaVersion: "role-model.vendored-upstream.v1",
+      upstream: { name, url: upstream.url, tag, commit, commitDate, license: upstream.license },
+      vendoredInto: repoName,
+      vendoredAt: new Date().toISOString(),
+      payload: {
+        root: upstream.dir,
+        includes: upstream.payload.map((p) => `${p}${p.includes(".") ? "" : "/**"}`),
+        excludes: upstream.excludes,
+      },
+      fileCount: digest.fileCount,
+      byteCount: digest.byteCount,
+      contentDigest: digest.contentDigest,
+      wiring:
+        "not a workspace package and not imported by any build; a lint-ignored source drop only",
+    };
+    writeFileSync(path.join(vendorDir, "VENDORED.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+    writeFileSync(
+      path.join(vendorDir, "PROVENANCE.md"),
+      `# Vendored upstream: ${name}
 
 This directory is a **verbatim copy of upstream ${name} source**, not first-party code. It is not a workspace
 package, is not imported by any build, and is excluded from linting by the repository's \`**/vendor/**\` ignore.
@@ -255,136 +275,147 @@ node scripts/vendor-upstream.mjs --name ${name} --sync --tag <tag> --commit <sha
 Moving the pin is a reviewed change: update \`VENDORED.json\`, \`PROVENANCE.md\` and the vendored files in the same
 commit so the digest always matches the tree.
 `,
-  );
-};
-
-if (has("--verify")) {
-  const recorded = JSON.parse(readFileSync(path.join(vendorDir, "VENDORED.json"), "utf8"));
-  const actual = digestTree();
-  if (actual.contentDigest !== recorded.contentDigest || actual.fileCount !== recorded.fileCount) {
-    fail(
-      `${name}: vendored tree does not match VENDORED.json (recorded ${recorded.fileCount} files ` +
-        `${recorded.contentDigest.slice(0, 16)}…, actual ${actual.fileCount} files ${actual.contentDigest.slice(0, 16)}…)`,
     );
-  }
-  console.log(
-    `vendor-upstream: ${name} verified ${actual.fileCount} files, ${(actual.byteCount / 1024 / 1024).toFixed(1)} MB, ` +
-      `sha256:${actual.contentDigest}`,
-  );
-  process.exit(0);
-}
+  };
 
-if (has("--sync")) {
-  const tag = flag("--tag") ?? upstream.tag;
-  const commit = flag("--commit") ?? upstream.commit;
-  if (!/^[0-9a-f]{40}$/.test(commit))
-    fail(`--commit must be a 40-character commit, saw "${commit}"`);
-  const temp = mkdtempSync(path.join(tmpdir(), `vendor-${name}-`));
-  try {
-    /**
-     * Run 115 S13a: some reviewed pins are reachable by SHA only - the upstream advertises no tag or
-     * branch at that commit (Crease UI advertises none at all). An entry can therefore declare
-     * refMode: "commit", and the acquisition fetches that exact object instead of cloning a ref.
-     * The SHA is verified twice: the fetch names it, and HEAD must equal it afterwards.
-     */
-    const commitOnly = (flag("--ref-mode") ?? upstream.refMode) === "commit";
-    const clone = commitOnly
-      ? (() => {
-        spawnSync("git", ["init", "--quiet", temp], { stdio: "pipe", encoding: "utf8" });
-        spawnSync("git", ["-C", temp, "remote", "add", "origin", upstream.url], {
-          stdio: "pipe",
-          encoding: "utf8",
-        });
-        const fetched = spawnSync("git", ["-C", temp, "fetch", "--depth", "1", "origin", commit], {
-          stdio: "pipe",
-          encoding: "utf8",
-        });
-        if (fetched.status !== 0) return fetched;
-        return spawnSync("git", ["-C", temp, "checkout", "--quiet", "FETCH_HEAD"], {
-          stdio: "pipe",
-          encoding: "utf8",
-        });
-      })()
-      : spawnSync("git", ["clone", "--depth", "1", "--branch", tag, upstream.url, temp], {
+  if (has("--verify")) {
+    const recorded = JSON.parse(readFileSync(path.join(vendorDir, "VENDORED.json"), "utf8"));
+    const { ok, actual } = verifyVendorDigest(vendorDir, recorded);
+    if (!ok) {
+      fail(
+        `${name}: vendored tree does not match VENDORED.json (recorded ${recorded.fileCount} files ` +
+          `${recorded.contentDigest.slice(0, 16)}…, actual ${actual.fileCount} files ${actual.contentDigest.slice(0, 16)}…)`,
+      );
+    }
+    console.log(
+      `vendor-upstream: ${name} verified ${actual.fileCount} files, ${(actual.byteCount / 1024 / 1024).toFixed(1)} MB, ` +
+        `sha256:${actual.contentDigest}`,
+    );
+    process.exit(0);
+  }
+
+  if (has("--sync")) {
+    const tag = flag("--tag") ?? upstream.tag;
+    const commit = flag("--commit") ?? upstream.commit;
+    if (!/^[0-9a-f]{40}$/.test(commit))
+      fail(`--commit must be a 40-character commit, saw "${commit}"`);
+    const temp = mkdtempSync(path.join(tmpdir(), `vendor-${name}-`));
+    try {
+      /**
+       * Run 115 S13a: some reviewed pins are reachable by SHA only - the upstream advertises no tag or
+       * branch at that commit (Crease UI advertises none at all). An entry can therefore declare
+       * refMode: "commit", and the acquisition fetches that exact object instead of cloning a ref.
+       * The SHA is verified twice: the fetch names it, and HEAD must equal it afterwards.
+       */
+      const commitOnly = (flag("--ref-mode") ?? upstream.refMode) === "commit";
+      const clone = commitOnly
+        ? (() => {
+            spawnSync("git", ["init", "--quiet", temp], { stdio: "pipe", encoding: "utf8" });
+            spawnSync("git", ["-C", temp, "remote", "add", "origin", upstream.url], {
+              stdio: "pipe",
+              encoding: "utf8",
+            });
+            const fetched = spawnSync(
+              "git",
+              ["-C", temp, "fetch", "--depth", "1", "origin", commit],
+              {
+                stdio: "pipe",
+                encoding: "utf8",
+              },
+            );
+            if (fetched.status !== 0) return fetched;
+            return spawnSync("git", ["-C", temp, "checkout", "--quiet", "FETCH_HEAD"], {
+              stdio: "pipe",
+              encoding: "utf8",
+            });
+          })()
+        : spawnSync("git", ["clone", "--depth", "1", "--branch", tag, upstream.url, temp], {
+            stdio: "pipe",
+            encoding: "utf8",
+          });
+      if (clone.status !== 0)
+        fail(
+          `git ${commitOnly ? "fetch" : "clone"} failed: ${clone.stderr?.trim() ?? clone.status}`,
+        );
+      const head = spawnSync("git", ["-C", temp, "rev-parse", "HEAD"], {
+        encoding: "utf8",
+      }).stdout.trim();
+      if (head !== commit)
+        fail(
+          `${commitOnly ? `fetched commit ${commit}` : `tag ${tag}`} resolves to ${head}, expected ${commit}`,
+        );
+      const commitDate = spawnSync("git", ["-C", temp, "log", "-1", "--format=%cI"], {
+        encoding: "utf8",
+      }).stdout.trim();
+
+      /**
+       * Export from the object database with eol conversion disabled. A working-tree copy would pick up the host's
+       * `core.autocrlf` (true on Windows checkouts), so the vendored bytes would be CRLF while the committed blobs are
+       * LF - and the recorded content digest would then fail on any other checkout. `git archive` with
+       * `core.autocrlf=false` writes the exact upstream bytes, and `cpSync` preserves them.
+       */
+      const archive = path.join(temp, "payload.tar");
+      const extract = path.join(temp, "payload-extract");
+      mkdirSync(extract, { recursive: true });
+      const exported = spawnSync(
+        "git",
+        [
+          "-C",
+          temp,
+          "-c",
+          "core.autocrlf=false",
+          "-c",
+          "core.eol=lf",
+          "archive",
+          "--format=tar",
+          "--output",
+          archive,
+          commit,
+          ...upstream.payload,
+        ],
+        { stdio: "pipe", encoding: "utf8" },
+      );
+      if (exported.status !== 0)
+        fail(`git archive failed: ${exported.stderr?.trim() ?? exported.status}`);
+      const unpacked = spawnSync("tar", ["-xf", archive, "-C", extract], {
         stdio: "pipe",
         encoding: "utf8",
       });
-    if (clone.status !== 0)
-      fail(
-        "git " + (commitOnly ? "fetch" : "clone") + " failed: " +
-          (clone.stderr?.trim() ?? clone.status),
-      );
-    const head = spawnSync("git", ["-C", temp, "rev-parse", "HEAD"], {
-      encoding: "utf8",
-    }).stdout.trim();
-    if (head !== commit)
-      fail(
-        (commitOnly ? "fetched commit " + commit : "tag " + tag) +
-          " resolves to " + head + ", expected " + commit,
-      );
-    const commitDate = spawnSync("git", ["-C", temp, "log", "-1", "--format=%cI"], {
-      encoding: "utf8",
-    }).stdout.trim();
+      if (unpacked.status !== 0)
+        fail(`tar extraction failed: ${unpacked.stderr?.trim() ?? unpacked.status}`);
 
-    /**
-     * Export from the object database with eol conversion disabled. A working-tree copy would pick up the host's
-     * `core.autocrlf` (true on Windows checkouts), so the vendored bytes would be CRLF while the committed blobs are
-     * LF - and the recorded content digest would then fail on any other checkout. `git archive` with
-     * `core.autocrlf=false` writes the exact upstream bytes, and `cpSync` preserves them.
-     */
-    const archive = path.join(temp, "payload.tar");
-    const extract = path.join(temp, "payload-extract");
-    mkdirSync(extract, { recursive: true });
-    const exported = spawnSync(
-      "git",
-      [
-        "-C",
-        temp,
-        "-c",
-        "core.autocrlf=false",
-        "-c",
-        "core.eol=lf",
-        "archive",
-        "--format=tar",
-        "--output",
-        archive,
-        commit,
-        ...upstream.payload,
-      ],
-      { stdio: "pipe", encoding: "utf8" },
-    );
-    if (exported.status !== 0)
-      fail(`git archive failed: ${exported.stderr?.trim() ?? exported.status}`);
-    const unpacked = spawnSync("tar", ["-xf", archive, "-C", extract], {
-      stdio: "pipe",
-      encoding: "utf8",
-    });
-    if (unpacked.status !== 0)
-      fail(`tar extraction failed: ${unpacked.stderr?.trim() ?? unpacked.status}`);
-
-    /**
-     * Swap only after the export is on disk: the trees are large, and a failed export must not leave the vendored
-     * directory half-written.
-     */
-    for (const payload of upstream.payload) {
-      const destination = path.join(vendorDir, payload);
-      const source = path.join(extract, payload);
-      const isDirectory = readdirSync(extract).includes(payload) && statSync(source).isDirectory();
-      if (isDirectory) rmSync(destination, { recursive: true, force: true });
-      mkdirSync(path.dirname(destination), { recursive: true });
-      cpSync(source, destination, { recursive: isDirectory });
+      /**
+       * Swap only after the export is on disk: the trees are large, and a failed export must not leave the vendored
+       * directory half-written.
+       */
+      for (const payload of upstream.payload) {
+        const destination = path.join(vendorDir, payload);
+        const source = path.join(extract, payload);
+        const isDirectory =
+          readdirSync(extract).includes(payload) && statSync(source).isDirectory();
+        if (isDirectory) rmSync(destination, { recursive: true, force: true });
+        mkdirSync(path.dirname(destination), { recursive: true });
+        cpSync(source, destination, { recursive: isDirectory });
+      }
+      writeProvenance({ tag, commit, commitDate, digest: computeVendorDigest(vendorDir) });
+      console.log(
+        `vendor-upstream: ${name} synced ${tag} (${commit}) into ${upstream.dir} (LF bytes)`,
+      );
+    } finally {
+      rmSync(temp, { recursive: true, force: true });
     }
-    writeProvenance({ tag, commit, commitDate, digest: digestTree() });
-    console.log(
-      `vendor-upstream: ${name} synced ${tag} (${commit}) into ${upstream.dir} (LF bytes)`,
-    );
-  } finally {
-    rmSync(temp, { recursive: true, force: true });
+    process.exit(0);
   }
-  process.exit(0);
-}
 
-console.log(
-  `vendor-upstream: nothing to do. Use --verify or --sync with --name <${Object.keys(UPSTREAMS).join("|")}> ` +
-    `(default ${name}).`,
-);
+  console.log(
+    `vendor-upstream: nothing to do. Use --verify or --sync with --name <${Object.keys(UPSTREAMS).join("|")}> ` +
+      `(default ${name}).`,
+  );
+};
+
+if (
+  typeof process.argv[1] === "string" &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
+  runCli();
+}

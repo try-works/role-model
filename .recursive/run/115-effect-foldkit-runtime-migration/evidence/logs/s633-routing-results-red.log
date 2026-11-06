@@ -1,0 +1,772 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s632-observe-routing-charts.test.ts > S632 observe routing charts > reloads the nine queries with the selected source and breakdown on the real route
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow view: 50.2ms (budget: 16ms), triggered by init. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'View',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'ObserveRouting' },
+    routingCharts: { entries: [], status: 'loading', token: 1 },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 50.1746000000021,
+  thresholdMs: 16
+}
+[foldkit] Slow patch: 218.0ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'ObserveRouting' },
+    routingCharts: { entries: [], status: 'loading', token: 1 },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 218.02140000000145,
+  thresholdMs: 8
+}
+
+stderr | test/s632-observe-routing-charts.test.ts > S632 observe routing charts > reloads the nine queries with the selected source and breakdown on the real route
+[foldkit] Slow update: 17.7ms (budget: 4ms), triggered by ReadbackLoaded. Inspect the triggering Message branch; move render-only derivations to memoized views and keep update focused on state transitions. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Update',
+  previousModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'ObserveRouting' },
+    routingCharts: { entries: [], status: 'loading', token: 1 },
+    theme: 'dark'
+  },
+  nextModel: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'ObserveRouting' },
+    routingCharts: { entries: [], status: 'loading', token: 1 },
+    theme: 'dark'
+  },
+  message: {
+    _tag: 'ReadbackLoaded',
+    key: 'observeRouting',
+    snapshot: { rows: [], status: 'empty', token: 1 },
+    token: 1
+  },
+  durationMs: 17.684300000000803,
+  thresholdMs: 4
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'observeRouting',
+  snapshot: { rows: [], status: 'empty', token: 1 },
+  token: 1
+}
+
+stderr | test/s632-observe-routing-charts.test.ts > S632 observe routing charts > reloads the nine queries with the selected source and breakdown on the real route
+[foldkit] Slow view: 17.0ms (budget: 16ms), triggered by RoutingChartsLoaded. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'View',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'ObserveRouting' },
+    routingCharts: { entries: [Array], status: 'ok', token: 2 },
+    theme: 'dark',
+    observeRoutingFilters: {
+      breakdown: 'Total',
+      difficulty: 'All buckets',
+      expanded: false,
+      range: 'Day',
+      source: 'Local only'
+    }
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'RoutingChartsLoaded',
+      entriesJson: '[{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Cost avoided by routing"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Routing decision volume"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Routing volume by taxonomy role"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Avoided cost by taxonomy task"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Difficulty distribution"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Strategy selection trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Capability routing mix"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Tool class routing mix"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Model selection"}]',
+      token: 2
+    }
+  },
+  durationMs: 17.03689999999915,
+  thresholdMs: 16
+} {
+  _tag: 'RoutingChartsLoaded',
+  entriesJson: '[{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Cost avoided by routing"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Routing decision volume"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Routing volume by taxonomy role"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Avoided cost by taxonomy task"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Difficulty distribution"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Strategy selection trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Capability routing mix"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Tool class routing mix"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Model selection"}]',
+  token: 2
+}
+[foldkit] Slow patch: 14.1ms (budget: 8ms), triggered by RoutingChartsLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'ObserveRouting' },
+    routingCharts: { entries: [Array], status: 'ok', token: 2 },
+    theme: 'dark',
+    observeRoutingFilters: {
+      breakdown: 'Total',
+      difficulty: 'All buckets',
+      expanded: false,
+      range: 'Day',
+      source: 'Local only'
+    }
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'RoutingChartsLoaded',
+      entriesJson: '[{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Cost avoided by routing"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Routing decision volume"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Routing volume by taxonomy role"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Avoided cost by taxonomy task"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Difficulty distribution"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Strategy selection trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Capability routing mix"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Tool class routing mix"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Model selection"}]',
+      token: 2
+    }
+  },
+  durationMs: 14.104899999998452,
+  thresholdMs: 8
+} {
+  _tag: 'RoutingChartsLoaded',
+  entriesJson: '[{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Cost avoided by routing"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Routing decision volume"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Routing volume by taxonomy role"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Avoided cost by taxonomy task"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Difficulty distribution"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Strategy selection trend"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Capability routing mix"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Tool class routing mix"},{"body":{"buckets":[],"ranking":{"rows":[]}},"id":"Model selection"}]',
+  token: 2
+}
+
+ ❯ test/s563-routerobserveconnect-layout.test.ts (16 tests | 1 failed) 1679ms
+   ✓ S563 Router + Observe + Connect reference layout > router overview: alias inventory then routing candidates, reference tables 275ms
+   ✓ S563 Router + Observe + Connect reference layout > router candidates: candidate inventory columns 70ms
+   ✓ S563 Router + Observe + Connect reference layout > router decisions: decision ledger columns and drill-in links 53ms
+   ✓ S563 Router + Observe + Connect reference layout > router strategy/config: strategy card, controls, measured-latency override 164ms
+   ✓ S563 Router + Observe + Connect reference layout > router workloads: posture sections and workload templates 159ms
+   ✓ S563 Router + Observe + Connect reference layout > router agent strategy: role editor and entries 124ms
+   ✓ S563 Router + Observe + Connect reference layout > observe activity: metric strip, ledger table, capture inspector 174ms
+   ✓ S563 Router + Observe + Connect reference layout > observe logs: metric strip, source filter, structured table, raw lines 72ms
+   × S563 Router + Observe + Connect reference layout > observe routing: filter bar and chart grid only, with no visible table 177ms
+     → expected <table data-s563-table …(1)>…(2)</table> to have a length of +0 but got 1
+   ✓ S563 Router + Observe + Connect reference layout > observability snapshot: card, refresh and metric registry table 56ms
+   ✓ S563 Router + Observe + Connect reference layout > queues: filter bar, queue depth and job detail tables 40ms
+   ✓ S563 Router + Observe + Connect reference layout > store degradation receipts: main card plus per-store tables 47ms
+   ✓ S563 Router + Observe + Connect reference layout > providers: reference sections and provider controls 76ms
+   ✓ S563 Router + Observe + Connect reference layout > endpoints: runtime connections table with reference columns 54ms
+   ✓ S563 Router + Observe + Connect reference layout > integrations downstream: connection contract and consumer setup 84ms
+   ✓ S563 Router + Observe + Connect reference layout > integrations upstream: accounts, boundary guidance and target inventory 41ms
+stderr | test/s632-observe-routing-charts.test.ts > S632 observe routing charts > builds the nine entry queries from the URL-restored filter state
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 137.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'ObserveRouting' },
+    routingCharts: { entries: [], status: 'loading', token: 1 },
+    observeRoutingFilters: {
+      breakdown: 'By upstream model',
+      difficulty: 'Hard only',
+      expanded: false,
+      range: 'Day',
+      source: 'Local only'
+    },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 137.14709999999832,
+  thresholdMs: 8
+}
+
+stderr | test/s632-observe-routing-charts.test.ts > S632 observe routing charts > dispatches the analytics batch with nine queries on the real route
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 116.5ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      providerCatalog: [Object],
+      providerAccounts: [Object],
+      roles: [Object],
+      rolePolicy: [Object],
+      benchmarkSuite: [Object],
+      benchmarkSummary: [Object],
+      benchmarkRuns: [Object],
+      benchmarkPreferences: [Object],
+      benchmarkActiveRun: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      overviewMetrics: [Object],
+      learning: [Object],
+      learningConfiguration: [Object],
+      learningPacks: [Object],
+      learningDecisions: [Object],
+      learningEvidence: [Object],
+      learningHistory: [Object],
+      localLlamaSwapModels: [Object],
+      localPolicy: [Object],
+      operatorStatus: [Object],
+      operatorTraceRoots: [Object],
+      extensions: [Object],
+      replayJobs: [Object],
+      evaluationJobs: [Object],
+      configuredModels: [Object],
+      modelEndpoints: [Object],
+      runtimeConfig: [Object],
+      routerConfig: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'ObserveRouting' },
+    routingCharts: { entries: [], status: 'loading', token: 1 },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 116.5070999999989,
+  thresholdMs: 8
+}
+
+ ❯ test/s632-observe-routing-charts.test.ts (7 tests | 1 failed) 12727ms
+   ✓ S632 observe routing charts > emits the full reference definition payloads for all nine charts 12ms
+   ✓ S632 observe routing charts > gives the time-series charts the selected breakdown and threads the analytics filters into every query 2ms
+   ✓ S632 observe routing charts > maps the page filters to the reference analytics filters and breakdown dimension 2ms
+   ✓ S632 observe routing charts > reloads the nine queries with the selected source and breakdown on the real route  1312ms
+   ✓ S632 observe routing charts > builds the nine entry queries from the URL-restored filter state  725ms
+   × S632 observe routing charts > renders all nine cards, real series where data exists, and in-plot empty states otherwise 620ms
+     → expected <table data-s563-table …(1)>…(2)</table> to have a length of +0 but got 1
+   ✓ S632 observe routing charts > dispatches the analytics batch with nine queries on the real route  10046ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s563-routerobserveconnect-layout.test.ts > S563 Router + Observe + Connect reference layout > observe routing: filter bar and chart grid only, with no visible table
+AssertionError: expected <table data-s563-table …(1)>…(2)</table> to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ test/s563-routerobserveconnect-layout.test.ts:189:63
+    187|     expectOrdered(text, ["Routing analytics", "Routing decision volume…
+    188|     expect(container.querySelectorAll("select").length).toBeGreaterTha…
+    189|     expect(container.querySelectorAll("table:not(.sr-only)")).toHaveLe…
+       |                                                               ^
+    190|     expect(container.querySelectorAll("table[data-chart-part='table'].…
+    191|     expect(container.querySelector(".md\\:grid-cols-2")).not.toBeNull(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s632-observe-routing-charts.test.ts > S632 observe routing charts > renders all nine cards, real series where data exists, and in-plot empty states otherwise
+AssertionError: expected <table data-s563-table …(1)>…(2)</table> to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ test/s632-observe-routing-charts.test.ts:179:63
+    177|     expect(costEmpty?.textContent).toContain("No routing savings");
+    178|     // Reference parity: the routing page has no visible table at all;…
+    179|     expect(container.querySelectorAll("table:not(.sr-only)")).toHaveLe…
+       |                                                               ^
+    180|     expect(container.querySelectorAll("table[data-chart-part='table'].…
+    181|     expect(container.textContent).not.toContain("Routing results");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 21 passed (23)
+   Start at  12:42:24
+   Duration  37.09s (transform 12.17s, setup 0ms, collect 36.13s, tests 14.41s, environment 8.37s, prepare 1.76s)
+

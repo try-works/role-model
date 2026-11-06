@@ -1,0 +1,21 @@
+COMMAND: node vitest run (S331 behavioral repair: 6 files)
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:57820) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s331-benchmark-behavior.test.ts (2 tests) 112ms
+ ✓ test/s321-partial-shutdown.test.ts (10 tests) 67ms
+ ✓ test/s327-drain-shutdown.test.ts (3 tests) 59ms
+ ✓ test/s324-readiness.test.ts (7 tests) 26ms
+ ✓ test/s330-benchmark-owner.test.ts (4 tests) 19ms
+(node:75432) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s313-server-owner.test.ts (5 tests) 13ms
+
+ Test Files  6 passed (6)
+      Tests  31 passed (31)
+   Start at  09:33:27
+   Duration  14.24s (transform 4.36s, setup 0ms, collect 11.35s, tests 297ms, environment 2ms, prepare 996ms)
+
+

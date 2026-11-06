@@ -1,0 +1,12 @@
+{
+  "artifact": "01-as-is.md",
+  "artifact_hash": "1d7a97bc9d5a690e8d0430873d2dc4afeb9b37893ae7eb826e74ab955a8f52ef",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\.recursive\\run\\115-effect-foldkit-runtime-migration\\01-as-is.md",
+  "locked_at": "2026-10-24T09:28:24Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "eaf8d6fadcc1c1ad46f2e16c5593afcf6e153e38f3071821f6be398346d191b1",
+    "00-worktree.md": "142096f8fc2e387403a46a6182405900523774469f83474da596ab642aff4e84"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "2934c9598e62cf6c649b24569c3c056f62a7ece12421ee0ac9c26d5acb3385f5"
+}

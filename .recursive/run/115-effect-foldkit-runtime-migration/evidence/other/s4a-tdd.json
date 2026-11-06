@@ -1,0 +1,75 @@
+{
+  "slice": "s4a-contracts-inventory",
+  "requirement": "R19 (current contracts/extraction B0)",
+  "status": "complete",
+  "task": ".recursive/run/115-effect-foldkit-runtime-migration/tasks/s4a-contracts-inventory.md",
+  "artifacts": {
+    "inventory": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/other/s4-contracts-inventory.json (run-relative evidence path, per the task's writable-file list)",
+    "test": "scripts/s4-contracts-inventory.test.mjs (node:test, CI-checkable)"
+  },
+  "counts": {
+    "entries": 16,
+    "byKind": {
+      "operation": 9,
+      "resource": 3,
+      "caller": 4
+    },
+    "byDisposition": {
+      "existing-effect": 7,
+      "adapter": 5,
+      "convert": 3,
+      "pure": 1
+    },
+    "exclusions": 7
+  },
+  "machineChecked": [
+    "every definition file exists and the cited line is within the file and not blank",
+    "every caller file exists and the cited line is within the file and not blank",
+    "definitions must be inside the inventoried roots (packages/ or apps/runtime-host-bridge/src/)",
+    "kind is one of operation/resource/caller; disposition is one of pure/existing-effect/adapter/convert (planned is rejected)",
+    "ids are unique; every entry has a non-empty reason and at least one caller",
+    "scope.excluded lists what was NOT inventoried, each with a reason"
+  ],
+  "driftRed": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s4a-red-drift.log",
+    "deliberateDrift": "diagnostics-read definition line set to 9999",
+    "message": "diagnostics-read: definition line 9999 is out of range for role-model-router/apps/runtime-host-bridge/src/local-diagnostics-read.ts (325 lines)",
+    "note": "The test also permanently rejects a wrong citation, a missing file, a duplicate id, an unknown disposition ('planned') and an unknown kind."
+  },
+  "green": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s4a-green.log",
+    "tests": 5,
+    "passed": 5,
+    "failed": 0,
+    "exit": 0
+  },
+  "honestLimits": [
+    {
+      "surface": "role-model-router/packages/sql-sqlite-node/src/service.ts (Effect SQLite service, make/makeSync)",
+      "whyNotCounted": "No product caller in the public host today; its only callers are package tests, so it is not a live surface in this inventory. R23's host wiring is tracked elsewhere."
+    },
+    {
+      "surface": "role-model-router/packages/effect/src/sql.ts and packages/effect-mq/src/index.ts",
+      "whyNotCounted": "Exported wrappers with no in-repo runtime caller found (no effect/sql or effect-mq source import); not counted as live surfaces."
+    },
+    {
+      "surface": "role-model-router/packages/effect-platform-browser",
+      "whyNotCounted": "Dist-only package (no workspace src definition); a build artifact wrapper, not a code surface."
+    },
+    {
+      "surface": "role-model-router/packages/sqlite-memory",
+      "whyNotCounted": "Large synchronous node:sqlite memory store; R23's sql-sqlite-node service is the Effect boundary and the legacy store has no R19-named operation in this inventory. Not classified rather than guessed."
+    },
+    {
+      "surface": "private repository",
+      "whyNotCounted": "Public artifact only; explicitly out of scope for this inventory and not cited."
+    }
+  ],
+  "dispositionMethod": {
+    "existing-effect": "Only where a workspace module demonstrably imports the vendored Effect today: protocol-routing (imports Effect at :24), core advisory ladder (:1), run108 observability (Context/Effect/Metric :1-6), module-health-writer (Cause/Effect/Exit :1), traffic-class (Match :1), unified-runtime-config (Result/Schema :3).",
+    "pure": "local-diagnostics-read.ts imports nothing from 'effect' (no imports at all in the module); the bounded query is a pure function over the injected source, verified by inspection.",
+    "adapter": "Workspace wrappers (re-export vendored Effect/Foldkit) and host seams that adapt HTTP/operator input to existing services.",
+    "convert": "Async host orchestration (request dispatcher, chat execution, CLI main) that is not an Effect program at its boundary; characterized as bounded leaves, not a monolith split."
+  },
+  "notRun": "tsc is not applicable: no TypeScript product source was modified in this slice (only an .mjs test and the JSON inventory). No installs, commits or subagents."
+}

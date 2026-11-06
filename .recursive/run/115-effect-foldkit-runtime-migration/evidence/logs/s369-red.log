@@ -1,0 +1,48 @@
+COMMAND: node vitest run test/s369 (S365b' RED)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:43956) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s369-diagnostics-query-source.test.ts (4 tests | 2 failed) 161ms
+   × S365b' production diagnostics query source > resolves the SAME backend storage instance and reads its bounded records (identity, no second construction) 9ms
+     → expected "spy" to be called 1 times, but got 0 times
+   ✓ S365b' production diagnostics query source > caps the supplied records at the read contract bound 1ms
+   ✓ S365b' production diagnostics query source > stays disabled without the enabled flag AND calibration approval 0ms
+   × S365b' production diagnostics query source > implements diagnosticRecords over the backend-owned telemetry store (fresh store -> empty, bounded) 148ms
+     → storage.diagnosticRecords is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s369-diagnostics-query-source.test.ts > S365b' production diagnostics query source > resolves the SAME backend storage instance and reads its bounded records (identity, no second construction)
+AssertionError: expected "spy" to be called 1 times, but got 0 times
+ ❯ test/s369-diagnostics-query-source.test.ts:40:24
+     38|     if (composition === undefined) throw new Error("composition expect…
+     39|     const records = composition.source().records();
+     40|     expect(recordsSpy).toHaveBeenCalledTimes(1);
+       |                        ^
+     41|     expect(records).toEqual([{ atMs: 1000, code: "telemetry.failure", …
+     42|     expect(backendStorageRefOf(options)?.current).toBe(fakeStorage);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s369-diagnostics-query-source.test.ts > S365b' production diagnostics query source > implements diagnosticRecords over the backend-owned telemetry store (fresh store -> empty, bounded)
+TypeError: storage.diagnosticRecords is not a function
+ ❯ test/s369-diagnostics-query-source.test.ts:75:29
+     73|       useFixtures: false,
+     74|     });
+     75|     const records = storage.diagnosticRecords();
+       |                             ^
+     76|     expect(Array.isArray(records)).toBe(true);
+     77|     expect(records.length).toBeLessThanOrEqual(MAX_DIAGNOSTICS_RECORDS…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  14:42:57
+   Duration  9.03s (transform 5.21s, setup 0ms, collect 8.14s, tests 161ms, environment 0ms, prepare 258ms)
+
+

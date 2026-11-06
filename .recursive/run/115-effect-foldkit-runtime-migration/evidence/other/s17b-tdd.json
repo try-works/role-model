@@ -1,0 +1,81 @@
+{
+  "slice": "s17b-sse-cleanup",
+  "requirement": "R26 (Transport/SSE B5, SSE half)",
+  "status": "complete",
+  "task": ".recursive/run/115-effect-foldkit-runtime-migration/tasks/s17b-sse-cleanup.md",
+  "extraction": {
+    "what": "new module src/sse-transcript.ts (scoped reader + typed errors); src/index.ts SSE region now delegates both readers to it",
+    "why": "the codex reader and provider reader duplicated block parsing and disagreed on cleanup (codex had try/finally; the provider reader had no cancel/release at all). One scoped reader gives one cleanup contract, one abort path and one place where typed failures are defined; it is testable without a server."
+  },
+  "abortProof": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17b-green.log",
+    "test": "stops a stalled stream when the enclosing fiber times out (abort reaches the read)",
+    "shape": "Effect.tryPromise with a signal-taking thunk races a 30ms timeout; the stream's read() never settles except through the forwarded signal, and the abort listener calls reader.cancel at abort time. The test asserts Exit failure, canceled=true, released=true and zero reads after release."
+  },
+  "cleanupCounts": {
+    "perPath": "success, protocol failure and caller abort each release ['abort-listener','decoder','reader'] (sorted); failure/abort also set canceled=true",
+    "decoderNote": "TextDecoder has no release API; its onRelease entry is the explicit scope-exit marker, documented in the module, not a fake resource",
+    "seam": "onRelease callback, the same observable seam shape S17a used (onRelease resources) for the JSON path"
+  },
+  "typedNames": {
+    "abort": "SseTranscriptAbortError",
+    "midFrame": "SseTranscriptIncompleteError",
+    "protocol": "SseTranscriptProtocolError",
+    "transport": "transport/downstream errors propagate unchanged (no wrapper) so business error identity survives; this was forced by the existing 'downstream stream-writer failures' regression",
+    "distinctFromJsonPath": "names deliberately differ from TrackBPrivateOperationAbort/Protocol/TimeoutError"
+  },
+  "frames": {
+    "pinned": "exact writer payload array: dropped pre-substantive reasoning chunk; fragmented content frame reassembled ('Hel'+'lo'); later reasoning, tool_calls, finish_reason and error frames in order; [DONE] never a payload",
+    "done": "onDone fires exactly once and [DONE] is excluded from payloads (asserted separately)",
+    "drain": "a valid final unterminated frame is drained (asserted: payload 2 emitted)",
+    "whatFails": "a reorder, drop, duplicate or an emitted [DONE] changes the exact array/count and fails",
+    "notPinned": "an upstream 'error' frame is pinned only as an opaque passthrough payload in its position; the reader does not classify upstream error frames (that policy is downstream). Recorded rather than invented."
+  },
+  "red": {
+    "cleanup": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17b-red-cleanup.log",
+      "mutation": "finally cleanup removed",
+      "failure": "released counts false on the success path"
+    },
+    "abort": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17b-red-abort.log",
+      "mutation": "caller signal ignored (no listener/race)",
+      "failure": "caller-abort test times out because the stalled read never stops"
+    },
+    "frames": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17b-red-frames.log",
+      "mutation": "first-substantive filter removed (extra early frame)",
+      "failure": "exact payload array mismatch (6 vs 5)"
+    },
+    "typed": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17b-red-typed.log",
+      "mutation": "incomplete mapped to protocol",
+      "failure": "expected SseTranscriptProtocolError to be an instance of SseTranscriptIncompleteError"
+    },
+    "note": "all mutations were byte-restored; the final GREEN run proves the restore"
+  },
+  "green": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17b-green.log",
+    "tests": 7,
+    "passed": 7,
+    "exit": 0
+  },
+  "regression": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17b-regression.log",
+    "files": 4,
+    "tests": 235,
+    "passed": 235,
+    "exit": 0,
+    "suites": "index.test.ts, openai-codex-subscription-matrix, run101-addendum14-credential-hot-reload, s17a-transport-signal"
+  },
+  "typecheck": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17b-tsc.log",
+    "exit": 0
+  },
+  "files": {
+    "role-model-router/apps/runtime-host-bridge/src/sse-transcript.ts": "scoped reader, typed errors, cleanup seam, abort race, frame/drain/DONE semantics",
+    "role-model-router/apps/runtime-host-bridge/src/index.ts": "SSE region only: readers delegate; codex adapter takes/passes abortSignal to fetch; provider call passes the execution abortSignal; dead block helper removed",
+    "role-model-router/apps/runtime-host-bridge/test/s17b-sse-cleanup.test.ts": "cleanup counts 3 paths, fiber abort, typed failures, drain/DONE, exact frame order"
+  },
+  "notTouched": "queue runtime, diagnostics modules, client app, wrappers, packages/ui, root, lockfile, vendor, private repo"
+}

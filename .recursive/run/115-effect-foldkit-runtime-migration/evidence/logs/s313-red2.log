@@ -1,0 +1,58 @@
+COMMAND: node vitest run test/s313-server-owner.test.ts (S314 RED: real owner threading)
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:52460) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s313-server-owner.test.ts (4 tests | 1 failed) 98ms
+   ✓ S313 DAG Server owner > composeServerOwner builds the listener/server through the transport and owns close ordering 16ms
+   ✓ S313 DAG Server owner > facade startBridgeServer composes the DAG Server owner; no local listen/lifecycle path exists 2ms
+   × S313 DAG Server owner > facade threads the real composed BackendOwner: serverOwner.backend === composedBackendOwner 68ms
+     → expected { Object (id, options) } to be { …(2), …(1) } // Object.is equality
+   ✓ S313 DAG Server owner > a plain-options owner injected as the backend is refused (legacy brand bypass gone) 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s313-server-owner.test.ts > S313 DAG Server owner > facade threads the real composed BackendOwner: serverOwner.backend === composedBackendOwner
+AssertionError: expected { Object (id, options) } to be { …(2), …(1) } // Object.is equality
+
+- Expected
++ Received
+
+@@ -1,7 +1,7 @@
+  {
+-   "id": "backend-owner:run115-s21a",
++   "id": "backend-owner:facade",
+    "options": {
+      "activateEndpoint": [Function anonymous],
+      "activateEndpointBatch": [Function anonymous],
+      "activateLearningPack": [Function anonymous],
+      "advanceGraphMigration": [Function anonymous],
+@@ -178,7 +178,6 @@
+      "updateRuntimeConfig": [Function anonymous],
+      "updateStorageRetentionPolicy": [Function anonymous],
+      "updateTaskDefinitions": [Function anonymous],
+      "upsertProviderAccount": [Function anonymous],
+    },
+-   Symbol(role-model-router.backend-owner): true,
+  }
+
+ ❯ test/s313-server-owner.test.ts:112:41
+    110|     });
+    111|     const server = await startBridgeServer(composed.options, { handler…
+    112|     expect(server.serverOwner?.backend).toBe(composed);
+       |                                         ^
+    113|   });
+    114| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 passed (4)
+   Start at  05:40:07
+   Duration  21.25s (transform 12.88s, setup 0ms, collect 19.81s, tests 98ms, environment 1ms, prepare 490ms)
+
+

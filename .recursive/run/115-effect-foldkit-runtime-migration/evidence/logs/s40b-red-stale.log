@@ -1,0 +1,287 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s40b-overview.test.ts > S40b overview charts and windows > switches to Week and ignores a late Day response
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow view: 16.9ms (budget: 16ms), triggered by init. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'View',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 16.8770999999997,
+  thresholdMs: 16
+}
+[foldkit] Slow patch: 68.3ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'Index' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 68.2601999999988,
+  thresholdMs: 8
+}
+
+stderr | test/s40b-overview.test.ts > S40b overview charts and windows > switches to Week and ignores a late Day response
+[foldkit] Slow view: 16.3ms (budget: 16ms), triggered by ReadbackLoaded. Keep render-only work in the view path and memoize expensive subtrees with createLazy or createKeyedLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'View',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Index' },
+    theme: 'dark',
+    overviewWindowMs: 604800000
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'dashboard',
+      snapshot: [Object],
+      token: 2
+    }
+  },
+  durationMs: 16.321799999999712,
+  thresholdMs: 16
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'dashboard',
+  snapshot: {
+    detailId: '604800000',
+    rows: [ [Object], [Object], [Object], [Object], [Object], [Object] ],
+    status: 'ok',
+    token: 2
+  },
+  token: 2
+}
+[foldkit] Slow patch: 35.4ms (budget: 8ms), triggered by ReadbackLoaded. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    controls: {
+      controlController: [Object],
+      endpoints: [Object],
+      providers: [Object]
+    },
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    observability: { rows: [], status: 'idle', token: 0 },
+    readbacks: {
+      dashboard: [Object],
+      localLogs: [Object],
+      localPeers: [Object],
+      systemPeers: [Object],
+      localSwap: [Object],
+      observeActivity: [Object],
+      observeLogs: [Object],
+      observeRouting: [Object],
+      queues: [Object],
+      requests: [Object],
+      routerCandidates: [Object],
+      routerDecisions: [Object],
+      router: [Object],
+      requestDetail: [Object],
+      routerDecisionDetail: [Object],
+      localPeerModels: [Object],
+      queueConfig: [Object],
+      downstreamOpenAI: [Object],
+      integrationProviders: [Object],
+      benchmarkSuite: [Object],
+      storageRetention: [Object],
+      models: [Object],
+      runtimeSummary: [Object],
+      health: [Object],
+      runtime: [Object],
+      sessionReadiness: [Object],
+      storeReceipts: [Object]
+    },
+    refresh: {
+      lastAppliedRevision: 0,
+      resyncToken: 0,
+      status: 'live',
+      message: undefined
+    },
+    route: { _tag: 'Index' },
+    theme: 'dark',
+    overviewWindowMs: 604800000
+  },
+  message: {
+    _id: 'Option',
+    _tag: 'Some',
+    value: {
+      _tag: 'ReadbackLoaded',
+      key: 'dashboard',
+      snapshot: [Object],
+      token: 2
+    }
+  },
+  durationMs: 35.35580000000118,
+  thresholdMs: 8
+} {
+  _tag: 'ReadbackLoaded',
+  key: 'dashboard',
+  snapshot: {
+    detailId: '604800000',
+    rows: [ [Object], [Object], [Object], [Object], [Object], [Object] ],
+    status: 'ok',
+    token: 2
+  },
+  token: 2
+}
+
+ ❯ test/s40b-overview.test.ts (4 tests | 1 failed | 3 skipped) 1280ms
+   ↓ S40b overview charts and windows > renders latency and success/failure charts with the Day window
+   × S40b overview charts and windows > switches to Week and ignores a late Day response 1276ms
+     → expected 'Runtime UIOverviewDiagnosticsObservab…' to contain '50'
+   ↓ S40b overview charts and windows > renders explicit empty, loading and error states without a flat-line chart
+   ↓ S40b overview charts and windows > rejects a fabricated 90-day response
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s40b-overview.test.ts > S40b overview charts and windows > switches to Week and ignores a late Day response
+AssertionError: expected 'Runtime UIOverviewDiagnosticsObservab…' to contain '50'
+
+Expected: "50"
+Received: "Runtime UIOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterStudioLocalRemoteModelsRouterObserveConnectSystemLearningRuntimeModels0Requests1Cache0%Router—Mode—Clicks: 0Dark shellRuntimeOverviewToggle themeOverviewDiagnosticsObservabilityReceiptsQueuesLocal logsCandidatesRequestsDecisionsSystem peersLocal peersRuntimeProvidersEndpointsControllerReadinessDashboardSwapActivityObserve logsObserve routingRouterStudioLocalRemoteModelsRouterObserveConnectSystemLearningRuntime overviewIndex pageLast WeekDayWeekMonth90 daysLatency (ms)Average and p95 for the last week.2 ms1 ms0 msAvgp95Average: Avg = 1 msp95: p95 = 2 msAveragep95Latency (ms) dataLabelAverage (ms)p95 (ms)Avg1—p95—2Success vs failureRequest outcomes for the last week.1 requests0.5 requests0 requestsSuccessFailureSuccess: Success = 1 requestsFailure: Failure = 0 requestsSuccessFailureSuccess vs failure dataLabelSuccess (requests)Failure (requests)Success1—Failure—0Clicked 0 time(s)"
+
+ ❯ test/s40b-overview.test.ts:71:39
+     69|     await new Promise((resolve) => setTimeout(resolve, 400));
+     70|     expect(document.querySelector("[data-overview-period]")?.textConte…
+     71|     expect(document.body.textContent).toContain("50");
+       |                                       ^
+     72|     expect(document.body.textContent).not.toContain("Last Day");
+     73|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  16:29:34
+   Duration  15.61s (transform 7.19s, setup 0ms, collect 11.24s, tests 1.28s, environment 1.41s, prepare 662ms)
+

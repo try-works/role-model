@@ -1,0 +1,126 @@
+✖ VENDORED.json records the reviewed upstream tag, commit and licence (1.9882ms)
+✖ VENDORED.json records the reviewed payload root and includes (0.4701ms)
+✖ the vendored packages report the reviewed release line (0.4965ms)
+✖ the content digest recomputed from the vendored bytes matches the manifest and is stable (0.5698ms)
+✖ the vendored tree carries no node_modules or .git directory (0.4462ms)
+✖ vendor-upstream.mjs defaults Foldkit to the reviewed tag and commit (1.4676ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 0
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 196.7121
+
+✖ failing tests:
+
+test at scripts\foldkit-vendored.test.mjs:97:1
+✖ VENDORED.json records the reviewed upstream tag, commit and licence (1.9882ms)
+  Error: ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\vendor\foldkit\VENDORED.json'
+      at readFileSync (node:fs:440:20)
+      at manifest (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/foldkit-vendored.test.mjs:53:35)
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/foldkit-vendored.test.mjs:98:17)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\vendor\\foldkit\\VENDORED.json'
+  }
+
+test at scripts\foldkit-vendored.test.mjs:108:1
+✖ VENDORED.json records the reviewed payload root and includes (0.4701ms)
+  Error: ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\vendor\foldkit\VENDORED.json'
+      at readFileSync (node:fs:440:20)
+      at manifest (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/foldkit-vendored.test.mjs:53:35)
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/foldkit-vendored.test.mjs:109:17)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\vendor\\foldkit\\VENDORED.json'
+  }
+
+test at scripts\foldkit-vendored.test.mjs:114:1
+✖ the vendored packages report the reviewed release line (0.4965ms)
+  Error: ENOENT: no such file or directory, scandir 'D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\vendor\foldkit\packages'
+      at readdirSync (node:fs:1569:26)
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/foldkit-vendored.test.mjs:117:23)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'scandir',
+    path: 'D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\vendor\\foldkit\\packages'
+  }
+
+test at scripts\foldkit-vendored.test.mjs:134:1
+✖ the content digest recomputed from the vendored bytes matches the manifest and is stable (0.5698ms)
+  Error: ENOENT: no such file or directory, scandir 'D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\vendor\foldkit'
+      at readdirSync (node:fs:1569:26)
+      at walk (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/foldkit-vendored.test.mjs:59:25)
+      at digestTree (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/foldkit-vendored.test.mjs:69:3)
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/foldkit-vendored.test.mjs:135:17)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'scandir',
+    path: 'D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\vendor\\foldkit'
+  }
+
+test at scripts\foldkit-vendored.test.mjs:144:1
+✖ the vendored tree carries no node_modules or .git directory (0.4462ms)
+  Error: ENOENT: no such file or directory, scandir 'D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\vendor\foldkit'
+      at readdirSync (node:fs:1569:26)
+      at listDirectories (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/foldkit-vendored.test.mjs:89:23)
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/foldkit-vendored.test.mjs:145:20)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'scandir',
+    path: 'D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\vendor\\foldkit'
+  }
+
+test at scripts\foldkit-vendored.test.mjs:149:1
+✖ vendor-upstream.mjs defaults Foldkit to the reviewed tag and commit (1.4676ms)
+  AssertionError [ERR_ASSERTION]: UPSTREAMS.foldkit entry not found
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/foldkit-vendored.test.mjs:152:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+COMMAND: node --test scripts/foldkit-vendored.test.mjs
+CWD: D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+TIMESTAMP: 2026-10-24T13:51:27.149Z
+EXIT_CODE: 1

@@ -57,6 +57,7 @@ const checkCitation = (issues, id, label, citation) => {
   }
 };
 
+// biome-ignore lint/suspicious/noExportsInTest: shared helper imported by sibling contract tests.
 export const validateInventory = (inventory) => {
   const issues = [];
   if (inventory === null || typeof inventory !== "object") {
@@ -198,10 +199,96 @@ test("a deliberately wrong citation fails", () => {
   );
 
   const missingFile = structuredClone(inventory);
-  missingFile.entries[0].callers[0].file = "role-model-router/apps/runtime-host-bridge/src/does-not-exist.ts";
+  missingFile.entries[0].callers[0].file =
+    "role-model-router/apps/runtime-host-bridge/src/does-not-exist.ts";
   assert.ok(
     validateInventory(missingFile).some((issue) => issue.includes("missing file")),
     "a missing caller file must fail",
+  );
+});
+
+const SQL_SERVICE_FILE = "role-model-router/packages/sql-sqlite-node/src/service.ts";
+const SQL_PACKAGE_ROOT = "role-model-router/packages/sql-sqlite-node/";
+const SQL_PRODUCT_CALLERS = [
+  ["role-model-router/apps/runtime-host-bridge/src/cli.ts", 12],
+  ["role-model-router/apps/runtime-host-bridge/src/index.ts", 19],
+  ["role-model-router/apps/runtime-host-bridge/src/queue-runtime/admin.ts", 19],
+  ["role-model-router/apps/runtime-host-bridge/src/queue-runtime/store.ts", 18],
+  ["role-model-router/apps/runtime-host-bridge/src/route-challenge-evidence.ts", 2],
+  ["role-model-router/apps/runtime-host-bridge/src/route-ladder-census.ts", 3],
+  ["role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts", 30],
+];
+
+/**
+ * R19/B0 structured guard (S300/S301): the SQL service must be INVENTORIED with a package-path citation under
+ * packages/sql-sqlite-node/src/service.ts, carry every product caller, and must never be re-excluded under a
+ * reworded "no product caller" claim (e.g. area "Effect SQLite service", reason "No product code calls it").
+ * Returns issue codes; an empty array means the workspace-level truth holds.
+ */
+// biome-ignore lint/suspicious/noExportsInTest: shared helper imported by sibling contract tests.
+export const validateSqlServiceCoverage = (inventory) => {
+  const issues = [];
+  const excluded = Array.isArray(inventory?.scope?.excluded) ? inventory.scope.excluded : [];
+  for (const entry of excluded) {
+    const area = String(entry?.area ?? "");
+    if (/sqlite/i.test(area)) issues.push(`sql-service-excluded: ${area}`);
+  }
+  const entries = Array.isArray(inventory?.entries) ? inventory.entries : [];
+  const sqlEntries = entries.filter((entry) =>
+    String(entry?.definition?.file ?? "").startsWith(SQL_PACKAGE_ROOT),
+  );
+  const serviceEntries = sqlEntries.filter((entry) => entry.definition.file === SQL_SERVICE_FILE);
+  if (serviceEntries.length < 7) {
+    issues.push(
+      `sql-service-not-inventoried: found ${String(serviceEntries.length)} service entries`,
+    );
+  }
+  if (
+    !sqlEntries.some(
+      (entry) =>
+        entry.definition.file === SQL_SERVICE_FILE &&
+        Number.isInteger(entry.definition.line) &&
+        entry.definition.line > 0,
+    )
+  ) {
+    issues.push("sql-service-package-path: no positive service.ts line citation");
+  }
+  const cited = sqlEntries.flatMap((entry) =>
+    (Array.isArray(entry.callers) ? entry.callers : []).map(
+      (caller) => `${String(caller?.file)}:${String(caller?.line)}`,
+    ),
+  );
+  for (const [file, line] of SQL_PRODUCT_CALLERS) {
+    if (!cited.includes(`${file}:${line}`))
+      issues.push(`sql-service-caller-missing: ${file}:${line}`);
+  }
+  for (const entry of sqlEntries) {
+    if (!DISPOSITIONS.has(entry.disposition))
+      issues.push(`sql-service-disposition: ${String(entry.id)}`);
+    if (String(entry.reason ?? "").trim().length === 0)
+      issues.push(`sql-service-reason: ${String(entry.id)}`);
+  }
+  if (JSON.stringify(excluded).includes("Effect SQLite service has no product caller")) {
+    issues.push("sql-service-false-claim: the removed sentence is back");
+  }
+  return issues;
+};
+
+test("R19/B0: the SQL service is a live product surface, never excluded as callerless", () => {
+  const issues = validateSqlServiceCoverage(loadInventory());
+  assert.deepEqual(issues, [], issues.join("\n"));
+});
+
+test("S301 reworded false SQL exclusion is rejected by the structured guard", () => {
+  const reworded = structuredClone(loadInventory());
+  reworded.scope.excluded.push({
+    area: "Effect SQLite service",
+    reason: "No product code calls it; package tests only.",
+  });
+  const issues = validateSqlServiceCoverage(reworded);
+  assert.ok(
+    issues.some((issue) => issue.startsWith("sql-service-excluded")),
+    `a reworded SQL exclusion must be rejected, got: ${issues.join("; ")}`,
   );
 });
 

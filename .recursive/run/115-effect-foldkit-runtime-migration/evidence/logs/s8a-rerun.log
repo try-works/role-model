@@ -1,0 +1,70 @@
+# S8a follow-up re-run: abort/cancel-watch + addendum06 + addendum08 + r5-cancel-drain
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:30620) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run101-addendum06-attempt-timeout.test.ts (3 tests) 5112ms
+   ✓ @recursive:101-effect-mq-queue-rebuild addendum06 per-attempt timeout > a handler that never returns is interrupted by the timeout and consumes the attempt  5102ms
+(node:47580) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run101-r5-cancel-drain.test.ts (5 tests | 1 failed) 3546ms
+   ✓ run 101 R5/R9 queue admin runtime side > reads the drain flag and answers false for an absent store 23ms
+   ✓ run 101 R5/R9 queue admin runtime side > reads one job's state, and answers null when the row or store is absent 20ms
+   × run 101 R5/R9 queue admin runtime side > claims nothing while the queue is draining, and claims again once it is cleared 1527ms
+     → Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
+    'job-drained',
++   'job-drained'
+  ]
+
+   ✓ run 101 R5/R9 queue admin runtime side > interrupts a running handler whose row is cancelled, without completing it  1973ms
+   ✓ run 101 R5/R9 queue admin runtime side > names the cancellation it performed, so a caller can tell it from a failure 1ms
+(node:44568) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run101-addendum08-attempt-outcome.test.ts (1 test) 2602ms
+   ✓ @recursive:101-effect-mq-queue-rebuild addendum08 attempt outcome reporting > reports the attempt, the budget and whether the job will be retried  2600ms
+(node:45768) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run115-s8a-worker-abort-signal.test.ts (3 tests) 2024ms
+   ✓ Run 115 S8a: queue worker forwards the Effect AbortSignal > an attempt timeout aborts a handler that settles only on its signal  1840ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run101-r5-cancel-drain.test.ts > run 101 R5/R9 queue admin runtime side > claims nothing while the queue is draining, and claims again once it is cleared
+AssertionError: Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
+    'job-drained',
++   'job-drained'
+  ]
+
+
+- Expected
++ Received
+
+  [
+    "job-drained",
++   "job-drained",
+  ]
+
+ ❯ test/run101-r5-cancel-drain.test.ts:225:14
+    223|       }
+    224|       await new Promise((resolve) => setTimeout(resolve, 900));
+    225|       assert.deepEqual(attempts, ["job-drained"]);
+       |              ^
+    226|     } finally {
+    227|       await worker.stop();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 11 passed (12)
+   Start at  23:04:14
+   Duration  21.22s (transform 1.94s, setup 0ms, collect 5.82s, tests 13.28s, environment 1ms, prepare 803ms)
+
+EXIT_CODE: 1

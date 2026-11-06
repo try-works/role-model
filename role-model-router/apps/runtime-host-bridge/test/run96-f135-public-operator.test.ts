@@ -23,7 +23,7 @@ function baseOptions(overrides: Record<string, unknown> = {}) {
 }
 
 async function startTestServer(overrides: Record<string, unknown> = {}) {
-  const server = await startBridgeServer(baseOptions(overrides));
+  const server = await startBridgeServer(baseOptions(overrides), { allowTestSeamBackend: true });
   servers.push(server);
   return server;
 }

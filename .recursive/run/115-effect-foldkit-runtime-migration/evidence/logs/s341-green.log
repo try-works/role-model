@@ -1,0 +1,24 @@
+COMMAND: node vitest run (S341 final)
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:37188) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s334-observation-storage.test.ts (9 tests) 15175ms
+   ✓ S334 observation storage > hung job: drain rejects with the typed 5s timeout and the pump does not stay permanently active  5039ms
+   ✓ S334 observation storage > drain watchdog abandons a hung active job and queued later jobs still run  5035ms
+   ✓ S334 observation storage > eventual settle after abandonment writes no cache entry and does not double-decrement pending  5035ms
+(node:63228) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s341-backend-storage.test.ts (3 tests) 595ms
+   ✓ S341 backend storage factory > composeBackendStorage returns a per-backend lifecycle with initialization, graph store and observation storage  429ms
+(node:25260) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s337-observation-families.test.ts (4 tests) 8ms
+
+ Test Files  3 passed (3)
+      Tests  16 passed (16)
+   Start at  10:50:11
+   Duration  24.92s (transform 2.87s, setup 0ms, collect 7.65s, tests 15.78s, environment 1ms, prepare 546ms)
+
+

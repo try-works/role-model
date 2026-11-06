@@ -1,0 +1,84 @@
+COMMAND: node vitest run test/s321-partial-shutdown.test.ts (PRE-IMPLEMENTATION state restored from E:/rm-tmp/s321 backups)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/s321-partial-shutdown.test.ts (5 tests | 4 failed) 19ms
+   × S321 partial shutdown ordering > release-all runs every release even when an earlier one fails (AggregateError, no early exit) 4ms
+     → (0 , runReleaseAll) is not a function
+   × S321 partial shutdown ordering > server shutdown order: stop admission -> join -> interrupt -> close transport -> close backend 3ms
+     → server.shutdown is not a function
+   × S321 partial shutdown ordering > a failing dependency close does not skip later releases (backend close still runs) 1ms
+     → server.shutdown is not a function
+   × S321 partial shutdown ordering > the facade's server.close uses the DAG owner's ordered shutdown (identity) 8ms
+     → expected [ 'transport-close' ] to deeply equal [ 'stop-accepting', 'join', …(2) ]
+   ✓ S321 partial shutdown ordering > facadeBackendOwner exposes no backend close (test seam only) 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s321-partial-shutdown.test.ts > S321 partial shutdown ordering > release-all runs every release even when an earlier one fails (AggregateError, no early exit)
+TypeError: (0 , runReleaseAll) is not a function
+ ❯ test/s321-partial-shutdown.test.ts:56:18
+     54|       throw new Error("first release failed");
+     55|     };
+     56|     await expect(runReleaseAll([failing, async () => { order.push("sec…
+       |                  ^
+     57|       .rejects.toBeInstanceOf(AggregateError);
+     58|     expect(order).toEqual(["first", "second", "third"]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/s321-partial-shutdown.test.ts > S321 partial shutdown ordering > server shutdown order: stop admission -> join -> interrupt -> close transport -> close backend
+TypeError: server.shutdown is not a function
+ ❯ test/s321-partial-shutdown.test.ts:67:18
+     65|     expect(isComposedServerOwner(server)).toBe(true);
+     66|     await server.start();
+     67|     await server.shutdown();
+       |                  ^
+     68|     expect(order).toEqual(["stop-accepting", "join", "interrupt", "tra…
+     69|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/s321-partial-shutdown.test.ts > S321 partial shutdown ordering > a failing dependency close does not skip later releases (backend close still runs)
+TypeError: server.shutdown is not a function
+ ❯ test/s321-partial-shutdown.test.ts:76:25
+     74|     const server = composeServerOwner({ backend, handlerFactory, trans…
+     75|     await server.start();
+     76|     await expect(server.shutdown()).rejects.toBeInstanceOf(AggregateEr…
+       |                         ^
+     77|     expect(order).toContain("backend-close");
+     78|     expect(order.indexOf("backend-close")).toBeGreaterThan(order.index…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/s321-partial-shutdown.test.ts > S321 partial shutdown ordering > the facade's server.close uses the DAG owner's ordered shutdown (identity)
+
+AssertionError: expected [ 'transport-close' ] to deeply equal [ 'stop-accepting', 'join', …(2) ]
+
+- Expected
++ Received
+
+  [
+-   "stop-accepting",
+-   "join",
+-   "interrupt",
+    "transport-close",
+  ]
+
+ ❯ test/s321-partial-shutdown.test.ts:87:19
+     85|     const started = await owner.start();
+     86|     await started.close();
+     87|     expect(order).toEqual(["stop-accepting", "join", "interrupt", "tra…
+       |                   ^
+     88|     expect(isComposedServerOwner(owner)).toBe(true);
+     89|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 1 passed (5)
+   Start at  07:50:38
+   Duration  3.23s (transform 1.68s, setup 0ms, collect 2.74s, tests 19ms, environment 0ms, prepare 167ms)
+
+

@@ -1,0 +1,38 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s639-duplicate-chart-series.test.ts (2 tests | 2 failed) 122ms
+   × S639 duplicate display names in chart series > keeps both /requests ranking rows and disambiguates the shared label 95ms
+     → A stack requires at most one value for each position and series; duplicate Gpt 5.4 / requestCount
+   × S639 duplicate display names in chart series > keeps both observe-routing ranking rows with a shared display name 22ms
+     → A stack requires at most one value for each position and series; duplicate Gpt 5.4 / requestCount
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s639-duplicate-chart-series.test.ts > S639 duplicate display names in chart series > keeps both /requests ranking rows and disambiguates the shared label
+ FAIL  test/s639-duplicate-chart-series.test.ts > S639 duplicate display names in chart series > keeps both observe-routing ranking rows with a shared display name
+TypeError: A stack requires at most one value for each position and series; duplicate Gpt 5.4 / requestCount
+ ❯ stackExtents ../../../node_modules/.pnpm/@tanstack+charts@1.1.0_reac_4f3ce8a9dc2f8784e0ce93271b525519/node_modules/@tanstack/charts/dist/stack-internal.js:38:13
+ ❯ stackValues ../../../node_modules/.pnpm/@tanstack+charts@1.1.0_reac_4f3ce8a9dc2f8784e0ce93271b525519/node_modules/@tanstack/charts/dist/stack-internal.js:170:19
+ ❯ ../../../node_modules/.pnpm/@tanstack+charts@1.1.0_reac_4f3ce8a9dc2f8784e0ce93271b525519/node_modules/@tanstack/charts/dist/bar.js:55:53
+ ❯ Object.normalizedInitialize [as initialize] ../../../node_modules/.pnpm/@tanstack+charts@1.1.0_reac_4f3ce8a9dc2f8784e0ce93271b525519/node_modules/@tanstack/charts/dist/mark.js:14:53
+ ❯ ../../../node_modules/.pnpm/@tanstack+charts@1.1.0_reac_4f3ce8a9dc2f8784e0ce93271b525519/node_modules/@tanstack/charts/dist/scene.js:77:31
+ ❯ createChartSceneWithScaleResolver ../../../node_modules/.pnpm/@tanstack+charts@1.1.0_reac_4f3ce8a9dc2f8784e0ce93271b525519/node_modules/@tanstack/charts/dist/scene.js:76:40
+ ❯ createChartScene ../../../node_modules/.pnpm/@tanstack+charts@1.1.0_reac_4f3ce8a9dc2f8784e0ce93271b525519/node_modules/@tanstack/charts/dist/scene.js:36:10
+ ❯ src/features/overview/tanstack-chart.ts:65:19
+     63|       },
+     64|     });
+     65|     const scene = createChartScene(definition, { height: options.heigh…
+       |                   ^
+     66|     let svg = renderChartSvg(scene, { ariaLabel: options.ariaLabel });
+     67|     for (const point of scene.points) {
+ ❯ tanstackChartSvg src/features/overview/tanstack-chart.ts:82:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  07:56:29
+   Duration  24.51s (transform 11.26s, setup 0ms, collect 18.72s, tests 122ms, environment 3.60s, prepare 740ms)
+

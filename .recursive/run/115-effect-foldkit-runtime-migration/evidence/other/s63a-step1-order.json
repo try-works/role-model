@@ -1,0 +1,12 @@
+{
+  "slice": "s63a-step1-order",
+  "serverFirst": "makeHostRuntimeServerFirst: acquire server -> backend -> packaged; release packaged -> backend -> server",
+  "backendFirst": "makeHostRuntime retained for backend-first",
+  "tests": {
+    "file": "test/cli-composition-scope.test.ts",
+    "count": 5
+  },
+  "step2": "NOT WIRED. Backend creation is inside the extension-runtime startup at cli.ts:9322 and interleaved with packaged/extension ownership; extracting it would change the composition root. Old shutdown at :5590-5610 untouched, process.exit(0) untouched. cli-startup-readiness/packaged-restart/index.test not run.",
+  "hostTsc": "exit 0",
+  "next": "Step 2 needs a CLI composition-root extraction: startBridgeServer into the scope first, expose a late backend/packaged acquisition, then replace shutdown with scope.close; keep old shutdown fallback."
+}

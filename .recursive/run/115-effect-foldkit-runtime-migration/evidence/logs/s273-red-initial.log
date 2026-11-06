@@ -1,0 +1,27 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s273-cleanup.test.ts [ test/s273-cleanup.test.ts ]
+Error: Cannot find module './support/s273-cleanup' imported from 'D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node/test/s273-cleanup.test.ts'
+ ❯ test/s273-cleanup.test.ts:6:1
+      4| 
+      5| import { type SqliteService } from "../src/service";
+      6| import {
+       | ^
+      7|   type CleanupFailure,
+      8|   disposeAfterTest,
+
+Caused by: Error: Failed to load url ./support/s273-cleanup (resolved id: ./support/s273-cleanup) in D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node/test/s273-cleanup.test.ts. Does the file exist?
+ ❯ loadAndTransform E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  15:46:32
+   Duration  2.50s (transform 247ms, setup 0ms, collect 0ms, tests 0ms, environment 1ms, prepare 618ms)
+

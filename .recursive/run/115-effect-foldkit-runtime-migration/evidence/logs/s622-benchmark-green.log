@@ -1,0 +1,12 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s622-benchmark-parity.test.ts (12 tests) 1964ms
+   ✓ S622 benchmark parity > renders the mode options with suite-derived counts and the judge select with endpoint ids  478ms
+   ✓ S622 benchmark parity > renders the Run label with the selected model, case counts and the clear-all control  406ms
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+   Start at  20:37:32
+   Duration  44.35s (transform 18.45s, setup 0ms, collect 31.21s, tests 1.96s, environment 8.29s, prepare 1.16s)
+

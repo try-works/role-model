@@ -1,0 +1,21 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+ ❯ test/s12c-foldkit-textarea.scene.test.ts (3 tests | 1 failed) 52ms
+   × RM3 textarea Foldkit primitive > associates its label, keeps the live field classes plus caller layout, and dispatches the typed value 43ms
+     → Expected element matching textbox to have class "min-h-[34px]" but it does not.
+   ✓ RM3 textarea Foldkit primitive > does not emit when disabled 5ms
+   ✓ RM3 textarea Foldkit primitive > uses aria-label when there is no visible label, and refuses a nameless textarea 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s12c-foldkit-textarea.scene.test.ts > RM3 textarea Foldkit primitive > associates its label, keeps the live field classes plus caller layout, and dispatches the typed value
+Error: Expected element matching textbox to have class "min-h-[34px]" but it does not.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  23:58:29
+   Duration  5.25s (transform 2.14s, setup 0ms, collect 3.44s, tests 52ms, environment 835ms, prepare 299ms)
+

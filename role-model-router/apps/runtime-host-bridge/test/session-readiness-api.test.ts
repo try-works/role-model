@@ -22,17 +22,20 @@ describe("session readiness API", () => {
         scopeId,
       });
 
-      const server = await startBridgeServer({
-        host: "127.0.0.1",
-        port: 0,
-        registry: backend.registry,
-        getRegistry: () => backend.registry,
-        executeChatCompletions: backend.executeChatCompletions,
-        executeResponses: backend.executeResponses,
-        readRuntimeSummary: backend.readRuntimeSummary,
-        readHealthStatus: backend.readHealthStatus,
-        getRoutableInventory: backend.getRoutableInventory,
-      });
+      const server = await startBridgeServer(
+        {
+          host: "127.0.0.1",
+          port: 0,
+          registry: backend.registry,
+          getRegistry: () => backend.registry,
+          executeChatCompletions: backend.executeChatCompletions,
+          executeResponses: backend.executeResponses,
+          readRuntimeSummary: backend.readRuntimeSummary,
+          readHealthStatus: backend.readHealthStatus,
+          getRoutableInventory: backend.getRoutableInventory,
+        },
+        { allowTestSeamBackend: true },
+      );
 
       try {
         let health = await backend.readHealthStatus();

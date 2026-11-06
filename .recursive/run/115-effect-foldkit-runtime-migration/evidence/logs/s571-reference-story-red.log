@@ -1,0 +1,88 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s565-page-stories.scene.test.ts (40 tests | 2 failed) 3231ms
+   ✓ S565 page stories — scene (captured from :3456) > Benchmark matches its :3456 story  379ms
+   ✓ S565 page stories — scene (captured from :3456) > ControlController matches its :3456 story 74ms
+   ✓ S565 page stories — scene (captured from :3456) > Endpoints matches its :3456 story 122ms
+   ✓ S565 page stories — scene (captured from :3456) > Index matches its :3456 story 173ms
+   ✓ S565 page stories — scene (captured from :3456) > Learning matches its :3456 story 61ms
+   ✓ S565 page stories — scene (captured from :3456) > LearningConfiguration matches its :3456 story 84ms
+   ✓ S565 page stories — scene (captured from :3456) > LearningDecisions matches its :3456 story 122ms
+   × S565 page stories — scene (captured from :3456) > LearningEvidence matches its :3456 story 70ms
+     → LearningEvidence
+table: missing columns [Guardrail, Bound, Observed, Verdict]: expected [ Array(1) ] to deeply equal []
+   ✓ S565 page stories — scene (captured from :3456) > LearningHistory matches its :3456 story 56ms
+   ✓ S565 page stories — scene (captured from :3456) > LearningPacks matches its :3456 story 62ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalChoose matches its :3456 story 53ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalLlamaSwapModels matches its :3456 story 132ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalLogs matches its :3456 story 85ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalPeerModels matches its :3456 story 101ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalPeers matches its :3456 story 54ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalPolicy matches its :3456 story 66ms
+   ✓ S565 page stories — scene (captured from :3456) > LocalSwap matches its :3456 story 55ms
+   ✓ S565 page stories — scene (captured from :3456) > Models matches its :3456 story 70ms
+   ✓ S565 page stories — scene (captured from :3456) > ModelsRoles matches its :3456 story 68ms
+   ✓ S565 page stories — scene (captured from :3456) > Observability matches its :3456 story 44ms
+   ✓ S565 page stories — scene (captured from :3456) > ObserveActivity matches its :3456 story 57ms
+   ✓ S565 page stories — scene (captured from :3456) > ObserveLogs matches its :3456 story 64ms
+   ✓ S565 page stories — scene (captured from :3456) > ObserveRouting matches its :3456 story 85ms
+   ✓ S565 page stories — scene (captured from :3456) > Providers matches its :3456 story 65ms
+   ✓ S565 page stories — scene (captured from :3456) > Queues matches its :3456 story 56ms
+   ✓ S565 page stories — scene (captured from :3456) > Requests matches its :3456 story 210ms
+   ✓ S565 page stories — scene (captured from :3456) > Router matches its :3456 story 50ms
+   ✓ S565 page stories — scene (captured from :3456) > RouterAgentStrategy matches its :3456 story 84ms
+   ✓ S565 page stories — scene (captured from :3456) > RouterCandidates matches its :3456 story 38ms
+   ✓ S565 page stories — scene (captured from :3456) > RouterConfig matches its :3456 story 70ms
+   ✓ S565 page stories — scene (captured from :3456) > RouterDecisions matches its :3456 story 24ms
+   ✓ S565 page stories — scene (captured from :3456) > RouterStrategy matches its :3456 story 44ms
+   ✓ S565 page stories — scene (captured from :3456) > RouterWorkloads matches its :3456 story 59ms
+   × S565 page stories — scene (captured from :3456) > Runtime matches its :3456 story 23ms
+     → Message is not defined
+   ✓ S565 page stories — scene (captured from :3456) > SessionReadiness matches its :3456 story 64ms
+   ✓ S565 page stories — scene (captured from :3456) > StorageRetention matches its :3456 story 34ms
+   ✓ S565 page stories — scene (captured from :3456) > StoreReceipts matches its :3456 story 39ms
+   ✓ S565 page stories — scene (captured from :3456) > SystemExtensions matches its :3456 story 56ms
+   ✓ S565 page stories — scene (captured from :3456) > SystemOperator matches its :3456 story 85ms
+   ✓ S565 page stories — scene (captured from :3456) > SystemPeers matches its :3456 story 69ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > LearningEvidence matches its :3456 story
+AssertionError: LearningEvidence
+table: missing columns [Guardrail, Bound, Observed, Verdict]: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "table: missing columns [Guardrail, Bound, Observed, Verdict]",
++ ]
+
+ ❯ test/s565-page-stories.scene.test.ts:98:58
+     96|       const container = await renderRoute(routeFor(tag));
+     97|       const failures = sceneFailures(container, story);
+     98|       expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+       |                                                          ^
+     99|       expect(normalise(container.textContent)).not.toContain("Runtime …
+    100|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene (captured from :3456) > Runtime matches its :3456 story
+ReferenceError: Message is not defined
+ ❯ runtimeRoute src/features/runtime/routes.ts:27:89
+
+ ❯ Runtime src/view.ts:1207:20
+ ❯ routeContent src/view.ts:1260:10
+ ❯ view src/view.ts:1389:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 38 passed (40)
+   Start at  15:47:30
+   Duration  29.45s (transform 13.18s, setup 0ms, collect 20.89s, tests 3.23s, environment 2.85s, prepare 845ms)
+

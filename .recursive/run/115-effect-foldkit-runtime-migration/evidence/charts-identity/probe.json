@@ -1,0 +1,789 @@
+{
+  "url": "http://127.0.0.1:3480",
+  "results": [
+    {
+      "route": "/",
+      "screenshot": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\.recursive\\run\\115-effect-foldkit-runtime-migration\\evidence\\charts-identity\\overview.png",
+      "overviewCards": [
+        {
+          "title": "Model pool",
+          "paths": 0,
+          "series": null
+        },
+        {
+          "title": "Token usage over time",
+          "paths": 3,
+          "series": "3"
+        },
+        {
+          "title": "Cache efficiency trend",
+          "paths": 2,
+          "series": "2"
+        },
+        {
+          "title": "Effective cost over time",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Cost avoided over time",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Latency trend",
+          "paths": 2,
+          "series": "2"
+        },
+        {
+          "title": "Success vs failure volume",
+          "paths": 0,
+          "series": "2"
+        }
+      ],
+      "plots": [
+        {
+          "title": "Token usage over time",
+          "paths": 3,
+          "series": "3"
+        },
+        {
+          "title": "Cache efficiency trend",
+          "paths": 2,
+          "series": "2"
+        },
+        {
+          "title": "Effective cost over time",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Cost avoided over time",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Latency trend",
+          "paths": 2,
+          "series": "2"
+        },
+        {
+          "title": "Success vs failure volume",
+          "paths": 0,
+          "series": "2"
+        }
+      ],
+      "chartCards": 6,
+      "totalTables": 6,
+      "routingResultsText": false,
+      "bars": 46,
+      "visibleChartTables": 0,
+      "hiddenChartTables": 6,
+      "title": "Overview | RM3 Foldkit shell",
+      "pathCount": 8
+    },
+    {
+      "route": "/requests",
+      "screenshot": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\.recursive\\run\\115-effect-foldkit-runtime-migration\\evidence\\charts-identity\\requests.png",
+      "overviewCards": [
+        {
+          "title": "Request volume",
+          "paths": 2,
+          "series": "2"
+        }
+      ],
+      "plots": [
+        {
+          "title": "Request volume",
+          "paths": 2,
+          "series": "2"
+        }
+      ],
+      "chartCards": 1,
+      "totalTables": 2,
+      "routingResultsText": false,
+      "bars": 0,
+      "visibleChartTables": 0,
+      "hiddenChartTables": 1,
+      "title": "Requests | RM3 Foldkit shell",
+      "pathCount": 3
+    },
+    {
+      "route": "/observe/routing",
+      "screenshot": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\.recursive\\run\\115-effect-foldkit-runtime-migration\\evidence\\charts-identity\\routing.png",
+      "overviewCards": [
+        {
+          "title": "Cost avoided by routing",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Routing decision volume",
+          "paths": 0,
+          "series": "1"
+        },
+        {
+          "title": "Routing volume by taxonomy role",
+          "paths": 0,
+          "series": "1"
+        },
+        {
+          "title": "Avoided cost by taxonomy task",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Difficulty distribution",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Strategy selection trend",
+          "paths": 0,
+          "series": "1"
+        },
+        {
+          "title": "Capability routing mix",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Tool class routing mix",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Model selection",
+          "paths": 0,
+          "series": "1"
+        }
+      ],
+      "plots": [
+        {
+          "title": "Cost avoided by routing",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Routing decision volume",
+          "paths": 0,
+          "series": "1"
+        },
+        {
+          "title": "Routing volume by taxonomy role",
+          "paths": 0,
+          "series": "1"
+        },
+        {
+          "title": "Avoided cost by taxonomy task",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Difficulty distribution",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Strategy selection trend",
+          "paths": 0,
+          "series": "1"
+        },
+        {
+          "title": "Capability routing mix",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Tool class routing mix",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Model selection",
+          "paths": 0,
+          "series": "1"
+        }
+      ],
+      "chartCards": 9,
+      "totalTables": 9,
+      "routingResultsText": false,
+      "bars": 76,
+      "visibleChartTables": 0,
+      "hiddenChartTables": 9,
+      "title": "Observe routing | RM3 Foldkit shell",
+      "pathCount": 1
+    },
+    {
+      "route": "/observe/routing?source=local&breakdown=By+upstream+model&difficulty=hard",
+      "screenshot": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\.recursive\\run\\115-effect-foldkit-runtime-migration\\evidence\\charts-identity\\routing-filtered.png",
+      "telemetryQueries": [
+        {
+          "url": "http://127.0.0.1:3480/api/role-model/telemetry/query",
+          "body": {
+            "breakdown": "modelId",
+            "filters": {
+              "sourceTypes": [
+                "local"
+              ],
+              "difficultyBuckets": [
+                "hard"
+              ]
+            },
+            "granularity": "hour",
+            "metrics": [
+              "routingCostSavingsUsd",
+              "cacheCostSavingsUsd",
+              "totalAvoidedCostUsd"
+            ],
+            "ranking": null,
+            "windowMs": 86400000
+          }
+        },
+        {
+          "url": "http://127.0.0.1:3480/api/role-model/telemetry/query",
+          "body": {
+            "breakdown": "modelId",
+            "filters": {
+              "sourceTypes": [
+                "local"
+              ],
+              "difficultyBuckets": [
+                "hard"
+              ]
+            },
+            "granularity": "hour",
+            "metrics": [
+              "requestCount"
+            ],
+            "ranking": null,
+            "windowMs": 86400000
+          }
+        },
+        {
+          "url": "http://127.0.0.1:3480/api/role-model/telemetry/query",
+          "body": {
+            "breakdown": "taxonomyRoleId",
+            "filters": {
+              "sourceTypes": [
+                "local"
+              ],
+              "difficultyBuckets": [
+                "hard"
+              ]
+            },
+            "granularity": "hour",
+            "metrics": [
+              "requestCount"
+            ],
+            "ranking": null,
+            "windowMs": 86400000
+          }
+        },
+        {
+          "url": "http://127.0.0.1:3480/api/role-model/telemetry/query",
+          "body": {
+            "breakdown": null,
+            "filters": {
+              "sourceTypes": [
+                "local"
+              ],
+              "difficultyBuckets": [
+                "hard"
+              ]
+            },
+            "granularity": "hour",
+            "metrics": [
+              "totalAvoidedCostUsd"
+            ],
+            "ranking": {
+              "dimension": "taxonomyTaskType",
+              "limit": 8,
+              "metric": "totalAvoidedCostUsd"
+            },
+            "windowMs": 86400000
+          }
+        },
+        {
+          "url": "http://127.0.0.1:3480/api/role-model/telemetry/query",
+          "body": {
+            "breakdown": null,
+            "filters": {
+              "sourceTypes": [
+                "local"
+              ],
+              "difficultyBuckets": [
+                "hard"
+              ]
+            },
+            "granularity": "hour",
+            "metrics": [
+              "requestCount"
+            ],
+            "ranking": {
+              "dimension": "difficultyBucket",
+              "limit": 8,
+              "metric": "requestCount"
+            },
+            "windowMs": 86400000
+          }
+        },
+        {
+          "url": "http://127.0.0.1:3480/api/role-model/telemetry/query",
+          "body": {
+            "breakdown": "selectedStrategy",
+            "filters": {
+              "sourceTypes": [
+                "local"
+              ],
+              "difficultyBuckets": [
+                "hard"
+              ]
+            },
+            "granularity": "hour",
+            "metrics": [
+              "requestCount"
+            ],
+            "ranking": null,
+            "windowMs": 86400000
+          }
+        },
+        {
+          "url": "http://127.0.0.1:3480/api/role-model/telemetry/query",
+          "body": {
+            "breakdown": null,
+            "filters": {
+              "sourceTypes": [
+                "local"
+              ],
+              "difficultyBuckets": [
+                "hard"
+              ]
+            },
+            "granularity": "hour",
+            "metrics": [
+              "requestCount"
+            ],
+            "ranking": {
+              "dimension": "taxonomyCapabilityId",
+              "limit": 8,
+              "metric": "requestCount"
+            },
+            "windowMs": 86400000
+          }
+        },
+        {
+          "url": "http://127.0.0.1:3480/api/role-model/telemetry/query",
+          "body": {
+            "breakdown": null,
+            "filters": {
+              "sourceTypes": [
+                "local"
+              ],
+              "difficultyBuckets": [
+                "hard"
+              ]
+            },
+            "granularity": "hour",
+            "metrics": [
+              "requestCount"
+            ],
+            "ranking": {
+              "dimension": "taxonomyToolClassId",
+              "limit": 8,
+              "metric": "requestCount"
+            },
+            "windowMs": 86400000
+          }
+        },
+        {
+          "url": "http://127.0.0.1:3480/api/role-model/telemetry/query",
+          "body": {
+            "breakdown": null,
+            "filters": {
+              "sourceTypes": [
+                "local"
+              ],
+              "difficultyBuckets": [
+                "hard"
+              ]
+            },
+            "granularity": "hour",
+            "metrics": [
+              "requestCount"
+            ],
+            "ranking": {
+              "dimension": "modelId",
+              "limit": 8,
+              "metric": "requestCount"
+            },
+            "windowMs": 86400000
+          }
+        }
+      ],
+      "overviewCards": [
+        {
+          "title": "Cost avoided by routing",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Routing decision volume",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Routing volume by taxonomy role",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Avoided cost by taxonomy task",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Difficulty distribution",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Strategy selection trend",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Capability routing mix",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Tool class routing mix",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Model selection",
+          "paths": 0,
+          "series": "0"
+        }
+      ],
+      "plots": [
+        {
+          "title": "Cost avoided by routing",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Routing decision volume",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Routing volume by taxonomy role",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Avoided cost by taxonomy task",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Difficulty distribution",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Strategy selection trend",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Capability routing mix",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Tool class routing mix",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Model selection",
+          "paths": 0,
+          "series": "0"
+        }
+      ],
+      "chartCards": 9,
+      "totalTables": 9,
+      "routingResultsText": false,
+      "bars": 0,
+      "visibleChartTables": 0,
+      "hiddenChartTables": 9,
+      "title": "Observe routing | RM3 Foldkit shell",
+      "pathCount": 1
+    },
+    {
+      "route": "/observe/routing?range=week",
+      "screenshot": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\.recursive\\run\\115-effect-foldkit-runtime-migration\\evidence\\charts-identity\\routing-week.png",
+      "telemetryQueries": [
+        {
+          "url": "http://127.0.0.1:3480/api/role-model/telemetry/query",
+          "body": {
+            "breakdown": null,
+            "filters": {},
+            "granularity": "day",
+            "metrics": [
+              "routingCostSavingsUsd",
+              "cacheCostSavingsUsd",
+              "totalAvoidedCostUsd"
+            ],
+            "ranking": null,
+            "windowMs": 604800000
+          }
+        },
+        {
+          "url": "http://127.0.0.1:3480/api/role-model/telemetry/query",
+          "body": {
+            "breakdown": null,
+            "filters": {},
+            "granularity": "day",
+            "metrics": [
+              "requestCount"
+            ],
+            "ranking": null,
+            "windowMs": 604800000
+          }
+        },
+        {
+          "url": "http://127.0.0.1:3480/api/role-model/telemetry/query",
+          "body": {
+            "breakdown": "taxonomyRoleId",
+            "filters": {},
+            "granularity": "day",
+            "metrics": [
+              "requestCount"
+            ],
+            "ranking": null,
+            "windowMs": 604800000
+          }
+        },
+        {
+          "url": "http://127.0.0.1:3480/api/role-model/telemetry/query",
+          "body": {
+            "breakdown": null,
+            "filters": {},
+            "granularity": "day",
+            "metrics": [
+              "totalAvoidedCostUsd"
+            ],
+            "ranking": {
+              "dimension": "taxonomyTaskType",
+              "limit": 8,
+              "metric": "totalAvoidedCostUsd"
+            },
+            "windowMs": 604800000
+          }
+        },
+        {
+          "url": "http://127.0.0.1:3480/api/role-model/telemetry/query",
+          "body": {
+            "breakdown": null,
+            "filters": {},
+            "granularity": "day",
+            "metrics": [
+              "requestCount"
+            ],
+            "ranking": {
+              "dimension": "difficultyBucket",
+              "limit": 8,
+              "metric": "requestCount"
+            },
+            "windowMs": 604800000
+          }
+        },
+        {
+          "url": "http://127.0.0.1:3480/api/role-model/telemetry/query",
+          "body": {
+            "breakdown": "selectedStrategy",
+            "filters": {},
+            "granularity": "day",
+            "metrics": [
+              "requestCount"
+            ],
+            "ranking": null,
+            "windowMs": 604800000
+          }
+        },
+        {
+          "url": "http://127.0.0.1:3480/api/role-model/telemetry/query",
+          "body": {
+            "breakdown": null,
+            "filters": {},
+            "granularity": "day",
+            "metrics": [
+              "requestCount"
+            ],
+            "ranking": {
+              "dimension": "taxonomyCapabilityId",
+              "limit": 8,
+              "metric": "requestCount"
+            },
+            "windowMs": 604800000
+          }
+        },
+        {
+          "url": "http://127.0.0.1:3480/api/role-model/telemetry/query",
+          "body": {
+            "breakdown": null,
+            "filters": {},
+            "granularity": "day",
+            "metrics": [
+              "requestCount"
+            ],
+            "ranking": {
+              "dimension": "taxonomyToolClassId",
+              "limit": 8,
+              "metric": "requestCount"
+            },
+            "windowMs": 604800000
+          }
+        },
+        {
+          "url": "http://127.0.0.1:3480/api/role-model/telemetry/query",
+          "body": {
+            "breakdown": null,
+            "filters": {},
+            "granularity": "day",
+            "metrics": [
+              "requestCount"
+            ],
+            "ranking": {
+              "dimension": "modelId",
+              "limit": 8,
+              "metric": "requestCount"
+            },
+            "windowMs": 604800000
+          }
+        }
+      ],
+      "overviewCards": [
+        {
+          "title": "Cost avoided by routing",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Routing decision volume",
+          "paths": 0,
+          "series": "1"
+        },
+        {
+          "title": "Routing volume by taxonomy role",
+          "paths": 0,
+          "series": "1"
+        },
+        {
+          "title": "Avoided cost by taxonomy task",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Difficulty distribution",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Strategy selection trend",
+          "paths": 0,
+          "series": "1"
+        },
+        {
+          "title": "Capability routing mix",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Tool class routing mix",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Model selection",
+          "paths": 0,
+          "series": "1"
+        }
+      ],
+      "plots": [
+        {
+          "title": "Cost avoided by routing",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Routing decision volume",
+          "paths": 0,
+          "series": "1"
+        },
+        {
+          "title": "Routing volume by taxonomy role",
+          "paths": 0,
+          "series": "1"
+        },
+        {
+          "title": "Avoided cost by taxonomy task",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Difficulty distribution",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Strategy selection trend",
+          "paths": 0,
+          "series": "1"
+        },
+        {
+          "title": "Capability routing mix",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Tool class routing mix",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Model selection",
+          "paths": 0,
+          "series": "1"
+        }
+      ],
+      "chartCards": 9,
+      "totalTables": 9,
+      "routingResultsText": false,
+      "bars": 25,
+      "visibleChartTables": 0,
+      "hiddenChartTables": 9,
+      "title": "Observe routing | RM3 Foldkit shell",
+      "pathCount": 1
+    },
+    {
+      "route": "/observe/queues",
+      "screenshot": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\.recursive\\run\\115-effect-foldkit-runtime-migration\\evidence\\charts-identity\\queues.png",
+      "overviewCards": [],
+      "plots": [],
+      "chartCards": 0,
+      "totalTables": 1,
+      "routingResultsText": false,
+      "bars": 0,
+      "visibleChartTables": 0,
+      "hiddenChartTables": 0,
+      "title": "Queues | RM3 Foldkit shell",
+      "pathCount": 1
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+ ❯ test/s12c-foldkit-input.scene.test.ts (3 tests | 1 failed) 43ms
+   × RM3 input Foldkit primitive > associates its label, carries the live RM3 field classes, and dispatches the typed value 33ms
+     → Expected element matching textbox to have attribute inputmode="numeric" but the attribute is not present.
+   ✓ RM3 input Foldkit primitive > does not emit when disabled 6ms
+   ✓ RM3 input Foldkit primitive > uses aria-label when there is no visible label, and refuses a nameless field 2ms
+ ❯ test/s12c-foldkit-checkbox.scene.test.ts (6 tests | 2 failed) 59ms
+   ✓ RM3 checkbox Foldkit primitive > reflects the model, dispatches the next checked payload, and keeps the live RM3 state classes 23ms
+   ✓ RM3 checkbox Foldkit primitive > renders checked from the model, not from local state 2ms
+   × RM3 checkbox Foldkit primitive > emits nothing when disabled 21ms
+     → Expected element matching checkbox not to have attribute "data-disabled" but it does.
+   ✓ RM3 checkbox Foldkit primitive > supports the mixed state as aria-checked=mixed 1ms
+   ✓ RM3 checkbox Foldkit primitive > associates an explicit label when given one, and refuses a nameless checkbox 6ms
+   × RM3 checkbox Foldkit primitive > forwards caller-supplied click/pointerdown hooks so a caller can prevent the default toggle 4ms
+     → Expected element matching "div[data-caller-clicks="1"]" to exist but it does not.
+ ❯ test/s12c-foldkit-textarea.scene.test.ts (3 tests | 1 failed) 47ms
+   × RM3 textarea Foldkit primitive > associates its label, keeps the live field classes plus caller layout, and dispatches the typed value 38ms
+     → Expected element matching textbox to have attribute inputmode="text" but the attribute is not present.
+   ✓ RM3 textarea Foldkit primitive > does not emit when disabled 6ms
+   ✓ RM3 textarea Foldkit primitive > uses aria-label when there is no visible label, and refuses a nameless textarea 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s12c-foldkit-checkbox.scene.test.ts > RM3 checkbox Foldkit primitive > emits nothing when disabled
+Error: Expected element matching checkbox not to have attribute "data-disabled" but it does.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/s12c-foldkit-checkbox.scene.test.ts > RM3 checkbox Foldkit primitive > forwards caller-supplied click/pointerdown hooks so a caller can prevent the default toggle
+Error: Expected element matching "div[data-caller-clicks="1"]" to exist but it does not.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/s12c-foldkit-input.scene.test.ts > RM3 input Foldkit primitive > associates its label, carries the live RM3 field classes, and dispatches the typed value
+Error: Expected element matching textbox to have attribute inputmode="numeric" but the attribute is not present.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/s12c-foldkit-textarea.scene.test.ts > RM3 textarea Foldkit primitive > associates its label, keeps the live field classes plus caller layout, and dispatches the typed value
+Error: Expected element matching textbox to have attribute inputmode="text" but the attribute is not present.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  4 failed | 8 passed (12)
+   Start at  00:18:24
+   Duration  4.84s (transform 2.25s, setup 0ms, collect 9.89s, tests 150ms, environment 2.34s, prepare 766ms)
+
+EXIT_CODE: 1

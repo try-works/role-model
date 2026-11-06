@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 import {
   TRACK_B_CANONICAL_EXTENSION_IDS,
@@ -123,8 +123,13 @@ describe("production Track B composition", () => {
   test("provisions stage artifact keys under durable state instead of a release secrets directory", async () => {
     const packageRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-stage-package-"));
     roots.push(packageRoot);
-    const previousCwd = process.cwd();
-    process.chdir(packageRoot);
+    /**
+     * Run 115 S99: this used to call process.chdir(packageRoot). Under the parallel suite that
+     * mutates the CWD of every concurrently running test file, which is what made
+     * "prefers repoRoot frontend assets over packaged assets" fail only in the full run and pass
+     * in isolation. Stubbing process.cwd keeps the behaviour local to this test.
+     */
+    const cwdSpy = vi.spyOn(process, "cwd").mockReturnValue(packageRoot);
     try {
       const runtimeModule = await import("../src/track-b-runtime.js");
       const resolveManagedArtifactKeyFiles = Reflect.get(
@@ -147,7 +152,7 @@ describe("production Track B composition", () => {
         path.join(packageRoot, "state", "managed-keys", "artifact-encryption.key"),
       );
     } finally {
-      process.chdir(previousCwd);
+      cwdSpy.mockRestore();
     }
   });
 

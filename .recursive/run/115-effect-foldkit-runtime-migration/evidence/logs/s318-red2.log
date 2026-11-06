@@ -1,0 +1,59 @@
+COMMAND: node vitest run test/s318-metadata-cache.test.ts (S319 RED: live payload + narrowed no-dedup)
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/s318-metadata-cache.test.ts (5 tests | 1 failed) 31ms
+   ✓ S318 metadata cache identity > keys include authority, generation and model (NUL separated) 3ms
+   ✓ S318 metadata cache identity > config change bumps the generation and invalidates the previous generation 4ms
+   ✓ S318 metadata cache identity > TTL and capacity bounds are preserved 1ms
+   ✓ S318 metadata cache identity > narrowed no-dedup scope: the metadata cache has no stochastic-inference dedup API 2ms
+   × S318 metadata cache identity > live routing prep keys by authority+generation and reads the DAG cache 19ms
+     → expected 'const routingPrepConfigIdentity = met…' to contain 'cachedObservedProfilesJson'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s318-metadata-cache.test.ts > S318 metadata cache identity > live routing prep keys by authority+generation and reads the DAG cache
+AssertionError: expected 'const routingPrepConfigIdentity = met…' to contain 'cachedObservedProfilesJson'
+
+- Expected
++ Received
+
+- cachedObservedProfilesJson
++ const routingPrepConfigIdentity = metadataConfigIdentity(currentUnifiedRuntimeConfig);
++     const routingPrepGeneration = metadataCacheOwner.noteConfig(routingPrepConfigIdentity).generation;
++     const routingPrepTickKey =
++       metadataCacheKey({
++         authorityId: metadataCacheOwner.authorityId,
++         configGeneration: routingPrepGeneration,
++         modelId: routingPrepRegistryIdentity,
++       }) +
++       ":" +
++       (routingPrepCacheTtlMs > 0
++         ? String(Math.floor(routingTimeMs / routingPrepCacheTtlMs))
++         : "t" + String(routingTimeMs));
++     // Real routing metadata read/write through the DAG cache, keyed by the generation identity.
++     const routingMetadataKey = metadataCacheOwner.keyFor(routingPrepRegistryIdentity);
++     if (metadataCacheOwner.getSync(routingMetadataKey, routingTimeMs) === undefined) {
++       metadataCacheOwner.setSync(routingMetadataKey, routingPrepRegistryIdentity, routingTimeMs);
++     }
++     
+
+ ❯ test/s318-metadata-cache.test.ts:81:20
+     79|     expect(region).toContain("metadataCacheOwner.getSync(");
+     80|     // S319: the DAG cache holds a REAL routing payload (observed prof…
+     81|     expect(region).toContain("cachedObservedProfilesJson");
+       |                    ^
+     82|     expect(region).toContain("JSON.stringify(profiles)");
+     83|     expect(region).toContain("JSON.parse(cachedObservedProfilesJson");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  07:29:12
+   Duration  3.07s (transform 1.60s, setup 0ms, collect 2.57s, tests 31ms, environment 0ms, prepare 177ms)
+
+

@@ -1,0 +1,18 @@
+✔ R33/B10: the v2 private ledger passes the fail-closed checker (15.7054ms)
+✔ R33/B10: the legacy pending ledger is rejected with schema and disposition issues (3.3023ms)
+✔ R33/B10: missing operation fields, caller disclosure and not-converted contract fail closed (11.8569ms)
+✔ R33/B10: the CLI exits 0 for the v2 ledger and 1 for an invalid one (230.719ms)
+✔ R33/B10: the CLI exits 1 with no path argument (87.0632ms)
+✔ S487 RED: the fail-closed checker rejects the legacy v1 pending ledger with concrete issues (11.3598ms)
+✔ S487: the v2 ledger passes the fail-closed checker (8.3307ms)
+✔ S487: the checker rejects a v2 operation missing a required R33 field group (6.6071ms)
+✔ S487: the checker rejects an operation without a disposition and a non-converted row without its missing contract (10.0993ms)
+✔ S487: the checker rejects reintroduced pending/notYet groups (8.3338ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 499.2491

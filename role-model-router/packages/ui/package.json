@@ -11,7 +11,8 @@
     "./foldkit-input": "./src/foldkit-input.ts",
     "./foldkit-textarea": "./src/foldkit-textarea.ts",
     "./*": "./src/*.tsx",
-    "./use-prefers-reduced-motion": "./src/use-prefers-reduced-motion.ts"
+    "./use-prefers-reduced-motion": "./src/use-prefers-reduced-motion.ts",
+    "./foldkit-chart": "./src/foldkit-chart.ts"
   },
   "scripts": {
     "typecheck:foldkit": "tsc -p tsconfig.foldkit.json",

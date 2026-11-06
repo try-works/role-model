@@ -1,0 +1,10 @@
+{
+  "scope": "global",
+  "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
+  "modelId": "moonshot/kimi-k2.5",
+  "displayName": "Kimi K2.5",
+  "upstreamModelId": "moonshot/kimi-k2.5",
+  "reasoningEffort": null,
+  "sourceType": "remote",
+  "updatedAtMs": 1792909821120
+}

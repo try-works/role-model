@@ -1,0 +1,95 @@
+{
+  "round": 2,
+  "phase": "00 Requirements DRAFT",
+  "publicBase": "f0d50fab083e3fe8daf2474cd9fb08b51066c8e1",
+  "privateBase": "16021cc5f87f60f2d01338a29adf0002da5e8327",
+  "checks": [
+    {
+      "repo": "public",
+      "suite": "runtime-ui full",
+      "exit": 0,
+      "files": 79,
+      "tests": 752,
+      "job": "pwsh-c9d93d0b42b447c8",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/round02-ui-baseline.log"
+    },
+    {
+      "repo": "public",
+      "suite": "core full",
+      "exit": 0,
+      "files": 21,
+      "tests": 194,
+      "job": "pwsh-6482bcfa6dc5453c",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/round02-core-baseline.log"
+    },
+    {
+      "repo": "public",
+      "suite": "protocol-routing full",
+      "exit": 0,
+      "files": 3,
+      "tests": 18,
+      "job": "pwsh-6482bcfa6dc5453c",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/round02-protocol-routing-baseline.log"
+    },
+    {
+      "repo": "public",
+      "suite": "endpoint-registry full",
+      "exit": 0,
+      "files": 5,
+      "tests": 16,
+      "job": "pwsh-6482bcfa6dc5453c",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/round02-endpoint-registry-baseline.log"
+    },
+    {
+      "repo": "public",
+      "suite": "host isolated queue cancel/timeout, stream commit, Effect entry case and paired observability",
+      "exit": 0,
+      "files": 5,
+      "tests": 46,
+      "job": "pwsh-567fdefa3bfb4432",
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/round02-host-isolated-baseline.log"
+    },
+    {
+      "repo": "private",
+      "suite": "capture durable queue + evaluation score queue",
+      "exit": 0,
+      "tests": 24,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/round02-private-capture-eval-baseline.log",
+      "env": {
+        "RUN96_F145_TEMP_ROOT": "E:/role-model-run115/test-temp/capture",
+        "TMP": "E:/role-model-run115/test-temp",
+        "TEMP": "E:/role-model-run115/test-temp"
+      }
+    },
+    {
+      "repo": "public",
+      "suite": "Effect/effect-mq vendor verify",
+      "exit": 0,
+      "effectDigest": "0d0028aa7de72ff9e6a8e39f4bc4232640bd1111b30aaa3440d0c53116a49749",
+      "mqDigest": "aa7cae59104a2472ea5127488641643eca5498b5a4955d362b4ff37c5b76f655"
+    },
+    {
+      "repo": "public",
+      "suite": "run artifact lint after sequencing repair",
+      "exit": 0,
+      "failures": 0,
+      "warnings": 11,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/round02-run-lint.log"
+    }
+  ],
+  "preparation": {
+    "requirements": 38,
+    "sourceHeadingsMapped": 61,
+    "independentReview": false,
+    "modelGate": "unresolved; no team children spawned",
+    "scopeE1E2": "unresolved explicit owner decision",
+    "sequencingRepair": "Initializer-created00-worktree drafts moved to evidence/other/phase00-worktree-prework.md; requirements sole active phase. No gates falsely passed."
+  },
+  "limits": [
+    "Baseline checks only; no product source/lockfile/manifest edits.",
+    "No whole host/private/workspace/package/browser/live release-parity certification.",
+    "Test fixtures may own ephemeral HTTP/process/DB; no operator runtime or real provider requests.",
+    "Review task2/3 remain gated by exact deepseek/deepseek-flash configuration.",
+    "Independent requirements lossless mapping and E1/E2 approval remain necessary; section map is not acceptance PASS."
+  ]
+}

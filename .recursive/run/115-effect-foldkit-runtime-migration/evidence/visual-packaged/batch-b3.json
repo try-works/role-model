@@ -1,0 +1,37 @@
+[
+  {
+    "route": "/observe/routing",
+    "status": 200,
+    "png": "_observe_routing.png",
+    "title": "Observe routing | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Observe routing Toggle theme Overview Diagnostics Observability Receipts Queues Local lo",
+    "states": [
+      "empty"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/router",
+    "status": 200,
+    "png": "_router.png",
+    "title": "Router | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Router Toggle theme Overview Diagnostics Observability Receipts Queues Local logs Candid",
+    "states": [
+      "ok"
+    ],
+    "alerts": []
+  },
+  {
+    "route": "/nonexistent-route",
+    "status": 200,
+    "png": "_nonexistent_route.png",
+    "title": "Not found: /nonexistent-route | RM3 Foldkit shell",
+    "main": "oints Controller Readiness Dashboard Swap Activity Observe logs Observe routing Router Studio Local Remote Models Router Observe Connect System Learning Clicks: 0 Dark shell Runtime Not found Toggle theme Overview Diagnostics Observability Receipts Queues Local logs Can",
+    "states": [
+      "error"
+    ],
+    "alerts": [
+      "Not found\n\nNot found: /nonexistent-route\n\nThis runtime route does not exist. Ret"
+    ]
+  }
+]

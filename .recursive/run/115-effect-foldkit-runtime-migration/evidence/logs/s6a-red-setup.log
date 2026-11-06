@@ -1,0 +1,29 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+
+(node:10048) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  role-model-router/packages/sql-sqlite-node/test/sqlite-service.test.ts [ role-model-router/packages/sql-sqlite-node/test/sqlite-service.test.ts ]
+Error: Cannot find module '../src/service' imported from 'D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node/test/sqlite-service.test.ts'
+ ❯ role-model-router/packages/sql-sqlite-node/test/sqlite-service.test.ts:9:1
+      7| import { afterEach, describe, expect, it } from "vitest";
+      8| 
+      9| import {
+       | ^
+     10|   BUSY_RETRY_DELAYS_MS,
+     11|   BUSY_TIMEOUT_MS,
+
+Caused by: Error: Failed to load url ../src/service (resolved id: ../src/service) in D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node/test/sqlite-service.test.ts. Does the file exist?
+ ❯ loadAndTransform E:/role-model-run115/public-virtual-store/vite@7.3.2_@types+node@22.1_d71bf8265f9610ce90201e170d5dc2b8/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  00:12:23
+   Duration  3.49s (transform 1.57s, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 226ms)
+

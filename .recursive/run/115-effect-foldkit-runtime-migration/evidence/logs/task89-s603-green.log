@@ -1,0 +1,27 @@
+Both esbuild and oxc options were set. oxc options will be used and esbuild options will be ignored. The following esbuild options were set: `{
+  tsconfigRaw: {
+    compilerOptions: {
+      target: 'ES2022',
+      useDefineForClassFields: true,
+      verbatimModuleSyntax: true
+    }
+  }
+}`
+
+ RUN  v4.1.11 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:22404) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run115-s603-cli-dag-nodes.test.ts (2 tests) 70ms
+(node:9744) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run115-s598-cli-acquisition.test.ts (6 tests) 211ms
+(node:20000) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run115-s593-layer-dag.test.ts (4 tests) 153ms
+
+ Test Files  3 passed (3)
+      Tests  12 passed (12)
+   Start at  06:41:09
+   Duration  50.30s (transform 18.17s, setup 0ms, import 42.23s, tests 433ms, environment 21ms)
+

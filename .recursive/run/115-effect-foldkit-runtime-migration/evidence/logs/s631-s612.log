@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s612-tanstack-chart.test.ts (7 tests) 990ms
+   ✓ S612 telemetry chart card visible contract > renders the visible TanStack svg plus the sr-only numeric table for a line card  304ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  09:14:01
+   Duration  40.26s (transform 17.32s, setup 0ms, collect 30.53s, tests 990ms, environment 6.05s, prepare 927ms)
+

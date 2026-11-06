@@ -476,21 +476,33 @@ privateTest(
     expect((await read({ ...s.input, nowMs: 11500 })).advisoryState).toBe("stale");
   },
 );
-privateTest("refused larger admission leaves bounded prior real snapshot routable", async () => {
-  const s = await setup();
-  const before = await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, taskTypeId });
-  const result = await s.materialize(2500, {
-    groups: [
-      ...s.groups,
-      ...Array.from({ length: 90 }, (_, i) => group(`huge:${i}:${"x".repeat(180)}`, 0.9, 2000)),
-    ],
-  });
-  expect(result.ladders[0].status).toBe("refused");
-  expect(
-    (await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, taskTypeId })).ladder.packId,
-  ).toBe(before.ladder.packId);
-  expect((await read(s.input)).advisoryState).toBe("fresh");
-});
+privateTest(
+  "larger admission spills provenance and leaves a bounded routable snapshot",
+  async () => {
+    const s = await setup();
+    const before = await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, taskTypeId });
+    const result = await s.materialize(2500, {
+      groups: [
+        ...s.groups,
+        ...Array.from({ length: 90 }, (_, i) => group(`huge:${i}:${"x".repeat(180)}`, 0.9, 2000)),
+      ],
+    });
+    // The spill design keeps the ladder document under the store cap instead of refusing the write.
+    expect(result.ladders[0].status).toBe("written");
+    expect(result.ladders[0].ladder.packId).not.toBe(before.ladder.packId);
+    expect(
+      (await s.invoke("knowledge:read-route-ladder", { scopeId, roleId, taskTypeId })).ladder
+        .packId,
+    ).toBe(result.ladders[0].ladder.packId);
+    const spilled = await read(s.input);
+    expect(spilled).toMatchObject({
+      advisoryState: "fresh",
+      confidence: 0.75,
+      preferredRoutePackage: "endpoint:a",
+    });
+  },
+);
+
 privateTest.each([
   "missingPolicy",
   "badK",

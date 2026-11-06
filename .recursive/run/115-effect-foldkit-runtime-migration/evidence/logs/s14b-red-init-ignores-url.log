@@ -1,0 +1,47 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/routes.test.ts > runtime routing in the Foldkit shell > renders the route from the initial URL, including the diagnostics path parameter
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 10.4ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: { clicks: 0, route: { _tag: 'Index' }, theme: 'light' },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 10.39639999999963,
+  thresholdMs: 8
+}
+
+ ❯ test/routes.test.ts (4 tests | 1 failed | 3 skipped) 2041ms
+   × runtime routing in the Foldkit shell > renders the route from the initial URL, including the diagnostics path parameter 2039ms
+     → Timed out waiting for the diagnostics route from the initial URL (last value: undefined) | url: /diagnostics/abc | body: IndexDiagnostics 42Index pageRoute-driven shell index.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+   ↓ runtime routing in the Foldkit shell > renders the not-found view for an unknown URL without throwing
+   ↓ runtime routing in the Foldkit shell > pushes a URL from an in-app control and the URL, not local state, changes the view
+   ↓ runtime routing in the Foldkit shell > changes the view when only the URL/history changes, through the runtime popstate config
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/routes.test.ts > runtime routing in the Foldkit shell > renders the route from the initial URL, including the diagnostics path parameter
+Error: Timed out waiting for the diagnostics route from the initial URL (last value: undefined) | url: /diagnostics/abc | body: IndexDiagnostics 42Index pageRoute-driven shell index.Light shellClicks: 0Clicked 0 time(s)Toggle theme
+ ❯ waitFor test/routes.test.ts:37:9
+     35|     await new Promise<void>((resolve) => setTimeout(resolve, 10));
+     36|   }
+     37|   throw new Error(
+       |         ^
+     38|     `Timed out waiting for ${label} (last value: ${String(last)}) | ur…
+     39|   );
+ ❯ test/routes.test.ts:74:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  00:36:32
+   Duration  9.12s (transform 3.43s, setup 0ms, collect 5.45s, tests 2.04s, environment 760ms, prepare 295ms)
+

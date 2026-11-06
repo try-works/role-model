@@ -1,0 +1,46 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+
+(node:14224) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ role-model-router/packages/sql-sqlite-node/test/sqlite-service.test.ts (11 tests | 1 failed | 10 skipped) 17ms
+   ↓ SQLite service > item 1: async Effect callers and the sync facade share one connection owner
+   × SQLite service > item 2: a failed open closes the database it opened (no half-initialized handle) 15ms
+     → expected [Function] to throw an error
+   ↓ SQLite service > item 3: one initial attempt plus 100ms and 200ms busy retries, with a 5s busy timeout
+   ↓ SQLite service > item 3b: exhausted busy retries stop at the third attempt and keep the busy error
+   ↓ SQLite service > item 3c: a non-busy open failure is not retried and preserves its cause
+   ↓ SQLite service > item 3d: the sync facade retries on the same 100ms/200ms schedule
+   ↓ SQLite service > item 4: a transaction runs on its own connection and the primary error survives rollback and close failures
+   ↓ SQLite service > item 5: a transaction never retries its work on a busy error
+   ↓ SQLite service > item 6: transaction ownership is serialized across yielding fibers
+   ↓ SQLite service > item 6b: a nested service call inside a transaction fails instead of deadlocking
+   ↓ SQLite service > closes idempotently and rejects work on a closed service
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  role-model-router/packages/sql-sqlite-node/test/sqlite-service.test.ts > SQLite service > item 2: a failed open closes the database it opened (no half-initialized handle)
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ role-model-router/packages/sql-sqlite-node/test/sqlite-service.test.ts:103:53
+    101|     expect(error.cause).toBe(original);
+    102|     expect(opened).toBeDefined();
+    103|     expect(() => opened?.prepare("SELECT 1").get()).toThrow(/database …
+       |                                                     ^
+    104|   });
+    105| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 skipped (11)
+   Start at  00:13:57
+   Duration  3.53s (transform 1.54s, setup 0ms, collect 2.63s, tests 17ms, environment 0ms, prepare 260ms)
+

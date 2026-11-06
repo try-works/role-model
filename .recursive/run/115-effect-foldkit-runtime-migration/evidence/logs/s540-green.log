@@ -1,0 +1,9 @@
+S540 system/local density - strict RED (10/11) + 5s settle with 40 fixture chat requests
+RED disclosure: s540-red.log is 10/11, not 11/11 - llama-swap swap already passed structure at pre-S540 HEAD (S534 state); the other 10 density tests failed.
+TSC=0
+SUITES: 77/77 (10 files incl s540 11/11, s383, s389, s26n, s458, s530, s534)
+S247: 3/3
+LINT: density supplements/test clean; view added-line clean
+AUDIT: s540-audit.log explicit table; 11/11 >=0.9x
+ratios: session 226.1%; endpoints 222.0%; runtime 226.3%; agent 149.8%; queues 501.1%; system peers 382.5%; workloads 241.5%; llama models 250.1%; policy 306.5%; swap 277.3%; local peers 188.0% (implied ref).
+LocalPeers now renders _app_local_endpoints labels (Local endpoints, Endpoint inventory, Add peer endpoint) and has Name/Endpoint URL inputs + Add endpoint. Llama models has Model ID input + Load model + Open runtime config + Refresh loaded models. Workloads has Add workload/Save Workloads. System peers has Refresh peers. s540 test asserts these by accessible name.

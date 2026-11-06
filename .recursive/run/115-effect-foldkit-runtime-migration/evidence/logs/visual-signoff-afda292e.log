@@ -1,0 +1,82 @@
+# S615 visual sign-off (deepseek-flash vision)
+head=afda292e
+production_url=http://127.0.0.1:3456
+foldkit_exe=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\dist\release\win32-x64\role-model-dev.exe
+expected_version=0.0.20-478-g2d4fa10b
+vision_model=baseline.remote-only
+chrome=C:\Program Files\Google\Chrome\Application\chrome.exe
+started_at=2026-11-01T14:09:53.062Z
+
+manifest_version=0.0.20-478-g2d4fa10b
+exe_sha256=bfa365e188ba01fa9d8962e13fd7692a1ef9b0148d5e816104c154fdefe4d1a3
+evidence_dir=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\.recursive\run\115-effect-foldkit-runtime-migration\evidence\logs\visual-signoff-afda292e
+
+production_capture=supplied (Chrome CLI screenshot path unavailable under the sandbox named-pipe policy)
+production_shot(source=supplied) bytes=120581 sha256=8aa6a80fc47671ad9c79dc470f80753003c6992f32182655d831d2535be6eb59
+foldkit_capture=supplied (see production_capture note)
+foldkit_shot(source=supplied) bytes=90518 sha256=3104b0c1c6f7f756eed3091ba15eabb09c4079340deb2ce296c8ab5bcafe1c3a
+state_source_signature_sha256=61e90f97ebdfec46c7e52e0c8ac948bfad7d3a5b46f7b2d0e12bc3fbeb9d24f3
+spawn[vision]: D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\dist\release\win32-x64\role-model-dev.exe --repo-root D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\dist\release\win32-x64 --runtime-state-root E:\tmp\visual-vision-pzHucQ\state --host 127.0.0.1 --port 3464
+healthz[vision]={"runtime":{"version":"0.0.20-478-g2d4fa10b","release_version":"0.0.20-478-g2d4fa10b","commit":"2d4fa10be62df9bf9c12b79e3958f9a67e30d69c","build_date":"2026-11-01T10:39:33.602Z","channel":"development","name":"role-model-dev","endpoint":"http://127.0.0.1:3458","source_tree":"4f8d667fdaef88823a27a48cb2275e816c9f6c71","executable_sha256":"bfa365e188ba01fa9d8962e13fd7692a1ef9b0148d5e816104c154fdefe4d1a3","core_payload_sha256":"bfa365e188ba01fa9d8962e13fd7692a1ef9b0148d5e816104c154fdefe4d1a3","configVersion":"1.0"},"status":"healthy","executionMode":"remote_only","vendors":{"llama-swap":{"vendorId":"llama-swap","healthStatus":"inactive"},"litellm":{"vendorId":"litellm","healthStatus":"inactive"}},"inactiveVendors":["llama-swap","litellm"],"credentialLifecycleAuthority":{"state":"provisional","bootstrapStatus":"running"},"sessionBootstrap":{"status":"running","startedAt":"2026-11-01T14:10:01.421Z","finishedAt":null,"stages":[]},"ready":true}
+healthz[vision]={"runtime":{"version":"0.0.20-478-g2d4fa10b","release_version":"0.0.20-478-g2d4fa10b","commit":"2d4fa10be62df9bf9c12b79e3958f9a67e30d69c","build_date":"2026-11-01T10:39:33.602Z","channel":"development","name":"role-model-dev","endpoint":"http://127.0.0.1:3458","source_tree":"4f8d667fdaef88823a27a48cb2275e816c9f6c71","executable_sha256":"bfa365e188ba01fa9d8962e13fd7692a1ef9b0148d5e816104c154fdefe4d1a3","core_payload_sha256":"bfa365e188ba01fa9d8962e13fd7692a1ef9b0148d5e816104c154fdefe4d1a3","configVersion":"1.0"},"status":"healthy","executionMode":"remote_only","vendors":{"llama-swap":{"vendorId":"llama-swap","healthStatus":"inactive"},"litellm":{"vendorId":"litellm","healthStatus":"inactive"}},"inactiveVendors":["llama-swap","litellm"],"credentialLifecycleAuthority":{"state":"provisional","bootstrapStatus":"running"},"sessionBootstrap":{"status":"running","startedAt":"2026-11-01T14:10:01.421Z","finishedAt":null,"stages":[]},"ready":true}
+healthz[vision]={"runtime":{"version":"0.0.20-478-g2d4fa10b","release_version":"0.0.20-478-g2d4fa10b","commit":"2d4fa10be62df9bf9c12b79e3958f9a67e30d69c","build_date":"2026-11-01T10:39:33.602Z","channel":"development","name":"role-model-dev","endpoint":"http://127.0.0.1:3458","source_tree":"4f8d667fdaef88823a27a48cb2275e816c9f6c71","executable_sha256":"bfa365e188ba01fa9d8962e13fd7692a1ef9b0148d5e816104c154fdefe4d1a3","core_payload_sha256":"bfa365e188ba01fa9d8962e13fd7692a1ef9b0148d5e816104c154fdefe4d1a3","configVersion":"1.0"},"status":"healthy","executionMode":"remote_only","vendors":{"llama-swap":{"vendorId":"llama-swap","healthStatus":"inactive"},"litellm":{"vendorId":"litellm","healthStatus":"inactive"}},"inactiveVendors":["llama-swap","litellm"],"credentialLifecycleAuthority":{"state":"provisional","bootstrapStatus":"running"},"sessionBootstrap":{"status":"running","startedAt":"2026-11-01T14:10:01.421Z","finishedAt":null,"stages":[]},"ready":true}
+healthz[vision]={"runtime":{"version":"0.0.20-478-g2d4fa10b","release_version":"0.0.20-478-g2d4fa10b","commit":"2d4fa10be62df9bf9c12b79e3958f9a67e30d69c","build_date":"2026-11-01T10:39:33.602Z","channel":"development","name":"role-model-dev","endpoint":"http://127.0.0.1:3458","source_tree":"4f8d667fdaef88823a27a48cb2275e816c9f6c71","executable_sha256":"bfa365e188ba01fa9d8962e13fd7692a1ef9b0148d5e816104c154fdefe4d1a3","core_payload_sha256":"bfa365e188ba01fa9d8962e13fd7692a1ef9b0148d5e816104c154fdefe4d1a3","configVersion":"1.0"},"status":"healthy","executionMode":"remote_only","vendors":{"llama-swap":{"vendorId":"llama-swap","healthStatus":"inactive"},"litellm":{"vendorId":"litellm","healthStatus":"inactive"}},"inactiveVendors":["llama-swap","litellm"],"credentialLifecycleAuthority":{"state":"authoritative","bootstrapStatus":"ready"},"sessionBootstrap":{"status":"ready","startedAt":"2026-11-01T14:10:01.421Z","finishedAt":"2026-11-01T14:10:03.675Z","stages":[{"stageId":"credentials","status":"ready","startedAt":"2026-11-01T14:10:01.422Z","finishedAt":"2026-11-01T14:10:01.483Z","details":{"pendingAttempted":0,"pendingSucceeded":0,"pendingConnected":0,"pendingFailed":0,"pendingDeferred":0,"refreshAttem…(2718 bytes)
+
+vision_request model=baseline.remote-only images=120581/90518 bytes (base64 omitted)
+vision_host_stopped_before_cleanup=true
+vision_status=200
+vision_response={"id":"chatcmpl-role-model","object":"chat.completion","created":1793542263,"model":"deepseek/deepseek-flash","choices":[{"index":0,"message":{"role":"assistant","content":"**1. Header and navigation**\n- Same “role-model” sidebar label, “Runtime overview” page title, and top-right theme icon.\n- Sidebar sections and order match: Overview selected, Studio, Local, Remote, Models, Router, Observe, Connect, System, Learning.\n- Lower sidebar differs: production lists `chatgpt/gpt-8-astra 32`, two `DeepSeek V4.1 Flash_ 32` rows, and `chatgpt/gpt-6.1-sol 4`; rebuilt lists `Claude 3.7 Sonnet 0`, `gpt-5.4 0`, and `GPT-4.1 Mini Fast 0`.\n- `CACHE no live samples` is the same. Router endpoint differs: production `127.0.0.1:3456/v1` / `baseline.remote-only`; rebuilt `127.0.0.1:3458/v1` / `-`.\n\n**2. Main content blocks and cards/tables**\n- Filter row labels and order match; `Day` is selected in both.\n- `Breakdown` differs: production shows truncated `By endpoint vari...`; rebuilt shows `Total`.\n- Model pool title, description, axes (`Quality`, `Cost`, `Speed`), and candidate-table header match.\n- Production model pool has four candidate rows with numeric route scores; rebuilt has three rows with `—` scores.\n- Production candidate names: `deepseek-flash (High)`, `deepseek-flash (Max)`, `gpt-5.1-sol`, `gpt-6-astra`. Rebuilt names: `openai/gpt-4.1-mini-fast`, `claude-3.7-sonnet`, `gpt-5.4`.\n- Production shows a `Selected` label on the first candidate; rebuilt shows no selected label.\n- Production plot has four spread-out markers; rebuilt has three markers clustered near the center/Cost side.\n- Token usage section is populated in production: teal filled area, grid, x-axis times `00:00`–`24:00`, three legend entries, and the note `36 row(s) in this slice do not support inputTokens.`\n- Rebuilt token usage section is empty: `No data`, tiny `1 tokens / 0.5 tokens / 0 tokens` axis, only `Input tokens` and `Output tokens` in the legend, and `No token-bearing requests have been recorded yet.`\n- Cache efficiency trend heading/description match. Production shows the top of its chart with `8874k`, `100%`, and lines; rebuilt shows only the heading/description area in the screenshot.\n\n**3. Typography and wording**\n- Typography appears broadly consistent: same sans-serif UI font, heading/body sizing, muted descriptions, and small uppercase labels.\n- Wording differences are mainly in the breakdown value, candidate names/scores/telemetry, token-usage empty state, and router endpoint status.\n- Production candidate telemetry includes values such as `S100`, `S34`, `S9`, `S3`; rebuilt shows `S–` for all three and no `No live telemetry` row.\n\n**4. Colours and theme**\n- Both use the same dark near-black theme, dark sidebar, subtle borders, light text, and grey secondary text.\n- Selected navigation state, buttons, and dropdown styling match.\n- Production token usage has a teal filled area; rebuilt has no filled data. Candidate marker colours differ with the data: production uses blue/orange markers; rebuilt shows orange, blue, and green markers.\n\n**5. Spacing and layout**\n- Overall layout matches: fixed sidebar, same main-content column, same stacked card structure, and aligned filter row.\n- Rebuilt shows a visible vertical page scrollbar on the far right; production does not show one in the screenshot.\n- The rebuilt sidebar model list has fewer rows, leaving a different lower-sidebar distribution.\n- The rebuilt token usage card is visually much emptier due to the missing plot and grid.\n\n**6. Missing or extra**\n- Missing from rebuilt versus production: fourth model row, numeric route scores, `Selected` indicator, production telemetry values, populated token usage chart, `Total tokens` legend entry, production note about unsupported input tokens, visible cache chart data, and `baseline.remote-only`.\n- Extra/different in rebuilt: `Total` breakdown selection, `No data` token chart state, `No token-bearing requests have been recorded yet.`, endpoint dash, and visible page scrollbar.\n\nVISUAL_VERDICT: major-deltas"},"finish_reason":"stop"}],"usage":{"prompt_tokens":2113,"completion_tokens":9237,"total_tokens":11350}}
+
+
+VISION_ANSWER=**1. Header and navigation**
+- Same “role-model” sidebar label, “Runtime overview” page title, and top-right theme icon.
+- Sidebar sections and order match: Overview selected, Studio, Local, Remote, Models, Router, Observe, Connect, System, Learning.
+- Lower sidebar differs: production lists `chatgpt/gpt-8-astra 32`, two `DeepSeek V4.1 Flash_ 32` rows, and `chatgpt/gpt-6.1-sol 4`; rebuilt lists `Claude 3.7 Sonnet 0`, `gpt-5.4 0`, and `GPT-4.1 Mini Fast 0`.
+- `CACHE no live samples` is the same. Router endpoint differs: production `127.0.0.1:3456/v1` / `baseline.remote-only`; rebuilt `127.0.0.1:3458/v1` / `-`.
+
+**2. Main content blocks and cards/tables**
+- Filter row labels and order match; `Day` is selected in both.
+- `Breakdown` differs: production shows truncated `By endpoint vari...`; rebuilt shows `Total`.
+- Model pool title, description, axes (`Quality`, `Cost`, `Speed`), and candidate-table header match.
+- Production model pool has four candidate rows with numeric route scores; rebuilt has three rows with `—` scores.
+- Production candidate names: `deepseek-flash (High)`, `deepseek-flash (Max)`, `gpt-5.1-sol`, `gpt-6-astra`. Rebuilt names: `openai/gpt-4.1-mini-fast`, `claude-3.7-sonnet`, `gpt-5.4`.
+- Production shows a `Selected` label on the first candidate; rebuilt shows no selected label.
+- Production plot has four spread-out markers; rebuilt has three markers clustered near the center/Cost side.
+- Token usage section is populated in production: teal filled area, grid, x-axis times `00:00`–`24:00`, three legend entries, and the note `36 row(s) in this slice do not support inputTokens.`
+- Rebuilt token usage section is empty: `No data`, tiny `1 tokens / 0.5 tokens / 0 tokens` axis, only `Input tokens` and `Output tokens` in the legend, and `No token-bearing requests have been recorded yet.`
+- Cache efficiency trend heading/description match. Production shows the top of its chart with `8874k`, `100%`, and lines; rebuilt shows only the heading/description area in the screenshot.
+
+**3. Typography and wording**
+- Typography appears broadly consistent: same sans-serif UI font, heading/body sizing, muted descriptions, and small uppercase labels.
+- Wording differences are mainly in the breakdown value, candidate names/scores/telemetry, token-usage empty state, and router endpoint status.
+- Production candidate telemetry includes values such as `S100`, `S34`, `S9`, `S3`; rebuilt shows `S–` for all three and no `No live telemetry` row.
+
+**4. Colours and theme**
+- Both use the same dark near-black theme, dark sidebar, subtle borders, light text, and grey secondary text.
+- Selected navigation state, buttons, and dropdown styling match.
+- Production token usage has a teal filled area; rebuilt has no filled data. Candidate marker colours differ with the data: production uses blue/orange markers; rebuilt shows orange, blue, and green markers.
+
+**5. Spacing and layout**
+- Overall layout matches: fixed sidebar, same main-content column, same stacked card structure, and aligned filter row.
+- Rebuilt shows a visible vertical page scrollbar on the far right; production does not show one in the screenshot.
+- The rebuilt sidebar model list has fewer rows, leaving a different lower-sidebar distribution.
+- The rebuilt token usage card is visually much emptier due to the missing plot and grid.
+
+**6. Missing or extra**
+- Missing from rebuilt versus production: fourth model row, numeric route scores, `Selected` indicator, production telemetry values, populated token usage chart, `Total tokens` legend entry, production note about unsupported input tokens, visible cache chart data, and `baseline.remote-only`.
+- Extra/different in rebuilt: `Total` breakdown selection, `No data` token chart state, `No token-bearing requests have been recorded yet.`, endpoint dash, and visible page scrollbar.
+
+VISUAL_VERDICT: major-deltas
+VISION_VERDICT=major-deltas
+VISION_VERDICT_NOTE=the verdict is a delta between the captures AS TAKEN and is NOT a design-match acceptance; the captures differ in data source (production live vs Foldkit fixture-backed), which dominates the comparison
+state_source_unchanged=true
+vision_state_copy_removed=true
+cleanup_failed=false
+
+# RESULT
+production_shot=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\.recursive\run\115-effect-foldkit-runtime-migration\evidence\logs\visual-signoff-afda292e\production-3456.png sha256=8aa6a80fc47671ad9c79dc470f80753003c6992f32182655d831d2535be6eb59
+foldkit_shot=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\.recursive\run\115-effect-foldkit-runtime-migration\evidence\logs\visual-signoff-afda292e\foldkit.png sha256=3104b0c1c6f7f756eed3091ba15eabb09c4079340deb2ce296c8ab5bcafe1c3a
+vision_model=baseline.remote-only
+vision_answer_chars=3869
+captures=supplied-overrides (Chrome CLI capture unavailable under the sandbox named-pipe policy)
+RESULT: PASS (comparison answered on supplied captures; Chrome CLI capture unavailable; the verdict is data-state-dominated and is NOT a design-match acceptance)

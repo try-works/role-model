@@ -1,0 +1,24 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s13b-foldkit-chart.test.ts [ test/s13b-foldkit-chart.test.ts ]
+TypeError: allSelector is not a function
+ ❯ test/s13b-foldkit-chart.test.ts:75:27
+     73| 
+     74| const chart = Scene.role("img");
+     75| const seriesPaths = Scene.allSelector("path.rm3-chart-series");
+       |                           ^
+     76| 
+     77| describe("RM3 chart primitive", () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  01:23:58
+   Duration  4.36s (transform 1.86s, setup 0ms, collect 0ms, tests 0ms, environment 688ms, prepare 214ms)
+

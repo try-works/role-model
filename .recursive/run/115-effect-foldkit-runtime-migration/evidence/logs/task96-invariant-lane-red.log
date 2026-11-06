@@ -1,0 +1,161 @@
+✔ S175: no accent-filled control uses text-white (9.1139ms)
+✔ S175: accent fills pair with the accent ink token (2.7276ms)
+✖ S177: the filter select carries an aria-label (10.7043ms)
+✔ S177: no select is added without a name in the port (2.0674ms)
+✔ S178: index.html selects a theme but never writes palette tokens inline (113.5698ms)
+✔ S179: the light theme maps muted text to the darker foreground token (25.4196ms)
+✔ S181: the shell offers a skip link to main content (9.1761ms)
+✖ S181: the skip link is a child of the shell, not one of its attributes (4.4734ms)
+✖ S182: the shell main column is a shrinking flex item, not w-full (11.2066ms)
+✔ S199: light muted text clears WCAG AA against the light background (8.0571ms)
+✔ S199: the accent fill and its ink clear WCAG AA (the S175 invisible-Run defect) (1.3281ms)
+✔ S199: the ring colour would NOT have cleared it (the old mapping was a real defect) (1.4218ms)
+✔ S205: every --rm token referenced by the port is defined (10.8676ms)
+✖ S205: the port does not rely on ring utilities, which do not compose on these elements (5.9128ms)
+✔ S207: the Studio route requests the configured model catalogue (5.9693ms)
+✔ S207: the Studio form prefers a catalogue model over the hardcoded default (1.569ms)
+✔ S207: a Studio run sends a model the host serves (1.1663ms)
+✖ S247: no test may exceed its recorded synthetic-click budget (373.7033ms)
+✖ S247: every file with clicks is recorded in the budget (257.5109ms)
+✖ S247: the total click count does not grow (238.7946ms)
+✔ S247: every recorded budget entry names the user path it exercises (3.4226ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 14
+ℹ fail 7
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1927.2561
+
+✖ failing tests:
+
+test at test\s177-select-names.test.mjs:16:1
+✖ S177: the filter select carries an aria-label (10.7043ms)
+  AssertionError [ERR_ASSERTION]: the select must be named by its field label
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next/test/s177-select-names.test.mjs:21:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '          h.DataAttribute("overview-filter", filter),',
+    expected: /h\.AriaLabel\(label\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at test\s181-skip-link.test.mjs:22:1
+✖ S181: the skip link is a child of the shell, not one of its attributes (4.4734ms)
+  AssertionError [ERR_ASSERTION]: the shell div is still built as expected
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next/test/s181-skip-link.test.mjs:24:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\s182-shell-overflow.test.mjs:15:1
+✖ S182: the shell main column is a shrinking flex item, not w-full (11.2066ms)
+  AssertionError [ERR_ASSERTION]: the main column class is still in one place
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next/test/s182-shell-overflow.test.mjs:20:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at test\s205-token-definitions.test.mjs:25:1
+✖ S205: the port does not rely on ring utilities, which do not compose on these elements (5.9128ms)
+  AssertionError [ERR_ASSERTION]: use an explicit outline for focus
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next/test/s205-token-definitions.test.mjs:26:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at test\s247-click-budget.test.mjs:69:1
+✖ S247: no test may exceed its recorded synthetic-click budget (373.7033ms)
+  AssertionError [ERR_ASSERTION]: lower the site count with a scene/story conversion instead of adding clicks
+  + actual - expected
+  
+  + [
+  +   [
+  +     's619-learning-controls.test.ts',
+  +     3
+  +   ]
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next/test/s247-click-budget.test.mjs:72:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ [ 's619-learning-controls.test.ts', 3 ] ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\s247-click-budget.test.mjs:75:1
+✖ S247: every file with clicks is recorded in the budget (257.5109ms)
+  AssertionError [ERR_ASSERTION]: record a new click site in BUDGET with its justification
+  + actual - expected
+  
+  + [
+  +   's619-learning-controls.test.ts'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next/test/s247-click-budget.test.mjs:78:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 's619-learning-controls.test.ts' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at test\s247-click-budget.test.mjs:81:1
+✖ S247: the total click count does not grow (238.7946ms)
+  AssertionError [ERR_ASSERTION]: synthetic clicks 35 > budget 32
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next/test/s247-click-budget.test.mjs:85:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

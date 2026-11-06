@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/run99-r33-holdout-split.test.ts (6 tests) 13ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  04:21:36
+   Duration  533ms (transform 79ms, setup 0ms, collect 72ms, tests 13ms, environment 0ms, prepare 173ms)
+

@@ -119,6 +119,26 @@ export interface UnifiedRuntimeControllerConfig {
   readonly timeoutMs: number;
 }
 
+/** Run 115: replay auto-queues eligible routed requests, bounded by a daily cap. */
+export interface UnifiedRuntimeReplayAutoQueueConfig {
+  readonly enabled: boolean;
+  readonly dailyCap: number;
+}
+
+export interface UnifiedRuntimeReplayConfig {
+  readonly autoQueue: UnifiedRuntimeReplayAutoQueueConfig;
+}
+
+export const DEFAULT_UNIFIED_RUNTIME_REPLAY_CONFIG: UnifiedRuntimeReplayConfig = Object.freeze({
+  autoQueue: Object.freeze({ enabled: true, dailyCap: 100 }),
+});
+
+export function resolveUnifiedRuntimeReplayConfig(
+  config: Pick<UnifiedRuntimeConfig, "replay"> | null | undefined,
+): UnifiedRuntimeReplayConfig {
+  return config?.replay ?? DEFAULT_UNIFIED_RUNTIME_REPLAY_CONFIG;
+}
+
 export interface UnifiedRuntimeObservedDataConfig {
   readonly enabled: boolean;
   readonly aggregation: {
@@ -218,6 +238,7 @@ export interface UnifiedRuntimeConfig {
   readonly workloads?: readonly AgentStrategyEntry[];
   readonly executionMode: UnifiedRuntimeExecutionMode;
   readonly observedData?: UnifiedRuntimeObservedDataConfig;
+  readonly replay?: UnifiedRuntimeReplayConfig;
   readonly difficultyClassifier?: UnifiedRuntimeDifficultyClassifierConfig;
   readonly controller?: UnifiedRuntimeControllerConfig;
   readonly modelAliases?: readonly UnifiedRuntimeModelAliasConfig[];
@@ -356,6 +377,16 @@ interface RawUnifiedRuntimeConfig {
       }
     >
   >;
+  readonly replay?: {
+    readonly auto_queue?: {
+      readonly enabled?: boolean;
+      readonly daily_cap?: number;
+    };
+    readonly autoQueue?: {
+      readonly enabled?: boolean;
+      readonly dailyCap?: number;
+    };
+  };
   readonly observed_data?: {
     readonly enabled?: boolean;
     readonly aggregation?: {
@@ -2013,6 +2044,43 @@ function canonicalizeUnifiedRuntimeRoutingAliases(
   };
 }
 
+function normalizeReplayInput(value: unknown, label: string): UnifiedRuntimeReplayConfig {
+  if (value === undefined || value === null) {
+    return { autoQueue: { ...DEFAULT_UNIFIED_RUNTIME_REPLAY_CONFIG.autoQueue } };
+  }
+  ensureObject(value, `${label} must be an object.`);
+  const raw = value as {
+    readonly auto_queue?: { readonly enabled?: unknown; readonly daily_cap?: unknown };
+    readonly autoQueue?: { readonly enabled?: unknown; readonly dailyCap?: unknown };
+  };
+  const autoQueue = raw.auto_queue ?? raw.autoQueue;
+  if (autoQueue !== undefined) ensureObject(autoQueue, `${label}.auto_queue must be an object.`);
+  const enabledInput = autoQueue?.enabled;
+  if (enabledInput !== undefined && typeof enabledInput !== "boolean") {
+    throw new Error(`${label}.auto_queue.enabled must be a boolean.`);
+  }
+  const capInput =
+    autoQueue && "daily_cap" in autoQueue
+      ? autoQueue.daily_cap
+      : autoQueue && "dailyCap" in autoQueue
+        ? autoQueue.dailyCap
+        : undefined;
+  const dailyCap =
+    capInput === undefined
+      ? DEFAULT_UNIFIED_RUNTIME_REPLAY_CONFIG.autoQueue.dailyCap
+      : typeof capInput === "number" &&
+          Number.isSafeInteger(capInput) &&
+          capInput > 0 &&
+          capInput <= 1_000_000
+        ? capInput
+        : (() => {
+            throw new Error(
+              `${label}.auto_queue.daily_cap must be a positive integer no greater than 1000000.`,
+            );
+          })();
+  return { autoQueue: { dailyCap, enabled: enabledInput !== false } };
+}
+
 export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfig {
   const rawDocument = parse(text) as unknown;
   ensureObject(rawDocument, "Unified runtime config root must be an object.");
@@ -2062,6 +2130,7 @@ export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfi
     ...(rawConfig.observed_data
       ? { observedData: normalizeObservedDataInput(rawConfig.observed_data, "observed_data") }
       : {}),
+    replay: normalizeReplayInput(rawConfig.replay, "replay"),
     llamaSwap,
     liteLLM,
   });
@@ -2096,6 +2165,7 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
       : "difficulty_classifier" in input
         ? input.difficulty_classifier
         : undefined;
+  const replaySource = "replay" in input ? input.replay : undefined;
   const modelAliasesSource =
     "modelAliases" in input
       ? input.modelAliases
@@ -2157,6 +2227,7 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
           observedData: normalizeObservedDataInput(observedDataSource, "observedData"),
         }
       : {}),
+    replay: normalizeReplayInput(replaySource, "replay"),
     llamaSwap,
     liteLLM,
   });
@@ -2211,6 +2282,15 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
   const renderedWorkloads = renderAgentStrategyBlock(config.workloads ?? []);
   if (renderedWorkloads !== null) {
     document.workloads = renderedWorkloads;
+  }
+
+  if (config.replay) {
+    document.replay = {
+      auto_queue: {
+        enabled: config.replay.autoQueue.enabled,
+        daily_cap: config.replay.autoQueue.dailyCap,
+      },
+    };
   }
 
   if (config.observedData) {

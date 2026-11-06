@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/module-health-writer.test.ts (13 tests) 30ms
+
+ Test Files  1 passed (1)
+      Tests  13 passed (13)
+   Start at  01:06:38
+   Duration  3.20s (transform 1.66s, setup 0ms, collect 2.69s, tests 30ms, environment 0ms, prepare 174ms)
+

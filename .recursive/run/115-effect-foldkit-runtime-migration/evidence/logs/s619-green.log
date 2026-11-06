@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s619-requests-observe-wiring.test.ts (3 tests) 635ms
+   ✓ S619 requests/observe wiring > renders the requests time-range and filter state  498ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  06:32:34
+   Duration  34.25s (transform 16.27s, setup 0ms, collect 26.86s, tests 635ms, environment 4.59s, prepare 819ms)
+

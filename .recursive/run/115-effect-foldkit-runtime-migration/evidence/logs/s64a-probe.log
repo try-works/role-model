@@ -1,0 +1,90 @@
+{
+  "port": 53868,
+  "before": 0,
+  "mid": 1,
+  "afterBad": 2,
+  "afterCancel": 3,
+  "okStatus": 200,
+  "okBody": {
+    "id": "chatcmpl-role-model",
+    "object": "chat.completion",
+    "created": 1792940978,
+    "model": "moonshot/kimi-k2.5",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "echo:OK"
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 7,
+      "completion_tokens": 5,
+      "total_tokens": 12
+    }
+  },
+  "badStatus": 500,
+  "badBody": "{\"error\":{\"message\":\"Provider request failed with HTTP 500.\",\"type\":\"upstream_error\",\"code\":\"upstream_error\",\"retryable\":true,\"fallbackEligible\":true,\"endpointId\":\"moonshot.personal.primary.global.kimi-k2.5\",\"providerId\":\"moonshot\",\"providerFamily\":\"moonshot\",\"executionFamily\":\"remote-service\",\"adap",
+  "cancel": {},
+  "metricsItem": {
+    "id": 1,
+    "request_id": "req-c44a2e4f-71f3-45bc-885f-1e4d0a7494dc",
+    "timestamp": "2026-10-25T15:09:39.555Z",
+    "model": "moonshot/kimi-k2.5",
+    "modelId": "moonshot/kimi-k2.5",
+    "endpointId": "routing.failed.pre-execution",
+    "upstreamModelId": "routing.failed.pre-execution",
+    "reasoningEffort": null,
+    "req_path": "/v1/chat/completions",
+    "resp_content_type": "application/json",
+    "resp_status_code": 500,
+    "tokens": {
+      "cache_tokens": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "prompt_per_second": 0,
+      "tokens_per_second": 0
+    },
+    "duration_ms": 34,
+    "has_capture": false
+  },
+  "decisions": [
+    {
+      "requestId": "req-c44a2e4f-71f3-45bc-885f-1e4d0a7494dc",
+      "routingDecisionId": "decision-req-c44a2e4f-71f3-45bc-885f-1e4d0a7494dc",
+      "selectedEndpointId": "routing.failed.pre-execution",
+      "selectedModelId": "moonshot/kimi-k2.5",
+      "upstreamModelId": "moonshot/kimi-k2.5",
+      "reasoningEffort": null,
+      "effortSource": "none",
+      "membershipRevision": null,
+      "profileRevision": null,
+      "strategyLabel": null,
+      "decidedAtMs": 1792940979557,
+      "sourceType": "local",
+      "providerId": null,
+      "finishReason": null,
+      "shadowAdvice": null
+    },
+    {
+      "requestId": "req-1379ee84-92d3-4b87-ab3d-4a99fd179ab1",
+      "routingDecisionId": "decision-req-1379ee84-92d3-4b87-ab3d-4a99fd179ab1",
+      "selectedEndpointId": "moonshot.personal.primary.global.kimi-k2.5",
+      "selectedModelId": "moonshot/kimi-k2.5",
+      "upstreamModelId": "moonshot/kimi-k2.5",
+      "reasoningEffort": null,
+      "effortSource": "none",
+      "membershipRevision": null,
+      "profileRevision": null,
+      "strategyLabel": null,
+      "decidedAtMs": 1792940979406,
+      "sourceType": "remote",
+      "providerId": "moonshot",
+      "finishReason": null,
+      "shadowAdvice": null
+    }
+  ]
+}

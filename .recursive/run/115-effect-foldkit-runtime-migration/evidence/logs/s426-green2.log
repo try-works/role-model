@@ -1,0 +1,37 @@
+✔ R32/B9: handshake accepts a supported DTO and records its version/capabilities (9.6688ms)
+✔ R32/B9: handshake rejects an unsupported DTO version with a typed failure (2.7975ms)
+✔ R32/B9: handshake rejects a missing required capability with a typed failure (1.3046ms)
+✔ R32/B9: handshake rejects a not-ready host with the readiness reason (1.1222ms)
+✔ R32/B9: the evaluation Layer preserves the handshake decision at open (121.7838ms)
+✔ R32/B9: a failed handshake rejects before the process factory is ever called (19.3169ms)
+✔ R32 handshake: unsupported root operator protocol version is rejected before the factory (112.3543ms)
+✔ R32 handshake: a missing real required capability is rejected before the factory (invented caps do not pass) (25.61ms)
+✔ R32 handshake: each descriptor version must be compatible (21.8873ms)
+✔ R32 handshake: a missing required operator binding is rejected before the factory (25.7015ms)
+✔ R32 handshake: ready is false during the factory and true only after owner.add (29.6428ms)
+✔ R32 handshake: a null factory result never becomes ready and is not registered (18.3444ms)
+✔ R32 handshake: factory failure never leaves ready=true (19.2549ms)
+✔ R32 handshake: closed late open releases the late child and stays not-ready (23.9468ms)
+✔ R32 handshake: a reused handle resets prior accepted evidence before a failing open (26.8582ms)
+✔ R32 handshake: no manifest returns null without invoking a custom factory (2.7627ms)
+✔ R32/B9: the packaged-operator scope closes children in order and continues after a failure (134.9105ms)
+✔ R32/B9: concurrent close shares one release pass (22.6464ms)
+✔ R32/B9: a null operator host is not registered and does not fail close (23.692ms)
+✔ R32/B9: a late manifest open fails closed and releases the late child (30.9149ms)
+✔ R32/B9: no manifest returns null without creating an unauthenticated child (3.8827ms)
+✔ R32/B9 repair: the sidecar main starts with the operator scope declared and stops without a ReferenceError (3450.5054ms)
+(node:77796) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ R32/B9 repair: the sidecar close path closes the passed evaluation host scope (530.7888ms)
+✔ R32/B9 repair: the REAL packaged-evaluation owner is closed by server.close (429.9408ms)
+✔ R32/B9 repair: evaluationProcess without a scope still closes directly (retained fallback) (314.243ms)
+✔ R32/B9: the REAL packaged-operator owner is closed by server.close exactly once (359.2325ms)
+✔ R32/B9: operatorProcess without a scope still closes directly (retained fallback) (286.8211ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5029.2161

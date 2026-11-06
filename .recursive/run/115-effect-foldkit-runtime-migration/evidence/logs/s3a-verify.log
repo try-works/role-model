@@ -1,0 +1,4 @@
+vendor-upstream: foldkit verified 2020 files, 11.9 MB, sha256:14a19d180fd43784b1c11073d9c7c6efa3a599c43b2fb8e5bcbd64136ed8322d
+COMMAND: node scripts/vendor-upstream.mjs --name foldkit --verify
+TIMESTAMP: 2026-10-24T13:53:59.512Z
+EXIT_CODE: 0

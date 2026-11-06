@@ -1,0 +1,58 @@
+COMMAND: node vitest run s415 (S416 auto-query RED)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s415-requests-ranking.test.ts (7 tests | 2 failed) 89ms
+   ✓ S413 requests ranking controls > keeps the original metric and target option sets 11ms
+   ✓ S413 requests ranking controls > builds the exact original POST /telemetry/query body 2ms
+   ✓ S413 requests ranking controls > POSTs that exact body to /telemetry/query 14ms
+   × S413 requests ranking state machine > auto-queries one token-fenced command when the metric changes 42ms
+     → expected [] to deeply equal [ 'QueryRequestsRanking' ]
+   × S413 requests ranking state machine > auto-queries when the ranking target changes and keeps the current metric 5ms
+     → "undefined" is not valid JSON
+   ✓ S413 requests ranking state machine > refuses a second submit while loading and fences stale results 5ms
+   ✓ S413 requests ranking state machine > maps empty and error results honestly while keeping the controls 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s415-requests-ranking.test.ts > S413 requests ranking state machine > auto-queries one token-fenced command when the metric changes
+AssertionError: expected [] to deeply equal [ 'QueryRequestsRanking' ]
+
+- Expected
++ Received
+
+- [
+-   "QueryRequestsRanking",
+- ]
++ []
+
+ ❯ test/s415-requests-ranking.test.ts:78:69
+     76|     const changed = shellUpdate(modelWith(stateWith()), Message.Reques…
+     77|     expect(changed.model.requestsRanking?.metric).toBe("failureCount");
+     78|     expect((changed.commands ?? []).map((command) => command.name)).to…
+       |                                                                     ^
+     79|     expect(JSON.parse(String((changed.commands ?? [])[0]?.args?.payloa…
+     80|     expect(changed.model.requestsRanking?.status).toBe("loading");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s415-requests-ranking.test.ts > S413 requests ranking state machine > auto-queries when the ranking target changes and keeps the current metric
+SyntaxError: "undefined" is not valid JSON
+ ❯ test/s415-requests-ranking.test.ts:85:26
+     83|   it("auto-queries when the ranking target changes and keeps the curre…
+     84|     const changed = shellUpdate(modelWith(stateWith({ metric: "totalTo…
+     85|     const payload = JSON.parse(String((changed.commands ?? [])[0]?.arg…
+       |                          ^
+     86|     expect(payload.ranking.dimension).toBe("providerId");
+     87|     expect(payload.ranking.metric).toBe("totalTokens");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 5 passed (7)
+   Start at  18:58:07
+   Duration  14.16s (transform 6.35s, setup 0ms, collect 9.82s, tests 89ms, environment 1.57s, prepare 721ms)
+
+

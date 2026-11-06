@@ -1,0 +1,80 @@
+{
+  "capturedAt": "2026-11-04T02:35:18.793Z",
+  "host": "isolated packaged host http://127.0.0.1:3484 (stopped after capture)",
+  "route": "/observe/routing",
+  "cardCount": 9,
+  "titles": [
+    "Cost avoided by routing",
+    "Routing decision volume",
+    "Routing volume by taxonomy role",
+    "Avoided cost by taxonomy task",
+    "Difficulty distribution",
+    "Strategy selection trend",
+    "Capability routing mix",
+    "Tool class routing mix",
+    "Model selection"
+  ],
+  "cards": [
+    {
+      "title": "Cost avoided by routing",
+      "paths": 0,
+      "rects": 0,
+      "empty": "No routing savings have been recorded for the current slice."
+    },
+    {
+      "title": "Routing decision volume",
+      "paths": 0,
+      "rects": 24,
+      "empty": null
+    },
+    {
+      "title": "Routing volume by taxonomy role",
+      "paths": 0,
+      "rects": 24,
+      "empty": null
+    },
+    {
+      "title": "Avoided cost by taxonomy task",
+      "paths": 0,
+      "rects": 0,
+      "empty": "No taxonomy task savings are available for the current slice."
+    },
+    {
+      "title": "Difficulty distribution",
+      "paths": 0,
+      "rects": 0,
+      "empty": "No difficulty-classified requests match the current slice."
+    },
+    {
+      "title": "Strategy selection trend",
+      "paths": 0,
+      "rects": 24,
+      "empty": null
+    },
+    {
+      "title": "Capability routing mix",
+      "paths": 0,
+      "rects": 2,
+      "empty": null
+    },
+    {
+      "title": "Tool class routing mix",
+      "paths": 0,
+      "rects": 0,
+      "empty": "No tool-class telemetry is available for the current slice."
+    },
+    {
+      "title": "Model selection",
+      "paths": 0,
+      "rects": 1,
+      "empty": null
+    }
+  ],
+  "visibleTables": 0,
+  "analyticsPosts": 9,
+  "reference3456": {
+    "note": "Reference /app/observe/routing renders the same nine chart definitions from lib/telemetry-route-models.ts (cost avoided by routing, routing decision volume, taxonomy role volume, avoided cost by task, difficulty distribution, strategy selection trend, capability routing mix, tool class routing mix, model selection).",
+    "screenshot": "s629-reference-3456-routing.png"
+  },
+  "screenshot": "s632-routing-charts-3484.png"
+}

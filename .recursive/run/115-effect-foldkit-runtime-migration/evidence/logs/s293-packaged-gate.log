@@ -1,0 +1,63 @@
+
+> role-model@0.0.0 runtime:verify-packaged-candidate E:\role-model-run115\package-s293-public
+> node scripts/runtime/verify-packaged-candidate.mjs "--" "--rendered" "--require-rendered" "--package-dir" "role-model-router/dist/release/win32-x64" "--static-root" "role-model-router/dist/release/win32-x64/build/client" "--fixture-root" "testdata/router-runtime/fixtures"
+
+version=healthy 0.0.20-269-g35103383
+sha256=d2bc6231f5b5751f4f0b8bc4a970a7593d27a63497b0f7bfa1e41d53beccd67b
+port=53323 state=E:\rm-tmp\r39-candidate-state-XIdRoH fixtures=E:\role-model-run115\package-s293-public\testdata\router-runtime\fixtures
+PASS health: healthy 0.0.20-269-g35103383
+PASS models: 3 models
+PASS telemetry: requestCount 0
+PASS controller: openai.personal.primary.us-east-1.fast
+PASS learning: role-model.knowledge-worker.v1
+PASS replay jobs: 0 jobs
+PASS evaluation jobs: 0 jobs
+PASS ui css: 58528 bytes, both theme blocks
+PASS ui bundle: 2682543 bytes
+PASS ui theme boot: theme selected in CSS, no inline palette
+PASS chat completion: openai/gpt-4.1-mini-fast total_tokens=56
+PASS ui shell: 2194 bytes
+seeded chat: status 200
+PASS / (1883 chars)
+PASS /runtime (454 chars)
+PASS /models (1201 chars)
+PASS /router (247 chars)
+PASS /router/candidates (784 chars)
+PASS /router/decisions (204 chars)
+PASS /control/providers (144 chars)
+PASS /control/endpoints (177 chars)
+PASS /control/controller (507 chars)
+PASS /observe/queues (302 chars)
+PASS /observe/observability-snapshot (211 chars)
+PASS /local/logs (173 chars)
+PASS /local/swap (152 chars)
+PASS /system/peers (151 chars)
+PASS /requests (219 chars)
+PASS /session-readiness (292 chars)
+PASS /dashboard (339 chars)
+PASS /studio (121 chars)
+PASS /learning (806 chars)
+PASS /diagnostics/42 (198 chars)
+PASS click sweep /: clicked 5
+PASS click sweep /runtime: clicked 2
+PASS click sweep /models: clicked 1
+PASS click sweep /router: clicked 1
+PASS click sweep /router/candidates: clicked 1
+PASS click sweep /router/decisions: clicked 1
+PASS click sweep /control/providers: clicked 2
+PASS click sweep /control/endpoints: clicked 1
+PASS click sweep /control/controller: clicked 3
+PASS click sweep /observe/queues: clicked 1
+PASS click sweep /observe/observability-snapshot: clicked 1
+PASS click sweep /local/logs: clicked 1
+PASS click sweep /local/swap: clicked 1
+PASS click sweep /system/peers: clicked 1
+PASS click sweep /requests: clicked 1
+PASS click sweep /session-readiness: clicked 1
+PASS click sweep /dashboard: clicked 1
+PASS click sweep /studio: clicked 7
+PASS click sweep /learning: clicked 1
+PASS click sweep /diagnostics/42: clicked 2
+PASS control action: message:Providers action failed: HTTP 400
+PASS studio run: clicked -> raw:success
+{"routes":20,"failures":0,"focus":true}

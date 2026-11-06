@@ -1,0 +1,24 @@
+COMMAND: node vitest run s475+cli-startup-readiness+s120+run96-f166; host+UI tsc
+HOST_TSC=0 UI_TSC=0
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:57148) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run96-f166-extension-restart-readiness.test.ts (5 tests) 8446ms
+   ✓ Run 96 F166 supervised extension restart readiness > F166: restarting every canonical extension under a live watchdog never retracts readiness  6033ms
+   ✓ Run 96 F166 supervised extension restart readiness > F166: a supervised start that fails degrades its extension without an unbounded pending transition  2203ms
+(node:37892) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/cli-startup-readiness.test.ts (3 tests) 118ms
+ ✓ test/s120-cli-ownership-guard.test.ts (3 tests) 11ms
+(node:56684) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s475-qa-invoke-timeout.test.ts (2 tests) 44ms
+
+ Test Files  4 passed (4)
+      Tests  13 passed (13)
+   Start at  12:34:21
+   Duration  23.15s (transform 5.87s, setup 0ms, collect 12.65s, tests 8.62s, environment 1ms, prepare 704ms)
+
+

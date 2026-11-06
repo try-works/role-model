@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s628-local-llama-swap-models-wiring.test.ts (2 tests) 147ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  19:12:12
+   Duration  23.71s (transform 10.27s, setup 0ms, collect 16.90s, tests 147ms, environment 4.17s, prepare 1.39s)
+

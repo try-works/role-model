@@ -1,0 +1,61 @@
+COMMAND: node vitest run test/s313-server-owner.test.ts (stub DAG Server owner)
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:55788) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s313-server-owner.test.ts (2 tests | 2 failed) 100ms
+   × S313 DAG Server owner > composeServerOwner builds the listener/server through the transport and owns close ordering 28ms
+     → expected false to be true // Object.is equality
+   × S313 DAG Server owner > facade startBridgeServer composes the DAG Server owner; no local listen/lifecycle path exists 64ms
+     → expected false to be true // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s313-server-owner.test.ts > S313 DAG Server owner > composeServerOwner builds the listener/server through the transport and owns close ordering
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/s313-server-owner.test.ts:59:42
+     57|     const backend = facadeBackendOwner({ host: "127.0.0.1", port: 0 } …
+     58|     const owner = composeServerOwner({ backend, handlerFactory, transp…
+     59|     expect(isComposedServerOwner(owner)).toBe(true);
+       |                                          ^
+     60|     const started = await owner.start();
+     61|     expect(fake.calls).toEqual(["createListener", "createServer", "lis…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s313-server-owner.test.ts > S313 DAG Server owner > facade startBridgeServer composes the DAG Server owner; no local listen/lifecycle path exists
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/s313-server-owner.test.ts:81:55
+     79|     });
+     80|     expect(capturedOwner).toBe(server.serverOwner);
+     81|     expect(isComposedServerOwner(server.serverOwner)).toBe(true);
+       |                                                       ^
+     82|     expect(fake.calls).toEqual(["createListener", "createServer", "lis…
+     83|     await server.close();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  05:09:04
+   Duration  20.44s (transform 12.18s, setup 0ms, collect 19.16s, tests 100ms, environment 1ms, prepare 434ms)
+
+

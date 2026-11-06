@@ -1,0 +1,191 @@
+COMMAND: node vitest run s424 (S424 observation cache RED, before product change)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:52156) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s424-observation-cache-correctness.test.ts (10 tests | 8 failed) 215ms
+   × S424 mutable read freshness > readHydrated invokes the reader on every call and never returns a captured snapshot 19ms
+     → expected { version: 1 } to deeply equal { version: 2 }
+   × S424 mutable read freshness > fresh readHydrated calls do not create cached async work 3ms
+     → expected 1 to be +0 // Object.is equality
+   × S424 mutable read freshness > read() serves explicit hydration snapshots while readHydrated stays live 3ms
+     → expected { snap: true } to deeply equal { fresh: true }
+   ✓ S424 mutable read freshness > a real disposable SQLite mutable read observes newly persisted telemetry 175ms
+   × S424 explicit snapshot bounds and write invalidation > capacity bounds retained snapshots even across more distinct keys 2ms
+     → expected 3 to be less than or equal to 2
+   × S424 explicit snapshot bounds and write invalidation > a successful write invalidates the old same-key snapshot immediately 2ms
+     → expected { value: 1 } to deeply equal { fresh: 2 }
+   × S424 explicit snapshot bounds and write invalidation > failed and overflowed hydration never leave the old snapshot authoritative 2ms
+     → expected { old: true } to deeply equal { fallback: true }
+   × S424 explicit snapshot bounds and write invalidation > a late old hydration cannot restore a value after a newer same-key write 1ms
+     → expected { stale: true } to deeply equal { fresh: true }
+   × S424 explicit snapshot bounds and write invalidation > invalid capacities are rejected instead of allowing an unbounded snapshot store 4ms
+     → expected [Function] to throw an error
+   ✓ S424 explicit snapshot bounds and write invalidation > sync reader and write errors retain their identity 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s424-observation-cache-correctness.test.ts > S424 mutable read freshness > readHydrated invokes the reader on every call and never returns a captured snapshot
+AssertionError: expected { version: 1 } to deeply equal { version: 2 }
+
+- Expected
++ Received
+
+  {
+-   "version": 2,
++   "version": 1,
+  }
+
+ ❯ test/s424-observation-cache-correctness.test.ts:28:51
+     26|     await storage.drain();
+     27|     version = 2;
+     28|     expect(storage.readHydrated("mutable", read)).toEqual({ version: 2…
+       |                                                   ^
+     29|     expect(calls).toBe(2);
+     30|     expect(storage.cached("mutable")).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  test/s424-observation-cache-correctness.test.ts > S424 mutable read freshness > fresh readHydrated calls do not create cached async work
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ test/s424-observation-cache-correctness.test.ts:38:34
+     36|     storage.readHydrated("one", () => ({ one: 1 }));
+     37|     storage.readHydrated("two", () => ({ two: 2 }));
+     38|     expect(storage.queueDepth()).toBe(0);
+       |                                  ^
+     39|     expect(storage.pumpActive()).toBe(false);
+     40|     await storage.drain();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  test/s424-observation-cache-correctness.test.ts > S424 mutable read freshness > read() serves explicit hydration snapshots while readHydrated stays live
+AssertionError: expected { snap: true } to deeply equal { fresh: true }
+
+- Expected
++ Received
+
+  {
+-   "fresh": true,
++   "snap": true,
+  }
+
+ ❯ test/s424-observation-cache-correctness.test.ts:50:71
+     48|     await storage.drain();
+     49|     expect(storage.read("explicit", () => ({ fresh: true }))).toEqual(…
+     50|     expect(storage.readHydrated("explicit", () => ({ fresh: true }))).…
+       |                                                                       ^
+     51|   });
+     52| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  test/s424-observation-cache-correctness.test.ts > S424 explicit snapshot bounds and write invalidation > capacity bounds retained snapshots even across more distinct keys
+AssertionError: expected 3 to be less than or equal to 2
+ ❯ test/s424-observation-cache-correctness.test.ts:76:29
+     74|       (value) => value !== undefined,
+     75|     );
+     76|     expect(retained.length).toBeLessThanOrEqual(2);
+       |                             ^
+     77|   });
+     78| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  test/s424-observation-cache-correctness.test.ts > S424 explicit snapshot bounds and write invalidation > a successful write invalidates the old same-key snapshot immediately
+AssertionError: expected { value: 1 } to deeply equal { fresh: 2 }
+
+- Expected
++ Received
+
+  {
+-   "fresh": 2,
++   "value": 1,
+  }
+
+ ❯ test/s424-observation-cache-correctness.test.ts:85:56
+     83|     expect(storage.read("same", () => ({ fresh: 0 }))).toEqual({ value…
+     84|     storage.persist(() => {}, undefined, "same");
+     85|     expect(storage.read("same", () => ({ fresh: 2 }))).toEqual({ fresh…
+       |                                                        ^
+     86|   });
+     87| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  test/s424-observation-cache-correctness.test.ts > S424 explicit snapshot bounds and write invalidation > failed and overflowed hydration never leave the old snapshot authoritative
+AssertionError: expected { old: true } to deeply equal { fallback: true }
+
+- Expected
++ Received
+
+  {
+-   "fallback": true,
++   "old": true,
+  }
+
+ ❯ test/s424-observation-cache-correctness.test.ts:94:61
+     92|     storage.persist(() => {}, async () => { throw new Error("hydrate f…
+     93|     await storage.drain();
+     94|     expect(storage.read("key", () => ({ fallback: true }))).toEqual({ …
+       |                                                             ^
+     95| 
+     96|     storage.persist(() => {}, async () => ({ again: true }), "key");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  test/s424-observation-cache-correctness.test.ts > S424 explicit snapshot bounds and write invalidation > a late old hydration cannot restore a value after a newer same-key write
+AssertionError: expected { stale: true } to deeply equal { fresh: true }
+
+- Expected
++ Received
+
+  {
+-   "fresh": true,
++   "stale": true,
+  }
+
+ ❯ test/s424-observation-cache-correctness.test.ts:113:59
+    111|     releaseOld?.({ stale: true });
+    112|     await storage.drain();
+    113|     expect(storage.read("late", () => ({ fresh: true }))).toEqual({ fr…
+       |                                                           ^
+    114|     expect(storage.cached("late")).toBeUndefined();
+    115|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  test/s424-observation-cache-correctness.test.ts > S424 explicit snapshot bounds and write invalidation > invalid capacities are rejected instead of allowing an unbounded snapshot store
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ test/s424-observation-cache-correctness.test.ts:118:45
+    116| 
+    117|   test("invalid capacities are rejected instead of allowing an unbound…
+    118|     expect(() => makeObservationStorage(0)).toThrow(/positive/);
+       |                                             ^
+    119|     expect(() => makeObservationStorage(-1)).toThrow(/positive/);
+    120|     expect(() => makeObservationStorage(Number.NaN)).toThrow(/positive…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  8 failed | 2 passed (10)
+   Start at  21:40:41
+   Duration  8.96s (transform 4.69s, setup 0ms, collect 7.93s, tests 215ms, environment 0ms, prepare 287ms)
+
+

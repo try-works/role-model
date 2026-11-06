@@ -1,0 +1,20 @@
+{
+  "slice": "s97a-repackage",
+  "outputRoot": "E:/rm-tmp/s97a/release",
+  "version": "0.0.20-81-g17cbdd21",
+  "commit": "17cbdd2100c8fcfe5aca56053efaa6f25bb14c99",
+  "tree": "6b2b4fa671c0b162a3298473aaad16fc87b91e29",
+  "sha": "4898f865c06c1e7364748641cff4889d8901bf8d3f70c5109de296e748f044c7",
+  "mainjs": {
+    "sha256": "d7cd6ded7ec2116b1439e9dff8db25022fcdfe217f49b9130f96e55ead7fd837",
+    "bytes": 2660667
+  },
+  "validate": "exit 0",
+  "port": 5926,
+  "smoke": {
+    "health": "healthy, version 0.0.20-81-g17cbdd21",
+    "foreign": "403 no ACAO, controller unchanged",
+    "sameOrigin": "200, controller changed",
+    "get": "200 ACAO *"
+  }
+}

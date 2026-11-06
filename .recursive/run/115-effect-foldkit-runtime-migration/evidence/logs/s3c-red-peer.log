@@ -1,0 +1,43 @@
+✔ @role-model-router/foldkit: built graph has no Node builtin or Node platform-package import (287.7009ms)
+✔ @role-model-router/foldkit: effect is one shared external specifier (353.5694ms)
+✔ @role-model-router/foldkit: every vendored subpath has a wrapper export backed by a built file (43.7571ms)
+✔ @role-model-router/foldkit-ui: built graph has no Node builtin or Node platform-package import (157.1737ms)
+✔ @role-model-router/foldkit-ui: effect is one shared external specifier (169.6476ms)
+✔ @role-model-router/foldkit-ui: every vendored subpath has a wrapper export backed by a built file (42.0918ms)
+✔ @role-model-router/effect-platform-browser: built graph has no Node builtin or Node platform-package import (65.4107ms)
+✔ @role-model-router/effect-platform-browser: effect is one shared external specifier (67.3933ms)
+✔ @role-model-router/effect-platform-browser: every vendored subpath has a wrapper export backed by a built file (25.9919ms)
+✔ foldkit-ui reaches its framework peer through the first-party wrapper specifier (296.4994ms)
+✖ the foldkit browser-platform peer resolves to the workspace wrapper (7.3579ms)
+✔ wrapper subpath coverage is total and stable for every wrapper package (68.3306ms)
+✔ a published subpath whose source file is missing fails entry generation loudly (16.1418ms)
+✔ an export target outside dist/ is refused instead of guessed (1.0868ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 13
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2061.0115
+
+✖ failing tests:
+
+test at test\graph-closure.test.mjs:413:1
+✖ the foldkit browser-platform peer resolves to the workspace wrapper (7.3579ms)
+  AssertionError [ERR_ASSERTION]: the foldkit peer must point at the first-party browser platform wrapper
+  + actual - expected
+  
+  + undefined
+  - 'workspace:*'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit/test/graph-closure.test.mjs:415:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'workspace:*',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

@@ -1,0 +1,136 @@
+
+> role-model@0.0.0 turbo:build E:\role-model-run115\s16-scratch
+> pnpm exec turbo run build --filter=./apps/* --filter=./packages/* --filter=./role-model-router/apps/* --filter=./role-model-router/packages/*
+
+[WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+[WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+Scope: all 55 workspace projects
+[WARN] The store at C:\Users\erikb\AppData\Local\pnpm\store\v11 is not used because packages cannot be hard linked from it into this project. Using the store at E:\.pnpm-store\v11 instead. Set storeDir to choose the store.
+[WARN] There are cyclic workspace dependencies: E:\role-model-run115\s16-scratch\role-model-router\packages\adapter-execution, E:\role-model-run115\s16-scratch\role-model-router\packages\provider-anthropic
+[WARN] The settings in packages/dsh-role-model/pnpm-workspace.yaml do not apply, because packages/dsh-role-model is a project of this workspace. pnpm reads settings only from the pnpm-workspace.yaml at the workspace root. Move the settings there, or add "!packages/dsh-role-model" to the root's "packages" to keep that project a separate workspace.
+[ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY] Aborted removal of modules directory due to no TTY
+
+If you are running pnpm in CI, set the CI environment variable to "true", or set "confirmModulesPurge" to "false".
+[WARN] The install that runs before scripts failed, so your node_modules may be out of sync with your lockfile. Set "verifyDepsBeforeRun: false" to skip this install.
+ WARNING  Circular package dependency detected: @role-model-router/provider-anthropic, @role-model-router/provider-openai, @role-model-router/adapter-execution
+
+   • turbo 2.11.7
+   • Packages in scope: @effect/sql-sqlite-node, @role-model-router/adapter-execution, @role-model-router/bench-cli, @role-model-router/bench-core, @role-model-router/bench-judge, @role-model-router/bench-routing, @role-model-router/catalog, @role-model-router/context-envelope, @role-model-router/core, @role-model-router/effect-platform-browser, @role-model-router/endpoint-registry, @role-model-router/foldkit, @role-model-router/foldkit-ui, @role-model-router/gateway-smoke, @role-model-router/openai-compat, @role-model-router/process-supervisor, @role-model-router/profile-aggregator, @role-model-router/protocol-routing, @role-model-router/provider-account, @role-model-router/provider-acp, @role-model-router/provider-anthropic, @role-model-router/provider-cli, @role-model-router/provider-litellm, @role-model-router/provider-mcp, @role-model-router/provider-openai, @role-model-router/retrieval-receipt, @role-model-router/roles, @role-model-router/router-devtools, @role-model-router/runtime-host-bridge, @role-model-router/runtime-observability, @role-model-router/runtime-ui, @role-model-router/runtime-ui-next, @role-model-router/runtime-web, @role-model-router/sqlite-memory, @role-model-router/tasks, @role-model-router/tool-registry, @role-model-router/trace, @role-model-router/ui-parity, @role-model-router/usage, @role-model-router/vendor-abstraction, @role-model-router/vendor-litellm, @role-model-router/vendor-llama-swap, @role-model/conformance, @role-model/docs-site, @role-model/packaging, @role-model/protocol-types, @role-model/schema-tools, @role-model/store-contract, @role-model/ui, @try-works/codex-role-model, @try-works/dsh-role-model, @try-works/pi-role-model, effect, effect-mq
+   • Running build in 54 packages
+   • Remote caching disabled
+
+@role-model-router/trace:build: cache miss, executing b1865224ea013e44
+@role-model/docs-site:build: cache miss, executing 278f022198d400bb
+@try-works/dsh-role-model:build: cache miss, executing b638a368cae9e155
+@role-model/schema-tools:build: cache miss, executing 9af1a4a411f653d3
+@role-model-router/roles:build: cache miss, executing 50b36ffeed1ced63
+@role-model-router/vendor-litellm:build: cache miss, executing 83a867c78b1a48a5
+@role-model-router/effect-platform-browser:build: cache miss, executing 92b30e3cfad7a3af
+@role-model-router/provider-cli:build: cache miss, executing 2e4e7932c476a702
+@role-model-router/runtime-ui:build: cache miss, executing a32ca0df0d195b61
+@role-model-router/context-envelope:build: cache miss, executing 1dd61afb877955e7
+@role-model-router/trace:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/trace:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/trace:build: $ tsc -p tsconfig.json
+@role-model/docs-site:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model/docs-site:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model/docs-site:build: $ react-router build && npm run types:check && node ./scripts/materialize-search-index.mjs
+@role-model/docs-site:build: 'react-router' is not recognized as an internal or external command,
+@role-model/docs-site:build: operable program or batch file.
+@try-works/dsh-role-model:build: $ node scripts/build.mjs
+@role-model/docs-site:build: [ELIFECYCLE] Command failed with exit code 1.
+@role-model/docs-site:build: [WARN]  Local package.json exists, but node_modules missing, did you mean to install?
+@role-model-router/openai-compat:build: cache miss, executing ff58a13a5fc3726c
+@role-model-router/process-supervisor:build: cache miss, executing 9c87ac4ba055b92f
+@role-model-router/runtime-host-bridge:build: cache miss, executing c7fc5b7b2420a3e3
+@role-model-router/tasks:build: cache miss, executing fca01ac2bdb10375
+@role-model-router/router-devtools:build: cache miss, executing f22fa1cd14c702a0
+@role-model-router/bench-cli:build: cache miss, executing ddbdc52b42d2ff78
+@role-model-router/vendor-llama-swap:build: cache miss, executing 96cd388c534c85f7
+@role-model-router/bench-routing:build: cache miss, executing 85309f0a8d2d021b
+@role-model-router/runtime-observability:build: cache miss, executing a0a4f69b676eba30
+@role-model/conformance:build: cache miss, executing b6e45c0a7827d5f9
+@role-model-router/bench-core:build: cache miss, executing 22444a1a5cbc591c
+@role-model-router/profile-aggregator:build: cache hit, replaying logs 50f7d31308f73189
+@role-model-router/profile-aggregator:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/profile-aggregator:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/profile-aggregator:build: $ tsc -p tsconfig.json
+@role-model-router/protocol-routing:build: cache miss, executing ef52503305936881
+@role-model-router/foldkit:build: cache miss, executing 209c4f5b85f0be33
+@role-model-router/tool-registry:build: cache miss, executing 4c5b2b90d1a41975
+@role-model-router/provider-account:build: cache miss, executing 27bfa6c15f87b7d2
+@role-model-router/vendor-abstraction:build: cache miss, executing 38ec8c7c5c85e4e0
+@role-model-router/provider-anthropic:build: cache miss, executing 2c2abca5a4e6e201
+@role-model-router/usage:build: cache miss, executing 2a39162408a92847
+@role-model-router/core:build: cache miss, executing a1fdd460dbf1d867
+@role-model-router/provider-openai:build: cache miss, executing 5c04ae3a12a9ff10
+@role-model-router/foldkit-ui:build: cache miss, executing 50d7f4910dc228f8
+@role-model-router/bench-judge:build: cache miss, executing ea1f5b36eb3501a0
+@effect/sql-sqlite-node:build: cache hit, replaying logs 7a5aafc348106410
+@effect/sql-sqlite-node:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@effect/sql-sqlite-node:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@effect/sql-sqlite-node:build: $ node build.mjs && tsc -p tsconfig.service.json
+@effect/sql-sqlite-node:build: ▲ [WARNING] Cannot find base config file "../../../tsconfig.base.json" [tsconfig.json]
+@effect/sql-sqlite-node:build: 
+@effect/sql-sqlite-node:build:     ../../../vendor/effect/packages/sql/sqlite-node/tsconfig.json:3:13:
+@effect/sql-sqlite-node:build:       3 │   "extends": "../../../tsconfig.base.json",
+@effect/sql-sqlite-node:build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@effect/sql-sqlite-node:build: 
+@effect/sql-sqlite-node:build: {"status":"PASS","package":"@effect/sql-sqlite-node","entries":["index"]}
+@role-model-router/endpoint-registry:build: cache miss, executing 041507fb8135a3bb
+@role-model-router/provider-acp:build: cache miss, executing a5da98d9540b44dc
+@try-works/codex-role-model:build: cache miss, executing f7b5736012861df6
+@role-model-router/catalog:build: cache hit, replaying logs ee6203750f3aabf1
+@role-model-router/catalog:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/catalog:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/catalog:build: $ tsc -p tsconfig.json
+effect:build: cache hit, replaying logs 8e89b749a923949f
+effect:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+effect:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+effect:build: $ node build.mjs
+effect:build: ▲ [WARNING] Cannot find base config file "../../tsconfig.base.json" [tsconfig.json]
+effect:build: 
+effect:build:     ../../../vendor/effect/packages/effect/tsconfig.json:3:13:
+effect:build:       3 │   "extends": "../../tsconfig.base.json",
+effect:build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+effect:build: 
+effect:build: {"status":"PASS","package":"effect","entries":["Array","BigDecimal","ByteSize","Cache","Cause","Clock","Config","ConfigProvider","Console","Context","Crypto","Data","DateTime","Deferred","Duration","Effect","Effectable","ErrorReporter","ExecutionPlan","Exit","Fiber","FileSystem","Function","Graph","HashMap","Inspectable","Layer","Logger","ManagedRuntime","Match","Metric","MutableList","MutableRef","Option","Path","Pipeable","PlatformError","PubSub","Queue","Random","Record","Redacted","References","Result","Runtime","Schedule","Scheduler","Schema","SchemaIssue","SchemaParser","Scope","SemVer","SemVerRange","Semaphore","Stream","Struct","Terminal","Tracer","Types","Utils","ai","ai/AiError","ai/Chat","ai/DecisionModel","ai/EmbeddingModel","ai/LanguageModel","ai/McpClient","ai/McpClientError","ai/McpSchema","ai/McpServer","ai/Model","ai/ResponseIdTracker","ai/Telemetry","ai/Tokenizer","ai/Tool","ai/Toolkit","cli","cli/CliConfig","cli/CliOutput","cli/Prompt","cli/TerminalCapabilities","cluster","cluster/ClusterCron","cluster/ClusterSchema","cluster/Entity","cluster/EntityResource","cluster/Envelope","cluster/K8sHttpClient","cluster/MessageStorage","cluster/RunnerHealth","cluster/RunnerStorage","cluster/Runners","cluster/Sharding","cluster/ShardingConfig","cluster/Snowflake","devtools","devtools/DevToolsClient","encoding","encoding/Tar","encoding/Zip","eventlog","eventlog/EventJournal","eventlog/EventLog","eventlog/EventLogEncryption","eventlog/EventLogMessage","eventlog/EventLogRemote","eventlog/EventLogServer","eventlog/EventLogServerUnencrypted","graphql","graphql/GraphQLClientError","graphql/GraphQLProtocol","graphql/GraphQLResolver","http","http-api","http-api/HttpApi","http-api/HttpApiGroup","http-api/HttpApiGroup/","http-api/OpenApi","http/Cookies","http/Etag","http/FetchHttpClient","http/Headers","http/HttpClient","http/HttpClientError","http/HttpClientRequest","http/HttpClientResponse","http/HttpEffect","http/HttpIncomingMessage","http/HttpMiddleware","http/HttpPlatform","http/HttpRouter","http/HttpServer","http/HttpServerError","http/HttpServerRequest","http/Multipart","http/MultipartParser","http/MultipartParser/HeadersParser","http/UrlParams","index","net","net/AddressResolver","net/Dns","observability","observability/OtlpExporter","observability/OtlpSerialization","persistence","persistence/KeyValueStore","persistence/PersistedQueue","persistence/Persistence","persistence/RateLimiter","persistence/Redis","process","process/ChildProcessSpawner","reactivity","reactivity/Hydration","reactivity/Reactivity","rpc","rpc/Rpc","rpc/RpcClient","rpc/RpcClientError","rpc/RpcSchema","rpc/RpcSerialization","rpc/RpcServer","rpc/RpcWorker","schema/SchemaCompiler","schema/index","socket","socket/DatagramSocket","socket/Socket","sql","sql/Migrator","sql/SqlClient","sql/SqlConnection","sql/SqlError","sql/Statement","testing","workers","workers/Transferable","workers/Worker","workers/WorkerError","workers/WorkerRunner","workflow","workflow/Activity","workflow/DurableDeferred","workflow/Workflow","workflow/WorkflowEngine"],"rekeyed":[{"subpath":"schema","key":"schema/index","shadows":"Schema"}],"types":"E:\\role-model-run115\\s16-scratch\\role-model-router\\packages\\effect\\dist\\types"}
+@role-model-router/gateway-smoke:build: cache miss, executing 9089893f360b9e1d
+@role-model-router/retrieval-receipt:build: cache miss, executing f840084bb9404749
+@role-model-router/sqlite-memory:build: cache miss, executing 6a9d51bc9f130f7f
+@role-model/store-contract:build: cache miss, executing 0390f5843b834cb4
+@role-model-router/runtime-web:build: cache miss, executing facc1ca2954ff574
+@role-model-router/provider-litellm:build: cache miss, executing 474d426f5175cac0
+@role-model-router/adapter-execution:build: cache miss, executing a640c92db8126693
+@role-model-router/ui-parity:build: cache miss, executing e54bf58be8542406
+@role-model-router/provider-mcp:build: cache miss, executing 2627509a98c6047f
+@try-works/pi-role-model:build: cache miss, executing d51de5ceb8947fe7
+@role-model/protocol-types:build: cache hit, replaying logs f87da6cbe6894d11
+@role-model/protocol-types:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model/protocol-types:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model/protocol-types:build: $ tsc -p tsconfig.json
+effect-mq:build: cache miss, executing 12b38ed50f4ebd01
+@role-model/packaging:build: cache miss, executing 56664f23fe99e37b
+@role-model/schema-tools:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model/schema-tools:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model/schema-tools:build: $ tsc -p tsconfig.json
+@role-model-router/roles:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/roles:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@role-model-router/roles:build: $ tsc -p tsconfig.json
+@role-model-router/vendor-litellm:build: [WARN] This project is configured to use 10.6.5 of pnpm. Your current pnpm is v11.28.5
+@role-model-router/vendor-litellm:build: Corepack invoked pnpm with this version, and pnpm does not switch versions when running under corepack.
+@try-works/dsh-role-model:build: 
+@try-works/dsh-role-model:build:   lib\index.js  137.4kb
+@try-works/dsh-role-model:build: 
+@try-works/dsh-role-model:build: Done in 263ms
+@role-model/docs-site#build:  ERROR  command (E:\role-model-run115\s16-scratch\apps\docs-site) D:\deepseek-harness\node_modules\.bin\pnpm.CMD run build exited (1)
+
+ Tasks:    5 successful, 52 total
+Cached:    5 cached, 52 total
+  Time:    2.538s 
+Failed:    @role-model/docs-site#build
+
+ ERROR  run failed: command  exited (1)
+ ELIFECYCLE  Command failed with exit code 1.

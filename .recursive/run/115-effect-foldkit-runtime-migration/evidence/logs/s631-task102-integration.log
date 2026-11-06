@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s631-task102-integration.test.ts (7 tests) 393ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  20:09:19
+   Duration  25.48s (transform 11.45s, setup 0ms, collect 19.44s, tests 393ms, environment 3.85s, prepare 682ms)
+

@@ -1,0 +1,41 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/release-host-resources.test.ts (5 tests | 1 failed | 4 skipped) 31ms
+   ↓ S87a releaseHostResources > releases server, packaged runtime then extension runtime in order
+   × S87a releaseHostResources > keeps going after a throwing server and names the failing step 28ms
+     → expected [ 'server' ] to deeply equal [ 'server', 'packaged', 'extension' ]
+   ↓ S87a releaseHostResources > still attempts extensionRuntime when the packaged runtime throws
+   ↓ S87a releaseHostResources > is idempotent for the same release functions
+   ↓ S87a releaseHostResources > skips absent resources and uses backend when there is no packaged runtime
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/release-host-resources.test.ts > S87a releaseHostResources > keeps going after a throwing server and names the failing step
+AssertionError: expected [ 'server' ] to deeply equal [ 'server', 'packaged', 'extension' ]
+
+- Expected
++ Received
+
+  [
+    "server",
+-   "packaged",
+-   "extension",
+  ]
+
+ ❯ test/release-host-resources.test.ts:23:20
+     21|     const seen: string[] = [];
+     22|     const result = await releaseHostResources({ server: step("server",…
+     23|     expect(events).toEqual(["server", "packaged", "extension"]);
+       |                    ^
+     24|     expect(result.released).toEqual(["packaged", "extension"]);
+     25|     expect(result.errors.map((entry) => entry.step)).toEqual(["server"…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 skipped (5)
+   Start at  02:52:39
+   Duration  884ms (transform 99ms, setup 0ms, collect 95ms, tests 31ms, environment 0ms, prepare 262ms)
+

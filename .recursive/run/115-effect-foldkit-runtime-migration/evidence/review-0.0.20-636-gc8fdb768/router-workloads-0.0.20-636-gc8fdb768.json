@@ -1,0 +1,11 @@
+{
+  "route": "/router/workloads",
+  "postureDiagnostics": 1,
+  "entries": 1,
+  "placeholderMarkers": [
+    "—",
+    "No posture entries are configured yet.",
+    "No Workloads entries are configured yet."
+  ],
+  "body": "Skip to content\nrole-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nMODELS\nREQUESTS\nCACHE\n53%\nROUTER ENDPOINT\n127.0.0.1:3458/v1\n—\nWorkloads\nOverview\nRouting strategy\nAgent strategy\nWorkloads\nController\nCandidates\nDecisions\nWorkloads\n\nWorkload postures stored in the workloads block of the unified runtime config.\n\nNo posture entries are configured yet.\n\nPosture diagnostics\n\nViolations and capability warnings the runtime raised for the saved entries on this page. A scope that cannot resolve is reported on its own entry.\n\nNo diagnostics readback available yet.\n\nWorkload templates\n\nStart from a workload template, then save the block.\n\nUse batch template\nUse embedding template\nEntries\n\n0 saved · edit the JSON block below to add, change or remove entries; saving replaces the whole block.\n\nNo Workloads entries are configured yet.\n\nAdd workload\nSave Workloads\nWorkloads JSON\n\nThis is the exact block the host persists; saving replaces the whole block.\n\nworkloads (JSON)\nSave Workloads\nReload from host"
+}

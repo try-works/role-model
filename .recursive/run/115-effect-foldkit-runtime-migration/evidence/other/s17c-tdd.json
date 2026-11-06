@@ -1,0 +1,63 @@
+{
+  "slice": "s17c-transport-repairs (residual follow-up)",
+  "requirement": "R26 transport: every recorder site either wired or explicitly residual",
+  "status": "complete",
+  "residualTable": [
+    {
+      "site": "index.ts:20961 (was :20888) - deferred route-capture drain",
+      "reachable": false,
+      "why": "runs from the 15 s background queue timer after the request that enqueued the capture has ended; no caller or request context exists to abort",
+      "action": "unchanged; recorded as an explicit residual in the module doc (track-b-operations.ts:1672-1682) and here"
+    },
+    {
+      "site": "index.ts:33839 (was :33809) - legacy terminal-failure recovery HTTP route",
+      "reachable": false,
+      "why": "the route handler contract is (body) => Promise<unknown>; no AbortSignal is in scope at the recorder call, and the operation is a durable admin recovery that should commit rather than be truncated",
+      "action": "unchanged; explicit residual"
+    },
+    {
+      "site": "index.ts:30391 and :30563 - recordDirectContribution call sites (was the aggregate recorder at :20948)",
+      "reachable": true,
+      "why": "both executeChatCompletions and executeResponses have requestOptions?.abortSignal in scope",
+      "action": "wired: DirectContributionInput.abortSignal added; extracted recordDirectContributionWith (index.ts:20551) forwards it as recordContributionAggregate(..., { signal }) (index.ts:20586); both call sites pass abortSignal: requestOptions?.abortSignal",
+      "test": "'forwards the reachable request signal to the direct contribution recorder' - fake recorder observes the exact AbortSignal instance",
+      "mutationRed": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17c-red-contribution.log",
+        "mutation": "helper stops forwarding { signal: input.abortSignal }",
+        "result": "expected undefined to be AbortSignal { aborted: false }"
+      }
+    },
+    {
+      "site": "index.ts:31190 (was :31160) - track-b contribution aggregate HTTP route",
+      "reachable": false,
+      "why": "the route handler contract is (body) => Promise<unknown>; no AbortSignal is in scope at the recorder call. Wiring it requires threading a signal through the backend route interface",
+      "action": "unchanged; explicit residual"
+    }
+  ],
+  "alreadyWired": [
+    "index.ts:28609 routed-capture fallback -> recordLocalRouteCapture(..., { signal: executionOptions?.requestOptions?.abortSignal })",
+    "index.ts:29545 direct capture -> recordLocalRouteCapture(routeCapturePayload, { signal: executionOptions?.requestOptions?.abortSignal })"
+  ],
+  "previousRepairs": {
+    "gap1": "operations accept { signal }; requestPrivate forwards to privateRetentionRequest; real-entry abort test (s17c-red-gap1.log)",
+    "gap2": "body.locked === false after success/status/abort; real add/removeEventListener counts; listener cancels active reader; s17c-red-release.log / s17c-red-listener.log",
+    "gap3": "status and timeout pinned to 1 call / no sleeps on direct and Effect paths; connection retry 5 calls / [250,1000,2500,5000] both paths; s17c-red-status.log / s17c-red-timeout.log"
+  },
+  "green": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17c-green.log",
+    "files": 8,
+    "tests": 277,
+    "passed": 277,
+    "exit": 0,
+    "s17aTests": 11
+  },
+  "typecheck": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s17c-tsc.log",
+    "exit": 0
+  },
+  "files": {
+    "role-model-router/apps/runtime-host-bridge/src/index.ts": "DirectContributionInput.abortSignal; recordDirectContributionWith extraction; two call sites pass requestOptions.abortSignal",
+    "role-model-router/apps/runtime-host-bridge/src/track-b-operations.ts": "module-doc residual block naming the three non-interruptible sites and why",
+    "role-model-router/apps/runtime-host-bridge/test/s17a-transport-signal.test.ts": "contribution forwarding test (11 total)"
+  }
+}

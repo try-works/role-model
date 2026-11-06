@@ -1,0 +1,199 @@
+COMMAND: node --test scripts/runtime/parity-selfcheck.test.mjs
+CWD: public worktree ; S294 strict RED against the zeroed contract skeleton
+EXIT_CODE=1
+
+✖ S294 PASSED when both builds are deterministic, clean and the dual comparison is recorded (10.9499ms)
+✖ S294 a React-vs-Foldkit difference is classified, never forced equal (1.1093ms)
+✖ S294 FAILED when a build is nondeterministic across the two runs (1.0142ms)
+✖ S294 FAILED when a capture surfaces console or network issues (1.0023ms)
+✖ S294 FAILED (not NOT_RUN) when a build target is unavailable (1.0765ms)
+✖ S294 NOT_RUN with exit 2 only when no browser is available (0.9322ms)
+✖ S294 runSelfcheck captures every target twice (two runs) and evaluates the result (1.2438ms)
+✖ S294 planTargets names the React and Foldkit static roots from the repo root (0.8539ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 0
+ℹ fail 8
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 370.3435
+
+✖ failing tests:
+
+test at scripts\runtime\parity-selfcheck.test.mjs:36:1
+✖ S294 PASSED when both builds are deterministic, clean and the dual comparison is recorded (10.9499ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'NOT_RUN'
+  - 'PASSED'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:44:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'NOT_RUN',
+    expected: 'PASSED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\runtime\parity-selfcheck.test.mjs:54:1
+✖ S294 a React-vs-Foldkit difference is classified, never forced equal (1.1093ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'NOT_RUN'
+  - 'PASSED'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:60:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'NOT_RUN',
+    expected: 'PASSED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\runtime\parity-selfcheck.test.mjs:65:1
+✖ S294 FAILED when a build is nondeterministic across the two runs (1.0142ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'NOT_RUN'
+  - 'FAILED'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:71:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'NOT_RUN',
+    expected: 'FAILED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\runtime\parity-selfcheck.test.mjs:76:1
+✖ S294 FAILED when a capture surfaces console or network issues (1.0023ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'NOT_RUN'
+  - 'FAILED'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:83:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'NOT_RUN',
+    expected: 'FAILED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\runtime\parity-selfcheck.test.mjs:87:1
+✖ S294 FAILED (not NOT_RUN) when a build target is unavailable (1.0765ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'NOT_RUN'
+  - 'FAILED'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:94:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'NOT_RUN',
+    expected: 'FAILED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\runtime\parity-selfcheck.test.mjs:98:1
+✖ S294 NOT_RUN with exit 2 only when no browser is available (0.9322ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - 'no-browser-available'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:101:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: 'no-browser-available',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\runtime\parity-selfcheck.test.mjs:105:1
+✖ S294 runSelfcheck captures every target twice (two runs) and evaluates the result (1.2438ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'NOT_RUN'
+  - 'PASSED'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:116:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'NOT_RUN',
+    expected: 'PASSED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\runtime\parity-selfcheck.test.mjs:122:1
+✖ S294 planTargets names the React and Foldkit static roots from the repo root (0.8539ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  0 !== 2
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck.test.mjs:124:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 0,
+    expected: 2,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+

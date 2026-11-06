@@ -1,0 +1,50 @@
+{
+  "slice": "s13e-chart-interaction",
+  "requirement": "R9 chart interaction/range/theme/multi-instance",
+  "interactionModel": "Pure Foldkit view + pure ChartInteractionState. Rm3ChartConfig gained optional theme and interaction (hiddenSeriesIds, tooltip, onToggleSeries, onShowPoint, onHideTooltip). Legend entries are buttons dispatching ToggleSeries; point circles dispatch ShowPoint on click/mouse-enter and carry an exact aria-label plus SVG <title>; a selected point renders a data-chart-tooltip overlay. Hidden series are removed from both SVG and the accessible table while their legend entry remains toggleable.",
+  "tokenMechanism": "chartInteractionState.requestToken is monotonic per chart instance. SwitchRange increments it and returns a ChartRangeCommand {type:'LoadChartRange', token, range}; RangeLoaded applies only when token === state.requestToken, otherwise the state/series are returned unchanged. No global ids/module state.",
+  "proofs": [
+    {
+      "id": "legend-table",
+      "test": "legend toggles Local off; path count 2->1; table no longer contains 'Local'; aria-pressed false; toggling back restores both",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13e-red-legend-table.log (table rendered from all series, hidden Local remained)"
+    },
+    {
+      "id": "tooltip",
+      "test": "click remote 09:05 point: data-chart-tooltip text 'Remote: 09:05 = 7 req'; circle accessible name is the same exact string",
+      "red": "covered by legend-table mutation run (Scene interaction active)"
+    },
+    {
+      "id": "stale-range",
+      "test": "switch 1h->24h (token1)->7d (token2); resolve token2 new first, then token1 old last; state.series is new, range 7d, rendered chart contains New and not Old",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13e-red-stale.log (token guard disabled; old resolved last won)"
+    },
+    {
+      "id": "theme",
+      "test": "light/dark serialized; after replacing only rm3-chart-theme-* with THEME the serialized structure is identical; 6 points both sides; no id",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13e-red-theme.log (dark shifted series color index; structure differed beyond theme class)"
+    },
+    {
+      "id": "multi-instance",
+      "test": "two charts in one view: 2 rm3-chart-svg, 3 series paths, 9 points; no '\"id\"'; hiding local in chart A leaves chart B hiddenSeriesIds []",
+      "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13e-red-multi-id.log (fixed svg id introduced collision)"
+    }
+  ],
+  "files": {
+    "role-model-router/packages/ui/src/foldkit-chart.ts": "f0f428fd9d08e16114a11aaae8d3936ac7984ea4f97fe6e3ec213aea7740838f",
+    "role-model-router/packages/ui/src/foldkit-chart-interaction.ts": "0200bbf6f4436f6bdfafeac5d0a00f3c2d899394b1e38388f1e0e3fe08ba59e6",
+    "role-model-router/packages/foldkit/test/s13e-chart-interaction.scene.test.ts": "6100e98eacda85061323b53591a15019ffe7f3849f0cfaaa74486b06f60cfeaf"
+  },
+  "testRuns": {
+    "command": "vitest s13e + s13b Foldkit chart",
+    "total": 17,
+    "passed": 17,
+    "failed": 0,
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s13e-green.log",
+    "typecheck": "tsc -p role-model-router/packages/ui/tsconfig.foldkit.json --noEmit: exit 0",
+    "biome": "biome check 3 files: exit 0"
+  },
+  "constraints": "Pure SVG only; no ECharts, canvas, dependency, host, wrapper, root, lockfile, vendor or private change. No client app file was needed because the range Command lives in the UI interaction module.",
+  "unproven": "The interaction model is a pure/Scene proof, not a browser pointer/keyboard session; resize behavior and the real page's range loader wiring are outside this slice."
+}

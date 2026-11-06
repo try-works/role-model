@@ -1,0 +1,21 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+ ❯ test/s13b-foldkit-chart.test.ts (3 tests | 1 failed | 2 skipped) 33ms
+   ↓ RM3 chart primitive > renders a pure SVG with axes, one token-coloured path per series, points and an accessible name
+   × RM3 chart primitive > renders a numeric HTML text alternative with a caption, headers and every value 31ms
+     → Expected element matching "table" to exist but it does not.
+   ↓ RM3 chart primitive > renders an explicit empty state instead of an empty chart
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s13b-foldkit-chart.test.ts > RM3 chart primitive > renders a numeric HTML text alternative with a caption, headers and every value
+Error: Expected element matching "table" to exist but it does not.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 skipped (3)
+   Start at  01:24:49
+   Duration  4.40s (transform 1.79s, setup 0ms, collect 2.86s, tests 33ms, environment 701ms, prepare 302ms)
+

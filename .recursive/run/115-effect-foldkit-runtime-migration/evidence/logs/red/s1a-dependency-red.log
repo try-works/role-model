@@ -1,0 +1,61 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+ ❯ test/compare.test.ts (35 tests | 1 failed) 43ms
+   × compareRequestTraces > rejects equal captures with an undeclared dependency 20ms
+     → expected 0 to be greater than 0
+   ✓ compareRequestTraces > rejects equal self-dependent captures 1ms
+   ✓ compareRequestTraces > rejects equal cyclic captures 1ms
+   ✓ compareRequestTraces > allows an explicitly reserved scenario-action root 2ms
+   ✓ compareRequestTraces > matches repeated same-step independent read variants as a multiset 1ms
+   ✓ compareRequestTraces > rejects a dependent read moved before its mutation predecessor 1ms
+   ✓ compareRequestTraces > rejects a write moved before the read that authorizes it 1ms
+   ✓ compareRequestTraces > returns no differences for identical captures 0ms
+   ✓ compareRequestTraces > returns no differences for two empty captures 1ms
+   ✓ compareRequestTraces > ignores volatile request ids and matches on stable step labels 1ms
+   ✓ compareRequestTraces > canonicalizes method case, header name case/order, and query key order 1ms
+   ✓ compareRequestTraces > preserves repeated query value order 1ms
+   ✓ compareRequestTraces > preserves repeated header value order 1ms
+   ✓ compareRequestTraces > reports a changed method 0ms
+   ✓ compareRequestTraces > reports a changed path 0ms
+   ✓ compareRequestTraces > reports a changed query value 0ms
+   ✓ compareRequestTraces > distinguishes a missing body from an empty body 0ms
+   ✓ compareRequestTraces > reports a changed body without leaking its bytes 1ms
+   ✓ compareRequestTraces > reports a changed status 1ms
+   ✓ compareRequestTraces > reports a changed terminal stream 1ms
+   ✓ compareRequestTraces > reports a changed terminal error 0ms
+   ✓ compareRequestTraces > reports a changed non-auth header without leaking its value 0ms
+   ✓ compareRequestTraces > compares an authorization scheme case-insensitively 0ms
+   ✓ compareRequestTraces > reports a changed authorization scheme 0ms
+   ✓ compareRequestTraces > reports a changed authorization credential without leaking it 0ms
+   ✓ compareRequestTraces > reports a changed api key as an auth-sensitive header 0ms
+   ✓ compareRequestTraces > reports a changed causal dependency 0ms
+   ✓ compareRequestTraces > requires an explicit dependency label for mutations 0ms
+   ✓ compareRequestTraces > ignores independent read order and keeps duplicate reads 0ms
+   ✓ compareRequestTraces > reports a missing duplicate read 0ms
+   ✓ compareRequestTraces > reports an extra independent read 0ms
+   ✓ compareRequestTraces > matches tool and turn dependencies by stable causal labels 0ms
+   ✓ compareRequestTraces > preserves causal write order instead of sorting writes by endpoint 0ms
+   ✓ compareRequestTraces > bounds findings to one per mismatched field 1ms
+   ✓ compareRequestTraces > reports a changed event kind 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/compare.test.ts > compareRequestTraces > rejects equal captures with an undeclared dependency
+AssertionError: expected 0 to be greater than 0
+ ❯ test/compare.test.ts:26:59
+     24|   it("rejects equal captures with an undeclared dependency", () => {
+     25|     const write = trace({ step: "write", kind: "mutation", dependency:…
+     26|     expect(compareRequestTraces([write], [write]).length).toBeGreaterT…
+       |                                                           ^
+     27|   });
+     28|   it("rejects equal self-dependent captures", () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 34 passed (35)
+   Start at  18:38:26
+   Duration  2.22s (transform 299ms, setup 0ms, collect 290ms, tests 43ms, environment 1ms, prepare 604ms)
+

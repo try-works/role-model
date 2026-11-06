@@ -1,0 +1,155 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node
+
+(node:23124) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:16296) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:75396) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56988) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s273-cleanup.test.ts (11 tests | 3 failed) 174ms
+   × S273 suspended transaction cleanup > keeps the inspect primary identity after release and commit both fail, and attempts both 50ms
+     → Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
++   'commit',
+    'release',
+-   'commit'
+  ]
+
+   × S273 suspended transaction cleanup > surfaces a release-only cleanup failure instead of swallowing it 7ms
+     → Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
++   'commit',
+    'release',
+-   'commit'
+  ]
+
+   ✓ S273 suspended transaction cleanup > surfaces a commit-only cleanup failure instead of swallowing it 2ms
+   × S273 suspended transaction cleanup > attempts release and commit when ready rejects, leaving no suspended transaction unjoined 5ms
+     → Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
++   'commit',
+    'release',
+-   'commit'
+  ]
+
+   ✓ S273 suspended transaction cleanup > preserves every falsey inspect primary even when a cleanup step fails 3ms
+   ✓ S273 suspended transaction cleanup > surfaces every falsey cleanup-only failure instead of treating it as absent 2ms
+   ✓ S273 temp database ownership cleanup > closes the acquired database before rethrowing a failed setup 45ms
+   ✓ S273 temp database ownership cleanup > closes and removes the owned database on a passing teardown 39ms
+   ✓ S273 temp database ownership cleanup > attempts every teardown step and reports each failure separately 2ms
+   ✓ S273 temp database ownership cleanup > does not mask an existing test failure but reports teardown errors separately 2ms
+   ✓ S273 temp database ownership cleanup > throws when teardown cleanup is the sole failure instead of suppressing it 1ms
+ ✓ test/sqlite-service.test.ts (11 tests) 496ms
+ ✓ test/s268-mixed-owner.test.ts (7 tests) 452ms
+ ✓ test/s18a-sql-truth.test.ts (10 tests) 3636ms
+   ✓ S18a blocking measurement > blocks the event loop for a whole synchronous statement whose work persists, relative to the idle timer baseline  2218ms
+   ✓ S18a blocking measurement > blocks through a whole synchronous transaction whose rows commit, relative to the idle timer baseline  491ms
+   ✓ S18a backup/restore owner fence > characterizes restore while an owner connection is active: no logical fence, only OS file locking  301ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s273-cleanup.test.ts > S273 suspended transaction cleanup > keeps the inspect primary identity after release and commit both fail, and attempts both
+AssertionError: Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
++   'commit',
+    'release',
+-   'commit'
+  ]
+
+
+- Expected
++ Received
+
+  [
+-   "release",
+    "commit",
++   "release",
+  ]
+
+ ❯ test/s273-cleanup.test.ts:82:12
+     80|     assert.equal(settled.rejected, true);
+     81|     assert.equal(settled.reason, primary);
+     82|     assert.deepEqual(attempted, ["release", "commit"]);
+       |            ^
+     83|     assert.deepEqual(
+     84|       reported.map((failure) => failure.step),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/s273-cleanup.test.ts > S273 suspended transaction cleanup > surfaces a release-only cleanup failure instead of swallowing it
+AssertionError: Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
++   'commit',
+    'release',
+-   'commit'
+  ]
+
+
+- Expected
++ Received
+
+  [
+-   "release",
+    "commit",
++   "release",
+  ]
+
+ ❯ test/s273-cleanup.test.ts:114:12
+    112|     assert.equal(settled.rejected, true);
+    113|     assert.equal(settled.reason, releaseError);
+    114|     assert.deepEqual(attempted, ["release", "commit"]);
+       |            ^
+    115|     assert.deepEqual(
+    116|       reported.map((failure) => failure.step),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/s273-cleanup.test.ts > S273 suspended transaction cleanup > attempts release and commit when ready rejects, leaving no suspended transaction unjoined
+AssertionError: Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
++   'commit',
+    'release',
+-   'commit'
+  ]
+
+
+- Expected
++ Received
+
+  [
+-   "release",
+    "commit",
++   "release",
+  ]
+
+ ❯ test/s273-cleanup.test.ts:173:12
+    171|     assert.equal(settled.reason, readyError);
+    172|     assert.equal(inspected, false);
+    173|     assert.deepEqual(attempted, ["release", "commit"]);
+       |            ^
+    174|   });
+    175| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  3 failed | 36 passed (39)
+   Start at  15:48:44
+   Duration  20.60s (transform 10.37s, setup 0ms, collect 49.48s, tests 4.76s, environment 7ms, prepare 4.52s)
+

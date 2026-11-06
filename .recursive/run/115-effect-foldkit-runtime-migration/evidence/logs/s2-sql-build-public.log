@@ -1,0 +1,11 @@
+▲ [WARNING] Cannot find base config file "../../../tsconfig.base.json" [tsconfig.json]
+
+    vendor/effect/packages/sql/sqlite-node/tsconfig.json:3:13:
+      3 │   "extends": "../../../tsconfig.base.json",
+        ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+{"status":"PASS","package":"@effect/sql-sqlite-node","entries":["index"]}
+COMMAND: node role-model-router/packages/sql-sqlite-node/build.mjs
+CWD: D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+TIMESTAMP: 2026-10-24T13:38:06.465Z
+EXIT_CODE: 0

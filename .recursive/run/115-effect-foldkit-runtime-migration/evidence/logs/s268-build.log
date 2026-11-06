@@ -1,0 +1,7 @@
+▲ [WARNING] Cannot find base config file "../../../tsconfig.base.json" [tsconfig.json]
+
+    ../../../vendor/effect/packages/sql/sqlite-node/tsconfig.json:3:13:
+      3 │   "extends": "../../../tsconfig.base.json",
+        ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+{"status":"PASS","package":"@effect/sql-sqlite-node","entries":["index"]}

@@ -1,0 +1,40 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/r27-composition.test.ts (3 tests | 1 failed | 2 skipped) 82ms
+   × R27/B6 scoped host composition > releases server then backend in reverse acquisition order 73ms
+     → expected [ 'acquire:backend', 'acquire:server' ] to deeply equal [ 'acquire:backend', …(3) ]
+   ↓ R27/B6 scoped host composition > a failed server acquisition releases the already-acquired backend
+   ↓ R27/B6 scoped host composition > a throwing server finalizer does not skip the backend release
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/r27-composition.test.ts > R27/B6 scoped host composition > releases server then backend in reverse acquisition order
+AssertionError: expected [ 'acquire:backend', 'acquire:server' ] to deeply equal [ 'acquire:backend', …(3) ]
+
+- Expected
++ Received
+
+  [
+    "acquire:backend",
+    "acquire:server",
+-   "release:server",
+-   "release:backend",
+  ]
+
+ ❯ test/r27-composition.test.ts:42:20
+     40|     expect(Context.get(context, Server).id).toBe("server");
+     41|     expect(Context.get(context, Backend).id).toBe("backend");
+     42|     expect(events).toEqual([
+       |                    ^
+     43|       "acquire:backend",
+     44|       "acquire:server",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 skipped (3)
+   Start at  22:24:56
+   Duration  6.52s (transform 3.39s, setup 0ms, collect 5.37s, tests 82ms, environment 1ms, prepare 358ms)
+

@@ -1,0 +1,65 @@
+{
+  "slice": "s5c-supervisor-repairs",
+  "requirement": "R22 supervisor repair of S5b HOLD findings",
+  "status": "all three code fixes landed; fix 3 RED/GREEN executed on Windows; fixes 1-2 are POSIX-only tests skipped on this host",
+  "files": {
+    "role-model-router/packages/process-supervisor/src/index.ts": "54b440ef6c070e449c5439006fbdfb81da00bc5d6ffc9a5df2c56169655bff07",
+    "role-model-router/packages/process-supervisor/test/s5b-process-lifecycle.test.ts": "e149ba60492fc42030e4dab8e459846df769c60043f407fae1d4a09f94bd03fc",
+    "role-model-router/packages/process-supervisor/test/s5c-supervisor-repairs.test.ts": "7338b5cbd39c486369e8f392140bd70092ddcedda8219fc6da773f20b59eb61c"
+  },
+  "fixes": [
+    {
+      "id": "double-signal",
+      "code": "src/index.ts:539-550: after the shutdown bound, one 25ms settle turn is raced against stopDeferred; the escalation guard is now child.exitCode === null && record.exitInfo === null, so an exit event that lands just after the timer prevents SIGKILL. record.exitInfo is set on the exit event (:526-535).",
+      "test": "s5c-supervisor-repairs.test.ts POSIX-only: prompt child delays its SIGTERM exit by 10ms while shutdownTimeoutMs=1, repeated 5 times; asserts escapedGraceful=false and forceSignal=null every run.",
+      "red": "NOT EXECUTED on this Windows host (POSIX-only). The mutation (remove the exitInfo/settle guard) is not runnable here; platform-limited evidence declared."
+    },
+    {
+      "id": "bounds",
+      "code": "s5b-process-lifecycle.test.ts: escalation now asserts escalatedAfterMs >= shutdownTimeoutMs (150) and elapsed >= shutdownTimeoutMs; prompt asserts elapsed < shutdownTimeoutMs (1000). Implementation timer is SHUTDOWN bound plus a 25ms settle slack (src/index.ts:12, :539-543).",
+      "test": "POSIX-only escalation and prompt tests (2 skipped on Windows).",
+      "red": "NOT EXECUTED on this Windows host. A sleep(100) mutant would now fail the >=150 assertion, and wait-the-bound-then-do-not-escalate would fail elapsed < 1000, but neither mutation is runnable where the tests are skipped."
+    },
+    {
+      "id": "windows-bound",
+      "code": "src/index.ts:36, :354, :366, :381-385 allow an injected terminationRunner; Windows stop races stopDeferred against shutdownTimeoutMs and throws typed ProcessStopTimeoutError (code PROCESS_STOP_TIMEOUT) when the child is still alive (:526-534). stopVendor resets the failed promise so a later cleanup can retry (:488-492).",
+      "test": "s5c-supervisor-repairs.test.ts Windows-only: injected runner no-ops (simulated failed/denied taskkill), shutdownTimeoutMs=100; stop rejects within <1100ms with PROCESS_STOP_TIMEOUT instead of hanging.",
+      "red": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5c-red-taskkill.log",
+        "mutation": "runner ignored / no injected bound",
+        "failure": "expected 'resolved' to be 'rejected'"
+      },
+      "green": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5c-green.log",
+        "result": "rejects in ~100ms bound window, typed code, suite exit 0"
+      }
+    }
+  ],
+  "evidenceGaps": {
+    "posixSchedule": "Skipped on this Windows host; the POSIX grace->SIGKILL timing and prompt-no-escalation claims remain platform-limited evidence, not verified here.",
+    "sea": "R22 also names SEA tests; this slice has no SEA evidence and does not claim it."
+  },
+  "testRuns": [
+    {
+      "command": "vitest run index + health-wait-timeout + s5b + s5c",
+      "total": 16,
+      "passed": 13,
+      "skipped": 3,
+      "failed": 0,
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5c-green.log"
+    },
+    {
+      "command": "tsc -p tsconfig.json --noEmit",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5c-typecheck.log"
+    },
+    {
+      "command": "biome check src/index.ts test/s5b-process-lifecycle.test.ts test/s5c-supervisor-repairs.test.ts",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s5c-biome-check.log"
+    }
+  ],
+  "slack": "25ms STOP_ESCALATION_SETTLE_MS after the bound; escalation assertion uses the bound itself (150ms), so the mutant sleep(100) cannot pass.",
+  "unproven": "POSIX fix 1 and fix 2 behavior on this host; R22 SEA."
+}

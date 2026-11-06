@@ -1,0 +1,40 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s612-tanstack-chart.test.ts (7 tests | 1 failed) 310ms
+   ✓ S612 TanStack chart adapter > renders responsive, accessible static SVG through TanStack Charts 41ms
+   ✓ S612 TanStack chart adapter > keeps one series per color and handles a null point without inventing data 5ms
+   × S612 TanStack chart adapter > returns an empty-state svg instead of a broken chart when there are no points 16ms
+     → expected 2 to be 1 // Object.is equality
+   ✓ S612 telemetry chart card visible contract > renders the visible TanStack svg plus the visible numeric table for a line card 132ms
+   ✓ S612 telemetry chart card visible contract > renders a TanStack bar scene for a bar card 51ms
+   ✓ S612 telemetry chart card visible contract > keeps a null bucket as a gap without NaN and still renders the table row 48ms
+   ✓ S612 telemetry chart card visible contract > renders the empty state svg and table without asserting fabricated points 12ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s612-tanstack-chart.test.ts > S612 TanStack chart adapter > returns an empty-state svg instead of a broken chart when there are no points
+AssertionError: expected 2 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ test/s612-tanstack-chart.test.ts:40:59
+     38|     expect(svg).toContain('aria-label="Empty"');
+     39|     expect(svg).not.toContain("<path");
+     40|     expect((svg.match(/data-chart-part=/g) ?? []).length).toBe(1);
+       |                                                           ^
+     41|     expect((svg.match(/data-chart-series-count=/g) ?? []).length).toBe…
+     42|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 passed (7)
+   Start at  20:16:50
+   Duration  15.53s (transform 6.75s, setup 0ms, collect 11.59s, tests 310ms, environment 2.42s, prepare 481ms)
+

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "role-model.store-degradation-receipts.v1",
+  "store": {
+    "available": true,
+    "receipts": []
+  },
+  "worker": {
+    "available": true,
+    "receipts": []
+  }
+}

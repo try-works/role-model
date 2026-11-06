@@ -1,0 +1,117 @@
+{
+  "slice": "s26a-route-inventory",
+  "requirement": "R13 route/component inventory as data with drift test and dependency waves",
+  "inventory": {
+    "path": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/other/s26a-route-inventory.json",
+    "sha256": "c51d7a758c6b63dbb5e9ca6fbe4a44875b9b11d9df3ba26a2c3c8f9efb5fc2ff",
+    "schema": "role-model.route-inventory.v1",
+    "scanned": "apps/runtime-ui/app/routes/*.tsx (51 files, test files excluded) + apps/runtime-ui/app/components/*.tsx (21 files, test files excluded)",
+    "routeRows": 51,
+    "componentRows": 21,
+    "totalRows": 72,
+    "newOnlyRows": 1,
+    "categories": {
+      "read": 25,
+      "control": 32,
+      "write": 2,
+      "heavy": 2,
+      "learning": 3,
+      "studio": 3,
+      "modal": 1,
+      "palette": 0,
+      "media": 2,
+      "device-auth": 2
+    },
+    "statuses": {
+      "absent": 68,
+      "scaffolded": 4,
+      "wired": 0,
+      "verified": 0,
+      "newOnlyVerified": 1
+    },
+    "scaffolded": [
+      "route:app-layout",
+      "route:index",
+      "route:not-found",
+      "component:app-shell"
+    ],
+    "newOnlyVerified": [
+      {
+        "id": "new-only:diagnostics",
+        "path": "/diagnostics/:id",
+        "proof": "apps/runtime-ui-next/test/diagnostics.test.ts",
+        "endpoint": "/api/role-model/operator/diagnostics"
+      }
+    ],
+    "note": "No legacy route is wired or verified; the Foldkit shell/layout are placeholders, not ports of the legacy journeys. Diagnostics is a new run115 route with no legacy counterpart and is counted separately."
+  },
+  "driftTest": {
+    "path": "role-model-router/apps/runtime-ui-next/test/s26a-route-inventory.test.ts",
+    "sha256": "f6b489bdc1e1f4f9e0365b26ca63a18b2ba5730bc53195f7f0bf61abb3c54b9f",
+    "checks": [
+      "every row source path exists",
+      "category/status are in the fixed vocabulary",
+      "route rows have non-empty unique routePaths; verified rows name an existing proof test",
+      "every .tsx in the two defined legacy directories has exactly one inventory row",
+      "a fake route file is reported as uncovered"
+    ],
+    "red": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26a-red-drift.log",
+    "redDetail": "added app/routes/__s26a_fake_route__.tsx: first test failed with the fake path in the missing list; second test also reported two uncovered entries. File removed.",
+    "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26a-green.log"
+  },
+  "waves": [
+    {
+      "id": 1,
+      "name": "Shell, layout and shared primitives",
+      "count": 8,
+      "newHostEndpoints": [],
+      "rationale": "No domain data. Shell/tokens/primitives/navigation are dependencies of every later route."
+    },
+    {
+      "id": 2,
+      "name": "Read-only telemetry and observability",
+      "count": 24,
+      "newHostEndpoints": [],
+      "rationale": "All sources are existing runtime-host-bridge read endpoints (/api/role-model/operator/*, telemetry). No new endpoint."
+    },
+    {
+      "id": 3,
+      "name": "Configuration, control and writes",
+      "count": 27,
+      "newHostEndpoints": [],
+      "rationale": "All operator/config/write endpoints already exist; forms must preserve legacy request semantics (R12)."
+    },
+    {
+      "id": 4,
+      "name": "Learning and studio/media",
+      "count": 8,
+      "newHostEndpoints": [],
+      "rationale": "Existing learning/inference/stream endpoints; depends on shell plus provider/model control from wave3."
+    },
+    {
+      "id": 5,
+      "name": "Heavy and device-auth",
+      "count": 5,
+      "newHostEndpoints": [],
+      "rationale": "Benchmark/retention/device-auth endpoints already exist; device-auth depends on provider control and modal focus/teardown."
+    }
+  ],
+  "hostEndpoints": {
+    "legacy": "No legacy route needs a new host endpoint; all are served by the existing runtime-host-bridge surface. Wave 1 has none; waves 2-5 reuse existing read/config/learning/benchmark/device-auth endpoints.",
+    "newOnly": "Diagnostics read is the only new endpoint required by the new client; it landed in S15 (/api/role-model/operator/diagnostics)."
+  },
+  "counts": {
+    "tests": 62,
+    "passed": 62,
+    "failed": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26a-green.log",
+    "typecheck": "tsc -p apps/runtime-ui-next/tsconfig.json --noEmit: exit 0",
+    "biome": "biome check drift test: exit 0"
+  },
+  "notes": [
+    "Route rows are source modules; routePaths lists every path sharing a module (learning 6, legacy-redirect 20 aliases).",
+    "Redirect-only modules are inventoried as control/navigation because they are route files; aliases inherit their target wave.",
+    "No command palette exists in the legacy client, so palette is zero rather than fabricated.",
+    "No page/product changes."
+  ]
+}

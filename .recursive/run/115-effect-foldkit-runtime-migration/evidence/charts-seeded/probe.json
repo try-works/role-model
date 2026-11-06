@@ -1,0 +1,117 @@
+{
+  "url": "http://127.0.0.1:3480",
+  "results": [
+    {
+      "route": "/",
+      "screenshot": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\.recursive\\run\\115-effect-foldkit-runtime-migration\\evidence\\charts-seeded\\overview.png",
+      "overviewCards": [
+        {
+          "title": "Model pool",
+          "paths": 0,
+          "series": null
+        },
+        {
+          "title": "Token usage over time",
+          "paths": 3,
+          "series": "3"
+        },
+        {
+          "title": "Cache efficiency trend",
+          "paths": 2,
+          "series": "2"
+        },
+        {
+          "title": "Effective cost over time",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Cost avoided over time",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Latency trend",
+          "paths": 2,
+          "series": "2"
+        },
+        {
+          "title": "Success vs failure volume",
+          "paths": 0,
+          "series": "2"
+        }
+      ],
+      "plots": [
+        {
+          "title": "Token usage over time",
+          "paths": 3,
+          "series": "3"
+        },
+        {
+          "title": "Cache efficiency trend",
+          "paths": 2,
+          "series": "2"
+        },
+        {
+          "title": "Effective cost over time",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Cost avoided over time",
+          "paths": 0,
+          "series": "0"
+        },
+        {
+          "title": "Latency trend",
+          "paths": 2,
+          "series": "2"
+        },
+        {
+          "title": "Success vs failure volume",
+          "paths": 0,
+          "series": "2"
+        }
+      ],
+      "pathCount": 8
+    },
+    {
+      "route": "/requests",
+      "screenshot": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\.recursive\\run\\115-effect-foldkit-runtime-migration\\evidence\\charts-seeded\\requests.png",
+      "overviewCards": [
+        {
+          "title": "Request volume",
+          "paths": 2,
+          "series": "2"
+        }
+      ],
+      "plots": [
+        {
+          "title": "Request volume",
+          "paths": 2,
+          "series": "2"
+        }
+      ],
+      "pathCount": 3
+    },
+    {
+      "route": "/observe/routing",
+      "screenshot": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\.recursive\\run\\115-effect-foldkit-runtime-migration\\evidence\\charts-seeded\\routing.png",
+      "overviewCards": [
+        {
+          "title": "Routing analytics volume",
+          "paths": 1,
+          "series": "1"
+        }
+      ],
+      "plots": [
+        {
+          "title": "Routing analytics volume",
+          "paths": 1,
+          "series": "1"
+        }
+      ],
+      "pathCount": 2
+    }
+  ]
+}

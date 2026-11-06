@@ -1,0 +1,45 @@
+{
+  "slice": "s38a-api-fallback",
+  "rule": "staticRoot GET fallback: existing file served; if missing AND (path /api/* or /v1/* OR Accept lacks text/html) -> 404 application/json {error:'not found'}; non-API navigation with Accept text/html -> index.html",
+  "proofs": [
+    {
+      "path": "/api/role-model/does-not-exist",
+      "accept": "text/html",
+      "status": 404,
+      "contentType": "application/json"
+    },
+    {
+      "path": "/v1/messages",
+      "accept": "application/json",
+      "status": 404,
+      "contentType": "application/json"
+    },
+    {
+      "path": "/v1/images/generations",
+      "accept": "application/json",
+      "status": 404,
+      "contentType": "application/json"
+    },
+    {
+      "path": "/api/role-model/router/strategy",
+      "accept": "text/html",
+      "status": 404,
+      "contentType": "application/json"
+    },
+    {
+      "path": "/observe/queues",
+      "accept": "text/html",
+      "status": 200,
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "path": "/assets/main.js",
+      "accept": "*/*",
+      "status": 200,
+      "contentType": "application/javascript; charset=utf-8"
+    }
+  ],
+  "test": "role-model-router/apps/runtime-host-bridge/test/index.test.ts serves the runtime UI shell from root and app routes (extended)",
+  "contractNote": "A non-API navigation request must send Accept: text/html to get the SPA index; clients without that header now get a typed 404 instead of HTML. Missing static assets also 404 rather than returning index.",
+  "hostTypecheck": "exit 0"
+}

@@ -1,0 +1,29 @@
+{
+  "capturedAt": "2026-11-05T12:53:17.828Z",
+  "question": "routing alias id spelling",
+  "findings": {
+    "production3456": {
+      "applied": true,
+      "executionMode": "remote_only",
+      "aliases": [
+        "default.remote-only",
+        "baseline.remote-only",
+        "controller.remote-only",
+        "difficulty.remote-only",
+        "hybrid.remote-only",
+        "researcher.remote-only"
+      ],
+      "note": "all hyphenated; executionMode value is remote_only but alias ids use remote-only"
+    },
+    "review3480": {
+      "aliasFamily": "same hyphenated family",
+      "baseline_remote_only_underscore": {
+        "result": "400 capability_eligibility_error no_eligible_target (no such alias id)"
+      },
+      "baseline_remote_only_hyphen": {
+        "result": "200 routed to deepseek/deepseek-flash, content {\"ok\":true,\"alias\":\"baseline.remote-only\"}"
+      }
+    }
+  },
+  "conclusion": "Per the running 0.0.20 production build the routing alias id is baseline.remote-only (hyphen). If underscore is the intended canonical spelling, that is a naming change to implement, not something the current alias resolver accepts."
+}

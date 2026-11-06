@@ -1,0 +1,13 @@
+{
+  "artifact": "02-to-be-plan.md",
+  "artifact_hash": "f79220f73c04a8a8c97c8ef7c4c3d1a3e6b1ddd058d9bc151ecdf4e2fe9bfcc1",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\.recursive\\run\\115-effect-foldkit-runtime-migration\\02-to-be-plan.md",
+  "locked_at": "2026-10-24T10:08:30Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "eaf8d6fadcc1c1ad46f2e16c5593afcf6e153e38f3071821f6be398346d191b1",
+    "00-worktree.md": "142096f8fc2e387403a46a6182405900523774469f83474da596ab642aff4e84",
+    "01-as-is.md": "1d7a97bc9d5a690e8d0430873d2dc4afeb9b37893ae7eb826e74ab955a8f52ef"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "d8312a4c4248e2c05e0075fdcdd68e24004d287719ae2681c40a42aeb5728fb7"
+}

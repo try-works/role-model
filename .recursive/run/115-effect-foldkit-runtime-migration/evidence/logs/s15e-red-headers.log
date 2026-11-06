@@ -1,0 +1,40 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/diagnostics-client.test.ts (6 tests | 1 failed | 5 skipped) 13ms
+   ↓ S15e diagnostics fetch client > builds the operator diagnostics URL and sends the expected bearer credential
+   × S15e diagnostics fetch client > sends no credential header and no spoofable owner/operator-context headers 11ms
+     → expected true to be false // Object.is equality
+   ↓ S15e diagnostics fetch client > passes every 200 state through unchanged
+   ↓ S15e diagnostics fetch client > distinguishes a 401 denial from a 403 rejection
+   ↓ S15e diagnostics fetch client > surfaces a transport rejection and a non-JSON 200 body as failures
+   ↓ S15e diagnostics fetch client > forwards the caller AbortSignal into the fetch call
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/diagnostics-client.test.ts > S15e diagnostics fetch client > sends no credential header and no spoofable owner/operator-context headers
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ test/diagnostics-client.test.ts:91:38
+     89|       "x-role-model-capability",
+     90|     ]) {
+     91|       expect(headers.has(forbidden)).toBe(false);
+       |                                      ^
+     92|     }
+     93|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 skipped (6)
+   Start at  04:16:38
+   Duration  3.84s (transform 1.57s, setup 0ms, collect 2.50s, tests 13ms, environment 678ms, prepare 192ms)
+
+EXIT_CODE: 1

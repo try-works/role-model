@@ -1,0 +1,114 @@
+COMMAND: node vitest run s448 (S448 loading/failed failclosed RED3, before toggle/readback guard)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s448-learning-scope.test.ts (7 tests | 3 failed) 59ms
+   ✓ S448 learning mutation scope authority > reads the authoritative records scopeId from the learning/records payload 5ms
+   × S448 learning mutation scope authority > uses the loaded scope in the rollback payload instead of standalone-runtime-stage 32ms
+     → expected [ { …(5) } ] to deeply equal [ { scopeId: 'scope-owner-b' } ]
+   ✓ S448 learning mutation scope authority > fails closed with an honest error when the loaded scope is missing 2ms
+   × S448 learning mutation scope authority > invalidates the old confirmation at the accepted learningPacks readback and reconfirms the new scope 6ms
+     → expected [ { …(5) } ] to deeply equal [ { scopeId: 'scope-owner-b' } ]
+   ✓ S448 learning mutation scope authority > loading or error readback clears the active scope and fails closed instead of using stale authority 3ms
+   ✓ S448 learning mutation scope authority > a pending old-scope result cannot refresh or mutate the new-scope row 1ms
+   × S448 learning mutation scope authority > RED: loading/failed records cannot fall back to a stale state scope on the second click 5ms
+     → expected [ { …(4) } ] to deeply equal []
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s448-learning-scope.test.ts > S448 learning mutation scope authority > uses the loaded scope in the rollback payload instead of standalone-runtime-stage
+AssertionError: expected [ { …(5) } ] to deeply equal [ { scopeId: 'scope-owner-b' } ]
+
+- Expected
++ Received
+
+  [
+    {
++     "reason": "operator_ui_ladder_rollback",
++     "roleId": "role.alpha",
++     "rolledBack": true,
+      "scopeId": "scope-owner-b",
++     "taskTypeId": "task.code",
+    },
+  ]
+
+ ❯ test/s448-learning-scope.test.ts:35:32
+     33|     expect(commandsOf(first)).toEqual([]);
+     34|     const second = toggle(first.model);
+     35|     expect(payloadsOf(second)).toEqual([{ scopeId: "scope-owner-b" }]);
+       |                                ^
+     36|   });
+     37| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/s448-learning-scope.test.ts > S448 learning mutation scope authority > invalidates the old confirmation at the accepted learningPacks readback and reconfirms the new scope
+AssertionError: expected [ { …(5) } ] to deeply equal [ { scopeId: 'scope-owner-b' } ]
+
+- Expected
++ Received
+
+  [
+    {
++     "reason": "operator_ui_ladder_rollback",
++     "roleId": "role.alpha",
++     "rolledBack": true,
+      "scopeId": "scope-owner-b",
++     "taskTypeId": "task.code",
+    },
+  ]
+
+ ❯ test/s448-learning-scope.test.ts:61:35
+     59|     expect(firstClickB.model.learningRanking?.phases[learningLadderRow…
+     60|     const confirmed = toggle(firstClickB.model);
+     61|     expect(payloadsOf(confirmed)).toEqual([{ scopeId: "scope-owner-b" …
+       |                                   ^
+     62|     expect(commandsOf(confirmed)).toHaveLength(1);
+     63|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/s448-learning-scope.test.ts > S448 learning mutation scope authority > RED: loading/failed records cannot fall back to a stale state scope on the second click
+AssertionError: expected [ { …(4) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "args": {
++       "payload": "{\"reason\":\"operator_ui_ladder_rollback\",\"roleId\":\"role.alpha\",\"rolledBack\":true,\"scopeId\":\"scope-owner-a\",\"taskTypeId\":\"task.code\"}",
++       "roleId": "role.alpha",
++       "scopeId": "scope-owner-a",
++       "taskTypeId": "task.code",
++       "token": 1,
++     },
++     "effect": {
++       "_id": "Effect",
++       "args": [Function anonymous],
++       "op": "Suspend",
++     },
++     "messageMappers": [],
++     "name": "RollbackLearningLadder",
++   },
++ ]
+
+ ❯ test/s448-learning-scope.test.ts:109:41
+    107|       },
+    108|     };
+    109|     expect(commandsOf(toggle(loading))).toEqual([]);
+       |                                         ^
+    110|     const failed = shellUpdate(first.model, Message.ReadbackFailed({
+    111|       key: "learningPacks",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 4 passed (7)
+   Start at  07:38:14
+   Duration  11.24s (transform 5.28s, setup 0ms, collect 8.39s, tests 59ms, environment 1.12s, prepare 677ms)
+
+

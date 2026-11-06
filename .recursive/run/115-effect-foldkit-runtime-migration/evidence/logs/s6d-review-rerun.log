@@ -1,0 +1,51 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:36560) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run105-review-challenge-evidence.test.ts > provider completion alone is not finalized evidence
+[route-evidence] readRouteDispatchEvidence failed: comparison page unavailable
+
+stderr | test/run105-review-challenge-evidence.test.ts > cyclic or malformed pages are unavailable rather than claimed complete
+[route-evidence] readRouteDispatchEvidence failed: comparison cursor unavailable
+
+stderr | test/run105-review-challenge-evidence.test.ts > enumerable durable evidence carries winning-member confidence and exact capture; cutoff refuses old evidence
+[route-evidence] readRouteDispatchEvidence failed: auth refused
+
+stderr | test/run105-review-challenge-evidence.test.ts > CLI history callback must actually bind supported exact read operation
+[run105] route replayable corpus refused: post-observation operations are not published yet
+
+ ✓ test/run105-review-challenge-evidence.test.ts (27 tests) 8317ms
+   ✓ history index unavailable and 501 matching ids are null, never a truncated complete corpus  3441ms
+(node:36536) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run108-census-eligibility.test.ts (5 tests) 7808ms
+   ✓ run108: the census declines to offer a family whose corpus cannot be projected > an OVER-BUDGET family is excluded while a projectable family exists  3853ms
+   ✓ run108: the census declines to offer a family whose corpus cannot be projected > FALLBACK: when EVERY family is over budget the full set is still offered, so the walk cannot idle  3670ms
+(node:52760) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run101-r5-cancel-drain.test.ts (5 tests) 3478ms
+   ✓ run 101 R5/R9 queue admin runtime side > claims nothing while the queue is draining, and claims again once it is cleared  1494ms
+   ✓ run 101 R5/R9 queue admin runtime side > interrupts a running handler whose row is cancelled, without completing it  1944ms
+(node:47220) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run105-review-census.test.ts (7 tests) 2363ms
+   ✓ run105 R8 production census > state roots and scopes isolate counts and honor a custom window  302ms
+   ✓ run105 R8 production census > missing database is explicit and a successful census leaves the database bytes unchanged  1169ms
+(node:39504) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run99-r28-externalized-readback.test.ts (3 tests) 54ms
+(node:21120) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s6d-second-batch-migration.test.ts (1 test) 1052ms
+   ✓ S6d retention DELETE through the SQLite service > removes the expired row and leaves the live row in the real backend startup  1050ms
+(node:26592) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run105-e5-ladder-index-readback.test.ts (1 test) 27ms
+
+ Test Files  7 passed (7)
+      Tests  49 passed (49)
+   Start at  05:59:07
+   Duration  41.88s (transform 7.24s, setup 0ms, collect 15.69s, tests 23.10s, environment 2ms, prepare 1.15s)
+
+EXIT_CODE: 0

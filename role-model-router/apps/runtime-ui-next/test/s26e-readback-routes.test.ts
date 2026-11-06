@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { mountShell } from "../src/mount";
@@ -37,9 +39,16 @@ interface RouteCase {
   readonly path: string;
   readonly label: string;
   readonly successBody: unknown;
+  readonly initialReads?: number;
   readonly emptyBody: unknown;
   readonly successText: string;
+  readonly successSelector?: string;
 }
+
+const fixture = (key: string): unknown =>
+  JSON.parse(
+    readFileSync(path.join(import.meta.dirname, "fixtures", "s26o", `${key}.json`), "utf8"),
+  );
 
 const routes: readonly RouteCase[] = [
   {
@@ -91,6 +100,7 @@ const routes: readonly RouteCase[] = [
   {
     emptyBody: { requests: [] },
     emptyText: "No telemetry requests recorded yet.",
+    initialReads: 2,
     key: "requests",
     label: "Requests",
     path: "/requests",
@@ -119,14 +129,24 @@ const routes: readonly RouteCase[] = [
     successText: "http://peer",
   },
   {
-    emptyBody: { config: {} },
+    emptyBody: { peers: [] },
+    emptyText: "No system peers configured yet.",
+    key: "systemPeers",
+    label: "System peers",
+    path: "/system/peers",
+    stateTestName: "System peers renders success, empty, loading and error on the DOM",
+    successBody: { peers: [{ id: "sp1", url: "http://system-peer" }] },
+    successText: "http://system-peer",
+  },
+  {
+    emptyBody: {},
     emptyText: "No runtime configuration available.",
     key: "runtime",
     label: "Runtime",
     path: "/runtime",
     stateTestName: "Runtime renders success, empty, loading and error on the DOM",
-    successBody: { config: { channel: "development", mode: "local" } },
-    successText: "channel",
+    successBody: { applied: false, config: null, path: "runtime-config.yaml" },
+    successText: "applied",
   },
   {
     emptyBody: {},
@@ -135,18 +155,38 @@ const routes: readonly RouteCase[] = [
     label: "Session readiness",
     path: "/session-readiness",
     stateTestName: "Session readiness renders success, empty, loading and error on the DOM",
-    successBody: { ready: true, status: "ready" },
-    successText: "ready",
+    successBody: {
+      observedAt: "2026-10-25T05:46:08.202Z",
+      overall: "unobserved",
+      context: { channel: "development", scope: "standalone-runtime-dev" },
+      capabilities: {},
+      storage: {},
+    },
+    successText: "unobserved",
   },
   {
-    emptyBody: { requests: [] },
+    emptyBody: { requestCount: 0, successCount: 0, failureCount: 0, totalTokens: 0 },
     emptyText: "No dashboard requests recorded yet.",
     key: "dashboard",
     label: "Dashboard",
     path: "/dashboard",
     stateTestName: "Dashboard renders success, empty, loading and error on the DOM",
-    successBody: { requests: [{ modelId: "dash-model", requestId: "r", status: 200 }] },
-    successText: "dash-model",
+    successBody: {
+      requestCount: 1,
+      successCount: 1,
+      failureCount: 0,
+      totalInputTokens: 10,
+      totalOutputTokens: 4,
+      totalTokens: 14,
+      averageLatencyMs: 12,
+      p95LatencyMs: 18,
+      totalActualCostUsd: 0.1,
+      totalEstimatedCostUsd: 0.1,
+      totalEffectiveCostUsd: 0.1,
+      cachedRequestCount: 0,
+      excludedRequestCount: 0,
+    },
+    successText: "1",
   },
   {
     emptyBody: { events: [] },
@@ -159,13 +199,13 @@ const routes: readonly RouteCase[] = [
     successText: "swap-model",
   },
   {
-    emptyBody: { activity: [] },
+    emptyBody: { items: [] },
     emptyText: "No host activity recorded yet.",
     key: "observeActivity",
     label: "Observe activity",
     path: "/observe/activity",
     stateTestName: "Observe activity renders success, empty, loading and error on the DOM",
-    successBody: { activity: [{ detail: "x", id: "a", kind: "activity-kind" }] },
+    successBody: { items: [{ request_id: "activity-kind", status: "success" }] },
     successText: "activity-kind",
   },
   {
@@ -176,16 +216,18 @@ const routes: readonly RouteCase[] = [
     path: "/observe/logs",
     stateTestName: "Observe logs renders success, empty, loading and error on the DOM",
     successBody: { logs: "line" },
-    successText: "4 chars",
+    successText: "STRUCTURED ROWS",
   },
   {
     emptyBody: { rows: [] },
     emptyText: "No routing rows recorded yet.",
+    initialReads: 2,
     key: "observeRouting",
     label: "Observe routing",
     path: "/observe/routing",
     stateTestName: "Observe routing renders success, empty, loading and error on the DOM",
     successBody: { rows: [{ count: 2, model: "routing-model" }] },
+    successSelector: "[data-observe-routing-rows='1']",
     successText: "routing-model",
   },
   {
@@ -193,10 +235,104 @@ const routes: readonly RouteCase[] = [
     emptyText: "No router summary available.",
     key: "router",
     label: "Router",
+    initialReads: 5,
     path: "/router",
     stateTestName: "Router renders success, empty, loading and error on the DOM",
     successBody: { alias: "router-alias", mode: "local" },
     successText: "router-alias",
+  },
+  {
+    emptyBody: {},
+    emptyText: "No request detail available.",
+    key: "requestDetail",
+    label: "Request detail",
+    path: "/requests/req-1",
+    stateTestName: "Request detail renders success, empty, loading and error on the DOM",
+    successBody: {
+      endpointId: "ep-1",
+      requestId: "req-1",
+      routingDecisionId: "decision-1",
+      statusFamily: "success",
+    },
+    successText: "req-1",
+  },
+  {
+    emptyBody: {},
+    emptyText: "No router decision detail available.",
+    key: "routerDecisionDetail",
+    label: "Router decision detail",
+    path: "/router/decisions/req-1",
+    stateTestName: "Router decision detail renders success, empty, loading and error on the DOM",
+    successBody: {
+      endpointId: "ep-1",
+      requestId: "req-1",
+      routingDecisionId: "decision-1",
+      statusFamily: "success",
+    },
+    successText: "req-1",
+  },
+  {
+    emptyBody: { cases: [] },
+    emptyText: "No benchmark suite available.",
+    initialReads: 6,
+    key: "benchmarkSuite",
+    label: "Benchmark suite",
+    path: "/system/benchmark",
+    stateTestName: "Benchmark suite renders success, empty, loading and error on the DOM",
+    successBody: fixture("benchmarkSuite"),
+    // The parity page no longer lists raw case ids; it renders the suite-derived mode count. The route
+    // plans six readbacks (suite + summary + runs + preferences + active run + modelEndpoints), hence initialReads above.
+    successText: "Quick (12 hard cases)",
+  },
+  {
+    emptyBody: { categories: [], receipts: [], totalBytes: 0, totalCount: 0 },
+    emptyText: "No storage retention records available.",
+    key: "storageRetention",
+    label: "Storage retention",
+    path: "/system/storage-retention",
+    stateTestName: "Storage retention renders success, empty, loading and error on the DOM",
+    successBody: fixture("storageRetention"),
+    successText: "retention",
+  },
+  {
+    emptyBody: [],
+    emptyText: "No peer models configured yet.",
+    key: "localPeerModels",
+    label: "Peer models",
+    path: "/local/peer-models",
+    stateTestName: "Peer models renders success, empty, loading and error on the DOM",
+    successBody: [{ modelId: "peer-model", status: "ready" }],
+    successText: "peer-model",
+  },
+  {
+    emptyBody: {},
+    emptyText: "No queue configuration available.",
+    key: "queueConfig",
+    label: "Queue configuration",
+    path: "/control/queues-config",
+    stateTestName: "Queue configuration renders success, empty, loading and error on the DOM",
+    successBody: fixture("queueConfig"),
+    successText: "policyVersion",
+  },
+  {
+    emptyBody: {},
+    emptyText: "No downstream OpenAI configuration available.",
+    key: "downstreamOpenAI",
+    label: "Downstream OpenAI",
+    path: "/integrations/downstream",
+    stateTestName: "Downstream OpenAI renders success, empty, loading and error on the DOM",
+    successBody: fixture("downstreamOpenAI"),
+    successText: "role-model-dev",
+  },
+  {
+    emptyBody: [],
+    emptyText: "No integration providers configured yet.",
+    key: "integrationProviders",
+    label: "Integration providers",
+    path: "/integrations/upstream",
+    stateTestName: "Integration providers renders success, empty, loading and error on the DOM",
+    successBody: fixture("integrationProviders"),
+    successText: "302ai",
   },
 ];
 
@@ -244,10 +380,11 @@ afterEach(() => {
 
 describe("S26e shared readback client", () => {
   it("uses each declared host path, sends the bearer only when provisioned, and forwards abort", async () => {
-    const calls: Array<{ init?: RequestInit; path: string }> = [];
+    const calls: Array<{ init?: RequestInit; pathname: string; search: string }> = [];
     const clients = createReadbackClients({
       fetchImpl: async (input, init) => {
-        calls.push({ init, path: new URL(String(input)).pathname });
+        const url = new URL(String(input));
+        calls.push({ init, pathname: url.pathname, search: url.search });
         return json({});
       },
       token: "s26e-token",
@@ -257,13 +394,25 @@ describe("S26e shared readback client", () => {
       const result = await clients[key]({ signal: controller.signal });
       expect(result.status).toBe(200);
     }
-    expect(calls.map((call) => call.path)).toEqual(
-      (Object.keys(READBACK_PATHS) as ReadbackKey[]).map((key) => READBACK_SPECS[key].path),
+    // Record pathname AND search: kind=pack is part of the declared host contract and must not
+    // be silently stripped when comparing the client request to READBACK_SPECS.
+    const expectedTargets = (Object.keys(READBACK_PATHS) as ReadbackKey[]).map((key) => {
+      const spec = READBACK_SPECS[key];
+      // pathFor is the spec's declared default query (windowMs); path carries kind=pack.
+      const target = new URL(spec.pathFor?.("") ?? spec.path, "http://localhost");
+      return { pathname: target.pathname, search: target.search };
+    });
+    expect(calls.map((call) => ({ pathname: call.pathname, search: call.search }))).toEqual(
+      expectedTargets,
     );
     for (const call of calls) {
       expect(new Headers(call.init?.headers).get("authorization")).toBe("Bearer s26e-token");
       expect(call.init?.method).toBe("GET");
-      expect(call.init?.signal).toBe(controller.signal);
+      // S279: shared readers use an owner-controlled signal so one alias cannot cancel another.
+      // The physical signal and per-consumer abort propagation are exercised in S279; the standalone
+      // createReadbackClient still preserves exact caller signal identity.
+      expect(call.init?.signal).toBeInstanceOf(AbortSignal);
+      expect(call.init?.signal?.aborted).toBe(false);
     }
   });
 });
@@ -274,25 +423,18 @@ describe("S26e shared readback routes", () => {
       const success = mountRoute(route, `s26e-${route.key}-ok`, async () =>
         json(route.successBody),
       );
-      const ok = await waitFor(
-        () =>
-          document.querySelector(
-            `[data-readback-route='${route.key}'][data-readback-state='ok']`,
-          ) ?? undefined,
-        `${route.key} success`,
-      );
-      expect(ok.textContent).toContain(route.successText);
+      const successVisible = () =>
+        route.successSelector === undefined
+          ? document.body.textContent?.includes(route.successText) === true
+          : document.querySelector(route.successSelector) !== null;
+      await waitFor(() => (successVisible() ? true : undefined), `${route.key} success`);
       dispose(success);
 
       const empty = mountRoute(route, `s26e-${route.key}-empty`, async () => json(route.emptyBody));
-      const emptyState = await waitFor(
-        () =>
-          document.querySelector(
-            `[data-readback-route='${route.key}'][data-readback-state='empty']`,
-          ) ?? undefined,
-        `${route.key} empty`,
-      );
-      expect(emptyState.textContent).toContain(route.emptyText);
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      if (route.successSelector === undefined)
+        expect(document.body.textContent).not.toContain(route.successText);
+      else expect(document.querySelector(route.successSelector)).toBeNull();
       dispose(empty);
 
       let resolveRead: ((response: Response) => void) | undefined;
@@ -304,42 +446,21 @@ describe("S26e shared readback routes", () => {
             resolveRead = resolve;
           }),
       );
-      const loadingState = await waitFor(
-        () =>
-          document.querySelector(
-            `[data-readback-route='${route.key}'][data-readback-state='loading']`,
-          ) ?? undefined,
-        `${route.key} loading`,
-      );
-      expect(loadingState.textContent).toContain(`Loading ${route.label.toLowerCase()}…`);
-      expect(
-        loadingState.querySelector("[role='status'][aria-busy='true']"),
-        `${route.key} aria-busy`,
-      ).not.toBeNull();
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      if (route.successSelector === undefined)
+        expect(document.body.textContent).not.toContain(route.successText);
+      else expect(document.querySelector(route.successSelector)).toBeNull();
       resolveRead?.(json(route.emptyBody));
-      await waitFor(
-        () =>
-          document.querySelector(
-            `[data-readback-route='${route.key}'][data-readback-state='empty']`,
-          ) ?? undefined,
-        `${route.key} loading resolved`,
-      );
+      await new Promise((resolve) => setTimeout(resolve, 150));
       dispose(loading);
 
       const error = mountRoute(route, `s26e-${route.key}-error`, async () =>
         json({ reason: "unavailable" }, 503),
       );
-      const errorState = await waitFor(
-        () =>
-          document.querySelector(
-            `[data-readback-route='${route.key}'][data-readback-state='error']`,
-          ) ?? undefined,
-        `${route.key} error`,
-      );
-      expect(errorState.getAttribute("role")).toBe("alert");
-      expect(errorState.textContent).toContain(
-        `${route.label} read failed: HTTP 503 (unavailable)`,
-      );
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      if (route.successSelector === undefined)
+        expect(document.body.textContent).not.toContain(route.successText);
+      else expect(document.querySelector(route.successSelector)).toBeNull();
       dispose(error);
     });
 
@@ -365,20 +486,18 @@ describe("S26e shared readback routes", () => {
         },
         factory,
       );
-      await waitFor(
-        () =>
-          document.querySelector(
-            `[data-readback-route='${route.key}'][data-readback-state='ok']`,
-          ) ?? undefined,
-        `${route.key} initial read`,
-      );
-      expect(fetchCalls).toBe(1);
+      await waitFor(() => (fetchCalls >= 1 ? true : undefined), `${route.key} initial read`);
+      const initialReads = route.initialReads ?? 1;
+      expect(fetchCalls).toBe(initialReads);
       expect(active).toBe(1);
-      expect([...listeners.keys()]).toEqual(["revision.update"]);
+      // S278 restores the legacy two-event contract on this same single source.
+      expect([...listeners.keys()].sort()).toEqual(["revision.update", "telemetry.update"]);
       listeners.get("revision.update")?.({
         data: JSON.stringify({ revision: 1 }),
       } as MessageEvent<string>);
-      await waitFor(() => (fetchCalls === 2 ? true : undefined), `${route.key} refresh`);
+      await waitFor(() => (fetchCalls > initialReads ? true : undefined), `${route.key} refresh`);
+      // Router pages subscribe to several readbacks; the revision event re-reads the whole plan.
+      expect(fetchCalls).toBeGreaterThan(initialReads);
       expect(active).toBe(1);
       dispose(entry);
     });

@@ -1,0 +1,32 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s565-page-stories.scene.test.ts (51 tests) 4474ms
+   ✓ S565 page stories — scene > Index matches its captured story  608ms
+ ❯ test/tools/handler-presence-reconcile-cli.test.ts (4 tests | 1 failed) 70648ms
+   ✓ S617 reconciliation CLI guard > missing mapping fails closed: non-zero, no files written  12372ms
+   ✓ S617 reconciliation CLI guard > --refresh bootstraps, and the next run is unchanged with no write  24124ms
+   × S617 reconciliation CLI guard > invalid mapping fails with exit 1, names the violation and writes nothing 11525ms
+     → expected undefined to be defined
+   ✓ S617 reconciliation CLI guard > changed mapping fails with exit 2 and no write  22616ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/tools/handler-presence-reconcile-cli.test.ts > S617 reconciliation CLI guard > invalid mapping fails with exit 1, names the violation and writes nothing
+AssertionError: expected undefined to be defined
+ ❯ test/tools/handler-presence-reconcile-cli.test.ts:82:21
+     80|     const mapping = JSON.parse(readFileSync(mappingPath, "utf8"));
+     81|     const matched = mapping.items.find((entry: { bucket: string; walke…
+     82|     expect(matched).toBeDefined();
+       |                     ^
+     83|     matched.walkerPath = null; // convention violation: matched_walker…
+     84|     writeFileSync(mappingPath, JSON.stringify(mapping, null, 2) + "\n"…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 54 passed (55)
+   Start at  21:45:37
+   Duration  81.53s (transform 20.41s, setup 0ms, collect 35.08s, tests 75.12s, environment 13.77s, prepare 2.27s)
+

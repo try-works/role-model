@@ -1,0 +1,50 @@
+{
+  "slice": "s26j-wave2-finish",
+  "ported": [
+    "route:system-peers /system/peers -> /api/role-model/local/peers (shared SystemPeers key/spec/renderer; four DOM states + refresh)"
+  ],
+  "refused": [
+    {
+      "row": "route:request-detail",
+      "reason": "Dynamic /requests/:requestId detail; shared ReadbackSpec/ReadReadback is static-route keyed with no per-record identity. Left absent rather than faking a static path."
+    },
+    {
+      "row": "route:router-decision-detail",
+      "reason": "Dynamic /router/decisions/:requestId detail; same static readback contract limitation."
+    },
+    {
+      "row": "5 wave-2 chart components",
+      "reason": "Presentational chart components, not read routes; ECharts excluded by task."
+    }
+  ],
+  "totals": {
+    "overall": {
+      "absent": 55,
+      "verified": 19,
+      "wired": 1,
+      "total": 75
+    },
+    "wave2Read": {
+      "total": 23,
+      "verified": 16,
+      "absent": 7
+    },
+    "wave2All": {
+      "total": 24,
+      "verified": 16,
+      "absent": 8
+    }
+  },
+  "redGreen": {
+    "success": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26j-red-success.log",
+    "refresh": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26j-red-refresh.log",
+    "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s26j-green.log"
+  },
+  "counts": {
+    "tests": 125,
+    "passed": 125,
+    "typecheck": "exit 0",
+    "biome": "exit 0"
+  },
+  "paths": "runtime-endpoints.ts systemPeers = /api/role-model/local/peers; S26f parsed tie covers it (duplicate endpoint path)."
+}

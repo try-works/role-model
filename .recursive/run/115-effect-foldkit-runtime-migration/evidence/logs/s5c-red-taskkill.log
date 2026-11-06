@@ -1,0 +1,32 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ❯ test/s5c-supervisor-repairs.test.ts (2 tests | 1 failed | 1 skipped) 960ms
+   ↓ S5c supervisor repairs > a prompt SIGTERM exit is never SIGKILLed across repeated short-bound stops
+   × S5c supervisor repairs > a failed taskkill rejects within the stop bound instead of hanging 958ms
+     → expected 'resolved' to be 'rejected' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s5c-supervisor-repairs.test.ts > S5c supervisor repairs > a failed taskkill rejects within the stop bound instead of hanging
+AssertionError: expected 'resolved' to be 'rejected' // Object.is equality
+
+Expected: "rejected"
+Received: "resolved"
+
+ ❯ test/s5c-supervisor-repairs.test.ts:85:28
+     83| 
+     84|     try {
+     85|       expect(outcome.kind).toBe("rejected");
+       |                            ^
+     86|       if (outcome.kind === "rejected") {
+     87|         const error = outcome.error as { code?: string; message?: stri…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 skipped (2)
+   Start at  04:01:56
+   Duration  1.69s (transform 95ms, setup 0ms, collect 96ms, tests 960ms, environment 0ms, prepare 208ms)
+

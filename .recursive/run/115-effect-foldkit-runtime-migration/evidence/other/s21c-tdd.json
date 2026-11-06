@@ -1,0 +1,80 @@
+{
+  "slice": "s21c-wire-owner",
+  "requirement": "R27 composition DAG: move one owner construction without behaviour change",
+  "owner": {
+    "chosen": "Bootstrap",
+    "rationale": "Smallest owner: a stateless ordered stage runner (pending/run are the existing pure session-bootstrap functions). It has no network, state ownership, port or store; the host only held one state variable and one call. Backend is the whole runtime and cannot move without a large extraction.",
+    "dagConstruction": "composition-dag.ts: bootstrapLayer supplies pending/run; composeBootstrapOwner() builds CompositionLayer once; bootstrapOwner is the singleton instance. bootstrapLayer is the only construction site; index.ts no longer imports createPendingBootstrapState/runSessionBootstrapStages.",
+    "hostUse": "src/index.ts:20773 selects composedBootstrapOwner; :30152 pending(); :34584 run(handlers). The host still sets the running state before awaiting, preserving the observable intermediate state."
+  },
+  "escapeHatch": {
+    "fields": [
+      "CreateRuntimeBridgeBackendOptions.onBootstrapOwner (observer)",
+      "CreateRuntimeBridgeBackendOptions.bootstrapOwner (test injection)"
+    ],
+    "inert": "Both are optional and unused in production; production always uses the DAG singleton. They exist only so the identity test can observe the host calling the owner's methods.",
+    "removal": "Delete both option fields and pass the composed owner through the future public composition result (or expose backend.composition); the host keeps using the DAG owner with no call-site change."
+  },
+  "evidence": {
+    "identityTest": "test/s21c-bootstrap-owner-wiring.test.ts: injects an observed owner that delegates to the DAG singleton, captures it via onBootstrapOwner, then asserts captured === injected, pending called once, run called once, and the real backend health projection still answers.",
+    "fallbackTests": [
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21c-red-fallback.log - host constructed a fresh owner per backend (composeBootstrapOwner()) instead of the DAG singleton: identity failed",
+      ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21c-red-legacy-fallback.log - host bypassed owner.pending/run and called createPendingBootstrapState/runSessionBootstrapStages directly: pending/run call counts were 0 (expected 1)"
+    ]
+  },
+  "behavior": {
+    "unchanged": "The DAG owner delegates to the same createPendingBootstrapState/runSessionBootstrapStages functions; stage order, per-stage failure capture, running state, readiness projection and credentials logic are untouched.",
+    "existingSuites": "S21a DAG 6/6, session-bootstrap 4/4, cli-startup-readiness 3/3 all pass."
+  },
+  "counts": {
+    "new": 2,
+    "totalRun": 15,
+    "passed": 15,
+    "failed": 0,
+    "typecheck": "tsc -p apps/runtime-host-bridge/tsconfig.json --noEmit: exit 0",
+    "biome": "biome check src/composition-dag.ts src/index.ts test/s21c-bootstrap-owner-wiring.test.ts: exit 0",
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s21c-green.log"
+  },
+  "remainingOwners": [
+    {
+      "owner": "Backend",
+      "blocker": "createRuntimeBridgeBackend is the whole host backend (options, network, fixtures, stores); extracting a service boundary is a large design step, not a construction move."
+    },
+    {
+      "owner": "Server",
+      "blocker": "startBridgeServer binds the listener and owns routes/lifecycle; needs an explicit server owner plus shutdown/readiness ordering."
+    },
+    {
+      "owner": "Refresh",
+      "blocker": "refresh/reload is embedded in backend closures and shared mutable state; needs a read/write handoff contract and atomic publication."
+    },
+    {
+      "owner": "Drain",
+      "blocker": "shutdown/drain spans backend, supervisor, queues and vendor children; needs the R27 partial-shutdown order and finalizer ownership."
+    },
+    {
+      "owner": "Benchmark",
+      "blocker": "benchmark execution is a separate CLI/runner; cancellation/overlap isolation and cross-process ownership are not modelled by the DAG."
+    },
+    {
+      "owner": "Cli",
+      "blocker": "cli.ts is the process entrypoint (args/SEA/startup); it is not a runtime service and needs packaging decisions."
+    },
+    {
+      "owner": "ProviderPermits pilot",
+      "blocker": "shape only; not connected to real provider execution. Needs the provider dispatch seam and reviewed concurrency defaults."
+    },
+    {
+      "owner": "ArtifactStore/EventLog/CaptureWal/Retention leaves",
+      "blocker": "DAG names shapes; the real stores retain their own PRAGMAs/owners. Wiring them crosses the storage ownership boundary and R28/R30 contracts."
+    }
+  ],
+  "files": {
+    "role-model-router/apps/runtime-host-bridge/src/composition-dag.ts": "a54abe58832bdfb3855f3c95013c410bd5e5c20a47e43319fe826ca92b591514",
+    "role-model-router/apps/runtime-host-bridge/src/index.ts": "5110d59e36365cdebb006a056804bad1f95950997fb540c30896a9b8c1bec8ed",
+    "role-model-router/apps/runtime-host-bridge/test/s21c-bootstrap-owner-wiring.test.ts": "b6da8688d7da09cfc99eb9861511c25eaecafeeeaa0f7fc1e8d906080894a24e"
+  },
+  "contractRisk": "No public behaviour/signature changed. The two optional backend-option fields are temporary test seams; the DAG Bootstrap shape gained pending/run (additive), and existing consumers only read id/artifactStore.",
+  "cleanup": "Temp roots E:\\role-model-run115\\s21c-* removed; backend shutdown called; no listeners/operator ports.",
+  "unproven": "Only the Bootstrap owner is wired. The DAG's other owners/leaves and the provider permits remain shapes; Bootstrap's artifactStore dependency is still the DAG shape leaf, not the real host store."
+}

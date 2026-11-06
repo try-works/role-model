@@ -1,0 +1,9 @@
+# S2 vendor verify BEFORE (public)
+COMMAND: node scripts/vendor-upstream.mjs --name effect --verify
+CWD: D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration
+TIMESTAMP: 2026-10-24T13:21:28.621Z
+EXIT_CODE: 0
+
+vendor-upstream: effect verified 1878 files, 38.5 MB, sha256:0d0028aa7de72ff9e6a8e39f4bc4232640bd1111b30aaa3440d0c53116a49749
+
+

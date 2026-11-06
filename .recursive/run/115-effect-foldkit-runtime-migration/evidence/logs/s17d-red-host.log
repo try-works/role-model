@@ -1,0 +1,43 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:33016) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s17a-transport-signal.test.ts (12 tests | 1 failed | 11 skipped) 30016ms
+   ↓ private operations transport signal > cancels the underlying fetch when the enclosing fiber times out (request does not keep running)
+   ↓ private operations transport signal > releases the real reader and abort listener (body unlocked) on success
+   ↓ private operations transport signal > counts scoped releases on the status-failure path and does not retry a stated status
+   ↓ private operations transport signal > counts scoped releases on the caller-abort path and does not retry
+   ↓ private operations transport signal > pins the exact connection-retry schedule 250/1000/2500/5000ms
+   ↓ private operations transport signal > pins the retry schedule through the Effect path as well
+   ↓ private operations transport signal > pins status and timeout as one call and no sleep on both paths
+   ↓ private operations transport signal > does not retry a caller abort
+   ↓ private operations transport signal > keeps timeout, status, protocol and abort failures distinct and non-retried
+   ↓ private operations transport signal > forwards the reachable request signal to the direct contribution recorder
+   × private operations transport signal > carries the request signal from the HOST capture edge into fetch 30014ms
+     → Test timed out in 30000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ↓ private operations transport signal > carries the caller signal through the REAL operation boundary into fetch
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s17a-transport-signal.test.ts > private operations transport signal > carries the request signal from the HOST capture edge into fetch
+Error: Test timed out in 30000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ test/s17a-transport-signal.test.ts:401:3
+    399|   });
+    400| 
+    401|   it("carries the request signal from the HOST capture edge into fetch…
+       |   ^
+    402|     const statePath = path.join(await mkdtemp(path.join(tmpdir(), "s17…
+    403|     const trace: FetchTrace = { aborted: false, calls: 0, sleeps: [] };
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 skipped (12)
+   Start at  03:21:56
+   Duration  37.08s (transform 4.25s, setup 0ms, collect 6.59s, tests 30.02s, environment 0ms, prepare 175ms)
+
+EXIT_CODE: 1

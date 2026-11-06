@@ -1,0 +1,29 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:40320) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/s27b-validator-scope.test.ts
+{
+  "packagedExecutable": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\role-model-router\\dist\\release\\win32-x64\\role-model-dev.exe",
+  "healthStatus": "healthy",
+  "latestRequestIds": [],
+  "modelCount": 8,
+  "roleDefinitionCount": 28,
+  "taxonomyVersion": "1.0.0-alpha.1",
+  "contentRevision": "taxonomy-v1-alpha.1",
+  "securityTaskCount": 10,
+  "extensionCount": 13,
+  "scopeId": "standalone-runtime-dev",
+  "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
+  "chatOutputText": "packaged env endpoint summary",
+  "responsesOutputText": "packaged env endpoint summary"
+}
+
+ ✓ test/s27b-validator-scope.test.ts (4 tests) 13ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  09:22:36
+   Duration  20.37s (transform 5.85s, setup 0ms, collect 19.32s, tests 13ms, environment 1ms, prepare 426ms)
+

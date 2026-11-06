@@ -1,0 +1,58 @@
+{
+  "capturedAt": "2026-11-04T05:42:55.783Z",
+  "source": "live review host",
+  "health": {
+    "version": "0.0.20-605-g5b14d8b2",
+    "commit": "5b14d8b26944c5e94f5f98b2bc744aaa00402638",
+    "executable_sha256": "cc483fe10f10c075f926c3eed099c28c5821c51836434ed278d447ea82f4220f",
+    "source_tree": "da957c357bb0665518da70e3da82831f3563954b"
+  },
+  "routing": {
+    "cards": 9,
+    "tables": 9,
+    "srOnly": 9,
+    "visible": 0,
+    "bars": 76,
+    "routingResults": false,
+    "titles": [
+      "Cost avoided by routing",
+      "Routing decision volume",
+      "Routing volume by taxonomy role",
+      "Avoided cost by taxonomy task",
+      "Difficulty distribution",
+      "Strategy selection trend",
+      "Capability routing mix",
+      "Tool class routing mix",
+      "Model selection"
+    ]
+  },
+  "overview": {
+    "cards": 6,
+    "visible": 0,
+    "paths": [
+      3,
+      2,
+      0,
+      0,
+      2,
+      0
+    ]
+  },
+  "requests": {
+    "cards": 1,
+    "srOnly": 1,
+    "visibleTables": [
+      [
+        "Request",
+        "Model",
+        "Endpoint",
+        "Status"
+      ]
+    ]
+  },
+  "queues": {
+    "url": "/observe/queues",
+    "title": "Queues | RM3 Foldkit shell",
+    "tables": 1
+  }
+}

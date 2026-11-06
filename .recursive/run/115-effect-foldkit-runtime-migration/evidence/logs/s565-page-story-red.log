@@ -1,0 +1,196 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s565-page-stories.scene.test.ts (43 tests | 7 failed) 2451ms
+   ✓ S565 page stories — scene > Benchmark shows its reference sections in order 261ms
+   ✓ S565 page stories — scene > ControlController shows its reference sections in order 60ms
+   ✓ S565 page stories — scene > Endpoints shows its reference sections in order 113ms
+   ✓ S565 page stories — scene > Index shows its reference sections in order 172ms
+   ✓ S565 page stories — scene > Learning shows its reference sections in order 54ms
+   ✓ S565 page stories — scene > LearningConfiguration shows its reference sections in order 44ms
+   ✓ S565 page stories — scene > LearningDecisions shows its reference sections in order 49ms
+   ✓ S565 page stories — scene > LearningEvidence shows its reference sections in order 42ms
+   ✓ S565 page stories — scene > LearningHistory shows its reference sections in order 33ms
+   ✓ S565 page stories — scene > LearningPacks shows its reference sections in order 57ms
+   ✓ S565 page stories — scene > LocalChoose shows its reference sections in order 22ms
+   × S565 page stories — scene > LocalLlamaSwapModels shows its reference sections in order 37ms
+     → LocalLlamaSwapModels: expected [Llama-swap models | Load model | Loaded models] in order, rendered [Load model | Loaded models | llama-swap models]: expected false to be true // Object.is equality
+   × S565 page stories — scene > LocalLogs shows its reference sections in order 23ms
+     → LocalLogs: expected [Llama-swap logs | Structured local log history | Raw log streams] in order, rendered [Structured local log history | Local logs | Raw log streams]: expected false to be true // Object.is equality
+   ✓ S565 page stories — scene > LocalPeerModels shows its reference sections in order 23ms
+   ✓ S565 page stories — scene > LocalPeers shows its reference sections in order 25ms
+   ✓ S565 page stories — scene > LocalPolicy shows its reference sections in order 25ms
+   × S565 page stories — scene > LocalSwap shows its reference sections in order 22ms
+     → LocalSwap: expected [Llama-swap swap history | Event ledger | Ledger semantics] in order, rendered [Event ledger | Local swap | Ledger semantics]: expected false to be true // Object.is equality
+   × S565 page stories — scene > Models shows its reference sections in order 47ms
+     → Models: expected [Configured models | Model inventory] in order, rendered [Model inventory | MODELS | RUNTIME | COST | BENCHMARK | ROLES | Model inventory]: expected false to be true // Object.is equality
+   × S565 page stories — scene > ModelsRoles shows its reference sections in order 31ms
+     → ModelsRoles: expected [Runtime roles | Create role | Role catalog | Role task allowlists | Edit selected role] in order, rendered [Create role | Role catalog | Role task allowlists | Edit selected role]: expected false to be true // Object.is equality
+   ✓ S565 page stories — scene > Observability shows its reference sections in order 57ms
+   ✓ S565 page stories — scene > ObserveActivity shows its reference sections in order 36ms
+   ✓ S565 page stories — scene > ObserveLogs shows its reference sections in order 34ms
+   ✓ S565 page stories — scene > ObserveRouting shows its reference sections in order 40ms
+   ✓ S565 page stories — scene > Providers shows its reference sections in order 49ms
+   ✓ S565 page stories — scene > Queues shows its reference sections in order 36ms
+   ✓ S565 page stories — scene > Requests shows its reference sections in order 162ms
+   ✓ S565 page stories — scene > Router shows its reference sections in order 24ms
+   ✓ S565 page stories — scene > RouterAgentStrategy shows its reference sections in order 100ms
+   × S565 page stories — scene > RouterCandidates shows its reference sections in order 45ms
+     → RouterCandidates: expected [Candidate inventory | Candidate inventory] in order, rendered [Router candidates | Candidate inventory]: expected false to be true // Object.is equality
+   ✓ S565 page stories — scene > RouterConfig shows its reference sections in order 79ms
+   ✓ S565 page stories — scene > RouterDecisions shows its reference sections in order 36ms
+   ✓ S565 page stories — scene > RouterStrategy shows its reference sections in order 64ms
+   ✓ S565 page stories — scene > RouterWorkloads shows its reference sections in order 84ms
+   ✓ S565 page stories — scene > Runtime shows its reference sections in order 70ms
+   ✓ S565 page stories — scene > SessionReadiness shows its reference sections in order 63ms
+   ✓ S565 page stories — scene > StorageRetention shows its reference sections in order 69ms
+   ✓ S565 page stories — scene > StoreReceipts shows its reference sections in order 32ms
+   ✓ S565 page stories — scene > Studio shows its reference sections in order 48ms
+   ✓ S565 page stories — scene > SystemExtensions shows its reference sections in order 37ms
+   × S565 page stories — scene > SystemOperator shows its reference sections in order 60ms
+     → SystemOperator: expected [Operator controls | Operator Controls | Trace lineage | Replay Jobs | Evaluation Jobs | Shadow Learning] in order, rendered [Operator status | Operator status | Trace lineage | Operator trace roots | Replay Jobs | Replay jobs | Evaluation Jobs | Evaluation jobs | Shadow Learning]: expected false to be true // Object.is equality
+   ✓ S565 page stories — scene > SystemPeers shows its reference sections in order 63ms
+   ✓ S565 studio tab stories — scene > every studio tab story is declared 2ms
+   ✓ S565 studio tab stories — scene > the studio chat story matches the shipped capture 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > LocalLlamaSwapModels shows its reference sections in order
+AssertionError: LocalLlamaSwapModels: expected [Llama-swap models | Load model | Loaded models] in order, rendered [Load model | Loaded models | llama-swap models]: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/s565-page-stories.scene.test.ts:78:9
+     76|         inOrder(expected, headings),
+     77|         `${tag}: expected [${expected.join(" | ")}] in order, rendered…
+     78|       ).toBe(true);
+       |         ^
+     79|       // The invented shell generation must never come back.
+     80|       expect(normalise(container.textContent)).not.toContain("Runtime …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > LocalLogs shows its reference sections in order
+AssertionError: LocalLogs: expected [Llama-swap logs | Structured local log history | Raw log streams] in order, rendered [Structured local log history | Local logs | Raw log streams]: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/s565-page-stories.scene.test.ts:78:9
+     76|         inOrder(expected, headings),
+     77|         `${tag}: expected [${expected.join(" | ")}] in order, rendered…
+     78|       ).toBe(true);
+       |         ^
+     79|       // The invented shell generation must never come back.
+     80|       expect(normalise(container.textContent)).not.toContain("Runtime …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > LocalSwap shows its reference sections in order
+AssertionError: LocalSwap: expected [Llama-swap swap history | Event ledger | Ledger semantics] in order, rendered [Event ledger | Local swap | Ledger semantics]: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/s565-page-stories.scene.test.ts:78:9
+
+     76|         inOrder(expected, headings),
+     77|         `${tag}: expected [${expected.join(" | ")}] in order, rendered…
+     78|       ).toBe(true);
+       |         ^
+     79|       // The invented shell generation must never come back.
+     80|       expect(normalise(container.textContent)).not.toContain("Runtime …
+ Test Files  1 failed (1)
+      Tests  7 failed | 36 passed (43)
+   Start at  14:07:08
+   Duration  28.57s (transform 12.67s, setup 0ms, collect 19.98s, tests 2.45s, environment 3.16s, prepare 1.03s)
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > Models shows its reference sections in order
+AssertionError: Models: expected [Configured models | Model inventory] in order, rendered [Model inventory | MODELS | RUNTIME | COST | BENCHMARK | ROLES | Model inventory]: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/s565-page-stories.scene.test.ts:78:9
+     76|         inOrder(expected, headings),
+     77|         `${tag}: expected [${expected.join(" | ")}] in order, rendered…
+     78|       ).toBe(true);
+       |         ^
+     79|       // The invented shell generation must never come back.
+     80|       expect(normalise(container.textContent)).not.toContain("Runtime …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > ModelsRoles shows its reference sections in order
+AssertionError: ModelsRoles: expected [Runtime roles | Create role | Role catalog | Role task allowlists | Edit selected role] in order, rendered [Create role | Role catalog | Role task allowlists | Edit selected role]: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/s565-page-stories.scene.test.ts:78:9
+     76|         inOrder(expected, headings),
+     77|         `${tag}: expected [${expected.join(" | ")}] in order, rendered…
+     78|       ).toBe(true);
+       |         ^
+     79|       // The invented shell generation must never come back.
+     80|       expect(normalise(container.textContent)).not.toContain("Runtime …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > RouterCandidates shows its reference sections in order
+AssertionError: RouterCandidates: expected [Candidate inventory | Candidate inventory] in order, rendered [Router candidates | Candidate inventory]: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/s565-page-stories.scene.test.ts:78:9
+     76|         inOrder(expected, headings),
+     77|         `${tag}: expected [${expected.join(" | ")}] in order, rendered…
+     78|       ).toBe(true);
+       |         ^
+     79|       // The invented shell generation must never come back.
+     80|       expect(normalise(container.textContent)).not.toContain("Runtime …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  test/s565-page-stories.scene.test.ts > S565 page stories — scene > SystemOperator shows its reference sections in order
+AssertionError: SystemOperator: expected [Operator controls | Operator Controls | Trace lineage | Replay Jobs | Evaluation Jobs | Shadow Learning] in order, rendered [Operator status | Operator status | Trace lineage | Operator trace roots | Replay Jobs | Replay jobs | Evaluation Jobs | Evaluation jobs | Shadow Learning]: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/s565-page-stories.scene.test.ts:78:9
+     76|         inOrder(expected, headings),
+     77|         `${tag}: expected [${expected.join(" | ")}] in order, rendered…
+     78|       ).toBe(true);
+       |         ^
+     79|       // The invented shell generation must never come back.
+     80|       expect(normalise(container.textContent)).not.toContain("Runtime …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+

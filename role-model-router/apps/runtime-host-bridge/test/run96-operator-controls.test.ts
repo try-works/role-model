@@ -22,7 +22,7 @@ function testOptions(overrides: Partial<StartBridgeServerOptions>): StartBridgeS
 }
 
 async function startTestServer(overrides: Partial<StartBridgeServerOptions>) {
-  const server = await startBridgeServer(testOptions(overrides));
+  const server = await startBridgeServer(testOptions(overrides), { allowTestSeamBackend: true });
   servers.push(server);
   return server;
 }
@@ -293,7 +293,7 @@ describe("Run 96 operator controls", () => {
       },
       backend,
     );
-    const server = await startBridgeServer(options);
+    const server = await startBridgeServer(options, { allowTestSeamBackend: true });
     servers.push(server);
 
     const request = (path: string, init?: RequestInit) =>

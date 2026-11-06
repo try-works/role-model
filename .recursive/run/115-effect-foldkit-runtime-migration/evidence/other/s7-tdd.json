@@ -1,0 +1,142 @@
+{
+  "slice": "s7-routing-effect-producer",
+  "requirement": "R25",
+  "worktree": "D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration",
+  "tddMode": "strict",
+  "vendoredApi": {
+    "effectVersion": "4.0.1",
+    "versionSource": "vendor/effect/packages/effect/package.json (name \"effect\", version \"4.0.1\")",
+    "reliedOn": [
+      {
+        "symbol": "Context.Service (function-style key and class-style two-stage declaration Context.Service<Self, Shape>()(id))",
+        "path": "vendor/effect/packages/effect/src/Context.ts",
+        "lines": "64-69 (Key), 98-103 (Service.use), 123-128 (ServiceClass), 201-267 (Service constructor; class-style overload 209-224)",
+        "use": "declared `class RouteDecisionProducer extends Context.Service<RouteDecisionProducer, RouteDecisionProducerService>()(\"role-model-router/RouteDecisionProducer\") {}` and used `RouteDecisionProducer.use(...)` in the test"
+      },
+      {
+        "symbol": "Layer.succeed(service, resource) and its curried form",
+        "path": "vendor/effect/packages/effect/src/Layer.ts",
+        "lines": "805-813",
+        "use": "`RouteDecisionProducerLive = Layer.succeed(RouteDecisionProducer, { decide: decideRoute })`"
+      },
+      {
+        "symbol": "Effect<A, E = never, R = never>",
+        "path": "vendor/effect/packages/effect/src/Effect.ts",
+        "lines": "116",
+        "use": "return type of the producer's `decide` and of `decideRoute`"
+      },
+      {
+        "symbol": "Effect.sync",
+        "path": "vendor/effect/packages/effect/src/Effect.ts",
+        "lines": "1168",
+        "use": "`Effect.sync(() => routeRequest(input))`; never fails, needs no services"
+      },
+      {
+        "symbol": "Effect.provide(effect, layer) (direct overload) and Effect.runSync",
+        "path": "vendor/effect/packages/effect/src/Effect.ts",
+        "lines": "provide 5881-5915 (layer overload 5894-5901); runSync 9231",
+        "use": "test runs the producer through the live layer with `Effect.runSync(Effect.provide(program, RouteDecisionProducerLive))`"
+      }
+    ],
+    "deliberateAvoidance": "Did not use Context.Tag: the vendored 4.0.1 Context.ts exports Service/Reference/Key, not Tag (grep of `export const (Tag|GenericTag|Service|Reference)` returned Service at 201 and Reference at 1327 only)."
+  },
+  "red": {
+    "command": "node ../../../node_modules/vitest/vitest.mjs run test/run115-s7-route-decision-producer.test.ts (cwd role-model-router/packages/core)",
+    "exit": 1,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s7-red.log",
+    "observed": "FAIL suite: `Error: Cannot find module '../src/route-decision-producer.js'` / `Failed to load url ../src/route-decision-producer.js ... Does the file exist?`; Test Files 1 failed, Tests no tests.",
+    "note": "Per the task, the first RED is only the missing module/export; the five behavioural fixtures plus the empty-pool success test are the real gate and ran on GREEN.",
+    "reproduction": "The module was temporarily moved to src/route-decision-producer.ts.redhold for the RED run and restored immediately (final module sha256 recorded below); the earlier attempt used `pnpm exec` and is not the recorded RED."
+  },
+  "green": {
+    "command": "node ../../../node_modules/vitest/vitest.mjs run test/run115-s7-route-decision-producer.test.ts (cwd role-model-router/packages/core)",
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s7-green.log",
+    "result": {
+      "testFiles": 1,
+      "tests": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    "cases": [
+      "ties: producer matches the synchronous kernel byte-for-byte (chosen alpha, TIE_BREAK_APPLIED)",
+      "empty pool: producer matches the synchronous kernel byte-for-byte (chosen \"\", empty selection/eligibility/scored)",
+      "hard eligibility filtering: producer matches byte-for-byte; excluded arm carries code CAPABILITY_MISSING with detail \"Endpoint is missing a required capability.\"",
+      "arm and effort identity: producer matches byte-for-byte (reasoning_effort high, effort_source named, exact_primary)",
+      "effort fallback identity disagreement: producer matches byte-for-byte (reasoning_effort high vs effective_effort low, effort_fallback_applied true)",
+      "the empty pool stays a success with an empty chosen endpoint"
+    ],
+    "equalityAssertions": [
+      "expect(producedDecision).toEqual(synchronousDecision)",
+      "expect(JSON.stringify(producedDecision)).toBe(JSON.stringify(synchronousDecision))"
+    ]
+  },
+  "typecheck": [
+    {
+      "command": "node node_modules/typescript/bin/tsc -p role-model-router/packages/core/tsconfig.json --noEmit",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s7-typecheck.log",
+      "note": "project typecheck covers src (new module, index.ts export)"
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc --noEmit --target ES2022 --module NodeNext --moduleResolution NodeNext --strict --skipLibCheck --esModuleInterop --resolveJsonModule --verbatimModuleSyntax --isolatedModules --types node role-model-router/packages/core/test/run115-s7-route-decision-producer.test.ts",
+      "exit": 0,
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s7-typecheck-test.log",
+      "note": "extra invocation so the new test file and the vendored Effect types are typechecked too"
+    }
+  ],
+  "existingTest": {
+    "command": "node ../../../node_modules/vitest/vitest.mjs run (cwd role-model-router/packages/core)",
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s7-existing-core.log",
+    "result": {
+      "testFiles": 22,
+      "tests": 200,
+      "passed": 200,
+      "failed": 0
+    },
+    "note": "includes the new run115 test file; the 21 pre-existing core test files all pass"
+  },
+  "styleChecks": {
+    "biome": {
+      "command": "node node_modules/@biomejs/biome/bin/biome check <3 touched files>",
+      "exit": 0,
+      "observed": "Checked 3 files in 20ms. No fixes applied."
+    },
+    "antiSlopLint": {
+      "module": "clean (15 rules) after renaming the service interface from RouteDecisionProducerShape to RouteDecisionProducerService (rule no-shape-in-symbol-names)",
+      "test": "clean (15 rules)"
+    }
+  },
+  "realCaller": {
+    "status": "staged, explicitly documented in the module header",
+    "namedCaller": "role-model-router/packages/protocol-routing/src/index.ts -> routeRuntimeRequest",
+    "evidence": "protocol-routing/src/index.ts:17 imports `routeRequest` from \"@role-model-router/core\"; line 351 calls `routeRequest(projected.routeInput)` (the single production call site; grep over the worktree found only this non-test caller plus the definition in core/src/router.ts:1976).",
+    "whyNotWired": "This slice may only write under role-model-router/packages/core, so protocol-routing could not be changed. The module documents the later slice: replace that call with RouteDecisionProducer.use((producer) => producer.decide(projected.routeInput)) and provide RouteDecisionProducerLive from the runtime host.",
+    "export": "role-model-router/packages/core/src/index.ts now re-exports the module, so the named caller can reach it through its existing \"@role-model-router/core\" import."
+  },
+  "files": {
+    "role-model-router/packages/core/src/route-decision-producer.ts": {
+      "sha256": "052e639b907a67b984f1f2bf3ac99538c3930178a48c463936233d65c6616f88",
+      "kind": "new module"
+    },
+    "role-model-router/packages/core/test/run115-s7-route-decision-producer.test.ts": {
+      "sha256": "d05ff784796c82f53352b9c8407865157f16cc5d848672c682a294b2a68a94b4",
+      "kind": "new test"
+    },
+    "role-model-router/packages/core/src/index.ts": {
+      "sha256": "580b35552a2de07320ecb57fff7533758c73022aed8e85ada270c143542d026d",
+      "kind": "modified: one added export line",
+      "diff": "+export * from \"./route-decision-producer.js\"; (after ./route-advisory-ladder.js)"
+    }
+  },
+  "installAttempt": "An early RED command used `pnpm exec vitest`, which made pnpm 11 check the lockfile and abort a modules-directory purge with ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY. No install or module change occurred (store/install aborted); every recorded run afterwards invoked vitest/tsc/biome directly from node_modules.",
+  "preExistingDirtyTree": "git status in this worktree already carries 1118 vendor/effect entries (uncommitted 4.0.1 payload relative to HEAD f0d50fab) plus other unrelated untracked paths; they predate this slice and were not touched. This slice's scope is exactly: index.ts modified, two new core files.",
+  "unverified": [
+    "No production wiring: the producer is staged with the named caller in the module header; no runtime path executes it yet.",
+    "No full workspace build or turbo typecheck was run; only the core package --noEmit typecheck plus the targeted test-file tsc invocation.",
+    "Only the core package suite was run (22 files / 200 tests); other packages' suites were not run.",
+    "No Effect runtime composition beyond Effect.sync + Layer.succeed + Effect.provide + Effect.runSync was exercised (no fibers, concurrency, or ManagedRuntime integration).",
+    "The vendored 4.0.1 tree in this worktree is uncommitted/pre-existing dirty state that this slice did not verify or change."
+  ]
+}

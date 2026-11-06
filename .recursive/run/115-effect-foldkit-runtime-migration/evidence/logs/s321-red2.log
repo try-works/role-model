@@ -1,0 +1,109 @@
+COMMAND: node vitest run test/s321-partial-shutdown.test.ts (S321-R2 RED: production wiring tests on pre-wiring code)
+EXIT_CODE=1
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/s321-partial-shutdown.test.ts (7 tests | 2 failed) 34ms
+   ✓ S321 partial shutdown ordering > release-all runs every release even when an earlier one fails (AggregateError, no early exit) 5ms
+   ✓ S321 partial shutdown ordering > server shutdown order: stop admission -> join -> interrupt -> close transport -> close backend 4ms
+   ✓ S321 partial shutdown ordering > a failing dependency close does not skip later releases (backend close still runs) 3ms
+   ✓ S321 partial shutdown ordering > the facade's server.close uses the DAG owner's ordered shutdown (identity) 1ms
+   ✓ S321 partial shutdown ordering > facadeBackendOwner exposes no backend close (test seam only) 0ms
+   × S321 partial shutdown ordering > production backend close runs last and exactly once when DAG shutdown then hostScope close runs 3ms
+     → onceClose is not a function
+   × S321 partial shutdown ordering > production cli passes the idempotent backend close into the DAG owner (source wiring) 14ms
+     → expected 'const startServer = () => {\n    let …' to contain 'closeBackend'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s321-partial-shutdown.test.ts > S321 partial shutdown ordering > production backend close runs last and exactly once when DAG shutdown then hostScope close runs
+TypeError: onceClose is not a function
+ ❯ test/s321-partial-shutdown.test.ts:99:38
+     97|     const { onceClose } = await import("../src/composition-dag.js");
+     98|     let closes = 0;
+     99|     const closePackagedRuntimeOnce = onceClose(async () => { closes +=…
+       |                                      ^
+    100|     const order: string[] = [];
+    101|     const backend = composeBackendOwner({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s321-partial-shutdown.test.ts > S321 partial shutdown ordering > production cli passes the idempotent backend close into the DAG owner (source wiring)
+AssertionError: expected 'const startServer = () => {\n    let …' to contain 'closeBackend'
+
+- Expected
++ Received
+
+- closeBackend
++ const startServer = () => {
++     let backendOwner: import("./composition-dag.js").BackendOwner | undefined;
++     const serverOptions = createCliServerOptions(
++       {
++         host: options.host,
++         port: options.port,
++         staticRoot,
++         runtimeStateRoot: options.runtimeStateRoot,
++         runtimeChannel: packagedProfile?.channel ?? "development",
++         ...(anonymousLearningReads ? { anonymousLearningReads } : {}),
++         // Run 98 addendum 44 `A44-S4`: the Configuration page shows what the router resolved, so a damaged
++         // policy source reads as a degraded readback instead of a stored document that is not in effect.
++         resolveLearningPolicySource: () =>
++           describeRouterPolicyResolution(
++             readLearningPolicyFile({
++               repoRoot: options.repoRoot,
++               stateRoot: resolveLearningPolicyStateRoot({
++                 runtimeStateRoot: options.runtimeStateRoot,
++                 scopeId: options.scopeId,
++               }),
++               channel: packagedProfile?.channel ?? "development",
++               scopeId: options.scopeId,
++             }),
++           ),
++         // Run 98 addendum 34 S7: the operator re-score route reads the handler through the holder above.
++         rescoreLearningScores: async (body: Readonly<Record<string, unknown>> = {}) => {
++           const handler = rescoreLearningScoresRef.current;
++           if (!handler) throw new Error("evaluation re-score is not available yet");
++           return handler({ ...body });
++         },
++         operatorContext: {
++           channel: packagedProfile?.channel ?? "development",
++           scope: options.scopeId,
++           authorizationEpoch: 1,
++         },
++         // Run 108 follow-up: the server serves THIS runtime scope, so its request-path metrics and
++         // the operator readback below share the one registry created at the composition root.
++         observabilityScope,
++         ...(operatorAuthToken ? { operatorAuthToken } : {}),
++         ...(run88StageIdentity ? { run88StageIdentity } : {}),
++       },
++       {
++         getBackend: () => backend,
++         readBootstrapState: () => bootstrapState,
++         readExtensionRuntime: () => extensionRuntimeRef.current,
++         onExtensionRuntimeFailure: failExtensionRuntime,
++       },
++       shutdown,
++       (owner) => {
++         backendOwner = owner;
++       },
++     );
++     return startBridgeServer(serverOptions, backendOwner === undefined ? undefined : { backend: backendOwner });
++   
+
+ ❯ test/s321-partial-shutdown.test.ts:128:20
+    126|     const end = cli.indexOf("};", cli.indexOf("return startBridgeServe…
+    127|     const region = cli.slice(start, end);
+    128|     expect(region).toContain("closeBackend");
+       |                    ^
+    129|     expect(cli).toContain("closePackagedRuntimeOnce");
+    130|     expect(cli).toContain('hostScope.register("packagedRuntime"');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 5 passed (7)
+   Start at  07:54:04
+   Duration  3.17s (transform 1.63s, setup 0ms, collect 2.64s, tests 34ms, environment 0ms, prepare 170ms)
+
+

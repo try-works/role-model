@@ -1,0 +1,14 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/endpoint-registry
+
+ ✓ test/run106-arm-expansion.test.ts (6 tests) 22ms
+ ✓ test/run108-dedupe.test.ts (1 test) 15ms
+ ✓ test/effort-instance-identity.test.ts (3 tests) 23ms
+ ✓ test/index.test.ts (2 tests) 22ms
+ ✓ test/run106-registry-arm-expansion.test.ts (4 tests) 24ms
+
+ Test Files  5 passed (5)
+      Tests  16 passed (16)
+   Start at  13:17:54
+   Duration  2.59s (transform 1.47s, setup 0ms, collect 2.59s, tests 106ms, environment 4ms, prepare 3.37s)
+

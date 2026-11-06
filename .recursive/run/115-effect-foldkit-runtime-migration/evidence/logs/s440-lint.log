@@ -1,0 +1,13 @@
+# S440 lint evidence — anti_slop_lint (vendored 15 generic rules), ABSOLUTE targets, filesScanned>0
+
+file: role-model-router/apps/runtime-ui-next/test/s397-device-auth-form.test.ts
+  status: clean; filesScanned: 1; rulesRun: 15; findings: 0
+  rules: {}
+  lines: 
+
+file: role-model-router/apps/runtime-ui-next/test/s425-device-auth-correctness.test.ts
+  status: clean; filesScanned: 1; rulesRun: 15; findings: 0
+  rules: {}
+  lines: 
+
+Only these two in-scope test files changed by S440; no product/source or s247-budget edit.

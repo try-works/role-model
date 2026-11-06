@@ -1,0 +1,28 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s633-benchmark-endpoints-load.test.ts (2 tests | 1 failed | 1 skipped) 98ms
+   × S633 benchmark endpoint loading > requests modelEndpoints when the Benchmark route is invalidated 86ms
+     → expected [ 'benchmarkSuite', …(4) ] to include 'modelEndpoints'
+   ↓ S633 benchmark endpoint loading > mounts /system/benchmark, renders endpoint checkboxes and enables Run
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s633-benchmark-endpoints-load.test.ts > S633 benchmark endpoint loading > requests modelEndpoints when the Benchmark route is invalidated
+AssertionError: expected [ 'benchmarkSuite', …(4) ] to include 'modelEndpoints'
+ ❯ test/s633-benchmark-endpoints-load.test.ts:50:18
+     48|       return candidate.args?.key === undefined ? [] : [candidate.args.…
+     49|     });
+     50|     expect(keys).toContain("modelEndpoints");
+       |                  ^
+     51|   });
+     52| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 skipped (2)
+   Start at  22:49:37
+   Duration  26.16s (transform 12.72s, setup 0ms, collect 21.12s, tests 98ms, environment 2.98s, prepare 793ms)
+

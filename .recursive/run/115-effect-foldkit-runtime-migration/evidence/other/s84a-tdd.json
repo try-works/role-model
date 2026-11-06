@@ -1,0 +1,32 @@
+{
+  "slice": "s84a-high-repairs",
+  "config": {
+    "notLoaded": "Review hidden until Load; state not-loaded",
+    "snapshot": "originalText taken at Load",
+    "stale": "Confirm GETs current config before PUT; mismatch -> SaveFailed message, no PUT",
+    "diff": "removed keys included",
+    "reds": {
+      "beforeLoad": "s84a-red-config-before-load.log",
+      "stale": "s84a-red-config-stale.log"
+    }
+  },
+  "models": {
+    "exact": "Claude row endpoint anthropic.team.shared.us-east-1.default, healthy, effort unavailable, role analyst",
+    "red": "s84a-red-models-empty-join.log"
+  },
+  "titles": {
+    "sample": "/ = Runtime overview, /models = Models, /studio = Studio, NotFound = Not found: /does/not/exist",
+    "settledWait": true,
+    "red": "s84a-red-title-text.log (attempt did not reproduce; count RED s71a-red-single-title.log is prior)"
+  },
+  "learning": {
+    "absent": "Production activation unknown (field absent), not disabled",
+    "fixture": "learning-missing-production.json",
+    "red": "s84a-red-learning-absent-production.log"
+  },
+  "counts": {
+    "clientFull": 257,
+    "files": 26,
+    "typecheck": 0
+  }
+}

@@ -3,6 +3,8 @@ import type { RouteUnion } from "@role-model-router/foldkit/route";
 import type { Url } from "@role-model-router/foldkit/url";
 import { Schema, pipe } from "effect";
 
+import { legacyRedirectForUrl } from "./legacy-redirects";
+
 /**
  * Run 115 S14b (R11/R21): the route union for the Foldkit shell.
  *
@@ -25,16 +27,47 @@ const routeCases = {
   LocalLogs: {},
   RouterCandidates: {},
   Requests: {},
+  RequestDetail: { requestId: Schema.String },
   RouterDecisions: {},
+  RouterDecisionDetail: { requestId: Schema.String },
   LocalPeers: {},
+  SystemPeers: {},
+  LocalPeerModels: {},
+  QueuesConfiguration: {},
+  IntegrationsDownstream: {},
+  IntegrationsUpstream: {},
+  LocalChoose: {},
+  Studio: {},
+  Learning: {},
+  LearningConfiguration: {},
+  LearningPacks: {},
+  LearningDecisions: {},
+  LearningEvidence: {},
+  LearningHistory: {},
+  LocalLlamaSwapModels: {},
+  LocalPolicy: {},
+  SystemOperator: {},
+  SystemExtensions: {},
+  Models: {},
+  ModelsRoles: {},
+  Benchmark: {},
+  StorageRetention: {},
   Runtime: {},
+  RuntimeConfig: {},
   SessionReadiness: {},
   Dashboard: {},
   LocalSwap: {},
+  RouterStrategy: {},
+  RouterWorkloads: {},
+  RouterConfig: {},
+  RouterAgentStrategy: {},
   ObserveActivity: {},
   ObserveLogs: {},
   ObserveRouting: {},
   Router: {},
+  Providers: {},
+  Endpoints: {},
+  ControlController: {},
   NotFound: { path: Schema.String },
 };
 
@@ -60,14 +93,95 @@ const localLogsRouter = Route.mapTo(AppRoute.LocalLogs)(
 const routerCandidatesRouter = Route.mapTo(AppRoute.RouterCandidates)(
   pipe(Route.literal("router"), Route.slash(Route.literal("candidates"))),
 );
+const requestDetailRouter = Route.mapTo(AppRoute.RequestDetail)(
+  pipe(Route.literal("requests"), Route.slash(Route.string("requestId"))),
+);
 const requestsRouter = Route.mapTo(AppRoute.Requests)(Route.literal("requests"));
+const routerDecisionDetailRouter = Route.mapTo(AppRoute.RouterDecisionDetail)(
+  pipe(
+    Route.literal("router"),
+    Route.slash(Route.literal("decisions")),
+    Route.slash(Route.string("requestId")),
+  ),
+);
 const routerDecisionsRouter = Route.mapTo(AppRoute.RouterDecisions)(
   pipe(Route.literal("router"), Route.slash(Route.literal("decisions"))),
 );
 const localPeersRouter = Route.mapTo(AppRoute.LocalPeers)(
   pipe(Route.literal("local"), Route.slash(Route.literal("peers"))),
 );
+const localPeerModelsRouter = Route.mapTo(AppRoute.LocalPeerModels)(
+  pipe(Route.literal("local"), Route.slash(Route.literal("peer-models"))),
+);
+const queuesConfigurationRouter = Route.mapTo(AppRoute.QueuesConfiguration)(
+  pipe(Route.literal("control"), Route.slash(Route.literal("queues-config"))),
+);
+const integrationsDownstreamRouter = Route.mapTo(AppRoute.IntegrationsDownstream)(
+  pipe(Route.literal("integrations"), Route.slash(Route.literal("downstream"))),
+);
+const integrationsUpstreamRouter = Route.mapTo(AppRoute.IntegrationsUpstream)(
+  pipe(Route.literal("integrations"), Route.slash(Route.literal("upstream"))),
+);
+const benchmarkRouter = Route.mapTo(AppRoute.Benchmark)(
+  pipe(Route.literal("system"), Route.slash(Route.literal("benchmark"))),
+);
+const storageRetentionRouter = Route.mapTo(AppRoute.StorageRetention)(
+  pipe(Route.literal("system"), Route.slash(Route.literal("storage-retention"))),
+);
+const modelsRouter = Route.mapTo(AppRoute.Models)(Route.literal("models"));
+const modelsRolesRouter = Route.mapTo(AppRoute.ModelsRoles)(
+  pipe(Route.literal("models"), Route.slash(Route.literal("roles"))),
+);
+const learningRouter = Route.mapTo(AppRoute.Learning)(Route.literal("learning"));
+const learningConfigurationRouter = Route.mapTo(AppRoute.LearningConfiguration)(
+  pipe(Route.literal("learning"), Route.slash(Route.literal("configuration"))),
+);
+const learningPacksRouter = Route.mapTo(AppRoute.LearningPacks)(
+  pipe(Route.literal("learning"), Route.slash(Route.literal("packs"))),
+);
+const learningDecisionsRouter = Route.mapTo(AppRoute.LearningDecisions)(
+  pipe(Route.literal("learning"), Route.slash(Route.literal("decisions"))),
+);
+const learningEvidenceRouter = Route.mapTo(AppRoute.LearningEvidence)(
+  pipe(Route.literal("learning"), Route.slash(Route.literal("evidence"))),
+);
+const localLlamaSwapModelsRouter = Route.mapTo(AppRoute.LocalLlamaSwapModels)(
+  pipe(
+    Route.literal("local"),
+    Route.slash(Route.literal("llama-swap")),
+    Route.slash(Route.literal("models")),
+  ),
+);
+const localPolicyRouter = Route.mapTo(AppRoute.LocalPolicy)(
+  pipe(
+    Route.literal("local"),
+    Route.slash(Route.literal("llama-swap")),
+    Route.slash(Route.literal("policy")),
+  ),
+);
+const systemOperatorRouter = Route.mapTo(AppRoute.SystemOperator)(
+  pipe(Route.literal("system"), Route.slash(Route.literal("operator"))),
+);
+const systemExtensionsRouter = Route.mapTo(AppRoute.SystemExtensions)(
+  pipe(Route.literal("system"), Route.slash(Route.literal("extensions"))),
+);
+const learningHistoryRouter = Route.mapTo(AppRoute.LearningHistory)(
+  pipe(Route.literal("learning"), Route.slash(Route.literal("history"))),
+);
+const studioRouter = Route.mapTo(AppRoute.Studio)(Route.literal("studio"));
+const localChooseRouter = Route.mapTo(AppRoute.LocalChoose)(
+  pipe(Route.literal("local"), Route.slash(Route.literal("choose"))),
+);
+const localModelsRedirectRouter = Route.mapTo(AppRoute.LocalChoose)(
+  pipe(Route.literal("local"), Route.slash(Route.literal("models"))),
+);
+const systemPeersRouter = Route.mapTo(AppRoute.SystemPeers)(
+  pipe(Route.literal("system"), Route.slash(Route.literal("peers"))),
+);
 const runtimeRouter = Route.mapTo(AppRoute.Runtime)(Route.literal("runtime"));
+const runtimeConfigRouter = Route.mapTo(AppRoute.RuntimeConfig)(
+  pipe(Route.literal("runtime"), Route.slash(Route.literal("config"))),
+);
 const sessionReadinessRouter = Route.mapTo(AppRoute.SessionReadiness)(
   Route.literal("session-readiness"),
 );
@@ -84,7 +198,28 @@ const observeLogsRouter = Route.mapTo(AppRoute.ObserveLogs)(
 const observeRoutingRouter = Route.mapTo(AppRoute.ObserveRouting)(
   pipe(Route.literal("observe"), Route.slash(Route.literal("routing"))),
 );
+const routerStrategyRouter = Route.mapTo(AppRoute.RouterStrategy)(
+  pipe(Route.literal("router"), Route.slash(Route.literal("strategy"))),
+);
+const routerWorkloadsRouter = Route.mapTo(AppRoute.RouterWorkloads)(
+  pipe(Route.literal("router"), Route.slash(Route.literal("workloads"))),
+);
+const routerConfigRouter = Route.mapTo(AppRoute.RouterConfig)(
+  pipe(Route.literal("router"), Route.slash(Route.literal("config"))),
+);
+const routerAgentStrategyRouter = Route.mapTo(AppRoute.RouterAgentStrategy)(
+  pipe(Route.literal("router"), Route.slash(Route.literal("agent-strategy"))),
+);
 const routerRouter = Route.mapTo(AppRoute.Router)(Route.literal("router"));
+const providersRouter = Route.mapTo(AppRoute.Providers)(
+  pipe(Route.literal("control"), Route.slash(Route.literal("providers"))),
+);
+const endpointsRouter = Route.mapTo(AppRoute.Endpoints)(
+  pipe(Route.literal("control"), Route.slash(Route.literal("endpoints"))),
+);
+const controlControllerRouter = Route.mapTo(AppRoute.ControlController)(
+  pipe(Route.literal("control"), Route.slash(Route.literal("controller"))),
+);
 
 export const appRouter = Route.oneOf(
   diagnosticsRouter,
@@ -93,9 +228,34 @@ export const appRouter = Route.oneOf(
   queuesRouter,
   localLogsRouter,
   routerCandidatesRouter,
+  requestDetailRouter,
   requestsRouter,
+  routerDecisionDetailRouter,
   routerDecisionsRouter,
   localPeersRouter,
+  systemPeersRouter,
+  localPeerModelsRouter,
+  queuesConfigurationRouter,
+  integrationsDownstreamRouter,
+  integrationsUpstreamRouter,
+  localChooseRouter,
+  studioRouter,
+  learningRouter,
+  learningConfigurationRouter,
+  learningPacksRouter,
+  learningDecisionsRouter,
+  learningEvidenceRouter,
+  learningHistoryRouter,
+  localLlamaSwapModelsRouter,
+  localPolicyRouter,
+  systemOperatorRouter,
+  systemExtensionsRouter,
+  modelsRouter,
+  modelsRolesRouter,
+  benchmarkRouter,
+  storageRetentionRouter,
+  localModelsRedirectRouter,
+  runtimeConfigRouter,
   runtimeRouter,
   sessionReadinessRouter,
   dashboardRouter,
@@ -104,10 +264,59 @@ export const appRouter = Route.oneOf(
   observeLogsRouter,
   observeRoutingRouter,
   routerRouter,
+  routerStrategyRouter,
+  routerWorkloadsRouter,
+  routerConfigRouter,
+  routerAgentStrategyRouter,
+  providersRouter,
+  endpointsRouter,
+  controlControllerRouter,
   indexRouter,
 );
 
 export const urlToRoute = Route.parseUrlWithFallback(appRouter, AppRoute.NotFound);
 
+export interface ResolvedAppUrl {
+  /** The URL the typed route was parsed from (the canonical target for a legacy URL). */
+  readonly canonicalUrl: Url;
+  /** Present only when this URL is an original `/app/*` path that needs a replace Command. */
+  readonly redirectHref?: string;
+  readonly route: AppRoute;
+}
+
+/**
+ * S269 (R11): one resolution entry point for initial load, in-app URL changes and tests.
+ *
+ * A supported original `/app/*` path parses against its canonical target, so callers get the same
+ * real typed route as the bare URL and one `redirectHref` to replace the address bar. Unrelated
+ * and missing paths still fall through to NotFound.
+ */
+export const resolveAppUrl = (url: Url): ResolvedAppUrl => {
+  const redirect = legacyRedirectForUrl(url);
+  if (redirect === undefined) return { canonicalUrl: url, route: urlToRoute(url) };
+  return {
+    canonicalUrl: redirect.url,
+    redirectHref: redirect.href,
+    route: urlToRoute(redirect.url),
+  };
+};
+
 /** The initial route comes from the URL the runtime passes to the routing init. */
-export const routeFromUrl = (url: Url): AppRoute => urlToRoute(url);
+export const routeFromUrl = (url: Url): AppRoute => resolveAppUrl(url).route;
+
+/**
+ * True when two routes address the same route instance. update uses this to ignore the
+ * `foldkit:urlchange` echo of its own redirect replace instead of issuing a second route read.
+ */
+export const sameRoute = (left: AppRoute, right: AppRoute): boolean => {
+  if (left._tag !== right._tag) return false;
+  if (left._tag === "Diagnostics" && right._tag === "Diagnostics") return left.id === right.id;
+  if (left._tag === "RequestDetail" && right._tag === "RequestDetail") {
+    return left.requestId === right.requestId;
+  }
+  if (left._tag === "RouterDecisionDetail" && right._tag === "RouterDecisionDetail") {
+    return left.requestId === right.requestId;
+  }
+  if (left._tag === "NotFound" && right._tag === "NotFound") return left.path === right.path;
+  return true;
+};

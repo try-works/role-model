@@ -1,0 +1,40 @@
+COMMAND: node --test scripts/runtime/parity-selfcheck.test.mjs
+CWD: public worktree ; S298 GREEN (final bytes): mutation JSON surface, 27 tests
+EXIT_CODE=0
+
+✔ S294 PASSED when both builds are deterministic, clean and the dual comparison is recorded (10.0009ms)
+✔ S294 a React-vs-Foldkit difference is classified, never forced equal (1.4265ms)
+✔ S294 FAILED when a build is nondeterministic across the two runs (1.7917ms)
+✔ S294 FAILED when a capture surfaces console or network issues (1.2763ms)
+✔ S294 FAILED (not NOT_RUN) when a build target is unavailable (1.2102ms)
+✔ S294 NOT_RUN with exit 2 only when no browser is available (0.7468ms)
+✔ S294 runSelfcheck captures every target twice (two runs) and evaluates the result (5.9982ms)
+✔ S294 partitions favicon harness noise out of the capture issues while recording it (1.7408ms)
+✔ S295 FAILED when a target has fewer than exactly two captures (2.9864ms)
+✔ S295 FAILED when a target entry is missing from the plan (1.647ms)
+✔ S295 emits per-target ignoredIssues and an ignored count in the JSON (2.3342ms)
+✔ S295 emits comparisons on the FAILED path and computes reactVsReact from the two react shas (0.9296ms)
+✔ S295 evidence.targets lists both run PNGs per target and echoes executable/temp roots (1.1548ms)
+✔ S295 runSelfcheck contains a capture failure as a FAILED JSON result, not a rejection (1.4739ms)
+✔ S295 r2 FAILED unless there are exactly two runs and one capture per target per run (1.8427ms)
+✔ S295 r2 enforces the required temp drive (E: passes, another drive fails) (1.4766ms)
+✔ S295 r2 launchChrome kills its child when the DevTools endpoint never appears (218.5046ms)
+✔ S295 r2 main emits FAILED JSON when the injected launch rejects (no uncaught rejection) (1377.0253ms)
+✔ S295 r3 launchChrome rejects a spawn error and kills the child (no orphan, no uncaught error) (34.3424ms)
+✔ S297 PASSED when the one-class mutant changes the capture and the unchanged pair is identical (1.983ms)
+✔ S297 FAILED when the mutant capture is identical to the baseline (blind harness) (0.5892ms)
+✔ S297 FAILED when the harness reports detected:false although the shas differ (0.5408ms)
+✔ S297 FAILED when the unchanged baseline pair itself differs (0.4255ms)
+✔ S297 FAILED on capture issues and NOT_RUN (exit 2) without a browser (0.5254ms)
+✔ S297 runMutationCheck captures baseline twice and the mutant once via the adapter (1.3282ms)
+✔ S298 mutation JSON carries ignoredIssues/ignoredCount, baseline run identity and PNG evidence (0.9182ms)
+✔ S294 planTargets names the React and Foldkit static roots from the repo root (1.1596ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2116.9881
+

@@ -1,0 +1,65 @@
+{
+  "runId": "88e065d8-d1e5-4591-a117-4b02b229d9b4",
+  "status": "completed",
+  "steps": 60,
+  "grades": [
+    {
+      "id": "mock.local.alpha.us-east-1.gpt-4.1-mini-fast",
+      "score": 0.6833333333333335,
+      "first": {
+        "caseId": "p17-tools-multi-hard",
+        "difficultyBucket": "hard",
+        "score": 0.82,
+        "rationale": "Mock judge: the deliverable addresses the requested capability.",
+        "gradingMethod": "judge",
+        "latencyMs": 617,
+        "actualPreview": "{\n  \"tool_calls\": []\n}",
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      "last": {
+        "caseId": "h15-max-signal-v3",
+        "difficultyBucket": "hard",
+        "score": 0.82,
+        "rationale": "Mock judge: the deliverable addresses the requested capability.",
+        "gradingMethod": "judge",
+        "latencyMs": 496,
+        "actualPreview": "{\n  \"tool_calls\": []\n}",
+        "parseSuccess": true,
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      }
+    },
+    {
+      "id": "mock.local.fail2.us-east-1.gpt-4.1-mini-fast",
+      "score": 0,
+      "first": {
+        "caseId": "p17-tools-multi-hard",
+        "difficultyBucket": "hard",
+        "score": 0,
+        "rationale": "Benchmark execution failed.",
+        "gradingMethod": "heuristic",
+        "latencyMs": 113,
+        "actualPreview": "mock upstream failure",
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      },
+      "last": {
+        "caseId": "h15-max-signal-v3",
+        "difficultyBucket": "hard",
+        "score": 0,
+        "rationale": "Benchmark execution failed.",
+        "gradingMethod": "heuristic",
+        "latencyMs": 100,
+        "actualPreview": "mock upstream failure",
+        "judgeError": null,
+        "judgeUnavailable": false,
+        "cappedByValidator": false
+      }
+    }
+  ]
+}

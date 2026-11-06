@@ -1,0 +1,69 @@
+COMMAND: node ../../../node_modules/vitest/vitest.mjs run  (x3)
+CWD: role-model-router/packages/process-supervisor
+EXIT_CODE=0,0,0
+
+RUN 1 EXIT_CODE=0
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ✓ test/health-wait-timeout.test.ts (3 tests) 4263ms
+   ✓ process-supervisor bounded health wait > rejects within startupTimeoutMs when the health peer accepts and never responds  884ms
+   ✓ process-supervisor bounded health wait > becomes healthy when a responsive endpoint replies after about 200ms  1150ms
+   ✓ process-supervisor bounded health wait > stops polling after a health timeout and shuts down cleanly  2226ms
+ ✓ test/index.test.ts (6 tests) 6132ms
+   ✓ process-supervisor > starts a vendor process, waits for health, and reports it as healthy  791ms
+   ✓ process-supervisor > can run supervised vendors without inheriting provider credential variables  1105ms
+   ✓ process-supervisor > captures child logs and restarts an unexpectedly crashed vendor with backoff  1773ms
+   ✓ process-supervisor > forces bounded shutdown when a vendor ignores the initial termination signal  955ms
+   ✓ process-supervisor > stops spawned child processes when a managed vendor shuts down on Windows  1213ms
+
+ Test Files  2 passed (2)
+      Tests  9 passed (9)
+   Start at  20:35:12
+   Duration  7.54s (transform 156ms, setup 0ms, collect 217ms, tests 10.39s, environment 1ms, prepare 859ms)
+
+
+RUN 2 EXIT_CODE=0
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ✓ test/health-wait-timeout.test.ts (3 tests) 4742ms
+   ✓ process-supervisor bounded health wait > rejects within startupTimeoutMs when the health peer accepts and never responds  919ms
+   ✓ process-supervisor bounded health wait > becomes healthy when a responsive endpoint replies after about 200ms  1206ms
+   ✓ process-supervisor bounded health wait > stops polling after a health timeout and shuts down cleanly  2613ms
+ ✓ test/index.test.ts (6 tests) 8372ms
+   ✓ process-supervisor > starts a vendor process, waits for health, and reports it as healthy  1120ms
+   ✓ process-supervisor > can run supervised vendors without inheriting provider credential variables  1436ms
+   ✓ process-supervisor > tracks crash callbacks when a managed vendor exits unexpectedly  1519ms
+   ✓ process-supervisor > captures child logs and restarts an unexpectedly crashed vendor with backoff  1790ms
+   ✓ process-supervisor > forces bounded shutdown when a vendor ignores the initial termination signal  861ms
+   ✓ process-supervisor > stops spawned child processes when a managed vendor shuts down on Windows  1641ms
+
+ Test Files  2 passed (2)
+      Tests  9 passed (9)
+   Start at  20:35:21
+   Duration  10.38s (transform 329ms, setup 0ms, collect 488ms, tests 13.11s, environment 1ms, prepare 1.31s)
+
+
+RUN 3 EXIT_CODE=0
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/process-supervisor
+
+ ✓ test/health-wait-timeout.test.ts (3 tests) 4085ms
+   ✓ process-supervisor bounded health wait > rejects within startupTimeoutMs when the health peer accepts and never responds  905ms
+   ✓ process-supervisor bounded health wait > becomes healthy when a responsive endpoint replies after about 200ms  865ms
+   ✓ process-supervisor bounded health wait > stops polling after a health timeout and shuts down cleanly  2311ms
+ ✓ test/index.test.ts (6 tests) 5725ms
+   ✓ process-supervisor > starts a vendor process, waits for health, and reports it as healthy  919ms
+   ✓ process-supervisor > can run supervised vendors without inheriting provider credential variables  779ms
+   ✓ process-supervisor > captures child logs and restarts an unexpectedly crashed vendor with backoff  1611ms
+   ✓ process-supervisor > forces bounded shutdown when a vendor ignores the initial termination signal  866ms
+   ✓ process-supervisor > stops spawned child processes when a managed vendor shuts down on Windows  1345ms
+
+ Test Files  2 passed (2)
+      Tests  9 passed (9)
+   Start at  20:35:33
+   Duration  7.26s (transform 306ms, setup 0ms, collect 443ms, tests 9.81s, environment 1ms, prepare 913ms)
+
+
+

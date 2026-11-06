@@ -26,62 +26,65 @@ const json = (response: Response): Promise<unknown> => response.json();
 describe("Run 96 operator evidence routes", () => {
   test("keeps operator evidence authenticated and delegates every evidence view", async () => {
     const calls: string[] = [];
-    const server = await startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      operatorAuthToken: "operator-secret",
-      // Run 98 addendum 46: the device owner is trusted on a loopback runtime, so this suite pins the
-      // token rule explicitly to keep testing what it is about — a client without the credential.
-      deviceOwnerTrust: "off",
-      operatorContext,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    const server = await startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        operatorAuthToken: "operator-secret",
+        // Run 98 addendum 46: the device owner is trusted on a loopback runtime, so this suite pins the
+        // token rule explicitly to keep testing what it is about — a client without the credential.
+        deviceOwnerTrust: "off",
+        operatorContext,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        executeResponses: async () => {
+          throw new Error("not used");
+        },
+        listOperatorTraceRoots: async (query) => {
+          calls.push(`trace-roots:${query?.limit ?? "none"}`);
+          return { roots: [{ traceRootId: "trace-1", completeness: "complete" }] };
+        },
+        readOperatorTraceRoot: async (traceRootId) => {
+          calls.push(`trace-root:${traceRootId}`);
+          return { traceRootId, generations: 2, branches: 1 };
+        },
+        readReplayJob: async (jobId) => {
+          calls.push(`replay:${jobId}`);
+          return { jobId, budget: { maxRequests: 5 }, status: "running" };
+        },
+        readReplayResults: async (jobId) => {
+          calls.push(`replay-results:${jobId}`);
+          return { jobId, results: [{ requestId: "req-1" }] };
+        },
+        listEvaluationTrials: async (jobId) => {
+          calls.push(`trials:${jobId}`);
+          return { jobId, trials: [{ trialId: "trial-1" }] };
+        },
+        listEvaluationScorers: async (jobId) => {
+          calls.push(`scorers:${jobId}`);
+          return { jobId, scorers: [{ scorerId: "scorer-1" }] };
+        },
+        listEvaluationComparisons: async (jobId) => {
+          calls.push(`comparisons:${jobId}`);
+          return { jobId, comparisons: [{ comparisonId: "comparison-1" }] };
+        },
+        listEvaluationGroups: async (jobId) => {
+          calls.push(`groups:${jobId}`);
+          return { jobId, groups: [{ groupId: "group-1" }] };
+        },
+        readLearningProfile: async () => {
+          calls.push("profile");
+          return { confidence: 0.81 };
+        },
+        readLearningAdvisory: async () => {
+          calls.push("advisory");
+          return { availability: "available", reason: "shadow-only" };
+        },
       },
-      executeResponses: async () => {
-        throw new Error("not used");
-      },
-      listOperatorTraceRoots: async (query) => {
-        calls.push(`trace-roots:${query?.limit ?? "none"}`);
-        return { roots: [{ traceRootId: "trace-1", completeness: "complete" }] };
-      },
-      readOperatorTraceRoot: async (traceRootId) => {
-        calls.push(`trace-root:${traceRootId}`);
-        return { traceRootId, generations: 2, branches: 1 };
-      },
-      readReplayJob: async (jobId) => {
-        calls.push(`replay:${jobId}`);
-        return { jobId, budget: { maxRequests: 5 }, status: "running" };
-      },
-      readReplayResults: async (jobId) => {
-        calls.push(`replay-results:${jobId}`);
-        return { jobId, results: [{ requestId: "req-1" }] };
-      },
-      listEvaluationTrials: async (jobId) => {
-        calls.push(`trials:${jobId}`);
-        return { jobId, trials: [{ trialId: "trial-1" }] };
-      },
-      listEvaluationScorers: async (jobId) => {
-        calls.push(`scorers:${jobId}`);
-        return { jobId, scorers: [{ scorerId: "scorer-1" }] };
-      },
-      listEvaluationComparisons: async (jobId) => {
-        calls.push(`comparisons:${jobId}`);
-        return { jobId, comparisons: [{ comparisonId: "comparison-1" }] };
-      },
-      listEvaluationGroups: async (jobId) => {
-        calls.push(`groups:${jobId}`);
-        return { jobId, groups: [{ groupId: "group-1" }] };
-      },
-      readLearningProfile: async () => {
-        calls.push("profile");
-        return { confidence: 0.81 };
-      },
-      readLearningAdvisory: async () => {
-        calls.push("advisory");
-        return { availability: "available", reason: "shadow-only" };
-      },
-    });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const baseUrl = `http://127.0.0.1:${server.port}`;
@@ -155,19 +158,22 @@ describe("Run 96 operator evidence routes", () => {
   });
 
   test("returns a truthful unavailable response when an optional operator view is not wired", async () => {
-    const server = await startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      operatorAuthToken: "operator-secret",
-      operatorContext,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    const server = await startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        operatorAuthToken: "operator-secret",
+        operatorContext,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        executeResponses: async () => {
+          throw new Error("not used");
+        },
       },
-      executeResponses: async () => {
-        throw new Error("not used");
-      },
-    });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(
@@ -194,30 +200,33 @@ describe("Run 96 operator evidence routes", () => {
   });
 
   test("does not turn an unavailable backend capability into a successful HTTP response", async () => {
-    const server = await startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      operatorAuthToken: "operator-secret",
-      operatorContext,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    const server = await startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        operatorAuthToken: "operator-secret",
+        operatorContext,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        executeResponses: async () => {
+          throw new Error("not used");
+        },
+        // createRuntimeBridgeBackend exposes this shape when the packaged private
+        // operator authority is not wired. The HTTP boundary must preserve that
+        // unavailable state instead of reporting a misleading 200.
+        readLearningAdvisory: async () => ({
+          schemaVersion: "role-model.operator-status.v1",
+          overall: "unavailable",
+          observedAtMs: Date.now(),
+          capabilities: { learningAdvisory: "unavailable" },
+          error: "operator_capability_unavailable",
+          capability: "learning advisory",
+        }),
       },
-      executeResponses: async () => {
-        throw new Error("not used");
-      },
-      // createRuntimeBridgeBackend exposes this shape when the packaged private
-      // operator authority is not wired. The HTTP boundary must preserve that
-      // unavailable state instead of reporting a misleading 200.
-      readLearningAdvisory: async () => ({
-        schemaVersion: "role-model.operator-status.v1",
-        overall: "unavailable",
-        observedAtMs: Date.now(),
-        capabilities: { learningAdvisory: "unavailable" },
-        error: "operator_capability_unavailable",
-        capability: "learning advisory",
-      }),
-    });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(
@@ -264,15 +273,18 @@ describe("Run 96 operator evidence routes", () => {
       },
       backend,
     );
-    const server = await startBridgeServer({
-      ...options,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    const server = await startBridgeServer(
+      {
+        ...options,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        executeResponses: async () => {
+          throw new Error("not used");
+        },
       },
-      executeResponses: async () => {
-        throw new Error("not used");
-      },
-    });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(
@@ -451,19 +463,22 @@ describe("Run 96 operator evidence routes", () => {
   });
 
   test("bridge returns a truthful unavailable response when materialization is not wired", async () => {
-    const server = await startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      operatorAuthToken: "operator-secret",
-      operatorContext,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    const server = await startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        operatorAuthToken: "operator-secret",
+        operatorContext,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        executeResponses: async () => {
+          throw new Error("not used");
+        },
       },
-      executeResponses: async () => {
-        throw new Error("not used");
-      },
-    });
+      { allowTestSeamBackend: true },
+    );
     try {
       const response = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/operator/learning/materialize-route-ladders`,

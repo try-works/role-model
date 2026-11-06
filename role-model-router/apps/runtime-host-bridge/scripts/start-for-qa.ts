@@ -1195,7 +1195,9 @@ export async function main(): Promise<void> {
     await bootstrapQaControlPlane(backend);
   }
 
-  const server = await startBridgeServer(createQaServerOptions(repoRoot, backend));
+  const server = await startBridgeServer(createQaServerOptions(repoRoot, backend), {
+    allowTestSeamBackend: true,
+  });
 
   const baseUrl = `http://${host}:${server.port}`;
   console.log(`[QA] Bridge server running at ${baseUrl}`);

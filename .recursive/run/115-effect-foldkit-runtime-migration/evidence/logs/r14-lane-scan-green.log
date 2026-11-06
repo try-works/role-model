@@ -1,0 +1,18 @@
+▶ packaged parity lane helpers
+  ✔ parses PASS/FAIL assertion outcomes in order and ignores narrating lines (4.2543ms)
+  ✔ reports PARITY for identical outcomes and DIVERGENCE for a changed one (1.5303ms)
+  ✔ reports INCOMPLETE when a run produced no assertion outcomes (2.9777ms)
+  ✔ classifies a compare-release summary: same/additive/environment is parity, different is not (1.4057ms)
+  ✔ states the selfcheck surface honestly (0.5074ms)
+✔ packaged parity lane helpers (14.6679ms)
+▶ selfcheck surface scan is not fooled by minified bundles
+  ✔ ignores react+digest co-occurrence inside a one-line bundle but reports a route marker in source (15.2299ms)
+✔ selfcheck surface scan is not fooled by minified bundles (15.6134ms)
+ℹ tests 6
+ℹ suites 2
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 321.3237

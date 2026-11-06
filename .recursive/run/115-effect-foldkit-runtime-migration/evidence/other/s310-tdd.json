@@ -1,0 +1,80 @@
+{
+  "slice": "s310-b6-backend-owner",
+  "requirement": "R27 Backend owner through composition DAG (s21d gateway)",
+  "decision": "STOP - the backend options object is constructed by createCliServerOptions in cli.ts (outside this slice's allowed write files: composition-dag.ts, the composition region of index.ts, test/**). The DAG cannot become its construction site without editing cli.ts, so no identity/no-fallback/withPermit wiring is claimed.",
+  "evidence": {
+    "cliConstruction": "apps/runtime-host-bridge/src/cli.ts:4300 createCliServerOptions(...) :4324 returns StartBridgeServerOptions; 161 StartBridgeServerOptions[\"...\"] bind sites in cli.ts (bindBackendMethod :4338-4346; bindings :4348-4937); invoked at :5640 startBridgeServer(createCliServerOptions(...)).",
+    "indexConstruction": "src/index.ts:20905 createRuntimeBridgeBackend(options: CreateRuntimeBridgeBackendOptions): Promise<RuntimeBridgeBackend> constructs the backend SERVICE (RuntimeBridgeBackend :3840-3867 holds registry/executeChatCompletions/executeResponses), not StartBridgeServerOptions; only 2 StartBridgeServerOptions bind sites exist in index.ts (:10131/:10137 type re-exports).",
+    "dagBackendShape": "composition-dag.ts BackendContract is {id, artifactStore, eventLog} + backendLayer; shape only, no options bundle or lifecycle.",
+    "handlerSignature": "src/index.ts:17437 createRequestHandler(options: StartBridgeServerOptions) closes over the host options; :20729 startBridgeServer(options) wires listener :20616-20624 and returns {port, close}; shutdown is server.close only; readiness is the route readback (options.readStartupReadiness).",
+    "seamRegion": "src/index.ts:4341-4346 S21c seams onBootstrapOwner/bootstrapOwner consumed at :20916; their removal condition (backend returns its composition owners) is independent of the blocked options-construction move.",
+    "typeProof": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s310-typeproof.log",
+      "command": "temporary `s310BackendOwnerProof(backend: BackendContract): StartBridgeServerOptions => backend` in index.ts + tsc -p apps/runtime-host-bridge/tsconfig.json --noEmit",
+      "error": "TS2739: Type 'BackendContract' is missing the following properties from type 'StartBridgeServerOptions': host, port, registry, executeChatCompletions, executeResponses",
+      "note": "Only the five REQUIRED fields are named structurally; the 178 optional route/lifecycle callbacks are equally needed for behaviour parity."
+    },
+    "startStopOrder": "build listener (module-health composition) -> createServer -> attach trace handlers -> listen(host/port) -> return close; the DAG owns no start/close lifecycle."
+  },
+  "redGreen": {
+    "red": "No runtime RED is possible for a move that cannot be made inside the allowed files; the type-level construction attempt is the RED (s310-typeproof.log, TS2739).",
+    "green": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s310-characterization.log: s21a-composition-dag (6) + s21c-bootstrap-owner-wiring (2) = 8/8 passed; s310-typecheck.log: tsc exit 0 after the temp proof was removed.",
+    "identityFallback": "Not applicable: no Backend construction was moved, so there is no DAG Backend instance for the host to identify and no legacy fallback to reject."
+  },
+  "counts": {
+    "tests": 8,
+    "passed": 8,
+    "failed": 0,
+    "typecheck": "exit 0",
+    "logs": [
+      "s310-characterization.log",
+      "s310-typecheck.log",
+      "s310-typeproof.log"
+    ]
+  },
+  "files": {
+    "role-model-router/apps/runtime-host-bridge/src/composition-dag.ts": "54E78CDD446E4D60DDE4554DF7D7042CADFE71416BA239C1C5A4E9D9E4317884",
+    "role-model-router/apps/runtime-host-bridge/src/index.ts": "C27188C296E5C852B60009EFE36E93B6DF918109390C0A40E4B3CCE526DA7761",
+    "role-model-router/apps/runtime-host-bridge/src/cli.ts": "ADB051F252234C720FA1082FD44941A2A01F311A7B7A6AD5BC1676CE5C9F8E81"
+  },
+  "changedProductFiles": "none (temp type proof removed; index.ts restored byte-identical)",
+  "ephemeralPorts": "No runtime server or listener started; no operator ports touched.",
+  "remainingOwners": [
+    {
+      "owner": "Backend",
+      "status": "blocked",
+      "blocker": "StartBridgeServerOptions construction site is cli.ts createCliServerOptions (:4300-4937, 161 bind sites, :5640 call), outside this slice's write files."
+    },
+    {
+      "owner": "Server",
+      "status": "blocked",
+      "blocker": "Needs the backend/options bundle and a start/close owner; StartBridgeServerOptions has 183 fields."
+    },
+    {
+      "owner": "Refresh",
+      "status": "blocked",
+      "blocker": "refresh/reload embedded in backend closures/shared state."
+    },
+    {
+      "owner": "Drain",
+      "status": "blocked",
+      "blocker": "shutdown/drain spans backend, supervisor, queues, vendors."
+    },
+    {
+      "owner": "Benchmark",
+      "status": "blocked",
+      "blocker": "separate CLI/runner; cancellation/cross-process ownership not modelled."
+    },
+    {
+      "owner": "Cli",
+      "status": "blocked",
+      "blocker": "process entrypoint (args/SEA/startup)."
+    },
+    {
+      "owner": "ProviderPermits pilot",
+      "status": "shape only",
+      "blocker": "not connected to provider dispatch; the real executeChatCompletions lives in createRuntimeBridgeBackend, but DAG instance identity cannot be established while options construction is cli-owned."
+    }
+  ],
+  "unproven": "No DAG-provided Backend instance exists; identity/no-fallback/withPermit-wiring tests were not written because the construction site is outside the allowed files. The next mechanical step is to move createCliServerOptions (and its CliBackend binding) into the DAG as a typed Backend owner input, which requires cli.ts in the write scope."
+}

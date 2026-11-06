@@ -1,0 +1,6 @@
+COMMAND: dialog-a11y-audit final5 exe + current static after S504
+EXIT_CODE=0
+(node:45640) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS: dialog aria-modal, initial focus Dismiss, Tab trapped, Escape closed, focus returned to Start device authorization
+

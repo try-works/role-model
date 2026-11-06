@@ -20,6 +20,12 @@ export interface ReplayLedgerLimits {
   readonly counterfactualsPerDay: number;
   readonly dispatchesPerDay: number;
   /**
+   * A hard ceiling that refuses reservations on every channel, independent of
+   * `enforced`. The auto-queue config uses it so `enabled: false` (or a daily cap)
+   * cannot be bypassed by the production-only budget enforcement policy.
+   */
+  readonly hardCounterfactualLimit: number | null;
+  /**
    * Run 100 phase-5 repair (operator instruction 2026-09-21): whether the ceilings may *refuse* work.
    * The accounting is unconditional - every dispatch is still recorded and reported - but the daily
    * ceiling is a production delivery guard, so on dev/stage the loop must not starve itself on it.
@@ -30,6 +36,7 @@ export interface ReplayLedgerLimits {
 export const DEFAULT_REPLAY_LEDGER_LIMITS: ReplayLedgerLimits = Object.freeze({
   counterfactualsPerDay: 100,
   dispatchesPerDay: 300,
+  hardCounterfactualLimit: null,
   enforced: true,
 });
 
@@ -74,6 +81,8 @@ export interface ReplayLedgerStatus {
   readonly dispatches: number;
   readonly counterfactualLimit: number;
   readonly dispatchLimit: number;
+  /** Hard auto-queue ceiling, checked on every channel; null means no hard bound. */
+  readonly hardCounterfactualLimit: number | null;
   /** False when the ceilings are measured but not enforced on this channel. */
   readonly enforced: boolean;
 }
@@ -201,6 +210,14 @@ export interface ReplayLedger {
  * finds capacity.
  */
 export function replayBudgetAvailable(status: ReplayLedgerStatus): boolean {
+  // The hard auto-queue ceiling binds admission before a reservation can refuse,
+  // even on channels where the ordinary daily budget is measured but not enforced.
+  if (
+    status.hardCounterfactualLimit !== null &&
+    status.counterfactuals >= status.hardCounterfactualLimit
+  ) {
+    return false;
+  }
   if (!status.enforced) return true;
   return status.dispatches + status.reservedDispatches < status.dispatchLimit;
 }
@@ -209,6 +226,8 @@ export function createReplayLedger(options: {
   readonly filePath: string;
   readonly now?: () => number;
   readonly limits?: Partial<ReplayLedgerLimits>;
+  /** Re-read the live limits on every accounting call (the UI cap applies without a restart). */
+  readonly limitsProvider?: () => Partial<ReplayLedgerLimits>;
 }): ReplayLedger {
   const now = options.now ?? (() => Date.now());
   const limits: ReplayLedgerLimits = {
@@ -216,7 +235,14 @@ export function createReplayLedger(options: {
       options.limits?.counterfactualsPerDay ?? DEFAULT_REPLAY_LEDGER_LIMITS.counterfactualsPerDay,
     dispatchesPerDay:
       options.limits?.dispatchesPerDay ?? DEFAULT_REPLAY_LEDGER_LIMITS.dispatchesPerDay,
+    hardCounterfactualLimit:
+      options.limits?.hardCounterfactualLimit ??
+      DEFAULT_REPLAY_LEDGER_LIMITS.hardCounterfactualLimit,
     enforced: options.limits?.enforced ?? DEFAULT_REPLAY_LEDGER_LIMITS.enforced,
+  };
+  const currentLimits = (): ReplayLedgerLimits => {
+    const live = options.limitsProvider?.() ?? {};
+    return { ...limits, ...live };
   };
 
   const load = (): LedgerFile => {
@@ -250,6 +276,7 @@ export function createReplayLedger(options: {
     window.reservations.reduce((total, row) => total + row.candidateDispatches, 0);
 
   const statusFor = (file: LedgerFile, atMs: number): ReplayLedgerStatus => {
+    const limits = currentLimits();
     const window = replayBudgetWindow(atMs);
     const row = file.windows[window] ?? emptyWindow();
     return {
@@ -260,6 +287,7 @@ export function createReplayLedger(options: {
       dispatches: row.dispatches.length,
       counterfactualLimit: limits.counterfactualsPerDay,
       dispatchLimit: limits.dispatchesPerDay,
+      hardCounterfactualLimit: limits.hardCounterfactualLimit,
       enforced: limits.enforced,
     };
   };
@@ -267,6 +295,7 @@ export function createReplayLedger(options: {
   return {
     filePath: options.filePath,
     reserve(input) {
+      const limits = currentLimits();
       const atMs = now();
       const file = load();
       const window = windowOf(file, atMs);
@@ -278,10 +307,18 @@ export function createReplayLedger(options: {
           detail: "this capture already finalized a counterfactual in this window",
         };
       }
+      const counterfactualCount = window.counterfactuals.length + window.reservations.length;
       if (
-        limits.enforced &&
-        window.counterfactuals.length + window.reservations.length >= limits.counterfactualsPerDay
+        limits.hardCounterfactualLimit !== null &&
+        counterfactualCount >= limits.hardCounterfactualLimit
       ) {
+        return {
+          accepted: false,
+          code: "budget_exhausted",
+          detail: "the auto-queue daily replay ceiling is exhausted",
+        };
+      }
+      if (limits.enforced && counterfactualCount >= limits.counterfactualsPerDay) {
         return {
           accepted: false,
           code: "budget_exhausted",
@@ -352,6 +389,7 @@ export function createReplayLedger(options: {
     },
     record(input) {
       assertReplayReceiptMetadataOnly(input as unknown as Record<string, unknown>);
+      const limits = currentLimits();
       const atMs = now();
       const file = load();
       const window = windowOf(file, atMs);

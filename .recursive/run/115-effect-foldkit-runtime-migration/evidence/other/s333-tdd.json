@@ -1,0 +1,28 @@
+{
+  "slice": "s333-r23-observation-store",
+  "requirement": "R23 async observation hydration via Backend-owned DAG store",
+  "decision": "STOP characterization (S21d). The observation store is the sync SQL facade owned by the backend closure (makeSync index.ts:19/:20969; graph store :21274-21280; bundle/telemetry helpers imported from sqlite-memory :113-133 and called synchronously at :21329/:21364/:25783/:26036/:6337/:6342/:26611/:26621-26627). A DAG store cannot own persist/read bundle + graph hydration without extracting the Backend's SQL facade; wiring only part would be a forbidden dual store. No product edits.",
+  "evidence": {
+    "makeSync": "index.ts:19 import, :20969 construction",
+    "backend": "createRuntimeBridgeBackend index.ts:21000",
+    "graphStore": "index.ts:21274-21280",
+    "bundleImports": "index.ts:113-133 (@role-model-router/sqlite-memory)",
+    "syncCallSites": [
+      "21329",
+      "21364",
+      "25783",
+      "26036",
+      "6337",
+      "6342",
+      "26611",
+      "26621-26627"
+    ],
+    "callerTable": "24 callers, 21 sync-at-call-time (s307 doc); current sites listed in tasks/s333-r23-observation-store.md"
+  },
+  "changedProductFiles": "none",
+  "filesUnchanged": {
+    "src/composition-dag.ts": "E473F0A348AE863A295ABC3923A616D7F29BF12497EC9698FA0CA7A595D14ADB",
+    "src/index.ts": "2AD79F0B2E0E878E157D8D9D254F0E6D446B48A573F8E6DD09A24DE4B38329A3"
+  },
+  "unblock": "Authorize a Backend-internal storage-service extraction (makeSync/SQLite init/graph store/observation helpers into a Backend-owned contract with a bounded Effect queue and sync read-through facade), then migrate the 24 callers family-by-family."
+}

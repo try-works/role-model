@@ -1,0 +1,56 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+stderr | test/s26b-wave1.test.ts > S26b wave 1 shell entries > not-found is a terminal error state with recovery navigation
+[foldkit] No response from @foldkit/vite-plugin. Add it to your vite.config.ts for Model preservation across reloads:
+
+  import { foldkit } from '@foldkit/vite-plugin'
+
+  export default defineConfig({ plugins: [foldkit()] })
+
+Starting without Model preservation.
+[foldkit] Slow patch: 21.1ms (budget: 8ms), triggered by init. Key mapped lists by stable ids, split large views, or memoize stable subtrees with createLazy. Set slow.thresholdOverrides to change budgets or pass slow: false to disable warnings. {
+  _tag: 'Patch',
+  model: {
+    clicks: 0,
+    diagnostics: { records: [], routeId: '', status: 'idle' },
+    refresh: { lastAppliedRevision: 0, resyncToken: 0, status: 'idle' },
+    route: { _tag: 'NotFound', path: '/does/not/exist' },
+    theme: 'dark'
+  },
+  message: { _id: 'Option', _tag: 'None' },
+  durationMs: 21.098799999999756,
+  thresholdMs: 8
+}
+
+ ❯ test/s26b-wave1.test.ts (4 tests | 1 failed | 3 skipped) 620ms
+   ↓ S26b wave 1 shell entries > layout is a persistent primary navigation and carries the active route
+   ↓ S26b wave 1 shell entries > index is a real success landing with working onward navigation
+   × S26b wave 1 shell entries > not-found is a terminal error state with recovery navigation 618ms
+     → expected 'success' to be 'error' // Object.is equality
+   ↓ S26b wave 1 shell entries > shell preserves theme, title, focus and scroll facts across navigation
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s26b-wave1.test.ts > S26b wave 1 shell entries > not-found is a terminal error state with recovery navigation
+AssertionError: expected 'success' to be 'error' // Object.is equality
+
+Expected: "error"
+Received: "success"
+
+ ❯ test/s26b-wave1.test.ts:103:45
+    101|       "not-found route",
+    102|     );
+    103|     expect(page.getAttribute("data-state")).toBe("error");
+       |                                             ^
+    104|     expect(page.getAttribute("role")).toBe("alert");
+    105|     expect(page.textContent).toContain("Not found: /does/not/exist");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 3 skipped (4)
+   Start at  07:19:20
+   Duration  9.06s (transform 4.23s, setup 0ms, collect 6.69s, tests 620ms, environment 746ms, prepare 418ms)
+

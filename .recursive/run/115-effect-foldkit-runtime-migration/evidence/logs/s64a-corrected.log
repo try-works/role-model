@@ -1,0 +1,68 @@
+{
+  "J3": {
+    "classification": "PASS",
+    "before": 2,
+    "afterCancel": 3,
+    "cancelMs": 515,
+    "slowResult": {
+      "kind": "error",
+      "name": "AbortError",
+      "message": "AbortError: This operation was aborted"
+    },
+    "countDelta": 1,
+    "note": "fresh state, abort at 500ms; no prior failure"
+  },
+  "J4": {
+    "classification": "PASS",
+    "honesty": "400 no_eligible_target; no-effort decision null/none",
+    "effortSupported": false,
+    "effortStatus": 400,
+    "effortBody": "{\"error\":{\"type\":\"capability_eligibility_error\",\"code\":\"no_eligible_target\",\"message\":\"no_eligible_target: no targets for model moonshot/kimi-k2.5 satisfy the inferred request capabilities.\",\"requestedModel\":\"moonshot/kimi-k2.5\",\"requiredInputModalit",
+    "afterOk": 1,
+    "afterEffort": 2,
+    "okDecision": {
+      "requestId": "req-7b5d9d51-ad21-4043-8529-17aa2c82bdd9",
+      "model": "moonshot/kimi-k2.5",
+      "reasoningEffort": null,
+      "effortSource": "none"
+    }
+  },
+  "J6": {
+    "classification": "PASS",
+    "endpoints": [
+      {
+        "path": "/api/role-model/operator/replay/jobs",
+        "status": 200,
+        "body": []
+      },
+      {
+        "path": "/api/role-model/operator/evaluation/jobs",
+        "status": 200,
+        "body": []
+      },
+      {
+        "path": "/api/role-model/operator/learning",
+        "status": 200,
+        "body": {
+          "knowledge": {
+            "available": true,
+            "schemaVersion": "role-model.knowledge-worker.v1",
+            "candidates": 0,
+            "indexedDocuments": 0,
+            "backend": "sqlite_fts5_bm25",
+            "productionActivation": false,
+            "retrievalReceipts": 0,
+            "rollbackReceipts": 0,
+            "recoveryReceipts": 0,
+            "degradationCount": 0,
+            "fenceGeneration": 0,
+            "probe": "knowledge_shadow_safety",
+            "processSessions": 0
+          }
+        }
+      }
+    ],
+    "execution": "NOT RUN - no jobs exist; honest empty/disabled",
+    "noSeededRows": true
+  }
+}

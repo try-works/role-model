@@ -1,0 +1,107 @@
+{
+  "slice": "s10a-health-writer",
+  "requirement": [
+    "R20 (first slice: bounded module-health writer)"
+  ],
+  "requirementSource": ".recursive/run/115-effect-foldkit-runtime-migration/00-requirements.md:190-196",
+  "module": "role-model-router/apps/runtime-host-bridge/src/module-health-writer.ts",
+  "test": "role-model-router/apps/runtime-host-bridge/test/module-health-writer.test.ts (13 tests, injected clock/reporter seams; no server)",
+  "contract": {
+    "1 bounded records + ring buffer + loss counter": {
+      "implemented": "capacity clamped to 1..256 (default 64); newest-first buffer; on overflow the oldest record is evicted and dropped is incremented; loss() reports {dropped, windowMs} where window is first drop..last drop; a single cause is capped at 8 reasons with the rest aggregated into one cause.truncated record (count = remainder); source() exposes the same bounded records/loss to the read path.",
+      "test": "keeps a bounded ring buffer and counts every overflow instead of growing",
+      "red": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s10a-red-01-no-loss-count.log",
+        "mutation": "dropped increment removed",
+        "message": "expected { dropped: +0, windowMs: +0 } to deeply equal { dropped: 2, windowMs: 10 }"
+      },
+      "green": "capacity 3 + 5 observations -> 3 records, dropped 2, window 10, newest atMs 1050; the extra read-contract test shows the same loss through readLocalDiagnostics."
+    },
+    "2 preservation: Fail/Die/Interrupt distinguishable; original cause never replaced/wrapped/swallowed": {
+      "implemented": "records classify by Cause.reasons kind: cause.fail (error), cause.die (error), cause.interrupt (warn), cause.other (warn); a mixed Cause produces one record per kind; recordCause returns void and never mutates the Cause. The Cause input is only read through Cause.isCause/cause.reasons/reason._tag; .error/.defect values are never read or serialized.",
+      "test": "distinguishes Fail, Die and Interrupt and leaves each original cause intact; records a nested/mixed cause without merging the kinds or recursing",
+      "red": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s10a-red-02-kinds-collapsed.log",
+        "mutation": "Die/Interrupt collapsed into cause.fail",
+        "message": "expected [Array(3)] to deeply equal [['cause.interrupt','warn'], ['cause.die','error'], ['cause.fail','error']]"
+      },
+      "green": "three records in interrupt, die, fail order/levels; Cause.findErrorOption identity still the same primary error, Cause.findDefect identity still the same defect, interrupt reason still present; mixed combine(fail,die,interrupt) yields all three codes and the cause still has 3 reasons.",
+      "messageClarification": "The reader's record is exactly four scalars (local-diagnostics-read.ts:39-43) and has no message field; clause 4 forbids message capture that could carry credentials. The writer therefore carries the bounded classification in `code` (kind + optional cause.truncated) and deliberately captures no raw message text. If a bounded message field is required, the fixed read contract cannot surface it and would need an explicit decision."
+    },
+    "3 no recursion / no business impact / hostile inputs": {
+      "implemented": "every writer layer is inside try/catch and never throws: recordCause (isCause, reasons array access, per-reason _tag, per-record push), recordError (no property reads), now() clock, onRecord reporter. observe() runs the writer in an Effect.onExit finalizer whose body is fully guarded, so writer failure becomes an outage count, not an Exit change. outages() exposes writer-internal failures.",
+      "tests": [
+        "contains a throwing reporter so the business result is unchanged (onRecord throws -> same error identity, outages > 0)",
+        "contains a cause whose reasons accessor throws (hostile Cause -> no throw, outages > 0, no record)",
+        "does not recurse on a cyclic error or a reused error (cyclic object recorded, same Error recorded twice -> 3 records, JSON serializable)",
+        "records a nested/mixed cause without merging the kinds or recursing",
+        "preserves an acquire/finalizer mixed exit with and without the writer",
+        "keeps the business value/error identity identical with and without the writer (fail, die, success value, interrupt)",
+        "is a single report owner (also proves no inner failures are reported)"
+      ],
+      "red": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s10a-red-03-finalizer-throws.log",
+        "mutation": "writer failure rethrown from the onExit finalizer",
+        "message": "throwing-reporter test failed: the observed Exit no longer carried the business error (getOrThrow called on a None)"
+      },
+      "effectSemanticsObserved": "Effect 4.0.6's ensuring/acquireRelease with a failing finalizer reports two Die reasons: the typed failure is carried as a defect alongside the release defect (probed: Cause.reasons = ['Die:primary','Die:release']). The writer records exactly those two cause.die records and the business Exit is identical with and without it; it does not reclassify. Manually constructed mixed Causes still expose Fail/Die/Interrupt distinctly."
+    },
+    "4 redaction": {
+      "implemented": "records have exactly atMs/code/count/level; code is UTF-8 byte-bounded (default 96 B, max 512 B); no error message, name, stack, cause graph, annotations, fiber id or fiber dump is read or stored; observe never inspects the fiber.",
+      "test": "redacts: only four bounded scalars leave the writer, never a message or fiber dump",
+      "red": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s10a-red-04-message-captured.log",
+        "mutation": "Fail classification included the raw error message",
+        "message": "serialized writer state contained 'SECRET'"
+      },
+      "green": "record keys exactly four; code <= maxCodeBytes; serialized records/loss/source contain no secret and no 'fiber'/'stack'"
+    },
+    "5 one report owner / single edge": {
+      "implemented": "observe(effect) is the single reporting edge: it records only the final Exit of the whole program and returns that Exit unchanged. There is no per-module instrumentation and no success record.",
+      "test": "is a single report owner: one write per observed exit and none for success or inner failures",
+      "red": {
+        "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s10a-red-05-double-report.log",
+        "mutation": "two recordCause calls per observed failure",
+        "message": "expected 1 record, got 2"
+      },
+      "green": "one failure -> 1 record; success -> 0; an inner failure caught by the program -> 0.",
+      "wiring": "No wiring change was made. The host bridge already exposes the read-source seam (index.ts:3493 readDiagnosticsSource?: () => LocalDiagnosticsSource, consumed at index.ts:17576 source: options.readDiagnosticsSource?.()); no caller/composition root in this worktree supplies it (grep: only those two sites plus the read module's DEFERRED WIRE note). The follow-up is outside this slice's writable files: construct makeModuleHealthWriter at the composition root, call observe at the chosen request/job/lifecycle edge after finalizers and before wire translation, and pass source() to readDiagnosticsSource."
+    }
+  },
+  "causeApiCitations": [
+    "Cause.reasons: vendor/effect/packages/effect/src/Cause.ts:79-82; Cause type :79.",
+    "Cause.isCause: Cause.ts:100; Reason union :151; reason _tag discriminator Cause.ReasonProto :271-278.",
+    "Fail/Die/Interrupt models: Cause.ts:339-341 (Die.defect), :375-377 (Fail.error), :403-405 (Interrupt.fiberId).",
+    "Cause.TypeId: Cause.ts:33 (used by the hostile-cause test).",
+    "Cause.fail/die/interrupt and combine/fromReasons/makeFailReason (tests): Cause.ts:500, :525, :546, :718, :444, :571.",
+    "Effect.onExit: vendor/effect/packages/effect/src/Effect.ts:7269; Effect.sync :1215; Exit.isFailure: Exit.ts:435; Exit.findErrorOption :1072; Exit.findDefect :744; Exit.getSuccess :1005.",
+    "Effect.scoped :6747, acquireRelease :6862, acquireUseRelease :6996, fail :1574, die :1707, interrupt :7610, runPromiseExit :9479 (tests).",
+    "Read contract: LocalDiagnosticRecord four scalars local-diagnostics-read.ts:39-43; LocalDiagnosticsLoss :46-48; LocalDiagnosticsSource :59-68; disabled/identity/staleness body :102-124."
+  ],
+  "green": {
+    "command": "cd role-model-router/apps/runtime-host-bridge && node ../../../node_modules/vitest/vitest.mjs run test/module-health-writer.test.ts",
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s10a-green.log",
+    "tests": 13,
+    "passed": 13,
+    "failed": 0,
+    "exit": 0
+  },
+  "typecheck": {
+    "command": "cd role-model-router/apps/runtime-host-bridge && node ../../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+    "exit": 0,
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s10a-typecheck.log",
+    "note": "The host bridge tsconfig excludes test/** (its normal build only covers src); the test file is type-transformed by Vitest, so tsc validates the writer source and not the test file. Biome on both files: exit 0 (s10a-biome-check.log)."
+  },
+  "deliberatelyNotBuilt": [
+    "Retention/rotation/TTL/query policy and calibrated enablement limits (R20 says calibrate and approve limits before enablement; capacity 64 / code 96 B are placeholders).",
+    "Any wiring at a request/job edge or a composition root (out of scope; exact seams reported above).",
+    "Message capture/redaction policy beyond 'never capture': origin labels/annotations/fiber ids are deliberately not recorded because the read record has no field for them and they are not bounded scalar contract fields.",
+    "Success/health metrics and business telemetry: the writer only reports failing exits and stays separate from run108 metrics/spans.",
+    "A total-memory byte cap beyond capacity x bounded code; rotation, backups and outage persistence."
+  ],
+  "files": {
+    "src/module-health-writer.ts": "2890b7d1cb88f4649b260cc5bb818e56b7bebd164bf9330aea84570e777c69b6",
+    "test/module-health-writer.test.ts": "3d548bdf701267ec0c7c261ba248fd306f91a5e7e26282fd30335e877d551398"
+  },
+  "scope": "Only the new writer module, its test, and evidence were written. No wiring file was edited; local-diagnostics-read.ts was not modified."
+}

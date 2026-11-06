@@ -1,0 +1,15 @@
+COMMAND: node ../../../node_modules/vitest/vitest.mjs run test/s278-telemetry-refresh.test.ts
+CWD: role-model-router/apps/runtime-ui-next ; S280A repair GREEN (lint-adjusted args, 8 tests)
+EXIT_CODE=0
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s278-telemetry-refresh.test.ts (8 tests) 294ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  17:42:03
+   Duration  26.37s (transform 13.27s, setup 0ms, collect 20.33s, tests 294ms, environment 3.42s, prepare 942ms)
+
+

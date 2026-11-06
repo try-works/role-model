@@ -1,0 +1,107 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node
+
+(node:62104) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s268-mixed-owner.test.ts (7 tests | 6 failed) 349ms
+   × S268 mixed async/sync connection ownership > refuses an external querySync (including a writing RETURNING query) before it touches the transaction 126ms
+     → expected [ { c: 2 } ] to deeply equal [ { c: 1 } ]
+   × S268 mixed async/sync connection ownership > refuses an external execSync write before it touches the transaction 36ms
+     → expected [ { c: 2 } ] to deeply equal [ { c: 1 } ]
+   × S268 mixed async/sync connection ownership > refuses an external transactionSync before it begins a nested transaction 47ms
+     → transactionSync must refuse rather than touch the connection: expected Error: cannot start a transaction within … { …(3) } to be an instance of SqliteServiceError
+   × S268 mixed async/sync connection ownership > refuses an external closeSync without closing the connection the transaction owns 30ms
+     → database is not open
+   × S268 mixed async/sync connection ownership > commits after external refusals and every facade operation plus close still works 36ms
+     → querySync must refuse rather than touch the connection: expected undefined to be an instance of SqliteServiceError
+   × S268 mixed async/sync connection ownership > refuses sync access during a suspended transaction and, on interruption, rolls back and clears ownership 30ms
+     → execSync must refuse rather than touch the connection: expected undefined to be an instance of SqliteServiceError
+   ✓ S268 mixed async/sync connection ownership > clears ownership after a failed transaction and preserves the primary error identity 37ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s268-mixed-owner.test.ts > S268 mixed async/sync connection ownership > refuses an external querySync (including a writing RETURNING query) before it touches the transaction
+ FAIL  test/s268-mixed-owner.test.ts > S268 mixed async/sync connection ownership > refuses an external execSync write before it touches the transaction
+AssertionError: expected [ { c: 2 } ] to deeply equal [ { c: 1 } ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "c": 1,
++     "c": 2,
+    },
+  ]
+
+ ❯ test/s268-mixed-owner.test.ts:83:61
+     81|         yield* Deferred.await(gate);
+     82|         // The owner's tx-local sync handle stays usable across the su…
+     83|         expect(tx.querySync("SELECT COUNT(*) AS c FROM t")).toEqual([{…
+       |                                                             ^
+     84|         tx.execSync("INSERT INTO t(value) VALUES (2)");
+     85|       }),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  test/s268-mixed-owner.test.ts > S268 mixed async/sync connection ownership > refuses an external transactionSync before it begins a nested transaction
+AssertionError: transactionSync must refuse rather than touch the connection: expected Error: cannot start a transaction within … { …(3) } to be an instance of SqliteServiceError
+ ❯ expectTypedRefusal test/s268-mixed-owner.test.ts:49:79
+     47|     caught = error;
+     48|   }
+     49|   expect(caught, `${operation} must refuse rather than touch the conne…
+       |                                                                               ^
+     50|     SqliteServiceError,
+     51|   );
+ ❯ test/s268-mixed-owner.test.ts:146:9
+ ❯ finishSuspended test/s268-mixed-owner.test.ts:101:5
+ ❯ test/s268-mixed-owner.test.ts:145:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  test/s268-mixed-owner.test.ts > S268 mixed async/sync connection ownership > refuses an external closeSync without closing the connection the transaction owns
+Error: database is not open
+ ❯ readRows src/service.ts:231:12
+    229|   // the package and its tests bind only these shapes, and the driver …
+    230|   // prepare time with its own error.
+    231|   database.prepare(sql).all(...(params as ReadonlyArray<SqlBindValue>)…
+       |            ^
+    232| 
+    233| const runExec = (database: DatabaseSync, sql: string): void => {
+ ❯ Object.querySync src/service.ts:249:36
+ ❯ test/s268-mixed-owner.test.ts:83:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  test/s268-mixed-owner.test.ts > S268 mixed async/sync connection ownership > commits after external refusals and every facade operation plus close still works
+AssertionError: querySync must refuse rather than touch the connection: expected undefined to be an instance of SqliteServiceError
+ ❯ expectTypedRefusal test/s268-mixed-owner.test.ts:49:79
+     47|     caught = error;
+     48|   }
+     49|   expect(caught, `${operation} must refuse rather than touch the conne…
+       |                                                                               ^
+     50|     SqliteServiceError,
+     51|   );
+ ❯ test/s268-mixed-owner.test.ts:181:9
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  test/s268-mixed-owner.test.ts > S268 mixed async/sync connection ownership > refuses sync access during a suspended transaction and, on interruption, rolls back and clears ownership
+AssertionError: execSync must refuse rather than touch the connection: expected undefined to be an instance of SqliteServiceError
+ ❯ expectTypedRefusal test/s268-mixed-owner.test.ts:49:79
+     47|     caught = error;
+     48|   }
+     49|   expect(caught, `${operation} must refuse rather than touch the conne…
+       |                                                                               ^
+     50|     SqliteServiceError,
+     51|   );
+ ❯ test/s268-mixed-owner.test.ts:231:9
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 1 passed (7)
+   Start at  14:51:14
+   Duration  11.19s (transform 5.06s, setup 0ms, collect 7.74s, tests 349ms, environment 1ms, prepare 843ms)
+

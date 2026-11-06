@@ -1,0 +1,52 @@
+{
+  "slice": "s10b-module-health-wiring",
+  "requirement": "R20 (writer wired; calibration deferred)",
+  "status": "complete",
+  "task": ".recursive/run/115-effect-foldkit-runtime-migration/tasks/s10b-writer-wiring.md",
+  "compositionEdge": {
+    "function": "src/index.ts:20516 createModuleHealthComposition(options) - the ONE edge; constructs makeModuleHealthWriter once",
+    "constructedOnce": "src/index.ts:20540 const moduleHealth = createModuleHealthComposition(options) in startBridgeServer (host lifetime, not per request)",
+    "sourceInjection": "src/index.ts:20541 handlerOptions = { ...options, readDiagnosticsSource: moduleHealth.source }; the existing seam (options.readDiagnosticsSource :3493) is consumed by the diagnostics route at :17595",
+    "reportingEdge": "src/index.ts:20584 moduleHealth?.reportRequestFailure(error) in the createServer transport catch, immediately BEFORE writeUnhandledBridgeError translates the failure to the wire; the request program has settled (finalizers ran) before the catch runs",
+    "resources": "the writer holds only bounded in-memory arrays (module-health-writer.ts:99-103); it owns no handles/timers, so there is nothing to dispose - it lives and dies with the host"
+  },
+  "enablement": {
+    "default": "OFF - src/index.ts:20521 `if (config?.enabled !== true) return undefined;`; absent, {}, and { enabled: false } all leave readDiagnosticsSource unset and the endpoint answers the honest disabled state",
+    "flag": "StartBridgeServerOptions.diagnostics (src/index.ts:3503) is where R20 calibration approval lands: { enabled, capacity, maxCodeBytes, instanceId, buildId }",
+    "placeholders": "capacity default 64 (module-health-writer.ts:26) and code cap default 96 bytes (:28) are labelled PLACEHOLDERS in the option and composition docs; enabling them is a deliberate calibration decision and the code claims no calibration"
+  },
+  "calibrationStillRequired": "R20 requires calibrated+approved record/byte/ingress/formatting/TTL/query limits BEFORE enablement. This slice wires the path and leaves the writer OFF; it does not calibrate capacity/code bytes/ingress rate/TTL/query limits or approve them.",
+  "reportingEdgeLimit": "The available single lifecycle edge is the transport catch, which observes only failures that ESCAPE the route handlers. Handled failures are translated inside the handler by many per-route catch blocks before the transport layer, so they never reach this edge; the writer's own `observe` (Effect.onExit - the final-Exit report owner, module-health-writer.ts:51-52,191-204) cannot be applied here because the bridge's request boundary is async/Promise, not an Effect. Widening coverage would need either an Effect boundary at the request entry (a Command/runtime architecture change) or per-route hooks (which would violate R20's ONE report owner). Recorded as a real gap, not approximated.",
+  "red": {
+    "enabled": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s10b-red-enabled.log",
+      "message": "expected the module-health composition to be enabled (stub returned undefined)"
+    },
+    "defaultOff": {
+      "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s10b-red-default.log",
+      "mutation": "flipped the gate to `config.enabled === false` (default ON)",
+      "message": "expected { …(3) } to be undefined",
+      "note": "the mutation was byte-restored; the GREEN run proves it"
+    }
+  },
+  "green": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s10b-green.log",
+    "exit": 0,
+    "files": 8,
+    "tests": 49,
+    "passed": 49,
+    "note": "S10b 2/2 + S15a read path 20/20 + 6 pre-existing operator auth/readback suites"
+  },
+  "typecheck": {
+    "log": ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s10b-tsc.log",
+    "exit": 0
+  },
+  "endToEnd": {
+    "enabled": "createModuleHealthComposition({ diagnostics: { enabled: true, instanceId, buildId } }) -> writer.observe(succeed(42)) returns 42 unchanged; observe(fail) keeps the failure Exit; reportRequestFailure leaves the business Error intact; handleLocalDiagnosticsRead with composition.source() returns 200 state ok, identity inst-s10b/build-s10b, codes cause.fail + error, recordCount 2",
+    "default": "absent/{}/{enabled:false} -> createModuleHealthComposition undefined; the same read with source undefined returns 200 disabled"
+  },
+  "files": {
+    "role-model-router/apps/runtime-host-bridge/src/index.ts": "diagnostics option, createModuleHealthComposition, one-time construction + source injection, transport-catch report",
+    "role-model-router/apps/runtime-host-bridge/test/run115-s10b-module-health-wiring.test.ts": "enabled end-to-end + default-off tests"
+  }
+}

@@ -33,13 +33,11 @@ const roots: string[] = [];
 const baseTemp =
   process.env.ROLE_MODEL_TEST_TEMP_ROOT?.trim() || path.join(tmpdir(), "role-model-run115");
 
-afterEach(async () => {
+afterEach(() => {
   setStateDatabaseServiceFactoryForTests(undefined);
-  await Promise.all(
-    roots
-      .splice(0)
-      .map((root) => rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })),
-  );
+  // Cleanup is best-effort on Windows: a slow antivirus delete must not fail the test hook.
+  for (const root of roots.splice(0))
+    void rm(root, { recursive: true, force: true, maxRetries: 1 }).catch(() => undefined);
 });
 
 async function tempRoot(): Promise<string> {
@@ -77,7 +75,8 @@ interface ConnectionCounts {
 }
 
 /** Wraps the real service so opens and closeSync are observable without changing behaviour. */
-const countingFactory = (counts: ConnectionCounts): typeof makeSync =>
+const countingFactory =
+  (counts: ConnectionCounts): typeof makeSync =>
   (config) => {
     counts.opens += 1;
     const service = makeSync(config);
@@ -156,7 +155,9 @@ describe("S6b/S6c cli SQLite service migration", () => {
     expect(counts).toEqual({ closes: 1, opens: 1 });
 
     // Every lookup is its own single connection, not a shared or duplicated one.
-    expect(readPersistedControllerEndpointId({ runtimeStateRoot: root, scopeId: "tenant" })).toBeNull();
+    expect(
+      readPersistedControllerEndpointId({ runtimeStateRoot: root, scopeId: "tenant" }),
+    ).toBeNull();
     expect(counts).toEqual({ closes: 2, opens: 2 });
   });
 

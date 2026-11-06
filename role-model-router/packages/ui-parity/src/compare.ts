@@ -199,11 +199,7 @@ function sameCanonicalHeaders(
   return true;
 }
 
-function finding(
-  code: TraceDifferenceCode,
-  index: number,
-  step: string,
-): TraceDifference {
+function finding(code: TraceDifferenceCode, index: number, step: string): TraceDifference {
   return { code, index, step };
 }
 
@@ -338,8 +334,12 @@ export function compareRequestTraces(
 
   for (let index = 0; index < expected.length; index += 1) {
     const expectedTrace = expected[index];
-    const actualIndex = reservedReads.get(index) ?? actual.findIndex((candidate, candidateIndex) =>
-      candidate.step === expectedTrace.step && !used.has(candidateIndex));
+    const actualIndex =
+      reservedReads.get(index) ??
+      actual.findIndex(
+        (candidate, candidateIndex) =>
+          candidate.step === expectedTrace.step && !used.has(candidateIndex),
+      );
     if (actualIndex === -1) {
       differences.push(finding("missing_event", index, expectedTrace.step));
       continue;
@@ -366,7 +366,12 @@ export function compareRequestTraces(
       const completed = new Set<string>();
       for (let index = 0; index < capture.length; index += 1) {
         const trace = capture[index];
-        if (trace.step === "$scenario" || (trace.dependency !== null && trace.dependency !== "$scenario" && !completed.has(trace.dependency))) {
+        if (
+          trace.step === "$scenario" ||
+          (trace.dependency !== null &&
+            trace.dependency !== "$scenario" &&
+            !completed.has(trace.dependency))
+        ) {
           return [finding("dependency_mismatch", index, trace.step)];
         }
         completed.add(trace.step);

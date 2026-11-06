@@ -1,0 +1,82 @@
+COMMAND: node vitest run test/s307-maintenance-owner-fence.test.ts (weak maintenance stub)
+EXIT_CODE=1
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sql-sqlite-node
+
+(node:16632) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s307-maintenance-owner-fence.test.ts (4 tests | 4 failed) 170ms
+   × S307 maintenance owner fence > maintenance refuses immediately while an async transaction owns the connection 72ms
+     → expected { Object (kind, durationMs, ...) } to be an instance of MaintenanceBusyError
+   × S307 maintenance owner fence > drain times out with a typed failure instead of waiting unbounded 38ms
+     → expected { Object (kind, durationMs, ...) } to be an instance of MaintenanceDrainTimeoutError
+   × S307 maintenance owner fence > reset and restore re-apply the store's actual PRAGMAs; the naive loss hook shows the failure 30ms
+     → expected undefined to be '5000' // Object.is equality
+   × S307 maintenance owner fence > bounded drain polls the event loop rather than blocking it (measured probe) 24ms
+     → expected { Object (kind, durationMs, ...) } to be an instance of MaintenanceDrainTimeoutError
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s307-maintenance-owner-fence.test.ts > S307 maintenance owner fence > maintenance refuses immediately while an async transaction owns the connection
+AssertionError: expected { Object (kind, durationMs, ...) } to be an instance of MaintenanceBusyError
+ ❯ test/s307-maintenance-owner-fence.test.ts:81:22
+     79|     try {
+     80|       const caught = await service.maintenance.backup(path.join(root, …
+     81|       expect(caught).toBeInstanceOf(MaintenanceBusyError);
+       |                      ^
+     82|       expect((caught as MaintenanceBusyError).code).toBe("MAINTENANCE_…
+     83|       expect(existsSync(path.join(root, "never.db"))).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/s307-maintenance-owner-fence.test.ts > S307 maintenance owner fence > drain times out with a typed failure instead of waiting unbounded
+AssertionError: expected { Object (kind, durationMs, ...) } to be an instance of MaintenanceDrainTimeoutError
+ ❯ test/s307-maintenance-owner-fence.test.ts:99:22
+     97|         .catch((error) => error);
+     98|       const elapsed = Date.now() - startedAt;
+     99|       expect(caught).toBeInstanceOf(MaintenanceDrainTimeoutError);
+       |                      ^
+    100|       expect((caught as MaintenanceDrainTimeoutError).code).toBe("MAIN…
+    101|       expect((caught as MaintenanceDrainTimeoutError).timeoutMs).toBe(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/s307-maintenance-owner-fence.test.ts > S307 maintenance owner fence > reset and restore re-apply the store's actual PRAGMAs; the naive loss hook shows the failure
+AssertionError: expected undefined to be '5000' // Object.is equality
+
+- Expected: 
+"5000"
+
++ Received: 
+undefined
+
+ ❯ test/s307-maintenance-owner-fence.test.ts:116:33
+    114|     service.execSync("PRAGMA synchronous = NORMAL");
+    115|     const before = service.maintenance.pragmas();
+    116|     expect(before.busy_timeout).toBe("5000");
+       |                                 ^
+    117|     expect(String(before.journal_mode).toLowerCase()).toBe("wal");
+    118|     expect(String(before.foreign_keys)).toBe("1");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/s307-maintenance-owner-fence.test.ts > S307 maintenance owner fence > bounded drain polls the event loop rather than blocking it (measured probe)
+AssertionError: expected { Object (kind, durationMs, ...) } to be an instance of MaintenanceDrainTimeoutError
+ ❯ test/s307-maintenance-owner-fence.test.ts:145:22
+    143|         .catch((error) => error);
+    144|       const elapsedMs = Date.now() - startedAt;
+    145|       expect(caught).toBeInstanceOf(MaintenanceDrainTimeoutError);
+       |                      ^
+    146|       expect(ticks.length).toBeGreaterThanOrEqual(3);
+    147|       writeFileSync(PROBE_PATH, JSON.stringify({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  02:54:18
+   Duration  9.64s (transform 4.45s, setup 0ms, collect 6.79s, tests 170ms, environment 2ms, prepare 981ms)
+
+
