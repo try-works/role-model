@@ -1,0 +1,50 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:21452) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s650-r27-metadata-cache.test.ts (2 tests | 2 failed) 106ms
+   × S650 R27 metadata cache identity guards > rejects an empty authority, empty model, non-integer generation, or NUL injection 80ms
+     → expected [Function] to throw an error
+   × S650 R27 metadata cache identity guards > distinct stochastic attempts always produce distinct keys and both values remain available 3ms
+     → (0 , stochasticInferenceCacheKey) is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s650-r27-metadata-cache.test.ts > S650 R27 metadata cache identity guards > rejects an empty authority, empty model, non-integer generation, or NUL injection
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ test/s650-r27-metadata-cache.test.ts:19:92
+     17| describe("S650 R27 metadata cache identity guards", () => {
+     18|   test("rejects an empty authority, empty model, non-integer generatio…
+     19|     expect(() => metadataCacheKey({ authorityId: "", configGeneration:…
+       |                                                                                            ^
+     20|     expect(() => metadataCacheKey({ authorityId: "a", configGeneration…
+     21|     expect(() => metadataCacheKey({ authorityId: "a", configGeneration…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/s650-r27-metadata-cache.test.ts > S650 R27 metadata cache identity guards > distinct stochastic attempts always produce distinct keys and both values remain available
+TypeError: (0 , stochasticInferenceCacheKey) is not a function
+ ❯ test/s650-r27-metadata-cache.test.ts:27:19
+     25|   test("distinct stochastic attempts always produce distinct keys and …
+     26|     const input = { authorityId: "auth", configGeneration: 2, modelId:…
+     27|     const first = stochasticInferenceCacheKey({ ...input, attemptId: "…
+       |                   ^
+     28|     const second = stochasticInferenceCacheKey({ ...input, attemptId: …
+     29|     expect(first).not.toBe(second);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  16:01:00
+   Duration  20.59s (transform 11.79s, setup 0ms, collect 19.03s, tests 106ms, environment 1ms, prepare 607ms)
+
