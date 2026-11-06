@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   STOCHASTIC_INFERENCE_DEDUPE,
+  composeMetadataCacheOwner,
   makeMetadataCache,
   metadataCacheKey,
   stochasticInferenceCacheKey,
@@ -20,6 +21,19 @@ describe("S650 R27 metadata cache identity guards", () => {
     expect(() => metadataCacheKey({ authorityId: "a", configGeneration: 1, modelId: "" })).toThrow(/model/i);
     expect(() => metadataCacheKey({ authorityId: "a", configGeneration: 1.5, modelId: "m" })).toThrow(/generation/i);
     expect(() => metadataCacheKey({ authorityId: "a\u0000b", configGeneration: 1, modelId: "m" })).toThrow(/authority|NUL/i);
+  });
+
+  test("the production metadata cache owner exposes the stochastic key guard and no dedupe", () => {
+    const owner = composeMetadataCacheOwner();
+    expect(owner.stochasticInferenceDedupe).toBe(false);
+    const first = owner.stochasticKeyFor("attempt-1");
+    const second = owner.stochasticKeyFor("attempt-2");
+    expect(first).not.toBe(second);
+    expect(first).not.toBe(owner.keyFor("model"));
+    owner.setSync(first, "inference-1", 0);
+    owner.setSync(second, "inference-2", 0);
+    expect(owner.getSync(first, 1)).toBe("inference-1");
+    expect(owner.getSync(second, 1)).toBe("inference-2");
   });
 
   test("distinct stochastic attempts always produce distinct keys and both values remain available", () => {

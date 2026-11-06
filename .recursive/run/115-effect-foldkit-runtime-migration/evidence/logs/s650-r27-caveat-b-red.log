@@ -1,0 +1,38 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:17756) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s650-r27-metadata-cache.test.ts (3 tests | 1 failed) 44ms
+   ✓ S650 R27 metadata cache identity guards > rejects an empty authority, empty model, non-integer generation, or NUL injection 13ms
+   × S650 R27 metadata cache identity guards > the production metadata cache owner exposes the stochastic key guard and no dedupe 21ms
+     → expected undefined to be false // Object.is equality
+   ✓ S650 R27 metadata cache identity guards > distinct stochastic attempts always produce distinct keys and both values remain available 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s650-r27-metadata-cache.test.ts > S650 R27 metadata cache identity guards > the production metadata cache owner exposes the stochastic key guard and no dedupe
+AssertionError: expected undefined to be false // Object.is equality
+
+- Expected: 
+false
+
++ Received: 
+undefined
+
+ ❯ test/s650-r27-metadata-cache.test.ts:28:45
+     26|   test("the production metadata cache owner exposes the stochastic key…
+     27|     const owner = composeMetadataCacheOwner();
+     28|     expect(owner.stochasticInferenceDedupe).toBe(false);
+       |                                             ^
+     29|     const first = owner.stochasticKeyFor("attempt-1");
+     30|     const second = owner.stochasticKeyFor("attempt-2");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  16:48:35
+   Duration  16.01s (transform 8.57s, setup 0ms, collect 14.16s, tests 44ms, environment 1ms, prepare 719ms)
+
