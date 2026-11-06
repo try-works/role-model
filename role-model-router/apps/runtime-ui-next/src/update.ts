@@ -5513,7 +5513,31 @@ export const createUpdate = (
       > => {
         const state = model.deviceAuth ?? initialDeviceAuthState();
         if (token !== state.token) return { model };
-        return { model: { ...model, deviceAuth: { ...state, error: undefined } } };
+        // S666: a completed device authorization creates the endpoint; re-read the provider
+        // readbacks so the connection card shows the new model without a manual reload.
+        const accountsToken = model.readbacks.providerAccounts.token + 1;
+        const endpointsToken = model.readbacks.modelEndpoints.token + 1;
+        const modelsToken = model.readbacks.configuredModels.token + 1;
+        const controlProvidersToken = model.controls.providers.token + 1;
+        return {
+          commands: [
+            readReadback({ key: "providerAccounts", token: accountsToken }),
+            readReadback({ key: "modelEndpoints", token: endpointsToken }),
+            readReadback({ key: "configuredModels", token: modelsToken }),
+            readControl({ key: "providers", token: controlProvidersToken }),
+          ],
+          model: {
+            ...model,
+            deviceAuth: { ...state, error: undefined },
+            readbacks: {
+              ...model.readbacks,
+              configuredModels: loadingReadback(modelsToken),
+              modelEndpoints: loadingReadback(endpointsToken),
+              providerAccounts: loadingReadback(accountsToken),
+            },
+            controls: { ...model.controls, providers: loadingControl(controlProvidersToken) },
+          },
+        };
       },
     };
     const requestsRankingHandlers = {
