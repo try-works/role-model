@@ -7696,20 +7696,23 @@ describe("runtime-host-bridge", () => {
           readHealthStatus: () => Promise<Record<string, unknown>>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        readHealthStatus: async () => ({
+          status: "healthy",
+          executionMode: "decision_only",
+          vendors: {},
+          inactiveVendors: [],
+        }),
       },
-      readHealthStatus: async () => ({
-        status: "healthy",
-        executionMode: "decision_only",
-        vendors: {},
-        inactiveVendors: [],
-      }),
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const healthResponse = await fetch(`http://127.0.0.1:${server.port}/healthz`);
@@ -7772,16 +7775,19 @@ describe("runtime-host-bridge", () => {
           listRecentRequestObservations?: () => Promise<readonly unknown[]>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        listRecentRequestIds,
+        listRecentRequestObservations,
       },
-      listRecentRequestIds,
-      listRecentRequestObservations,
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const latestIdsResponse = await fetch(
@@ -7822,15 +7828,18 @@ describe("runtime-host-bridge", () => {
           ) => Promise<unknown>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      shutdown,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        shutdown,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
       },
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(
@@ -7869,26 +7878,29 @@ describe("runtime-host-bridge", () => {
           }>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
-      },
-      readRuntimeConfig: async () => ({
-        config: {
-          executionMode: "remote_only",
-          routingStrategy: "baseline",
-          modelAliases: [
-            {
-              aliasId: "gpt-5.4",
-              modelIds: ["moonshot/kimi-k2.5"],
-            },
-          ],
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
         },
-      }),
-    }, { allowTestSeamBackend: true });
+        readRuntimeConfig: async () => ({
+          config: {
+            executionMode: "remote_only",
+            routingStrategy: "baseline",
+            modelAliases: [
+              {
+                aliasId: "gpt-5.4",
+                modelIds: ["moonshot/kimi-k2.5"],
+              },
+            ],
+          },
+        }),
+      },
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const modelsResponse = await fetch(`http://127.0.0.1:${server.port}/v1/models`);
@@ -7975,47 +7987,50 @@ describe("runtime-host-bridge", () => {
           }>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
-      },
-      readRuntimeConfig: async () => ({
-        config: {
-          executionMode: "remote_only",
-          routingStrategy: "hybrid",
-          modelAliases: [{ aliasId: "hybrid.remote-only", modelIds: ["chatgpt/gpt-5.6-luna"] }],
-          agentStrategies: [
-            {
-              name: "tester",
-              kind: "role",
-              roleId: "tester",
-              scoringStrategy: "quality",
-              routingMode: "baseline",
-              computePreference: null,
-              modelIds: [],
-              requiredCapabilities: [],
-              violations: [],
-            },
-          ],
-          workloads: [
-            {
-              name: "batch",
-              kind: "workload",
-              roleId: null,
-              scoringStrategy: "cost",
-              routingMode: null,
-              computePreference: null,
-              modelIds: [],
-              requiredCapabilities: [],
-              violations: [],
-            },
-          ],
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
         },
-      }),
-    }, { allowTestSeamBackend: true });
+        readRuntimeConfig: async () => ({
+          config: {
+            executionMode: "remote_only",
+            routingStrategy: "hybrid",
+            modelAliases: [{ aliasId: "hybrid.remote-only", modelIds: ["chatgpt/gpt-5.6-luna"] }],
+            agentStrategies: [
+              {
+                name: "tester",
+                kind: "role",
+                roleId: "tester",
+                scoringStrategy: "quality",
+                routingMode: "baseline",
+                computePreference: null,
+                modelIds: [],
+                requiredCapabilities: [],
+                violations: [],
+              },
+            ],
+            workloads: [
+              {
+                name: "batch",
+                kind: "workload",
+                roleId: null,
+                scoringStrategy: "cost",
+                routingMode: null,
+                computePreference: null,
+                modelIds: [],
+                requiredCapabilities: [],
+                violations: [],
+              },
+            ],
+          },
+        }),
+      },
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const modelsResponse = await fetch(`http://127.0.0.1:${server.port}/v1/models`);
@@ -8051,54 +8066,57 @@ describe("runtime-host-bridge", () => {
           },
         ) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
-      },
-      readVersionInfo: async () => ({
-        version: "0.0.0-test",
-        commit: "abc123",
-        build_date: "2026-05-07",
-      }),
-      listActivityMetrics: async () => [
-        {
-          id: 7,
-          timestamp: "2026-05-07T05:00:00.000Z",
-          model: "moonshot/kimi-k2.5",
-          req_path: "/v1/chat/completions",
-          resp_content_type: "application/json",
-          resp_status_code: 200,
-          tokens: {
-            cache_tokens: 0,
-            input_tokens: 44,
-            output_tokens: 19,
-            prompt_per_second: 88.1,
-            tokens_per_second: 45.2,
-          },
-          duration_ms: 840,
-          has_capture: true,
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
         },
-      ],
-      readActivityCapture: async (captureId: number) =>
-        captureId === 7
-          ? {
-              id: 7,
-              req_path: "/v1/chat/completions",
-              req_headers: {
-                authorization: "Bearer role-model-local",
-              },
-              req_body: "e30=",
-              resp_headers: {
-                "content-type": "application/json",
-              },
-              resp_body: "W10=",
-            }
-          : null,
-      readLogs: async () => "role-model bridge ready\nrecent request complete\n",
-    }, { allowTestSeamBackend: true });
+        readVersionInfo: async () => ({
+          version: "0.0.0-test",
+          commit: "abc123",
+          build_date: "2026-05-07",
+        }),
+        listActivityMetrics: async () => [
+          {
+            id: 7,
+            timestamp: "2026-05-07T05:00:00.000Z",
+            model: "moonshot/kimi-k2.5",
+            req_path: "/v1/chat/completions",
+            resp_content_type: "application/json",
+            resp_status_code: 200,
+            tokens: {
+              cache_tokens: 0,
+              input_tokens: 44,
+              output_tokens: 19,
+              prompt_per_second: 88.1,
+              tokens_per_second: 45.2,
+            },
+            duration_ms: 840,
+            has_capture: true,
+          },
+        ],
+        readActivityCapture: async (captureId: number) =>
+          captureId === 7
+            ? {
+                id: 7,
+                req_path: "/v1/chat/completions",
+                req_headers: {
+                  authorization: "Bearer role-model-local",
+                },
+                req_body: "e30=",
+                resp_headers: {
+                  "content-type": "application/json",
+                },
+                resp_body: "W10=",
+              }
+            : null,
+        readLogs: async () => "role-model bridge ready\nrecent request complete\n",
+      },
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const versionResponse = await fetch(`http://127.0.0.1:${server.port}/api/version`);
@@ -8172,15 +8190,18 @@ describe("runtime-host-bridge", () => {
           staticRoot: string;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      staticRoot,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        staticRoot,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
       },
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/logs/stream`);
@@ -8217,15 +8238,18 @@ describe("runtime-host-bridge", () => {
           staticRoot: string;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      staticRoot,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        staticRoot,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
       },
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       for (const route of ["/", "/app", "/app/router/strategy"]) {
@@ -8236,7 +8260,11 @@ describe("runtime-host-bridge", () => {
         expect(response.headers.get("content-type")).toContain("text/html");
         expect(await response.text()).toContain("runtime ui shell");
       }
-      for (const route of ["/api/role-model/does-not-exist", "/v1/messages", "/api/role-model/router/strategy"]) {
+      for (const route of [
+        "/api/role-model/does-not-exist",
+        "/v1/messages",
+        "/api/role-model/router/strategy",
+      ]) {
         const response = await fetch(`http://127.0.0.1:${server.port}${route}`, {
           headers: { accept: "text/html" },
         });
@@ -8249,7 +8277,6 @@ describe("runtime-host-bridge", () => {
       await rm(staticRoot, { recursive: true, force: true });
     }
   });
-
 
   test("proxies the Studio vendor paths to a healthy llama-swap and 503s when it is not running", async () => {
     // S57: the proxy used to read a base URL that nothing ever assigned, so every call took
@@ -8287,10 +8314,14 @@ describe("runtime-host-bridge", () => {
       host: string;
       port: number;
       registry: EndpointRegistryResult;
-      executeChatCompletions: (body: Record<string, unknown>, requestId: string) => Promise<unknown>;
-      readLlamaSwapVendorStatus: () =>
-        | { healthStatus: "healthy" | "stopped"; baseUrl?: string }
-        | null;
+      executeChatCompletions: (
+        body: Record<string, unknown>,
+        requestId: string,
+      ) => Promise<unknown>;
+      readLlamaSwapVendorStatus: () => {
+        healthStatus: "healthy" | "stopped";
+        baseUrl?: string;
+      } | null;
     };
     const server = await (
       bridge as {
@@ -8299,25 +8330,25 @@ describe("runtime-host-bridge", () => {
           close(): Promise<void>;
         }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        readLlamaSwapVendorStatus: () => vendorStatus,
       },
-      readLlamaSwapVendorStatus: () => vendorStatus,
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     try {
-      const proxied = await fetch(
-        `http://127.0.0.1:${server.port}/v1/images/generations`,
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ model: "local/image", prompt: "a cat" }),
-        },
-      );
+      const proxied = await fetch(`http://127.0.0.1:${server.port}/v1/images/generations`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ model: "local/image", prompt: "a cat" }),
+      });
       expect(proxied.status).toBe(200);
       expect(proxied.headers.get("content-type")).toContain("application/json");
       const forwarded = (await proxied.json()) as {
@@ -8349,9 +8380,7 @@ describe("runtime-host-bridge", () => {
         const body = (await unavailable.json()) as { error?: string };
         expect(body.error).toContain("Llama-swap is not running");
       }
-      const voices = await fetch(
-        `http://127.0.0.1:${server.port}/v1/audio/voices?model=local/tts`,
-      );
+      const voices = await fetch(`http://127.0.0.1:${server.port}/v1/audio/voices?model=local/tts`);
       expect(voices.status).toBe(503);
     } finally {
       await server.close();
@@ -8378,27 +8407,30 @@ describe("runtime-host-bridge", () => {
           ) => Promise<unknown>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async (_body, requestId, _streamWriter, requestOptions) => {
-        capturedRequestId = requestId;
-        capturedClientRequestId = requestOptions?.clientRequestId;
-        return {
-          model: "moonshot/kimi-k2.5",
-          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-          adapterFamily: "ai-sdk-openai-compatible",
-          routingDecisionId: "decision-alias-test",
-          outputText: "ok",
-          finishReason: "stop",
-          usage: {
-            inputTokens: 1,
-            outputTokens: 1,
-          },
-        };
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async (_body, requestId, _streamWriter, requestOptions) => {
+          capturedRequestId = requestId;
+          capturedClientRequestId = requestOptions?.clientRequestId;
+          return {
+            model: "moonshot/kimi-k2.5",
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            adapterFamily: "ai-sdk-openai-compatible",
+            routingDecisionId: "decision-alias-test",
+            outputText: "ok",
+            finishReason: "stop",
+            usage: {
+              inputTokens: 1,
+              outputTokens: 1,
+            },
+          };
+        },
       },
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -8469,23 +8501,26 @@ describe("runtime-host-bridge", () => {
           readRuntimeSummary: () => Promise<unknown>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async (_body, _requestId, streamWriter) => {
-        await streamWriter?.(
-          { id: "chunk-1", choices: [{ delta: { content: "partial" } }] },
-          {
-            endpointId: "moonshot.personal.primary.global.kimi-k3",
-            adapterFamily: "ai-sdk-openai-compatible",
-            routingDecisionId: "decision-late-stream-failure",
-          },
-        );
-        throw new Error("induced post-commit stream failure");
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async (_body, _requestId, streamWriter) => {
+          await streamWriter?.(
+            { id: "chunk-1", choices: [{ delta: { content: "partial" } }] },
+            {
+              endpointId: "moonshot.personal.primary.global.kimi-k3",
+              adapterFamily: "ai-sdk-openai-compatible",
+              routingDecisionId: "decision-late-stream-failure",
+            },
+          );
+          throw new Error("induced post-commit stream failure");
+        },
+        readRuntimeSummary: async () => ({ status: "healthy" }),
       },
-      readRuntimeSummary: async () => ({ status: "healthy" }),
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
     const abortController = new AbortController();
 
     try {
@@ -8531,36 +8566,39 @@ describe("runtime-host-bridge", () => {
           close(): Promise<void>;
         }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        executeResponses: async (
+          _body: Record<string, unknown>,
+          _requestId: string,
+          streamWriter?: (
+            chunk: Record<string, unknown>,
+            metadata?: {
+              endpointId: string;
+              adapterFamily: string;
+              routingDecisionId: string;
+            },
+          ) => Promise<void>,
+        ) => {
+          await streamWriter?.(
+            { type: "response.output_text.delta", delta: "partial" },
+            {
+              endpointId: "moonshot.personal.primary.global.kimi-k3",
+              adapterFamily: "ai-sdk-openai-compatible",
+              routingDecisionId: "decision-late-responses-failure",
+            },
+          );
+          throw new Error("induced post-commit Responses failure");
+        },
       },
-      executeResponses: async (
-        _body: Record<string, unknown>,
-        _requestId: string,
-        streamWriter?: (
-          chunk: Record<string, unknown>,
-          metadata?: {
-            endpointId: string;
-            adapterFamily: string;
-            routingDecisionId: string;
-          },
-        ) => Promise<void>,
-      ) => {
-        await streamWriter?.(
-          { type: "response.output_text.delta", delta: "partial" },
-          {
-            endpointId: "moonshot.personal.primary.global.kimi-k3",
-            adapterFamily: "ai-sdk-openai-compatible",
-            routingDecisionId: "decision-late-responses-failure",
-          },
-        );
-        throw new Error("induced post-commit Responses failure");
-      },
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
     const abortController = new AbortController();
 
     try {
@@ -8601,26 +8639,29 @@ describe("runtime-host-bridge", () => {
           ) => Promise<unknown>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async (_body, requestId) => {
-        capturedRequestIds.push(requestId);
-        return {
-          model: "moonshot/kimi-k2.5",
-          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-          adapterFamily: "ai-sdk-openai-compatible",
-          routingDecisionId: `decision-${requestId}`,
-          outputText: "ok",
-          finishReason: "stop",
-          usage: {
-            inputTokens: 1,
-            outputTokens: 1,
-          },
-        };
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async (_body, requestId) => {
+          capturedRequestIds.push(requestId);
+          return {
+            model: "moonshot/kimi-k2.5",
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            adapterFamily: "ai-sdk-openai-compatible",
+            routingDecisionId: `decision-${requestId}`,
+            outputText: "ok",
+            finishReason: "stop",
+            usage: {
+              inputTokens: 1,
+              outputTokens: 1,
+            },
+          };
+        },
       },
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       for (let index = 0; index < 2; index += 1) {
@@ -8681,50 +8722,73 @@ describe("runtime-host-bridge", () => {
           readRouterDecision: (requestId: string) => Promise<unknown>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
-      },
-      readRuntimeSummary: async () => ({
-        lifecycleSummary: registry.lifecycleSummary,
-        providerCount: 1,
-        accountCount: 2,
-      }),
-      listProviders: async () => [
-        {
-          providerId: "moonshot",
-          displayName: "Moonshot AI",
-          supportedAuthModes: ["api-key-static", "oauth2-device-code"],
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
         },
-      ],
-      listRoles: async () => [
-        {
-          roleId: "general.chat",
-          label: "General chat",
-        },
-      ],
-      readRolePolicy: async () => ({
-        roleDefinitions: [
+        readRuntimeSummary: async () => ({
+          lifecycleSummary: registry.lifecycleSummary,
+          providerCount: 1,
+          accountCount: 2,
+        }),
+        listProviders: async () => [
           {
-            role_id: "general.chat",
-            name: "General Chat",
-            description: "General chat role",
-            role_kind: "assistant",
-            default_system_instructions: "Help the user.",
-            task_types_supported: ["text.chat"],
-            required_capabilities: [],
-            preferred_capabilities: [],
-            forbidden_capabilities: [],
-            tool_policy: { mode: "allowed", allowed_tools: [] },
-            routing_policy_overrides: {},
-            output_contracts: [],
-            safety_policy_refs: [],
+            providerId: "moonshot",
+            displayName: "Moonshot AI",
+            supportedAuthModes: ["api-key-static", "oauth2-device-code"],
           },
         ],
-        taskDefinitions: [
+        listRoles: async () => [
+          {
+            roleId: "general.chat",
+            label: "General chat",
+          },
+        ],
+        readRolePolicy: async () => ({
+          roleDefinitions: [
+            {
+              role_id: "general.chat",
+              name: "General Chat",
+              description: "General chat role",
+              role_kind: "assistant",
+              default_system_instructions: "Help the user.",
+              task_types_supported: ["text.chat"],
+              required_capabilities: [],
+              preferred_capabilities: [],
+              forbidden_capabilities: [],
+              tool_policy: { mode: "allowed", allowed_tools: [] },
+              routing_policy_overrides: {},
+              output_contracts: [],
+              safety_policy_refs: [],
+            },
+          ],
+          taskDefinitions: [
+            {
+              task_type: "text.chat",
+              description: "General chat task",
+              required_inputs: [],
+              required_capabilities: ["text.chat"],
+              preferred_capabilities: [],
+              quality_metrics: [],
+              allowed_roles: ["general.chat"],
+              default_benchmark_suites: [],
+            },
+          ],
+        }),
+        createRolePolicyRole: async (body) => ({
+          saved: true,
+          ...body,
+        }),
+        updateRolePolicyRole: async (roleId, body) => ({
+          saved: true,
+          role_id: roleId,
+          ...body,
+        }),
+        listTaskDefinitions: async () => [
           {
             task_type: "text.chat",
             description: "General chat task",
@@ -8736,214 +8800,194 @@ describe("runtime-host-bridge", () => {
             default_benchmark_suites: [],
           },
         ],
-      }),
-      createRolePolicyRole: async (body) => ({
-        saved: true,
-        ...body,
-      }),
-      updateRolePolicyRole: async (roleId, body) => ({
-        saved: true,
-        role_id: roleId,
-        ...body,
-      }),
-      listTaskDefinitions: async () => [
-        {
-          task_type: "text.chat",
-          description: "General chat task",
-          required_inputs: [],
-          required_capabilities: ["text.chat"],
-          preferred_capabilities: [],
-          quality_metrics: [],
-          allowed_roles: ["general.chat"],
-          default_benchmark_suites: [],
-        },
-      ],
-      updateTaskDefinitions: async (body) => body,
-      listAccounts: async () => [
-        {
-          providerAccountId: "moonshot.personal.primary",
-          providerId: "moonshot",
-          authMode: "api-key-static",
-          modelRoleBindings: [
-            {
-              modelId: "moonshot/kimi-k2.5",
-              roleIds: ["general.chat"],
-            },
-          ],
-        },
-      ],
-      listProviderDeviceAuthorizations: async () => [
-        {
-          authRequestId: "auth-001",
-          providerAccountId: "moonshot.personal.kimi-code",
-          providerId: "moonshot",
-          variantId: "kimi-code",
-          status: "pending",
-          userCode: "ABCD-EFGH",
-        },
-      ],
-      upsertProviderAccount: async (body) => ({
-        saved: true,
-        providerAccountId: body.providerAccountId,
-      }),
-      startProviderDeviceAuthorization: async () => ({
-        authRequestId: "auth-001",
-        providerAccountId: "moonshot.personal.kimi-code",
-        status: "pending",
-        userCode: "ABCD-EFGH",
-      }),
-      pollProviderDeviceAuthorization: async () => ({
-        authRequestId: "auth-001",
-        providerAccountId: "moonshot.personal.kimi-code",
-        status: "connected",
-      }),
-      readRuntimeConfig: async () => ({
-        applied: true,
-        path: "D:\\runtime-config.yaml",
-        config: {
-          version: "1.0",
-          executionMode: "hybrid",
-        },
-      }),
-      updateRuntimeConfig: async (body) => ({
-        applied: true,
-        path: "D:\\runtime-config.yaml",
-        config: {
-          version: body.version,
-          executionMode: "hybrid",
-        },
-      }),
-      activateEndpoint: async () => ({
-        endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-        providerAccountId: "moonshot.personal.primary",
-        modelId: "moonshot/kimi-k2.5",
-        status: "active",
-      }),
-      activateEndpointBatch: async (body) => ({
-        activationBatchId: body.activationBatchId,
-        status: "committed",
-        endpoints: [
+        updateTaskDefinitions: async (body) => body,
+        listAccounts: async () => [
           {
-            endpointId: "moonshot.personal.primary.global.kimi-k2.5.high",
             providerAccountId: "moonshot.personal.primary",
-            modelId: "moonshot/kimi-k2.5",
-            status: "active",
+            providerId: "moonshot",
+            authMode: "api-key-static",
+            modelRoleBindings: [
+              {
+                modelId: "moonshot/kimi-k2.5",
+                roleIds: ["general.chat"],
+              },
+            ],
           },
         ],
-      }),
-      readControllerAssignment: async () => ({
-        scope: "global",
-        endpointId: "cli.local.coder",
-        modelId: "gpt-5.4",
-        sourceType: "local",
-      }),
-      updateControllerAssignment: async (body) => ({
-        scope: "global",
-        endpointId: body.endpointId,
-        modelId: "moonshot/kimi-k2.5",
-        sourceType: "remote",
-      }),
-      listEndpoints: async () => [
-        {
-          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-          providerId: "moonshot",
-          modelId: "moonshot/kimi-k2.5",
-          routingEligible: true,
-          benchmarkEligible: true,
-          webSearchSupport: {
-            mode: "native",
-            currentRuntimeContract: "moonshot.chat.builtin_web_search",
-            documentedProviderContract: "moonshot.chat.builtin_web_search",
+        listProviderDeviceAuthorizations: async () => [
+          {
+            authRequestId: "auth-001",
+            providerAccountId: "moonshot.personal.kimi-code",
+            providerId: "moonshot",
+            variantId: "kimi-code",
+            status: "pending",
+            userCode: "ABCD-EFGH",
           },
-        },
-      ],
-      readRouterSummary: async () => ({
-        strategy: "balanced",
-        executionMode: "hybrid",
-        controller: {
+        ],
+        upsertProviderAccount: async (body) => ({
+          saved: true,
+          providerAccountId: body.providerAccountId,
+        }),
+        startProviderDeviceAuthorization: async () => ({
+          authRequestId: "auth-001",
+          providerAccountId: "moonshot.personal.kimi-code",
+          status: "pending",
+          userCode: "ABCD-EFGH",
+        }),
+        pollProviderDeviceAuthorization: async () => ({
+          authRequestId: "auth-001",
+          providerAccountId: "moonshot.personal.kimi-code",
+          status: "connected",
+        }),
+        readRuntimeConfig: async () => ({
+          applied: true,
+          path: "D:\\runtime-config.yaml",
+          config: {
+            version: "1.0",
+            executionMode: "hybrid",
+          },
+        }),
+        updateRuntimeConfig: async (body) => ({
+          applied: true,
+          path: "D:\\runtime-config.yaml",
+          config: {
+            version: body.version,
+            executionMode: "hybrid",
+          },
+        }),
+        activateEndpoint: async () => ({
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+          providerAccountId: "moonshot.personal.primary",
+          modelId: "moonshot/kimi-k2.5",
+          status: "active",
+        }),
+        activateEndpointBatch: async (body) => ({
+          activationBatchId: body.activationBatchId,
+          status: "committed",
+          endpoints: [
+            {
+              endpointId: "moonshot.personal.primary.global.kimi-k2.5.high",
+              providerAccountId: "moonshot.personal.primary",
+              modelId: "moonshot/kimi-k2.5",
+              status: "active",
+            },
+          ],
+        }),
+        readControllerAssignment: async () => ({
+          scope: "global",
           endpointId: "cli.local.coder",
           modelId: "gpt-5.4",
           sourceType: "local",
-        },
-        configuredCandidateCount: 2,
-        recentDecisionCount: 3,
-      }),
-      readRouterConfig: async () => ({
-        persisted: {
+        }),
+        updateControllerAssignment: async (body) => ({
+          scope: "global",
+          endpointId: body.endpointId,
+          modelId: "moonshot/kimi-k2.5",
+          sourceType: "remote",
+        }),
+        listEndpoints: async () => [
+          {
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            providerId: "moonshot",
+            modelId: "moonshot/kimi-k2.5",
+            routingEligible: true,
+            benchmarkEligible: true,
+            webSearchSupport: {
+              mode: "native",
+              currentRuntimeContract: "moonshot.chat.builtin_web_search",
+              documentedProviderContract: "moonshot.chat.builtin_web_search",
+            },
+          },
+        ],
+        readRouterSummary: async () => ({
           strategy: "balanced",
           executionMode: "hybrid",
-        },
-        controller: {
-          endpointId: "cli.local.coder",
-          modelId: "gpt-5.4",
-          sourceType: "local",
-        },
-        guidance: {
-          preferredEndpointIds: ["cli.local.coder"],
-          ignoredEndpointIds: ["moonshot.personal.kimi-code.global.kimi-k2.5"],
-        },
-        policySources: {
-          roles: [
-            {
-              roleId: "general.chat",
-              taskTypes: ["general.chat"],
-              routingPolicyOverrides: {
-                computePreference: "balanced",
+          controller: {
+            endpointId: "cli.local.coder",
+            modelId: "gpt-5.4",
+            sourceType: "local",
+          },
+          configuredCandidateCount: 2,
+          recentDecisionCount: 3,
+        }),
+        readRouterConfig: async () => ({
+          persisted: {
+            strategy: "balanced",
+            executionMode: "hybrid",
+          },
+          controller: {
+            endpointId: "cli.local.coder",
+            modelId: "gpt-5.4",
+            sourceType: "local",
+          },
+          guidance: {
+            preferredEndpointIds: ["cli.local.coder"],
+            ignoredEndpointIds: ["moonshot.personal.kimi-code.global.kimi-k2.5"],
+          },
+          policySources: {
+            roles: [
+              {
+                roleId: "general.chat",
+                taskTypes: ["general.chat"],
+                routingPolicyOverrides: {
+                  computePreference: "balanced",
+                },
               },
-            },
-          ],
-          tasks: [
-            {
-              taskType: "general.chat",
-              label: "General chat",
-              routingTarget: "balanced",
-            },
-          ],
-        },
-      }),
-      listRouterCandidates: async () => [
-        {
-          endpointId: "cli.local.coder",
-          modelId: "gpt-5.4",
-          providerId: "local",
-          sourceType: "local",
-          endpointKind: "local_process",
-          servingSource: "local",
-          healthStatus: "healthy",
-          routingEligible: true,
-          benchmarkEligible: true,
-          controllerEligible: true,
-          roleBindings: ["general.chat"],
-          toolCallingSupported: true,
-        },
-      ],
-      listRouterDecisions: async () => [
-        {
-          requestId: "req-router-001",
+            ],
+            tasks: [
+              {
+                taskType: "general.chat",
+                label: "General chat",
+                routingTarget: "balanced",
+              },
+            ],
+          },
+        }),
+        listRouterCandidates: async () => [
+          {
+            endpointId: "cli.local.coder",
+            modelId: "gpt-5.4",
+            providerId: "local",
+            sourceType: "local",
+            endpointKind: "local_process",
+            servingSource: "local",
+            healthStatus: "healthy",
+            routingEligible: true,
+            benchmarkEligible: true,
+            controllerEligible: true,
+            roleBindings: ["general.chat"],
+            toolCallingSupported: true,
+          },
+        ],
+        listRouterDecisions: async () => [
+          {
+            requestId: "req-router-001",
+            routingDecisionId: "route-001",
+            selectedEndpointId: "cli.local.coder",
+            selectedModelId: "gpt-5.4",
+            strategyLabel: "balanced",
+          },
+        ],
+        readRouterDecision: async (requestId) => ({
+          requestId,
           routingDecisionId: "route-001",
           selectedEndpointId: "cli.local.coder",
           selectedModelId: "gpt-5.4",
+          providerAttemptIds: ["attempt:req-router-001:final"],
+          fallbackEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
           strategyLabel: "balanced",
-        },
-      ],
-      readRouterDecision: async (requestId) => ({
-        requestId,
-        routingDecisionId: "route-001",
-        selectedEndpointId: "cli.local.coder",
-        selectedModelId: "gpt-5.4",
-        providerAttemptIds: ["attempt:req-router-001:final"],
-        fallbackEndpointIds: ["moonshot.personal.primary.global.kimi-k2.5"],
-        strategyLabel: "balanced",
-        scoredCandidates: [
-          {
-            endpointId: "cli.local.coder",
-            totalScore: 0.98,
-            metricProvenance: "measured",
-          },
-        ],
-        observeRequestPath: `/app/observe/requests/${requestId}`,
-      }),
-    }, { allowTestSeamBackend: true });
+          scoredCandidates: [
+            {
+              endpointId: "cli.local.coder",
+              totalScore: 0.98,
+              metricProvenance: "measured",
+            },
+          ],
+          observeRequestPath: `/app/observe/requests/${requestId}`,
+        }),
+      },
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const summaryResponse = await fetch(
@@ -9444,47 +9488,50 @@ describe("runtime-host-bridge", () => {
           listTelemetryRequests: () => Promise<unknown>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        executeResponses: async () => {
+          throw new Error("not used");
+        },
+        readTelemetrySummary: async () => ({
+          requestCount: 2,
+          successCount: 1,
+          failureCount: 1,
+          totalTokens: 200,
+        }),
+        listTelemetryComparisonRows: async () => [
+          {
+            endpointId: "llama-swap.local.local-mock-llama",
+            sourceType: "local",
+            requestCount: 1,
+          },
+          {
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            sourceType: "remote",
+            requestCount: 1,
+          },
+        ],
+        listTelemetryRequests: async () => [
+          {
+            requestId: "req-telemetry-local-001",
+            sourceType: "local",
+            endpointId: "llama-swap.local.local-mock-llama",
+          },
+          {
+            requestId: "req-telemetry-remote-001",
+            sourceType: "remote",
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+          },
+        ],
       },
-      executeResponses: async () => {
-        throw new Error("not used");
-      },
-      readTelemetrySummary: async () => ({
-        requestCount: 2,
-        successCount: 1,
-        failureCount: 1,
-        totalTokens: 200,
-      }),
-      listTelemetryComparisonRows: async () => [
-        {
-          endpointId: "llama-swap.local.local-mock-llama",
-          sourceType: "local",
-          requestCount: 1,
-        },
-        {
-          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-          sourceType: "remote",
-          requestCount: 1,
-        },
-      ],
-      listTelemetryRequests: async () => [
-        {
-          requestId: "req-telemetry-local-001",
-          sourceType: "local",
-          endpointId: "llama-swap.local.local-mock-llama",
-        },
-        {
-          requestId: "req-telemetry-remote-001",
-          sourceType: "remote",
-          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-        },
-      ],
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const summaryResponse = await fetch(
@@ -9553,22 +9600,25 @@ describe("runtime-host-bridge", () => {
           queryTelemetryAnalytics: (body: Record<string, unknown>) => Promise<unknown>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        executeResponses: async () => {
+          throw new Error("not used");
+        },
+        queryTelemetryAnalytics: async (body) => ({
+          echoedQuery: body,
+          buckets: [],
+          ranking: null,
+        }),
       },
-      executeResponses: async () => {
-        throw new Error("not used");
-      },
-      queryTelemetryAnalytics: async (body) => ({
-        echoedQuery: body,
-        buckets: [],
-        ranking: null,
-      }),
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const analyticsResponse = await fetch(
@@ -9617,14 +9667,17 @@ describe("runtime-host-bridge", () => {
           ) => Promise<unknown>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
       },
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(
@@ -9710,26 +9763,29 @@ describe("runtime-host-bridge", () => {
           }>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async () => ({
-        model: "moonshot/kimi-k2.5",
-        endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-        adapterFamily: "ai-sdk-openai",
-        routingDecisionId: "decision-chat-123",
-        outputText: "Routed summary",
-        finishReason: "stop",
-        usage: {
-          inputTokens: 32,
-          outputTokens: 24,
-        },
-        vendorMetadata: {
-          costUsd: 0.0042,
-        },
-      }),
-    }, { allowTestSeamBackend: true });
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async () => ({
+          model: "moonshot/kimi-k2.5",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+          adapterFamily: "ai-sdk-openai",
+          routingDecisionId: "decision-chat-123",
+          outputText: "Routed summary",
+          finishReason: "stop",
+          usage: {
+            inputTokens: 32,
+            outputTokens: 24,
+          },
+          vendorMetadata: {
+            costUsd: 0.0042,
+          },
+        }),
+      },
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -9816,80 +9872,83 @@ describe("runtime-host-bridge", () => {
           },
         ) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
-      },
-      executeResponses: async (_body, _requestId, streamWriter) => {
-        executionCalls += 1;
-        expect(typeof streamWriter).toBe("function");
-        await streamWriter?.(
-          {
-            type: "response.created",
-            response: {
-              id: "resp_123",
-              created_at: 1,
-              model: "moonshot/kimi-k2.5",
-            },
-          },
-          {
-            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-            adapterFamily: "ai-sdk-openai",
-            routingDecisionId: "decision-responses-stream-123",
-          },
-        );
-        await delay(25);
-        await streamWriter?.(
-          {
-            type: "response.output_text.delta",
-            item_id: "msg_1",
-            delta: "Ready now",
-          },
-          {
-            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-            adapterFamily: "ai-sdk-openai",
-            routingDecisionId: "decision-responses-stream-123",
-          },
-        );
-        await delay(25);
-        await streamWriter?.(
-          {
-            type: "response.completed",
-            response: {
-              usage: {
-                input_tokens: 11,
-                output_tokens: 4,
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        executeResponses: async (_body, _requestId, streamWriter) => {
+          executionCalls += 1;
+          expect(typeof streamWriter).toBe("function");
+          await streamWriter?.(
+            {
+              type: "response.created",
+              response: {
+                id: "resp_123",
+                created_at: 1,
+                model: "moonshot/kimi-k2.5",
               },
             },
-          },
-          {
+            {
+              endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+              adapterFamily: "ai-sdk-openai",
+              routingDecisionId: "decision-responses-stream-123",
+            },
+          );
+          await delay(25);
+          await streamWriter?.(
+            {
+              type: "response.output_text.delta",
+              item_id: "msg_1",
+              delta: "Ready now",
+            },
+            {
+              endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+              adapterFamily: "ai-sdk-openai",
+              routingDecisionId: "decision-responses-stream-123",
+            },
+          );
+          await delay(25);
+          await streamWriter?.(
+            {
+              type: "response.completed",
+              response: {
+                usage: {
+                  input_tokens: 11,
+                  output_tokens: 4,
+                },
+              },
+            },
+            {
+              endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+              adapterFamily: "ai-sdk-openai",
+              routingDecisionId: "decision-responses-stream-123",
+            },
+          );
+          executionCompleted = true;
+          return {
+            responseId: "resp_123",
+            model: "moonshot/kimi-k2.5",
             endpointId: "moonshot.personal.primary.global.kimi-k2.5",
             adapterFamily: "ai-sdk-openai",
             routingDecisionId: "decision-responses-stream-123",
-          },
-        );
-        executionCompleted = true;
-        return {
-          responseId: "resp_123",
-          model: "moonshot/kimi-k2.5",
-          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-          adapterFamily: "ai-sdk-openai",
-          routingDecisionId: "decision-responses-stream-123",
-          outputText: "Ready now",
-          finishReason: "stop",
-          usage: {
-            inputTokens: 11,
-            outputTokens: 4,
-          },
-          vendorMetadata: {
-            costUsd: 0.0042,
-          },
-        };
+            outputText: "Ready now",
+            finishReason: "stop",
+            usage: {
+              inputTokens: 11,
+              outputTokens: 4,
+            },
+            vendorMetadata: {
+              costUsd: 0.0042,
+            },
+          };
+        },
       },
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/responses`, {
@@ -10005,32 +10064,35 @@ describe("runtime-host-bridge", () => {
           }>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async () => ({
-        model: "moonshot/kimi-k2.5",
-        endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-        adapterFamily: "ai-sdk-openai",
-        outputText: "",
-        finishReason: "tool_calls",
-        usage: {
-          inputTokens: 32,
-          outputTokens: 24,
-        },
-        toolCalls: [
-          {
-            id: "call_1",
-            type: "function",
-            function: {
-              name: "lookupRegistry",
-              arguments: '{"endpointId":"moonshot.personal.primary.global.kimi-k2.5"}',
-            },
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async () => ({
+          model: "moonshot/kimi-k2.5",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+          adapterFamily: "ai-sdk-openai",
+          outputText: "",
+          finishReason: "tool_calls",
+          usage: {
+            inputTokens: 32,
+            outputTokens: 24,
           },
-        ],
-      }),
-    }, { allowTestSeamBackend: true });
+          toolCalls: [
+            {
+              id: "call_1",
+              type: "function",
+              function: {
+                name: "lookupRegistry",
+                arguments: '{"endpointId":"moonshot.personal.primary.global.kimi-k2.5"}',
+              },
+            },
+          ],
+        }),
+      },
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -10117,116 +10179,119 @@ describe("runtime-host-bridge", () => {
           },
         ) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
-      },
-      executeResponses: async (_body, _requestId, streamWriter) => {
-        expect(typeof streamWriter).toBe("function");
-        const metadata = {
-          endpointId: "deepseek.personal.primary.global.deepseek-v4-pro",
-          adapterFamily: "ai-sdk-openai-compatible",
-          routingDecisionId: "decision-responses-normalized-123",
-        };
-        await streamWriter?.(
-          {
-            id: "chatcmpl-deepseek",
-            object: "chat.completion.chunk",
-            created: 1,
-            model: "deepseek/deepseek-v4-pro",
-            choices: [
-              {
-                index: 0,
-                delta: {
-                  role: "assistant",
-                  content: null,
-                  reasoning_content: "",
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        executeResponses: async (_body, _requestId, streamWriter) => {
+          expect(typeof streamWriter).toBe("function");
+          const metadata = {
+            endpointId: "deepseek.personal.primary.global.deepseek-v4-pro",
+            adapterFamily: "ai-sdk-openai-compatible",
+            routingDecisionId: "decision-responses-normalized-123",
+          };
+          await streamWriter?.(
+            {
+              id: "chatcmpl-deepseek",
+              object: "chat.completion.chunk",
+              created: 1,
+              model: "deepseek/deepseek-v4-pro",
+              choices: [
+                {
+                  index: 0,
+                  delta: {
+                    role: "assistant",
+                    content: null,
+                    reasoning_content: "",
+                  },
+                  finish_reason: null,
                 },
-                finish_reason: null,
-              },
-            ],
-          },
-          metadata,
-        );
-        await delay(10);
-        await streamWriter?.(
-          {
-            id: "chatcmpl-deepseek",
-            object: "chat.completion.chunk",
-            created: 1,
-            model: "deepseek/deepseek-v4-pro",
-            choices: [
-              {
-                index: 0,
-                delta: {
-                  content: null,
-                  reasoning_content: "Thinking...",
-                },
-                finish_reason: null,
-              },
-            ],
-          },
-          metadata,
-        );
-        await delay(10);
-        await streamWriter?.(
-          {
-            id: "chatcmpl-deepseek",
-            object: "chat.completion.chunk",
-            created: 1,
-            model: "deepseek/deepseek-v4-pro",
-            choices: [
-              {
-                index: 0,
-                delta: {
-                  content: "OK",
-                },
-                finish_reason: null,
-              },
-            ],
-          },
-          metadata,
-        );
-        await delay(10);
-        await streamWriter?.(
-          {
-            id: "chatcmpl-deepseek",
-            object: "chat.completion.chunk",
-            created: 1,
-            model: "deepseek/deepseek-v4-pro",
-            choices: [
-              {
-                index: 0,
-                delta: {},
-                finish_reason: "stop",
-              },
-            ],
-            usage: {
-              prompt_tokens: 7,
-              completion_tokens: 1,
+              ],
             },
-          },
-          metadata,
-        );
-        executionCompleted = true;
-        return {
-          responseId: "resp_deepseek_123",
-          model: "deepseek/deepseek-v4-pro",
-          endpointId: "deepseek.personal.primary.global.deepseek-v4-pro",
-          adapterFamily: "ai-sdk-openai-compatible",
-          routingDecisionId: "decision-responses-normalized-123",
-          outputText: "OK",
-          finishReason: "stop",
-          usage: {
-            inputTokens: 7,
-            outputTokens: 1,
-          },
-        };
+            metadata,
+          );
+          await delay(10);
+          await streamWriter?.(
+            {
+              id: "chatcmpl-deepseek",
+              object: "chat.completion.chunk",
+              created: 1,
+              model: "deepseek/deepseek-v4-pro",
+              choices: [
+                {
+                  index: 0,
+                  delta: {
+                    content: null,
+                    reasoning_content: "Thinking...",
+                  },
+                  finish_reason: null,
+                },
+              ],
+            },
+            metadata,
+          );
+          await delay(10);
+          await streamWriter?.(
+            {
+              id: "chatcmpl-deepseek",
+              object: "chat.completion.chunk",
+              created: 1,
+              model: "deepseek/deepseek-v4-pro",
+              choices: [
+                {
+                  index: 0,
+                  delta: {
+                    content: "OK",
+                  },
+                  finish_reason: null,
+                },
+              ],
+            },
+            metadata,
+          );
+          await delay(10);
+          await streamWriter?.(
+            {
+              id: "chatcmpl-deepseek",
+              object: "chat.completion.chunk",
+              created: 1,
+              model: "deepseek/deepseek-v4-pro",
+              choices: [
+                {
+                  index: 0,
+                  delta: {},
+                  finish_reason: "stop",
+                },
+              ],
+              usage: {
+                prompt_tokens: 7,
+                completion_tokens: 1,
+              },
+            },
+            metadata,
+          );
+          executionCompleted = true;
+          return {
+            responseId: "resp_deepseek_123",
+            model: "deepseek/deepseek-v4-pro",
+            endpointId: "deepseek.personal.primary.global.deepseek-v4-pro",
+            adapterFamily: "ai-sdk-openai-compatible",
+            routingDecisionId: "decision-responses-normalized-123",
+            outputText: "OK",
+            finishReason: "stop",
+            usage: {
+              inputTokens: 7,
+              outputTokens: 1,
+            },
+          };
+        },
       },
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/responses`, {
@@ -10357,98 +10422,101 @@ describe("runtime-host-bridge", () => {
           }>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async (_body, _requestId, streamWriter) => {
-        executionCalls += 1;
-        expect(typeof streamWriter).toBe("function");
-        await streamWriter?.(
-          {
-            id: "chatcmpl-role-model",
-            object: "chat.completion.chunk",
-            created: 1,
-            model: "moonshot/kimi-k2.5",
-            choices: [
-              {
-                index: 0,
-                delta: {
-                  role: "assistant",
-                  content: "un",
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async (_body, _requestId, streamWriter) => {
+          executionCalls += 1;
+          expect(typeof streamWriter).toBe("function");
+          await streamWriter?.(
+            {
+              id: "chatcmpl-role-model",
+              object: "chat.completion.chunk",
+              created: 1,
+              model: "moonshot/kimi-k2.5",
+              choices: [
+                {
+                  index: 0,
+                  delta: {
+                    role: "assistant",
+                    content: "un",
+                  },
+                  finish_reason: null,
                 },
-                finish_reason: null,
-              },
-            ],
-          },
-          {
-            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-            adapterFamily: "ai-sdk-openai",
-            routingDecisionId: "decision-chat-stream-123",
-          },
-        );
-        await delay(25);
-        await streamWriter?.(
-          {
-            id: "chatcmpl-role-model",
-            object: "chat.completion.chunk",
-            created: 1,
-            model: "moonshot/kimi-k2.5",
-            choices: [
-              {
-                index: 0,
-                delta: {
-                  content: "expected",
+              ],
+            },
+            {
+              endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+              adapterFamily: "ai-sdk-openai",
+              routingDecisionId: "decision-chat-stream-123",
+            },
+          );
+          await delay(25);
+          await streamWriter?.(
+            {
+              id: "chatcmpl-role-model",
+              object: "chat.completion.chunk",
+              created: 1,
+              model: "moonshot/kimi-k2.5",
+              choices: [
+                {
+                  index: 0,
+                  delta: {
+                    content: "expected",
+                  },
+                  finish_reason: null,
                 },
-                finish_reason: null,
-              },
-            ],
-          },
-          {
-            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-            adapterFamily: "ai-sdk-openai",
-            routingDecisionId: "decision-chat-stream-123",
-          },
-        );
-        await delay(25);
-        await streamWriter?.(
-          {
-            id: "chatcmpl-role-model",
-            object: "chat.completion.chunk",
-            created: 1,
+              ],
+            },
+            {
+              endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+              adapterFamily: "ai-sdk-openai",
+              routingDecisionId: "decision-chat-stream-123",
+            },
+          );
+          await delay(25);
+          await streamWriter?.(
+            {
+              id: "chatcmpl-role-model",
+              object: "chat.completion.chunk",
+              created: 1,
+              model: "moonshot/kimi-k2.5",
+              choices: [
+                {
+                  index: 0,
+                  delta: {},
+                  finish_reason: "stop",
+                },
+              ],
+            },
+            {
+              endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+              adapterFamily: "ai-sdk-openai",
+              routingDecisionId: "decision-chat-stream-123",
+            },
+          );
+          executionCompleted = true;
+          return {
             model: "moonshot/kimi-k2.5",
-            choices: [
-              {
-                index: 0,
-                delta: {},
-                finish_reason: "stop",
-              },
-            ],
-          },
-          {
             endpointId: "moonshot.personal.primary.global.kimi-k2.5",
             adapterFamily: "ai-sdk-openai",
             routingDecisionId: "decision-chat-stream-123",
-          },
-        );
-        executionCompleted = true;
-        return {
-          model: "moonshot/kimi-k2.5",
-          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-          adapterFamily: "ai-sdk-openai",
-          routingDecisionId: "decision-chat-stream-123",
-          outputText: "unexpected",
-          finishReason: "stop",
-          usage: {
-            inputTokens: 1,
-            outputTokens: 1,
-          },
-          vendorMetadata: {
-            costUsd: 0.0042,
-          },
-        };
+            outputText: "unexpected",
+            finishReason: "stop",
+            usage: {
+              inputTokens: 1,
+              outputTokens: 1,
+            },
+            vendorMetadata: {
+              costUsd: 0.0042,
+            },
+          };
+        },
       },
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -10584,23 +10652,26 @@ describe("runtime-host-bridge", () => {
           }>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async () => ({
-        model: "moonshot/kimi-k2.5",
-        endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-        adapterFamily: "ai-sdk-openai",
-        outputText: "Ready",
-        reasoningText: "I should answer briefly.",
-        finishReason: "stop",
-        usage: {
-          inputTokens: 1,
-          outputTokens: 1,
-        },
-      }),
-    }, { allowTestSeamBackend: true });
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async () => ({
+          model: "moonshot/kimi-k2.5",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+          adapterFamily: "ai-sdk-openai",
+          outputText: "Ready",
+          reasoningText: "I should answer briefly.",
+          finishReason: "stop",
+          usage: {
+            inputTokens: 1,
+            outputTokens: 1,
+          },
+        }),
+      },
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -10694,26 +10765,29 @@ describe("runtime-host-bridge", () => {
           }>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async (_body, _requestId, _streamWriter, value) => {
-        requestOptions = value;
-        return {
-          model: "moonshot/kimi-k2.5",
-          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-          adapterFamily: "ai-sdk-openai",
-          routingDecisionId: "decision-chat-routing-mode-123",
-          outputText: "ok",
-          finishReason: "stop",
-          usage: {
-            inputTokens: 1,
-            outputTokens: 1,
-          },
-        };
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async (_body, _requestId, _streamWriter, value) => {
+          requestOptions = value;
+          return {
+            model: "moonshot/kimi-k2.5",
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            adapterFamily: "ai-sdk-openai",
+            routingDecisionId: "decision-chat-routing-mode-123",
+            outputText: "ok",
+            finishReason: "stop",
+            usage: {
+              inputTokens: 1,
+              outputTokens: 1,
+            },
+          };
+        },
       },
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -10784,26 +10858,29 @@ describe("runtime-host-bridge", () => {
           }>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async (_body, _requestId, _streamWriter, value) => {
-        requestOptions = value;
-        return {
-          model: "moonshot/kimi-k2.5",
-          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-          adapterFamily: "ai-sdk-openai-compatible",
-          routingDecisionId: "decision-chat-ingress-affinity-123",
-          outputText: "ok",
-          finishReason: "stop",
-          usage: {
-            inputTokens: 1,
-            outputTokens: 1,
-          },
-        };
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async (_body, _requestId, _streamWriter, value) => {
+          requestOptions = value;
+          return {
+            model: "moonshot/kimi-k2.5",
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            adapterFamily: "ai-sdk-openai-compatible",
+            routingDecisionId: "decision-chat-ingress-affinity-123",
+            outputText: "ok",
+            finishReason: "stop",
+            usage: {
+              inputTokens: 1,
+              outputTokens: 1,
+            },
+          };
+        },
       },
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -10874,26 +10951,29 @@ describe("runtime-host-bridge", () => {
           }>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async (_body, _requestId, _streamWriter, value) => {
-        requestOptions = value;
-        return {
-          model: "moonshot/kimi-k2.5",
-          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-          adapterFamily: "ai-sdk-openai-compatible",
-          routingDecisionId: "decision-chat-ingress-affinity-pi-123",
-          outputText: "ok",
-          finishReason: "stop",
-          usage: {
-            inputTokens: 1,
-            outputTokens: 1,
-          },
-        };
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async (_body, _requestId, _streamWriter, value) => {
+          requestOptions = value;
+          return {
+            model: "moonshot/kimi-k2.5",
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            adapterFamily: "ai-sdk-openai-compatible",
+            routingDecisionId: "decision-chat-ingress-affinity-pi-123",
+            outputText: "ok",
+            finishReason: "stop",
+            usage: {
+              inputTokens: 1,
+              outputTokens: 1,
+            },
+          };
+        },
       },
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -10952,26 +11032,29 @@ describe("runtime-host-bridge", () => {
           }>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async () => {
-        executionCalls += 1;
-        return {
-          model: "moonshot/kimi-k2.5",
-          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-          adapterFamily: "ai-sdk-openai",
-          routingDecisionId: "decision-chat-routing-mode-invalid",
-          outputText: "unexpected",
-          finishReason: "stop",
-          usage: {
-            inputTokens: 1,
-            outputTokens: 1,
-          },
-        };
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async () => {
+          executionCalls += 1;
+          return {
+            model: "moonshot/kimi-k2.5",
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            adapterFamily: "ai-sdk-openai",
+            routingDecisionId: "decision-chat-routing-mode-invalid",
+            outputText: "unexpected",
+            finishReason: "stop",
+            usage: {
+              inputTokens: 1,
+              outputTokens: 1,
+            },
+          };
+        },
       },
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
@@ -13564,15 +13647,18 @@ describe("runtime-host-bridge", () => {
           readRequestObservation?: (requestId: string) => Promise<unknown>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry: backend.registry,
-      executeChatCompletions: backend.executeChatCompletions,
-      executeResponses: backend.executeResponses,
-      listTelemetryRequests: backend.listTelemetryRequests,
-      readRequestObservation: backend.readRequestObservation,
-    }, { allowTestSeamBackend: true });
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry: backend.registry,
+        executeChatCompletions: backend.executeChatCompletions,
+        executeResponses: backend.executeResponses,
+        listTelemetryRequests: backend.listTelemetryRequests,
+        readRequestObservation: backend.readRequestObservation,
+      },
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const clientRequestId = "req-controller-http-regression-001";
@@ -14351,16 +14437,19 @@ describe("runtime-host-bridge", () => {
           listTaskDefinitions?: () => Promise<unknown>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry: backend.registry,
-      executeChatCompletions: backend.executeChatCompletions,
-      executeResponses: backend.executeResponses,
-      listRoles: backend.listRoles,
-      readRolePolicy: backend.readRolePolicy,
-      listTaskDefinitions: backend.listTaskDefinitions,
-    }, { allowTestSeamBackend: true });
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry: backend.registry,
+        executeChatCompletions: backend.executeChatCompletions,
+        executeResponses: backend.executeResponses,
+        listRoles: backend.listRoles,
+        readRolePolicy: backend.readRolePolicy,
+        listTaskDefinitions: backend.listTaskDefinitions,
+      },
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const [rolesResponse, rolePolicyResponse, tasksResponse] = await Promise.all([
@@ -16998,15 +17087,18 @@ describe("runtime-host-bridge", () => {
             readRequestObservation?: (requestId: string) => Promise<unknown>;
           }) => Promise<{ port: number; close(): Promise<void> }>;
         }
-      ).startBridgeServer({
-        host: "127.0.0.1",
-        port: 0,
-        registry: backend.registry,
-        executeChatCompletions: backend.executeChatCompletions,
-        executeResponses: backend.executeResponses,
-        listTelemetryRequests: backend.listTelemetryRequests,
-        readRequestObservation: backend.readRequestObservation,
-      }, { allowTestSeamBackend: true });
+      ).startBridgeServer(
+        {
+          host: "127.0.0.1",
+          port: 0,
+          registry: backend.registry,
+          executeChatCompletions: backend.executeChatCompletions,
+          executeResponses: backend.executeResponses,
+          listTelemetryRequests: backend.listTelemetryRequests,
+          readRequestObservation: backend.readRequestObservation,
+        },
+        { allowTestSeamBackend: true },
+      );
 
       try {
         const httpClientRequestId = "req-runtime-bridge-codex-timeout-http-001";
@@ -21101,19 +21193,22 @@ describe("runtime-host-bridge", () => {
           readEndpointProfile?: (endpointId: string) => Promise<unknown>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry: backend.registry,
-      executeChatCompletions: backend.executeChatCompletions,
-      executeResponses: backend.executeResponses,
-      readTelemetrySummary: backend.readTelemetrySummary,
-      listTelemetryComparisonRows: backend.listTelemetryComparisonRows,
-      listTelemetryRequests: backend.listTelemetryRequests,
-      listRecentRequestObservations: backend.listRecentRequestObservations,
-      readRequestObservation: backend.readRequestObservation,
-      readEndpointProfile: backend.readEndpointProfile,
-    }, { allowTestSeamBackend: true });
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry: backend.registry,
+        executeChatCompletions: backend.executeChatCompletions,
+        executeResponses: backend.executeResponses,
+        readTelemetrySummary: backend.readTelemetrySummary,
+        listTelemetryComparisonRows: backend.listTelemetryComparisonRows,
+        listTelemetryRequests: backend.listTelemetryRequests,
+        listRecentRequestObservations: backend.listRecentRequestObservations,
+        readRequestObservation: backend.readRequestObservation,
+        readEndpointProfile: backend.readEndpointProfile,
+      },
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const clientRequestId = "req-runtime-bridge-route-001";
@@ -22575,15 +22670,18 @@ describe("runtime-host-bridge", () => {
           readRequestObservation?: (requestId: string) => Promise<unknown>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry: backend.registry,
-      executeChatCompletions: backend.executeChatCompletions,
-      executeResponses: backend.executeResponses,
-      listTelemetryRequests: backend.listTelemetryRequests,
-      readRequestObservation: backend.readRequestObservation,
-    }, { allowTestSeamBackend: true });
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry: backend.registry,
+        executeChatCompletions: backend.executeChatCompletions,
+        executeResponses: backend.executeResponses,
+        listTelemetryRequests: backend.listTelemetryRequests,
+        readRequestObservation: backend.readRequestObservation,
+      },
+      { allowTestSeamBackend: true },
+    );
 
     try {
       for (let index = 0; index < 2; index += 1) {
@@ -22688,15 +22786,18 @@ describe("runtime-host-bridge", () => {
           readRequestObservation?: (requestId: string) => Promise<unknown>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry: backend.registry,
-      executeChatCompletions: backend.executeChatCompletions,
-      executeResponses: backend.executeResponses,
-      listTelemetryRequests: backend.listTelemetryRequests,
-      readRequestObservation: backend.readRequestObservation,
-    }, { allowTestSeamBackend: true });
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry: backend.registry,
+        executeChatCompletions: backend.executeChatCompletions,
+        executeResponses: backend.executeResponses,
+        listTelemetryRequests: backend.listTelemetryRequests,
+        readRequestObservation: backend.readRequestObservation,
+      },
+      { allowTestSeamBackend: true },
+    );
 
     try {
       const clientRequestId = "req-client-failure-001";
@@ -23074,17 +23175,20 @@ describe("runtime-host-bridge", () => {
           subscribeTelemetry?: (listener: (event: unknown) => void) => () => void;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry: backend.registry,
-      executeChatCompletions: backend.executeChatCompletions,
-      executeResponses: backend.executeResponses,
-      readTelemetrySummary: backend.readTelemetrySummary,
-      listTelemetryComparisonRows: backend.listTelemetryComparisonRows,
-      listTelemetryRequests: backend.listTelemetryRequests,
-      subscribeTelemetry: backend.subscribeTelemetry,
-    }, { allowTestSeamBackend: true });
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry: backend.registry,
+        executeChatCompletions: backend.executeChatCompletions,
+        executeResponses: backend.executeResponses,
+        readTelemetrySummary: backend.readTelemetrySummary,
+        listTelemetryComparisonRows: backend.listTelemetryComparisonRows,
+        listTelemetryRequests: backend.listTelemetryRequests,
+        subscribeTelemetry: backend.subscribeTelemetry,
+      },
+      { allowTestSeamBackend: true },
+    );
 
     const abortController = new AbortController();
 
@@ -23170,46 +23274,49 @@ describe("runtime-host-bridge", () => {
           executeResponses: () => Promise<unknown>;
         }) => Promise<{ port: number; close(): Promise<void> }>;
       }
-    ).startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry,
-      executeChatCompletions: async (_body, _requestId, streamWriter, requestOptions) => {
-        if (!requestOptions?.abortSignal) {
-          resolveAbortObserved(false);
-        } else {
-          requestOptions.abortSignal.addEventListener(
-            "abort",
-            () => {
-              resolveAbortObserved(true);
+    ).startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry,
+        executeChatCompletions: async (_body, _requestId, streamWriter, requestOptions) => {
+          if (!requestOptions?.abortSignal) {
+            resolveAbortObserved(false);
+          } else {
+            requestOptions.abortSignal.addEventListener(
+              "abort",
+              () => {
+                resolveAbortObserved(true);
+              },
+              { once: true },
+            );
+          }
+          await streamWriter?.(
+            {
+              id: "chatcmpl-abort-test",
+              object: "chat.completion.chunk",
+              choices: [{ index: 0, delta: { content: "partial" }, finish_reason: null }],
             },
-            { once: true },
+            {
+              endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+              adapterFamily: "test-adapter",
+              routingDecisionId: "decision-abort-test",
+            },
           );
-        }
-        await streamWriter?.(
-          {
-            id: "chatcmpl-abort-test",
-            object: "chat.completion.chunk",
-            choices: [{ index: 0, delta: { content: "partial" }, finish_reason: null }],
-          },
-          {
+          await delay(1_000);
+          return {
+            model: "moonshot/kimi-k2.5",
             endpointId: "moonshot.personal.primary.global.kimi-k2.5",
             adapterFamily: "test-adapter",
-            routingDecisionId: "decision-abort-test",
-          },
-        );
-        await delay(1_000);
-        return {
-          model: "moonshot/kimi-k2.5",
-          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
-          adapterFamily: "test-adapter",
-          outputText: "partial",
-          finishReason: "stop",
-          usage: { inputTokens: 1, outputTokens: 1 },
-        };
+            outputText: "partial",
+            finishReason: "stop",
+            usage: { inputTokens: 1, outputTokens: 1 },
+          };
+        },
+        executeResponses: async () => ({}),
       },
-      executeResponses: async () => ({}),
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
 
     const abortController = new AbortController();
 

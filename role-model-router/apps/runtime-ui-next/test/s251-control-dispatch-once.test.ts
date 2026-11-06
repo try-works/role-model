@@ -32,19 +32,40 @@ const model = () =>
 
 describe("S251 control action dispatch", () => {
   it("the first request returns one DispatchControl command and marks the action pending", () => {
-    const next = shellUpdate(model(), Message.ControlActionRequested({ key: "providers", token: 0 }));
+    const next = shellUpdate(
+      model(),
+      Message.ControlActionRequested({ key: "providers", token: 0 }),
+    );
     const commands = next.commands ?? [];
     assert.equal(commands.length, 1, "one command per request");
-    assert.equal(commands[0]?.name, "DispatchControl", "the reducer returned the production command");
-    assert.equal(commands[0]?.args?.key, "providers", "the command addresses the requested control");
+    assert.equal(
+      commands[0]?.name,
+      "DispatchControl",
+      "the reducer returned the production command",
+    );
+    assert.equal(
+      commands[0]?.args?.key,
+      "providers",
+      "the command addresses the requested control",
+    );
     assert.equal(commands[0]?.args?.token, 1, "the command carries the advanced token");
     assert.equal(next.model.controls.providers.actionStatus, "pending");
-    assert.equal(next.model.controls.providers.token, 1, "the token advances so a stale result cannot apply");
+    assert.equal(
+      next.model.controls.providers.token,
+      1,
+      "the token advances so a stale result cannot apply",
+    );
   });
 
   it("a second request while pending returns no command", () => {
-    const first = shellUpdate(model(), Message.ControlActionRequested({ key: "providers", token: 0 }));
-    const second = shellUpdate(first.model, Message.ControlActionRequested({ key: "providers", token: 0 }));
+    const first = shellUpdate(
+      model(),
+      Message.ControlActionRequested({ key: "providers", token: 0 }),
+    );
+    const second = shellUpdate(
+      first.model,
+      Message.ControlActionRequested({ key: "providers", token: 0 }),
+    );
     assert.equal(second.commands?.length ?? 0, 0, "two requests must not dispatch twice");
     assert.equal(second.model.controls.providers.token, 1, "the pending token is unchanged");
     assert.equal(second.model.controls.providers.actionStatus, "pending");

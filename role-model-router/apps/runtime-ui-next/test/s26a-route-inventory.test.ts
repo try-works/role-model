@@ -168,7 +168,9 @@ describe("S26a route inventory drift", () => {
     const readRoutes = inventory.routes.filter((entry) => entry.category === "read");
     expect(readRoutes.length).toBeGreaterThan(0);
     expect(
-      readRoutes.filter((entry) => (entry.hostEndpoints?.length ?? 0) === 0).map((entry) => entry.id),
+      readRoutes
+        .filter((entry) => (entry.hostEndpoints?.length ?? 0) === 0)
+        .map((entry) => entry.id),
       "every read route declares its host endpoints",
     ).toEqual([]);
 

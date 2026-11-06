@@ -128,7 +128,14 @@ describe("RM3 chart primitive", () => {
         view: sceneView({
           series: [
             { id: "a", label: "A", points: [{ label: "a", value: 1 }] },
-            { id: "b", label: "B", points: [{ label: "a", value: 2 }, { label: "b", value: 3 }] },
+            {
+              id: "b",
+              label: "B",
+              points: [
+                { label: "a", value: 2 },
+                { label: "b", value: 3 },
+              ],
+            },
           ],
           title: "Ragged",
         }),

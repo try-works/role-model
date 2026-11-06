@@ -62,19 +62,25 @@ describe("Foldkit app shell on the wrapper stack", () => {
     // S49: the product view no longer renders the debug counter/button. Wait for the real
     // page heading and prove the debug artifacts are absent.
     const heading = await waitFor(
-      () => document.querySelector("h1")?.textContent === "Runtime overview" ? document.querySelector("h1") : undefined,
+      () =>
+        document.querySelector("h1")?.textContent === "Runtime overview"
+          ? document.querySelector("h1")
+          : undefined,
       "the product page heading to render",
     );
     expect(heading?.textContent).toBe("Runtime overview");
     expect(document.body.textContent).not.toContain("Clicked");
     expect(document.body.textContent).not.toContain("Clicks:");
     await waitFor(
-      () => (document.querySelector('button[data-slot="role-model-theme-toggle"]') ? true : undefined),
+      () =>
+        document.querySelector('button[data-slot="role-model-theme-toggle"]') ? true : undefined,
       "the reference theme toggle to render",
     );
 
     const themeToggle = await waitFor(
-      () => document.querySelector<HTMLButtonElement>('button[data-slot="role-model-theme-toggle"]') ?? undefined,
+      () =>
+        document.querySelector<HTMLButtonElement>('button[data-slot="role-model-theme-toggle"]') ??
+        undefined,
       "the reference theme toggle to render",
     );
     expect(themeToggle.getAttribute("aria-label")).toBe("Switch to light mode");
@@ -91,8 +97,8 @@ describe("Foldkit app shell on the wrapper stack", () => {
     expect(document.getElementById("s14a-app-shell")).toBe(container);
     expect(container.childNodes.length).toBe(0);
     // The rendered content must be gone. The Document title is not body text, so asserting on it
-// would pass before dispose as well; assert on text the mounted view actually renders.
-expect(document.body.textContent).not.toContain("Clicks:");
-expect(document.body.textContent).not.toContain("Clicked");
+    // would pass before dispose as well; assert on text the mounted view actually renders.
+    expect(document.body.textContent).not.toContain("Clicks:");
+    expect(document.body.textContent).not.toContain("Clicked");
   });
 });

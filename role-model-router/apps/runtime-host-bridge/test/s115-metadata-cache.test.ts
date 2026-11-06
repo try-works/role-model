@@ -1,10 +1,7 @@
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
-import {
-  metadataCacheKey,
-  makeMetadataCache,
-} from "../src/composition-dag.js";
+import { makeMetadataCache, metadataCacheKey } from "../src/composition-dag.js";
 
 /**
  * Run 115 S115 (R27): cache identity, TTL, cap and invalidation for the metadata cache.
@@ -14,14 +11,31 @@ import {
  * router decision can never be served from an entry that belongs to a different authority or to
  * a superseded configuration.
  */
-const config = { instanceId: "rt-1", channel: "development" as const, providerMaxConcurrent: 2, providerMaxWaiters: 4 };
+const config = {
+  instanceId: "rt-1",
+  channel: "development" as const,
+  providerMaxConcurrent: 2,
+  providerMaxWaiters: 4,
+};
 
 describe("S115 metadata cache identity, TTL and invalidation", () => {
   it("keys distinguish authority, configuration generation and model", () => {
     const a = metadataCacheKey({ authorityId: "graph-1", configGeneration: 3, modelId: "m" });
-    const otherAuthority = metadataCacheKey({ authorityId: "graph-2", configGeneration: 3, modelId: "m" });
-    const otherGeneration = metadataCacheKey({ authorityId: "graph-1", configGeneration: 4, modelId: "m" });
-    const otherModel = metadataCacheKey({ authorityId: "graph-1", configGeneration: 3, modelId: "m2" });
+    const otherAuthority = metadataCacheKey({
+      authorityId: "graph-2",
+      configGeneration: 3,
+      modelId: "m",
+    });
+    const otherGeneration = metadataCacheKey({
+      authorityId: "graph-1",
+      configGeneration: 4,
+      modelId: "m",
+    });
+    const otherModel = metadataCacheKey({
+      authorityId: "graph-1",
+      configGeneration: 3,
+      modelId: "m2",
+    });
     expect(new Set([a, otherAuthority, otherGeneration, otherModel]).size).toBe(4);
   });
 
@@ -35,7 +49,8 @@ describe("S115 metadata cache identity, TTL and invalidation", () => {
 
   it("evicts the oldest entry when the capacity is exceeded", async () => {
     const cache = makeMetadataCache({ capacity: 2, ttlMs: 1_000 });
-    const keyFor = (n: number) => metadataCacheKey({ authorityId: "graph-1", configGeneration: 1, modelId: "m" + n });
+    const keyFor = (n: number) =>
+      metadataCacheKey({ authorityId: "graph-1", configGeneration: 1, modelId: `m${n}` });
     await Effect.runPromise(cache.set(keyFor(1), 1, 0));
     await Effect.runPromise(cache.set(keyFor(2), 2, 1));
     await Effect.runPromise(cache.set(keyFor(3), 3, 2));

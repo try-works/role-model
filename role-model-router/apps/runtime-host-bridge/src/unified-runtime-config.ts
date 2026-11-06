@@ -2068,10 +2068,15 @@ function normalizeReplayInput(value: unknown, label: string): UnifiedRuntimeRepl
   const dailyCap =
     capInput === undefined
       ? DEFAULT_UNIFIED_RUNTIME_REPLAY_CONFIG.autoQueue.dailyCap
-      : typeof capInput === "number" && Number.isSafeInteger(capInput) && capInput > 0 && capInput <= 1_000_000
+      : typeof capInput === "number" &&
+          Number.isSafeInteger(capInput) &&
+          capInput > 0 &&
+          capInput <= 1_000_000
         ? capInput
         : (() => {
-            throw new Error(`${label}.auto_queue.daily_cap must be a positive integer no greater than 1000000.`);
+            throw new Error(
+              `${label}.auto_queue.daily_cap must be a positive integer no greater than 1000000.`,
+            );
           })();
   return { autoQueue: { dailyCap, enabled: enabledInput !== false } };
 }

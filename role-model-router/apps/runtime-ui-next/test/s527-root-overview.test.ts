@@ -3,8 +3,8 @@ import { Effect } from "effect";
 import { renderToString } from "@role-model-router/foldkit/experimental/server";
 import { describe, expect, it } from "vitest";
 
-import { shellModel } from "./support/runtime-shell";
 import { view } from "../src/view";
+import { shellModel } from "./support/runtime-shell";
 
 const TITLES = [
   "Model pool",
@@ -18,10 +18,15 @@ const TITLES = [
 
 describe("S527 root Runtime overview structural parity", () => {
   it("renders all seven reference sections and the candidate-space SVG axes", async () => {
-    const rendered = await Effect.runPromise(renderToString({
-      init: () => ({ model: shellModel({ route: { _tag: "Index" } }), commands: [] }),
-      view,
-    }, { isHydratable: false }));
+    const rendered = await Effect.runPromise(
+      renderToString(
+        {
+          init: () => ({ model: shellModel({ route: { _tag: "Index" } }), commands: [] }),
+          view,
+        },
+        { isHydratable: false },
+      ),
+    );
     const container = document.createElement("div");
     container.innerHTML = rendered.html;
     const text = container.textContent ?? "";

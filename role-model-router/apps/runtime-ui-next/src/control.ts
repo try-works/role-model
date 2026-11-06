@@ -127,7 +127,12 @@ const parseEndpoints = (body: unknown, token: number): ControlState => {
   const rows = list.flatMap((value, index) => {
     const endpoint = asRecord(value);
     if (endpoint === undefined) return [];
-    if (endpoint.endpointId === undefined && endpoint.id === undefined && endpoint.modelId === undefined) return [];
+    if (
+      endpoint.endpointId === undefined &&
+      endpoint.id === undefined &&
+      endpoint.modelId === undefined
+    )
+      return [];
     const id = String(endpoint.endpointId ?? endpoint.id ?? index);
     return [
       row(
@@ -138,7 +143,14 @@ const parseEndpoints = (body: unknown, token: number): ControlState => {
       ),
     ];
   });
-  if (list.length > 0 && rows.length === 0) return { actionStatus: "idle", error: "Endpoints read failed: invalid response", rows: [], status: "error", token };
+  if (list.length > 0 && rows.length === 0)
+    return {
+      actionStatus: "idle",
+      error: "Endpoints read failed: invalid response",
+      rows: [],
+      status: "error",
+      token,
+    };
   return rowsOrEmpty(rows, token);
 };
 const parseController = (body: unknown, token: number): ControlState => {
@@ -259,7 +271,7 @@ export const createControlClients = (options: ControlClientOptions = {}): Contro
     dispatch: async (key, endpointId) => {
       const spec = CONTROL_SPECS[key];
       const action = spec.action;
-      if (action === undefined) return { body: { error: "no action for " + key }, status: 400 };
+      if (action === undefined) return { body: { error: `no action for ${key}` }, status: 400 };
       const response = await fetchImpl(url(action.path), {
         body: JSON.stringify(
           endpointId === undefined || action.targetField === undefined

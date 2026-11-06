@@ -5,23 +5,33 @@ import { Effect, Exit, Layer, Scope } from "effect";
 import { describe, expect, test } from "vitest";
 
 import * as cli from "../src/cli.js";
-import * as bridge from "../src/index.js";
 import { composeReadinessOwner } from "../src/composition-dag.js";
+import * as bridge from "../src/index.js";
 import { composeR27HostLayer } from "../src/r27-layer-dag.js";
 import { resolveRuntimeChannelProfile } from "../src/runtime-channel.js";
 
-
-const dagOwner = (): { readonly owner: ReturnType<typeof composeReadinessOwner>; readonly calls: () => number } => {
+const dagOwner = (): {
+  readonly owner: ReturnType<typeof composeReadinessOwner>;
+  readonly calls: () => number;
+} => {
   const composed = composeReadinessOwner();
   let calls = 0;
   return {
     calls: () => calls,
-    owner: { ...composed, markReady: () => { calls += 1; composed.markReady(); } },
+    owner: {
+      ...composed,
+      markReady: () => {
+        calls += 1;
+        composed.markReady();
+      },
+    },
   };
 };
 const composeDag = async (owner: ReturnType<typeof composeReadinessOwner>) => {
   const scope = Effect.runSync(Scope.make());
-  await Effect.runPromise(Layer.buildWithScope(composeR27HostLayer({ readiness: owner as never }), scope));
+  await Effect.runPromise(
+    Layer.buildWithScope(composeR27HostLayer({ readiness: owner as never }), scope),
+  );
   return scope;
 };
 
@@ -182,8 +192,12 @@ describe("S478/S479 packaged branch readiness", () => {
         bootstrapState: state,
         hasPackagedDistribution: true,
         readinessOwner: observed.owner,
-        runPackaged: async () => { packagedRan = true; },
-        runPlain: async () => { plainRan = true; },
+        runPackaged: async () => {
+          packagedRan = true;
+        },
+        runPlain: async () => {
+          plainRan = true;
+        },
       });
     } finally {
       await Effect.runPromise(Scope.close(scope, Exit.void));
@@ -196,7 +210,10 @@ describe("S478/S479 packaged branch readiness", () => {
   });
 
   test("a non-packaged branch run still marks readiness exactly once", async () => {
-    const state: Parameters<typeof cli.completeCliStartupReadiness>[0] = { status: "pending", message: "x" };
+    const state: Parameters<typeof cli.completeCliStartupReadiness>[0] = {
+      status: "pending",
+      message: "x",
+    };
     const observed = dagOwner();
     const scope = await composeDag(observed.owner);
     try {
@@ -216,7 +233,10 @@ describe("S478/S479 packaged branch readiness", () => {
 });
 describe("S479 branch selection", () => {
   test("manifest present without a release id selects the packaged path", async () => {
-    const state: Parameters<typeof cli.completeCliStartupReadiness>[0] = { status: "pending", message: "x" };
+    const state: Parameters<typeof cli.completeCliStartupReadiness>[0] = {
+      status: "pending",
+      message: "x",
+    };
     let packagedRan = 0;
     let plainRan = 0;
     await cli.runCliBackendBranch({
@@ -224,8 +244,12 @@ describe("S479 branch selection", () => {
       hasPackagedDistribution: true,
       packagedReleaseId: undefined,
       readinessOwner: { markReady: () => {} },
-      runPackaged: async () => { packagedRan += 1; },
-      runPlain: async () => { plainRan += 1; },
+      runPackaged: async () => {
+        packagedRan += 1;
+      },
+      runPlain: async () => {
+        plainRan += 1;
+      },
     });
     expect(packagedRan).toBe(1);
     expect(plainRan).toBe(0);
@@ -233,7 +257,10 @@ describe("S479 branch selection", () => {
   });
 
   test("a release id without a manifest falls back to the plain path without TypeError", async () => {
-    const state: Parameters<typeof cli.completeCliStartupReadiness>[0] = { status: "pending", message: "x" };
+    const state: Parameters<typeof cli.completeCliStartupReadiness>[0] = {
+      status: "pending",
+      message: "x",
+    };
     let plainRan = 0;
     await expect(
       cli.runCliBackendBranch({
@@ -241,7 +268,9 @@ describe("S479 branch selection", () => {
         hasPackagedDistribution: false,
         packagedReleaseId: "run88:release-without-manifest",
         readinessOwner: { markReady: () => {} },
-        runPlain: async () => { plainRan += 1; },
+        runPlain: async () => {
+          plainRan += 1;
+        },
       }),
     ).resolves.toBeUndefined();
     expect(plainRan).toBe(1);

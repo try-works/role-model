@@ -7,8 +7,8 @@ import { describe, expect, test } from "vitest";
 import {
   RouteDecisionProducer,
   RouteDecisionProducerLive,
-  routeRequest,
   type RouteRequestInput,
+  routeRequest,
 } from "@role-model-router/core";
 import {
   type ProjectRuntimeRouteInputInput,
@@ -82,7 +82,11 @@ function runtimeInput(
       preferLocal: false,
     },
     catalog: TEST_CATALOG,
-    registry: { endpoints: [], diagnostics: [], lifecycleSummary: { active: 0, degraded: 0, offline: 0 } },
+    registry: {
+      endpoints: [],
+      diagnostics: [],
+      lifecycleSummary: { active: 0, degraded: 0, offline: 0 },
+    },
     observedProfilesByEndpointId: {},
     envelope: {
       sessionId: "session-s7c",
@@ -113,7 +117,11 @@ function runtimeInput(
 }
 
 function registry(endpoints: readonly RegistryEndpoint[]) {
-  return { endpoints, diagnostics: [], lifecycleSummary: { active: endpoints.length, degraded: 0, offline: 0 } };
+  return {
+    endpoints,
+    diagnostics: [],
+    lifecycleSummary: { active: endpoints.length, degraded: 0, offline: 0 },
+  };
 }
 
 const roleDefinitions = [
@@ -241,7 +249,10 @@ const matrix = [
       };
       const digest = `sha256:${createHash("sha256").update(JSON.stringify(decision)).digest("hex")}`;
       const eligibilityCodes = decision.eligibility.flatMap((entry) =>
-        entry.exclusions.map((exclusion) => ({ endpoint_id: entry.endpoint_id, code: exclusion.code })),
+        entry.exclusions.map((exclusion) => ({
+          endpoint_id: entry.endpoint_id,
+          code: exclusion.code,
+        })),
       );
       expect(decision.chosen_endpoint_id).toBe(fixture.chosen_endpoint_id);
       expect(decision.selection_reasons).toEqual(fixture.selection_reasons);

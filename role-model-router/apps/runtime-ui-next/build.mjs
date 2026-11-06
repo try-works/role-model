@@ -1,10 +1,10 @@
+import { existsSync, readFileSync, statSync } from "node:fs";
+import { cp, mkdir, rm } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 // Bundles the Foldkit runtime UI into a static client the packaged runtime can
 // serve via --static-root. Uses the repository's esbuild; adds no dependency.
 import { build } from "esbuild";
-import { cp, mkdir, rm } from "node:fs/promises";
-import { existsSync, readFileSync, statSync } from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const outDir = path.join(here, "dist", "client");
@@ -21,7 +21,7 @@ await build({
   target: ["es2022"],
   sourcemap: "linked",
   logLevel: "info",
-  define: { 
+  define: {
     "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV ?? "development"),
   },
 });
@@ -30,7 +30,8 @@ await import("./style-build.mjs");
 const cssTarget = path.join(outDir, "assets", "main.css");
 await cp(path.join(here, "dist", "css", "main.css"), cssTarget);
 const cssBytes = statSync(cssTarget).size;
-if (cssBytes < 10_000) throw new Error("generated stylesheet is empty or truncated: " + String(cssBytes));
+if (cssBytes < 10_000)
+  throw new Error(`generated stylesheet is empty or truncated: ${String(cssBytes)}`);
 await cp(
   path.join(here, "../runtime-ui/public/assets/fonts"),
   path.join(outDir, "assets", "fonts"),
@@ -47,7 +48,7 @@ const unresolved = [...emittedCss.matchAll(/url\(([^)]+)\)/g)]
     return !existsSync(resolved);
   });
 if (unresolved.length > 0) {
-  throw new Error("generated stylesheet references unserved assets: " + unresolved.join(", "));
+  throw new Error(`generated stylesheet references unserved assets: ${unresolved.join(", ")}`);
 }
 await cp(path.join(here, "index.html"), path.join(outDir, "index.html"));
 console.log(JSON.stringify({ status: "PASS", outDir }));

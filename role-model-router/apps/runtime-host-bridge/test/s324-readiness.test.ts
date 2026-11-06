@@ -1,17 +1,20 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  type ServerAdmissionReadiness,
+  type ServerTransport,
   composeBackendOwner,
   composeReadinessOwner,
   composeServerOwner,
   isComposedReadiness,
   startupReadinessRefusalBody,
-  type ServerAdmissionReadiness,
-  type ServerTransport,
 } from "../src/composition-dag.js";
 
 type TestRequest = { method?: string; url?: string };
-type TestResponse = { writeHead: (status: number, headers: Record<string, string>) => void; end?: (body?: string) => void };
+type TestResponse = {
+  writeHead: (status: number, headers: Record<string, string>) => void;
+  end?: (body?: string) => void;
+};
 type Captured = { listener?: (request: TestRequest, response: TestResponse) => Promise<void> };
 
 /**
@@ -19,14 +22,24 @@ type Captured = { listener?: (request: TestRequest, response: TestResponse) => P
  * and the Server refuses/defer admission while not ready, with the exact existing 503 readback shape.
  */
 
-const fakeBackend = () => ({ effectiveRegistry: { diagnostics: [], endpoints: [], lifecycleSummary: { active: 0, degraded: 0, offline: 0 } } });
+const fakeBackend = () => ({
+  effectiveRegistry: {
+    diagnostics: [],
+    endpoints: [],
+    lifecycleSummary: { active: 0, degraded: 0, offline: 0 },
+  },
+});
 
 const makeBackend = (readiness?: ServerAdmissionReadiness) =>
   composeBackendOwner({
     // SAFETY: test-only cast required by the transport/composer input types.
     emptyCatalog: { catalogVersion: "1", source: {} } as never,
     // SAFETY: test-only cast required by the transport/composer input types.
-    emptyRegistry: { diagnostics: [], endpoints: [], lifecycleSummary: { active: 0, degraded: 0, offline: 0 } } as never,
+    emptyRegistry: {
+      diagnostics: [],
+      endpoints: [],
+      lifecycleSummary: { active: 0, degraded: 0, offline: 0 },
+    } as never,
     host: "127.0.0.1",
     overrides: {},
     port: 0,
@@ -51,13 +64,18 @@ const makeTransport = (captured: Captured = {}): ServerTransport => ({
 });
 
 const makeResponse = () => {
-    // SAFETY: test-only cast required by the transport/composer input types.
+  // SAFETY: test-only cast required by the transport/composer input types.
   const out = { status: 0, body: "", headers: {} as Record<string, string> };
   return {
     out,
     response: {
-      end: (body?: string) => { if (body !== undefined) out.body = body; },
-      writeHead: (status: number, headers: Record<string, string>) => { out.status = status; out.headers = headers; },
+      end: (body?: string) => {
+        if (body !== undefined) out.body = body;
+      },
+      writeHead: (status: number, headers: Record<string, string>) => {
+        out.status = status;
+        out.headers = headers;
+      },
     },
   };
 };
@@ -88,19 +106,24 @@ describe("S324 early readiness owner and admission gate", () => {
     let served = 0;
     const server = composeServerOwner({
       backend: makeBackend(),
-      handlerFactory: () => async () => { served += 1; },
+      handlerFactory: () => async () => {
+        served += 1;
+      },
       readiness,
       transport: makeTransport(captured),
     });
     await server.start();
     const pending = makeResponse();
-    await captured.listener!({ method: "POST", url: "/v1/chat/completions" }, pending.response);
+    await captured.listener?.({ method: "POST", url: "/v1/chat/completions" }, pending.response);
     expect(pending.out.status).toBe(503);
-    expect(JSON.parse(pending.out.body)).toEqual({ error: "runtime_initializing", status: "pending" });
+    expect(JSON.parse(pending.out.body)).toEqual({
+      error: "runtime_initializing",
+      status: "pending",
+    });
     expect(served).toBe(0);
     readiness.markReady();
     const after = makeResponse();
-    await captured.listener!({ method: "POST", url: "/v1/chat/completions" }, after.response);
+    await captured.listener?.({ method: "POST", url: "/v1/chat/completions" }, after.response);
     expect(served).toBe(1);
   });
 
@@ -117,11 +140,15 @@ describe("S324 early readiness owner and admission gate", () => {
     });
     await server.start();
     const failed = makeResponse();
-    await captured.listener!({ method: "POST", url: "/v1/chat" }, failed.response);
-    expect(JSON.parse(failed.out.body)).toEqual({ error: "runtime_initializing", message: "boom", status: "failed" });
+    await captured.listener?.({ method: "POST", url: "/v1/chat" }, failed.response);
+    expect(JSON.parse(failed.out.body)).toEqual({
+      error: "runtime_initializing",
+      message: "boom",
+      status: "failed",
+    });
     // Without staticRoot the static-UI exemption does not apply (byte-for-byte parity with the host gate).
     const asset = makeResponse();
-    await captured.listener!({ method: "GET", url: "/app.js" }, asset.response);
+    await captured.listener?.({ method: "GET", url: "/app.js" }, asset.response);
     expect(asset.out.status).toBe(503);
   });
 
@@ -129,7 +156,12 @@ describe("S324 early readiness owner and admission gate", () => {
     const server = composeServerOwner({
       backend: makeBackend(),
       handlerFactory: () => async () => {},
-      readiness: { markFailed: () => {}, markReady: () => {}, ready: () => true, state: () => ({ status: "ready" }) },
+      readiness: {
+        markFailed: () => {},
+        markReady: () => {},
+        ready: () => true,
+        state: () => ({ status: "ready" }),
+      },
       transport: makeTransport({}),
     });
     await expect(server.start()).rejects.toThrow(/composed readiness owner/);
@@ -142,20 +174,22 @@ describe("S324 early readiness owner and admission gate", () => {
     const readiness = composeReadinessOwner();
     const server = composeServerOwner({
       backend: makeBackend(),
-      handlerFactory: () => async () => { served += 1; },
+      handlerFactory: () => async () => {
+        served += 1;
+      },
       readiness,
       transport: makeTransport(captured),
     });
     await server.start();
     const pending = makeResponse();
-    await captured.listener!({ method: "POST", url: "/v1/chat" }, pending.response);
+    await captured.listener?.({ method: "POST", url: "/v1/chat" }, pending.response);
     expect(pending.out.status).toBe(503);
     expect(pending.out.headers["content-type"]).toBe("application/json");
     expect(pending.out.body).toBe('{"error":"runtime_initializing","status":"pending"}\n');
     expect(pending.out.body).toBe(startupReadinessRefusalBody({ status: "pending" }));
     readiness.markReady();
     const ready = makeResponse();
-    await captured.listener!({ method: "POST", url: "/v1/chat" }, ready.response);
+    await captured.listener?.({ method: "POST", url: "/v1/chat" }, ready.response);
     expect(served).toBe(1);
     expect(ready.out.status).toBe(0);
     const failedReadiness = composeReadinessOwner();
@@ -170,11 +204,17 @@ describe("S324 early readiness owner and admission gate", () => {
     });
     await failedServer.start();
     const failed = makeResponse();
-    await failedCaptured.listener!({ method: "POST", url: "/api/status" }, failed.response);
-    expect(failed.out.body).toBe('{"error":"runtime_initializing","status":"failed","message":"boom"}\n');
-    expect(failed.out.body).toBe(startupReadinessRefusalBody({ message: "boom", status: "failed" }));
+    await failedCaptured.listener?.({ method: "POST", url: "/api/status" }, failed.response);
+    expect(failed.out.body).toBe(
+      '{"error":"runtime_initializing","status":"failed","message":"boom"}\n',
+    );
+    expect(failed.out.body).toBe(
+      startupReadinessRefusalBody({ message: "boom", status: "failed" }),
+    );
     // Falsy message omits the field (host gate spread semantics), byte for byte.
-    expect(startupReadinessRefusalBody({ message: "", status: "failed" })).toBe('{"error":"runtime_initializing","status":"failed"}\n');
+    expect(startupReadinessRefusalBody({ message: "", status: "failed" })).toBe(
+      '{"error":"runtime_initializing","status":"failed"}\n',
+    );
   });
 
   test("failed readiness with staticRoot: static assets are SERVED while /api and /v1 return 503", async () => {
@@ -185,10 +225,14 @@ describe("S324 early readiness owner and admission gate", () => {
     let served = 0;
     const server = composeServerOwner({
       backend: composeBackendOwner({
-    // SAFETY: test-only cast required by the transport/composer input types.
+        // SAFETY: test-only cast required by the transport/composer input types.
         emptyCatalog: { catalogVersion: "1", source: {} } as never,
-    // SAFETY: test-only cast required by the transport/composer input types.
-        emptyRegistry: { diagnostics: [], endpoints: [], lifecycleSummary: { active: 0, degraded: 0, offline: 0 } } as never,
+        // SAFETY: test-only cast required by the transport/composer input types.
+        emptyRegistry: {
+          diagnostics: [],
+          endpoints: [],
+          lifecycleSummary: { active: 0, degraded: 0, offline: 0 },
+        } as never,
         host: "127.0.0.1",
         overrides: { staticRoot: "/tmp/role-model-ui" },
         port: 0,
@@ -196,20 +240,22 @@ describe("S324 early readiness owner and admission gate", () => {
         readBootstrapState: () => ({ status: "ready" }),
         resolveBackend: () => fakeBackend(),
       }),
-      handlerFactory: () => async () => { served += 1; },
+      handlerFactory: () => async () => {
+        served += 1;
+      },
       readiness,
       transport: makeTransport(captured),
     });
     await server.start();
     const asset = makeResponse();
-    await captured.listener!({ method: "GET", url: "/app.js" }, asset.response);
+    await captured.listener?.({ method: "GET", url: "/app.js" }, asset.response);
     expect(served).toBe(1);
     expect(asset.out.status).toBe(0);
     const api = makeResponse();
-    await captured.listener!({ method: "GET", url: "/api/status" }, api.response);
+    await captured.listener?.({ method: "GET", url: "/api/status" }, api.response);
     expect(api.out.status).toBe(503);
     const v1 = makeResponse();
-    await captured.listener!({ method: "POST", url: "/v1/chat" }, v1.response);
+    await captured.listener?.({ method: "POST", url: "/v1/chat" }, v1.response);
     expect(v1.out.status).toBe(503);
   });
 });

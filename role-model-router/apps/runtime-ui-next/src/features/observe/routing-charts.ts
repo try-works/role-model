@@ -1,7 +1,7 @@
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 
 import type { Message } from "../../message";
-import { telemetryChartCards, type TelemetryChartDefinition } from "./telemetry-chart-suite";
+import { type TelemetryChartDefinition, telemetryChartCards } from "./telemetry-chart-suite";
 
 /**
  * S632 (task-112): the observe-routing chart suite ported from the :3456 reference
@@ -14,7 +14,8 @@ export type RoutingChartDefinition = TelemetryChartDefinition;
 export const ROUTING_CHARTS: ReadonlyArray<RoutingChartDefinition> = [
   {
     className: "min-w-0 bg-card col-span-1 md:col-span-2",
-    description: "Avoided spend based on the selected route versus the highest-cost eligible configured candidate, plus cache savings.",
+    description:
+      "Avoided spend based on the selected route versus the highest-cost eligible configured candidate, plus cache savings.",
     emptyMessage: "No routing savings have been recorded for the current slice.",
     kind: "area",
     metrics: ["routingCostSavingsUsd", "cacheCostSavingsUsd", "totalAvoidedCostUsd"],
@@ -115,10 +116,14 @@ export interface RoutingChartFilters {
 /** Maps the observe page breakdown label to the analytics dimension (:3456 mapping). */
 export const routingBreakdownDimension = (breakdown: string | undefined): string | null => {
   switch (breakdown) {
-    case "By endpoint variant": return "endpointId";
-    case "By upstream model": return "modelId";
-    case "By provider": return "providerId";
-    default: return null;
+    case "By endpoint variant":
+      return "endpointId";
+    case "By upstream model":
+      return "modelId";
+    case "By provider":
+      return "providerId";
+    default:
+      return null;
   }
 };
 
@@ -126,44 +131,76 @@ export const routingBreakdownDimension = (breakdown: string | undefined): string
 const csv = (value: string | undefined): ReadonlyArray<string> =>
   value === undefined
     ? []
-    : value.split(",").map((entry) => entry.trim()).filter((entry) => entry.length > 0);
+    : value
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0);
 const single = (value: string | undefined): ReadonlyArray<string> =>
   value === undefined || value.trim().length === 0 ? [] : [value.trim()];
 
 /** Maps the observe page filter state (basic selects + Advanced controls) to the reference analytics filters. */
 export const routingChartFilters = (
-  state: {
-    readonly difficulty?: string;
-    readonly effortSources?: string;
-    readonly reasoningEfforts?: string;
-    readonly requestedRoleId?: string;
-    readonly selectedStrategy?: string;
-    readonly source?: string;
-    readonly taxonomyCapabilityIds?: string;
-    readonly taxonomyGroupId?: string;
-    readonly taxonomyModalityIds?: string;
-    readonly taxonomyRoleId?: string;
-    readonly taxonomyTaskType?: string;
-    readonly taxonomyTaskVariant?: string;
-    readonly taxonomyToolClassIds?: string;
-  } | undefined,
+  state:
+    | {
+        readonly difficulty?: string;
+        readonly effortSources?: string;
+        readonly reasoningEfforts?: string;
+        readonly requestedRoleId?: string;
+        readonly selectedStrategy?: string;
+        readonly source?: string;
+        readonly taxonomyCapabilityIds?: string;
+        readonly taxonomyGroupId?: string;
+        readonly taxonomyModalityIds?: string;
+        readonly taxonomyRoleId?: string;
+        readonly taxonomyTaskType?: string;
+        readonly taxonomyTaskVariant?: string;
+        readonly taxonomyToolClassIds?: string;
+      }
+    | undefined,
 ): RoutingChartFilters => ({
-  ...(state?.source === "Local only" ? { sourceTypes: ["local"] } : state?.source === "Remote only" ? { sourceTypes: ["remote"] } : {}),
-  ...(state?.difficulty === "Easy only" ? { difficultyBuckets: ["easy"] }
-    : state?.difficulty === "Medium only" ? { difficultyBuckets: ["medium"] }
-      : state?.difficulty === "Hard only" ? { difficultyBuckets: ["hard"] }
+  ...(state?.source === "Local only"
+    ? { sourceTypes: ["local"] }
+    : state?.source === "Remote only"
+      ? { sourceTypes: ["remote"] }
+      : {}),
+  ...(state?.difficulty === "Easy only"
+    ? { difficultyBuckets: ["easy"] }
+    : state?.difficulty === "Medium only"
+      ? { difficultyBuckets: ["medium"] }
+      : state?.difficulty === "Hard only"
+        ? { difficultyBuckets: ["hard"] }
         : {}),
-  ...(single(state?.requestedRoleId).length === 0 ? {} : { requestedRoleIds: single(state?.requestedRoleId) }),
-  ...(single(state?.selectedStrategy).length === 0 ? {} : { selectedStrategies: single(state?.selectedStrategy) }),
-  ...(csv(state?.reasoningEfforts).length === 0 ? {} : { reasoningEfforts: csv(state?.reasoningEfforts) }),
+  ...(single(state?.requestedRoleId).length === 0
+    ? {}
+    : { requestedRoleIds: single(state?.requestedRoleId) }),
+  ...(single(state?.selectedStrategy).length === 0
+    ? {}
+    : { selectedStrategies: single(state?.selectedStrategy) }),
+  ...(csv(state?.reasoningEfforts).length === 0
+    ? {}
+    : { reasoningEfforts: csv(state?.reasoningEfforts) }),
   ...(csv(state?.effortSources).length === 0 ? {} : { effortSources: csv(state?.effortSources) }),
-  ...(single(state?.taxonomyGroupId).length === 0 ? {} : { taxonomyGroupIds: single(state?.taxonomyGroupId) }),
-  ...(single(state?.taxonomyRoleId).length === 0 ? {} : { taxonomyRoleIds: single(state?.taxonomyRoleId) }),
-  ...(single(state?.taxonomyTaskType).length === 0 ? {} : { taxonomyTaskTypes: single(state?.taxonomyTaskType) }),
-  ...(single(state?.taxonomyTaskVariant).length === 0 ? {} : { taxonomyTaskVariants: single(state?.taxonomyTaskVariant) }),
-  ...(csv(state?.taxonomyCapabilityIds).length === 0 ? {} : { taxonomyCapabilityIds: csv(state?.taxonomyCapabilityIds) }),
-  ...(csv(state?.taxonomyModalityIds).length === 0 ? {} : { taxonomyModalityIds: csv(state?.taxonomyModalityIds) }),
-  ...(csv(state?.taxonomyToolClassIds).length === 0 ? {} : { taxonomyToolClassIds: csv(state?.taxonomyToolClassIds) }),
+  ...(single(state?.taxonomyGroupId).length === 0
+    ? {}
+    : { taxonomyGroupIds: single(state?.taxonomyGroupId) }),
+  ...(single(state?.taxonomyRoleId).length === 0
+    ? {}
+    : { taxonomyRoleIds: single(state?.taxonomyRoleId) }),
+  ...(single(state?.taxonomyTaskType).length === 0
+    ? {}
+    : { taxonomyTaskTypes: single(state?.taxonomyTaskType) }),
+  ...(single(state?.taxonomyTaskVariant).length === 0
+    ? {}
+    : { taxonomyTaskVariants: single(state?.taxonomyTaskVariant) }),
+  ...(csv(state?.taxonomyCapabilityIds).length === 0
+    ? {}
+    : { taxonomyCapabilityIds: csv(state?.taxonomyCapabilityIds) }),
+  ...(csv(state?.taxonomyModalityIds).length === 0
+    ? {}
+    : { taxonomyModalityIds: csv(state?.taxonomyModalityIds) }),
+  ...(csv(state?.taxonomyToolClassIds).length === 0
+    ? {}
+    : { taxonomyToolClassIds: csv(state?.taxonomyToolClassIds) }),
 });
 
 export interface RoutingChartQuery {
@@ -173,12 +210,17 @@ export interface RoutingChartQuery {
     readonly filters: RoutingChartFilters;
     readonly granularity: "hour" | "day";
     readonly metrics: ReadonlyArray<string>;
-    readonly ranking: { readonly dimension: string; readonly limit: number; readonly metric: string } | null;
+    readonly ranking: {
+      readonly dimension: string;
+      readonly limit: number;
+      readonly metric: string;
+    } | null;
     readonly windowMs: number;
   };
 }
 
-export const routingChartGranularity = (windowMs: number): "hour" | "day" => (windowMs <= 86_400_000 ? "hour" : "day");
+export const routingChartGranularity = (windowMs: number): "hour" | "day" =>
+  windowMs <= 86_400_000 ? "hour" : "day";
 
 export const buildRoutingChartQueries = (
   windowMs: number,
@@ -188,7 +230,8 @@ export const buildRoutingChartQueries = (
   ROUTING_CHARTS.map((chart) => ({
     id: chart.title,
     query: {
-      breakdown: chart.usesSelectedBreakdown === true ? selectedBreakdown : chart.breakdown ?? null,
+      breakdown:
+        chart.usesSelectedBreakdown === true ? selectedBreakdown : (chart.breakdown ?? null),
       filters,
       granularity: routingChartGranularity(windowMs),
       metrics: chart.metrics,

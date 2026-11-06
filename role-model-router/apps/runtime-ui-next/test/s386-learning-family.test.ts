@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { Url } from "@role-model-router/foldkit";
 
-import { mountShell } from "../src/mount";
 import { Message } from "../src/message";
+import { mountShell } from "../src/mount";
 import { createReadbackClients } from "../src/readback";
 import { routeFromUrl } from "../src/route";
 import { shellModel, shellUpdate } from "./support/runtime-shell";
@@ -31,18 +31,30 @@ const mountAt = (path: string, id: string, fetchImpl: typeof fetch) => {
   const handle = mountShell(container, { readbackReaders: createReadbackClients({ fetchImpl }) });
   pageMounted.push({ container, handle });
 };
-const waitForRouteState = async (routeName: string, expected: string, label: string): Promise<string> => {
+const waitForRouteState = async (
+  routeName: string,
+  expected: string,
+  label: string,
+): Promise<string> => {
   const end = Date.now() + 3000;
   let last: string | null = null;
   while (Date.now() < end) {
-    last = document.querySelector("[data-route='" + routeName + "'][data-page-state='" + expected + "']")?.getAttribute("data-page-state") ?? null;
+    last =
+      document
+        .querySelector(`[data-route='${routeName}'][data-page-state='${expected}']`)
+        ?.getAttribute("data-page-state") ?? null;
     if (last === expected) return last;
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
-  throw new Error("Timed out waiting for " + label + " (last: " + String(last) + " | path: " + window.location.pathname + ")");
+  throw new Error(
+    `Timed out waiting for ${label} (last: ${String(last)} | path: ${window.location.pathname})`,
+  );
 };
 afterEach(() => {
-  for (const entry of pageMounted.splice(0)) { entry.handle.dispose(); entry.container.remove(); }
+  for (const entry of pageMounted.splice(0)) {
+    entry.handle.dispose();
+    entry.container.remove();
+  }
   window.history.replaceState({}, "", "/");
 });
 
@@ -71,7 +83,10 @@ describe("S379c Learning family canonical URLs", () => {
     expect(module.legacyRedirectForUrl(urlOf("/app/learning/decisions?limit=50#top"))?.href).toBe(
       "/learning/decisions?limit=50#top",
     );
-    const result = shellUpdate(shellModel(), Message.ChangedUrl({ url: urlOf("/app/learning/history") }));
+    const result = shellUpdate(
+      shellModel(),
+      Message.ChangedUrl({ url: urlOf("/app/learning/history") }),
+    );
     expect(result.model.route._tag).toBe("LearningHistory");
     expect(result.model.pendingRedirectHref).toBe("/learning/history");
     expect(commandNames(result).filter((name) => name === "ReplaceLegacyUrl")).toHaveLength(1);
@@ -95,34 +110,62 @@ describe("S379c Learning family canonical URLs", () => {
   });
 
   it("leaves the requestId families unchanged", () => {
-    expect(routeFromUrl(urlOf("/requests/req-5"))).toMatchObject({ _tag: "RequestDetail", requestId: "req-5" });
-    expect(routeFromUrl(urlOf("/router/decisions/req-5"))).toMatchObject({ _tag: "RouterDecisionDetail", requestId: "req-5" });
+    expect(routeFromUrl(urlOf("/requests/req-5"))).toMatchObject({
+      _tag: "RequestDetail",
+      requestId: "req-5",
+    });
+    expect(routeFromUrl(urlOf("/router/decisions/req-5"))).toMatchObject({
+      _tag: "RouterDecisionDetail",
+      requestId: "req-5",
+    });
   });
 });
 
 describe("S379c Learning family pages (real per-panel readbacks)", () => {
   const body = { items: [{ id: "row-1", label: "First row", value: "ready" }] };
-  const json = () => new Response(JSON.stringify(body), { headers: { "content-type": "application/json" }, status: 200 });
+  const json = () =>
+    new Response(JSON.stringify(body), {
+      headers: { "content-type": "application/json" },
+      status: 200,
+    });
 
   it("renders loading then ok on the decisions panel", async () => {
     let release: (() => void) | undefined;
-    const gate = new Promise<void>((resolve) => { release = resolve; });
-    mountAt("/learning/decisions", "s386-decisions", async () => { await gate; return json(); });
-    expect(await waitForRouteState("learning-decisions", "loading", "decisions loading")).toBe("loading");
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    mountAt("/learning/decisions", "s386-decisions", async () => {
+      await gate;
+      return json();
+    });
+    expect(await waitForRouteState("learning-decisions", "loading", "decisions loading")).toBe(
+      "loading",
+    );
     release?.();
     expect(await waitForRouteState("learning-decisions", "ok", "decisions ok")).toBe("ok");
-    expect(document.querySelector("[data-route='learning-decisions']")?.textContent).toContain("First row");
+    expect(document.querySelector("[data-route='learning-decisions']")?.textContent).toContain(
+      "First row",
+    );
   });
 
   it("renders error honestly when a panel readback fails", async () => {
-    mountAt("/learning/decisions", "s386-error", async () => new Response("null", { headers: { "content-type": "application/json" }, status: 200 }));
+    mountAt(
+      "/learning/decisions",
+      "s386-error",
+      async () =>
+        new Response("null", { headers: { "content-type": "application/json" }, status: 200 }),
+    );
     expect(await waitForRouteState("learning-decisions", "error", "decisions error")).toBe("error");
-    expect(document.querySelector("[data-route='learning-decisions']")?.textContent).toMatch(/read failed/i);
+    expect(document.querySelector("[data-route='learning-decisions']")?.textContent).toMatch(
+      /read failed/i,
+    );
   });
 
   it("renders the history panel from its own readback", async () => {
     mountAt("/learning/history", "s386-history", async () => json());
     expect(await waitForRouteState("learning-history", "ok", "history ok")).toBe("ok");
-    expect(document.querySelector("[data-route='learning-history']")?.textContent).toContain("First row");
+    expect(document.querySelector("[data-route='learning-history']")?.textContent).toContain(
+      "First row",
+    );
   });
 });

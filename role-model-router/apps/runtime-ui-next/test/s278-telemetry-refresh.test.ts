@@ -34,7 +34,7 @@ import { shellModel } from "./support/runtime-shell";
 const REQUESTS_PATH = "/api/role-model/telemetry/requests";
 
 const urlOf = (href: string): Url =>
-  Option.getOrThrow(urlFromString("http://foldkit.local" + href));
+  Option.getOrThrow(urlFromString(`http://foldkit.local${href}`));
 
 const firstMessage = (messages: readonly Message[]): Message => {
   const [message] = messages;
@@ -101,7 +101,12 @@ const bodyForUrl = (url: string) =>
       ? { requestCount: 1, status: "ok" }
       : {
           requests: [
-            { endpointId: "endpoint-s278", modelId: "model-s278", requestId: "req-s278", status: "success" },
+            {
+              endpointId: "endpoint-s278",
+              modelId: "model-s278",
+              requestId: "req-s278",
+              status: "success",
+            },
           ],
         };
 
@@ -196,7 +201,11 @@ describe("S278 telemetry refresh (R12)", () => {
       const commands = result.commands ?? [];
       expect(commands).toHaveLength(2);
       expect(commands.every((entry) => entry.name === "ReadReadback")).toBe(true);
-      expect(commands.map((entry) => String((entry.args as { readonly key?: unknown } | undefined)?.key))).toEqual(["requests", "overviewMetrics"]);
+      expect(
+        commands.map((entry) =>
+          String((entry.args as { readonly key?: unknown } | undefined)?.key),
+        ),
+      ).toEqual(["requests", "overviewMetrics"]);
       expect(result.model.readbacks.requests.token).toBe(model.readbacks.requests.token + 1);
       expect(result.model.readbacks.requests.status).toBe("loading");
       expect(result.model.readbacks.overviewMetrics.status).toBe("loading");
@@ -259,14 +268,30 @@ describe("S278 telemetry refresh (R12)", () => {
         "[]",
         JSON.stringify({ emittedAtMs: 1, eventName: "telemetry.update" }),
         JSON.stringify({ emittedAtMs: 1, eventName: "telemetry.update", request: {} }),
-        JSON.stringify({ emittedAtMs: "1", eventName: "telemetry.update", request: { requestId: "r" } }),
-        JSON.stringify({ emittedAtMs: 1, eventName: "revision.update", request: { requestId: "r" } }),
+        JSON.stringify({
+          emittedAtMs: "1",
+          eventName: "telemetry.update",
+          request: { requestId: "r" },
+        }),
+        JSON.stringify({
+          emittedAtMs: 1,
+          eventName: "revision.update",
+          request: { requestId: "r" },
+        }),
         JSON.stringify({ eventName: "telemetry.update", request: { requestId: "r" } }),
         JSON.stringify({ emittedAtMs: 1, eventName: "telemetry.update", request: ["r"] }),
         // JSON.parse turns 1e999 into Infinity, and a fractional timestamp is not an emittedAtMs.
         '{"emittedAtMs":1e999,"eventName":"telemetry.update","request":{"requestId":"r"}}',
-        JSON.stringify({ emittedAtMs: 1.5, eventName: "telemetry.update", request: { requestId: "r" } }),
-        JSON.stringify({ emittedAtMs: 1, eventName: "telemetry.update", request: { requestId: "" } }),
+        JSON.stringify({
+          emittedAtMs: 1.5,
+          eventName: "telemetry.update",
+          request: { requestId: "r" },
+        }),
+        JSON.stringify({
+          emittedAtMs: 1,
+          eventName: "telemetry.update",
+          request: { requestId: "" },
+        }),
       ];
       for (const payload of malformed) {
         source.emit("telemetry.update", payload);
@@ -279,7 +304,10 @@ describe("S278 telemetry refresh (R12)", () => {
       source.emit("revision.update", JSON.stringify({ eventName: "revision.update", revision: 7 }));
       await waitFor(() => stream.messages.length > 0, "the revision signal must still arrive");
       expect(stream.messages).toHaveLength(1);
-      const applied = update(shellModel({ route: { _tag: "Requests" } }), firstMessage(stream.messages));
+      const applied = update(
+        shellModel({ route: { _tag: "Requests" } }),
+        firstMessage(stream.messages),
+      );
       expect(applied.model.refresh.lastAppliedRevision).toBe(7);
     } finally {
       await stream.stop();

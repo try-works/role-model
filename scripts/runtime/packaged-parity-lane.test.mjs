@@ -73,11 +73,18 @@ describe("packaged parity lane helpers", () => {
     assert.deepEqual(clean.counts, { same: 5, "additive-shape": 2, "environment-state": 1 });
 
     const divergent = parseCompareCounts(
-      runLog(['same /api/role-model/models (200/200)', "different /api/role-model/endpoints (200/200)", '{"same":1,"different":1}']),
+      runLog([
+        "same /api/role-model/models (200/200)",
+        "different /api/role-model/endpoints (200/200)",
+        '{"same":1,"different":1}',
+      ]),
     );
     assert.equal(divergent.verdict, "DIVERGENCE");
 
-    assert.equal(parseCompareCounts("NOT RUN: --left-exe did not become healthy").verdict, "NOT_RUN");
+    assert.equal(
+      parseCompareCounts("NOT RUN: --left-exe did not become healthy").verdict,
+      "NOT_RUN",
+    );
     assert.equal(parseCompareCounts("").verdict, "NOT_RUN");
   });
 
@@ -86,7 +93,6 @@ describe("packaged parity lane helpers", () => {
     assert.equal(selfcheckSurfaceVerdict([{ file: "x", line: "selfcheck" }]), "PRESENT");
   });
 });
-
 
 describe("selfcheck surface scan is not fooled by minified bundles", () => {
   it("ignores react+digest co-occurrence inside a one-line bundle but reports a route marker in source", () => {
@@ -99,9 +105,17 @@ describe("selfcheck surface scan is not fooled by minified bundles", () => {
         "utf8",
       );
       const bundleOnly = scanSelfcheckSurface([root]);
-      assert.equal(bundleOnly.matches.length, 0, "a minified bundle's react+digest co-occurrence is not a selfcheck surface");
+      assert.equal(
+        bundleOnly.matches.length,
+        0,
+        "a minified bundle's react+digest co-occurrence is not a selfcheck surface",
+      );
       mkdirSync(path.join(root, "src"), { recursive: true });
-      writeFileSync(path.join(root, "src", "route.ts"), 'const probe = "/api/role-model/selfcheck";\n', "utf8");
+      writeFileSync(
+        path.join(root, "src", "route.ts"),
+        'const probe = "/api/role-model/selfcheck";\n',
+        "utf8",
+      );
       const withRoute = scanSelfcheckSurface([root]);
       assert.equal(withRoute.matches.length, 1);
       assert.match(withRoute.matches[0].line, /selfcheck/);

@@ -9,10 +9,7 @@ import {
   resolveAutoQueueConfigPath,
   resolveAutoQueueDailyCap,
 } from "../src/queue-runtime/auto-queue.js";
-import {
-  createReplayLedger,
-  replayBudgetAvailable,
-} from "../src/track-b-replay-ledger.js";
+import { createReplayLedger, replayBudgetAvailable } from "../src/track-b-replay-ledger.js";
 import {
   mergeUnifiedRuntimeConfigDocuments,
   parseUnifiedRuntimeConfigText,
@@ -33,7 +30,13 @@ afterEach(async () => {
 });
 
 const configPath = () => path.join(stateRoot, "runtime-config.yaml");
-const repoRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..", "..", "..");
+const repoRoot = path.resolve(
+  path.dirname(new URL(import.meta.url).pathname),
+  "..",
+  "..",
+  "..",
+  "..",
+);
 
 describe("auto-queue daily cap config", () => {
   it("defaults the readback to 100 and renders the section", () => {
@@ -63,7 +66,11 @@ describe("auto-queue daily cap config", () => {
 
   it("reads the cap from the persisted scope config and falls back to 100", async () => {
     expect(resolveAutoQueueDailyCap(configPath())).toBe(100);
-    await writeFile(configPath(), "version: '1.0'\nreplay:\n  auto_queue:\n    daily_cap: 7\n", "utf8");
+    await writeFile(
+      configPath(),
+      "version: '1.0'\nreplay:\n  auto_queue:\n    daily_cap: 7\n",
+      "utf8",
+    );
     expect(resolveAutoQueueDailyCap(configPath())).toBe(7);
   });
 
@@ -75,7 +82,12 @@ describe("auto-queue daily cap config", () => {
     await writeFile(legacy, "version: '1.0'\n", "utf8");
     expect(resolveAutoQueueConfigPath({ runtimeStateRoot: stateRoot })).toBe(legacy);
     const explicit = path.join(stateRoot, "explicit-config.yaml");
-    expect(resolveAutoQueueConfigPath({ runtimeStateRoot: stateRoot, unifiedRuntimeConfigPath: explicit })).toBe(explicit);
+    expect(
+      resolveAutoQueueConfigPath({
+        runtimeStateRoot: stateRoot,
+        unifiedRuntimeConfigPath: explicit,
+      }),
+    ).toBe(explicit);
   });
 
   it("reads a root-config PUT through the real ledger resolver", async () => {
@@ -164,7 +176,11 @@ describe("auto-queue daily cap config", () => {
       limits: applyAutoQueueDailyCap({ enforced: false }, 0),
     });
     expect(
-      ledger.reserve({ captureRef: "capture-disabled", policySetDigest: "digest", candidateDispatches: 1 }),
+      ledger.reserve({
+        captureRef: "capture-disabled",
+        policySetDigest: "digest",
+        candidateDispatches: 1,
+      }),
     ).toMatchObject({ accepted: false, code: "budget_exhausted" });
   });
 

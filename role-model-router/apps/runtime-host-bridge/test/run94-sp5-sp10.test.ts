@@ -521,24 +521,27 @@ test("GREEN: exposes extension readback through the Track B HTTP surface", async
       schemaVersion: "role-model.track-b-extension-readback.v1",
     }),
   });
-  const server = await startBridgeServer({
-    host: "127.0.0.1",
-    port: 0,
-    registry: backend.registry,
-    getRegistry: () => backend.registry,
-    executeChatCompletions: backend.executeChatCompletions,
-    executeResponses: backend.executeResponses,
-    readTrackBExtensionReadback: backend.readTrackBExtensionReadback,
-    measureNoRichCaptureBaseline: async (body) => ({
-      schemaVersion: "role-model.no-rich-capture-baseline-channel.v1",
-      sourceMode: "measured_capture_disabled_packaged_runtime",
-      channel: "development",
-      sampleCount: body.sampleCount,
-      captureCpuP95Ms: 12,
-      providerPathLatencyP95Ms: 18,
-      sqliteLockWaitP95Ms: 2,
-    }),
-  }, { allowTestSeamBackend: true });
+  const server = await startBridgeServer(
+    {
+      host: "127.0.0.1",
+      port: 0,
+      registry: backend.registry,
+      getRegistry: () => backend.registry,
+      executeChatCompletions: backend.executeChatCompletions,
+      executeResponses: backend.executeResponses,
+      readTrackBExtensionReadback: backend.readTrackBExtensionReadback,
+      measureNoRichCaptureBaseline: async (body) => ({
+        schemaVersion: "role-model.no-rich-capture-baseline-channel.v1",
+        sourceMode: "measured_capture_disabled_packaged_runtime",
+        channel: "development",
+        sampleCount: body.sampleCount,
+        captureCpuP95Ms: 12,
+        providerPathLatencyP95Ms: 18,
+        sqliteLockWaitP95Ms: 2,
+      }),
+    },
+    { allowTestSeamBackend: true },
+  );
   try {
     const response = await fetch(
       `http://127.0.0.1:${server.port}/api/role-model/track-b/extension-readback`,
@@ -598,15 +601,18 @@ test("Run96 S3 RED: exposes an explicit authenticated supervised replay command 
       state: "complete",
     }),
   });
-  const server = await startBridgeServer({
-    host: "127.0.0.1",
-    port: 0,
-    registry: backend.registry,
-    getRegistry: () => backend.registry,
-    executeChatCompletions: backend.executeChatCompletions,
-    executeResponses: backend.executeResponses,
-    runTrackBSupervisedReplay: backend.runTrackBSupervisedReplay,
-  }, { allowTestSeamBackend: true });
+  const server = await startBridgeServer(
+    {
+      host: "127.0.0.1",
+      port: 0,
+      registry: backend.registry,
+      getRegistry: () => backend.registry,
+      executeChatCompletions: backend.executeChatCompletions,
+      executeResponses: backend.executeResponses,
+      runTrackBSupervisedReplay: backend.runTrackBSupervisedReplay,
+    },
+    { allowTestSeamBackend: true },
+  );
   try {
     const response = await fetch(`http://127.0.0.1:${server.port}/api/role-model/track-b/replay`, {
       method: "POST",

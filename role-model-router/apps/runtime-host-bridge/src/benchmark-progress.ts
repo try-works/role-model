@@ -1,5 +1,9 @@
+import type {
+  BenchmarkCaseCounts,
+  BenchmarkRunOutcomeOrPending,
+  BenchmarkSkippedEndpoint,
+} from "./benchmark-outcome.js";
 import type { BenchmarkRunResult } from "./benchmark-runner.js";
-import type { BenchmarkCaseCounts, BenchmarkRunOutcomeOrPending, BenchmarkSkippedEndpoint } from "./benchmark-outcome.js";
 
 export type BenchmarkRunStatus = "running" | "completed" | "failed";
 export type BenchmarkRunErrorCode =

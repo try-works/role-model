@@ -484,7 +484,12 @@ describe("benchmark-runner judge remediation", () => {
     const databasePath = path.join(artifactRoot, "state", "memory.db");
     await mkdir(path.dirname(databasePath), { recursive: true });
     initBenchmarkDatabase(databasePath);
-    const endpoint = { endpointId: "deepseek.personal.deepseek-flash", modelId: "deepseek/deepseek-flash", sourceType: "remote" as const, healthStatus: "healthy" };
+    const endpoint = {
+      endpointId: "deepseek.personal.deepseek-flash",
+      modelId: "deepseek/deepseek-flash",
+      sourceType: "remote" as const,
+      healthStatus: "healthy",
+    };
     const subjectBodies: Array<Record<string, unknown>> = [];
     const deps: BenchmarkRunnerDependencies = {
       databasePath,
@@ -493,14 +498,22 @@ describe("benchmark-runner judge remediation", () => {
       deriveEndpointVersion: () => "v1",
       executeChatCompletions: async (body: Record<string, unknown>) => {
         subjectBodies.push(body);
-        if ((body.response_format as { readonly type?: string }).type === "json_schema") throw new Error("This response_format type is unavailable now");
+        if ((body.response_format as { readonly type?: string }).type === "json_schema")
+          throw new Error("This response_format type is unavailable now");
         return {
           contentText: '{"answer":"createRouter"}',
-          toolCalls: [{ function: { name: "read_file", arguments: '{"path":"state/runtime-config.yaml"}' } }],
+          toolCalls: [
+            { function: { name: "read_file", arguments: '{"path":"state/runtime-config.yaml"}' } },
+          ],
         };
       },
     };
-    const summary = await runRoutingCapabilityBenchmark(deps, { endpointIds: [endpoint.endpointId], mode: "quick", caseIds: ["h04-tool-read-router"], useJudge: false });
+    const summary = await runRoutingCapabilityBenchmark(deps, {
+      endpointIds: [endpoint.endpointId],
+      mode: "quick",
+      caseIds: ["h04-tool-read-router"],
+      useJudge: false,
+    });
     expect(subjectBodies.length).toBeGreaterThan(0);
     for (const body of subjectBodies) expect(body.response_format).toEqual({ type: "json_object" });
     const caseResult = summary.endpointGrades[0]?.caseResults[0];

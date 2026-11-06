@@ -366,7 +366,9 @@ export const view = <Message>(config: Rm3ChartConfig<Message>, h: HtmlBuilder<Me
   const height = config.height ?? CHART_HEIGHT;
   const plotWidth = CHART_WIDTH - CHART_LEFT - CHART_RIGHT;
   const plotHeight = Math.max(1, height - CHART_TOP - CHART_BOTTOM);
-  const values = series.flatMap((item) => item.points.flatMap((point) => (point.value === null ? [] : [finite(point.value)])));
+  const values = series.flatMap((item) =>
+    item.points.flatMap((point) => (point.value === null ? [] : [finite(point.value)])),
+  );
   const minimum = Math.min(0, ...values);
   const maximum = Math.max(...values, minimum + 1);
   const range = Math.max(1, maximum - minimum);
@@ -493,29 +495,31 @@ export const view = <Message>(config: Rm3ChartConfig<Message>, h: HtmlBuilder<Me
         if (point.value === null) return [];
         const showPoint = config.interaction?.onShowPoint;
         const pointKeyDown = config.interaction?.onPointKeyDown;
-        return [h.circle(
-          [
-            h.Cx(String(xFor(labelIndex.get(point.label) ?? 0, labels.length))),
-            h.Cy(String(yFor(finite(point.value ?? 0)))),
-            h.R("2.5"),
-            h.Fill(color),
-            h.Class(pointClass),
-            h.DataAttribute("chart-series-id", item.id),
-            h.DataAttribute("chart-point-label", point.label),
-            h.AriaLabel(pointValueText(item.label, point)),
-            h.Tabindex(0),
-            ...(showPoint === undefined
-              ? []
-              : [
-                  h.OnClick(showPoint(item.id, point.label)),
-                  h.OnMouseEnter(showPoint(item.id, point.label)),
-                ]),
-            ...(pointKeyDown === undefined
-              ? []
-              : [h.OnKeyDown((key) => pointKeyDown(item.id, point.label, key))]),
-          ],
-          [h.title([], [pointValueText(item.label, point)])],
-        )];
+        return [
+          h.circle(
+            [
+              h.Cx(String(xFor(labelIndex.get(point.label) ?? 0, labels.length))),
+              h.Cy(String(yFor(finite(point.value ?? 0)))),
+              h.R("2.5"),
+              h.Fill(color),
+              h.Class(pointClass),
+              h.DataAttribute("chart-series-id", item.id),
+              h.DataAttribute("chart-point-label", point.label),
+              h.AriaLabel(pointValueText(item.label, point)),
+              h.Tabindex(0),
+              ...(showPoint === undefined
+                ? []
+                : [
+                    h.OnClick(showPoint(item.id, point.label)),
+                    h.OnMouseEnter(showPoint(item.id, point.label)),
+                  ]),
+              ...(pointKeyDown === undefined
+                ? []
+                : [h.OnKeyDown((key) => pointKeyDown(item.id, point.label, key))]),
+            ],
+            [h.title([], [pointValueText(item.label, point)])],
+          ),
+        ];
       }),
     ];
   });

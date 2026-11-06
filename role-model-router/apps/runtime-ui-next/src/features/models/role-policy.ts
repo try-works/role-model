@@ -62,7 +62,8 @@ const parseTokenList = (value: string): string[] =>
     .map((part) => part.trim())
     .filter((part) => part.length > 0);
 
-const formatTokenList = (values: readonly string[] | undefined): string => (values ?? []).join(", ");
+const formatTokenList = (values: readonly string[] | undefined): string =>
+  (values ?? []).join(", ");
 
 export const blankRoleDraft = (): RoleDraft => ({
   allowedTools: "",
@@ -109,21 +110,31 @@ export const draftToRolePayload = (draft: RoleDraft): Record<string, unknown> =>
   required_capabilities: parseTokenList(draft.requiredCapabilities),
   role_id: draft.roleId.trim(),
   role_kind: draft.roleKind.trim(),
-  routing_policy_overrides: JSON.parse(draft.routingOverridesText.trim().length === 0 ? "{}" : draft.routingOverridesText) as Record<string, unknown>,
+  routing_policy_overrides: JSON.parse(
+    draft.routingOverridesText.trim().length === 0 ? "{}" : draft.routingOverridesText,
+  ) as Record<string, unknown>,
   safety_policy_refs: parseTokenList(draft.safetyPolicyRefs),
   task_types_supported: parseTokenList(draft.taskTypesSupported),
-  tool_policy: { allowed_tools: parseTokenList(draft.allowedTools), mode: draft.toolPolicyMode.trim() },
+  tool_policy: {
+    allowed_tools: parseTokenList(draft.allowedTools),
+    mode: draft.toolPolicyMode.trim(),
+  },
 });
 
 const asRecord = (value: unknown): Record<string, unknown> | undefined =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : undefined;
-const asArray = (value: unknown): readonly unknown[] => Array.isArray(value) ? value : [];
-const stringValue = (value: unknown, fallback = ""): string => typeof value === "string" ? value : fallback;
-const stringArray = (value: unknown): readonly string[] => asArray(value).filter((entry): entry is string => typeof entry === "string");
+  value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+const asArray = (value: unknown): readonly unknown[] => (Array.isArray(value) ? value : []);
+const stringValue = (value: unknown, fallback = ""): string =>
+  typeof value === "string" ? value : fallback;
+const stringArray = (value: unknown): readonly string[] =>
+  asArray(value).filter((entry): entry is string => typeof entry === "string");
 
 const parseRoleDefinition = (value: unknown): RoleDefinition | null => {
   const entry = asRecord(value);
-  if (entry === undefined || typeof entry.role_id !== "string" || entry.role_id.trim().length === 0) return null;
+  if (entry === undefined || typeof entry.role_id !== "string" || entry.role_id.trim().length === 0)
+    return null;
   const toolPolicy = asRecord(entry.tool_policy);
   const routing = asRecord(entry.routing_policy_overrides);
   return {
@@ -140,18 +151,27 @@ const parseRoleDefinition = (value: unknown): RoleDefinition | null => {
     safety_policy_refs: stringArray(entry.safety_policy_refs),
     task_types_supported: stringArray(entry.task_types_supported),
     tool_policy: {
-      ...(toolPolicy?.allowed_tools === undefined ? {} : { allowed_tools: stringArray(toolPolicy.allowed_tools) }),
+      ...(toolPolicy?.allowed_tools === undefined
+        ? {}
+        : { allowed_tools: stringArray(toolPolicy.allowed_tools) }),
       mode: stringValue(toolPolicy?.mode, "allowed"),
     },
     ...(typeof entry.primaryGroupId === "string" ? { primaryGroupId: entry.primaryGroupId } : {}),
     ...(typeof entry.riskLevel === "string" ? { riskLevel: entry.riskLevel } : {}),
-    ...(entry.secondaryGroupIds === undefined ? {} : { secondaryGroupIds: stringArray(entry.secondaryGroupIds) }),
+    ...(entry.secondaryGroupIds === undefined
+      ? {}
+      : { secondaryGroupIds: stringArray(entry.secondaryGroupIds) }),
   };
 };
 
 const parseTaskDefinition = (value: unknown): TaskDefinition | null => {
   const entry = asRecord(value);
-  if (entry === undefined || typeof entry.task_type !== "string" || entry.task_type.trim().length === 0) return null;
+  if (
+    entry === undefined ||
+    typeof entry.task_type !== "string" ||
+    entry.task_type.trim().length === 0
+  )
+    return null;
   return {
     allowed_roles: stringArray(entry.allowed_roles),
     default_benchmark_suites: stringArray(entry.default_benchmark_suites),
@@ -166,10 +186,21 @@ const parseTaskDefinition = (value: unknown): TaskDefinition | null => {
 
 export const parseRolePolicy = (body: unknown): RolePolicy | null => {
   const record = asRecord(body);
-  if (record === undefined || !Array.isArray(record.roleDefinitions) || !Array.isArray(record.taskDefinitions)) return null;
+  if (
+    record === undefined ||
+    !Array.isArray(record.roleDefinitions) ||
+    !Array.isArray(record.taskDefinitions)
+  )
+    return null;
   return {
-    roleDefinitions: record.roleDefinitions.flatMap((role) => { const parsed = parseRoleDefinition(role); return parsed === null ? [] : [parsed]; }),
-    taskDefinitions: record.taskDefinitions.flatMap((task) => { const parsed = parseTaskDefinition(task); return parsed === null ? [] : [parsed]; }),
+    roleDefinitions: record.roleDefinitions.flatMap((role) => {
+      const parsed = parseRoleDefinition(role);
+      return parsed === null ? [] : [parsed];
+    }),
+    taskDefinitions: record.taskDefinitions.flatMap((task) => {
+      const parsed = parseTaskDefinition(task);
+      return parsed === null ? [] : [parsed];
+    }),
   };
 };
 
@@ -187,11 +218,20 @@ export const rolePolicyFromReadback = (readback: ReadbackState | undefined): Rol
 
 export const tasksForRole = (policy: RolePolicy, role: RoleDefinition): readonly TaskDefinition[] =>
   [...policy.taskDefinitions]
-    .filter((task) => task.allowed_roles.includes(role.role_id) || role.task_types_supported.includes(task.task_type))
+    .filter(
+      (task) =>
+        task.allowed_roles.includes(role.role_id) ||
+        role.task_types_supported.includes(task.task_type),
+    )
     .sort((left, right) => left.task_type.localeCompare(right.task_type, "en"));
 
 export const groupLabel = (groupId: string): string =>
-  groupId.split(/[_-]+/).filter((part) => part.length > 0).map((part) => part.slice(0, 1).toUpperCase() + part.slice(1)).join(" ");
+  groupId
+    .split(/[_-]+/)
+    .filter((part) => part.length > 0)
+    .map((part) => part.slice(0, 1).toUpperCase() + part.slice(1))
+    .join(" ");
 
 export const isHighRiskRole = (role: RoleDefinition): boolean =>
-  role.riskLevel === "high" || ["security", "legal", "finance", "recruiter", "health"].includes(role.role_id);
+  role.riskLevel === "high" ||
+  ["security", "legal", "finance", "recruiter", "health"].includes(role.role_id);

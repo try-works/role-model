@@ -38,7 +38,9 @@ afterEach(async () => {
       // already closed
     }
   }
-  await Promise.all(roots.splice(0).map(async (root) => rm(root, { recursive: true, force: true })));
+  await Promise.all(
+    roots.splice(0).map(async (root) => rm(root, { recursive: true, force: true })),
+  );
 });
 
 const makeRoot = async (): Promise<string> => {
@@ -63,7 +65,9 @@ const openService = async (): Promise<{ service: SqliteService; root: string }> 
 };
 
 /** Starts an async transaction that holds the connection until the returned release() is called. */
-const holdTransaction = async (service: SqliteService): Promise<{ release: () => void; done: Promise<void> }> => {
+const holdTransaction = async (
+  service: SqliteService,
+): Promise<{ release: () => void; done: Promise<void> }> => {
   let release: () => void = () => {};
   const gate = new Promise<void>((resolve) => {
     release = resolve;
@@ -73,10 +77,12 @@ const holdTransaction = async (service: SqliteService): Promise<{ release: () =>
     started = resolve;
   });
   const done = Effect.runPromise(
-    service.transaction(() => Effect.promise(async () => {
-      started();
-      await gate;
-    })),
+    service.transaction(() =>
+      Effect.promise(async () => {
+        started();
+        await gate;
+      }),
+    ),
   );
   await startedGate;
   return { done, release };
@@ -87,7 +93,9 @@ describe("S307 maintenance owner fence", () => {
     const { service, root } = await openService();
     const holder = await holdTransaction(service);
     try {
-      const caught = await service.maintenance.backup(path.join(root, "never.db")).catch((error) => error);
+      const caught = await service.maintenance
+        .backup(path.join(root, "never.db"))
+        .catch((error) => error);
       expect(caught).toBeInstanceOf(MaintenanceBusyError);
       const busy = caught instanceof MaintenanceBusyError ? caught : undefined;
       expect(busy?.code).toBe("MAINTENANCE_BUSY");
@@ -153,13 +161,21 @@ describe("S307 maintenance owner fence", () => {
       const elapsedMs = Date.now() - startedAt;
       expect(caught).toBeInstanceOf(MaintenanceDrainTimeoutError);
       expect(ticks.length).toBeGreaterThanOrEqual(3);
-      writeFileSync(PROBE_PATH, JSON.stringify({
-        drainTimeoutMs: 100,
-        elapsedMs,
-        eventLoopTicks: ticks.length,
-        mode: "async-poll-drain",
-        statement: "DatabaseSync remains blocking; only the fence drain yields, measured by a 10ms interval",
-      }, null, 2) + "\n");
+      writeFileSync(
+        PROBE_PATH,
+        `${JSON.stringify(
+          {
+            drainTimeoutMs: 100,
+            elapsedMs,
+            eventLoopTicks: ticks.length,
+            mode: "async-poll-drain",
+            statement:
+              "DatabaseSync remains blocking; only the fence drain yields, measured by a 10ms interval",
+          },
+          null,
+          2,
+        )}\n`,
+      );
     } finally {
       clearInterval(interval);
       holder.release();
@@ -228,7 +244,9 @@ describe("S307 maintenance owner fence", () => {
       expect(existsSync(busyTarget)).toBe(false);
 
       const timeoutTarget = path.join(root, "timeout-refused.db");
-      await service.maintenance.backup(timeoutTarget, { drainTimeoutMs: 60 }).catch(() => undefined);
+      await service.maintenance
+        .backup(timeoutTarget, { drainTimeoutMs: 60 })
+        .catch(() => undefined);
       expect(service.maintenance.pragmas()).toEqual(before);
       expect(existsSync(timeoutTarget)).toBe(false);
     } finally {

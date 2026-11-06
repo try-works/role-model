@@ -46,8 +46,7 @@ const REDIRECT_ROUTE_ENTRIES: readonly string[] = [
   "/app/control/session-readiness",
 ];
 
-const urlOf = (href: string) =>
-  Option.getOrThrow(Url.fromString(`http://localhost${href}`));
+const urlOf = (href: string) => Option.getOrThrow(Url.fromString(`http://localhost${href}`));
 
 const commandNames = (result: ReturnType<typeof shellUpdate>): readonly string[] =>
   (result.commands ?? []).map((command) => command.name);
@@ -222,9 +221,9 @@ describe("S269 typed resolution of original /app URLs", () => {
 
   it("preserves an original query string across the redirect", async () => {
     const module = await legacy();
-    expect(
-      module.legacyRedirectForUrl(urlOf("/app/observe/requests?status=error"))?.href,
-    ).toBe("/requests?status=error");
+    expect(module.legacyRedirectForUrl(urlOf("/app/observe/requests?status=error"))?.href).toBe(
+      "/requests?status=error",
+    );
     expect(
       module.legacyRedirectForUrl(urlOf("/app/observe/requests/req-7?window=3600000"))?.href,
     ).toBe("/requests/req-7?window=3600000");
@@ -233,8 +232,12 @@ describe("S269 typed resolution of original /app URLs", () => {
   it("routes each original runtime surface to its own implemented route", async () => {
     const module = await legacy();
     expect(module.legacyRedirectForUrl(urlOf("/app/system/runtime"))?.href).toBe("/runtime");
-    expect(module.legacyRedirectForUrl(urlOf("/app/system/runtime-config"))?.href).toBe("/runtime/config");
-    expect(module.legacyRedirectForUrl(urlOf("/app/control/runtime-config"))?.href).toBe("/runtime/config");
+    expect(module.legacyRedirectForUrl(urlOf("/app/system/runtime-config"))?.href).toBe(
+      "/runtime/config",
+    );
+    expect(module.legacyRedirectForUrl(urlOf("/app/control/runtime-config"))?.href).toBe(
+      "/runtime/config",
+    );
   });
 });
 
@@ -279,7 +282,11 @@ describe("S269 redirect/route inventory", () => {
 describe("S269 original redirect entries: 20 resolvable targets", () => {
   const resolvable = [
     { href: "/local/llama-swap/policy", original: "/app/local/policy", tag: "LocalPolicy" },
-    { href: "/local/llama-swap/models?view=grid", original: "/app/local/matrix", tag: "LocalLlamaSwapModels" },
+    {
+      href: "/local/llama-swap/models?view=grid",
+      original: "/app/local/matrix",
+      tag: "LocalLlamaSwapModels",
+    },
     { href: "/local/swap", original: "/app/local/swap", tag: "LocalSwap" },
     { href: "/local/logs", original: "/app/local/logs", tag: "LocalLogs" },
     { href: "/local/peers", original: "/app/local/peers", tag: "LocalPeers" },
@@ -338,10 +345,7 @@ describe("S269 original redirect entries: 20 resolvable targets", () => {
     it(`redirects ${entry.original} to ${entry.href} as ${entry.tag} with a replace Command`, async () => {
       const module = await legacy();
       expect(module.legacyRedirectForUrl(urlOf(entry.original))?.href).toBe(entry.href);
-      const result = shellUpdate(
-        shellModel(),
-        Message.ChangedUrl({ url: urlOf(entry.original) }),
-      );
+      const result = shellUpdate(shellModel(), Message.ChangedUrl({ url: urlOf(entry.original) }));
       expect(result.model.route._tag).toBe(entry.tag);
       expect(replaceCommand(result)?.args?.href).toBe(entry.href);
       expect(commandNames(result).filter((name) => name === "ReplaceLegacyUrl")).toHaveLength(1);
@@ -402,10 +406,7 @@ describe("S269 redirect Commands and exactly-once reads", () => {
       shellModel(),
       Message.ChangedUrl({ url: urlOf("/app/observe/requests") }),
     );
-    const echo = shellUpdate(
-      first.model,
-      Message.ChangedUrl({ url: urlOf("/requests") }),
-    );
+    const echo = shellUpdate(first.model, Message.ChangedUrl({ url: urlOf("/requests") }));
     // The command's own urlchange echo is consumed without a second read.
     expect(first.model.pendingRedirectHref).toBe("/requests");
     expect(echo.commands ?? []).toHaveLength(0);
@@ -414,10 +415,7 @@ describe("S269 redirect Commands and exactly-once reads", () => {
 
     // A genuine navigation to the same canonical URL after the echo is baseline behaviour:
     // one read, refresh reset, resync token bump and a scroll.
-    const genuine = shellUpdate(
-      echo.model,
-      Message.ChangedUrl({ url: urlOf("/requests") }),
-    );
+    const genuine = shellUpdate(echo.model, Message.ChangedUrl({ url: urlOf("/requests") }));
     expect(readCommands(genuine)).toHaveLength(2);
     expect(commandNames(genuine)).toContain("ScrollShellToTop");
     expect(genuine.model.refresh.message).toBeUndefined();
@@ -454,16 +452,10 @@ describe("S269 redirect Commands and exactly-once reads", () => {
       shellModel(),
       Message.ChangedUrl({ url: urlOf("/app/observe/requests/req-1") }),
     );
-    const echo = shellUpdate(
-      first.model,
-      Message.ChangedUrl({ url: urlOf("/requests/req-1") }),
-    );
+    const echo = shellUpdate(first.model, Message.ChangedUrl({ url: urlOf("/requests/req-1") }));
     expect(echo.commands ?? []).toHaveLength(0);
 
-    const other = shellUpdate(
-      echo.model,
-      Message.ChangedUrl({ url: urlOf("/requests/req-2") }),
-    );
+    const other = shellUpdate(echo.model, Message.ChangedUrl({ url: urlOf("/requests/req-2") }));
     expect(readCommands(other)[0]?.args?.id).toBe("req-2");
 
     const original = shellUpdate(
@@ -474,22 +466,13 @@ describe("S269 redirect Commands and exactly-once reads", () => {
   });
 
   it("reads repeated diagnostics navigation for the same and a different id", () => {
-    const first = shellUpdate(
-      shellModel(),
-      Message.ChangedUrl({ url: urlOf("/diagnostics/42") }),
-    );
+    const first = shellUpdate(shellModel(), Message.ChangedUrl({ url: urlOf("/diagnostics/42") }));
     expect(diagnosticsReadCommands(first)).toHaveLength(1);
 
-    const other = shellUpdate(
-      first.model,
-      Message.ChangedUrl({ url: urlOf("/diagnostics/7") }),
-    );
+    const other = shellUpdate(first.model, Message.ChangedUrl({ url: urlOf("/diagnostics/7") }));
     expect(diagnosticsReadCommands(other)).toHaveLength(1);
 
-    const repeated = shellUpdate(
-      other.model,
-      Message.ChangedUrl({ url: urlOf("/diagnostics/7") }),
-    );
+    const repeated = shellUpdate(other.model, Message.ChangedUrl({ url: urlOf("/diagnostics/7") }));
     expect(diagnosticsReadCommands(repeated)).toHaveLength(1);
   });
 
@@ -498,10 +481,7 @@ describe("S269 redirect Commands and exactly-once reads", () => {
       shellModel(),
       Message.ChangedUrl({ url: urlOf("/app/observe/requests") }),
     );
-    const interleaved = shellUpdate(
-      first.model,
-      Message.ChangedUrl({ url: urlOf("/models") }),
-    );
+    const interleaved = shellUpdate(first.model, Message.ChangedUrl({ url: urlOf("/models") }));
     expect(interleaved.model.route).toMatchObject({ _tag: "Models" });
     expect(interleaved.model.pendingRedirectHref).toBeUndefined();
     expect(readCommands(interleaved)).toHaveLength(1);
@@ -520,16 +500,10 @@ describe("S269 redirect Commands and exactly-once reads", () => {
       Message.ChangedUrl({ url: urlOf("/app/observe/requests") }),
     );
     // Only one URL change can be distinguished as the echo; the first exact match is consumed.
-    const ambiguous = shellUpdate(
-      first.model,
-      Message.ChangedUrl({ url: urlOf("/requests") }),
-    );
+    const ambiguous = shellUpdate(first.model, Message.ChangedUrl({ url: urlOf("/requests") }));
     expect(ambiguous.commands ?? []).toHaveLength(0);
     // The real echo therefore becomes a genuine navigation: the read is delayed, not dropped.
-    const realEcho = shellUpdate(
-      ambiguous.model,
-      Message.ChangedUrl({ url: urlOf("/requests") }),
-    );
+    const realEcho = shellUpdate(ambiguous.model, Message.ChangedUrl({ url: urlOf("/requests") }));
     expect(readCommands(realEcho)).toHaveLength(2);
   });
 

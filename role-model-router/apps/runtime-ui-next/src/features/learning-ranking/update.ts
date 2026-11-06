@@ -1,9 +1,9 @@
 import {
+  type LearningRankingState,
+  type LearningRollbackPayload,
   initialLearningRankingState,
   learningLadderRowKey,
   learningRollbackPayload,
-  type LearningRankingState,
-  type LearningRollbackPayload,
 } from "./model";
 
 /**
@@ -13,7 +13,11 @@ import {
 export type LearningLadderTogglePlan =
   | Readonly<{ readonly kind: "noop" }>
   | Readonly<{ readonly kind: "set"; readonly key: string; readonly state: LearningRankingState }>
-  | Readonly<{ readonly kind: "confirm"; readonly key: string; readonly state: LearningRankingState }>
+  | Readonly<{
+      readonly kind: "confirm";
+      readonly key: string;
+      readonly state: LearningRankingState;
+    }>
   | Readonly<{
       readonly kind: "rollback";
       readonly key: string;
@@ -41,7 +45,10 @@ export const planLearningLadderToggle = (
         ...state,
         phases: {
           ...state.phases,
-          [key]: { error: "Learning scope is unavailable from the records readback; rollback is disabled.", phase: "error" },
+          [key]: {
+            error: "Learning scope is unavailable from the records readback; rollback is disabled.",
+            phase: "error",
+          },
         },
       },
     };
@@ -51,19 +58,32 @@ export const planLearningLadderToggle = (
   const phase = state.phases[key]?.phase ?? "idle";
   if (phase === "pending") return { kind: "noop" };
   if (phase !== "confirming") {
-    const phases = Object.fromEntries(Object.entries(state.phases).filter(([, entry]) => entry.phase !== "confirming"));
+    const phases = Object.fromEntries(
+      Object.entries(state.phases).filter(([, entry]) => entry.phase !== "confirming"),
+    );
     return {
       key,
       kind: "confirm",
       state: { ...state, phases: { ...phases, [key]: { phase: "confirming", scopeId } }, scopeId },
     };
   }
-  const token = (state.nextToken ?? Math.max(0, ...Object.values(state.phases).map((entry) => entry.token ?? 0))) + 1;
+  const token =
+    (state.nextToken ??
+      Math.max(0, ...Object.values(state.phases).map((entry) => entry.token ?? 0))) + 1;
   return {
     key,
     kind: "rollback",
-    payload: learningRollbackPayload({ roleId: input.roleId, taskTypeId: input.taskTypeId }, input.rolledBack, scopeId),
-    state: { ...state, nextToken: token, phases: { ...state.phases, [key]: { phase: "pending", scopeId, token } }, scopeId },
+    payload: learningRollbackPayload(
+      { roleId: input.roleId, taskTypeId: input.taskTypeId },
+      input.rolledBack,
+      scopeId,
+    ),
+    state: {
+      ...state,
+      nextToken: token,
+      phases: { ...state.phases, [key]: { phase: "pending", scopeId, token } },
+      scopeId,
+    },
     token,
   };
 };
@@ -78,10 +98,27 @@ export const mergeLearningLadderUpdated = (
     readonly token: number;
   },
 ): LearningRankingState | undefined => {
-  const key = learningLadderRowKey({ roleId: input.roleId, taskTypeId: input.taskTypeId }, input.scopeId);
+  const key = learningLadderRowKey(
+    { roleId: input.roleId, taskTypeId: input.taskTypeId },
+    input.scopeId,
+  );
   const entry = state.phases[key];
-  if (input.freshScope !== input.scopeId || state.scopeId !== input.scopeId || entry?.phase !== "pending" || entry.scopeId !== input.scopeId || entry.token !== input.token) return undefined;
-  return { ...state, nextToken: state.nextToken ?? input.token, phases: { ...state.phases, [key]: { phase: "idle", scopeId: input.scopeId, token: input.token } } };
+  if (
+    input.freshScope !== input.scopeId ||
+    state.scopeId !== input.scopeId ||
+    entry?.phase !== "pending" ||
+    entry.scopeId !== input.scopeId ||
+    entry.token !== input.token
+  )
+    return undefined;
+  return {
+    ...state,
+    nextToken: state.nextToken ?? input.token,
+    phases: {
+      ...state.phases,
+      [key]: { phase: "idle", scopeId: input.scopeId, token: input.token },
+    },
+  };
 };
 
 export const mergeLearningLadderFailed = (
@@ -95,10 +132,26 @@ export const mergeLearningLadderFailed = (
     readonly token: number;
   },
 ): LearningRankingState | undefined => {
-  const key = learningLadderRowKey({ roleId: input.roleId, taskTypeId: input.taskTypeId }, input.scopeId);
+  const key = learningLadderRowKey(
+    { roleId: input.roleId, taskTypeId: input.taskTypeId },
+    input.scopeId,
+  );
   const entry = state.phases[key];
-  if (input.freshScope !== input.scopeId || state.scopeId !== input.scopeId || entry?.phase !== "pending" || entry.scopeId !== input.scopeId || entry.token !== input.token) return undefined;
-  return { ...state, phases: { ...state.phases, [key]: { error: input.message, phase: "error", scopeId: input.scopeId, token: input.token } } };
+  if (
+    input.freshScope !== input.scopeId ||
+    state.scopeId !== input.scopeId ||
+    entry?.phase !== "pending" ||
+    entry.scopeId !== input.scopeId ||
+    entry.token !== input.token
+  )
+    return undefined;
+  return {
+    ...state,
+    phases: {
+      ...state.phases,
+      [key]: { error: input.message, phase: "error", scopeId: input.scopeId, token: input.token },
+    },
+  };
 };
 
 export { initialLearningRankingState };

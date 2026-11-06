@@ -119,9 +119,9 @@ describe("S269 mounted legacy redirects", () => {
     expect(window.location.search).toBe("");
     expect(window.history.length).toBe(historyLength);
     expect(document.title).toBe("Requests | RM3 Foldkit shell");
-    expect(
-      document.querySelector("[data-shell-route]")?.getAttribute("data-shell-route"),
-    ).toBe("Requests");
+    expect(document.querySelector("[data-shell-route]")?.getAttribute("data-shell-route")).toBe(
+      "Requests",
+    );
     expect(countPath("/api/role-model/telemetry/requests")).toBe(1);
   });
 
@@ -249,7 +249,9 @@ describe("S269 mounted legacy redirects", () => {
     mountAt("/app/local/llama-swap/policy");
 
     const page = await waitFor(
-      () => document.querySelector("[data-route='local-policy'][data-page-layout='reference']") ?? undefined,
+      () =>
+        document.querySelector("[data-route='local-policy'][data-page-layout='reference']") ??
+        undefined,
       "the real local-policy page after the replace redirect and read",
     );
 

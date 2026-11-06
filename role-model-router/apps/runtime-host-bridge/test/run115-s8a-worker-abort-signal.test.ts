@@ -63,7 +63,6 @@ function policyDocument() {
   };
 }
 
-
 /** The operator's cancel: the same row update the R5 cancel/drain suite applies. */
 function cancelQueueRow(root: string, queue: string): void {
   const database = new DatabaseSync(path.join(root, "track-b", "queues", "queues.sqlite"));
@@ -109,10 +108,7 @@ describe("Run 115 S8a: queue worker forwards the Effect AbortSignal", () => {
           },
           { id: "req-s8a-abort" },
         );
-      }).pipe(
-        Effect.provide(storeLayerForQueuePolicy({ stateRoot, policy })),
-        Effect.scoped,
-      ),
+      }).pipe(Effect.provide(storeLayerForQueuePolicy({ stateRoot, policy })), Effect.scoped),
     );
 
     let entered = 0;
@@ -196,10 +192,7 @@ describe("Run 115 S8a: queue worker forwards the Effect AbortSignal", () => {
           },
           { id: "req-s8a-cancel-watch" },
         );
-      }).pipe(
-        Effect.provide(storeLayerForQueuePolicy({ stateRoot, policy })),
-        Effect.scoped,
-      ),
+      }).pipe(Effect.provide(storeLayerForQueuePolicy({ stateRoot, policy })), Effect.scoped),
     );
 
     let markEntered: () => void = () => undefined;
@@ -319,10 +312,7 @@ describe("Run 115 S8a: queue worker forwards the Effect AbortSignal", () => {
               watch,
             );
           });
-        }).pipe(
-          Effect.provide(storeLayerForQueuePolicy({ stateRoot, policy })),
-          Effect.scoped,
-        ),
+        }).pipe(Effect.provide(storeLayerForQueuePolicy({ stateRoot, policy })), Effect.scoped),
       ),
     );
 

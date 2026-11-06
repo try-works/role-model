@@ -32,32 +32,35 @@ const operatorContext = {
 };
 
 const start = (overrides: Readonly<Record<string, unknown>> = {}) =>
-  startBridgeServer({
-    host: "127.0.0.1",
-    port: 0,
-    operatorAuthToken: "operator-secret",
-    // Run 98 addendum 46: a loopback runtime now trusts its device owner for every operator path, so this
-    // suite pins the token rule explicitly to keep testing anonymous-read gating rather than device trust.
-    deviceOwnerTrust: "off",
-    operatorContext,
-    registry,
-    executeChatCompletions: async () => {
-      throw new Error("not used");
+  startBridgeServer(
+    {
+      host: "127.0.0.1",
+      port: 0,
+      operatorAuthToken: "operator-secret",
+      // Run 98 addendum 46: a loopback runtime now trusts its device owner for every operator path, so this
+      // suite pins the token rule explicitly to keep testing anonymous-read gating rather than device trust.
+      deviceOwnerTrust: "off",
+      operatorContext,
+      registry,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+      executeResponses: async () => {
+        throw new Error("not used");
+      },
+      readLearningActivity: async () => ({
+        schemaVersion: "role-model.learning-activity.v1",
+        scannedStores: 4,
+      }),
+      readLearningHistory: async () => ({
+        schemaVersion: "role-model.learning-history.v1",
+        scannedStores: 4,
+      }),
+      readLearningPolicy: async () => ({ policyVersion: 21 }),
+      ...overrides,
     },
-    executeResponses: async () => {
-      throw new Error("not used");
-    },
-    readLearningActivity: async () => ({
-      schemaVersion: "role-model.learning-activity.v1",
-      scannedStores: 4,
-    }),
-    readLearningHistory: async () => ({
-      schemaVersion: "role-model.learning-history.v1",
-      scannedStores: 4,
-    }),
-    readLearningPolicy: async () => ({ policyVersion: 21 }),
-    ...overrides,
-  }, { allowTestSeamBackend: true });
+    { allowTestSeamBackend: true },
+  );
 
 describe("run99 anonymous loopback Learning readbacks", () => {
   test("serves the Learning readbacks without a token and keeps everything else gated", async () => {

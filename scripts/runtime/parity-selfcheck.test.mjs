@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import os from "node:os";
 import { mkdirSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
+import { isLoadedPayload } from "./parity-capture.mjs";
 import {
   DEFAULT_TEMP_DRIVE,
   enforceTempRoot,
@@ -14,13 +15,12 @@ import {
   launchChrome,
   main,
   partitionCaptureIssues,
-  resolveRequiredTempDrive,
   planTargets,
+  resolveRequiredTempDrive,
   runMutationCheck,
   runSelfcheck,
   statusForCaptureError,
 } from "./parity-selfcheck.mjs";
-import { isLoadedPayload } from "./parity-capture.mjs";
 
 /**
  * S294 (R14): the selfcheck runner must prove React-vs-React 0 differences and run determinism, record the
@@ -30,13 +30,13 @@ import { isLoadedPayload } from "./parity-capture.mjs";
 
 const target = (id, available = true) => ({
   id,
-  label: id + " build",
-  staticRoot: "/dist/" + id,
+  label: `${id} build`,
+  staticRoot: `/dist/${id}`,
   available,
 });
 
 const capture = (targetId, sha256, issues = [], ignoredIssues = []) => ({
-  evidencePath: "/evidence/" + targetId + "-" + sha256.slice(0, 8) + ".png",
+  evidencePath: `/evidence/${targetId}-${sha256.slice(0, 8)}.png`,
   ignoredIssues,
   issues,
   sha256,
@@ -62,7 +62,11 @@ test("S294 PASSED when both builds are deterministic, clean and the dual compari
   assert.equal(result.targets.find((entry) => entry.id === "react")?.sha256, sha);
   assert.equal(result.targets.find((entry) => entry.id === "foldkit")?.sha256, fold);
   assert.equal(result.comparisons.reactVsReact.equal, true);
-  assert.equal(result.comparisons.reactVsFoldkit.equal, false, "a real difference must be reported as different");
+  assert.equal(
+    result.comparisons.reactVsFoldkit.equal,
+    false,
+    "a real difference must be reported as different",
+  );
   assert.equal(result.comparisons.reactVsFoldkit.classification, "different");
 });
 
@@ -92,7 +96,10 @@ test("S294 FAILED when a capture surfaces console or network issues", () => {
   const sha = "a".repeat(64);
   const result = evaluateSelfcheck({
     chromeAvailable: true,
-    runs: [[capture("react", sha, ["console: boom"]), capture("foldkit", sha)], [capture("react", sha), capture("foldkit", sha)]],
+    runs: [
+      [capture("react", sha, ["console: boom"]), capture("foldkit", sha)],
+      [capture("react", sha), capture("foldkit", sha)],
+    ],
     targets: [target("react"), target("foldkit")],
   });
   assert.equal(result.status, "FAILED");
@@ -111,7 +118,11 @@ test("S294 FAILED (not NOT_RUN) when a build target is unavailable", () => {
 });
 
 test("S294 NOT_RUN with exit 2 only when no browser is available", () => {
-  const result = evaluateSelfcheck({ chromeAvailable: false, runs: [], targets: [target("react"), target("foldkit")] });
+  const result = evaluateSelfcheck({
+    chromeAvailable: false,
+    runs: [],
+    targets: [target("react"), target("foldkit")],
+  });
   assert.equal(result.status, "NOT_RUN");
   assert.equal(result.reason, "no-browser-available");
   assert.equal(exitCodeFor(result.status), 2);
@@ -131,7 +142,12 @@ test("S294 runSelfcheck captures every target twice (two runs) and evaluates the
   assert.equal(result.status, "PASSED");
   assert.equal(calls.length, 4);
   assert.deepEqual(calls.map((call) => call.run).sort(), [0, 0, 1, 1]);
-  assert.deepEqual(calls.map((call) => call.targetId).sort(), ["foldkit", "foldkit", "react", "react"]);
+  assert.deepEqual(calls.map((call) => call.targetId).sort(), [
+    "foldkit",
+    "foldkit",
+    "react",
+    "react",
+  ]);
 });
 
 test("S294 partitions favicon harness noise out of the capture issues while recording it", () => {
@@ -148,7 +164,11 @@ test("S294 partitions favicon harness noise out of the capture issues while reco
   const withoutFavicon = partitionCaptureIssues([
     "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
   ]);
-  assert.equal(withoutFavicon.kept.length, 1, "a 404 echo without a favicon line is still surfaced");
+  assert.equal(
+    withoutFavicon.kept.length,
+    1,
+    "a 404 echo without a favicon line is still surfaced",
+  );
 });
 
 test("S295 FAILED when a target has fewer than exactly two captures", () => {
@@ -160,7 +180,11 @@ test("S295 FAILED when a target has fewer than exactly two captures", () => {
   });
   assert.equal(result.status, "FAILED");
   assert.match(String(result.reason), /capture-count/);
-  assert.equal(result.comparisons, null, "an invalid run shape has no meaningful comparison to report");
+  assert.equal(
+    result.comparisons,
+    null,
+    "an invalid run shape has no meaningful comparison to report",
+  );
 });
 
 test("S295 FAILED when a target entry is missing from the plan", () => {
@@ -179,7 +203,10 @@ test("S295 emits per-target ignoredIssues and an ignored count in the JSON", () 
   const favicon = "network: http://127.0.0.1:1/favicon.ico -> 404";
   const result = evaluateSelfcheck({
     chromeAvailable: true,
-    runs: [[capture("react", sha, [], [favicon]), capture("foldkit", sha)], [capture("react", sha, [], [favicon]), capture("foldkit", sha)]],
+    runs: [
+      [capture("react", sha, [], [favicon]), capture("foldkit", sha)],
+      [capture("react", sha, [], [favicon]), capture("foldkit", sha)],
+    ],
     targets: [target("react"), target("foldkit")],
   });
   const react = result.targets.find((entry) => entry.id === "react");
@@ -329,7 +356,12 @@ test("S295 r3 launchChrome rejects a spawn error and kills the child (no orphan,
   assert.equal(child.killed, true, "a spawn error must kill the child");
 });
 
-const CLASS_MUTATION = { file: "assets/root.css", from: "display:flex", selector: ".flex", to: "display:block" };
+const CLASS_MUTATION = {
+  file: "assets/root.css",
+  from: "display:flex",
+  selector: ".flex",
+  to: "display:block",
+};
 
 test("S297 PASSED when the one-class mutant changes the capture and the unchanged pair is identical", () => {
   const result = evaluateMutationCheck({
@@ -399,7 +431,8 @@ test("S297 runMutationCheck captures baseline twice and the mutant once via the 
   const result = await runMutationCheck({
     capture: async (request) => {
       calls.push(request);
-      if (request.kind === "mutated") return { classMutation: CLASS_MUTATION, sha256: "b".repeat(64) };
+      if (request.kind === "mutated")
+        return { classMutation: CLASS_MUTATION, sha256: "b".repeat(64) };
       return { sha256: "a".repeat(64) };
     },
     chromeAvailable: true,
@@ -413,14 +446,30 @@ test("S297 runMutationCheck captures baseline twice and the mutant once via the 
 
 test("S298 mutation JSON carries ignoredIssues/ignoredCount, baseline run identity and PNG evidence", () => {
   const faviconNet = "network: http://127.0.0.1:1/favicon.ico -> 404";
-  const faviconEcho = "console: Failed to load resource: the server responded with a status of 404 (Not Found)";
+  const faviconEcho =
+    "console: Failed to load resource: the server responded with a status of 404 (Not Found)";
   const result = evaluateMutationCheck({
     baselineCaptures: [
-      { evidencePath: "/caps/baseline-run0.png", ignoredIssues: [faviconNet, faviconEcho], run: 0, sha256: "a".repeat(64) },
-      { evidencePath: "/caps/baseline-run1.png", ignoredIssues: [], run: 1, sha256: "a".repeat(64) },
+      {
+        evidencePath: "/caps/baseline-run0.png",
+        ignoredIssues: [faviconNet, faviconEcho],
+        run: 0,
+        sha256: "a".repeat(64),
+      },
+      {
+        evidencePath: "/caps/baseline-run1.png",
+        ignoredIssues: [],
+        run: 1,
+        sha256: "a".repeat(64),
+      },
     ],
     classMutation: CLASS_MUTATION,
-    mutatedCapture: { evidencePath: "/caps/mutated-run0.png", ignoredIssues: [faviconNet], run: 0, sha256: "b".repeat(64) },
+    mutatedCapture: {
+      evidencePath: "/caps/mutated-run0.png",
+      ignoredIssues: [faviconNet],
+      run: 0,
+      sha256: "b".repeat(64),
+    },
   });
   assert.equal(result.status, "PASSED");
   assert.equal(result.ignoredCount, 3);
@@ -435,7 +484,10 @@ test("S298 mutation JSON carries ignoredIssues/ignoredCount, baseline run identi
   assert.deepEqual(target?.captures[0]?.ignoredIssues, [faviconNet, faviconEcho]);
   assert.deepEqual(target?.ignoredIssues, [faviconNet, faviconEcho, faviconNet]);
   assert.equal(target?.captures[0]?.evidencePath, "/caps/baseline-run0.png");
-  assert.deepEqual(result.evidence.baseline, ["/caps/baseline-run0.png", "/caps/baseline-run1.png"]);
+  assert.deepEqual(result.evidence.baseline, [
+    "/caps/baseline-run0.png",
+    "/caps/baseline-run1.png",
+  ]);
   assert.equal(result.evidence.mutant, "/caps/mutated-run0.png");
 });
 
@@ -447,7 +499,6 @@ test("S294 planTargets names the React and Foldkit static roots from the repo ro
   assert.equal(planned[1]?.id, "foldkit");
   assert.match(String(planned[1]?.staticRoot), /runtime-ui-next[\\/]dist[\\/]client$/);
 });
-
 
 /** S342c (CI prerequisite): PARITY_SELFCHECK_TEMP_DRIVE override (default E:), empty env falls back. */
 const withTempDriveEnv = async (values, run) => {
@@ -494,7 +545,7 @@ test("S342c an unavailable PARITY_SELFCHECK_TEMP_DRIVE keeps the existing fail-f
   );
   assert.equal(result.status, "FAILED");
   assert.equal(result.exitCode, 1);
-  assert.match(String(result.reason), new RegExp("not on the required drive " + otherDrive));
+  assert.match(String(result.reason), new RegExp(`not on the required drive ${otherDrive}`));
 });
 
 test("S343c an EMPTY PARITY_SELFCHECK_TEMP_DRIVE still applies the default E: guard", async () => {
@@ -535,20 +586,42 @@ test("S342c the default required drive stays E: when the env override is absent"
  * not-loaded capture must map to NOT_RUN (exit 2), never a FAILED pseudo-capture or a fake pass.
  */
 test("S616: the loaded gate rejects a loading shell and accepts a loaded page", () => {
-  assert.equal(isLoadedPayload({ hasMain: false, textLength: 60 }, 200), false, "a shell without main is not loaded");
-  assert.equal(isLoadedPayload({ hasMain: true, textLength: 120 }, 200), false, "a short loading panel is not loaded");
-  assert.equal(isLoadedPayload({ hasMain: true, textLength: 2148 }, 200), true, "the rendered overview page is loaded");
-  assert.equal(isLoadedPayload({ hasMain: true, textLength: 200 }, 200), true, "the boundary is inclusive");
+  assert.equal(
+    isLoadedPayload({ hasMain: false, textLength: 60 }, 200),
+    false,
+    "a shell without main is not loaded",
+  );
+  assert.equal(
+    isLoadedPayload({ hasMain: true, textLength: 120 }, 200),
+    false,
+    "a short loading panel is not loaded",
+  );
+  assert.equal(
+    isLoadedPayload({ hasMain: true, textLength: 2148 }, 200),
+    true,
+    "the rendered overview page is loaded",
+  );
+  assert.equal(
+    isLoadedPayload({ hasMain: true, textLength: 200 }, 200),
+    true,
+    "the boundary is inclusive",
+  );
   assert.equal(isLoadedPayload(undefined, 200), false, "a missing payload is not loaded");
 });
 
 test("S616: a not-loaded capture maps to NOT_RUN, other capture failures stay FAILED", () => {
-  const notLoaded = statusForCaptureError({ code: "capture_not_loaded", message: "page content did not reach the loaded gate" });
+  const notLoaded = statusForCaptureError({
+    code: "capture_not_loaded",
+    message: "page content did not reach the loaded gate",
+  });
   assert.equal(notLoaded.status, "NOT_RUN");
   assert.equal(notLoaded.exitCode, 2);
   assert.match(notLoaded.reason, /capture-not-loaded/);
 
-  const timeout = statusForCaptureError({ code: "capture_timeout", message: "navigation did not complete" });
+  const timeout = statusForCaptureError({
+    code: "capture_timeout",
+    message: "navigation did not complete",
+  });
   assert.equal(timeout.status, "FAILED");
   assert.equal(timeout.exitCode, 1);
   assert.match(timeout.reason, /capture-failed/);

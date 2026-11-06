@@ -13,7 +13,13 @@ describe("S48a styled client build", () => {
     expect(result.status, result.stderr).toBe(0);
     const css = readFileSync(path.join(here, "dist/client/assets/main.css"), "utf8");
     expect(css.length).toBeGreaterThan(50_000);
-    for (const selector of [".md\\:flex{", ".flex-col{", ".text-\\[11px\\]{", ".border-\\[var\\(--rm-border\\)\\]{", ".bg-\\[var\\(--rm-surface\\)\\]{"]) {
+    for (const selector of [
+      ".md\\:flex{",
+      ".flex-col{",
+      ".text-\\[11px\\]{",
+      ".border-\\[var\\(--rm-border\\)\\]{",
+      ".bg-\\[var\\(--rm-surface\\)\\]{",
+    ]) {
       expect(css, selector).toContain(selector);
     }
     expect(css).toContain(".text-\\[11px\\]");
@@ -25,11 +31,17 @@ describe("S48a styled client build", () => {
      */
     expect(css).toContain("focus-visible");
     expect(css).toContain("prefers-reduced-motion");
-    const urls = [...css.matchAll(/url\(([^)]+)\)/g)].map((match) => (match[1] ?? "").replace(/^["\']|["\']$/g, "")).filter((ref) => ref.startsWith("/"));
+    const urls = [...css.matchAll(/url\(([^)]+)\)/g)]
+      .map((match) => (match[1] ?? "").replace(/^["\']|["\']$/g, ""))
+      .filter((ref) => ref.startsWith("/"));
     for (const url of urls) {
       expect(existsSync(path.join(here, "dist/client", url.slice(1))), url).toBe(true);
     }
-    expect(readdirSync(path.join(here, "dist/client/assets/fonts")).filter((file) => file.endsWith(".woff2")).length).toBeGreaterThanOrEqual(14);
+    expect(
+      readdirSync(path.join(here, "dist/client/assets/fonts")).filter((file) =>
+        file.endsWith(".woff2"),
+      ).length,
+    ).toBeGreaterThanOrEqual(14);
     const buildSource = readFileSync(path.join(here, "build.mjs"), "utf8");
     expect(buildSource).toContain("runtime-ui/public/assets/fonts");
     expect(buildSource).not.toContain("runtime-ui/build/client/assets/fonts");

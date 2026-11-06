@@ -90,11 +90,14 @@ const waitForState = async (expected: string, label: string): Promise<string> =>
   const end = Date.now() + 3000;
   let last: string | null = null;
   while (Date.now() < end) {
-    last = document.querySelector("[data-models-roles-state]")?.getAttribute("data-models-roles-state") ?? null;
+    last =
+      document
+        .querySelector("[data-models-roles-state]")
+        ?.getAttribute("data-models-roles-state") ?? null;
     if (last === expected) return last;
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
-  throw new Error("Timed out waiting for " + label + " (last: " + String(last) + ")");
+  throw new Error(`Timed out waiting for ${label} (last: ${String(last)})`);
 };
 const waitForText = async (read: () => string | undefined, label: string): Promise<string> => {
   const end = Date.now() + 3000;
@@ -103,10 +106,13 @@ const waitForText = async (read: () => string | undefined, label: string): Promi
     if (value !== undefined) return value;
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
-  throw new Error("Timed out waiting for " + label);
+  throw new Error(`Timed out waiting for ${label}`);
 };
 afterEach(() => {
-  for (const entry of pageMounted.splice(0)) { entry.handle.dispose(); entry.container.remove(); }
+  for (const entry of pageMounted.splice(0)) {
+    entry.handle.dispose();
+    entry.container.remove();
+  }
   window.history.replaceState({}, "", "/");
 });
 
@@ -116,11 +122,17 @@ describe("S381 Models/roles page state (read-only)", () => {
     const state = await waitForState("loading", "models-roles loading");
     expect(state).toBe("loading");
     expect(document.querySelector('[data-route="models"]')?.textContent).toContain("Runtime roles");
-    expect(document.querySelector('[data-route="models"]')?.textContent).toContain("Loading runtime role policy");
+    expect(document.querySelector('[data-route="models"]')?.textContent).toContain(
+      "Loading runtime role policy",
+    );
   });
 
   it("renders error with the readback message when either readback errors", async () => {
-    mountRoles("s381-error", async () => new Response("{}", { headers: { "content-type": "application/json" }, status: 200 }));
+    mountRoles(
+      "s381-error",
+      async () =>
+        new Response("{}", { headers: { "content-type": "application/json" }, status: 200 }),
+    );
     const state = await waitForState("error", "models-roles error");
     expect(state).toBe("error");
     expect(document.querySelector('[data-route="models"]')?.textContent).toMatch(/read failed/i);
@@ -134,10 +146,15 @@ describe("S381 Models/roles page state (read-only)", () => {
         : url.includes("endpoint")
           ? { endpoints: [] }
           : [];
-      return new Response(JSON.stringify(body), { headers: { "content-type": "application/json" }, status: 200 });
+      return new Response(JSON.stringify(body), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      });
     });
     const state = await waitForState("empty", "models-roles empty");
     expect(state).toBe("empty");
-    expect(document.querySelector('[data-route="models"]')?.textContent).toContain("No runtime role policy is available yet.");
+    expect(document.querySelector('[data-route="models"]')?.textContent).toContain(
+      "No runtime role policy is available yet.",
+    );
   });
 });

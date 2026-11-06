@@ -9,7 +9,12 @@ import { createRuntimeConfigClient } from "../src/runtime-config";
  * S219 proved the end-to-end save by hand and S221 pinned the command; neither asserts the network
  * request. This does: method, path, body, content-type and the parsed response.
  */
-interface Call { body?: string; headers?: Record<string, string>; method?: string; url: string }
+interface Call {
+  body?: string;
+  headers?: Record<string, string>;
+  method?: string;
+  url: string;
+}
 
 const clientWith = (calls: Call[], response: unknown, status = 200) =>
   createRuntimeConfigClient({
@@ -36,7 +41,10 @@ describe("S222 runtime config client", () => {
     assert.equal(calls[0]?.url, "http://localhost/api/role-model/runtime/config");
     assert.equal(calls[0]?.headers?.["content-type"], "application/json");
     assert.equal(calls[0]?.headers?.authorization, "Bearer op-token");
-    assert.deepEqual(JSON.parse(calls[0]?.body ?? "{}"), { execution_mode: "decision_only", version: "1.0" });
+    assert.deepEqual(JSON.parse(calls[0]?.body ?? "{}"), {
+      execution_mode: "decision_only",
+      version: "1.0",
+    });
     assert.equal(result.status, 200);
     assert.deepEqual(result.body, { applied: true, config: { version: "1.0" } });
   });

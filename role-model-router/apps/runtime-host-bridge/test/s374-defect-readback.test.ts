@@ -47,7 +47,9 @@ const storageAndOptions = () => {
   return { options, storage };
 };
 
-const readBodyRecords = (source: ReturnType<NonNullable<ReturnType<typeof createModuleHealthComposition>>["source"]>) => {
+const readBodyRecords = (
+  source: ReturnType<NonNullable<ReturnType<typeof createModuleHealthComposition>>["source"]>,
+) => {
   const result = handleLocalDiagnosticsRead(request(authHeaders), { ...baseOptions, source });
   return { records: result.body.records, state: result.body.state, result };
 };
@@ -59,14 +61,19 @@ describe("S421 authorized defect readback (edge -> writer -> authorized read)", 
     if (composition === undefined) throw new Error("composition expected");
     composition.reportRequestFailure(Cause.die(new Error("injected runtime defect")));
 
-    const businessRows = listRuntimeTelemetryRecords({ databasePath: storage.initialization.databasePath, limit: 50 });
+    const businessRows = listRuntimeTelemetryRecords({
+      databasePath: storage.initialization.databasePath,
+      limit: 50,
+    });
     expect(businessRows.some((row) => (row.errorClass ?? "").includes("cause.die"))).toBe(false);
 
     const { records, state } = readBodyRecords(composition.source());
     expect(state).not.toBe("disabled");
     const visible = records ?? [];
     expect(visible.filter((record) => record.code === "cause.die")).toHaveLength(1);
-    expect(visible.some((record) => record.code === "cause.die" && record.level === "error")).toBe(true);
+    expect(visible.some((record) => record.code === "cause.die" && record.level === "error")).toBe(
+      true,
+    );
     expect(visible.length).toBeLessThanOrEqual(MAX_DIAGNOSTICS_RECORDS);
     await storage.close();
   });
@@ -89,7 +96,7 @@ describe("S421 authorized defect readback (edge -> writer -> authorized read)", 
     const composition = createModuleHealthComposition(options);
     if (composition === undefined) throw new Error("composition expected");
     for (let index = 0; index < MAX_DIAGNOSTICS_RECORDS + 10; index += 1) {
-      composition.reportRequestFailure(Cause.fail(new Error("defect " + String(index))));
+      composition.reportRequestFailure(Cause.fail(new Error(`defect ${String(index)}`)));
     }
     const { records } = readBodyRecords(composition.source());
     expect((records ?? []).length).toBeLessThanOrEqual(MAX_DIAGNOSTICS_RECORDS);
@@ -101,10 +108,13 @@ describe("S421 authorized defect readback (edge -> writer -> authorized read)", 
     const composition = createModuleHealthComposition(options);
     if (composition === undefined) throw new Error("composition expected");
     composition.reportRequestFailure(Cause.fail(new Error("defect")));
-    const denied = handleLocalDiagnosticsRead(request({ ...authHeaders, authorization: "Bearer wrong" }), {
-      ...baseOptions,
-      source: composition.source(),
-    });
+    const denied = handleLocalDiagnosticsRead(
+      request({ ...authHeaders, authorization: "Bearer wrong" }),
+      {
+        ...baseOptions,
+        source: composition.source(),
+      },
+    );
     expect(denied.status).toBe(401);
     expect(denied.body.records).toBeUndefined();
   });

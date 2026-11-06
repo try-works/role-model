@@ -1,11 +1,11 @@
 import {
-  buildRequestsRankingQuery,
-  requestsRankingMetricOf,
-  requestsRankingTargetOf,
   type RequestsRankingField,
   type RequestsRankingQuery,
   type RequestsRankingRow,
   type RequestsRankingState,
+  buildRequestsRankingQuery,
+  requestsRankingMetricOf,
+  requestsRankingTargetOf,
 } from "./model";
 
 /**
@@ -32,7 +32,12 @@ export const planRequestsRankingFieldChange = (
     const token = state.token + 1;
     return {
       kind: "error",
-      state: { ...nextState, message: "Select a supported metric and ranking target.", status: "error", token },
+      state: {
+        ...nextState,
+        message: "Select a supported metric and ranking target.",
+        status: "error",
+        token,
+      },
     };
   }
   const token = state.token + 1;

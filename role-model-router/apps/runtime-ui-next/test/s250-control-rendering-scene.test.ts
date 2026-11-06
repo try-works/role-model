@@ -45,7 +45,9 @@ describe("control action rendering", () => {
   test("success paints the completion message", () => {
     scene(
       { update: shellUpdate, view },
-      given(modelWithProviders({ actionMessage: "Providers action completed.", actionStatus: "ok" })),
+      given(
+        modelWithProviders({ actionMessage: "Providers action completed.", actionStatus: "ok" }),
+      ),
       expect(text("Providers action completed.")).toExist(),
     );
   });
@@ -53,7 +55,12 @@ describe("control action rendering", () => {
   test("failure paints the bounded error phrase", () => {
     scene(
       { update: shellUpdate, view },
-      given(modelWithProviders({ actionMessage: "Providers action failed: HTTP 500", actionStatus: "error" })),
+      given(
+        modelWithProviders({
+          actionMessage: "Providers action failed: HTTP 500",
+          actionStatus: "error",
+        }),
+      ),
       expect(text("Providers action failed: HTTP 500")).toExist(),
     );
   });

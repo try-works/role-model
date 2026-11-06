@@ -15,7 +15,7 @@ const recorder = () => {
     released,
     owner: (kind: string, fail = false) => ({
       acquire: async () => {
-        if (fail) throw new Error(kind + " failed");
+        if (fail) throw new Error(`${kind} failed`);
         return { kind };
       },
       kind,
@@ -46,9 +46,29 @@ describe("S117 partial shutdown on a failed start", () => {
   it("keeps releasing the rest when one rollback release itself throws", async () => {
     const released: string[] = [];
     const result = await acquireWithPartialShutdown([
-      { acquire: async () => ({}), kind: "server", release: async () => { released.push("server"); } },
-      { acquire: async () => ({}), kind: "backend", release: async () => { throw new Error("backend release failed"); } },
-      { acquire: async () => { throw new Error("stop"); }, kind: "extension", release: async () => { released.push("extension"); } },
+      {
+        acquire: async () => ({}),
+        kind: "server",
+        release: async () => {
+          released.push("server");
+        },
+      },
+      {
+        acquire: async () => ({}),
+        kind: "backend",
+        release: async () => {
+          throw new Error("backend release failed");
+        },
+      },
+      {
+        acquire: async () => {
+          throw new Error("stop");
+        },
+        kind: "extension",
+        release: async () => {
+          released.push("extension");
+        },
+      },
     ]);
     expect(result.ok).toBe(false);
     expect(released).toEqual(["server"]);
@@ -59,7 +79,11 @@ describe("S117 partial shutdown on a failed start", () => {
 
   it("releases in reverse start order on a clean shutdown", async () => {
     const { owner, released } = recorder();
-    const result = await acquireWithPartialShutdown([owner("server"), owner("backend"), owner("extension")]);
+    const result = await acquireWithPartialShutdown([
+      owner("server"),
+      owner("backend"),
+      owner("extension"),
+    ]);
     expect(result.ok).toBe(true);
     if (result.ok === true) {
       await result.release();
@@ -69,6 +93,8 @@ describe("S117 partial shutdown on a failed start", () => {
 
   it("does not throw on a failed start - it returns a typed failure", async () => {
     const { owner } = recorder();
-    await expect(acquireWithPartialShutdown([owner("server", true)])).resolves.toMatchObject({ ok: false });
+    await expect(acquireWithPartialShutdown([owner("server", true)])).resolves.toMatchObject({
+      ok: false,
+    });
   });
 });

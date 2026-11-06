@@ -3,10 +3,10 @@ import { Effect } from "effect";
 import { renderToString } from "@role-model-router/foldkit/experimental/server";
 import { describe, expect, it } from "vitest";
 
-import { REFERENCE_TITLES } from "./support/reference-titles";
-import { shellModel } from "./support/runtime-shell";
 import type { Model } from "../src/model";
 import { view } from "../src/view";
+import { REFERENCE_TITLES } from "./support/reference-titles";
+import { shellModel } from "./support/runtime-shell";
 
 /**
  * S567: the page-title story. The shipped 0.0.20 shell shows the createRoute title of the page in
@@ -62,14 +62,19 @@ const CASES = [
   ["Studio", "/app/studio/rerank", "rerank"],
   ["Studio", "/app/studio/advanced", "advanced"],
 ] as const;
-;
 
 const renderTitle = async (tag: string, path: string, tab: string | undefined): Promise<string> => {
   const base = shellModel({ route: { _tag: tag } as Model["route"] });
   const model: Model =
     tab === undefined
       ? base
-      : { ...base, studio: { ...(base.studio ?? { tab: "chat" } as never), tab: tab as never } as Model["studio"] };
+      : {
+          ...base,
+          studio: {
+            ...(base.studio ?? ({ tab: "chat" } as never)),
+            tab: tab as never,
+          } as Model["studio"],
+        };
   const rendered = await Effect.runPromise(
     renderToString({ init: () => ({ model, commands: [] }), view }, { isHydratable: false }),
   );
@@ -80,7 +85,7 @@ const renderTitle = async (tag: string, path: string, tab: string | undefined): 
 
 describe("S567 page titles match the 0.0.20 reference", () => {
   for (const [tag, path, tab] of CASES) {
-    it(`${tag}${tab === undefined ? "" : ":" + tab} shows the reference title`, async () => {
+    it(`${tag}${tab === undefined ? "" : `:${tab}`} shows the reference title`, async () => {
       const expected = REFERENCE_TITLES[path];
       expect(expected, path).toBeDefined();
       await expect(renderTitle(tag, path, tab)).resolves.toBe(expected);

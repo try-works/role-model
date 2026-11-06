@@ -1,31 +1,65 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import { mountShell } from "../src/mount";
 import { Message } from "../src/message";
+import { mountShell } from "../src/mount";
 import { createReadbackClients } from "../src/readback";
 import { shellModel, shellUpdate } from "./support/runtime-shell";
 
-const suite = { cases: [{ benchmark_eligible: true, case_id: "c1", category: "knowledge", difficulty_bucket: "easy", quick_benchmark: true }], description: "fixture", suite_id: "suite-1", suite_version: "1.0", task_type: "capability" };
-const summary = { completedAtMs: null, judgeEndpointId: null, judgeModelId: null, mode: null, runId: null, subjects: [], suiteId: "suite-1" };
+const suite = {
+  cases: [
+    {
+      benchmark_eligible: true,
+      case_id: "c1",
+      category: "knowledge",
+      difficulty_bucket: "easy",
+      quick_benchmark: true,
+    },
+  ],
+  description: "fixture",
+  suite_id: "suite-1",
+  suite_version: "1.0",
+  task_type: "capability",
+};
+const summary = {
+  completedAtMs: null,
+  judgeEndpointId: null,
+  judgeModelId: null,
+  mode: null,
+  runId: null,
+  subjects: [],
+  suiteId: "suite-1",
+};
 const runs: ReadonlyArray<unknown> = [];
 const endpoints = [
   { benchmarkEligible: true, endpointId: "ep-a", modelId: "model-a", sourceType: "remote" },
   { benchmarkEligible: true, endpointId: "ep-b", modelId: "model-b", sourceType: "remote" },
 ];
 const responseFor = (path: string): Response => {
-  const body = path.includes("/benchmark/suite") ? suite
-    : path.includes("/benchmark/summary") ? summary
-      : path.includes("/benchmark/runs") ? runs
-        : path.includes("/benchmark/preferences") ? {}
-          : path.includes("/benchmark/active-run") ? {}
-            : path.includes("/api/role-model/endpoints") ? endpoints
+  const body = path.includes("/benchmark/suite")
+    ? suite
+    : path.includes("/benchmark/summary")
+      ? summary
+      : path.includes("/benchmark/runs")
+        ? runs
+        : path.includes("/benchmark/preferences")
+          ? {}
+          : path.includes("/benchmark/active-run")
+            ? {}
+            : path.includes("/api/role-model/endpoints")
+              ? endpoints
               : { rows: [] };
-  return new Response(JSON.stringify(body), { headers: { "content-type": "application/json" }, status: 200 });
+  return new Response(JSON.stringify(body), {
+    headers: { "content-type": "application/json" },
+    status: 200,
+  });
 };
 
 const mounted: Array<{ container: HTMLElement; handle: { dispose(): void } }> = [];
 afterEach(() => {
-  for (const entry of mounted.splice(0)) { entry.handle.dispose(); entry.container.remove(); }
+  for (const entry of mounted.splice(0)) {
+    entry.handle.dispose();
+    entry.container.remove();
+  }
   window.history.replaceState({}, "", "/");
 });
 
@@ -55,7 +89,11 @@ describe("S633 benchmark endpoint loading", () => {
     const container = document.createElement("div");
     container.id = "s633-benchmark";
     document.body.append(container);
-    const handle = mountShell(container, { readbackReaders: createReadbackClients({ fetchImpl: async (input) => responseFor(String(input)) }) });
+    const handle = mountShell(container, {
+      readbackReaders: createReadbackClients({
+        fetchImpl: async (input) => responseFor(String(input)),
+      }),
+    });
     mounted.push({ container, handle });
     const firstCheckbox = await waitFor("input[type='checkbox'][aria-label^='Select ']");
     expect(firstCheckbox).not.toBeNull();

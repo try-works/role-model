@@ -236,7 +236,8 @@ export function createReplayLedger(options: {
     dispatchesPerDay:
       options.limits?.dispatchesPerDay ?? DEFAULT_REPLAY_LEDGER_LIMITS.dispatchesPerDay,
     hardCounterfactualLimit:
-      options.limits?.hardCounterfactualLimit ?? DEFAULT_REPLAY_LEDGER_LIMITS.hardCounterfactualLimit,
+      options.limits?.hardCounterfactualLimit ??
+      DEFAULT_REPLAY_LEDGER_LIMITS.hardCounterfactualLimit,
     enforced: options.limits?.enforced ?? DEFAULT_REPLAY_LEDGER_LIMITS.enforced,
   };
   const currentLimits = (): ReplayLedgerLimits => {

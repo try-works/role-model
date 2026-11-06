@@ -1,14 +1,14 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  type MetadataCacheValue,
+  ServerJoinTimeoutError,
+  type ServerTransport,
   composeBackendOwner,
   composeServerOwner,
-  testSeamBackendOwner,
   isComposedServerOwner,
   runReleaseAll,
-  ServerJoinTimeoutError,
-  type MetadataCacheValue,
-  type ServerTransport,
+  testSeamBackendOwner,
 } from "../src/composition-dag.js";
 
 /**
@@ -17,7 +17,13 @@ import {
  * earlier one fails (AggregateError, no early exit).
  */
 
-const fakeBackend = () => ({ effectiveRegistry: { diagnostics: [], endpoints: [], lifecycleSummary: { active: 0, degraded: 0, offline: 0 } } });
+const fakeBackend = () => ({
+  effectiveRegistry: {
+    diagnostics: [],
+    endpoints: [],
+    lifecycleSummary: { active: 0, degraded: 0, offline: 0 },
+  },
+});
 
 const makeComposedBackend = (order: string[], closeImpl?: () => Promise<void>) =>
   composeBackendOwner({
@@ -25,7 +31,11 @@ const makeComposedBackend = (order: string[], closeImpl?: () => Promise<void>) =
     // SAFETY: test-only structural cast required by the composer input types.
     emptyCatalog: { catalogVersion: "1", source: {} } as never,
     // SAFETY: test-only structural cast required by the composer input types.
-    emptyRegistry: { diagnostics: [], endpoints: [], lifecycleSummary: { active: 0, degraded: 0, offline: 0 } } as never,
+    emptyRegistry: {
+      diagnostics: [],
+      endpoints: [],
+      lifecycleSummary: { active: 0, degraded: 0, offline: 0 },
+    } as never,
     host: "127.0.0.1",
     overrides: {},
     port: 0,
@@ -41,10 +51,16 @@ const makeTransport = (order: string[], failClose = false): ServerTransport => (
   },
   createListener: () => () => {},
   createServer: () => ({ handle: true }),
-  interrupt: () => { order.push("interrupt"); },
-  join: async () => { order.push("join"); },
+  interrupt: () => {
+    order.push("interrupt");
+  },
+  join: async () => {
+    order.push("join");
+  },
   listen: async () => 4321,
-  stopAccepting: async () => { order.push("stop-accepting"); },
+  stopAccepting: async () => {
+    order.push("stop-accepting");
+  },
 });
 
 const handlerFactory = () => async () => {};
@@ -56,25 +72,48 @@ describe("S321 partial shutdown ordering", () => {
       order.push("first");
       throw new Error("first release failed");
     };
-    await expect(runReleaseAll([failing, async () => { order.push("second"); }, async () => { order.push("third"); }]))
-      .rejects.toBeInstanceOf(AggregateError);
+    await expect(
+      runReleaseAll([
+        failing,
+        async () => {
+          order.push("second");
+        },
+        async () => {
+          order.push("third");
+        },
+      ]),
+    ).rejects.toBeInstanceOf(AggregateError);
     expect(order).toEqual(["first", "second", "third"]);
   });
 
   test("server shutdown order: stop admission -> join -> interrupt -> close transport -> close backend", async () => {
     const order: string[] = [];
-    const backend = makeComposedBackend(order, async () => { order.push("backend-close"); });
+    const backend = makeComposedBackend(order, async () => {
+      order.push("backend-close");
+    });
     const server = composeServerOwner({ backend, handlerFactory, transport: makeTransport(order) });
     expect(isComposedServerOwner(server)).toBe(true);
     await server.start();
     await server.shutdown();
-    expect(order).toEqual(["stop-accepting", "join", "interrupt", "transport-close", "backend-close"]);
+    expect(order).toEqual([
+      "stop-accepting",
+      "join",
+      "interrupt",
+      "transport-close",
+      "backend-close",
+    ]);
   });
 
   test("a failing dependency close does not skip later releases (backend close still runs)", async () => {
     const order: string[] = [];
-    const backend = makeComposedBackend(order, async () => { order.push("backend-close"); });
-    const server = composeServerOwner({ backend, handlerFactory, transport: makeTransport(order, true) });
+    const backend = makeComposedBackend(order, async () => {
+      order.push("backend-close");
+    });
+    const server = composeServerOwner({
+      backend,
+      handlerFactory,
+      transport: makeTransport(order, true),
+    });
     await server.start();
     await expect(server.shutdown()).rejects.toBeInstanceOf(AggregateError);
     expect(order).toContain("backend-close");
@@ -100,14 +139,23 @@ describe("S321 partial shutdown ordering", () => {
   test("production backend close runs last and exactly once when DAG shutdown then hostScope close runs", async () => {
     const { onceClose } = await import("../src/composition-dag.js");
     let closes = 0;
-    const closePackagedRuntimeOnce = onceClose(async () => { closes += 1; });
+    const closePackagedRuntimeOnce = onceClose(async () => {
+      closes += 1;
+    });
     const order: string[] = [];
     const backend = composeBackendOwner({
-      closeBackend: async () => { await closePackagedRuntimeOnce(); order.push("backend-close"); },
-    // SAFETY: test-only structural cast required by the composer input types.
+      closeBackend: async () => {
+        await closePackagedRuntimeOnce();
+        order.push("backend-close");
+      },
+      // SAFETY: test-only structural cast required by the composer input types.
       emptyCatalog: { catalogVersion: "1", source: {} } as never,
-    // SAFETY: test-only structural cast required by the composer input types.
-      emptyRegistry: { diagnostics: [], endpoints: [], lifecycleSummary: { active: 0, degraded: 0, offline: 0 } } as never,
+      // SAFETY: test-only structural cast required by the composer input types.
+      emptyRegistry: {
+        diagnostics: [],
+        endpoints: [],
+        lifecycleSummary: { active: 0, degraded: 0, offline: 0 },
+      } as never,
       host: "127.0.0.1",
       overrides: {},
       port: 0,
@@ -121,7 +169,13 @@ describe("S321 partial shutdown ordering", () => {
     await server.shutdown();
     // simulates the later hostScope.close() release of the same packaged runtime resource
     await closePackagedRuntimeOnce();
-    expect(order).toEqual(["stop-accepting", "join", "interrupt", "transport-close", "backend-close"]);
+    expect(order).toEqual([
+      "stop-accepting",
+      "join",
+      "interrupt",
+      "transport-close",
+      "backend-close",
+    ]);
     expect(closes).toBe(1);
   });
 
@@ -138,14 +192,22 @@ describe("S321 partial shutdown ordering", () => {
   });
 
   test("bounded join: a hung keep-alive connection does not block shutdown; interrupt runs after the bound", async () => {
-    const { composeBackendOwner: composeBackend, onceClose } = await import("../src/composition-dag.js");
+    const { composeBackendOwner: composeBackend, onceClose } = await import(
+      "../src/composition-dag.js"
+    );
     const order: string[] = [];
     const backend = composeBackend({
-      closeBackend: async () => { order.push("backend-close"); },
-    // SAFETY: test-only structural cast required by the composer input types.
+      closeBackend: async () => {
+        order.push("backend-close");
+      },
+      // SAFETY: test-only structural cast required by the composer input types.
       emptyCatalog: { catalogVersion: "1", source: {} } as never,
-    // SAFETY: test-only structural cast required by the composer input types.
-      emptyRegistry: { diagnostics: [], endpoints: [], lifecycleSummary: { active: 0, degraded: 0, offline: 0 } } as never,
+      // SAFETY: test-only structural cast required by the composer input types.
+      emptyRegistry: {
+        diagnostics: [],
+        endpoints: [],
+        lifecycleSummary: { active: 0, degraded: 0, offline: 0 },
+      } as never,
       host: "127.0.0.1",
       overrides: {},
       port: 0,
@@ -154,15 +216,29 @@ describe("S321 partial shutdown ordering", () => {
       resolveBackend: () => fakeBackend(),
     });
     const hungTransport: ServerTransport = {
-      close: async () => { order.push("transport-close"); },
+      close: async () => {
+        order.push("transport-close");
+      },
       createListener: () => () => {},
       createServer: () => ({ handle: true }),
-      interrupt: () => { order.push("interrupt"); },
-      join: () => new Promise<void>(() => { order.push("join"); }),
+      interrupt: () => {
+        order.push("interrupt");
+      },
+      join: () =>
+        new Promise<void>(() => {
+          order.push("join");
+        }),
       listen: async () => 9999,
-      stopAccepting: async () => { order.push("stop-accepting"); },
+      stopAccepting: async () => {
+        order.push("stop-accepting");
+      },
     };
-    const server = composeServerOwner({ backend, handlerFactory, joinTimeoutMs: 25, transport: hungTransport });
+    const server = composeServerOwner({
+      backend,
+      handlerFactory,
+      joinTimeoutMs: 25,
+      transport: hungTransport,
+    });
     await server.start();
     const startedAt = Date.now();
     const failure: unknown = await server.shutdown().catch((error: Error) => error);
@@ -170,7 +246,13 @@ describe("S321 partial shutdown ordering", () => {
     const aggregate = failure instanceof AggregateError ? failure : undefined;
     expect(aggregate?.errors.some((entry) => entry instanceof ServerJoinTimeoutError)).toBe(true);
     expect(Date.now() - startedAt).toBeLessThan(2000);
-    expect(order).toEqual(["stop-accepting", "join", "interrupt", "transport-close", "backend-close"]);
+    expect(order).toEqual([
+      "stop-accepting",
+      "join",
+      "interrupt",
+      "transport-close",
+      "backend-close",
+    ]);
   });
 
   test("packaged runtime Effect scope closes exactly once across DAG shutdown and hostScope close", async () => {
@@ -178,7 +260,14 @@ describe("S321 partial shutdown ordering", () => {
     const { Effect, Exit, Scope } = await import("effect");
     let finalizers = 0;
     const scope = Effect.runSync(Scope.make());
-    await Effect.runPromise(Scope.addFinalizer(scope, Effect.sync(() => { finalizers += 1; })));
+    await Effect.runPromise(
+      Scope.addFinalizer(
+        scope,
+        Effect.sync(() => {
+          finalizers += 1;
+        }),
+      ),
+    );
     const closeScopeOnce = onceClose(async () => {
       await Effect.runPromise(Scope.close(scope, Exit.void));
     });

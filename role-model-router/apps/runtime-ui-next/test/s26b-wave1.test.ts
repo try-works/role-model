@@ -35,7 +35,10 @@ const mountAt = (id: string, pathname: string, readbackFetchImpl?: typeof fetch)
   const container = document.createElement("div");
   container.id = id;
   document.body.append(container);
-  const handle = mountShell(container, readbackFetchImpl === undefined ? {} : { readbackFetchImpl });
+  const handle = mountShell(
+    container,
+    readbackFetchImpl === undefined ? {} : { readbackFetchImpl },
+  );
   mounted.push({ container, handle });
   return { container, handle };
 };
@@ -63,7 +66,16 @@ describe("S26b wave 1 shell entries", () => {
     );
     const sections = [...document.querySelectorAll("aside[data-shell-sidebar] a[data-nav]")];
     expect(sections.map((link) => link.textContent)).toEqual([
-      "Overview", "Studio", "Local", "Remote", "Models", "Router", "Observe", "Connect", "System", "Learning",
+      "Overview",
+      "Studio",
+      "Local",
+      "Remote",
+      "Models",
+      "Router",
+      "Observe",
+      "Connect",
+      "System",
+      "Learning",
     ]);
 
     const models = document.querySelector<HTMLAnchorElement>("a[data-nav='models']");
@@ -75,7 +87,9 @@ describe("S26b wave 1 shell entries", () => {
       () => (document.querySelector("[data-shell-route='Models']") ? true : undefined),
       "the models route",
     );
-    expect(document.querySelector("[data-shell-route='Models']")?.textContent).toBe("Configured models");
+    expect(document.querySelector("[data-shell-route='Models']")?.textContent).toBe(
+      "Configured models",
+    );
     expect(document.querySelectorAll("aside[data-shell-sidebar]")).toHaveLength(1);
     expect(document.querySelector("a[data-nav='models']")?.getAttribute("aria-current")).toBe(
       "page",
@@ -90,12 +104,31 @@ describe("S26b wave 1 shell entries", () => {
     mountAt("s26b-index", "/", async (input) => {
       const url = new URL(String(input), "http://localhost");
       if (url.pathname === "/api/metrics/page") {
-        return new Response(JSON.stringify({ items: [{ id: 1, timestamp: "2026-01-01T00:00:00.000Z", duration_ms: 10, resp_status_code: 200, modelId: "model-a" }], window: { startAtMs: Date.parse("2026-01-01T00:00:00.000Z"), endAtMs: Date.parse("2026-01-02T00:00:00.000Z"), asOfMs: 0 } }), { status: 200 });
+        return new Response(
+          JSON.stringify({
+            items: [
+              {
+                id: 1,
+                timestamp: "2026-01-01T00:00:00.000Z",
+                duration_ms: 10,
+                resp_status_code: 200,
+                modelId: "model-a",
+              },
+            ],
+            window: {
+              startAtMs: Date.parse("2026-01-01T00:00:00.000Z"),
+              endAtMs: Date.parse("2026-01-02T00:00:00.000Z"),
+              asOfMs: 0,
+            },
+          }),
+          { status: 200 },
+        );
       }
       return new Response("{}", { status: 200 });
     });
     const page = await waitFor(
-      () => document.querySelector("[data-route='index'][data-overview-state='success']") ?? undefined,
+      () =>
+        document.querySelector("[data-route='index'][data-overview-state='success']") ?? undefined,
       "index route",
     );
     expect(page.getAttribute("data-overview-state")).toBe("success");
@@ -140,7 +173,9 @@ describe("S26b wave 1 shell entries", () => {
       expect(document.documentElement.classList.contains("dark")).toBe(true);
 
       const toggle = await waitFor(
-        () => document.querySelector<HTMLButtonElement>("[data-slot='role-model-theme-toggle']") ?? undefined,
+        () =>
+          document.querySelector<HTMLButtonElement>("[data-slot='role-model-theme-toggle']") ??
+          undefined,
         "theme toggle",
       );
       toggle.click();

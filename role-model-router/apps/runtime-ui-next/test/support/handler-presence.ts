@@ -22,7 +22,12 @@ import { shellModel } from "./runtime-shell";
 
 type RecordedAttr = Readonly<{ args: ReadonlyArray<unknown>; kind: "attr"; name: string }>;
 type RecordedText = Readonly<{ kind: "text"; text: string }>;
-type RecordedNode = Readonly<{ attrs: ReadonlyArray<RecordedAttr>; children: ReadonlyArray<RecordedChild>; kind: "node"; tag: string }>;
+type RecordedNode = Readonly<{
+  attrs: ReadonlyArray<RecordedAttr>;
+  children: ReadonlyArray<RecordedChild>;
+  kind: "node";
+  tag: string;
+}>;
 type RecordedChild = RecordedNode | RecordedText;
 
 export interface InteractiveElement {
@@ -63,16 +68,52 @@ export interface InventoryRoute {
 }
 export interface Inventory {
   readonly routes: ReadonlyArray<InventoryRoute>;
-  readonly totals: Readonly<{ deadControls: number; disabledControls: number; elements: number; routes: number }>;
+  readonly totals: Readonly<{
+    deadControls: number;
+    disabledControls: number;
+    elements: number;
+    routes: number;
+  }>;
 }
 
-export const INTERACTIVE_TAGS: ReadonlySet<string> = new Set(["a", "button", "input", "select", "textarea"]);
-export const INTERACTIVE_ROLES: ReadonlySet<string> = new Set(["button", "option", "tab", "link", "switch", "checkbox", "menuitem", "radio"]);
-export const WIRING_EVENTS: ReadonlySet<string> = new Set(["click", "input", "change", "submit", "keydown", "keyup", "pointerdown", "pointerup", "touchstart", "mousedown", "focus", "blur"]);
+export const INTERACTIVE_TAGS: ReadonlySet<string> = new Set([
+  "a",
+  "button",
+  "input",
+  "select",
+  "textarea",
+]);
+export const INTERACTIVE_ROLES: ReadonlySet<string> = new Set([
+  "button",
+  "option",
+  "tab",
+  "link",
+  "switch",
+  "checkbox",
+  "menuitem",
+  "radio",
+]);
+export const WIRING_EVENTS: ReadonlySet<string> = new Set([
+  "click",
+  "input",
+  "change",
+  "submit",
+  "keydown",
+  "keyup",
+  "pointerdown",
+  "pointerup",
+  "touchstart",
+  "mousedown",
+  "focus",
+  "blur",
+]);
 
-const isAttr = (value: unknown): value is RecordedAttr => value !== null && typeof value === "object" && (value as { kind?: string }).kind === "attr";
-const isNode = (value: unknown): value is RecordedNode => value !== null && typeof value === "object" && (value as { kind?: string }).kind === "node";
-const isText = (value: unknown): value is RecordedText => value !== null && typeof value === "object" && (value as { kind?: string }).kind === "text";
+const isAttr = (value: unknown): value is RecordedAttr =>
+  value !== null && typeof value === "object" && (value as { kind?: string }).kind === "attr";
+const isNode = (value: unknown): value is RecordedNode =>
+  value !== null && typeof value === "object" && (value as { kind?: string }).kind === "node";
+const isText = (value: unknown): value is RecordedText =>
+  value !== null && typeof value === "object" && (value as { kind?: string }).kind === "text";
 
 const flatten = (value: unknown, out: unknown[]): void => {
   if (Array.isArray(value)) {
@@ -96,7 +137,8 @@ export const recordingHtmlBuilder = <MessageT>(): HtmlBuilder<MessageT> => {
     for (const item of items) {
       if (isAttr(item)) attrs.push(item);
       else if (isNode(item) || isText(item)) children.push(item);
-      else if (typeof item === "string" || typeof item === "number") children.push({ kind: "text", text: String(item) });
+      else if (typeof item === "string" || typeof item === "number")
+        children.push({ kind: "text", text: String(item) });
     }
     return { attrs, children, kind: "node", tag };
   };
@@ -112,8 +154,14 @@ export const recordingHtmlBuilder = <MessageT>(): HtmlBuilder<MessageT> => {
           const inner: unknown[] = [];
           try {
             const candidate = config as { model?: unknown; view?: unknown } | null;
-            if (candidate !== null && typeof candidate === "object" && typeof candidate.view === "function") {
-              inner.push((candidate.view as (model: unknown, h: unknown) => unknown)(candidate.model, proxy));
+            if (
+              candidate !== null &&
+              typeof candidate === "object" &&
+              typeof candidate.view === "function"
+            ) {
+              inner.push(
+                (candidate.view as (model: unknown, h: unknown) => unknown)(candidate.model, proxy),
+              );
             }
           } catch {
             // An opaque submodel still renders its container; its inner controls stay uninspected.
@@ -121,7 +169,8 @@ export const recordingHtmlBuilder = <MessageT>(): HtmlBuilder<MessageT> => {
           return node("submodel", inner);
         };
       }
-      if (/^[A-Z]/.test(key)) return (...args: ReadonlyArray<unknown>) => ({ args, kind: "attr" as const, name: key });
+      if (/^[A-Z]/.test(key))
+        return (...args: ReadonlyArray<unknown>) => ({ args, kind: "attr" as const, name: key });
       return (...args: ReadonlyArray<unknown>) => node(key, args);
     },
   });
@@ -138,7 +187,8 @@ const rawAttribute = (attrs: ReadonlyArray<RecordedAttr>, name: string): string 
   for (let index = attrs.length - 1; index >= 0; index -= 1) {
     if (attrs[index].name !== "Attribute") continue;
     const [rawName, rawValue] = attrs[index].args;
-    if (String(rawName).toLowerCase() === name.toLowerCase()) return rawValue === undefined ? "" : String(rawValue);
+    if (String(rawName).toLowerCase() === name.toLowerCase())
+      return rawValue === undefined ? "" : String(rawValue);
   }
   return null;
 };
@@ -161,18 +211,24 @@ const eventForAttribute = (name: string): string | null => {
 
 const describe = (node: RecordedNode, path: string): InteractiveElement | null => {
   const tag = node.tag.toLowerCase();
-  const role = attrValue(node.attrs, "Role") === undefined ? rawAttribute(node.attrs, "role") : String(attrValue(node.attrs, "Role"));
+  const role =
+    attrValue(node.attrs, "Role") === undefined
+      ? rawAttribute(node.attrs, "role")
+      : String(attrValue(node.attrs, "Role"));
   // A native <option> is never independently wirable: the select owns the change event, and counting the
   // option as a dead control inflated the baseline (15 dead per page for one unwired select). Options are
   // part of the select's inventory; role=option on a non-option element (a custom listbox row) still counts.
-  const interactive = INTERACTIVE_TAGS.has(tag) || (tag !== "option" && role !== null && INTERACTIVE_ROLES.has(role));
+  const interactive =
+    INTERACTIVE_TAGS.has(tag) || (tag !== "option" && role !== null && INTERACTIVE_ROLES.has(role));
   if (!interactive) return null;
   const handlers: string[] = [];
   for (const attr of node.attrs) {
     const event = eventForAttribute(attr.name);
     if (event !== null) handlers.push(event);
   }
-  const rawHandler = node.attrs.find((attr) => attr.name === "Attribute" && String(attr.args[0]).toLowerCase().startsWith("on"));
+  const rawHandler = node.attrs.find(
+    (attr) => attr.name === "Attribute" && String(attr.args[0]).toLowerCase().startsWith("on"),
+  );
   if (rawHandler !== undefined) handlers.push(String(rawHandler.args[0]).toLowerCase().slice(2));
   const uniqueHandlers = [...new Set(handlers)].sort();
   const hrefValue = attrValue(node.attrs, "Href");
@@ -193,13 +249,21 @@ const describe = (node: RecordedNode, path: string): InteractiveElement | null =
   const textParts: string[] = [];
   collectText(node, textParts);
   const text = normalize(textParts.join(" "));
-  const label = normalize(String(labelled ?? "")) || text.slice(0, 80) || "(unlabelled " + tag + ")";
+  const label = normalize(String(labelled ?? "")) || text.slice(0, 80) || `(unlabelled ${tag})`;
   const wired = uniqueHandlers.length > 0 || (tag === "a" && href !== null && href.length > 0);
   return {
     attributeNames: node.attrs.map((attr) => attr.name),
     dead: !wired && !disabled,
     disabled,
-    disabledReason: disabled ? normalize(String(attrValue(node.attrs, "DisabledReason") ?? rawAttribute(node.attrs, "data-disabled-reason") ?? "")) || null : null,
+    disabledReason: disabled
+      ? normalize(
+          String(
+            attrValue(node.attrs, "DisabledReason") ??
+              rawAttribute(node.attrs, "data-disabled-reason") ??
+              "",
+          ),
+        ) || null
+      : null,
     handlers: uniqueHandlers,
     href,
     label,
@@ -219,27 +283,29 @@ const walk = (node: RecordedNode, path: string, out: InteractiveElement[]): void
     const key = child.tag.toLowerCase();
     const next = (counters.get(key) ?? 0) + 1;
     counters.set(key, next);
-    walk(child, path + ">" + key + "[" + next + "]", out);
+    walk(child, `${path}>${key}[${next}]`, out);
   }
 };
 
 /** Every interactive element in a recorded route Html tree, in document order, with a stable path. */
 export const interactiveElements = (html: unknown): InteractiveElement[] => {
   const out: InteractiveElement[] = [];
-  if (isNode(html)) walk(html, html.tag.toLowerCase() + "[1]", out);
+  if (isNode(html)) walk(html, `${html.tag.toLowerCase()}[1]`, out);
   else {
     const items: unknown[] = [];
     flatten(html, items);
-    for (const item of items) if (isNode(item)) walk(item, item.tag.toLowerCase() + "[1]", out);
+    for (const item of items) if (isNode(item)) walk(item, `${item.tag.toLowerCase()}[1]`, out);
   }
   return out;
 };
 
 /** The controls a user can reach whose wiring is absent (disabled controls are reported, not dead). */
-export const unwiredControls = (html: unknown): InteractiveElement[] => interactiveElements(html).filter((entry) => entry.dead);
+export const unwiredControls = (html: unknown): InteractiveElement[] =>
+  interactiveElements(html).filter((entry) => entry.dead);
 
 /** Stable identity of one dead control across scans (route + structural path + tag + label). */
-export const deadKey = (route: string, entry: InventoryEntry): string => route + "|" + entry.path + "|" + entry.tag + "|" + entry.label;
+export const deadKey = (route: string, entry: InventoryEntry): string =>
+  `${route}|${entry.path}|${entry.tag}|${entry.label}`;
 
 export interface DeadKeyComparison {
   /** Controls present now that the baseline did not have: a regression, and the only failing direction. */
@@ -254,8 +320,12 @@ export interface DeadKeyComparison {
  * directions are exercised with synthetic inventories instead of only comparing the scan to itself.
  */
 export const compareDeadKeys = (actual: Inventory, baseline: Inventory): DeadKeyComparison => {
-  const actualDead = new Set(actual.routes.flatMap((route) => route.unwired.map((entry) => deadKey(route.route, entry))));
-  const baselineDead = new Set(baseline.routes.flatMap((route) => route.unwired.map((entry) => deadKey(route.route, entry))));
+  const actualDead = new Set(
+    actual.routes.flatMap((route) => route.unwired.map((entry) => deadKey(route.route, entry))),
+  );
+  const baselineDead = new Set(
+    baseline.routes.flatMap((route) => route.unwired.map((entry) => deadKey(route.route, entry))),
+  );
   return {
     added: [...actualDead].filter((key) => !baselineDead.has(key)).sort(),
     removed: [...baselineDead].filter((key) => !actualDead.has(key)).sort(),
@@ -312,7 +382,12 @@ export const renderInventory = (scans: ReadonlyArray<RouteScan>): Inventory => {
     disabledCount: scan.disabled.length,
     elementCount: scan.elements.length,
     route: scan.route,
-    unwired: scan.unwired.map((entry) => ({ label: entry.label, path: entry.path, role: entry.role, tag: entry.tag })),
+    unwired: scan.unwired.map((entry) => ({
+      label: entry.label,
+      path: entry.path,
+      role: entry.role,
+      tag: entry.tag,
+    })),
     wiredCount: scan.wired.length,
   }));
   return {
@@ -330,8 +405,11 @@ export const renderInventory = (scans: ReadonlyArray<RouteScan>): Inventory => {
 export const formatInventoryText = (inventory: Inventory): string =>
   inventory.routes
     .map((route) => {
-      const head = route.route + ": " + String(route.elementCount) + " interactive, " + String(route.wiredCount) + " wired, " + String(route.disabledCount) + " disabled, " + String(route.unwired.length) + " dead";
-      const lines = route.unwired.map((entry) => "  - " + entry.tag + (entry.role === null ? "" : "[role=" + entry.role + "]") + " " + JSON.stringify(entry.label) + " @ " + entry.path);
+      const head = `${route.route}: ${String(route.elementCount)} interactive, ${String(route.wiredCount)} wired, ${String(route.disabledCount)} disabled, ${String(route.unwired.length)} dead`;
+      const lines = route.unwired.map(
+        (entry) =>
+          `  - ${entry.tag}${entry.role === null ? "" : `[role=${entry.role}]`} ${JSON.stringify(entry.label)} @ ${entry.path}`,
+      );
       return [head, ...lines].join("\n");
     })
     .join("\n");

@@ -47,7 +47,7 @@ interface RouteCase {
 
 const fixture = (key: string): unknown =>
   JSON.parse(
-    readFileSync(path.join(import.meta.dirname, "fixtures", "s26o", key + ".json"), "utf8"),
+    readFileSync(path.join(import.meta.dirname, "fixtures", "s26o", `${key}.json`), "utf8"),
   );
 
 const routes: readonly RouteCase[] = [
@@ -155,7 +155,13 @@ const routes: readonly RouteCase[] = [
     label: "Session readiness",
     path: "/session-readiness",
     stateTestName: "Session readiness renders success, empty, loading and error on the DOM",
-    successBody: { observedAt: "2026-10-25T05:46:08.202Z", overall: "unobserved", context: { channel: "development", scope: "standalone-runtime-dev" }, capabilities: {}, storage: {} },
+    successBody: {
+      observedAt: "2026-10-25T05:46:08.202Z",
+      overall: "unobserved",
+      context: { channel: "development", scope: "standalone-runtime-dev" },
+      capabilities: {},
+      storage: {},
+    },
     successText: "unobserved",
   },
   {
@@ -165,7 +171,21 @@ const routes: readonly RouteCase[] = [
     label: "Dashboard",
     path: "/dashboard",
     stateTestName: "Dashboard renders success, empty, loading and error on the DOM",
-    successBody: { requestCount: 1, successCount: 1, failureCount: 0, totalInputTokens: 10, totalOutputTokens: 4, totalTokens: 14, averageLatencyMs: 12, p95LatencyMs: 18, totalActualCostUsd: 0.1, totalEstimatedCostUsd: 0.1, totalEffectiveCostUsd: 0.1, cachedRequestCount: 0, excludedRequestCount: 0 },
+    successBody: {
+      requestCount: 1,
+      successCount: 1,
+      failureCount: 0,
+      totalInputTokens: 10,
+      totalOutputTokens: 4,
+      totalTokens: 14,
+      averageLatencyMs: 12,
+      p95LatencyMs: 18,
+      totalActualCostUsd: 0.1,
+      totalEstimatedCostUsd: 0.1,
+      totalEffectiveCostUsd: 0.1,
+      cachedRequestCount: 0,
+      excludedRequestCount: 0,
+    },
     successText: "1",
   },
   {
@@ -228,7 +248,12 @@ const routes: readonly RouteCase[] = [
     label: "Request detail",
     path: "/requests/req-1",
     stateTestName: "Request detail renders success, empty, loading and error on the DOM",
-    successBody: { endpointId: "ep-1", requestId: "req-1", routingDecisionId: "decision-1", statusFamily: "success" },
+    successBody: {
+      endpointId: "ep-1",
+      requestId: "req-1",
+      routingDecisionId: "decision-1",
+      statusFamily: "success",
+    },
     successText: "req-1",
   },
   {
@@ -238,7 +263,12 @@ const routes: readonly RouteCase[] = [
     label: "Router decision detail",
     path: "/router/decisions/req-1",
     stateTestName: "Router decision detail renders success, empty, loading and error on the DOM",
-    successBody: { endpointId: "ep-1", requestId: "req-1", routingDecisionId: "decision-1", statusFamily: "success" },
+    successBody: {
+      endpointId: "ep-1",
+      requestId: "req-1",
+      routingDecisionId: "decision-1",
+      statusFamily: "success",
+    },
     successText: "req-1",
   },
   {
@@ -397,15 +427,13 @@ describe("S26e shared readback routes", () => {
         route.successSelector === undefined
           ? document.body.textContent?.includes(route.successText) === true
           : document.querySelector(route.successSelector) !== null;
-      await waitFor(
-        () => (successVisible() ? true : undefined),
-        `${route.key} success`,
-      );
+      await waitFor(() => (successVisible() ? true : undefined), `${route.key} success`);
       dispose(success);
 
       const empty = mountRoute(route, `s26e-${route.key}-empty`, async () => json(route.emptyBody));
       await new Promise((resolve) => setTimeout(resolve, 150));
-      if (route.successSelector === undefined) expect(document.body.textContent).not.toContain(route.successText);
+      if (route.successSelector === undefined)
+        expect(document.body.textContent).not.toContain(route.successText);
       else expect(document.querySelector(route.successSelector)).toBeNull();
       dispose(empty);
 
@@ -419,7 +447,8 @@ describe("S26e shared readback routes", () => {
           }),
       );
       await new Promise((resolve) => setTimeout(resolve, 100));
-      if (route.successSelector === undefined) expect(document.body.textContent).not.toContain(route.successText);
+      if (route.successSelector === undefined)
+        expect(document.body.textContent).not.toContain(route.successText);
       else expect(document.querySelector(route.successSelector)).toBeNull();
       resolveRead?.(json(route.emptyBody));
       await new Promise((resolve) => setTimeout(resolve, 150));
@@ -429,7 +458,8 @@ describe("S26e shared readback routes", () => {
         json({ reason: "unavailable" }, 503),
       );
       await new Promise((resolve) => setTimeout(resolve, 100));
-      if (route.successSelector === undefined) expect(document.body.textContent).not.toContain(route.successText);
+      if (route.successSelector === undefined)
+        expect(document.body.textContent).not.toContain(route.successText);
       else expect(document.querySelector(route.successSelector)).toBeNull();
       dispose(error);
     });
@@ -456,10 +486,7 @@ describe("S26e shared readback routes", () => {
         },
         factory,
       );
-      await waitFor(
-        () => (fetchCalls >= 1 ? true : undefined),
-        `${route.key} initial read`,
-      );
+      await waitFor(() => (fetchCalls >= 1 ? true : undefined), `${route.key} initial read`);
       const initialReads = route.initialReads ?? 1;
       expect(fetchCalls).toBe(initialReads);
       expect(active).toBe(1);

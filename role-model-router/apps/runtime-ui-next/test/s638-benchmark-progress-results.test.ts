@@ -6,8 +6,8 @@ import { renderToString } from "@role-model-router/foldkit/experimental/server";
 import { Message } from "../src/message";
 import { mountShell } from "../src/mount";
 import { READBACK_SPECS, emptyReadbacks, parseReadbackFixture } from "../src/readback";
-import { shellModel, shellUpdate } from "./support/runtime-shell";
 import { view } from "../src/view";
+import { shellModel, shellUpdate } from "./support/runtime-shell";
 
 /**
  * S638 (task-121): the benchmark progress panel must show the reference phase wording, a percent bar and
@@ -19,8 +19,9 @@ import { view } from "../src/view";
 const runId = "24a89d52-f6cf-425c-a101-9e937736b342";
 
 const failingCase = (index: number) => ({
-  actualPreview: index === 0 ? "upstream error: invalid api key (401)" : "upstream error: request rejected",
-  caseId: "case-" + String(index),
+  actualPreview:
+    index === 0 ? "upstream error: invalid api key (401)" : "upstream error: request rejected",
+  caseId: `case-${String(index)}`,
   difficultyBucket: "hard",
   errorMessage: index === 0 ? "upstream credential error" : undefined,
   gradingMethod: "heuristic",
@@ -32,14 +33,20 @@ const failingCase = (index: number) => ({
 
 const runResult = {
   completedAtMs: 1_700_000_000_000,
-  endpointGrades: [{
-    byDifficulty: { easy: { cases: 0, score: 0 }, hard: { cases: 12, score: 0 }, medium: { cases: 0, score: 0 } },
-    caseResults: Array.from({ length: 12 }, (_unused, index) => failingCase(index)),
-    endpointId: "ep-a",
-    modelId: "model-a",
-    overallScore: 0,
-    sourceType: "remote",
-  }],
+  endpointGrades: [
+    {
+      byDifficulty: {
+        easy: { cases: 0, score: 0 },
+        hard: { cases: 12, score: 0 },
+        medium: { cases: 0, score: 0 },
+      },
+      caseResults: Array.from({ length: 12 }, (_unused, index) => failingCase(index)),
+      endpointId: "ep-a",
+      modelId: "model-a",
+      overallScore: 0,
+      sourceType: "remote",
+    },
+  ],
   judgeEndpointId: "ep-j",
   mode: "quick",
   runId,
@@ -74,8 +81,14 @@ const completedProgress = {
 
 const renderWith = async (modelsView: Record<string, unknown> = {}) => {
   const base = shellModel({ route: { _tag: "Benchmark" } });
-  const model = { ...base, modelsView: { ...base.modelsView, ...modelsView }, readbacks: { ...emptyReadbacks(), ...base.readbacks } };
-  const rendered = await Effect.runPromise(renderToString({ init: () => ({ commands: [], model }), view }, { isHydratable: false }));
+  const model = {
+    ...base,
+    modelsView: { ...base.modelsView, ...modelsView },
+    readbacks: { ...emptyReadbacks(), ...base.readbacks },
+  };
+  const rendered = await Effect.runPromise(
+    renderToString({ init: () => ({ commands: [], model }), view }, { isHydratable: false }),
+  );
   const container = document.createElement("div");
   container.innerHTML = rendered.html;
   return container;
@@ -84,19 +97,31 @@ const renderWith = async (modelsView: Record<string, unknown> = {}) => {
 describe("S638 benchmark progress and per-case results", () => {
   it("renders the reference phase label, percent bar, steps and endpoint/case context while running", async () => {
     const container = await renderWith({ benchmarkProgress: runningProgress });
-    expect(container.querySelector("[data-benchmark-progress-phase]")?.textContent).toBe("Phase 3 of 3 · Head-to-head compare");
+    expect(container.querySelector("[data-benchmark-progress-phase]")?.textContent).toBe(
+      "Phase 3 of 3 · Head-to-head compare",
+    );
     expect(container.querySelector("[data-benchmark-progress-percent]")?.textContent).toBe("82%");
-    expect(container.querySelector("[data-benchmark-progress-steps]")?.textContent).toBe("49 / 60 steps");
+    expect(container.querySelector("[data-benchmark-progress-steps]")?.textContent).toBe(
+      "49 / 60 steps",
+    );
     const detail = container.querySelector("[data-benchmark-progress-detail]")?.textContent ?? "";
     // The reference compare phase lists the case only (describeBenchmarkProgress), not the endpoint.
     expect(detail).toContain("case 5/12 (case-4)");
     expect(detail).toContain("ranking subjects for this case");
-    expect(container.querySelector("[data-benchmark-progress-bar]")?.getAttribute("style")).toContain("width: 82%");
+    expect(
+      container.querySelector("[data-benchmark-progress-bar]")?.getAttribute("style"),
+    ).toContain("width: 82%");
   });
 
   it("surfaces a terminal failure with the host error code and message", async () => {
     const container = await renderWith({
-      benchmarkProgress: { errorCode: "benchmark_execution_failed", errorMessage: "upstream provider returned 401", runId, status: "failed", totalSteps: 60 },
+      benchmarkProgress: {
+        errorCode: "benchmark_execution_failed",
+        errorMessage: "upstream provider returned 401",
+        runId,
+        status: "failed",
+        totalSteps: 60,
+      },
     });
     const failed = container.querySelector("[data-benchmark-terminal-status='failed']");
     expect(failed?.textContent).toContain("benchmark_execution_failed");
@@ -106,7 +131,9 @@ describe("S638 benchmark progress and per-case results", () => {
   it("does not show a green completed state when the host completed a run whose cases all failed", async () => {
     const container = await renderWith({ benchmarkProgress: completedProgress });
     expect(container.querySelector("[data-benchmark-terminal-status='completed']")).not.toBeNull();
-    expect(container.querySelector("[data-benchmark-case-summary]")?.textContent).toBe("0/12 cases executed — 12 failed");
+    expect(container.querySelector("[data-benchmark-case-summary]")?.textContent).toBe(
+      "0/12 cases executed — 12 failed",
+    );
     const failure = container.querySelector("[data-benchmark-case-failure]")?.textContent ?? "";
     expect(failure).toContain("case-0: Benchmark execution failed.");
     expect(failure).toContain("upstream error: invalid api key (401)");
@@ -121,8 +148,12 @@ describe("S638 benchmark progress and per-case results", () => {
     });
     const panel = container.querySelector("[data-benchmark-run-detail-panel]");
     expect(panel).not.toBeNull();
-    expect(container.querySelector("[data-benchmark-run-detail-cases]")?.textContent).toBe("0/12 cases passed — 12 failed");
-    expect(container.querySelector("[data-benchmark-run-detail-status]")?.textContent).toContain(runId);
+    expect(container.querySelector("[data-benchmark-run-detail-cases]")?.textContent).toBe(
+      "0/12 cases passed — 12 failed",
+    );
+    expect(container.querySelector("[data-benchmark-run-detail-status]")?.textContent).toContain(
+      runId,
+    );
     expect(container.querySelectorAll("[data-benchmark-case-row]")).toHaveLength(12);
     expect(container.querySelector("[data-benchmark-case-result='fail']")).not.toBeNull();
     expect(panel?.textContent).toContain("Benchmark execution failed.");
@@ -131,28 +162,62 @@ describe("S638 benchmark progress and per-case results", () => {
   });
 
   it("reads endpoint grades from the finished run record nested under result", async () => {
-    const nestedSnapshot = { completedSteps: 60, result: runResult, runId, status: "completed", totalSteps: 60 };
+    const nestedSnapshot = {
+      completedSteps: 60,
+      result: runResult,
+      runId,
+      status: "completed",
+      totalSteps: 60,
+    };
     const container = await renderWith({
       benchmarkProgress: completedProgress,
-      benchmarkRunDetail: { json: JSON.stringify(nestedSnapshot), runId, status: "loaded", token: 1 },
+      benchmarkRunDetail: {
+        json: JSON.stringify(nestedSnapshot),
+        runId,
+        status: "loaded",
+        token: 1,
+      },
     });
-    expect(container.querySelector("[data-benchmark-run-detail-cases]")?.textContent).toBe("0/12 cases passed — 12 failed");
+    expect(container.querySelector("[data-benchmark-run-detail-cases]")?.textContent).toBe(
+      "0/12 cases passed — 12 failed",
+    );
     expect(container.querySelectorAll("[data-benchmark-case-row]")).toHaveLength(12);
     expect(container.querySelectorAll("[data-benchmark-case-result='fail']")).toHaveLength(12);
-    expect(container.querySelector("[data-benchmark-run-detail-status]")?.textContent).toContain("completed");
+    expect(container.querySelector("[data-benchmark-run-detail-status]")?.textContent).toContain(
+      "completed",
+    );
   });
 
   it("dispatches the detail request from a history row and loads the exact detail path", async () => {
     const base = shellModel({ route: { _tag: "Benchmark" } });
-    const runs = parseReadbackFixture("benchmarkRuns", [{ caseCount: 12, completedAtMs: 1_700_000_000_000, endpointIds: ["ep-a"], mode: "quick", runId, suiteId: "suite-1" }]);
-    const model = { ...base, readbacks: { ...emptyReadbacks(), ...base.readbacks, benchmarkRuns: runs } };
-    const rendered = await Effect.runPromise(renderToString({ init: () => ({ commands: [], model }), view }, { isHydratable: false }));
+    const runs = parseReadbackFixture("benchmarkRuns", [
+      {
+        caseCount: 12,
+        completedAtMs: 1_700_000_000_000,
+        endpointIds: ["ep-a"],
+        mode: "quick",
+        runId,
+        suiteId: "suite-1",
+      },
+    ]);
+    const model = {
+      ...base,
+      readbacks: { ...emptyReadbacks(), ...base.readbacks, benchmarkRuns: runs },
+    };
+    const rendered = await Effect.runPromise(
+      renderToString({ init: () => ({ commands: [], model }), view }, { isHydratable: false }),
+    );
     const container = document.createElement("div");
     container.innerHTML = rendered.html;
-    const button = container.querySelector("[data-benchmark-run-detail='" + runId + "']") as HTMLButtonElement;
+    const button = container.querySelector(
+      `[data-benchmark-run-detail='${runId}']`,
+    ) as HTMLButtonElement;
     expect(button).not.toBeNull();
     const requested = shellUpdate(model, Message.BenchmarkRunDetailRequested({ runId }));
-    const command = (requested.commands ?? [])[0] as unknown as { readonly args: { readonly runId: string }; readonly name: string };
+    const command = (requested.commands ?? [])[0] as unknown as {
+      readonly args: { readonly runId: string };
+      readonly name: string;
+    };
     expect(command.name).toBe("LoadBenchmarkRunDetail");
     expect(command.args.runId).toBe(runId);
     expect(READBACK_SPECS.benchmarkActiveRun.path).toBe("/api/role-model/benchmark/runs/active");
@@ -169,16 +234,31 @@ describe("S638 benchmark progress and per-case results", () => {
     const handle = mountShell(container, {
       modelsFetchImpl: async (input) => {
         requested.push(String(input));
-        return new Response(JSON.stringify({ ...JSON.parse(pending), status: "completed", completedSteps: 60, runPhase: "complete", result: runResult }), { status: 200, headers: { "content-type": "application/json" } });
+        return new Response(
+          JSON.stringify({
+            ...JSON.parse(pending),
+            status: "completed",
+            completedSteps: 60,
+            runPhase: "complete",
+            result: runResult,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        );
       },
       readbackFetchImpl: async (input) => {
         const url = String(input);
         if (url.includes("/benchmark/runs/active")) {
           activeCalls += 1;
           // The host clears the active snapshot once the run terminates; returning it forever would re-open the run.
-          return new Response(JSON.stringify(activeCalls === 1 ? runningProgress : {}), { status: 200, headers: { "content-type": "application/json" } });
+          return new Response(JSON.stringify(activeCalls === 1 ? runningProgress : {}), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
         }
-        return new Response(JSON.stringify({}), { status: 200, headers: { "content-type": "application/json" } });
+        return new Response(JSON.stringify({}), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
       },
     });
     try {
@@ -188,12 +268,27 @@ describe("S638 benchmark progress and per-case results", () => {
           if (read()) return;
           await new Promise((resolve) => setTimeout(resolve, 25));
         }
-        throw new Error("Timed out waiting for " + label);
+        throw new Error(`Timed out waiting for ${label}`);
       };
-      await waitFor(() => document.querySelector("[data-benchmark-progress-phase]")?.textContent === "Phase 3 of 3 · Head-to-head compare", "running phase panel");
-      await waitFor(() => (document.querySelector("[data-benchmark-case-summary]")?.textContent ?? "").includes("0/12 cases executed"), "completed failure summary");
-      expect(document.querySelector("[data-benchmark-case-summary]")?.textContent).toBe("0/12 cases executed — 12 failed");
-      expect(requested.every((url) => url === "/api/role-model/benchmark/runs/" + runId)).toBe(true);
+      await waitFor(
+        () =>
+          document.querySelector("[data-benchmark-progress-phase]")?.textContent ===
+          "Phase 3 of 3 · Head-to-head compare",
+        "running phase panel",
+      );
+      await waitFor(
+        () =>
+          (document.querySelector("[data-benchmark-case-summary]")?.textContent ?? "").includes(
+            "0/12 cases executed",
+          ),
+        "completed failure summary",
+      );
+      expect(document.querySelector("[data-benchmark-case-summary]")?.textContent).toBe(
+        "0/12 cases executed — 12 failed",
+      );
+      expect(requested.every((url) => url === `/api/role-model/benchmark/runs/${runId}`)).toBe(
+        true,
+      );
       expect(requested.length).toBeGreaterThan(0);
     } finally {
       handle.dispose();

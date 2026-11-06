@@ -66,7 +66,10 @@ export const LOADED_EXPRESSION = `(() => {
 })()`;
 
 /** Pure judgement over the LOADED_EXPRESSION payload; exported so the gate itself is unit-pinned. */
-export const isLoadedPayload = (payload, minLoadedTextChars = PARITY_CAPTURE_DEFAULTS.minLoadedTextChars) =>
+export const isLoadedPayload = (
+  payload,
+  minLoadedTextChars = PARITY_CAPTURE_DEFAULTS.minLoadedTextChars,
+) =>
   payload !== null &&
   typeof payload === "object" &&
   payload.hasMain === true &&
@@ -203,7 +206,8 @@ const buildDeterminismScript = ({ fixedEpochMs, randomSeed }) => `(() => {
 })();`;
 
 const isPositiveInteger = (value) => Number.isInteger(value) && value > 0;
-const isFinitePositive = (value) => typeof value === "number" && Number.isFinite(value) && value > 0;
+const isFinitePositive = (value) =>
+  typeof value === "number" && Number.isFinite(value) && value > 0;
 
 const validateOptions = (options) => {
   const fail = (message) => {
@@ -214,15 +218,19 @@ const validateOptions = (options) => {
   if (typeof options.url !== "string" || options.url.length === 0) fail("url is required");
   const viewport = { ...DEFAULT_VIEWPORT, ...(options.viewport ?? {}) };
   for (const key of ["width", "height", "deviceScaleFactor"]) {
-    if (!isPositiveInteger(viewport[key])) fail("viewport." + key + " must be a positive integer");
+    if (!isPositiveInteger(viewport[key])) fail(`viewport.${key} must be a positive integer`);
   }
-  if (typeof (options.timezone ?? PARITY_CAPTURE_DEFAULTS.timezone) !== "string") fail("timezone must be a string");
+  if (typeof (options.timezone ?? PARITY_CAPTURE_DEFAULTS.timezone) !== "string")
+    fail("timezone must be a string");
   for (const key of ["deadlineMs", "pollMs", "quietMs"]) {
-    if (!isFinitePositive(options[key] ?? PARITY_CAPTURE_DEFAULTS[key])) fail(key + " must be a finite positive number");
+    if (!isFinitePositive(options[key] ?? PARITY_CAPTURE_DEFAULTS[key]))
+      fail(`${key} must be a finite positive number`);
   }
   const stableCount = options.stableCount ?? PARITY_CAPTURE_DEFAULTS.stableCount;
-  if (!isPositiveInteger(stableCount) || stableCount < 2) fail("stableCount must be an integer >= 2");
-  const minLoadedTextChars = options.minLoadedTextChars ?? PARITY_CAPTURE_DEFAULTS.minLoadedTextChars;
+  if (!isPositiveInteger(stableCount) || stableCount < 2)
+    fail("stableCount must be an integer >= 2");
+  const minLoadedTextChars =
+    options.minLoadedTextChars ?? PARITY_CAPTURE_DEFAULTS.minLoadedTextChars;
   if (!isPositiveInteger(minLoadedTextChars)) fail("minLoadedTextChars must be a positive integer");
   return {
     minLoadedTextChars,
@@ -244,7 +252,8 @@ const evaluateValue = async (send, expression) => {
 
 const readJson = async (send, expression) => {
   const value = await evaluateValue(send, expression);
-  if (typeof value !== "string") throw new ParityCaptureError("capture_protocol", "evaluate returned no string payload");
+  if (typeof value !== "string")
+    throw new ParityCaptureError("capture_protocol", "evaluate returned no string payload");
   try {
     return JSON.parse(value);
   } catch {
@@ -260,18 +269,23 @@ const subscribeEvents = (cdp) => {
   }
   const unsubscribers = [
     cdp.on("Runtime.exceptionThrown", (params) => {
-      const text = params?.exceptionDetails?.text ?? params?.exceptionDetails?.exception?.description ?? "exception";
+      const text =
+        params?.exceptionDetails?.text ??
+        params?.exceptionDetails?.exception?.description ??
+        "exception";
       consoleErrors.push(String(text).slice(0, 500));
     }),
     cdp.on("Log.entryAdded", (params) => {
-      if (params?.entry?.level === "error") consoleErrors.push(String(params.entry.text ?? "error").slice(0, 500));
+      if (params?.entry?.level === "error")
+        consoleErrors.push(String(params.entry.text ?? "error").slice(0, 500));
     }),
     cdp.on("Network.loadingFailed", (params) => {
       networkErrors.push(String(params?.errorText ?? "network failure").slice(0, 500));
     }),
     cdp.on("Network.responseReceived", (params) => {
       const status = Number(params?.response?.status ?? 0);
-      if (status >= 400) networkErrors.push(String(params.response.url ?? "response") + " -> " + status);
+      if (status >= 400)
+        networkErrors.push(`${String(params.response.url ?? "response")} -> ${status}`);
     }),
   ];
   return {
@@ -308,7 +322,11 @@ export const captureParityScreenshot = async (options) => {
   const sendBounded = async (method, params = {}) => {
     const budget = remaining();
     if (budget <= 0) {
-      throw new ParityCaptureError("capture_timeout", "the capture deadline expired before " + method, { method, phase });
+      throw new ParityCaptureError(
+        "capture_timeout",
+        `the capture deadline expired before ${method}`,
+        { method, phase },
+      );
     }
     let timer = null;
     try {
@@ -317,10 +335,14 @@ export const captureParityScreenshot = async (options) => {
         new Promise((resolve, reject) => {
           timer = setTimeout(() => {
             reject(
-              new ParityCaptureError("capture_timeout", "CDP send exceeded the remaining deadline: " + method, {
-                method,
-                phase,
-              }),
+              new ParityCaptureError(
+                "capture_timeout",
+                `CDP send exceeded the remaining deadline: ${method}`,
+                {
+                  method,
+                  phase,
+                },
+              ),
             );
           }, budget);
         }),
@@ -340,18 +362,24 @@ export const captureParityScreenshot = async (options) => {
     await sendBounded("Network.setCacheDisabled", { cacheDisabled: true });
     await sendBounded("Emulation.setDeviceMetricsOverride", { ...config.viewport, mobile: false });
     await sendBounded("Emulation.setTimezoneOverride", { timezoneId: config.timezone });
-    await sendBounded("Page.addScriptToEvaluateOnNewDocument", { source: buildDeterminismScript(config) });
+    await sendBounded("Page.addScriptToEvaluateOnNewDocument", {
+      source: buildDeterminismScript(config),
+    });
 
     phase = "navigation";
     const navigationStarted = Date.now();
     await sendBounded("Page.navigate", { url });
     for (;;) {
-      if (await evaluateValue(sendBounded, READY_STATE_EXPRESSION) === "complete") break;
+      if ((await evaluateValue(sendBounded, READY_STATE_EXPRESSION)) === "complete") break;
       if (remaining() <= 0) {
-        throw new ParityCaptureError("capture_timeout", "navigation did not complete before the deadline", {
-          phase,
-          url,
-        });
+        throw new ParityCaptureError(
+          "capture_timeout",
+          "navigation did not complete before the deadline",
+          {
+            phase,
+            url,
+          },
+        );
       }
       await sleep(config.pollMs);
     }
@@ -369,7 +397,7 @@ export const captureParityScreenshot = async (options) => {
       if (remaining() <= 0) {
         throw new ParityCaptureError(
           "capture_not_loaded",
-          "page content did not reach the loaded gate (" + String(config.minLoadedTextChars) + " visible characters) before the deadline",
+          `page content did not reach the loaded gate (${String(config.minLoadedTextChars)} visible characters) before the deadline`,
           { phase, loaded: loadedPayload, minLoadedTextChars: config.minLoadedTextChars },
         );
       }
@@ -400,15 +428,19 @@ export const captureParityScreenshot = async (options) => {
         lastMutations = null;
       }
       if (remaining() <= 0) {
-        throw new ParityCaptureError("capture_timeout", "page did not reach font/image readiness and DOM quiet before the deadline", {
-          phase,
-          readiness: {
-            fontsReady: ready.fontsReady === true,
-            imagesReady: ready.imagesReady === true,
-            mutations: ready.mutations,
-            pendingRequests: ready.pendingRequests,
+        throw new ParityCaptureError(
+          "capture_timeout",
+          "page did not reach font/image readiness and DOM quiet before the deadline",
+          {
+            phase,
+            readiness: {
+              fontsReady: ready.fontsReady === true,
+              imagesReady: ready.imagesReady === true,
+              mutations: ready.mutations,
+              pendingRequests: ready.pendingRequests,
+            },
           },
-        });
+        );
       }
       await sleep(config.pollMs);
     }
@@ -426,7 +458,7 @@ export const captureParityScreenshot = async (options) => {
       if (screenshots > 0 && remaining() <= 0) {
         throw new ParityCaptureError(
           "capture_unstable",
-          "screenshots did not become byte-identical " + config.stableCount + " times before the deadline",
+          `screenshots did not become byte-identical ${config.stableCount} times before the deadline`,
           { phase, screenshots, stableCount: config.stableCount, lastSha256: sha256(lastBytes) },
         );
       }
@@ -436,7 +468,8 @@ export const captureParityScreenshot = async (options) => {
         fromSurface: true,
       });
       const bytes = Buffer.from(String(response?.data ?? ""), "base64");
-      if (bytes.length === 0) throw new ParityCaptureError("capture_protocol", "captureScreenshot returned no bytes");
+      if (bytes.length === 0)
+        throw new ParityCaptureError("capture_protocol", "captureScreenshot returned no bytes");
       screenshots += 1;
       lastBytes = bytes;
       if (previous !== null && bytes.equals(previous)) {
@@ -449,7 +482,7 @@ export const captureParityScreenshot = async (options) => {
       if (remaining() <= 0) {
         throw new ParityCaptureError(
           "capture_unstable",
-          "screenshots did not become byte-identical " + config.stableCount + " times before the deadline",
+          `screenshots did not become byte-identical ${config.stableCount} times before the deadline`,
           { phase, screenshots, stableCount: config.stableCount, lastSha256: sha256(bytes) },
         );
       }
@@ -459,12 +492,23 @@ export const captureParityScreenshot = async (options) => {
 
     phase = "recorder";
     const recorder = await readJson(sendBounded, RECORDER_EXPRESSION);
-    const consoleErrors = [...new Set([...(Array.isArray(recorder.consoleErrors) ? recorder.consoleErrors : []), ...events.consoleErrors])];
-    const networkErrors = [...new Set([...(Array.isArray(recorder.networkErrors) ? recorder.networkErrors : []), ...events.networkErrors])];
+    const consoleErrors = [
+      ...new Set([
+        ...(Array.isArray(recorder.consoleErrors) ? recorder.consoleErrors : []),
+        ...events.consoleErrors,
+      ]),
+    ];
+    const networkErrors = [
+      ...new Set([
+        ...(Array.isArray(recorder.networkErrors) ? recorder.networkErrors : []),
+        ...events.networkErrors,
+      ]),
+    ];
     const png = lastBytes;
     return {
       bytes: png.length,
-      clean: consoleErrors.length === 0 && networkErrors.length === 0 && events.channel === "subscribed",
+      clean:
+        consoleErrors.length === 0 && networkErrors.length === 0 && events.channel === "subscribed",
       clock: { fixedEpochMs: config.fixedEpochMs, randomSeed: config.randomSeed },
       consoleErrors,
       events: { channel: events.channel, complete: events.channel === "subscribed" },
@@ -494,14 +538,15 @@ export const captureParityScreenshot = async (options) => {
 /** Every surfaced capture problem, for a caller that must fail a gate instead of reading past issues. */
 export const captureIssues = (result) => {
   const issues = [];
-  for (const line of result?.consoleErrors ?? []) issues.push("console: " + line);
-  for (const line of result?.networkErrors ?? []) issues.push("network: " + line);
+  for (const line of result?.consoleErrors ?? []) issues.push(`console: ${line}`);
+  for (const line of result?.networkErrors ?? []) issues.push(`network: ${line}`);
   if (result?.events?.channel !== "subscribed") {
     issues.push("event channel unavailable: console/network events may be incomplete");
   }
   return issues;
 };
 
-const sleep = (delayMs) => new Promise((resolve) => {
-  setTimeout(resolve, delayMs);
-});
+const sleep = (delayMs) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, delayMs);
+  });

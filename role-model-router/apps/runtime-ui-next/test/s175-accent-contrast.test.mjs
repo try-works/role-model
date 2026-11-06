@@ -25,6 +25,10 @@ test("S175: accent fills pair with the accent ink token", () => {
   const accentFills = classStrings.filter((value) => value.includes("bg-[var(--rm-accent)]"));
   assert.ok(accentFills.length > 0, "the shell still has accent-filled controls");
   for (const value of accentFills) {
-    assert.match(value, /text-\[var\(--rm-on-primary\)\]/, "accent fill without the ink token: " + value);
+    assert.match(
+      value,
+      /text-\[var\(--rm-on-primary\)\]/,
+      `accent fill without the ink token: ${value}`,
+    );
   }
 });

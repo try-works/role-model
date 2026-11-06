@@ -122,10 +122,15 @@ export const createRequestsRankingClient = (
 ): RequestsRankingClient => ({
   query: async (payload) => {
     const fetchImpl = options.fetchImpl ?? fetch;
-    const headers: HeadersInit = options.token === undefined
-      ? { accept: "application/json", "content-type": "application/json" }
-      : { accept: "application/json", authorization: "Bearer " + options.token, "content-type": "application/json" };
-    const response = await fetchImpl((options.baseUrl ?? "") + "/api/role-model/telemetry/query", {
+    const headers: HeadersInit =
+      options.token === undefined
+        ? { accept: "application/json", "content-type": "application/json" }
+        : {
+            accept: "application/json",
+            authorization: `Bearer ${options.token}`,
+            "content-type": "application/json",
+          };
+    const response = await fetchImpl(`${options.baseUrl ?? ""}/api/role-model/telemetry/query`, {
       body: JSON.stringify(payload),
       headers,
       method: "POST",
@@ -135,7 +140,9 @@ export const createRequestsRankingClient = (
       let detail = "telemetry ranking query failed";
       try {
         // SAFETY: TelemetryErrorSchema decodes exactly this optional error string.
-        const decoded = Schema.decodeUnknownSync(TelemetryErrorSchema)(parsed) as { readonly error?: string };
+        const decoded = Schema.decodeUnknownSync(TelemetryErrorSchema)(parsed) as {
+          readonly error?: string;
+        };
         detail = decoded.error ?? detail;
       } catch {
         // keep the bounded default

@@ -29,7 +29,12 @@ import {
 
 const sentinel = (() => undefined) as never;
 
-const deadEntry = (label: string, path = "div[1]>button[1]"): InventoryEntry => ({ label, path, role: null, tag: "button" });
+const deadEntry = (label: string, path = "div[1]>button[1]"): InventoryEntry => ({
+  label,
+  path,
+  role: null,
+  tag: "button",
+});
 const inventoryRoute = (route: string, unwired: ReadonlyArray<InventoryEntry>): InventoryRoute => ({
   disabledCount: 0,
   elementCount: unwired.length + 1,
@@ -53,10 +58,13 @@ const tree = (build: (h: ReturnType<typeof recordingHtmlBuilder>) => unknown) =>
 describe("S617 handler-presence: structural walker", () => {
   it("accepts a button wired with OnClick and flags one without any handler", () => {
     const elements = tree((h) =>
-      h.div([], [
-        h.button([h.Type("button"), h.OnClick(sentinel as never)], ["Run benchmark"]),
-        h.button([h.Type("button"), h.Class("ghost")], ["Clear all data"]),
-      ]),
+      h.div(
+        [],
+        [
+          h.button([h.Type("button"), h.OnClick(sentinel as never)], ["Run benchmark"]),
+          h.button([h.Type("button"), h.Class("ghost")], ["Clear all data"]),
+        ],
+      ),
     );
     const wired = elements.find((entry) => entry.label === "Run benchmark");
     const dead = elements.find((entry) => entry.label === "Clear all data");
@@ -70,12 +78,15 @@ describe("S617 handler-presence: structural walker", () => {
 
   it("flags inputs, selects and textareas without OnInput/OnChange, and accepts wired ones", () => {
     const elements = tree((h) =>
-      h.div([], [
-        h.input([h.Type("password"), h.AriaLabel("Operator token")]),
-        h.input([h.Type("text"), h.OnInput(sentinel as never)]),
-        h.select([h.AriaLabel("Breakdown")], [h.option([h.Value("total")], ["Total"])]),
-        h.textarea([h.AriaLabel("Notes")]),
-      ]),
+      h.div(
+        [],
+        [
+          h.input([h.Type("password"), h.AriaLabel("Operator token")]),
+          h.input([h.Type("text"), h.OnInput(sentinel as never)]),
+          h.select([h.AriaLabel("Breakdown")], [h.option([h.Value("total")], ["Total"])]),
+          h.textarea([h.AriaLabel("Notes")]),
+        ],
+      ),
     );
     const token = elements.find((entry) => entry.label === "Operator token");
     const wiredInput = elements.find((entry) => entry.handlers.includes("input"));
@@ -94,11 +105,14 @@ describe("S617 handler-presence: structural walker", () => {
 
   it("treats an anchor as wired only when it has a real href or a click handler", () => {
     const elements = tree((h) =>
-      h.div([], [
-        h.a([h.Href("/models")], ["Models"]),
-        h.a([h.Class("underline"), h.OnClick(sentinel as never)], ["Open"]),
-        h.a([h.Class("plain")], ["Dead link"]),
-      ]),
+      h.div(
+        [],
+        [
+          h.a([h.Href("/models")], ["Models"]),
+          h.a([h.Class("underline"), h.OnClick(sentinel as never)], ["Open"]),
+          h.a([h.Class("plain")], ["Dead link"]),
+        ],
+      ),
     );
     const byLabel = (label: string) => elements.find((entry) => entry.label === label);
     expect(byLabel("Models")?.wired).toBe(true);
@@ -109,12 +123,15 @@ describe("S617 handler-presence: structural walker", () => {
 
   it("recognises role=button/tab/option controls, and disabled controls are reported but not dead", () => {
     const elements = tree((h) =>
-      h.div([], [
-        h.div([h.Role("tab")], ["Decisions"]),
-        h.div([h.Role("tab"), h.OnClick(sentinel as never)], ["Evidence"]),
-        h.button([h.Disabled(true)], ["Release kill switch"]),
-        h.div([h.Role("button"), h.Attribute("aria-disabled", "true")], ["Roll back"]),
-      ]),
+      h.div(
+        [],
+        [
+          h.div([h.Role("tab")], ["Decisions"]),
+          h.div([h.Role("tab"), h.OnClick(sentinel as never)], ["Evidence"]),
+          h.button([h.Disabled(true)], ["Release kill switch"]),
+          h.div([h.Role("button"), h.Attribute("aria-disabled", "true")], ["Roll back"]),
+        ],
+      ),
     );
     expect(elements.find((entry) => entry.label === "Decisions")?.wired).toBe(false);
     expect(elements.find((entry) => entry.label === "Evidence")?.wired).toBe(true);
@@ -123,7 +140,9 @@ describe("S617 handler-presence: structural walker", () => {
     expect(disabled?.dead).toBe(false);
     expect(elements.find((entry) => entry.label === "Roll back")?.disabled).toBe(true);
     const h = recordingHtmlBuilder<Message>();
-    const dead = unwiredControls(h.div([], [h.button([], ["Dead one"]), h.button([h.Disabled(true)], ["Off"])]));
+    const dead = unwiredControls(
+      h.div([], [h.button([], ["Dead one"]), h.button([h.Disabled(true)], ["Off"])]),
+    );
     expect(dead.map((entry) => entry.label)).toEqual(["Dead one"]);
   });
 });
@@ -153,7 +172,9 @@ describe("S617 handler-presence: routed inventory", () => {
     // task-102 wired the LocalPeers inputs/actions and the SystemExtensions/SystemOperator controls;
     // none of them may remain dead in the inventory.
     const peers = scans.find((scan) => scan.route === "LocalPeers");
-    expect(peers?.unwired.some((entry) => entry.label.includes("http://127.0.0.1:1234"))).toBe(false);
+    expect(peers?.unwired.some((entry) => entry.label.includes("http://127.0.0.1:1234"))).toBe(
+      false,
+    );
     const extensions = scans.find((scan) => scan.route === "SystemExtensions");
     expect(extensions?.unwired.some((entry) => entry.label === "Pause")).toBe(false);
     const operator = scans.find((scan) => scan.route === "SystemOperator");
@@ -162,7 +183,9 @@ describe("S617 handler-presence: routed inventory", () => {
 
   it("the comparison FAILS on a synthetic newly dead control and names it", () => {
     const baseline = inventoryOf([inventoryRoute("Models", [deadEntry("Save")])]);
-    const actual = inventoryOf([inventoryRoute("Models", [deadEntry("Save"), deadEntry("Delete", "div[1]>button[2]")])]);
+    const actual = inventoryOf([
+      inventoryRoute("Models", [deadEntry("Save"), deadEntry("Delete", "div[1]>button[2]")]),
+    ]);
     const comparison = compareDeadKeys(actual, baseline);
     expect(comparison.added).toEqual([deadKey("Models", deadEntry("Delete", "div[1]>button[2]"))]);
     expect(comparison.added.length).toBe(1);
@@ -170,22 +193,35 @@ describe("S617 handler-presence: routed inventory", () => {
   });
 
   it("the comparison PASSES when a baseline control becomes wired or disappears", () => {
-    const baseline = inventoryOf([inventoryRoute("Models", [deadEntry("Save"), deadEntry("Delete", "div[1]>button[2]")])]);
+    const baseline = inventoryOf([
+      inventoryRoute("Models", [deadEntry("Save"), deadEntry("Delete", "div[1]>button[2]")]),
+    ]);
     const actual = inventoryOf([inventoryRoute("Models", [deadEntry("Save")])]);
     const comparison = compareDeadKeys(actual, baseline);
     expect(comparison.added).toEqual([]);
-    expect(comparison.removed).toEqual([deadKey("Models", deadEntry("Delete", "div[1]>button[2]"))]);
+    expect(comparison.removed).toEqual([
+      deadKey("Models", deadEntry("Delete", "div[1]>button[2]")),
+    ]);
   });
 
   it("matches the committed baseline, so a new dead control fails the suite", () => {
     const scans = scanAllRoutes();
     const actual = renderInventory(scans);
-    const baselinePath = fileURLToPath(new URL("test/support/handler-presence-baseline.json", "file://" + process.cwd() + "/"));
+    const baselinePath = fileURLToPath(
+      new URL("test/support/handler-presence-baseline.json", `file://${process.cwd()}/`),
+    );
     if (process.env.UPDATE_HANDLER_PRESENCE_BASELINE === "1") {
-      writeFileSync(baselinePath, JSON.stringify(actual, null, 2) + "\n");
+      writeFileSync(baselinePath, `${JSON.stringify(actual, null, 2)}\n`);
     }
     const baseline: Inventory = JSON.parse(readFileSync(baselinePath, "utf8"));
     const comparison = compareDeadKeys(actual, baseline);
-    expect(comparison.added, "new dead controls: " + comparison.added.join(", ") + (comparison.removed.length === 0 ? "" : " (wired up since the baseline: " + comparison.removed.join(", ") + ")")).toEqual([]);
+    expect(
+      comparison.added,
+      `new dead controls: ${comparison.added.join(", ")}${
+        comparison.removed.length === 0
+          ? ""
+          : ` (wired up since the baseline: ${comparison.removed.join(", ")})`
+      }`,
+    ).toEqual([]);
   });
 });

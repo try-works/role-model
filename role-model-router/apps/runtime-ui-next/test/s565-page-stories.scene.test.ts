@@ -3,11 +3,11 @@ import { Effect } from "effect";
 import { renderToString } from "@role-model-router/foldkit/experimental/server";
 import { describe, expect, it } from "vitest";
 
-import { PAGE_STORIES, type PageStory } from "./support/page-stories";
-import { shellModel } from "./support/runtime-shell";
 import type { Model } from "../src/model";
 import { AppRoute } from "../src/route";
 import { view } from "../src/view";
+import { PAGE_STORIES, type PageStory } from "./support/page-stories";
+import { shellModel } from "./support/runtime-shell";
 
 /**
  * S565: the per-route scene contract. Every routed page tag must have a captured story, and the
@@ -64,32 +64,44 @@ const renderRoute = async (route: Model["route"], studioTab?: string): Promise<H
 const sceneFailures = (container: HTMLElement, story: PageStory): string[] => {
   const failures: string[] = [];
   const pageTitle = normalise(container.querySelector("h1")?.textContent);
-  const headings = [
-    ...container.querySelectorAll("main h2, main h3, main h4"),
-  ].map((element) => normalise(element.textContent));
+  const headings = [...container.querySelectorAll("main h2, main h3, main h4")].map((element) =>
+    normalise(element.textContent),
+  );
   const expectedHeadings = story.headings
     .map((heading) => normalise(heading.text))
     .filter((heading, index) => !(index === 0 && heading === pageTitle));
   if (!inOrder(expectedHeadings, headings)) {
-    failures.push("sections: expected [" + expectedHeadings.join(" | ") + "] rendered [" + headings.join(" | ") + "]");
+    failures.push(
+      `sections: expected [${expectedHeadings.join(" | ")}] rendered [${headings.join(" | ")}]`,
+    );
   }
   const renderedTables = [...container.querySelectorAll("table, [role='table']")].map((table) =>
-    [...table.querySelectorAll("thead th, [role='columnheader']")].map((cell) => normalise(cell.textContent)),
+    [...table.querySelectorAll("thead th, [role='columnheader']")].map((cell) =>
+      normalise(cell.textContent),
+    ),
   );
   for (const table of story.tables) {
     const headers = table.headers.map(normalise);
     const found = renderedTables.some((rendered) => inOrder(headers, rendered));
     if (!found) {
-      failures.push("table: missing columns [" + headers.join(", ") + "]");
+      failures.push(`table: missing columns [${headers.join(", ")}]`);
     }
   }
-  const named = [...container.querySelectorAll("main select, main [role='combobox'], main button[aria-haspopup='listbox']")].map((control) =>
+  const named = [
+    ...container.querySelectorAll(
+      "main select, main [role='combobox'], main button[aria-haspopup='listbox']",
+    ),
+  ].map((control) =>
     normalise(control.getAttribute("aria-label") ?? control.closest("label")?.textContent ?? ""),
   );
   for (const combo of story.combos) {
-    const matched = named.some((name) => (combo.label.length > 0 && name.includes(combo.label)) || (combo.text.length > 0 && name.includes(combo.text)));
+    const matched = named.some(
+      (name) =>
+        (combo.label.length > 0 && name.includes(combo.label)) ||
+        (combo.text.length > 0 && name.includes(combo.text)),
+    );
     if (!matched) {
-      failures.push("control: missing [" + (combo.label || combo.text) + "]");
+      failures.push(`control: missing [${combo.label || combo.text}]`);
     }
   }
   return failures;
@@ -99,24 +111,25 @@ const stories: Readonly<Record<string, PageStory | undefined>> = PAGE_STORIES;
 // SAFETY: at runtime AppRoute is the Effect TaggedUnion, which carries the per-tag `cases` map the
 // workspace's RouteUnion type does not re-declare. Reading it once here is the only way to derive
 // the full routed tag set instead of hard-coding a list that silently goes stale.
-const routeCases = (AppRoute as unknown as { readonly cases: Readonly<Record<string, unknown>> }).cases;
+const routeCases = (AppRoute as unknown as { readonly cases: Readonly<Record<string, unknown>> })
+  .cases;
 const routeTags: readonly string[] = Object.keys(routeCases);
 
 describe("S565 page stories — scene", () => {
   for (const tag of routeTags) {
-    it(tag + " matches its captured story", async () => {
+    it(`${tag} matches its captured story`, async () => {
       const story = stories[tag];
-      expect(story, "no captured story for route tag " + tag).toBeDefined();
+      expect(story, `no captured story for route tag ${tag}`).toBeDefined();
       if (story === undefined) return;
       const container = await renderRoute(routeFor(tag));
       const failures = sceneFailures(container, story);
-      expect(failures, tag + "\n" + failures.join("\n")).toEqual([]);
+      expect(failures, `${tag}\n${failures.join("\n")}`).toEqual([]);
       expect(normalise(container.textContent)).not.toContain("Runtime UI");
     });
   }
 
   it("every route tag in the union has a captured story", () => {
     const missing = routeTags.filter((tag) => stories[tag] === undefined);
-    expect(missing, "missing page stories: " + missing.join(", ")).toEqual([]);
+    expect(missing, `missing page stories: ${missing.join(", ")}`).toEqual([]);
   });
 });

@@ -47,7 +47,9 @@ export interface R32DomainGraphContract {
   readonly close: () => Promise<void>;
 }
 
-export class R32DomainGraph extends Context.Service<R32DomainGraph, R32DomainGraphContract>()("R32DomainGraph") {}
+export class R32DomainGraph extends Context.Service<R32DomainGraph, R32DomainGraphContract>()(
+  "R32DomainGraph",
+) {}
 
 class R32Retention extends Context.Service<R32Retention, R32DomainNode>()("R32Retention") {}
 class R32Evaluation extends Context.Service<R32Evaluation, R32DomainNode>()("R32Evaluation") {}
@@ -63,7 +65,9 @@ export interface R32AcquiredDomain {
   readonly release: () => Promise<void>;
 }
 
-export type R32DomainFactory = (options: { readonly id: R32DomainId }) => Promise<R32AcquiredDomain>;
+export type R32DomainFactory = (options: {
+  readonly id: R32DomainId;
+}) => Promise<R32AcquiredDomain>;
 
 export interface R32DomainLayerOptions {
   readonly events?: string[];
@@ -88,12 +92,19 @@ const nodeLayer = <I>(
     service,
     Effect.acquireRelease(
       Effect.gen(function* () {
-        if (options.failOn === id) return yield* Effect.die(new Error("r32 domain acquisition failed: " + id));
+        if (options.failOn === id)
+          return yield* Effect.die(new Error(`r32 domain acquisition failed: ${id}`));
         const factory = options.acquire?.[id];
-        const acquired = factory === undefined
-          ? { handle: { domain: id }, release: async () => { events.push("release:" + id); } }
-          : yield* Effect.promise(() => factory({ id }));
-        events.push("acquire:" + id);
+        const acquired =
+          factory === undefined
+            ? {
+                handle: { domain: id },
+                release: async () => {
+                  events.push(`release:${id}`);
+                },
+              }
+            : yield* Effect.promise(() => factory({ id }));
+        events.push(`acquire:${id}`);
         return { handle: acquired.handle, id, release: once(acquired.release) };
       }),
       (node) => Effect.promise(() => node.release()),
@@ -102,7 +113,10 @@ const nodeLayer = <I>(
   return Layer.provideMerge(leaf, previous);
 };
 
-const graphLeaf = (options: R32DomainLayerOptions, last: Layer.Layer<any, never, never>): Layer.Layer<R32DomainGraph, never, never> => {
+const graphLeaf = (
+  options: R32DomainLayerOptions,
+  last: Layer.Layer<any, never, never>,
+): Layer.Layer<R32DomainGraph, never, never> => {
   const events = options.events ?? [];
   return Layer.provideMerge(
     Layer.effect(
@@ -121,13 +135,19 @@ const graphLeaf = (options: R32DomainLayerOptions, last: Layer.Layer<any, never,
           };
           let closePromise: Promise<void> | null = null;
           const graph: R32DomainGraphContract = {
-            close: () => (closePromise ??= (async () => {
-              const failures: unknown[] = [];
-              for (const id of [...R32_DOMAIN_IDS].reverse()) {
-                try { await domains[id].release(); } catch (error) { failures.push(error); }
-              }
-              if (failures.length > 0) throw new AggregateError(failures, "r32 domain release failures");
-            })()),
+            close: () =>
+              (closePromise ??= (async () => {
+                const failures: unknown[] = [];
+                for (const id of [...R32_DOMAIN_IDS].reverse()) {
+                  try {
+                    await domains[id].release();
+                  } catch (error) {
+                    failures.push(error);
+                  }
+                }
+                if (failures.length > 0)
+                  throw new AggregateError(failures, "r32 domain release failures");
+              })()),
             domains,
             ready: true,
             shutdownOrder: [...R32_DOMAIN_IDS].reverse(),
@@ -143,7 +163,9 @@ const graphLeaf = (options: R32DomainLayerOptions, last: Layer.Layer<any, never,
 };
 
 /** Compose the per-domain Layers. No factory runs until the returned Layer is built. */
-export const composeR32DomainLayers = (options: R32DomainLayerOptions = {}): Layer.Layer<R32DomainGraph, never, never> => {
+export const composeR32DomainLayers = (
+  options: R32DomainLayerOptions = {},
+): Layer.Layer<R32DomainGraph, never, never> => {
   const normalized: R32DomainLayerOptions = { ...options, events: options.events ?? [] };
   const steps: ReadonlyArray<readonly [Context.Key<any, R32DomainNode>, R32DomainId]> = [
     [R32Retention, "retention"],

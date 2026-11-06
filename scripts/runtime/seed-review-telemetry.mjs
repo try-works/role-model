@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { existsSync } from "node:fs";
+import path from "node:path";
 /**
  * Reproducible review-instance telemetry seeding.
  *
@@ -15,14 +17,36 @@
  * replaced in one transaction. The host must be stopped while this runs (SQLite).
  */
 import { DatabaseSync } from "node:sqlite";
-import { existsSync } from "node:fs";
-import path from "node:path";
 
 const MODELS = [
-  { endpointId: "anthropic.team.shared.us-east-1.default", modelId: "claude-3.7-sonnet", providerFamily: "anthropic", providerKind: "remote", region: "us-east-1" },
-  { endpointId: "openai.personal.primary.us-east-1.fast", modelId: "openai/gpt-4.1-mini-fast", providerFamily: "openai", providerKind: "remote", region: "us-east-1" },
-  { endpointId: "cli.local.coder", modelId: "gpt-5.4", providerFamily: "openai", providerKind: "local", region: "local" },
-  { endpointId: "moonshot.personal.primary.global.kimi-k2.5", modelId: "moonshot/kimi-k2.5", providerFamily: "moonshot", providerKind: "remote", region: "global" },
+  {
+    endpointId: "anthropic.team.shared.us-east-1.default",
+    modelId: "claude-3.7-sonnet",
+    providerFamily: "anthropic",
+    providerKind: "remote",
+    region: "us-east-1",
+  },
+  {
+    endpointId: "openai.personal.primary.us-east-1.fast",
+    modelId: "openai/gpt-4.1-mini-fast",
+    providerFamily: "openai",
+    providerKind: "remote",
+    region: "us-east-1",
+  },
+  {
+    endpointId: "cli.local.coder",
+    modelId: "gpt-5.4",
+    providerFamily: "openai",
+    providerKind: "local",
+    region: "local",
+  },
+  {
+    endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+    modelId: "moonshot/kimi-k2.5",
+    providerFamily: "moonshot",
+    providerKind: "remote",
+    region: "global",
+  },
 ];
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -37,7 +61,12 @@ const parseArgs = (argv) => {
   const stateRoot = value("--state-root", undefined);
   if (!stateRoot) throw new Error("--state-root is required");
   if (!Number.isInteger(count) || count < 1) throw new Error("--count must be a positive integer");
-  return { count, seed, nowMs: now === undefined ? Date.now() : Date.parse(now), stateRoot: path.resolve(stateRoot) };
+  return {
+    count,
+    seed,
+    nowMs: now === undefined ? Date.now() : Date.parse(now),
+    stateRoot: path.resolve(stateRoot),
+  };
 };
 
 const mulberry32 = (seed) => {
@@ -64,9 +93,10 @@ export function generateSeedRecords({ count, seed, nowMs }) {
   const chartStart = count - chartCount;
   for (let i = 0; i < count; i += 1) {
     const chartIndex = i - chartStart;
-    const ageMs = i >= chartStart
-      ? Math.round(DAY_MS - (0.5 + ((chartIndex + 0.5) / chartCount) * 23) * 60 * 60 * 1000)
-      : Math.round(DAY_MS - between(rng, 5, 30) * 60 * 1000);
+    const ageMs =
+      i >= chartStart
+        ? Math.round(DAY_MS - (0.5 + ((chartIndex + 0.5) / chartCount) * 23) * 60 * 60 * 1000)
+        : Math.round(DAY_MS - between(rng, 5, 30) * 60 * 1000);
     const created = nowMs - Math.max(60_000, Math.min(DAY_MS - 60_000, ageMs));
     const model = pick(rng, MODELS);
     const failure = rng() < 0.12;
@@ -92,7 +122,13 @@ export function generateSeedRecords({ count, seed, nowMs }) {
       region: model.region,
       statusCode: status,
       statusFamily: failure ? "error" : "success",
-      errorClass: failure ? (status === 429 ? "rate_limit" : status === 503 ? "provider_unavailable" : "provider_error") : null,
+      errorClass: failure
+        ? status === 429
+          ? "rate_limit"
+          : status === 503
+            ? "provider_unavailable"
+            : "provider_error"
+        : null,
       latencyMs: latency,
       requestLatencyMs: latency,
       providerCompletionLatencyMs: Math.max(0, latency - between(rng, 5, 60)),
@@ -155,7 +191,10 @@ const INSERT = `INSERT OR REPLACE INTO runtime_telemetry_records (
 
 export function seedTelemetry({ stateRoot, count, seed, nowMs }) {
   const dbPath = path.join(stateRoot, "standalone-runtime-dev", "memory", "memory.sqlite");
-  if (!existsSync(dbPath)) throw new Error(`review database not found: ${dbPath} (start the host once to create the schema, then stop it)`);
+  if (!existsSync(dbPath))
+    throw new Error(
+      `review database not found: ${dbPath} (start the host once to create the schema, then stop it)`,
+    );
   const rows = generateSeedRecords({ count, seed, nowMs });
   // The activity/overview charts read the observations page (bounded page), not every raw
   // telemetry row. Seed observations for a 50-point sweep across the full day so the chart
@@ -174,48 +213,91 @@ export function seedTelemetry({ stateRoot, count, seed, nowMs }) {
     );
     for (const r of rows) {
       statement.run(
-        r.requestId, r.routingDecisionId, r.endpointId, r.conversationId, r.createdAtMs,
-        r.modelId, r.requestedModelId, r.selectedModelId, r.providerKind, r.providerFamily, r.region,
-        r.requestOperation, r.routingMode, r.statusCode, r.statusFamily, r.errorClass, r.finishReason,
-        r.latencyMs, r.requestLatencyMs, r.providerCompletionLatencyMs, r.timeToFirstTokenMs,
-        r.inputTokens, r.outputTokens, r.totalTokens, r.promptCacheRequested, r.promptCacheSupported,
-        r.promptCacheUsed, r.cacheReadTokens, r.cacheReadTokensSupported, r.cacheWriteTokens,
-        r.cacheWriteTokensSupported, r.cacheState, r.toolCallCount, r.toolExecutionCount, r.retryCount,
-        r.streamTextSupported, r.baseCostUsd, r.baseCostUsd, r.baseCostUsd,
-      );
-      if (observationIds.has(r.requestId)) observationStatement.run(
         r.requestId,
         r.routingDecisionId,
         r.endpointId,
         r.conversationId,
         r.createdAtMs,
-        JSON.stringify({
-          usageEvent: {
-            request_id: r.requestId,
-            routing_decision_id: r.routingDecisionId,
-            endpoint_id: r.endpointId,
-            model_id: r.modelId,
-            timestamp_ms: r.createdAtMs,
-            latency_ms: r.latencyMs,
-            tokens_in: r.inputTokens,
-            tokens_out: r.outputTokens,
-            total_tokens: r.totalTokens,
-            error_class: r.errorClass,
-            status_code: r.statusCode,
-            finish_reason: r.finishReason,
-          },
-          cacheObservability: {
-            cacheReadTokens: r.cacheReadTokens,
-            cacheWriteTokens: r.cacheWriteTokens,
-            promptCacheUsed: r.promptCacheUsed === 1,
-          },
-          inspection: { request: { requestCapture: { body: { path: "/v1/chat/completions" }, headers: {} }, responseCapture: { body: {}, headers: { "content-type": "application/json" }, statusCode: r.statusCode } } },
-        }),
+        r.modelId,
+        r.requestedModelId,
+        r.selectedModelId,
+        r.providerKind,
+        r.providerFamily,
+        r.region,
+        r.requestOperation,
+        r.routingMode,
+        r.statusCode,
+        r.statusFamily,
+        r.errorClass,
+        r.finishReason,
+        r.latencyMs,
+        r.requestLatencyMs,
+        r.providerCompletionLatencyMs,
+        r.timeToFirstTokenMs,
+        r.inputTokens,
+        r.outputTokens,
+        r.totalTokens,
+        r.promptCacheRequested,
+        r.promptCacheSupported,
+        r.promptCacheUsed,
+        r.cacheReadTokens,
+        r.cacheReadTokensSupported,
+        r.cacheWriteTokens,
+        r.cacheWriteTokensSupported,
+        r.cacheState,
+        r.toolCallCount,
+        r.toolExecutionCount,
+        r.retryCount,
+        r.streamTextSupported,
+        r.baseCostUsd,
+        r.baseCostUsd,
+        r.baseCostUsd,
       );
+      if (observationIds.has(r.requestId))
+        observationStatement.run(
+          r.requestId,
+          r.routingDecisionId,
+          r.endpointId,
+          r.conversationId,
+          r.createdAtMs,
+          JSON.stringify({
+            usageEvent: {
+              request_id: r.requestId,
+              routing_decision_id: r.routingDecisionId,
+              endpoint_id: r.endpointId,
+              model_id: r.modelId,
+              timestamp_ms: r.createdAtMs,
+              latency_ms: r.latencyMs,
+              tokens_in: r.inputTokens,
+              tokens_out: r.outputTokens,
+              total_tokens: r.totalTokens,
+              error_class: r.errorClass,
+              status_code: r.statusCode,
+              finish_reason: r.finishReason,
+            },
+            cacheObservability: {
+              cacheReadTokens: r.cacheReadTokens,
+              cacheWriteTokens: r.cacheWriteTokens,
+              promptCacheUsed: r.promptCacheUsed === 1,
+            },
+            inspection: {
+              request: {
+                requestCapture: { body: { path: "/v1/chat/completions" }, headers: {} },
+                responseCapture: {
+                  body: {},
+                  headers: { "content-type": "application/json" },
+                  statusCode: r.statusCode,
+                },
+              },
+            },
+          }),
+        );
     }
     database.exec("COMMIT");
   } catch (error) {
-    try { database.exec("ROLLBACK"); } catch {}
+    try {
+      database.exec("ROLLBACK");
+    } catch {}
     throw error;
   } finally {
     database.close();
@@ -223,7 +305,10 @@ export function seedTelemetry({ stateRoot, count, seed, nowMs }) {
   return { databasePath: dbPath, summary: summarize(rows) };
 }
 
-if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1].replaceAll("\\", "/")}`).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === new URL(`file://${process.argv[1].replaceAll("\\", "/")}`).href
+) {
   const options = parseArgs(process.argv.slice(2));
   const result = seedTelemetry(options);
   console.log(JSON.stringify(result, null, 2));

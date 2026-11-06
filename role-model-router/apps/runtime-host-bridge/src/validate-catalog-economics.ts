@@ -298,24 +298,27 @@ export async function runCatalogEconomicsValidation(
 
       await waitForBootstrapIdle(() => backend.readHealthStatus());
 
-      const server = await startBridgeServer({
-        host: "127.0.0.1",
-        port: 0,
-        observabilityScope,
-        registry: backend.effectiveRegistry,
-        getRegistry: () => backend.effectiveRegistry,
-        executeChatCompletions: backend.executeChatCompletions,
-        executeResponses: backend.executeResponses,
-        readRuntimeSummary: backend.readRuntimeSummary,
-        readRuntimeConfig: backend.readRuntimeConfig,
-        updateRuntimeConfig: backend.updateRuntimeConfig,
-        readHealthStatus: backend.readHealthStatus,
-        getRoutableInventory: backend.getEffectiveRoutableInventory,
-        listEndpoints: backend.listEndpoints,
-        listProviders: backend.listProviders,
-        listRecentRequestObservations: backend.listRecentRequestObservations,
-        readRequestObservation: backend.readRequestObservation,
-      }, { allowTestSeamBackend: true });
+      const server = await startBridgeServer(
+        {
+          host: "127.0.0.1",
+          port: 0,
+          observabilityScope,
+          registry: backend.effectiveRegistry,
+          getRegistry: () => backend.effectiveRegistry,
+          executeChatCompletions: backend.executeChatCompletions,
+          executeResponses: backend.executeResponses,
+          readRuntimeSummary: backend.readRuntimeSummary,
+          readRuntimeConfig: backend.readRuntimeConfig,
+          updateRuntimeConfig: backend.updateRuntimeConfig,
+          readHealthStatus: backend.readHealthStatus,
+          getRoutableInventory: backend.getEffectiveRoutableInventory,
+          listEndpoints: backend.listEndpoints,
+          listProviders: backend.listProviders,
+          listRecentRequestObservations: backend.listRecentRequestObservations,
+          readRequestObservation: backend.readRequestObservation,
+        },
+        { allowTestSeamBackend: true },
+      );
 
       try {
         const baseUrl = `http://127.0.0.1:${server.port}`;

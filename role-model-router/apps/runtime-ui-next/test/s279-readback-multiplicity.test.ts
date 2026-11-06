@@ -96,9 +96,19 @@ const summaryBody = JSON.stringify({
 });
 const endpointsBody = JSON.stringify({ endpoints: [{ endpointId: "e-1", modelId: "m-1" }] });
 const payloadFor = (pathname: string): string =>
-  pathname === MODELS ? modelBody : pathname === SUMMARY ? summaryBody : pathname === ENDPOINTS ? endpointsBody : "{}";
+  pathname === MODELS
+    ? modelBody
+    : pathname === SUMMARY
+      ? summaryBody
+      : pathname === ENDPOINTS
+        ? endpointsBody
+        : "{}";
 
-const waitFor = async <Value>(read: () => Value | undefined, label: string, timeoutMs = 5000): Promise<Value> => {
+const waitFor = async <Value>(
+  read: () => Value | undefined,
+  label: string,
+  timeoutMs = 5000,
+): Promise<Value> => {
   const deadline = Date.now() + timeoutMs;
   let last: Value | undefined;
   while (Date.now() < deadline) {
@@ -106,7 +116,7 @@ const waitFor = async <Value>(read: () => Value | undefined, label: string, time
     if (last !== undefined) return last;
     await new Promise<void>((resolve) => setTimeout(resolve, 10));
   }
-  throw new Error("Timed out waiting for " + label + " (last: " + String(last) + ")");
+  throw new Error(`Timed out waiting for ${label} (last: ${String(last)})`);
 };
 
 describe("S279 readback in-flight sharing", () => {
@@ -168,7 +178,8 @@ describe("S279 readback in-flight sharing", () => {
     aborted.abort();
     const firstResult = await settleBounded(first);
     expect(firstResult.status).toBe("rejected");
-    if (firstResult.status === "rejected") expect(String(firstResult.reason).toLowerCase()).toContain("abort");
+    if (firstResult.status === "rejected")
+      expect(String(firstResult.reason).toLowerCase()).toContain("abort");
     expect(gated.calls[0].signal?.aborted).toBe(false);
     gated.calls[0].release({ body: modelBody });
     const secondResult = await second;
@@ -300,19 +311,21 @@ describe("S279 readback in-flight sharing", () => {
 
   it("keeps the standalone createReadbackClient signal identity", async () => {
     const calls: Array<RequestInit | undefined> = [];
-    const reader = createReadbackClient(
-      READBACK_SPECS.runtimeSummary,
-      { fetchImpl: async (_input, init) => { calls.push(init); return new Response("{}"); } },
-    );
+    const reader = createReadbackClient(READBACK_SPECS.runtimeSummary, {
+      fetchImpl: async (_input, init) => {
+        calls.push(init);
+        return new Response("{}");
+      },
+    });
     const controller = new AbortController();
     await reader({ signal: controller.signal });
     expect(calls[0]?.signal).toBe(controller.signal);
   });
 });
 
-
 describe("S279 mounted shell aliases", () => {
-  const mounted: Array<{ readonly container: HTMLElement; readonly handle: { dispose(): void } }> = [];
+  const mounted: Array<{ readonly container: HTMLElement; readonly handle: { dispose(): void } }> =
+    [];
   afterEach(() => {
     for (const entry of mounted.splice(0)) {
       entry.handle.dispose();
@@ -328,7 +341,10 @@ describe("S279 mounted shell aliases", () => {
     container.id = "s279-models";
     document.body.append(container);
     window.history.replaceState({}, "", "/models");
-    const handle = mountShell(container, { readbackFetchImpl: gated.fetchImpl, readbackToken: "s279-mount" });
+    const handle = mountShell(container, {
+      readbackFetchImpl: gated.fetchImpl,
+      readbackToken: "s279-mount",
+    });
     mounted.push({ container, handle });
     const released = new Set<RecordedCall>();
     const releaseAll = (): void => {
@@ -340,7 +356,10 @@ describe("S279 mounted shell aliases", () => {
     };
     try {
       await waitFor(
-        () => (countPath(gated.calls, MODELS) >= 1 && countPath(gated.calls, SUMMARY) >= 1 ? true : undefined),
+        () =>
+          countPath(gated.calls, MODELS) >= 1 && countPath(gated.calls, SUMMARY) >= 1
+            ? true
+            : undefined,
         "the mounted readback commands",
       );
       expect(countPath(gated.calls, MODELS)).toBe(1);
@@ -350,13 +369,18 @@ describe("S279 mounted shell aliases", () => {
       expect(modelsCall?.accept).toBe("application/json");
       releaseAll();
       await waitFor(
-        () => (document.querySelector('[data-route="models"] h3')?.textContent === "Model inventory" ? true : undefined),
+        () =>
+          document.querySelector('[data-route="models"] h3')?.textContent === "Model inventory"
+            ? true
+            : undefined,
         "the configured models projection",
       );
       releaseAll();
       const railValues = await waitFor(() => {
-        const inventory = document.querySelector("[data-slot='role-model-model-inventory']")?.textContent ?? "";
-        const router = document.querySelector("[data-slot='role-model-router-endpoint']")?.textContent ?? "";
+        const inventory =
+          document.querySelector("[data-slot='role-model-model-inventory']")?.textContent ?? "";
+        const router =
+          document.querySelector("[data-slot='role-model-router-endpoint']")?.textContent ?? "";
         return inventory.length > 0 && router.length > 0 ? { inventory, router } : undefined;
       }, "the models and router footer projections");
       expect(railValues.inventory).toContain("Models");

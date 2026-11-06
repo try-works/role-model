@@ -2,7 +2,9 @@
 // This performs no network requests and cannot certify browser/live parity.
 const args = process.argv.slice(2);
 if (args.length === 1 && args[0] === "--request-selfcheck") {
-  const { runRequestParitySelfcheck } = await import("../role-model-router/packages/ui-parity/src/selfcheck.ts");
+  const { runRequestParitySelfcheck } = await import(
+    "../role-model-router/packages/ui-parity/src/selfcheck.ts"
+  );
   const result = runRequestParitySelfcheck();
   process.stdout.write(`${JSON.stringify(result)}\n`);
   process.exitCode = result.status === "PASSED" ? 0 : 1;
@@ -16,8 +18,12 @@ if (args.length === 1 && args[0] === "--request-selfcheck") {
     process.exitCode = result.exitCode ?? exitCodeFor(result.status);
   } catch (error) {
     // S295: a rejected runner must still emit the FAILED contract (never an uncaught rejection).
-    const reason = String(error).startsWith("Error: ") ? String(error).slice("Error: ".length) : String(error);
-    process.stdout.write(`${JSON.stringify({ status: "FAILED", scope: "browser-parity", reason: "runner-failure: " + reason, exitCode: 1 })}\n`);
+    const reason = String(error).startsWith("Error: ")
+      ? String(error).slice("Error: ".length)
+      : String(error);
+    process.stdout.write(
+      `${JSON.stringify({ status: "FAILED", scope: "browser-parity", reason: `runner-failure: ${reason}`, exitCode: 1 })}\n`,
+    );
     process.exitCode = 1;
   }
 } else {

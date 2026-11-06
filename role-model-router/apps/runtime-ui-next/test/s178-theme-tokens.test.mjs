@@ -16,7 +16,11 @@ const appDir = path.join(import.meta.dirname, "..");
 
 test("S178: index.html selects a theme but never writes palette tokens inline", async () => {
   const html = await readFile(path.join(appDir, "index.html"), "utf8");
-  assert.doesNotMatch(html, /setProperty\(\s*"--rm-/, "palette tokens must come from CSS, not inline style");
+  assert.doesNotMatch(
+    html,
+    /setProperty\(\s*"--rm-/,
+    "palette tokens must come from CSS, not inline style",
+  );
   assert.doesNotMatch(html, /palettes\s*=/, "no hard-coded palette table in the shell");
   assert.match(html, /dataset\.theme\s*=/, "the shell still selects a theme");
 });
@@ -26,5 +30,9 @@ test("S179: the light theme maps muted text to the darker foreground token", asy
   // The light and dark blocks are not necessarily ordered light-then-dark in the source, so this
   // asserts on the mapping itself rather than slicing a range that may be empty (it was, at first).
   assert.match(css, /--rm-muted:\s*var\(--rm3-light-muted-foreground\)/, "#888 on #fff is 3.54:1");
-  assert.doesNotMatch(css, /--rm-muted:\s*var\(--rm3-light-ring\)/, "the light muted token must not be the ring colour");
+  assert.doesNotMatch(
+    css,
+    /--rm-muted:\s*var\(--rm3-light-ring\)/,
+    "the light muted token must not be the ring colour",
+  );
 });

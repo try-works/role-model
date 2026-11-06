@@ -95,10 +95,15 @@ describe("runtime routing in the Foldkit shell", () => {
   it("pushes a URL from an in-app control and the URL, not local state, changes the view", async () => {
     mountAt("/");
 
-    await waitFor(() => (bodyText().includes("Runtime overview") ? true : undefined), "the index route");
+    await waitFor(
+      () => (bodyText().includes("Runtime overview") ? true : undefined),
+      "the index route",
+    );
 
     const link = await waitFor(
-      () => document.querySelector<HTMLAnchorElement>('nav[data-shell-nav] a[data-nav="models"]') ?? undefined,
+      () =>
+        document.querySelector<HTMLAnchorElement>('nav[data-shell-nav] a[data-nav="models"]') ??
+        undefined,
       "the Models section navigation control",
     );
 
@@ -113,7 +118,9 @@ describe("runtime routing in the Foldkit shell", () => {
       "the Models view after the URL push",
     );
 
-    expect(document.querySelector("[data-shell-route]")?.getAttribute("data-shell-route")).toBe("Models");
+    expect(document.querySelector("[data-shell-route]")?.getAttribute("data-shell-route")).toBe(
+      "Models",
+    );
     expect(bodyText()).not.toContain("Runtime overview");
   });
 

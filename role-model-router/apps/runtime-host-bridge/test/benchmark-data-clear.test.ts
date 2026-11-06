@@ -114,17 +114,20 @@ describe("benchmark global data clear", () => {
         "utf8",
       );
 
-      const server = await startBridgeServer({
-        host: "127.0.0.1",
-        port: 0,
-        registry: backend.registry,
-        getRegistry: () => backend.registry,
-        executeChatCompletions: backend.executeChatCompletions,
-        executeResponses: backend.executeResponses,
-        readRuntimeSummary: backend.readRuntimeSummary,
-        readHealthStatus: backend.readHealthStatus,
-        clearBenchmarkData: backend.clearBenchmarkData,
-      }, { allowTestSeamBackend: true });
+      const server = await startBridgeServer(
+        {
+          host: "127.0.0.1",
+          port: 0,
+          registry: backend.registry,
+          getRegistry: () => backend.registry,
+          executeChatCompletions: backend.executeChatCompletions,
+          executeResponses: backend.executeResponses,
+          readRuntimeSummary: backend.readRuntimeSummary,
+          readHealthStatus: backend.readHealthStatus,
+          clearBenchmarkData: backend.clearBenchmarkData,
+        },
+        { allowTestSeamBackend: true },
+      );
 
       try {
         const response = await fetch(

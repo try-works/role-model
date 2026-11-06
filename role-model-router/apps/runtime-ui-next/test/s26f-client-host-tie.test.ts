@@ -134,10 +134,7 @@ describe("S26f client/host tie", () => {
       }),
       runtimeEventSourceFactory: factory,
     });
-    await waitFor(
-      () => (fetchCalls >= 1 ? true : undefined),
-      "initial read",
-    );
+    await waitFor(() => (fetchCalls >= 1 ? true : undefined), "initial read");
     expect(fetchCalls).toBe(1);
     listeners.get("revision.update")?.({
       data: JSON.stringify({ revision: 1 }),
@@ -159,10 +156,7 @@ describe("S26f client/host tie", () => {
       },
       observabilityToken: "s26f-default-token",
     });
-    await waitFor(
-      () => (headers.length >= 1 ? true : undefined),
-      "default-token read",
-    );
+    await waitFor(() => (headers.length >= 1 ? true : undefined), "default-token read");
     expect(headers).toEqual(["Bearer s26f-default-token"]);
   });
 
@@ -188,7 +182,8 @@ describe("S26f client/host tie", () => {
     expect(document.body.textContent).not.toContain("router.decisions");
     resolveRead?.(json({ metrics: {} }));
     await waitFor(
-      () => (document.body.textContent?.includes("No metric rows in the registry.") ? true : undefined),
+      () =>
+        document.body.textContent?.includes("No metric rows in the registry.") ? true : undefined,
       "empty after loading",
     );
   });

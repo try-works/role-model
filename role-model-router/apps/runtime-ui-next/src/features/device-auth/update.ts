@@ -5,7 +5,7 @@ import type { DeviceAuthSession, DeviceAuthState } from "./model";
 /** W1c (S509): pure device-auth update/wiring decisions. The parent dispatcher owns Commands. */
 export const withDeviceAuthDialog = (model: Model, session: DeviceAuthSession): Model => {
   if (session.status !== "pending" || session.userCode === undefined) return model;
-  const key = session.authRequestId + ":" + session.userCode;
+  const key = `${session.authRequestId}:${session.userCode}`;
   if (model.deviceAuthModalKey === key) return model;
   return {
     ...model,
@@ -24,7 +24,10 @@ export const deviceAuthCancelledState = (state: DeviceAuthState): DeviceAuthStat
   token: state.token + 1,
 });
 
-export const deviceAuthFailedState = (state: DeviceAuthState, message: string): DeviceAuthState => ({
+export const deviceAuthFailedState = (
+  state: DeviceAuthState,
+  message: string,
+): DeviceAuthState => ({
   ...state,
   error: message,
   inflight: false,

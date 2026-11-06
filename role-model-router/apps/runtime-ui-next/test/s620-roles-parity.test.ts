@@ -1,14 +1,14 @@
+import { renderToString } from "@role-model-router/foldkit/experimental/server";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
-import { renderToString } from "@role-model-router/foldkit/experimental/server";
 
-import { Message } from "../src/message";
 import { createModelsClient, defineModelsCommands } from "../src/commands";
+import { blankRoleDraft } from "../src/features/models/role-policy";
+import { modelsRolesRoute } from "../src/features/models/routes";
+import { Message } from "../src/message";
 import { mountShell } from "../src/mount";
 import { createReadbackClients } from "../src/readback";
 import { READBACK_SPECS, type ReadbackState } from "../src/readback";
-import { modelsRolesRoute } from "../src/features/models/routes";
-import { blankRoleDraft } from "../src/features/models/role-policy";
 import { shellModel, shellUpdate } from "./support/runtime-shell";
 
 const rolePolicyBody = {
@@ -82,13 +82,30 @@ const createDraft = (overrides: Partial<Record<string, string>> = {}) => ({
   toolPolicy: "allowed",
   ...overrides,
 });
-const renderRoles = async (modelsView?: Parameters<typeof modelsRolesRoute>[3], rolePolicy = rolePolicyReadback()) =>
-  document.createElement("div").innerHTML = (await (async () => {
-    const rendered = await Effect.runPromise(renderToString({
-      init: () => ({ model: shellModel({ route: { _tag: "ModelsRoles" } }), commands: [] }),
-      // SAFETY: renderToString infers Message=unknown; the route only emits typed messages.
-      view: (_model, h) => ({ body: modelsRolesRoute({ rows: [], status: "ok", token: 0 }, { rows: [], status: "ok", token: 0 }, h as Parameters<typeof modelsRolesRoute>[2], modelsView, rolePolicy), title: "roles" }),
-    }, { isHydratable: false }));
+const renderRoles = async (
+  modelsView?: Parameters<typeof modelsRolesRoute>[3],
+  rolePolicy = rolePolicyReadback(),
+) =>
+  (document.createElement("div").innerHTML = await (async () => {
+    const rendered = await Effect.runPromise(
+      renderToString(
+        {
+          init: () => ({ model: shellModel({ route: { _tag: "ModelsRoles" } }), commands: [] }),
+          // SAFETY: renderToString infers Message=unknown; the route only emits typed messages.
+          view: (_model, h) => ({
+            body: modelsRolesRoute(
+              { rows: [], status: "ok", token: 0 },
+              { rows: [], status: "ok", token: 0 },
+              h as Parameters<typeof modelsRolesRoute>[2],
+              modelsView,
+              rolePolicy,
+            ),
+            title: "roles",
+          }),
+        },
+        { isHydratable: false },
+      ),
+    );
     const container = document.createElement("div");
     container.innerHTML = rendered.html;
     return container.innerHTML;
@@ -103,15 +120,33 @@ describe("S620 roles page parity", () => {
     expect(container.textContent).toContain("Role catalog");
     expect(container.textContent).toContain("Role task allowlists");
     expect(container.textContent).toContain("Edit selected role");
-    expect([...container.querySelectorAll("#role-create-kind option")].map((option) => option.getAttribute("value"))).toEqual(["assistant", "capability"]);
-    expect([...container.querySelectorAll("#role-create-tool-policy option")].map((option) => option.getAttribute("value"))).toEqual(["allowed", "limited", "disabled"]);
-    expect(container.querySelector("[data-role-catalog-select='coder']")?.textContent).toContain("Coder");
-    expect(container.querySelector("[data-role-task-detail='coder']")?.textContent).toBe("Hide task detail");
+    expect(
+      [...container.querySelectorAll("#role-create-kind option")].map((option) =>
+        option.getAttribute("value"),
+      ),
+    ).toEqual(["assistant", "capability"]);
+    expect(
+      [...container.querySelectorAll("#role-create-tool-policy option")].map((option) =>
+        option.getAttribute("value"),
+      ),
+    ).toEqual(["allowed", "limited", "disabled"]);
+    expect(container.querySelector("[data-role-catalog-select='coder']")?.textContent).toContain(
+      "Coder",
+    );
+    expect(container.querySelector("[data-role-task-detail='coder']")?.textContent).toBe(
+      "Hide task detail",
+    );
     expect(container.textContent).toContain("Review a code change.");
-    expect(container.querySelector("[aria-label='Allow coder for code.review']")?.getAttribute("aria-pressed")).toBe("true");
+    expect(
+      container
+        .querySelector("[aria-label='Allow coder for code.review']")
+        ?.getAttribute("aria-pressed"),
+    ).toBe("true");
     expect(container.querySelector("#role-edit-id")?.getAttribute("value")).toBe("coder");
     expect(container.querySelector("#role-edit-name")?.getAttribute("value")).toBe("Coder");
-    expect(container.querySelector("#role-edit-routing-overrides")?.textContent).toContain("prefer");
+    expect(container.querySelector("#role-edit-routing-overrides")?.textContent).toContain(
+      "prefer",
+    );
     expect(container.textContent).toContain("tool policy limited");
   });
 
@@ -129,16 +164,27 @@ describe("S620 roles page parity", () => {
           : url.includes("/endpoints")
             ? { endpoints: [] }
             : {};
-      return new Response(JSON.stringify(body), { headers: { "content-type": "application/json" }, status: 200 });
+      return new Response(JSON.stringify(body), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      });
     };
     const handle = mountShell(container, { readbackReaders: createReadbackClients({ fetchImpl }) });
     try {
       const end = Date.now() + 5000;
-      while (document.querySelector("[data-role-task-detail='coder']") === null && Date.now() < end) {
+      while (
+        document.querySelector("[data-role-task-detail='coder']") === null &&
+        Date.now() < end
+      ) {
         await new Promise((resolve) => setTimeout(resolve, 10));
       }
-      const button = document.querySelector("[data-role-task-detail='coder']") as HTMLButtonElement | null;
-      if (button === null) throw new Error("role catalog did not render: " + (document.body.textContent ?? "").slice(0, 400));
+      const button = document.querySelector(
+        "[data-role-task-detail='coder']",
+      ) as HTMLButtonElement | null;
+      if (button === null)
+        throw new Error(
+          `role catalog did not render: ${(document.body.textContent ?? "").slice(0, 400)}`,
+        );
       button.click();
       await new Promise((resolve) => setTimeout(resolve, 50));
       expect(document.body.textContent).toContain("Review a code change.");
@@ -150,42 +196,97 @@ describe("S620 roles page parity", () => {
   });
 
   it("starts an edit draft from the selected role before applying a field change", () => {
-    const base = shellModel({ route: { _tag: "ModelsRoles" }, modelsView: { selectedRoleId: "coder" } });
+    const base = shellModel({
+      route: { _tag: "ModelsRoles" },
+      modelsView: { selectedRoleId: "coder" },
+    });
     const model = { ...base, readbacks: { ...base.readbacks, rolePolicy: rolePolicyReadback() } };
-    const changed = shellUpdate(model, Message.RoleEditDraftChanged({ field: "description", value: "Updated description" }));
-    expect(changed.model.modelsView?.roleEditDraft).toMatchObject({ description: "Updated description", name: "Coder", roleId: "coder" });
+    const changed = shellUpdate(
+      model,
+      Message.RoleEditDraftChanged({ field: "description", value: "Updated description" }),
+    );
+    expect(changed.model.modelsView?.roleEditDraft).toMatchObject({
+      description: "Updated description",
+      name: "Coder",
+      roleId: "coder",
+    });
   });
 
   it("sends the exact create, update, and task allowlist bodies", async () => {
     const calls: Array<{ body: unknown; method: string; path: string }> = [];
-    const commands = defineModelsCommands(createModelsClient({
-      fetchImpl: async (input, init) => {
-        const url = new URL(String(input), "http://localhost");
-        calls.push({ body: init?.body === undefined ? undefined : JSON.parse(String(init.body)), method: String(init?.method), path: url.pathname });
-        return new Response("{}", { status: 200 });
-      },
-    }));
-    const base = shellModel({ route: { _tag: "ModelsRoles" }, modelsView: { roleDraft: createDraft({ roleId: "new-role", name: "New role" }) } });
+    const commands = defineModelsCommands(
+      createModelsClient({
+        fetchImpl: async (input, init) => {
+          const url = new URL(String(input), "http://localhost");
+          calls.push({
+            body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+            method: String(init?.method),
+            path: url.pathname,
+          });
+          return new Response("{}", { status: 200 });
+        },
+      }),
+    );
+    const base = shellModel({
+      route: { _tag: "ModelsRoles" },
+      modelsView: { roleDraft: createDraft({ roleId: "new-role", name: "New role" }) },
+    });
     const model = { ...base, readbacks: { ...base.readbacks, rolePolicy: rolePolicyReadback() } };
     const created = shellUpdate(model, Message.RoleCreateRequested());
-    const createArgs = (created.commands ?? [])[0] as unknown as { args: { draftJson: string; token: number } };
+    const createArgs = (created.commands ?? [])[0] as unknown as {
+      args: { draftJson: string; token: number };
+    };
     expect(created.commands?.[0]?.name).toBe("CreateRole");
     await Effect.runPromise(commands.createRole(createArgs.args).effect);
-    expect(calls[0]).toEqual({ body: JSON.parse(createArgs.args.draftJson), method: "POST", path: "/api/role-model/roles" });
+    expect(calls[0]).toEqual({
+      body: JSON.parse(createArgs.args.draftJson),
+      method: "POST",
+      path: "/api/role-model/roles",
+    });
 
-    const editing = { ...model, modelsView: { selectedRoleId: "coder", roleEditDraft: createDraft({ roleId: "coder", name: "Coder", roleKind: "capability", toolPolicyMode: "limited" }) } };
+    const editing = {
+      ...model,
+      modelsView: {
+        selectedRoleId: "coder",
+        roleEditDraft: createDraft({
+          roleId: "coder",
+          name: "Coder",
+          roleKind: "capability",
+          toolPolicyMode: "limited",
+        }),
+      },
+    };
     const edited = shellUpdate(editing, Message.RoleEditSaveRequested());
-    const editArgs = (edited.commands ?? [])[0] as unknown as { args: { draftJson: string; roleId: string; token: number } };
+    const editArgs = (edited.commands ?? [])[0] as unknown as {
+      args: { draftJson: string; roleId: string; token: number };
+    };
     expect(edited.commands?.[0]?.name).toBe("UpdateRole");
     await Effect.runPromise(commands.updateRole(editArgs.args).effect);
-    expect(calls[1]).toEqual({ body: JSON.parse(editArgs.args.draftJson), method: "PUT", path: "/api/role-model/roles/coder" });
+    expect(calls[1]).toEqual({
+      body: JSON.parse(editArgs.args.draftJson),
+      method: "PUT",
+      path: "/api/role-model/roles/coder",
+    });
 
-    const toggled = shellUpdate(editing, Message.RoleTaskRoleToggled({ roleId: "legal", taskType: "code.review" }));
+    const toggled = shellUpdate(
+      editing,
+      Message.RoleTaskRoleToggled({ roleId: "legal", taskType: "code.review" }),
+    );
     const saved = shellUpdate(toggled.model, Message.RoleTaskAllowlistsSaveRequested());
-    const tasksArgs = (saved.commands ?? [])[0] as unknown as { args: { tasksJson: string; token: number } };
+    const tasksArgs = (saved.commands ?? [])[0] as unknown as {
+      args: { tasksJson: string; token: number };
+    };
     expect(saved.commands?.[0]?.name).toBe("UpdateRoleTaskAllowlists");
     await Effect.runPromise(commands.updateTasks(tasksArgs.args).effect);
-    expect(calls[2]).toEqual({ body: JSON.parse(tasksArgs.args.tasksJson), method: "PUT", path: "/api/role-model/tasks" });
-    expect((calls[2]?.body as readonly { allowed_roles: readonly string[]; task_type: string }[]).find((task) => task.task_type === "code.review")?.allowed_roles).toEqual(["coder", "legal"]);
+    expect(calls[2]).toEqual({
+      body: JSON.parse(tasksArgs.args.tasksJson),
+      method: "PUT",
+      path: "/api/role-model/tasks",
+    });
+    expect(
+      (calls[2]?.body as readonly { allowed_roles: readonly string[]; task_type: string }[]).find(
+        (task) => task.task_type === "code.review",
+      )?.allowed_roles,
+    ).toEqual(["coder", "legal"]);
   });
 });

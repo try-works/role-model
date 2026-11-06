@@ -10,10 +10,10 @@ import { describe, expect, it } from "vitest";
 import { handleLocalDiagnosticsRead } from "../src/index.js";
 import {
   DIAGNOSTICS_STALENESS_MS,
-  MAX_DIAGNOSTICS_RECORDS,
-  MAX_DIAGNOSTICS_RESPONSE_BYTES,
   type LocalDiagnosticRecord,
   type LocalDiagnosticsSource,
+  MAX_DIAGNOSTICS_RECORDS,
+  MAX_DIAGNOSTICS_RESPONSE_BYTES,
 } from "../src/local-diagnostics-read.js";
 import {
   collectObservabilitySnapshot,
@@ -39,7 +39,10 @@ const baseOptions = {
   now: () => NOW,
 };
 
-const record = (index: number, overrides: Partial<LocalDiagnosticRecord> = {}): LocalDiagnosticRecord => ({
+const record = (
+  index: number,
+  overrides: Partial<LocalDiagnosticRecord> = {},
+): LocalDiagnosticRecord => ({
   atMs: NOW - index,
   level: "info",
   code: `diag.${index}`,
@@ -75,10 +78,11 @@ const offline = { host: "0.0.0.0", deviceOwnerTrust: "off" as const };
 describe("S15a R21.1 bounded diagnostics query", () => {
   it("returns identity, loss, cursor, staleness rule and records bounded by the record cap", () => {
     const records = Array.from({ length: 60 }, (_, index) => record(index));
-    const result = handleLocalDiagnosticsRead(
-      request(tokenHeaders, "203.0.113.9", "?limit=1000"),
-      { ...baseOptions, ...offline, source: source(records) },
-    );
+    const result = handleLocalDiagnosticsRead(request(tokenHeaders, "203.0.113.9", "?limit=1000"), {
+      ...baseOptions,
+      ...offline,
+      source: source(records),
+    });
 
     expect(result.status).toBe(200);
     expect(result.body.schemaVersion).toBe("role-model.local-diagnostics-read.v1");
@@ -97,7 +101,10 @@ describe("S15a R21.1 bounded diagnostics query", () => {
   it("pages with the opaque cursor and stops at the end", () => {
     const records = Array.from({ length: 3 }, (_, index) => record(index));
     const options = { ...baseOptions, ...offline, source: source(records) };
-    const firstPage = handleLocalDiagnosticsRead(request(tokenHeaders, "203.0.113.9", "?limit=2"), options);
+    const firstPage = handleLocalDiagnosticsRead(
+      request(tokenHeaders, "203.0.113.9", "?limit=2"),
+      options,
+    );
     expect(firstPage.body.recordCount).toBe(2);
     expect(firstPage.body.truncated).toBe(true);
     const cursor = firstPage.body.cursor ?? "";
@@ -151,7 +158,10 @@ describe("S15a R21.2 reused authorization, forwarded-owner rejection and CORS", 
 
   it("rejects a spoofed forwarded owner header instead of trusting it", () => {
     const result = handleLocalDiagnosticsRead(
-      request({ ...tokenHeaders, "x-forwarded-for": "127.0.0.1", "x-role-model-device-owner": "on" }, "203.0.113.9"),
+      request(
+        { ...tokenHeaders, "x-forwarded-for": "127.0.0.1", "x-role-model-device-owner": "on" },
+        "203.0.113.9",
+      ),
       { ...baseOptions, ...offline, source: source([record(0)]) },
     );
     expect(result.status).toBe(403);
@@ -159,10 +169,11 @@ describe("S15a R21.2 reused authorization, forwarded-owner rejection and CORS", 
   });
 
   it("does not grant device-owner trust from a spoofed Host header", () => {
-    const result = handleLocalDiagnosticsRead(
-      request({ host: "127.0.0.1:3456" }, "203.0.113.9"),
-      { ...baseOptions, ...offline, source: source([record(0)]) },
-    );
+    const result = handleLocalDiagnosticsRead(request({ host: "127.0.0.1:3456" }, "203.0.113.9"), {
+      ...baseOptions,
+      ...offline,
+      source: source([record(0)]),
+    });
     expect(result.status).toBe(401);
   });
 
@@ -307,10 +318,7 @@ describe("S15c review defects (exact failing inputs)", () => {
   });
 
   it("Defect C: oldest-first records without lastRecordAtMs are not stale while the newest is 1s old", () => {
-    const records = [
-      record(1, { atMs: NOW - 400_000 }),
-      record(0, { atMs: NOW - 1_000 }),
-    ];
+    const records = [record(1, { atMs: NOW - 400_000 }), record(0, { atMs: NOW - 1_000 })];
     const result = handleLocalDiagnosticsRead(request(tokenHeaders, "203.0.113.9"), {
       ...baseOptions,
       ...offline,

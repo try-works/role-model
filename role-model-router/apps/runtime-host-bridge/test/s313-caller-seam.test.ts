@@ -17,9 +17,15 @@ const EXEMPT = new Set(["s313-caller-seam.test.ts", "s313-server-owner.test.ts"]
 
 const callFiles = (): readonly { file: string; text: string }[] => {
   const files = [
-    ...readdirSync(testRoot).filter((name) => name.endsWith(".ts") && !EXEMPT.has(name)).map((name) => join(testRoot, name)),
-    ...readdirSync(join(appRoot, "src")).filter((name) => name.startsWith("validate-") && name.endsWith(".ts")).map((name) => join(appRoot, "src", name)),
-    ...readdirSync(join(appRoot, "scripts")).filter((name) => name.endsWith(".ts")).map((name) => join(appRoot, "scripts", name)),
+    ...readdirSync(testRoot)
+      .filter((name) => name.endsWith(".ts") && !EXEMPT.has(name))
+      .map((name) => join(testRoot, name)),
+    ...readdirSync(join(appRoot, "src"))
+      .filter((name) => name.startsWith("validate-") && name.endsWith(".ts"))
+      .map((name) => join(appRoot, "src", name)),
+    ...readdirSync(join(appRoot, "scripts"))
+      .filter((name) => name.endsWith(".ts"))
+      .map((name) => join(appRoot, "scripts", name)),
   ];
   return files.map((file) => ({ file, text: readFileSync(file, "utf8") }));
 };
@@ -36,14 +42,23 @@ const callTexts = (text: string): readonly string[] => {
     for (let i = open; i < text.length; i++) {
       const ch = text[i] ?? "";
       if (quote !== null) {
-        if (ch === "\\") { i += 1; continue; }
+        if (ch === "\\") {
+          i += 1;
+          continue;
+        }
         if (ch === quote) quote = null;
         continue;
       }
-      if (ch === '"' || ch === "'" || ch === "`") { quote = ch; continue; }
+      if (ch === '"' || ch === "'" || ch === "`") {
+        quote = ch;
+        continue;
+      }
       if (ch === "(" || ch === "{" || ch === "[") depth += 1;
       else if (ch === ")" || ch === "}" || ch === "]") {
-        if (ch === ")" && depth === 0) { close = i; break; }
+        if (ch === ")" && depth === 0) {
+          close = i;
+          break;
+        }
         depth -= 1;
       }
     }
@@ -66,11 +81,17 @@ export const splitTopLevelArgs = (call: string): readonly string[] => {
   for (let i = 0; i < inner.length; i++) {
     const ch = inner[i] ?? "";
     if (quote !== null) {
-      if (ch === "\\") { i += 1; continue; }
+      if (ch === "\\") {
+        i += 1;
+        continue;
+      }
       if (ch === quote) quote = null;
       continue;
     }
-    if (ch === '"' || ch === "'" || ch === "`") { quote = ch; continue; }
+    if (ch === '"' || ch === "'" || ch === "`") {
+      quote = ch;
+      continue;
+    }
     if (ch === "(" || ch === "{" || ch === "[") depth += 1;
     else if (ch === ")" || ch === "}" || ch === "]") depth -= 1;
     else if (ch === "," && depth === 0) {
@@ -84,7 +105,10 @@ export const splitTopLevelArgs = (call: string): readonly string[] => {
   return args;
 };
 
-const CREATE_OPTIONS_FORMS = [/^createCliServerOptions\s*\(/, /^(?:[\w$]+\s*\.\s*)+createCliServerOptions\s*\(/];
+const CREATE_OPTIONS_FORMS = [
+  /^createCliServerOptions\s*\(/,
+  /^(?:[\w$]+\s*\.\s*)+createCliServerOptions\s*\(/,
+];
 
 /** True only for a call whose seam/backend is actually recognized, not for a bare second argument. */
 export const isSafeCall = (call: string): boolean => {
@@ -101,7 +125,10 @@ describe("S314 caller seam sweep", () => {
     const offenders: string[] = [];
     for (const { file, text } of callFiles()) {
       for (const call of callTexts(text)) {
-        if (!isSafeCall(call)) offenders.push(file.replace(appRoot, "") + " :: " + call.slice(0, 90).replace(/\s+/g, " "));
+        if (!isSafeCall(call))
+          offenders.push(
+            `${file.replace(appRoot, "")} :: ${call.slice(0, 90).replace(/\s+/g, " ")}`,
+          );
       }
     }
     expect(offenders).toEqual([]);

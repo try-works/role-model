@@ -37,14 +37,8 @@
       "providerKind": "provider-cli",
       "providerId": "local-cli",
       "modelId": "gpt-5.4",
-      "capabilities": [
-        "code.edit",
-        "reasoning.multi_step",
-        "tools.function_calling"
-      ],
-      "modalities": [
-        "text"
-      ],
+      "capabilities": ["code.edit", "reasoning.multi_step", "tools.function_calling"],
+      "modalities": ["text"],
       "endpointKind": "cli-agent",
       "servingSource": "local-process",
       "lifecycleState": "active",

@@ -191,9 +191,9 @@ describe("S26k control surface", () => {
         endpoint.method,
       );
     }
-    expect(CONTROL_SPECS.providers.action!.method).toBe("POST");
+    expect(CONTROL_SPECS.providers.action?.method).toBe("POST");
     expect(CONTROL_SPECS.endpoints.action).toBeUndefined();
-    expect(CONTROL_SPECS.controlController.action!.method).toBe("PATCH");
+    expect(CONTROL_SPECS.controlController.action?.method).toBe("PATCH");
   });
 
   it("sends the real method, path and body through createControlClients", async () => {
@@ -202,7 +202,11 @@ describe("S26k control surface", () => {
     const clients = createControlClients({
       baseUrl: "http://localhost",
       fetchImpl: async (input, init) => {
-        calls.push({ body: init?.body === undefined ? undefined : String(init.body), method: init?.method, path: new URL(String(input)).pathname });
+        calls.push({
+          body: init?.body === undefined ? undefined : String(init.body),
+          method: init?.method,
+          path: new URL(String(input)).pathname,
+        });
         return new Response(JSON.stringify({ ok: true }), { status: 200 });
       },
     });
@@ -210,8 +214,8 @@ describe("S26k control surface", () => {
     const refused = await clients.dispatch("endpoints");
     expect(refused.status).toBe(400);
     expect(calls.map((call) => [call.method, call.path])).toEqual([
-      ["POST", CONTROL_SPECS.providers.action!.path],
-      ["PATCH", CONTROL_SPECS.controlController.action!.path],
+      ["POST", CONTROL_SPECS.providers.action?.path],
+      ["PATCH", CONTROL_SPECS.controlController.action?.path],
     ]);
     // S209: the specs no longer carry operator-catalogue sample bodies. Without an acting row the
     // payload is empty; the row id is merged at dispatch time.
@@ -222,32 +226,44 @@ describe("S26k control surface", () => {
     const targetedClients = createControlClients({
       baseUrl: "http://localhost",
       fetchImpl: async (_input, init) => {
-        targeted.push({ body: init?.body === undefined ? undefined : String(init.body), method: init?.method });
+        targeted.push({
+          body: init?.body === undefined ? undefined : String(init.body),
+          method: init?.method,
+        });
         return new Response(JSON.stringify({ ok: true }), { status: 200 });
       },
     });
     await targetedClients.dispatch("providers", "provider-account-1");
     await targetedClients.dispatch("controlController", "endpoint-2");
-    expect(JSON.parse(targeted[0]?.body ?? "{}")).toEqual({ providerAccountId: "provider-account-1" });
+    expect(JSON.parse(targeted[0]?.body ?? "{}")).toEqual({
+      providerAccountId: "provider-account-1",
+    });
     expect(JSON.parse(targeted[1]?.body ?? "{}")).toEqual({ endpointId: "endpoint-2" });
   });
 
   it("keeps action bodies and read methods on the shared specs", () => {
-    for (const spec of Object.values(CONTROL_SPECS).filter((candidate) => candidate.action !== undefined)) {
+    for (const spec of Object.values(CONTROL_SPECS).filter(
+      (candidate) => candidate.action !== undefined,
+    )) {
       expect(spec.read.method).toBe("GET");
-      expect(spec.action!.method === "POST" || spec.action!.method === "PATCH").toBe(true);
-      expect(spec.action!.path.length).toBeGreaterThan(0);
+      expect(spec.action?.method === "POST" || spec.action?.method === "PATCH").toBe(true);
+      expect(spec.action?.path.length).toBeGreaterThan(0);
     }
     expect(CONTROL_SPECS.endpoints.action).toBeUndefined();
   });
   it("navigating into Providers and Endpoints starts their control reads", async () => {
     const pending = client({ read: () => new Promise(() => undefined) });
     mountAt("/", pending);
-    for (const [path, key] of [["/control/providers", "providers"], ["/control/endpoints", "endpoints"]] as const) {
+    for (const [path, key] of [
+      ["/control/providers", "providers"],
+      ["/control/endpoints", "endpoints"],
+    ] as const) {
       window.history.pushState({}, "", path);
       window.dispatchEvent(new PopStateEvent("popstate"));
       const node = await waitFor(
-        () => document.querySelector(`[data-control-route='${key}'][data-control-state='loading']`) ?? undefined,
+        () =>
+          document.querySelector(`[data-control-route='${key}'][data-control-state='loading']`) ??
+          undefined,
         `${key} control loading after navigation`,
       );
       expect(node).not.toBeNull();

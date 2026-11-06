@@ -22,19 +22,11 @@
       "id": "anthropic.team.shared.us-east-1.default",
       "object": "model",
       "owned_by": "role-model",
-      "endpoint_ids": [
-        "anthropic.team.shared.us-east-1.default"
-      ],
+      "endpoint_ids": ["anthropic.team.shared.us-east-1.default"],
       "type": "endpoint",
-      "targetModelIds": [
-        "claude-3.7-sonnet"
-      ],
-      "canonicalModelIds": [
-        "claude-3.7-sonnet"
-      ],
-      "providerIds": [
-        "anthropic"
-      ],
+      "targetModelIds": ["claude-3.7-sonnet"],
+      "canonicalModelIds": ["claude-3.7-sonnet"],
+      "providerIds": ["anthropic"],
       "limits": {
         "safeContextWindow": 200000,
         "safeMaxOutputTokens": 8192,
@@ -42,26 +34,14 @@
         "maxOutputTokens": 8192
       },
       "modalities": {
-        "guaranteedInput": [
-          "text"
-        ],
-        "availableInput": [
-          "text"
-        ],
+        "guaranteedInput": ["text"],
+        "availableInput": ["text"],
         "conditionalInput": {},
-        "output": [
-          "text"
-        ]
+        "output": ["text"]
       },
       "capabilities": {
-        "guaranteed": [
-          "text.chat",
-          "tools.function_calling"
-        ],
-        "available": [
-          "text.chat",
-          "tools.function_calling"
-        ],
+        "guaranteed": ["text.chat", "tools.function_calling"],
+        "available": ["text.chat", "tools.function_calling"],
         "conditional": {},
         "tools": {
           "functionCalling": true
@@ -81,20 +61,12 @@
         }
       },
       "declared": {
-        "modelIds": [
-          "claude-3.7-sonnet"
-        ],
-        "endpointIds": [
-          "anthropic.team.shared.us-east-1.default"
-        ]
+        "modelIds": ["claude-3.7-sonnet"],
+        "endpointIds": ["anthropic.team.shared.us-east-1.default"]
       },
       "routable": {
-        "modelIds": [
-          "claude-3.7-sonnet"
-        ],
-        "endpointIds": [
-          "anthropic.team.shared.us-east-1.default"
-        ]
+        "modelIds": ["claude-3.7-sonnet"],
+        "endpointIds": ["anthropic.team.shared.us-east-1.default"]
       },
       "piMapping": {
         "contextWindow": 200000,
@@ -105,9 +77,7 @@
           "supportsLongCacheRetention": false
         }
       },
-      "sources": [
-        "catalog:claude-3.7-sonnet"
-      ],
+      "sources": ["catalog:claude-3.7-sonnet"],
       "upstream_model_id": "claude-3.7-sonnet",
       "fixed_effort": null
     },
@@ -115,19 +85,11 @@
       "id": "claude-3.7-sonnet",
       "object": "model",
       "owned_by": "role-model",
-      "endpoint_ids": [
-        "anthropic.team.shared.us-east-1.default"
-      ],
+      "endpoint_ids": ["anthropic.team.shared.us-east-1.default"],
       "type": "model",
-      "targetModelIds": [
-        "claude-3.7-sonnet"
-      ],
-      "canonicalModelIds": [
-        "claude-3.7-sonnet"
-      ],
-      "providerIds": [
-        "anthropic"
-      ],
+      "targetModelIds": ["claude-3.7-sonnet"],
+      "canonicalModelIds": ["claude-3.7-sonnet"],
+      "providerIds": ["anthropic"],
       "limits": {
         "safeContextWindow": 200000,
         "safeMaxOutputTokens": 8192,
@@ -135,26 +97,14 @@
         "maxOutputTokens": 8192
       },
       "modalities": {
-        "guaranteedInput": [
-          "text"
-        ],
-        "availableInput": [
-          "text"
-        ],
+        "guaranteedInput": ["text"],
+        "availableInput": ["text"],
         "conditionalInput": {},
-        "output": [
-          "text"
-        ]
+        "output": ["text"]
       },
       "capabilities": {
-        "guaranteed": [
-          "text.chat",
-          "tools.function_calling"
-        ],
-        "available": [
-          "text.chat",
-          "tools.function_calling"
-        ],
+        "guaranteed": ["text.chat", "tools.function_calling"],
+        "available": ["text.chat", "tools.function_calling"],
         "conditional": {},
         "tools": {
           "functionCalling": true
@@ -174,20 +124,12 @@
         }
       },
       "declared": {
-        "modelIds": [
-          "claude-3.7-sonnet"
-        ],
-        "endpointIds": [
-          "anthropic.team.shared.us-east-1.default"
-        ]
+        "modelIds": ["claude-3.7-sonnet"],
+        "endpointIds": ["anthropic.team.shared.us-east-1.default"]
       },
       "routable": {
-        "modelIds": [
-          "claude-3.7-sonnet"
-        ],
-        "endpointIds": [
-          "anthropic.team.shared.us-east-1.default"
-        ]
+        "modelIds": ["claude-3.7-sonnet"],
+        "endpointIds": ["anthropic.team.shared.us-east-1.default"]
       },
       "piMapping": {
         "contextWindow": 200000,
@@ -198,25 +140,17 @@
           "supportsLongCacheRetention": false
         }
       },
-      "sources": [
-        "catalog:claude-3.7-sonnet"
-      ]
+      "sources": ["catalog:claude-3.7-sonnet"]
     },
     {
       "id": "cli.local.coder",
       "object": "model",
       "owned_by": "role-model",
-      "endpoint_ids": [
-        "cli.local.coder"
-      ],
+      "endpoint_ids": ["cli.local.coder"],
       "type": "endpoint",
-      "targetModelIds": [
-        "gpt-5.4"
-      ],
+      "targetModelIds": ["gpt-5.4"],
       "canonicalModelIds": [],
-      "providerIds": [
-        "unknown"
-      ],
+      "providerIds": ["unknown"],
       "limits": {
         "safeContextWindow": null,
         "safeMaxOutputTokens": null,
@@ -251,20 +185,12 @@
         }
       },
       "declared": {
-        "modelIds": [
-          "gpt-5.4"
-        ],
-        "endpointIds": [
-          "cli.local.coder"
-        ]
+        "modelIds": ["gpt-5.4"],
+        "endpointIds": ["cli.local.coder"]
       },
       "routable": {
-        "modelIds": [
-          "gpt-5.4"
-        ],
-        "endpointIds": [
-          "cli.local.coder"
-        ]
+        "modelIds": ["gpt-5.4"],
+        "endpointIds": ["cli.local.coder"]
       },
       "piMapping": {
         "contextWindow": null,
@@ -283,17 +209,11 @@
       "id": "gpt-5.4",
       "object": "model",
       "owned_by": "role-model",
-      "endpoint_ids": [
-        "cli.local.coder"
-      ],
+      "endpoint_ids": ["cli.local.coder"],
       "type": "model",
-      "targetModelIds": [
-        "gpt-5.4"
-      ],
+      "targetModelIds": ["gpt-5.4"],
       "canonicalModelIds": [],
-      "providerIds": [
-        "unknown"
-      ],
+      "providerIds": ["unknown"],
       "limits": {
         "safeContextWindow": null,
         "safeMaxOutputTokens": null,
@@ -328,20 +248,12 @@
         }
       },
       "declared": {
-        "modelIds": [
-          "gpt-5.4"
-        ],
-        "endpointIds": [
-          "cli.local.coder"
-        ]
+        "modelIds": ["gpt-5.4"],
+        "endpointIds": ["cli.local.coder"]
       },
       "routable": {
-        "modelIds": [
-          "gpt-5.4"
-        ],
-        "endpointIds": [
-          "cli.local.coder"
-        ]
+        "modelIds": ["gpt-5.4"],
+        "endpointIds": ["cli.local.coder"]
       },
       "piMapping": {
         "contextWindow": null,
@@ -358,19 +270,11 @@
       "id": "openai.personal.primary.us-east-1.fast",
       "object": "model",
       "owned_by": "role-model",
-      "endpoint_ids": [
-        "openai.personal.primary.us-east-1.fast"
-      ],
+      "endpoint_ids": ["openai.personal.primary.us-east-1.fast"],
       "type": "endpoint",
-      "targetModelIds": [
-        "openai/gpt-4.1-mini-fast"
-      ],
-      "canonicalModelIds": [
-        "openai/gpt-4.1-mini-fast"
-      ],
-      "providerIds": [
-        "openai"
-      ],
+      "targetModelIds": ["openai/gpt-4.1-mini-fast"],
+      "canonicalModelIds": ["openai/gpt-4.1-mini-fast"],
+      "providerIds": ["openai"],
       "limits": {
         "safeContextWindow": 1047576,
         "safeMaxOutputTokens": 32768,
@@ -378,16 +282,10 @@
         "maxOutputTokens": 32768
       },
       "modalities": {
-        "guaranteedInput": [
-          "text"
-        ],
-        "availableInput": [
-          "text"
-        ],
+        "guaranteedInput": ["text"],
+        "availableInput": ["text"],
         "conditionalInput": {},
-        "output": [
-          "text"
-        ]
+        "output": ["text"]
       },
       "capabilities": {
         "guaranteed": [
@@ -421,20 +319,12 @@
         }
       },
       "declared": {
-        "modelIds": [
-          "openai/gpt-4.1-mini-fast"
-        ],
-        "endpointIds": [
-          "openai.personal.primary.us-east-1.fast"
-        ]
+        "modelIds": ["openai/gpt-4.1-mini-fast"],
+        "endpointIds": ["openai.personal.primary.us-east-1.fast"]
       },
       "routable": {
-        "modelIds": [
-          "openai/gpt-4.1-mini-fast"
-        ],
-        "endpointIds": [
-          "openai.personal.primary.us-east-1.fast"
-        ]
+        "modelIds": ["openai/gpt-4.1-mini-fast"],
+        "endpointIds": ["openai.personal.primary.us-east-1.fast"]
       },
       "piMapping": {
         "contextWindow": 1047576,
@@ -445,9 +335,7 @@
           "supportsLongCacheRetention": true
         }
       },
-      "sources": [
-        "catalog:openai/gpt-4.1-mini-fast"
-      ],
+      "sources": ["catalog:openai/gpt-4.1-mini-fast"],
       "upstream_model_id": "openai/gpt-4.1-mini-fast",
       "fixed_effort": null
     },
@@ -455,19 +343,11 @@
       "id": "openai/gpt-4.1-mini-fast",
       "object": "model",
       "owned_by": "role-model",
-      "endpoint_ids": [
-        "openai.personal.primary.us-east-1.fast"
-      ],
+      "endpoint_ids": ["openai.personal.primary.us-east-1.fast"],
       "type": "model",
-      "targetModelIds": [
-        "openai/gpt-4.1-mini-fast"
-      ],
-      "canonicalModelIds": [
-        "openai/gpt-4.1-mini-fast"
-      ],
-      "providerIds": [
-        "openai"
-      ],
+      "targetModelIds": ["openai/gpt-4.1-mini-fast"],
+      "canonicalModelIds": ["openai/gpt-4.1-mini-fast"],
+      "providerIds": ["openai"],
       "limits": {
         "safeContextWindow": 1047576,
         "safeMaxOutputTokens": 32768,
@@ -475,16 +355,10 @@
         "maxOutputTokens": 32768
       },
       "modalities": {
-        "guaranteedInput": [
-          "text"
-        ],
-        "availableInput": [
-          "text"
-        ],
+        "guaranteedInput": ["text"],
+        "availableInput": ["text"],
         "conditionalInput": {},
-        "output": [
-          "text"
-        ]
+        "output": ["text"]
       },
       "capabilities": {
         "guaranteed": [
@@ -518,20 +392,12 @@
         }
       },
       "declared": {
-        "modelIds": [
-          "openai/gpt-4.1-mini-fast"
-        ],
-        "endpointIds": [
-          "openai.personal.primary.us-east-1.fast"
-        ]
+        "modelIds": ["openai/gpt-4.1-mini-fast"],
+        "endpointIds": ["openai.personal.primary.us-east-1.fast"]
       },
       "routable": {
-        "modelIds": [
-          "openai/gpt-4.1-mini-fast"
-        ],
-        "endpointIds": [
-          "openai.personal.primary.us-east-1.fast"
-        ]
+        "modelIds": ["openai/gpt-4.1-mini-fast"],
+        "endpointIds": ["openai.personal.primary.us-east-1.fast"]
       },
       "piMapping": {
         "contextWindow": 1047576,
@@ -542,9 +408,7 @@
           "supportsLongCacheRetention": true
         }
       },
-      "sources": [
-        "catalog:openai/gpt-4.1-mini-fast"
-      ]
+      "sources": ["catalog:openai/gpt-4.1-mini-fast"]
     }
   ],
   "effort": {

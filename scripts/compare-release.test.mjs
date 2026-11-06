@@ -31,13 +31,22 @@ const runCompare = (args) =>
     });
     let stdout = "";
     let stderr = "";
-    child.stdout.on("data", (chunk) => { stdout += String(chunk); });
-    child.stderr.on("data", (chunk) => { stderr += String(chunk); });
+    child.stdout.on("data", (chunk) => {
+      stdout += String(chunk);
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += String(chunk);
+    });
     child.on("close", (code) => resolve({ code, stderr, stdout }));
   });
 
-const health = (version, extra = {}) => ({ runtime: { channel: "development", version, ...extra } });
-const summary = (extra = {}) => ({ runtime: { channel: "development", ...extra }, unifiedConfig: { path: "x" } });
+const health = (version, extra = {}) => ({
+  runtime: { channel: "development", version, ...extra },
+});
+const summary = (extra = {}) => ({
+  runtime: { channel: "development", ...extra },
+  unifiedConfig: { path: "x" },
+});
 
 const bodiesFor = (version, extra = {}) => ({
   "/healthz": health(version, extra),
@@ -55,7 +64,12 @@ test("S238: identical releases classify as same", async () => {
   const left = await listen(bodiesFor("0.0.20-1"));
   const right = await listen(bodiesFor("0.0.20-1"));
   try {
-    const result = await runCompare(["--left", "http://127.0.0.1:" + String(left.port), "--right", "http://127.0.0.1:" + String(right.port)]);
+    const result = await runCompare([
+      "--left",
+      `http://127.0.0.1:${String(left.port)}`,
+      "--right",
+      `http://127.0.0.1:${String(right.port)}`,
+    ]);
     assert.equal(result.code, 0, result.stdout + result.stderr);
     assert.match(result.stdout, /same \/healthz/);
     assert.equal(result.stdout.includes("different"), false);
@@ -69,7 +83,12 @@ test("S238: an added key is additive-shape, not shape-delta", async () => {
   const left = await listen(bodiesFor("0.0.20-1"));
   const right = await listen(bodiesFor("0.0.20-1", { release_id: "run88" }));
   try {
-    const result = await runCompare(["--left", "http://127.0.0.1:" + String(left.port), "--right", "http://127.0.0.1:" + String(right.port)]);
+    const result = await runCompare([
+      "--left",
+      `http://127.0.0.1:${String(left.port)}`,
+      "--right",
+      `http://127.0.0.1:${String(right.port)}`,
+    ]);
     assert.equal(result.code, 0, result.stdout + result.stderr);
     assert.match(result.stdout, /additive-shape \/healthz/);
     assert.match(result.stdout, /"additive-shape":2/);
@@ -81,13 +100,24 @@ test("S238: an added key is additive-shape, not shape-delta", async () => {
 
 test("S238: a value change is different, not additive", async () => {
   const left = await listen(bodiesFor("0.0.20-1"));
-  const right = await listen({ ...bodiesFor("0.0.20-1"), "/api/role-model/router/summary": { strategy: "cost" } });
+  const right = await listen({
+    ...bodiesFor("0.0.20-1"),
+    "/api/role-model/router/summary": { strategy: "cost" },
+  });
   try {
-    const result = await runCompare(["--left", "http://127.0.0.1:" + String(left.port), "--right", "http://127.0.0.1:" + String(right.port)]);
+    const result = await runCompare([
+      "--left",
+      `http://127.0.0.1:${String(left.port)}`,
+      "--right",
+      `http://127.0.0.1:${String(right.port)}`,
+    ]);
     // A real value difference must FAIL the parity run; exit 0 would report a difference as acceptable.
     assert.equal(result.code, 1, result.stdout + result.stderr);
     assert.match(result.stdout, /different \/api\/role-model\/router\/summary/);
-    assert.match(result.stdout, /value-diff \/api\/role-model\/router\/summary: strategy \("balanced" -> "cost"\)/);
+    assert.match(
+      result.stdout,
+      /value-diff \/api\/role-model\/router\/summary: strategy \("balanced" -> "cost"\)/,
+    );
   } finally {
     left.server.close();
     right.server.close();
@@ -99,12 +129,18 @@ test("S238: a wrong expected version fails with exit 2", async () => {
   const right = await listen(bodiesFor("0.0.20"));
   try {
     const result = await runCompare([
-      "--left", "http://127.0.0.1:" + String(left.port),
-      "--right", "http://127.0.0.1:" + String(right.port),
-      "--expect-left-version", "0.0.20-999",
+      "--left",
+      `http://127.0.0.1:${String(left.port)}`,
+      "--right",
+      `http://127.0.0.1:${String(right.port)}`,
+      "--expect-left-version",
+      "0.0.20-999",
     ]);
     assert.equal(result.code, 2, result.stdout + result.stderr);
-    assert.match(result.stdout, /FAIL identity: left is 0\.0\.20-231-gd61c32dc, expected 0\.0\.20-999/);
+    assert.match(
+      result.stdout,
+      /FAIL identity: left is 0\.0\.20-231-gd61c32dc, expected 0\.0\.20-999/,
+    );
   } finally {
     left.server.close();
     right.server.close();
@@ -116,10 +152,14 @@ test("S238: matching expected versions pass and are printed", async () => {
   const right = await listen(bodiesFor("0.0.20"));
   try {
     const result = await runCompare([
-      "--left", "http://127.0.0.1:" + String(left.port),
-      "--right", "http://127.0.0.1:" + String(right.port),
-      "--expect-left-version", "0.0.20-231-gd61c32dc",
-      "--expect-right-version", "0.0.20",
+      "--left",
+      `http://127.0.0.1:${String(left.port)}`,
+      "--right",
+      `http://127.0.0.1:${String(right.port)}`,
+      "--expect-left-version",
+      "0.0.20-231-gd61c32dc",
+      "--expect-right-version",
+      "0.0.20",
     ]);
     assert.equal(result.code, 0, result.stdout + result.stderr);
     assert.match(result.stdout, /identity left=0\.0\.20-231-gd61c32dc right=0\.0\.20/);

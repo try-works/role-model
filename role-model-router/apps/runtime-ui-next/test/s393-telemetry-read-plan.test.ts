@@ -29,7 +29,7 @@ const waitFor = async (read: () => boolean, label: string): Promise<void> => {
     if (read()) return;
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
-  throw new Error("Timed out waiting for " + label);
+  throw new Error(`Timed out waiting for ${label}`);
 };
 
 interface FakeSource extends RuntimeEventSourceLike {
@@ -47,7 +47,9 @@ const createFakeSource = (): FakeSource => {
       set.add(listener);
       listeners.set(type, set);
     },
-    close() { closes += 1; },
+    close() {
+      closes += 1;
+    },
     closeCount: () => closes,
     emit(type, data) {
       for (const listener of listeners.get(type) ?? []) listener(new MessageEvent(type, { data }));
@@ -83,7 +85,11 @@ describe("S392a telemetry read plan (R12 exact multiplicity)", () => {
     const model = shellModel({ route: { _tag: "ModelsRoles" } });
     const result = shellUpdate(model, telemetry());
     const reads = readsOf(result, "ReadReadback");
-    expect(reads.map((command) => String(command.args?.key)).sort()).toEqual(["configuredModels", "modelEndpoints", "rolePolicy"]);
+    expect(reads.map((command) => String(command.args?.key)).sort()).toEqual([
+      "configuredModels",
+      "modelEndpoints",
+      "rolePolicy",
+    ]);
     for (const command of reads) {
       const key = String(command.args?.key);
       // SAFETY: the two plan keys were asserted above; indexing only those readback keys.
@@ -98,7 +104,14 @@ describe("S392a telemetry read plan (R12 exact multiplicity)", () => {
     const model = shellModel({ route: { _tag: "SystemOperator" } });
     const result = shellUpdate(model, telemetry());
     const reads = readsOf(result, "ReadReadback");
-    const keys = ["operatorStatus", "operatorTraceRoots", "replayJobs", "evaluationJobs", "learningProfile", "learningAdvisory"];
+    const keys = [
+      "operatorStatus",
+      "operatorTraceRoots",
+      "replayJobs",
+      "evaluationJobs",
+      "learningProfile",
+      "learningAdvisory",
+    ];
     expect(reads.map((command) => String(command.args?.key)).sort()).toEqual([...keys].sort());
     for (const command of reads) {
       const key = String(command.args?.key);
@@ -162,7 +175,10 @@ describe("S392a telemetry read plan (R12 exact multiplicity)", () => {
   });
 
   it("keeps exact multiplicity for two telemetry events (one read each, tokens advance per event)", () => {
-    const first = shellUpdate(shellModel({ route: { _tag: "LearningDecisions" } }), telemetry("req-a"));
+    const first = shellUpdate(
+      shellModel({ route: { _tag: "LearningDecisions" } }),
+      telemetry("req-a"),
+    );
     expect(readsOf(first, "ReadReadback")).toHaveLength(1);
     const second = shellUpdate(first.model, telemetry("req-b"));
     const reads = readsOf(second, "ReadReadback");
@@ -176,14 +192,21 @@ describe("S392a telemetry read plan (R12 exact multiplicity)", () => {
     const messages: Message[] = [];
     const fiber = Effect.runFork(
       Stream.runForEach(refreshRevisionStream(factory), (message) =>
-        Effect.sync(() => { messages.push(message); })),
+        Effect.sync(() => {
+          messages.push(message);
+        }),
+      ),
     );
     try {
       await waitFor(() => source.listenerCount("telemetry.update") === 1, "one telemetry listener");
       expect(source.listenerCount("revision.update")).toBe(1);
       source.emit(
         "telemetry.update",
-        JSON.stringify({ emittedAtMs: 1, eventName: "telemetry.update", request: { requestId: "req-1" } }),
+        JSON.stringify({
+          emittedAtMs: 1,
+          eventName: "telemetry.update",
+          request: { requestId: "req-1" },
+        }),
       );
       await waitFor(() => messages.length === 1, "one telemetry message");
     } finally {
@@ -192,7 +215,11 @@ describe("S392a telemetry read plan (R12 exact multiplicity)", () => {
     expect(source.closeCount()).toBe(1);
     source.emit(
       "telemetry.update",
-      JSON.stringify({ emittedAtMs: 2, eventName: "telemetry.update", request: { requestId: "req-2" } }),
+      JSON.stringify({
+        emittedAtMs: 2,
+        eventName: "telemetry.update",
+        request: { requestId: "req-2" },
+      }),
     );
     expect(messages).toHaveLength(1);
   });

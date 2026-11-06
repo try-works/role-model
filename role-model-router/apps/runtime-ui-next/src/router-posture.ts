@@ -49,5 +49,16 @@ export const initialRouterPostureState = (): RouterPostureState => ({
 });
 
 export const ROUTER_MODES = ["baseline", "difficulty", "hybrid", "intelligent"] as const;
-export const ROUTER_SCORING_STRATEGIES = ["balanced", "quality", "latency", "cost", "custom"] as const;
-export const ROUTER_EXECUTION_MODES = ["decision_only", "hybrid", "local_only", "remote_only"] as const;
+export const ROUTER_SCORING_STRATEGIES = [
+  "balanced",
+  "quality",
+  "latency",
+  "cost",
+  "custom",
+] as const;
+export const ROUTER_EXECUTION_MODES = [
+  "decision_only",
+  "hybrid",
+  "local_only",
+  "remote_only",
+] as const;

@@ -45,7 +45,10 @@ export const releaseHostResources = async (
   const errors: HostReleaseError[] = [];
   const released: string[] = [];
   const result = { errors, released };
-  const attempt = async (step: string, release: (() => Promise<void>) | undefined): Promise<void> => {
+  const attempt = async (
+    step: string,
+    release: (() => Promise<void>) | undefined,
+  ): Promise<void> => {
     const before = result.errors.length;
     await releaseStep(step, release, result);
     if (result.errors.length > before) {

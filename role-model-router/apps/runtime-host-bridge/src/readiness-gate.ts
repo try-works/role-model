@@ -22,7 +22,13 @@ export type ReadinessStageId =
   | "remote-health"
   | "inventory";
 
-export type ReadinessStageStatus = "pending" | "running" | "ready" | "degraded" | "failed" | "skipped";
+export type ReadinessStageStatus =
+  | "pending"
+  | "running"
+  | "ready"
+  | "degraded"
+  | "failed"
+  | "skipped";
 
 export interface ReadinessOutcome {
   readonly ready: boolean;

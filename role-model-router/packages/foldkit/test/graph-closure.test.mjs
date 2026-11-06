@@ -488,14 +488,18 @@ test("emitted declarations name the first-party wrappers, never the upstream pac
       const source = maskNonCode(await readFile(file, "utf8"));
       for (const specifier of importSpecifiers(source)) {
         for (const name of upstream) {
-          if (specifier === name || specifier.startsWith(name + "/")) {
-            offenders.push(path.relative(here, file) + " -> " + specifier);
+          if (specifier === name || specifier.startsWith(`${name}/`)) {
+            offenders.push(`${path.relative(here, file)} -> ${specifier}`);
           }
         }
       }
     }
   }
-  assert.deepEqual(offenders, [], "declarations must reference @role-model-router/*, not upstream names");
+  assert.deepEqual(
+    offenders,
+    [],
+    "declarations must reference @role-model-router/*, not upstream names",
+  );
 });
 
 test("a published subpath whose source file is missing fails entry generation loudly", async () => {

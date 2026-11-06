@@ -4,17 +4,27 @@ import { mountShell } from "../src/mount";
 import { createReadbackClients } from "../src/readback";
 
 const mounted: Array<{ container: HTMLElement; handle: { dispose(): void } }> = [];
-const mountAt = (fetchImpl: typeof fetch, retentionFetchImpl: typeof fetch, path = "/system/storage-retention") => {
+const mountAt = (
+  fetchImpl: typeof fetch,
+  retentionFetchImpl: typeof fetch,
+  path = "/system/storage-retention",
+) => {
   window.history.replaceState({}, "", path);
   const container = document.createElement("div");
   container.id = "s595-storage-retention";
   document.body.append(container);
-  const handle = mountShell(container, { readbackReaders: createReadbackClients({ fetchImpl }), retentionFetchImpl });
+  const handle = mountShell(container, {
+    readbackReaders: createReadbackClients({ fetchImpl }),
+    retentionFetchImpl,
+  });
   mounted.push({ container, handle });
 };
 
 afterEach(() => {
-  for (const entry of mounted.splice(0)) { entry.handle.dispose(); entry.container.remove(); }
+  for (const entry of mounted.splice(0)) {
+    entry.handle.dispose();
+    entry.container.remove();
+  }
   window.history.replaceState({}, "", "/");
 });
 
@@ -26,18 +36,38 @@ const waitFor = async (read: () => string | null, label: string): Promise<string
     if (last !== null && last !== "loading" && last !== "idle") return last;
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
-  throw new Error("Timed out waiting for " + label + " (last: " + String(last) + ")");
+  throw new Error(`Timed out waiting for ${label} (last: ${String(last)})`);
 };
 
 describe("S595 storage retention and control wiring", () => {
   it("saves the retention policy to the host", async () => {
     const requests: Array<{ method: string; url: string; body: unknown }> = [];
     const retentionFetch: typeof fetch = async (input, init) => {
-      requests.push({ method: init?.method ?? "GET", url: String(input), body: init?.body === undefined ? undefined : JSON.parse(String(init.body)) });
-      return new Response(JSON.stringify({ ok: true }), { headers: { "content-type": "application/json" }, status: 200 });
+      requests.push({
+        method: init?.method ?? "GET",
+        url: String(input),
+        body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+      });
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      });
     };
-    mountAt(async () => new Response(JSON.stringify({ rows: [] }), { headers: { "content-type": "application/json" }, status: 200 }), retentionFetch);
-    await waitFor(() => document.querySelector("[data-route='storage-retention']")?.getAttribute("data-page-layout") ?? null, "storage page");
+    mountAt(
+      async () =>
+        new Response(JSON.stringify({ rows: [] }), {
+          headers: { "content-type": "application/json" },
+          status: 200,
+        }),
+      retentionFetch,
+    );
+    await waitFor(
+      () =>
+        document
+          .querySelector("[data-route='storage-retention']")
+          ?.getAttribute("data-page-layout") ?? null,
+      "storage page",
+    );
     const save = document.querySelector<HTMLButtonElement>("[data-retention-save-policy]");
     expect(save, "wired save policy button missing").not.toBeNull();
     const size = document.querySelector<HTMLInputElement>('input[aria-label="Maximum size (GB)"]');
@@ -45,26 +75,64 @@ describe("S595 storage retention and control wiring", () => {
     expect(size).not.toBeNull();
     expect(age).not.toBeNull();
     size!.value = "2";
-    size!.dispatchEvent(new Event("input", { bubbles: true }));
+    size?.dispatchEvent(new Event("input", { bubbles: true }));
     age!.value = "60";
-    age!.dispatchEvent(new Event("input", { bubbles: true }));
+    age?.dispatchEvent(new Event("input", { bubbles: true }));
     await new Promise((resolve) => setTimeout(resolve, 50));
-    save!.click();
+    save?.click();
     await new Promise((resolve) => setTimeout(resolve, 250));
-    console.log("S595REQS", JSON.stringify(requests), "status", document.querySelector("[data-retention-status]")?.getAttribute("data-retention-status"), "msg", document.querySelector("[data-retention-status]")?.textContent);
-    expect(requests.some((request) => request.method === "PUT" && request.url.includes("/api/role-model/storage-retention/policy"))).toBe(true);
+    console.log(
+      "S595REQS",
+      JSON.stringify(requests),
+      "status",
+      document.querySelector("[data-retention-status]")?.getAttribute("data-retention-status"),
+      "msg",
+      document.querySelector("[data-retention-status]")?.textContent,
+    );
+    expect(
+      requests.some(
+        (request) =>
+          request.method === "PUT" &&
+          request.url.includes("/api/role-model/storage-retention/policy"),
+      ),
+    ).toBe(true);
     const put = requests.find((request) => request.method === "PUT");
-    expect(put?.body).toMatchObject({ policyId: "ui-managed", scope: "all", maxBytes: 2 * 1024 * 1024 * 1024, maxAgeDays: 60 });
+    expect(put?.body).toMatchObject({
+      policyId: "ui-managed",
+      scope: "all",
+      maxBytes: 2 * 1024 * 1024 * 1024,
+      maxAgeDays: 60,
+    });
   });
 
   it("runs dry-run and execute against the host", async () => {
     const requests: Array<{ method: string; url: string; body?: unknown }> = [];
     const retentionFetch: typeof fetch = async (input, init) => {
-      requests.push({ method: init?.method ?? "GET", url: String(input), body: init?.body === undefined ? undefined : JSON.parse(String(init.body)) });
-      return new Response(JSON.stringify({ retention: { currentPlan: { manifestHash: "hash-1" } } }), { headers: { "content-type": "application/json" }, status: 200 });
+      requests.push({
+        method: init?.method ?? "GET",
+        url: String(input),
+        body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+      });
+      return new Response(
+        JSON.stringify({ retention: { currentPlan: { manifestHash: "hash-1" } } }),
+        { headers: { "content-type": "application/json" }, status: 200 },
+      );
     };
-    mountAt(async () => new Response(JSON.stringify({ rows: [] }), { headers: { "content-type": "application/json" }, status: 200 }), retentionFetch);
-    await waitFor(() => document.querySelector("[data-route='storage-retention']")?.getAttribute("data-page-layout") ?? null, "storage page");
+    mountAt(
+      async () =>
+        new Response(JSON.stringify({ rows: [] }), {
+          headers: { "content-type": "application/json" },
+          status: 200,
+        }),
+      retentionFetch,
+    );
+    await waitFor(
+      () =>
+        document
+          .querySelector("[data-route='storage-retention']")
+          ?.getAttribute("data-page-layout") ?? null,
+      "storage page",
+    );
     const execute = document.querySelector<HTMLButtonElement>("[data-retention-execute]");
     expect(execute?.getAttribute("aria-disabled")).toBe("true");
     expect(execute?.getAttribute("data-reason-disabled")).toContain("dry-run");
@@ -72,15 +140,42 @@ describe("S595 storage retention and control wiring", () => {
     await new Promise((resolve) => setTimeout(resolve, 250));
     document.querySelector<HTMLButtonElement>("[data-retention-execute]")?.click();
     await new Promise((resolve) => setTimeout(resolve, 250));
-    expect(requests.some((request) => request.method === "POST" && request.url.includes("/api/role-model/storage-retention/dry-run"))).toBe(true);
-    const executeRequest = requests.find((request) => request.method === "POST" && request.url.includes("/api/role-model/storage-retention/execute"));
+    expect(
+      requests.some(
+        (request) =>
+          request.method === "POST" &&
+          request.url.includes("/api/role-model/storage-retention/dry-run"),
+      ),
+    ).toBe(true);
+    const executeRequest = requests.find(
+      (request) =>
+        request.method === "POST" &&
+        request.url.includes("/api/role-model/storage-retention/execute"),
+    );
     expect(executeRequest?.body).toEqual({ manifestHash: "hash-1" });
   });
 
   it("reasons every remaining handler-less control and wires the logs refresh", async () => {
-    mountAt(async () => new Response(JSON.stringify({ rows: [] }), { headers: { "content-type": "application/json" }, status: 200 }), async () => new Response(JSON.stringify({ ok: true }), { headers: { "content-type": "application/json" }, status: 200 }), "/local/logs");
+    mountAt(
+      async () =>
+        new Response(JSON.stringify({ rows: [] }), {
+          headers: { "content-type": "application/json" },
+          status: 200,
+        }),
+      async () =>
+        new Response(JSON.stringify({ ok: true }), {
+          headers: { "content-type": "application/json" },
+          status: 200,
+        }),
+      "/local/logs",
+    );
     // The local logs page which carries the wired refresh control.
-    await waitFor(() => document.querySelector("[data-route='local-logs']")?.getAttribute("data-page-layout") ?? null, "logs page");
+    await waitFor(
+      () =>
+        document.querySelector("[data-route='local-logs']")?.getAttribute("data-page-layout") ??
+        null,
+      "logs page",
+    );
     const refresh = document.querySelector<HTMLButtonElement>("[data-local-logs-refresh]");
     expect(refresh, "wired local logs refresh missing").not.toBeNull();
   });
@@ -89,26 +184,59 @@ describe("S595 storage retention and control wiring", () => {
     const cases: Array<{ path: string; marker: string; labels: ReadonlyArray<string> }> = [
       { path: "/local/peers", marker: "local-peers", labels: ["Add endpoint"] },
       { path: "/local/peer-models", marker: "local-peer-models", labels: ["Register model"] },
-      { path: "/local/llama-swap/models", marker: "local-llama-swap-models", labels: ["Load model", "All roles"] },
-      { path: "/system/operator", marker: "system-operator", labels: ["Create Replay", "Load Operator State"] },
-      { path: "/system/extensions", marker: "system-extensions", labels: ["Download & validate latest"] },
+      {
+        path: "/local/llama-swap/models",
+        marker: "local-llama-swap-models",
+        labels: ["Load model", "All roles"],
+      },
+      {
+        path: "/system/operator",
+        marker: "system-operator",
+        labels: ["Create Replay", "Load Operator State"],
+      },
+      {
+        path: "/system/extensions",
+        marker: "system-extensions",
+        labels: ["Download & validate latest"],
+      },
     ];
     for (const entry of cases) {
       window.history.replaceState({}, "", entry.path);
       const container = document.createElement("div");
-      container.id = "s595-reasons-" + entry.path.replaceAll("/", "-");
+      container.id = `s595-reasons-${entry.path.replaceAll("/", "-")}`;
       document.body.append(container);
       const handle = mountShell(container, {
-        readbackReaders: createReadbackClients({ fetchImpl: async (input) => new Response(JSON.stringify(String(input).includes("/extensions") ? [{ id: "ext-1", label: "ext-1" }] : { rows: [] }), { headers: { "content-type": "application/json" }, status: 200 }) }),
+        readbackReaders: createReadbackClients({
+          fetchImpl: async (input) =>
+            new Response(
+              JSON.stringify(
+                String(input).includes("/extensions")
+                  ? [{ id: "ext-1", label: "ext-1" }]
+                  : { rows: [] },
+              ),
+              { headers: { "content-type": "application/json" }, status: 200 },
+            ),
+        }),
       });
       mounted.push({ container, handle });
-      await waitFor(() => document.querySelector("[data-route='" + entry.marker + "']")?.getAttribute("data-page-layout") ?? null, entry.path);
+      await waitFor(
+        () =>
+          document
+            .querySelector(`[data-route='${entry.marker}']`)
+            ?.getAttribute("data-page-layout") ?? null,
+        entry.path,
+      );
       for (const label of entry.labels) {
-        const button = [...document.querySelectorAll<HTMLButtonElement>("button")].find((element) => element.textContent?.trim() === label);
-        expect(button, label + " missing on " + entry.path).toBeDefined();
+        const button = [...document.querySelectorAll<HTMLButtonElement>("button")].find(
+          (element) => element.textContent?.trim() === label,
+        );
+        expect(button, `${label} missing on ${entry.path}`).toBeDefined();
         if (button === undefined) continue;
-        expect(button.disabled, label + " must be enabled on " + entry.path).toBe(false);
-        expect(button.getAttribute("aria-disabled"), label + " must not be aria-disabled on " + entry.path).not.toBe("true");
+        expect(button.disabled, `${label} must be enabled on ${entry.path}`).toBe(false);
+        expect(
+          button.getAttribute("aria-disabled"),
+          `${label} must not be aria-disabled on ${entry.path}`,
+        ).not.toBe("true");
       }
     }
   });
@@ -116,31 +244,64 @@ describe("S595 storage retention and control wiring", () => {
   it("updates and rolls back the operator shadow learning state", async () => {
     const requests: Array<{ method: string; url: string; body: unknown }> = [];
     const operatorFetch: typeof fetch = async (input, init) => {
-      requests.push({ method: init?.method ?? "GET", url: String(input), body: init?.body === undefined ? undefined : JSON.parse(String(init.body)) });
-      return new Response(JSON.stringify({ ok: true }), { headers: { "content-type": "application/json" }, status: 200 });
+      requests.push({
+        method: init?.method ?? "GET",
+        url: String(input),
+        body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+      });
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      });
     };
     window.history.replaceState({}, "", "/system/operator");
     const container = document.createElement("div");
     container.id = "s595-operator";
     document.body.append(container);
     const handle = mountShell(container, {
-      readbackReaders: createReadbackClients({ fetchImpl: async () => new Response(JSON.stringify({ rows: [] }), { headers: { "content-type": "application/json" }, status: 200 }) }),
+      readbackReaders: createReadbackClients({
+        fetchImpl: async () =>
+          new Response(JSON.stringify({ rows: [] }), {
+            headers: { "content-type": "application/json" },
+            status: 200,
+          }),
+      }),
       operatorLearningFetchImpl: operatorFetch,
     });
     mounted.push({ container, handle });
-    await waitFor(() => document.querySelector("[data-route='system-operator']")?.getAttribute("data-page-layout") ?? null, "operator page");
+    await waitFor(
+      () =>
+        document
+          .querySelector("[data-route='system-operator']")
+          ?.getAttribute("data-page-layout") ?? null,
+      "operator page",
+    );
     const select = document.querySelector<HTMLSelectElement>("[data-learning-mode-select]");
     expect(select, "learning mode select missing").not.toBeNull();
     select!.value = "disabled";
-    select!.dispatchEvent(new Event("change", { bubbles: true }));
+    select?.dispatchEvent(new Event("change", { bubbles: true }));
     await new Promise((resolve) => setTimeout(resolve, 40));
     document.querySelector<HTMLButtonElement>("[data-learning-mode-update]")?.click();
     await new Promise((resolve) => setTimeout(resolve, 200));
     document.querySelector<HTMLButtonElement>("[data-learning-rollback]")?.click();
     await new Promise((resolve) => setTimeout(resolve, 250));
-    expect(requests.some((request) => request.method === "POST" && request.url.includes("/api/role-model/operator/learning/mode"))).toBe(true);
-    const modeRequest = requests.find((request) => request.url.includes("/api/role-model/operator/learning/mode"));
+    expect(
+      requests.some(
+        (request) =>
+          request.method === "POST" &&
+          request.url.includes("/api/role-model/operator/learning/mode"),
+      ),
+    ).toBe(true);
+    const modeRequest = requests.find((request) =>
+      request.url.includes("/api/role-model/operator/learning/mode"),
+    );
     expect(modeRequest?.body).toEqual({ mode: "disabled" });
-    expect(requests.some((request) => request.method === "POST" && request.url.includes("/api/role-model/operator/learning/rollback"))).toBe(true);
+    expect(
+      requests.some(
+        (request) =>
+          request.method === "POST" &&
+          request.url.includes("/api/role-model/operator/learning/rollback"),
+      ),
+    ).toBe(true);
   });
 });

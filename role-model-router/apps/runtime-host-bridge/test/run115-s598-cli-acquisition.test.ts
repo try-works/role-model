@@ -1,8 +1,13 @@
 import { Effect, Exit, Layer, Scope } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { closeR27HostScope, composeR27HostLayer, R27_RESOURCE_IDS, type R27HostContract } from "../src/r27-layer-dag.js";
 import { composeReadinessOwner } from "../src/composition-dag.js";
+import {
+  type R27HostContract,
+  R27_RESOURCE_IDS,
+  closeR27HostScope,
+  composeR27HostLayer,
+} from "../src/r27-layer-dag.js";
 
 /**
  * S598 (R27): CLI-level acquisition test. This mirrors the production sequence in cli.ts:
@@ -15,13 +20,30 @@ describe("S598 R27 production acquisition", () => {
     const events: string[] = [];
     const readiness = composeReadinessOwner();
     const scope = Effect.runSync(Scope.make());
-    await Effect.runPromise(Layer.buildWithScope(composeR27HostLayer({ events, readiness }), scope));
+    await Effect.runPromise(
+      Layer.buildWithScope(composeR27HostLayer({ events, readiness }), scope),
+    );
     expect(readiness.ready()).toBe(true);
-    const acquired = events.filter((event) => event.startsWith("acquire:")).map((event) => event.slice("acquire:".length));
-    expect(acquired).toEqual(["readiness", "providerPermits", "backend", "bootstrap", "refresh", "drains", "benchmarks", "server", "cli", "host"]);
+    const acquired = events
+      .filter((event) => event.startsWith("acquire:"))
+      .map((event) => event.slice("acquire:".length));
+    expect(acquired).toEqual([
+      "readiness",
+      "providerPermits",
+      "backend",
+      "bootstrap",
+      "refresh",
+      "drains",
+      "benchmarks",
+      "server",
+      "cli",
+      "host",
+    ]);
     expect(events).toContain("ready");
     await Effect.runPromise(Scope.close(scope, Exit.void));
-    const released = events.filter((event) => event.startsWith("release:")).map((event) => event.slice("release:".length));
+    const released = events
+      .filter((event) => event.startsWith("release:"))
+      .map((event) => event.slice("release:".length));
     expect(released).toEqual([...acquired].reverse());
   });
 
@@ -29,16 +51,32 @@ describe("S598 R27 production acquisition", () => {
     const events: string[] = [];
     const scope = Effect.runSync(Scope.make());
     await expect(
-      Effect.runPromise(Layer.buildWithScope(composeR27HostLayer({ events, failOn: "benchmarks", readiness: composeReadinessOwner() }), scope)),
+      Effect.runPromise(
+        Layer.buildWithScope(
+          composeR27HostLayer({ events, failOn: "benchmarks", readiness: composeReadinessOwner() }),
+          scope,
+        ),
+      ),
     ).rejects.toThrow(/r27 layer acquisition failed: benchmarks/);
-    const acquired = events.filter((event) => event.startsWith("acquire:")).map((event) => event.slice("acquire:".length));
+    const acquired = events
+      .filter((event) => event.startsWith("acquire:"))
+      .map((event) => event.slice("acquire:".length));
     expect(acquired).toContain("drains");
     expect(acquired).not.toContain("server");
     await Effect.runPromise(Scope.close(scope, Exit.void)).catch(() => undefined);
   });
 
   test("the resource id set covers every acquired non-leaf node", () => {
-    for (const id of ["providerPermits", "backend", "bootstrap", "refresh", "drains", "benchmarks", "server", "cli"]) {
+    for (const id of [
+      "providerPermits",
+      "backend",
+      "bootstrap",
+      "refresh",
+      "drains",
+      "benchmarks",
+      "server",
+      "cli",
+    ]) {
       expect(R27_RESOURCE_IDS).toContain(id);
     }
   });
@@ -48,17 +86,32 @@ describe("S598 R27 production acquisition", () => {
     let host: R27HostContract | undefined;
     let serverClosed = 0;
     const scope = Effect.runSync(Scope.make());
-    await Effect.runPromise(Layer.buildWithScope(composeR27HostLayer({
-      events,
-      onHost: (value) => { host = value; },
-      acquire: {
-        server: async () => ({
-          handle: { close: async () => { serverClosed += 1; }, kind: "bridge-server" },
-          release: async () => { serverClosed += 1; events.push("release:server-handle"); },
+    await Effect.runPromise(
+      Layer.buildWithScope(
+        composeR27HostLayer({
+          events,
+          onHost: (value) => {
+            host = value;
+          },
+          acquire: {
+            server: async () => ({
+              handle: {
+                close: async () => {
+                  serverClosed += 1;
+                },
+                kind: "bridge-server",
+              },
+              release: async () => {
+                serverClosed += 1;
+                events.push("release:server-handle");
+              },
+            }),
+          },
+          readiness: composeReadinessOwner(),
         }),
-      },
-      readiness: composeReadinessOwner(),
-    }), scope));
+        scope,
+      ),
+    );
     expect(host?.handles.server?.handle).toMatchObject({ kind: "bridge-server" });
     expect(typeof (host?.handles.server?.handle as { close?: unknown }).close).toBe("function");
     expect(events).toContain("acquire:server");
@@ -72,13 +125,20 @@ describe("S598 R27 production acquisition", () => {
     const events: string[] = [];
     const scope = Effect.runSync(Scope.make());
     await expect(
-      Effect.runPromise(Layer.buildWithScope(composeR27HostLayer({
-        events,
-        readiness: composeReadinessOwner(),
-        acquire: {
-          server: async () => { throw new Error("server resource build failed"); },
-        },
-      }), scope)),
+      Effect.runPromise(
+        Layer.buildWithScope(
+          composeR27HostLayer({
+            events,
+            readiness: composeReadinessOwner(),
+            acquire: {
+              server: async () => {
+                throw new Error("server resource build failed");
+              },
+            },
+          }),
+          scope,
+        ),
+      ),
     ).rejects.toThrow(/server resource build failed/);
     expect(events).not.toContain("acquire:server");
     expect(events).not.toContain("acquire:cli");
@@ -90,17 +150,29 @@ describe("S598 R27 production acquisition", () => {
     let serverClosed = 0;
     const scope = Effect.runSync(Scope.make());
     await expect(
-      Effect.runPromise(Layer.buildWithScope(composeR27HostLayer({
-        events,
-        failAfter: "server",
-        readiness: composeReadinessOwner(),
-        acquire: {
-          server: async () => ({
-            handle: { close: async () => { serverClosed += 1; }, kind: "bridge-server" },
-            release: async () => { serverClosed += 1; },
+      Effect.runPromise(
+        Layer.buildWithScope(
+          composeR27HostLayer({
+            events,
+            failAfter: "server",
+            readiness: composeReadinessOwner(),
+            acquire: {
+              server: async () => ({
+                handle: {
+                  close: async () => {
+                    serverClosed += 1;
+                  },
+                  kind: "bridge-server",
+                },
+                release: async () => {
+                  serverClosed += 1;
+                },
+              }),
+            },
           }),
-        },
-      }), scope)),
+          scope,
+        ),
+      ),
     ).rejects.toThrow(/r27 host acquisition failed after server/);
     await closeR27HostScope(scope).catch(() => undefined);
     expect(serverClosed).toBe(1);

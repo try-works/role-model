@@ -16,7 +16,10 @@ describe("S128 scope-owned host resource", () => {
       Scope.provide(
         Effect.acquireRelease(
           Effect.promise(async () => ({ id: "server" })),
-          () => Effect.promise(async () => { closes += 1; }),
+          () =>
+            Effect.promise(async () => {
+              closes += 1;
+            }),
         ),
         scope,
       ),
@@ -33,7 +36,10 @@ describe("S128 scope-owned host resource", () => {
       Scope.provide(
         Effect.acquireRelease(
           Effect.promise(async () => ({ id: "server" })),
-          () => Effect.promise(async () => { throw new Error("close failed"); }),
+          () =>
+            Effect.promise(async () => {
+              throw new Error("close failed");
+            }),
         ),
         scope,
       ),
@@ -48,8 +54,13 @@ describe("S128 scope-owned host resource", () => {
     const exit = await Effect.runPromiseExit(
       Scope.provide(
         Effect.acquireRelease(
-          Effect.promise(async (): Promise<{ id: string }> => { throw new Error("bind failed"); }),
-          () => Effect.promise(async () => { closes += 1; }),
+          Effect.promise(async (): Promise<{ id: string }> => {
+            throw new Error("bind failed");
+          }),
+          () =>
+            Effect.promise(async () => {
+              closes += 1;
+            }),
         ),
         scope,
       ),

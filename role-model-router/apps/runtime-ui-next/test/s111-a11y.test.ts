@@ -9,13 +9,21 @@ import { mountShell } from "../src/mount";
  * new control cannot ship without an accessible name.
  */
 const routes = [
-  "/", "/models", "/studio", "/control/controller", "/learning", "/requests",
+  "/",
+  "/models",
+  "/studio",
+  "/control/controller",
+  "/learning",
+  "/requests",
   "/does/not/exist",
 ] as const;
 
 const mounted: Array<{ container: HTMLElement; handle: { dispose(): void } }> = [];
 afterEach(() => {
-  for (const entry of mounted.splice(0)) { entry.handle.dispose(); entry.container.remove(); }
+  for (const entry of mounted.splice(0)) {
+    entry.handle.dispose();
+    entry.container.remove();
+  }
   window.history.replaceState({}, "", "/");
 });
 
@@ -41,7 +49,7 @@ describe("S111 accessibility invariants per route", () => {
       window.history.replaceState({}, "", route);
       const container = document.createElement("div");
       // Foldkit requires a container id for Model preservation; without it the shell refuses to mount.
-      container.id = "s111-" + route.replaceAll(/[^a-zA-Z0-9]/g, "-");
+      container.id = `s111-${route.replaceAll(/[^a-zA-Z0-9]/g, "-")}`;
       document.body.append(container);
       const handle = mountShell(container);
       mounted.push({ container, handle });
@@ -57,7 +65,9 @@ describe("S111 accessibility invariants per route", () => {
         const interactive = [...document.querySelectorAll("button,a[href],input,select,textarea")];
         unnamed = interactive
           .filter((element) => accessibleName(element) === "")
-          .map((element) => element.tagName.toLowerCase() + ":" + (element.getAttribute("type") ?? ""));
+          .map(
+            (element) => `${element.tagName.toLowerCase()}:${element.getAttribute("type") ?? ""}`,
+          );
         if (unnamed.length === 0) break;
         await new Promise((resolve) => setTimeout(resolve, 20));
       }

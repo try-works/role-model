@@ -34,7 +34,9 @@ describe("S134 every registration closes a scope", () => {
       } else {
         expect(body, kind).toContain("Scope.close(");
       }
-      expect(body, kind).not.toMatch(/await (server|backend|packagedRuntime|extensionRuntime)\.(close|shutdown)\(\)/);
+      expect(body, kind).not.toMatch(
+        /await (server|backend|packagedRuntime|extensionRuntime)\.(close|shutdown)\(\)/,
+      );
     }
   });
 });

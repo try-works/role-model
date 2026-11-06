@@ -40,7 +40,9 @@ afterEach(async () => {
     const supervisor = supervisors.pop();
     await supervisor?.shutdown();
   }
-  await Promise.all(tempRoots.splice(0).map(async (tempRoot) => rm(tempRoot, { recursive: true, force: true })));
+  await Promise.all(
+    tempRoots.splice(0).map(async (tempRoot) => rm(tempRoot, { recursive: true, force: true })),
+  );
 });
 
 async function waitFor(predicate: () => boolean, timeoutMs = 10_000): Promise<void> {
@@ -63,7 +65,7 @@ async function waitForHttpDown(url: string, timeoutMs = 10_000): Promise<void> {
     }
     await new Promise((resolve) => setTimeout(resolve, 25));
   }
-  throw new Error("Timed out waiting for " + url + " to stop responding.");
+  throw new Error(`Timed out waiting for ${url} to stop responding.`);
 }
 
 const LOOPBACK_HOSTS = ["127.0.0.1", "::1", "localhost"];
@@ -74,16 +76,20 @@ const LOOPBACK_HOSTS = ["127.0.0.1", "::1", "localhost"];
  * Staged as the weak S305-RED version first (always null); the negative test fails against it.
  */
 const reportedHealthIssue = (reportedUrl: string | undefined, boundPort: number): string | null => {
-  if (reportedUrl === undefined || reportedUrl.length === 0) return "the vendor must report a health URL";
+  if (reportedUrl === undefined || reportedUrl.length === 0)
+    return "the vendor must report a health URL";
   let url: URL;
   try {
     url = new URL(reportedUrl);
   } catch {
-    return "the reported health URL is not a URL: " + reportedUrl;
+    return `the reported health URL is not a URL: ${reportedUrl}`;
   }
-  if (!LOOPBACK_HOSTS.includes(url.hostname)) return "non-loopback health host: " + url.hostname;
-  const reportedPort = url.port.length > 0 ? Number(url.port) : url.protocol === "https:" ? 443 : 80;
-  return reportedPort === boundPort ? null : "health port " + String(reportedPort) + " does not match the bound port " + String(boundPort);
+  if (!LOOPBACK_HOSTS.includes(url.hostname)) return `non-loopback health host: ${url.hostname}`;
+  const reportedPort =
+    url.port.length > 0 ? Number(url.port) : url.protocol === "https:" ? 443 : 80;
+  return reportedPort === boundPort
+    ? null
+    : `health port ${String(reportedPort)} does not match the bound port ${String(boundPort)}`;
 };
 
 const processIsAlive = (pid: number): boolean => {
@@ -128,7 +134,7 @@ describe("S303 scoped process service", () => {
       'const server = createServer((request, response) => { response.writeHead(200, { "content-type": "text/plain" }); response.end("ok"); });',
       'server.listen(Number(process.env.PORT), "127.0.0.1", () => { const address = server.address(); appendFileSync(process.env.MARKER, "bind=" + String(address.address) + ":" + String(address.port) + "\\n"); });',
       'console.log("s303-scoped-log-line");',
-      'setInterval(() => {}, 1000);',
+      "setInterval(() => {}, 1000);",
     ].join("\n");
     const supervisor = new ProcessSupervisor();
     supervisors.push(supervisor);
@@ -138,8 +144,13 @@ describe("S303 scoped process service", () => {
       command: process.execPath,
       args: ["-e", script],
       cwd: tempRoot,
-      env: { MARKER: markerPath, PORT: String(port), S303_MARK: "scoped-mark", S303_TOKEN: "token-s303" },
-      healthCheckUrl: "http://127.0.0.1:" + String(port) + "/healthz",
+      env: {
+        MARKER: markerPath,
+        PORT: String(port),
+        S303_MARK: "scoped-mark",
+        S303_TOKEN: "token-s303",
+      },
+      healthCheckUrl: `http://127.0.0.1:${String(port)}/healthz`,
       required: true,
       shutdownTimeoutMs: 10_000,
       startupTimeoutMs: 15_000,
@@ -150,16 +161,24 @@ describe("S303 scoped process service", () => {
     expect(marker).toContain("token=token-s303");
     // Parse the address the child ACTUALLY bound (recorded by the child) and the port the supervisor
     // recorded — never a literal URL rebuilt in the test.
-    await waitFor(() => (supervisor.getVendorStatus("s303-scoped")?.logs ?? []).length >= 0 && marker.includes("bind="));
+    await waitFor(
+      () =>
+        (supervisor.getVendorStatus("s303-scoped")?.logs ?? []).length >= 0 &&
+        marker.includes("bind="),
+    );
     const bindLine = marker.split("\n").find((line) => line.startsWith("bind="));
     expect(bindLine).toBeDefined();
     const bind = String(bindLine).slice("bind=".length);
-    expect(reportedHealthIssue("http://" + bind + "/healthz", vendor.port)).toBeNull();
+    expect(reportedHealthIssue(`http://${bind}/healthz`, vendor.port)).toBeNull();
     expect(vendor.port).toBe(port);
-    expect(marker).toContain("cwd=" + tempRoot);
-    await waitFor(() => (supervisor.getVendorStatus("s303-scoped")?.logs ?? []).some((line) => line.includes("s303-scoped-log-line")));
+    expect(marker).toContain(`cwd=${tempRoot}`);
+    await waitFor(() =>
+      (supervisor.getVendorStatus("s303-scoped")?.logs ?? []).some((line) =>
+        line.includes("s303-scoped-log-line"),
+      ),
+    );
     await scope.close();
-    await waitForHttpDown("http://127.0.0.1:" + String(port) + "/healthz");
+    await waitForHttpDown(`http://127.0.0.1:${String(port)}/healthz`);
   });
 
   test("starting into a closed scope rolls the vendor back and kills the child", async () => {
@@ -169,7 +188,7 @@ describe("S303 scoped process service", () => {
     const script = [
       'const { createServer } = require("node:http");',
       'createServer((request, response) => { response.writeHead(200); response.end("ok"); }).listen(Number(process.env.PORT), "127.0.0.1");',
-      'setInterval(() => {}, 1000);',
+      "setInterval(() => {}, 1000);",
     ].join("\n");
     const supervisor = new ProcessSupervisor();
     supervisors.push(supervisor);
@@ -182,7 +201,7 @@ describe("S303 scoped process service", () => {
         command: process.execPath,
         args: ["-e", script],
         env: { PORT: String(port) },
-        healthCheckUrl: "http://127.0.0.1:" + String(port) + "/healthz",
+        healthCheckUrl: `http://127.0.0.1:${String(port)}/healthz`,
         required: true,
         shutdownTimeoutMs: 10_000,
         startupTimeoutMs: 15_000,
@@ -191,7 +210,7 @@ describe("S303 scoped process service", () => {
       rejected = true;
     }
     expect(rejected).toBe(true);
-    await waitForHttpDown("http://127.0.0.1:" + String(port) + "/healthz");
+    await waitForHttpDown(`http://127.0.0.1:${String(port)}/healthz`);
   });
 
   test("a rejecting stop during the rollback is surfaced, never swallowed", async () => {
@@ -248,11 +267,17 @@ describe("S303 scoped process service", () => {
   test("a vendor reporting a non-loopback health URL is rejected (negative harness test)", async () => {
     const port = await allocatePort();
     // A vendor double that reports 0.0.0.0 (and a LAN address) must be rejected by the same assertion helper.
-    expect(reportedHealthIssue("http://0.0.0.0:" + String(port) + "/healthz", port)).toMatch(/non-loopback/);
-    expect(reportedHealthIssue("http://192.168.1.10:" + String(port) + "/healthz", port)).toMatch(/non-loopback/);
+    expect(reportedHealthIssue(`http://0.0.0.0:${String(port)}/healthz`, port)).toMatch(
+      /non-loopback/,
+    );
+    expect(reportedHealthIssue(`http://192.168.1.10:${String(port)}/healthz`, port)).toMatch(
+      /non-loopback/,
+    );
     // A mismatched port is rejected even on a loopback host.
-    expect(reportedHealthIssue("http://127.0.0.1:" + String(port + 1) + "/healthz", port)).toMatch(/port/);
-    expect(reportedHealthIssue("http://127.0.0.1:" + String(port) + "/healthz", port)).toBeNull();
+    expect(reportedHealthIssue(`http://127.0.0.1:${String(port + 1)}/healthz`, port)).toMatch(
+      /port/,
+    );
+    expect(reportedHealthIssue(`http://127.0.0.1:${String(port)}/healthz`, port)).toBeNull();
     expect(reportedHealthIssue(undefined, port)).toMatch(/report/);
   });
 
@@ -266,8 +291,8 @@ describe("S303 scoped process service", () => {
       'const { spawn } = require("node:child_process");',
       'const { writeFileSync } = require("node:fs");',
       'const { createServer } = require("node:http");',
-      'const grandchild = spawn(process.execPath, ["-e", ' + JSON.stringify(grandchildScript) + '], { stdio: "ignore" });',
-      'writeFileSync(process.env.GRANDCHILD_PID, String(grandchild.pid));',
+      `const grandchild = spawn(process.execPath, ["-e", ${JSON.stringify(grandchildScript)}], { stdio: "ignore" });`,
+      "writeFileSync(process.env.GRANDCHILD_PID, String(grandchild.pid));",
       'createServer((request, response) => { response.writeHead(200); response.end("ok"); }).listen(Number(process.env.PORT), "127.0.0.1");',
     ].join("\n");
     const supervisor = new ProcessSupervisor();
@@ -278,7 +303,7 @@ describe("S303 scoped process service", () => {
       command: process.execPath,
       args: ["-e", parentScript],
       env: { GRANDCHILD_PID: grandchildPidPath, PORT: String(port) },
-      healthCheckUrl: "http://127.0.0.1:" + String(port) + "/healthz",
+      healthCheckUrl: `http://127.0.0.1:${String(port)}/healthz`,
       required: true,
       shutdownTimeoutMs: 10_000,
       startupTimeoutMs: 15_000,

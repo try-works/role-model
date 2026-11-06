@@ -37,7 +37,12 @@ const request = (headers: Readonly<Record<string, string | string[] | undefined>
 });
 
 const requireComposition = (options: {
-  readonly diagnostics?: { readonly enabled?: boolean; readonly instanceId?: string; readonly buildId?: string; readonly calibration?: { readonly approved?: boolean } };
+  readonly diagnostics?: {
+    readonly enabled?: boolean;
+    readonly instanceId?: string;
+    readonly buildId?: string;
+    readonly calibration?: { readonly approved?: boolean };
+  };
 }): ModuleHealthComposition => {
   const composition = createModuleHealthComposition(options);
   if (composition === undefined) {
@@ -57,7 +62,12 @@ const recordCodes = (body: { readonly records?: unknown }): ReadonlyArray<string
 describe("S10b module-health writer composition", () => {
   it("enabled: a recorded failure appears through the real diagnostics read and business values are unchanged", () => {
     const composition = requireComposition({
-      diagnostics: { buildId: "build-s10b", calibration: { approved: true }, enabled: true, instanceId: "inst-s10b" },
+      diagnostics: {
+        buildId: "build-s10b",
+        calibration: { approved: true },
+        enabled: true,
+        instanceId: "inst-s10b",
+      },
     });
 
     // Business behaviour unchanged: the observer returns the success value untouched...

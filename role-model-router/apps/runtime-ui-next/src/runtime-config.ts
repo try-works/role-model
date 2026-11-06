@@ -5,20 +5,28 @@ export interface RuntimeConfigRecord {
 }
 
 const asRecord = (value: unknown): Readonly<Record<string, unknown>> | undefined =>
-  value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Readonly<Record<string, unknown>>) : undefined;
+  value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Readonly<Record<string, unknown>>)
+    : undefined;
 
 export const parseRuntimeConfigRecord = (body: unknown): RuntimeConfigRecord | undefined => {
   const record = asRecord(body);
   if (record === undefined) return undefined;
   const config = record.config === null ? null : asRecord(record.config);
   if (record.config !== null && config === undefined) return undefined;
-  return { applied: record.applied === true, config: config ?? null, ...(typeof record.path === "string" ? { path: record.path } : {}) };
+  return {
+    applied: record.applied === true,
+    config: config ?? null,
+    ...(typeof record.path === "string" ? { path: record.path } : {}),
+  };
 };
 
 export const runtimeConfigText = (record: RuntimeConfigRecord): string =>
   record.config === null ? "{}" : JSON.stringify(record.config, null, 2);
 
-export const parseRuntimeConfigText = (text: string): { readonly config: Readonly<Record<string, unknown>> } | { readonly error: string } => {
+export const parseRuntimeConfigText = (
+  text: string,
+): { readonly config: Readonly<Record<string, unknown>> } | { readonly error: string } => {
   try {
     const parsed: unknown = JSON.parse(text);
     const config = asRecord(parsed);
@@ -39,9 +47,9 @@ export const runtimeConfigDiff = (
     const before = Object.hasOwn(original, key) ? valueKey(original[key]) : undefined;
     const after = Object.hasOwn(edited, key) ? valueKey(edited[key]) : undefined;
     if (before === after) return [];
-    if (before === undefined) return ["added: " + key];
-    if (after === undefined) return ["removed: " + key];
-    return ["changed: " + key];
+    if (before === undefined) return [`added: ${key}`];
+    if (after === undefined) return [`removed: ${key}`];
+    return [`changed: ${key}`];
   });
 };
 
@@ -55,29 +63,47 @@ export interface ReplayAutoQueuePatch {
   readonly enabled: boolean;
 }
 export interface RuntimeConfigClient {
-  readonly patchReplayAutoQueue: (patch: ReplayAutoQueuePatch) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly patchReplayAutoQueue: (
+    patch: ReplayAutoQueuePatch,
+  ) => Promise<{ readonly body: unknown; readonly status: number }>;
   readonly read: () => Promise<{ readonly body: unknown; readonly status: number }>;
-  readonly save: (config: Readonly<Record<string, unknown>>) => Promise<{ readonly body: unknown; readonly status: number }>;
+  readonly save: (
+    config: Readonly<Record<string, unknown>>,
+  ) => Promise<{ readonly body: unknown; readonly status: number }>;
 }
-export const createRuntimeConfigClient = (options: RuntimeConfigClientOptions = {}): RuntimeConfigClient => {
+export const createRuntimeConfigClient = (
+  options: RuntimeConfigClientOptions = {},
+): RuntimeConfigClient => {
   const fetchImpl = options.fetchImpl ?? fetch;
-  const url = (options.baseUrl ?? "") + "/api/role-model/runtime/config";
-  const headers = (base: Record<string, string>): Record<string, string> => ({ ...base, ...(options.token === undefined ? {} : { authorization: `Bearer ${options.token}` }) });
+  const url = `${options.baseUrl ?? ""}/api/role-model/runtime/config`;
+  const headers = (base: Record<string, string>): Record<string, string> => ({
+    ...base,
+    ...(options.token === undefined ? {} : { authorization: `Bearer ${options.token}` }),
+  });
   return {
     patchReplayAutoQueue: async (patch) => {
       const response = await fetchImpl(url, {
-        body: JSON.stringify({ replay: { auto_queue: { daily_cap: patch.dailyCap, enabled: patch.enabled } } }),
+        body: JSON.stringify({
+          replay: { auto_queue: { daily_cap: patch.dailyCap, enabled: patch.enabled } },
+        }),
         headers: headers({ "content-type": "application/json" }),
         method: "PUT",
       });
       return { body: await response.json(), status: response.status };
     },
     read: async () => {
-      const response = await fetchImpl(url, { cache: "no-store", headers: headers({ accept: "application/json" }) });
+      const response = await fetchImpl(url, {
+        cache: "no-store",
+        headers: headers({ accept: "application/json" }),
+      });
       return { body: await response.json(), status: response.status };
     },
     save: async (config) => {
-      const response = await fetchImpl(url, { body: JSON.stringify(config), headers: headers({ "content-type": "application/json" }), method: "PUT" });
+      const response = await fetchImpl(url, {
+        body: JSON.stringify(config),
+        headers: headers({ "content-type": "application/json" }),
+        method: "PUT",
+      });
       return { body: await response.json(), status: response.status };
     },
   };

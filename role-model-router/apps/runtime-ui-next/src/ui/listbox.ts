@@ -1,8 +1,8 @@
 import { Option } from "effect";
 
+import * as Listbox from "@role-model-router/foldkit-ui/listbox";
 import { childAttributes } from "@role-model-router/foldkit/html";
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
-import * as Listbox from "@role-model-router/foldkit-ui/listbox";
 
 /**
  * Workspace W1b (S491/S496): the real Foldkit Listbox facade for the two
@@ -47,12 +47,20 @@ const requestsListboxView = <ParentMessage>(
       itemToConfig: (value: string) => ({
         content: h.span([h.DataAttribute(dataAttribute, value)], [labels.get(value) ?? value]),
       }),
-      buttonContent: h.span([h.DataAttribute(id === "requests-ranking-metric" ? "ranking-metric-value" : "ranking-target-value", "")], [
-        labels.get(config.selected) ?? config.selected,
-      ]),
+      buttonContent: h.span(
+        [
+          h.DataAttribute(
+            id === "requests-ranking-metric" ? "ranking-metric-value" : "ranking-target-value",
+            "",
+          ),
+        ],
+        [labels.get(config.selected) ?? config.selected],
+      ),
       maybeSelectedValue: Option.some(config.selected),
       buttonAttributes: childAttributes([
-        h.Class("flex h-[34px] min-w-[9rem] items-center justify-between gap-2 rounded-md border border-input bg-secondary px-2.5 text-left font-sans text-sm text-foreground"),
+        h.Class(
+          "flex h-[34px] min-w-[9rem] items-center justify-between gap-2 rounded-md border border-input bg-secondary px-2.5 text-left font-sans text-sm text-foreground",
+        ),
       ]),
       anchor: { placement: "bottom-start" },
     },

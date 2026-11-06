@@ -1,7 +1,16 @@
-import { releaseHostResources, type HostReleaseError, type HostReleaseResult } from "./release-host-resources.js";
+import {
+  type HostReleaseError,
+  type HostReleaseResult,
+  releaseHostResources,
+} from "./release-host-resources.js";
 
 /** S134/R27: the server is owned by the DAG server node, so it is not a hostScope kind. */
-export const HOST_RUNTIME_KINDS = ["packagedRuntime", "backend", "extensionRuntimeOwner", "extensionRuntime"] as const;
+export const HOST_RUNTIME_KINDS = [
+  "packagedRuntime",
+  "backend",
+  "extensionRuntimeOwner",
+  "extensionRuntime",
+] as const;
 export type HostRuntimeKind = (typeof HOST_RUNTIME_KINDS)[number];
 
 export interface HostRuntimeRegistration {
@@ -30,7 +39,7 @@ export const createHostRuntimeScope = (): HostRuntimeScope => {
     },
     register(kind, close) {
       if (closed) throw new Error("Host runtime scope is already closed");
-      if (entries.has(kind)) throw new Error("Host runtime resource already registered: " + kind);
+      if (entries.has(kind)) throw new Error(`Host runtime resource already registered: ${kind}`);
       entries.set(kind, close);
     },
     registered() {

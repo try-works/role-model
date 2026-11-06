@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
-import { type SqliteService, makeSync } from "@effect/sql-sqlite-node/service";
 import { DatabaseSync } from "node:sqlite";
+import { type SqliteService, makeSync } from "@effect/sql-sqlite-node/service";
 import { resolveSqliteMemoryLocation } from "@role-model-router/sqlite-memory";
 import {
   captureRefFromReplayJob,

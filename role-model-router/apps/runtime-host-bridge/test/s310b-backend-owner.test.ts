@@ -2,10 +2,10 @@ import { describe, expect, test } from "vitest";
 
 import { createCliServerOptions } from "../src/cli.js";
 import {
+  type BackendOwner,
   assertComposedBackendOwner,
   isComposedBackendOwner,
   withBackendProviderPermits,
-  type BackendOwner,
 } from "../src/composition-dag.js";
 
 /**
@@ -16,7 +16,11 @@ import {
  */
 
 type FakeBackend = {
-  readonly effectiveRegistry: { diagnostics: never[]; endpoints: never[]; lifecycleSummary: { active: number; degraded: number; offline: number } };
+  readonly effectiveRegistry: {
+    diagnostics: never[];
+    endpoints: never[];
+    lifecycleSummary: { active: number; degraded: number; offline: number };
+  };
   getEffectiveRoutableInventory: () => null;
   getExecutionCatalog: () => { catalogVersion: string; source: Record<string, never> };
   operatorAuthToken: string;
@@ -28,7 +32,11 @@ type FakeBackend = {
 // real backend types, so the double is cast at each call boundary through this one helper.
 const asNever = <T>(value: T): never => value as never;
 
-const makeBackend = (): { backend: FakeBackend; stats: () => { maxActive: number }; failNext: () => void } => {
+const makeBackend = (): {
+  backend: FakeBackend;
+  stats: () => { maxActive: number };
+  failNext: () => void;
+} => {
   let active = 0;
   let maxActive = 0;
   let failOnce = false;
@@ -44,14 +52,24 @@ const makeBackend = (): { backend: FakeBackend; stats: () => { maxActive: number
     return { kind };
   };
   const backend = {
-    effectiveRegistry: { diagnostics: [], endpoints: [], lifecycleSummary: { active: 0, degraded: 0, offline: 0 } },
+    effectiveRegistry: {
+      diagnostics: [],
+      endpoints: [],
+      lifecycleSummary: { active: 0, degraded: 0, offline: 0 },
+    },
     getEffectiveRoutableInventory: () => null,
     getExecutionCatalog: () => ({ catalogVersion: "1", source: {} }),
     operatorAuthToken: "s310b-token",
     executeChatCompletions: (..._args) => track("chat"),
     executeResponses: (..._args) => track("responses"),
   } satisfies FakeBackend;
-  return { backend, failNext: () => { failOnce = true; }, stats: () => ({ maxActive }) };
+  return {
+    backend,
+    failNext: () => {
+      failOnce = true;
+    },
+    stats: () => ({ maxActive }),
+  };
 };
 
 describe("S310b DAG Backend owner", () => {
@@ -77,22 +95,42 @@ describe("S310b DAG Backend owner", () => {
     // Production wraps the backend at createRuntimeBridgeBackend; the double is wrapped the same way.
     const wrapped = withBackendProviderPermits(asNever(backend));
     const options = createCliServerOptions({ host: "127.0.0.1", port: 0 }, asNever(wrapped));
-    await Promise.all(Array.from({ length: 6 }, () => options.executeChatCompletions(asNever({}), "r", undefined, undefined)));
+    await Promise.all(
+      Array.from({ length: 6 }, () =>
+        options.executeChatCompletions(asNever({}), "r", undefined, undefined),
+      ),
+    );
     expect(stats().maxActive).toBeLessThanOrEqual(4);
     failNext();
-    await expect(options.executeChatCompletions(asNever({}), "r", undefined, undefined)).rejects.toThrow(/provider failure/);
+    await expect(
+      options.executeChatCompletions(asNever({}), "r", undefined, undefined),
+    ).rejects.toThrow(/provider failure/);
     // Permit released after the rejection: the next call still succeeds and stays bounded.
-    await Promise.all(Array.from({ length: 6 }, () => options.executeResponses(asNever({}), "r", undefined, undefined)));
+    await Promise.all(
+      Array.from({ length: 6 }, () =>
+        options.executeResponses(asNever({}), "r", undefined, undefined),
+      ),
+    );
     expect(stats().maxActive).toBeLessThanOrEqual(4);
-    await expect(options.executeResponses(asNever({}), "r", undefined, undefined)).resolves.toBeDefined();
+    await expect(
+      options.executeResponses(asNever({}), "r", undefined, undefined),
+    ).resolves.toBeDefined();
   });
 
   test("raw backend consumers (pairwise judge path) are permit-bounded through the DAG wrapper", async () => {
     const { backend, stats } = makeBackend();
     const bounded = withBackendProviderPermits(asNever(backend));
-    await Promise.all(Array.from({ length: 6 }, () => bounded.executeChatCompletions(asNever({}), "r", undefined, undefined)));
+    await Promise.all(
+      Array.from({ length: 6 }, () =>
+        bounded.executeChatCompletions(asNever({}), "r", undefined, undefined),
+      ),
+    );
     expect(stats().maxActive).toBeLessThanOrEqual(4);
-    await Promise.all(Array.from({ length: 6 }, () => bounded.executeResponses(asNever({}), "r", undefined, undefined)));
+    await Promise.all(
+      Array.from({ length: 6 }, () =>
+        bounded.executeResponses(asNever({}), "r", undefined, undefined),
+      ),
+    );
     expect(stats().maxActive).toBeLessThanOrEqual(4);
   });
 
@@ -113,7 +151,10 @@ describe("S310b DAG Backend owner", () => {
     expect(options.getRoutableInventory?.()).toBeNull();
     expect(options.anonymousLearningReads).toBe("on");
     expect(Object.keys(options).length).toBe(181);
-    const withoutAnonymous = createCliServerOptions({ host: "127.0.0.1", port: 0 }, asNever(backend));
+    const withoutAnonymous = createCliServerOptions(
+      { host: "127.0.0.1", port: 0 },
+      asNever(backend),
+    );
     expect("anonymousLearningReads" in withoutAnonymous).toBe(false);
   });
 

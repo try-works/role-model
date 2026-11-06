@@ -51,7 +51,11 @@ const ErrorBodySchema = Schema.Struct({ error: Schema.optional(Schema.String) })
 
 const errorTextFromBody = (body: RuntimeJson | undefined, status: number): string => {
   const decoded = Schema.decodeUnknownOption(ErrorBodySchema)(body);
-  if (Option.isSome(decoded) && decoded.value.error !== undefined && decoded.value.error.length > 0) {
+  if (
+    Option.isSome(decoded) &&
+    decoded.value.error !== undefined &&
+    decoded.value.error.length > 0
+  ) {
     return decoded.value.error;
   }
   return `runtime request failed with status ${String(status)}`;

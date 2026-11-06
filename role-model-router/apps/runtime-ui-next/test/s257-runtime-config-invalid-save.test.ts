@@ -38,7 +38,11 @@ describe("S257 runtime config invalid save", () => {
     assert.equal(noCommands(next.commands), true, "the invalid save emits no command of any kind");
 
     const confirmed = shellUpdate(next.model, Message.RuntimeConfigConfirmRequested({ token: 1 }));
-    assert.equal(noCommands(confirmed.commands), true, "a confirm from the invalid state emits no command of any kind");
+    assert.equal(
+      noCommands(confirmed.commands),
+      true,
+      "a confirm from the invalid state emits no command of any kind",
+    );
     assert.equal(confirmed.model.runtimeConfigEditor?.status, "invalid");
   });
 
@@ -52,12 +56,23 @@ describe("S257 runtime config invalid save", () => {
     assert.equal(noCommands(reviewed.commands), true, "reviewing does not save");
     assert.ok(editor !== undefined, "the confirming state carries the token");
 
-    const confirmed = shellUpdate(reviewed.model, Message.RuntimeConfigConfirmRequested({ token: editor.token }));
+    const confirmed = shellUpdate(
+      reviewed.model,
+      Message.RuntimeConfigConfirmRequested({ token: editor.token }),
+    );
     const commands = confirmed.commands ?? [];
     assert.equal(commands.length, 1, "the valid control emits exactly one save command");
-    assert.equal(commands[0]?.name, "SaveRuntimeConfig", "the reducer returned the production command");
+    assert.equal(
+      commands[0]?.name,
+      "SaveRuntimeConfig",
+      "the reducer returned the production command",
+    );
     assert.equal(commands[0]?.args?.configText, '{"a": 2}', "the command carries the edited text");
-    assert.equal(commands[0]?.args?.originalText, '{"a": 1}', "the command carries the loaded snapshot");
+    assert.equal(
+      commands[0]?.args?.originalText,
+      '{"a": 1}',
+      "the command carries the loaded snapshot",
+    );
     assert.equal(commands[0]?.args?.token, editor.token, "the command carries the confirm token");
     assert.equal(confirmed.model.runtimeConfigEditor?.status, "pending");
     assert.notEqual(confirmed.model.runtimeConfigEditor?.status, "confirming");

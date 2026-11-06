@@ -1,5 +1,5 @@
-import { Cause } from "effect";
 import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
+import { Cause } from "effect";
 
 import {
   appendFileSync,
@@ -281,23 +281,23 @@ import {
 import {
   type BackendOwner,
   type BootstrapContract,
-  benchmarkGate,
-  backendStorageRefOf,
-  composeBackendStorage,
   type ObservationStorageContract,
-  composeObservationStorage,
-  graphObservationKey,
-  makeRetentionCleanupDatabase,
-  liveScoresObservationKey,
-  composeMetadataCacheOwner,
-  startupReadinessRefusalBody,
-  metadataCacheKey,
-  metadataConfigIdentity,
   type ServerOwner,
   type ServerTransport,
-  bootstrapOwner as composedBootstrapOwner,
-  composedBackendOwnerOf,
+  backendStorageRefOf,
+  benchmarkGate,
+  composeBackendStorage,
+  composeMetadataCacheOwner,
+  composeObservationStorage,
   composeServerOwner,
+  composedBackendOwnerOf,
+  bootstrapOwner as composedBootstrapOwner,
+  graphObservationKey,
+  liveScoresObservationKey,
+  makeRetentionCleanupDatabase,
+  metadataCacheKey,
+  metadataConfigIdentity,
+  startupReadinessRefusalBody,
   testSeamBackendOwner,
   withBackendProviderPermits,
 } from "./composition-dag.js";
@@ -3766,7 +3766,11 @@ export interface StartBridgeServerOptions {
   readonly recoverLegacyTerminalFailure?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readEndpointProfile?: (endpointId: string) => Promise<unknown>;
   readonly readBenchmarkSuite?: () => Promise<unknown>;
-  readonly runBenchmark?: (body: Record<string, unknown>, signal: AbortSignal, runId: string) => Promise<unknown>;
+  readonly runBenchmark?: (
+    body: Record<string, unknown>,
+    signal: AbortSignal,
+    runId: string,
+  ) => Promise<unknown>;
   readonly readBenchmarkRun?: (runId: string) => Promise<unknown>;
   readonly readActiveBenchmarkRun?: () => Promise<unknown>;
   readonly clearBenchmarkEndpointData?: (endpointId: string) => Promise<unknown>;
@@ -6325,13 +6329,16 @@ function mergeObservedProfileForDifficultyBucket(input: {
   };
 }
 
-export function readObservedProfilesForRouting(input: {
-  readonly databasePath: string;
-  readonly registry: EndpointRegistryResult;
-  readonly observedDataConfig: ReturnType<typeof resolveUnifiedRuntimeObservedDataConfig>;
-  readonly difficultyBucket?: UnifiedRuntimeDifficultyBucket;
-  readonly routingTimeMs: number;
-}, observationStorage: ObservationStorageContract): {
+export function readObservedProfilesForRouting(
+  input: {
+    readonly databasePath: string;
+    readonly registry: EndpointRegistryResult;
+    readonly observedDataConfig: ReturnType<typeof resolveUnifiedRuntimeObservedDataConfig>;
+    readonly difficultyBucket?: UnifiedRuntimeDifficultyBucket;
+    readonly routingTimeMs: number;
+  },
+  observationStorage: ObservationStorageContract,
+): {
   readonly observedProfilesByEndpointId: Parameters<
     typeof routeRuntimeRequest
   >[0]["observedProfilesByEndpointId"];
@@ -6360,16 +6367,24 @@ export function readObservedProfilesForRouting(input: {
   const endpointIds = [
     ...new Set(input.registry.endpoints.map((endpoint) => endpoint.identity.endpoint_id)),
   ];
-  const endpointWideProfilesByEndpointId = observationStorage.readHydrated("observed-profiles:" + endpointIds.join(","), () => readLatestObservedProfilesByEndpointIds({
-    databasePath: input.databasePath,
-    endpointIds,
-  }));
-  const difficultyBucketProfilesByEndpointId = input.difficultyBucket
-    ? observationStorage.readHydrated("observed-profiles:" + endpointIds.join(",") + ":" + String(input.difficultyBucket), () => readLatestObservedProfilesByEndpointIds({
+  const endpointWideProfilesByEndpointId = observationStorage.readHydrated(
+    `observed-profiles:${endpointIds.join(",")}`,
+    () =>
+      readLatestObservedProfilesByEndpointIds({
         databasePath: input.databasePath,
         endpointIds,
-        difficultyBucket: input.difficultyBucket,
-      }))
+      }),
+  );
+  const difficultyBucketProfilesByEndpointId = input.difficultyBucket
+    ? observationStorage.readHydrated(
+        `observed-profiles:${endpointIds.join(",")}:${String(input.difficultyBucket)}`,
+        () =>
+          readLatestObservedProfilesByEndpointIds({
+            databasePath: input.databasePath,
+            endpointIds,
+            difficultyBucket: input.difficultyBucket,
+          }),
+      )
     : {};
   const latestProfilesByEndpointId = input.difficultyBucket
     ? Object.fromEntries(
@@ -17485,7 +17500,8 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     // Its response carries no CORS headers at all, so no origin is ever allowed or reflected.
     const isLocalDiagnosticsRequest = (request.url ?? "").startsWith(LOCAL_DIAGNOSTICS_PATH);
     const earlyPath = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
-    const mutatingApiRequest = earlyPath.startsWith("/api/role-model/") && isMutatingMethod(request.method);
+    const mutatingApiRequest =
+      earlyPath.startsWith("/api/role-model/") && isMutatingMethod(request.method);
     if (!isLocalDiagnosticsRequest && !mutatingApiRequest) setCorsHeaders(response);
 
     if (request.method === "OPTIONS") {
@@ -17587,13 +17603,27 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
-    if (url.pathname.startsWith("/api/role-model/") && (mutatingApiRequest || request.method === "OPTIONS")) {
+    if (
+      url.pathname.startsWith("/api/role-model/") &&
+      (mutatingApiRequest || request.method === "OPTIONS")
+    ) {
       if (!isSameOriginWrite(request)) {
-        writeJson(response, 403, { error: "cross-origin write rejected", code: "cross_origin_write_rejected" });
+        writeJson(response, 403, {
+          error: "cross-origin write rejected",
+          code: "cross_origin_write_rejected",
+        });
         return;
       }
-      if (mutatingApiRequest && options.operatorAuthToken !== undefined && options.operatorAuthToken.length > 0 && !operatorTokenMatches(request, options.operatorAuthToken)) {
-        writeJson(response, 401, { error: "operator credential required", code: "operator_credential_required" });
+      if (
+        mutatingApiRequest &&
+        options.operatorAuthToken !== undefined &&
+        options.operatorAuthToken.length > 0 &&
+        !operatorTokenMatches(request, options.operatorAuthToken)
+      ) {
+        writeJson(response, 401, {
+          error: "operator credential required",
+          code: "operator_credential_required",
+        });
         return;
       }
     }
@@ -19724,11 +19754,22 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       const benchmarkRunId = randomUUID();
       const benchmarkRun = benchmarkGate.begin(benchmarkRunId);
       if (benchmarkRun.ok !== true) {
-        writeJson(response, 409, { activeRunId: benchmarkRun.activeRunId, error: "benchmark_already_running" });
+        writeJson(response, 409, {
+          activeRunId: benchmarkRun.activeRunId,
+          error: "benchmark_already_running",
+        });
         return;
       }
       try {
-        writeJson(response, 202, await options.runBenchmark(await readJsonBody(request), benchmarkRun.signal, benchmarkRun.runId));
+        writeJson(
+          response,
+          202,
+          await options.runBenchmark(
+            await readJsonBody(request),
+            benchmarkRun.signal,
+            benchmarkRun.runId,
+          ),
+        );
       } catch (error) {
         writeJson(response, 400, {
           error: error instanceof Error ? error.message : "benchmark run failed",
@@ -20816,14 +20857,13 @@ export const bridgeServerTransport: ServerTransport = {
         appendRuntimeHttpTrace(
           runtimeStateRoot,
           runtimeChannel,
-          "request-start method=" + String(request.method) + " path=" + requestPath,
+          `request-start method=${String(request.method)} path=${requestPath}`,
         );
         response.on("finish", () => {
           appendRuntimeHttpTrace(
             runtimeStateRoot,
             runtimeChannel,
-            "request-finish method=" + String(request.method) + " path=" + requestPath +
-              " status=" + String(response.statusCode) + " duration_ms=" + String(Date.now() - requestStart),
+            `request-finish method=${String(request.method)} path=${requestPath} status=${String(response.statusCode)} duration_ms=${String(Date.now() - requestStart)}`,
           );
         });
         response.on("close", () => {
@@ -20831,21 +20871,28 @@ export const bridgeServerTransport: ServerTransport = {
             appendRuntimeHttpTrace(
               runtimeStateRoot,
               runtimeChannel,
-              "request-close method=" + String(request.method) + " path=" + requestPath +
-                " duration_ms=" + String(Date.now() - requestStart),
+              `request-close method=${String(request.method)} path=${requestPath} duration_ms=${String(Date.now() - requestStart)}`,
             );
           }
         });
       }
       // S10b reporting edge: the request program has settled (finalizers ran) and the failure has not
       // yet been translated to the wire. One place, not per route.
-      (requestListener as (incoming: IncomingMessage, outgoing: ServerResponse) => void)(request, response);
+      (requestListener as (incoming: IncomingMessage, outgoing: ServerResponse) => void)(
+        request,
+        response,
+      );
     }),
   listen: (server, host, port) => listen(server as Server, host, port),
   stopAccepting: (server) => {
     const httpServer = server as Server;
     if (!closingServers.has(httpServer)) {
-      closingServers.set(httpServer, new Promise<void>((resolve) => { httpServer.close(() => resolve()); }));
+      closingServers.set(
+        httpServer,
+        new Promise<void>((resolve) => {
+          httpServer.close(() => resolve());
+        }),
+      );
     }
     return Promise.resolve();
   },
@@ -20913,7 +20960,6 @@ export async function startBridgeServer(
   const started = await owner.start();
   return { close: started.close, port: started.port, serverOwner: owner };
 }
-
 
 /**
  * Project the opaque provider-attempt identifiers retained by a persisted runtime
@@ -21005,10 +21051,13 @@ export interface ObservabilitySnapshotReadback {
  * DELETE. Exported so the batch can pin busy_timeout=0, the predicate boundary and the deleted
  * count without booting the whole backend. nowMs is a safe integer literal (no external input).
  */
-type RetentionCleanupDatabaseFactory = (databasePath: string) => ReturnType<typeof makeRetentionCleanupDatabase>;
+type RetentionCleanupDatabaseFactory = (
+  databasePath: string,
+) => ReturnType<typeof makeRetentionCleanupDatabase>;
 let retentionCleanupDatabaseFactory: RetentionCleanupDatabaseFactory = makeRetentionCleanupDatabase;
-export const openRetentionCleanupDatabase = (databasePath: string): ReturnType<typeof makeRetentionCleanupDatabase> =>
-  retentionCleanupDatabaseFactory(databasePath);
+export const openRetentionCleanupDatabase = (
+  databasePath: string,
+): ReturnType<typeof makeRetentionCleanupDatabase> => retentionCleanupDatabaseFactory(databasePath);
 
 export const runRetentionCleanupAt = (
   databasePath: string,
@@ -21222,13 +21271,15 @@ export async function createRuntimeBridgeBackend(
   const configuredTrackBOperationsEndpoint =
     options.trackBOperationsEndpoint ?? process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL?.trim();
   const storageRef = backendStorageRefOf(options);
-  const backendStorage = storageRef?.current ?? composeBackendStorage({
-    channel: runtimeChannel,
-    runtimeStateRoot: options.runtimeStateRoot,
-    scopeId: options.scopeId,
-    trackBOperationsEndpoint: configuredTrackBOperationsEndpoint,
-    useFixtures,
-  });
+  const backendStorage =
+    storageRef?.current ??
+    composeBackendStorage({
+      channel: runtimeChannel,
+      runtimeStateRoot: options.runtimeStateRoot,
+      scopeId: options.scopeId,
+      trackBOperationsEndpoint: configuredTrackBOperationsEndpoint,
+      useFixtures,
+    });
   if (storageRef !== undefined) storageRef.current = backendStorage;
   retentionCleanupDatabaseFactory = backendStorage.openRetentionCleanupDatabase;
   const initialization = backendStorage.initialization;
@@ -21300,8 +21351,11 @@ export async function createRuntimeBridgeBackend(
   // starve request handling). `ROLE_MODEL_ROUTING_PREP_CACHE_TTL_MS=0` disables the snapshot.
   const routingPrepCacheTtlMs = resolveRoutingPrepCacheTtlMs(process.env);
   const routingPrepCache = createRoutingPrepCache({ ttlMs: routingPrepCacheTtlMs });
-// S318 (R27): the DAG metadata cache owner (authority + config generation identity).
-const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: routingPrepCacheTtlMs });
+  // S318 (R27): the DAG metadata cache owner (authority + config generation identity).
+  const metadataCacheOwner = composeMetadataCacheOwner({
+    capacity: 1024,
+    ttlMs: routingPrepCacheTtlMs,
+  });
   const recordDirectContribution = (input: DirectContributionInput): Promise<void> =>
     recordDirectContributionWith(runtimeTrackBOperations, input, {
       scopeId: options.scopeId,
@@ -21367,28 +21421,34 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
     });
     persistFailureTelemetrySafely(() =>
       observationStorage.persist(
-        () => persistRuntimeTelemetryFailure({
-        databasePath: initialization.databasePath,
-        requestId: input.requestId,
-        clientRequestId: input.clientRequestId ?? null,
-        requestClass: toPersistedTrafficClass(input.requestClass),
-        sourceType:
-          currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local",
-        endpointId: input.endpointId,
-        reasoningEffort: failureEffort.reasoningEffort,
-        effortSource: failureEffort.effortSource,
-        effortCoerced: failureEffort.coerced,
-        modelId: input.modelId,
-        requestedModelId: input.modelId,
-        requestOperation: input.requestOperation,
-        statusCode,
-        errorClass: runtimeTelemetryErrorClassFor(input.error),
-        latencyMs,
-        dimensions,
-        observation: failureObservation,
-        ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-        }),
-        async () => readRuntimeObservationBundle({ databasePath: initialization.databasePath, requestId: input.requestId, ...(localGraphStore ? { graphStore: localGraphStore } : {}) }),
+        () =>
+          persistRuntimeTelemetryFailure({
+            databasePath: initialization.databasePath,
+            requestId: input.requestId,
+            clientRequestId: input.clientRequestId ?? null,
+            requestClass: toPersistedTrafficClass(input.requestClass),
+            sourceType:
+              currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local",
+            endpointId: input.endpointId,
+            reasoningEffort: failureEffort.reasoningEffort,
+            effortSource: failureEffort.effortSource,
+            effortCoerced: failureEffort.coerced,
+            modelId: input.modelId,
+            requestedModelId: input.modelId,
+            requestOperation: input.requestOperation,
+            statusCode,
+            errorClass: runtimeTelemetryErrorClassFor(input.error),
+            latencyMs,
+            dimensions,
+            observation: failureObservation,
+            ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+          }),
+        async () =>
+          readRuntimeObservationBundle({
+            databasePath: initialization.databasePath,
+            requestId: input.requestId,
+            ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+          }),
         graphObservationKey(options.scopeId, input.requestId),
       ),
     );
@@ -21405,11 +21465,13 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
   };
   const readPersistedRuntimeObservation = (requestId: string) => {
     try {
-      return observationStorage.readHydrated(graphObservationKey(options.scopeId, requestId), () => readRuntimeObservationBundle({
-        databasePath: initialization.databasePath,
-        requestId,
-        ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-      }));
+      return observationStorage.readHydrated(graphObservationKey(options.scopeId, requestId), () =>
+        readRuntimeObservationBundle({
+          databasePath: initialization.databasePath,
+          requestId,
+          ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+        }),
+      );
     } catch (error) {
       if (!localGraphStore && /graph artifact reader required after cutover/i.test(String(error)))
         return readRuntimeObservationStorageRecord({
@@ -26072,15 +26134,21 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
             requestRecords.filter((record) => record.sourceType === "remote"),
           ),
         }
-      : observationStorage.readHydrated("telemetry-sources:" + JSON.stringify(aggregateQuery), () => readRuntimeTelemetrySourceSummaries({
-          databasePath: initialization.databasePath,
-          ...aggregateQuery,
-        }));
+      : observationStorage.readHydrated(`telemetry-sources:${JSON.stringify(aggregateQuery)}`, () =>
+          readRuntimeTelemetrySourceSummaries({
+            databasePath: initialization.databasePath,
+            ...aggregateQuery,
+          }),
+        );
     return {
-      ...observationStorage.readHydrated("telemetry-summary:" + JSON.stringify(aggregateQuery), () => readRuntimeTelemetrySummary({
-        databasePath: initialization.databasePath,
-        ...aggregateQuery,
-      })),
+      ...observationStorage.readHydrated(
+        `telemetry-summary:${JSON.stringify(aggregateQuery)}`,
+        () =>
+          readRuntimeTelemetrySummary({
+            databasePath: initialization.databasePath,
+            ...aggregateQuery,
+          }),
+      ),
       sourceBreakdown: sourceSummaries,
       window: { startAtMs, endAtMs: asOfMs, asOfMs },
     };
@@ -26654,30 +26722,40 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
     const telemetryWindowEndMs = Date.now();
     const telemetryWindowStartMs = Math.max(0, telemetryWindowEndMs - 7 * 24 * 60 * 60 * 1_000);
     const telemetryScores = observationStorage.readHydrated(
-      liveScoresObservationKey(endpointId, telemetryWindowStartMs, telemetryWindowEndMs, observedDataConfig.aggregation.minSamples),
-      () => readLiveTaskTelemetryScoresByEndpointIds({
-        databasePath: initialization.databasePath,
-        endpointIds: [endpointId],
-        windowStartMs: telemetryWindowStartMs,
-        windowEndMs: telemetryWindowEndMs,
-        minimumSampleCount: observedDataConfig.aggregation.minSamples,
-      }),
+      liveScoresObservationKey(
+        endpointId,
+        telemetryWindowStartMs,
+        telemetryWindowEndMs,
+        observedDataConfig.aggregation.minSamples,
+      ),
+      () =>
+        readLiveTaskTelemetryScoresByEndpointIds({
+          databasePath: initialization.databasePath,
+          endpointIds: [endpointId],
+          windowStartMs: telemetryWindowStartMs,
+          windowEndMs: telemetryWindowEndMs,
+          minimumSampleCount: observedDataConfig.aggregation.minSamples,
+        }),
     )[endpointId];
     const difficultyProfiles = Object.fromEntries(
       (["easy", "medium", "hard"] as const).map((difficultyBucket) => [
         difficultyBucket,
-        observationStorage.readHydrated("profile:" + endpointId + ":" + difficultyBucket, () => readLatestObservedProfile({
-          databasePath: initialization.databasePath,
-          endpointId,
-          difficultyBucket,
-        })),
+        observationStorage.readHydrated(`profile:${endpointId}:${difficultyBucket}`, () =>
+          readLatestObservedProfile({
+            databasePath: initialization.databasePath,
+            endpointId,
+            difficultyBucket,
+          }),
+        ),
       ]),
     ) as Record<UnifiedRuntimeDifficultyBucket, ReturnType<typeof readLatestObservedProfile>>;
 
-    const operationalProfile = observationStorage.readHydrated("profile:" + endpointId + ":none", () => readLatestObservedProfile({
-      databasePath: initialization.databasePath,
-      endpointId,
-    }));
+    const operationalProfile = observationStorage.readHydrated(`profile:${endpointId}:none`, () =>
+      readLatestObservedProfile({
+        databasePath: initialization.databasePath,
+        endpointId,
+      }),
+    );
     const recentSamples = readObservedPerformanceSamples({
       databasePath: initialization.databasePath,
       endpointId,
@@ -27404,42 +27482,54 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
     // S318 (R27): the live routing-prep key carries the DAG identity: authority + configuration generation
     // + registry model identity, then the TTL bucket. A config change bumps the generation and invalidates.
     const routingPrepConfigIdentity = metadataConfigIdentity(currentUnifiedRuntimeConfig);
-    const routingPrepGeneration = metadataCacheOwner.noteConfig(routingPrepConfigIdentity).generation;
-    const routingPrepTickKey =
-      metadataCacheKey({
-        authorityId: metadataCacheOwner.authorityId,
-        configGeneration: routingPrepGeneration,
-        modelId: routingPrepRegistryIdentity,
-      }) +
-      ":" +
-      (routingPrepCacheTtlMs > 0
+    const routingPrepGeneration =
+      metadataCacheOwner.noteConfig(routingPrepConfigIdentity).generation;
+    const routingPrepTickKey = `${metadataCacheKey({
+      authorityId: metadataCacheOwner.authorityId,
+      configGeneration: routingPrepGeneration,
+      modelId: routingPrepRegistryIdentity,
+    })}:${
+      routingPrepCacheTtlMs > 0
         ? String(Math.floor(routingTimeMs / routingPrepCacheTtlMs))
-        : "t" + String(routingTimeMs));
+        : `t${String(routingTimeMs)}`
+    }`;
     const observedDifficultyBucket = resolveObservedDifficultyBucketForPlan(plan);
     // S319 (R27): the DAG cache holds the REAL observed-profiles payload the routing decision reads, keyed by
     // authority + config generation + registry identity (not an identity marker). TTL/cap come from the DAG
     // owner configured with the routing-prep TTL; routingPrepCache keeps in-flight coalescing.
     const observedProfilesMetadataKey = metadataCacheOwner.keyFor(
-      "observed-profiles:" + routingPrepRegistryIdentity + ":" + String(observedDifficultyBucket ?? "none"),
+      `observed-profiles:${routingPrepRegistryIdentity}:${String(observedDifficultyBucket ?? "none")}`,
     );
-    const cachedObservedProfilesJson = metadataCacheOwner.getSync(observedProfilesMetadataKey, routingTimeMs);
+    const cachedObservedProfilesJson = metadataCacheOwner.getSync(
+      observedProfilesMetadataKey,
+      routingTimeMs,
+    );
     const runtimeObservedProfiles =
       typeof cachedObservedProfilesJson === "string"
-        ? (JSON.parse(cachedObservedProfilesJson) as Awaited<ReturnType<typeof readObservedProfilesForRouting>>)
+        ? (JSON.parse(cachedObservedProfilesJson) as Awaited<
+            ReturnType<typeof readObservedProfilesForRouting>
+          >)
         : await routingPrepCache
             .read(
               `observed-profiles:${routingPrepTickKey}:${observedDifficultyBucket ?? "none"}`,
               () =>
-                readObservedProfilesForRouting({
-                  databasePath: initialization.databasePath,
-                  registry: executionSnapshot.registry,
-                  observedDataConfig,
-                  difficultyBucket: observedDifficultyBucket,
-                  routingTimeMs,
-                }, observationStorage),
+                readObservedProfilesForRouting(
+                  {
+                    databasePath: initialization.databasePath,
+                    registry: executionSnapshot.registry,
+                    observedDataConfig,
+                    difficultyBucket: observedDifficultyBucket,
+                    routingTimeMs,
+                  },
+                  observationStorage,
+                ),
             )
             .then((profiles) => {
-              metadataCacheOwner.setSync(observedProfilesMetadataKey, JSON.stringify(profiles), routingTimeMs);
+              metadataCacheOwner.setSync(
+                observedProfilesMetadataKey,
+                JSON.stringify(profiles),
+                routingTimeMs,
+              );
               return profiles;
             });
     const telemetryScoresByEndpointId = await routingPrepCache.read(
@@ -28988,88 +29078,100 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
         ...(graphEvidence ? { graphEvidence } : {}),
       });
       const persisted = persistFailureTelemetrySafely(() =>
-        observationStorage.persist(() => persistRuntimeTelemetryFailure({
-          databasePath: initialization.databasePath,
-          requestId,
-          routingDecisionId,
-          endpointId: selectedEndpointId,
-          reasoningEffort: selectedReasoningEffort,
-          effortSource: selectedEffortSource,
-          modelId: selectedModelId ?? undefined,
-          requestedModelId: executionOptions?.requestedModel ?? selectedModelId,
-          selectedModelId,
-          requestOperation: executionOptions?.requestOperation ?? "chat",
-          statusCode: error.statusCode,
-          errorClass: error.errorClass,
-          latencyMs: failureLatencyMs,
-          /**
-           * Run 101 addendum 23: the failure row must carry what the client actually received. The builder used to
-           * write a literal zero, so a response that had streamed 789 chunks was recorded (and read by this operator)
-           * as `streamTextDeltaCount: 0` - the number that made a post-content drop look like a pre-content failure
-           * for two repair cycles. This is the count of chunks that carried content or tool calls.
-           */
-          streamTextDeltaCount: deliveredSubstantiveChunkCount,
-          clientRequestId: executionOptions?.requestOptions?.clientRequestId ?? null,
-          requestClass: toPersistedTrafficClass(
-            executionOptions?.requestOptions?.executionTrafficClass,
-          ),
-          sourceType,
-          providerKind: selectedCandidate?.identity.provider_kind ?? null,
-          providerFamily: error.providerFamily,
-          vendorId: error.vendorId ?? null,
-          providerId: error.providerId,
-          providerAccountId:
-            selectedProviderAccount?.providerAccountId ??
-            selectedRuntimeEndpoint?.providerAccountId ??
-            null,
-          endpointKind: selectedCandidate?.identity.endpoint_kind ?? "remote_api",
-          servingSource:
-            selectedCandidate?.identity.serving_source ?? error.executionFamily ?? "remote-service",
-          region: selectedCandidate?.identity.region ?? null,
-          lifecycleStateAtRequest: selectedCandidate?.status ?? "unknown",
-          healthStatusAtRequest: selectedProviderAccount?.healthStatus ?? null,
-          routingMode: requestRoutingMode?.effectiveMode ?? null,
-          selectedStrategy: plan.routingRequest.strategy,
-          sourceClient,
-          executionFamily: error.executionFamily,
-          adapterFamily: error.adapterFamily,
-          requestPayloadBytes: payloadBytes.ingress,
-          ingressPayloadBytes: payloadBytes.ingress,
-          translatedPayloadBytes: payloadBytes.translated,
-          providerCanonicalPayloadBytes: payloadBytes.providerCanonical,
-          providerWirePayloadBytes: payloadBytes.providerWire,
-          responsePayloadBytes: payloadBytes.providerResponse,
-          retryCount: executionSemanticsReceipt.retryCount,
-          rerouteCount: executionSemanticsReceipt.rerouteCount,
-          cooldownDecision: executionSemanticsReceipt.cooldownDecision,
-          idempotencyDecision: "not_needed",
-          toolSideEffectState: "none",
-          toolingUsed: Boolean(plan.executionRequest.tools?.length),
-          cacheState: "unknown",
-          roleIds: telemetrySnapshot.roleIds,
-          eligibleEndpointIds,
-          eligibleModelIds,
-          candidateCostSnapshot: telemetrySnapshot.candidateCostSnapshot,
-          selectedPricingSnapshot: telemetrySnapshot.selectedPricingSnapshot,
-          selectedUncachedCostUsd: telemetrySnapshot.selectedUncachedCostUsd,
-          baselineMaxEligibleCostUsd: telemetrySnapshot.baselineMaxEligibleCostUsd,
-          routingCostSavingsUsd: telemetrySnapshot.routingCostSavingsUsd,
-          cacheCostSavingsUsd: telemetrySnapshot.cacheCostSavingsUsd,
-          totalAvoidedCostUsd: telemetrySnapshot.totalAvoidedCostUsd,
-          costBaselineSource: telemetrySnapshot.costBaselineSource,
-          costSavingsSupport: telemetrySnapshot.costSavingsSupport,
-          samplingRate: failureObservation.privacyReceipt.samplingRate,
-          retentionTtlHours: failureObservation.privacyReceipt.retentionTtlHours,
-          retainUntil: failureObservation.privacyReceipt.retainUntil,
-          redactionLevel: capturePolicy.redactionLevel,
-          retentionClass: capturePolicy.retentionClass,
-          structuredInspectionMode: capturePolicy.structuredInspectionMode,
-          rawCaptureAvailable: capturePolicy.rawCaptureAvailable,
-          structuredInspectionAvailable: capturePolicy.structuredInspectionAvailable,
-          dimensions: selectedEndpointDimensions,
-          observation: failureObservation,
-          ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-        }), async () => readRuntimeObservationBundle({ databasePath: initialization.databasePath, requestId, ...(localGraphStore ? { graphStore: localGraphStore } : {}) }), graphObservationKey(options.scopeId, requestId)),
+        observationStorage.persist(
+          () =>
+            persistRuntimeTelemetryFailure({
+              databasePath: initialization.databasePath,
+              requestId,
+              routingDecisionId,
+              endpointId: selectedEndpointId,
+              reasoningEffort: selectedReasoningEffort,
+              effortSource: selectedEffortSource,
+              modelId: selectedModelId ?? undefined,
+              requestedModelId: executionOptions?.requestedModel ?? selectedModelId,
+              selectedModelId,
+              requestOperation: executionOptions?.requestOperation ?? "chat",
+              statusCode: error.statusCode,
+              errorClass: error.errorClass,
+              latencyMs: failureLatencyMs,
+              /**
+               * Run 101 addendum 23: the failure row must carry what the client actually received. The builder used to
+               * write a literal zero, so a response that had streamed 789 chunks was recorded (and read by this operator)
+               * as `streamTextDeltaCount: 0` - the number that made a post-content drop look like a pre-content failure
+               * for two repair cycles. This is the count of chunks that carried content or tool calls.
+               */
+              streamTextDeltaCount: deliveredSubstantiveChunkCount,
+              clientRequestId: executionOptions?.requestOptions?.clientRequestId ?? null,
+              requestClass: toPersistedTrafficClass(
+                executionOptions?.requestOptions?.executionTrafficClass,
+              ),
+              sourceType,
+              providerKind: selectedCandidate?.identity.provider_kind ?? null,
+              providerFamily: error.providerFamily,
+              vendorId: error.vendorId ?? null,
+              providerId: error.providerId,
+              providerAccountId:
+                selectedProviderAccount?.providerAccountId ??
+                selectedRuntimeEndpoint?.providerAccountId ??
+                null,
+              endpointKind: selectedCandidate?.identity.endpoint_kind ?? "remote_api",
+              servingSource:
+                selectedCandidate?.identity.serving_source ??
+                error.executionFamily ??
+                "remote-service",
+              region: selectedCandidate?.identity.region ?? null,
+              lifecycleStateAtRequest: selectedCandidate?.status ?? "unknown",
+              healthStatusAtRequest: selectedProviderAccount?.healthStatus ?? null,
+              routingMode: requestRoutingMode?.effectiveMode ?? null,
+              selectedStrategy: plan.routingRequest.strategy,
+              sourceClient,
+              executionFamily: error.executionFamily,
+              adapterFamily: error.adapterFamily,
+              requestPayloadBytes: payloadBytes.ingress,
+              ingressPayloadBytes: payloadBytes.ingress,
+              translatedPayloadBytes: payloadBytes.translated,
+              providerCanonicalPayloadBytes: payloadBytes.providerCanonical,
+              providerWirePayloadBytes: payloadBytes.providerWire,
+              responsePayloadBytes: payloadBytes.providerResponse,
+              retryCount: executionSemanticsReceipt.retryCount,
+              rerouteCount: executionSemanticsReceipt.rerouteCount,
+              cooldownDecision: executionSemanticsReceipt.cooldownDecision,
+              idempotencyDecision: "not_needed",
+              toolSideEffectState: "none",
+              toolingUsed: Boolean(plan.executionRequest.tools?.length),
+              cacheState: "unknown",
+              roleIds: telemetrySnapshot.roleIds,
+              eligibleEndpointIds,
+              eligibleModelIds,
+              candidateCostSnapshot: telemetrySnapshot.candidateCostSnapshot,
+              selectedPricingSnapshot: telemetrySnapshot.selectedPricingSnapshot,
+              selectedUncachedCostUsd: telemetrySnapshot.selectedUncachedCostUsd,
+              baselineMaxEligibleCostUsd: telemetrySnapshot.baselineMaxEligibleCostUsd,
+              routingCostSavingsUsd: telemetrySnapshot.routingCostSavingsUsd,
+              cacheCostSavingsUsd: telemetrySnapshot.cacheCostSavingsUsd,
+              totalAvoidedCostUsd: telemetrySnapshot.totalAvoidedCostUsd,
+              costBaselineSource: telemetrySnapshot.costBaselineSource,
+              costSavingsSupport: telemetrySnapshot.costSavingsSupport,
+              samplingRate: failureObservation.privacyReceipt.samplingRate,
+              retentionTtlHours: failureObservation.privacyReceipt.retentionTtlHours,
+              retainUntil: failureObservation.privacyReceipt.retainUntil,
+              redactionLevel: capturePolicy.redactionLevel,
+              retentionClass: capturePolicy.retentionClass,
+              structuredInspectionMode: capturePolicy.structuredInspectionMode,
+              rawCaptureAvailable: capturePolicy.rawCaptureAvailable,
+              structuredInspectionAvailable: capturePolicy.structuredInspectionAvailable,
+              dimensions: selectedEndpointDimensions,
+              observation: failureObservation,
+              ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+            }),
+          async () =>
+            readRuntimeObservationBundle({
+              databasePath: initialization.databasePath,
+              requestId,
+              ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+            }),
+          graphObservationKey(options.scopeId, requestId),
+        ),
       );
       if (options.trackBPostObservation) {
         try {
@@ -29968,14 +30070,20 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
       try {
         markPhase("observation-persist-start");
         observationStorage.persist(
-        () => persistRuntimeObservationBundle({
-          databasePath: initialization.databasePath,
-          channel: runtimeChannel,
-          observation: persistedObservation,
-          ...(artifactRef ? { artifactRef } : {}),
-          ...(localGraphStore ? { graphStore: localGraphStore } : {}),
-          }),
-          async () => readRuntimeObservationBundle({ databasePath: initialization.databasePath, requestId, ...(localGraphStore ? { graphStore: localGraphStore } : {}) }),
+          () =>
+            persistRuntimeObservationBundle({
+              databasePath: initialization.databasePath,
+              channel: runtimeChannel,
+              observation: persistedObservation,
+              ...(artifactRef ? { artifactRef } : {}),
+              ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+            }),
+          async () =>
+            readRuntimeObservationBundle({
+              databasePath: initialization.databasePath,
+              requestId,
+              ...(localGraphStore ? { graphStore: localGraphStore } : {}),
+            }),
           graphObservationKey(options.scopeId, requestId),
         );
       } catch (error) {
@@ -34263,7 +34371,11 @@ const metadataCacheOwner = composeMetadataCacheOwner({ capacity: 1024, ttlMs: ro
     async readBenchmarkSuite(): Promise<unknown> {
       return readRoutingCapabilityBenchmarkSuite();
     },
-    async runBenchmark(body: Record<string, unknown>, signal: AbortSignal, runId: string): Promise<unknown> {
+    async runBenchmark(
+      body: Record<string, unknown>,
+      signal: AbortSignal,
+      runId: string,
+    ): Promise<unknown> {
       const endpointIds = Array.isArray(body.endpoint_ids)
         ? body.endpoint_ids.filter((value): value is string => typeof value === "string")
         : Array.isArray(body.endpointIds)

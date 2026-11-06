@@ -3,7 +3,7 @@
  * Scan build artifacts / evidence for credential-shaped strings without printing them.
  * Prints only pattern label, hit count, and file paths.
  */
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 
 const PATTERNS = [
@@ -16,7 +16,9 @@ const PATTERNS = [
 const walk = (target) => {
   const stat = statSync(target);
   if (stat.isFile()) return [target];
-  return readdirSync(target, { withFileTypes: true }).flatMap((entry) => walk(path.join(target, entry.name)));
+  return readdirSync(target, { withFileTypes: true }).flatMap((entry) =>
+    walk(path.join(target, entry.name)),
+  );
 };
 
 const roots = process.argv.slice(2);
@@ -43,5 +45,19 @@ for (const file of files) {
     }
   }
 }
-console.log(JSON.stringify({ roots, filesScanned: files.length, patterns: results.map((entry) => ({ label: entry.label, hits: entry.hits, files: [...new Set(entry.files)] })) }, null, 2));
+console.log(
+  JSON.stringify(
+    {
+      roots,
+      filesScanned: files.length,
+      patterns: results.map((entry) => ({
+        label: entry.label,
+        hits: entry.hits,
+        files: [...new Set(entry.files)],
+      })),
+    },
+    null,
+    2,
+  ),
+);
 if (results.some((entry) => entry.label.startsWith("sk-") && entry.hits > 0)) process.exitCode = 1;

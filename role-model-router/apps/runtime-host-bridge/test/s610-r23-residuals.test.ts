@@ -20,22 +20,37 @@ describe("S610 R23 residual clauses", () => {
   test("a failed graph hydration never installs a partial cache entry", async () => {
     const storage = storageFor("graph-failure");
     const key = graphObservationKey("graph-failure", "request-failed");
-    storage.observationStorage.persist(() => {}, async () => {
-      throw new Error("graph hydration failed");
-    }, key);
+    storage.observationStorage.persist(
+      () => {},
+      async () => {
+        throw new Error("graph hydration failed");
+      },
+      key,
+    );
     await storage.observationStorage.drain();
-    expect(storage.observationStorage.read(key, () => ({ fallback: true }))).toEqual({ fallback: true });
-    expect(storage.observationStorage.readHydrated(key, () => ({ fresh: true }))).toEqual({ fresh: true });
+    expect(storage.observationStorage.read(key, () => ({ fallback: true }))).toEqual({
+      fallback: true,
+    });
+    expect(storage.observationStorage.readHydrated(key, () => ({ fresh: true }))).toEqual({
+      fresh: true,
+    });
     await storage.close();
   });
 
   test("rich graph hydration is cached only after the async job settles", async () => {
     const storage = storageFor("graph-settled");
     const key = graphObservationKey("graph-settled", "request-settled");
-    storage.observationStorage.persist(() => {}, async () => ({ nodes: ["a", "b"], edges: 1 }), key);
+    storage.observationStorage.persist(
+      () => {},
+      async () => ({ nodes: ["a", "b"], edges: 1 }),
+      key,
+    );
     expect(storage.observationStorage.read(key, () => null)).toBeNull();
     await storage.observationStorage.drain();
-    expect(storage.observationStorage.read(key, () => null)).toEqual({ nodes: ["a", "b"], edges: 1 });
+    expect(storage.observationStorage.read(key, () => null)).toEqual({
+      nodes: ["a", "b"],
+      edges: 1,
+    });
     await storage.close();
   });
 

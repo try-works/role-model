@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
 
-import { benchmarkGate } from "../src/composition-dag.js";
 import { BenchmarkCancelledError } from "../src/benchmark-gate.js";
-import { startBridgeServer } from "../src/index.js";
 import { runRoutingCapabilityBenchmark } from "../src/benchmark-runner.js";
+import { benchmarkGate } from "../src/composition-dag.js";
+import { startBridgeServer } from "../src/index.js";
 
 /**
  * S331 behavioral repair: exercise the real HTTP handler for benchmark admission/cancel release, and a real
@@ -35,8 +35,8 @@ describe("S331 benchmark route behavior", () => {
     const probeOptions = { host: "127.0.0.1", port: 0, runBenchmark } as never;
     const server = await startBridgeServer(probeOptions, { allowTestSeamBackend: true });
     try {
-      const base = "http://127.0.0.1:" + String(server.port);
-      const first = fetch(base + "/api/role-model/benchmark/runs", {
+      const base = `http://127.0.0.1:${String(server.port)}`;
+      const first = fetch(`${base}/api/role-model/benchmark/runs`, {
         body: JSON.stringify({ mode: "quick" }),
         method: "POST",
       });
@@ -47,30 +47,30 @@ describe("S331 benchmark route behavior", () => {
       expect(capturedRunId).toBeTypeOf("string");
       expect(capturedSignal).toBeInstanceOf(AbortSignal);
       expect(benchmarkGate.running()).toBe(true);
-      const second = await fetch(base + "/api/role-model/benchmark/runs", {
+      const second = await fetch(`${base}/api/role-model/benchmark/runs`, {
         body: JSON.stringify({ mode: "quick" }),
         method: "POST",
       });
       expect(second.status).toBe(409);
-    // SAFETY: test-only structural cast required by the benchmark route/runner probe types.
+      // SAFETY: test-only structural cast required by the benchmark route/runner probe types.
       const refusal = (await second.json()) as { activeRunId?: string; error?: string };
       expect(refusal).toEqual({ activeRunId: capturedRunId, error: "benchmark_already_running" });
       releaseFirst?.({ runId: capturedRunId });
       const firstResponse = await first;
       expect(firstResponse.status).toBe(202);
-    // SAFETY: test-only structural cast required by the benchmark route/runner probe types.
+      // SAFETY: test-only structural cast required by the benchmark route/runner probe types.
       const accepted = (await firstResponse.json()) as { runId?: string };
       expect(accepted.runId).toBe(capturedRunId);
       expect(benchmarkGate.running()).toBe(false);
       // FAILURE path releases the slot too.
       failNext = true;
-      const failed = await fetch(base + "/api/role-model/benchmark/runs", {
+      const failed = await fetch(`${base}/api/role-model/benchmark/runs`, {
         body: JSON.stringify({ mode: "quick" }),
         method: "POST",
       });
       expect(failed.status).toBe(400);
       expect(benchmarkGate.running()).toBe(false);
-      const next = fetch(base + "/api/role-model/benchmark/runs", {
+      const next = fetch(`${base}/api/role-model/benchmark/runs`, {
         body: JSON.stringify({ mode: "quick" }),
         method: "POST",
       });
@@ -101,10 +101,11 @@ describe("S331 benchmark route behavior", () => {
       listConfiguredEndpoints: async () => [],
       membershipRevision: () => "revision",
       signal: controller.signal,
-    // SAFETY: test-only structural cast required by the benchmark route/runner probe types.
+      // SAFETY: test-only structural cast required by the benchmark route/runner probe types.
     } as never;
-    await expect(runRoutingCapabilityBenchmark(deps, { mode: "quick", runId: "run-cancelled" }))
-      .rejects.toBeInstanceOf(BenchmarkCancelledError);
+    await expect(
+      runRoutingCapabilityBenchmark(deps, { mode: "quick", runId: "run-cancelled" }),
+    ).rejects.toBeInstanceOf(BenchmarkCancelledError);
     expect(upstreamCalls).toBe(0);
   });
 });

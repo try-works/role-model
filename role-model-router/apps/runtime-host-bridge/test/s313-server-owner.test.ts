@@ -2,14 +2,14 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, test } from "vitest";
 
-import { startBridgeServer } from "../src/index.js";
 import {
+  type ServerTransport,
   assertComposedServerOwner,
   composeServerOwner,
-  testSeamBackendOwner,
   isComposedServerOwner,
-  type ServerTransport,
+  testSeamBackendOwner,
 } from "../src/composition-dag.js";
+import { startBridgeServer } from "../src/index.js";
 
 /**
  * S313 (R27): the DAG Server owner is the ONE lifecycle construction site. The facade startBridgeServer composes it
@@ -31,7 +31,11 @@ type FakeTransport = {
 
 const makeTransport = (): FakeTransport => {
   const calls: string[] = [];
-  const captured: Captured = { listener: undefined, listenerFactoryOptions: undefined, server: undefined };
+  const captured: Captured = {
+    listener: undefined,
+    listenerFactoryOptions: undefined,
+    server: undefined,
+  };
   const transport: ServerTransport = {
     createListener: (options) => {
       calls.push("createListener");
@@ -104,15 +108,28 @@ describe("S313 DAG Server owner", () => {
     // SAFETY: the empty registry/catalog are only structural inputs; the composed owner is the identity under test.
     const composed = composeBackendOwner({
       emptyCatalog: { catalogVersion: "1", source: {} } as never,
-      emptyRegistry: { diagnostics: [], endpoints: [], lifecycleSummary: { active: 0, degraded: 0, offline: 0 } } as never,
+      emptyRegistry: {
+        diagnostics: [],
+        endpoints: [],
+        lifecycleSummary: { active: 0, degraded: 0, offline: 0 },
+      } as never,
       host: "127.0.0.1",
       overrides: {},
       port: 0,
       projectCliStartupReadiness: (state) => state,
       readBootstrapState: () => ({ status: "ready" }),
-      resolveBackend: () => ({ effectiveRegistry: { diagnostics: [], endpoints: [], lifecycleSummary: { active: 0, degraded: 0, offline: 0 } } }),
+      resolveBackend: () => ({
+        effectiveRegistry: {
+          diagnostics: [],
+          endpoints: [],
+          lifecycleSummary: { active: 0, degraded: 0, offline: 0 },
+        },
+      }),
     });
-    const server = await startBridgeServer(composed.options, { handlerFactory, transport: fake.transport });
+    const server = await startBridgeServer(composed.options, {
+      handlerFactory,
+      transport: fake.transport,
+    });
     expect(server.serverOwner?.backend).toBe(composed);
   });
 
@@ -122,32 +139,50 @@ describe("S313 DAG Server owner", () => {
     // SAFETY: minimal structural inputs for the composed owner under test.
     const composed = composeBackendOwner({
       emptyCatalog: { catalogVersion: "1", source: {} } as never,
-      emptyRegistry: { diagnostics: [], endpoints: [], lifecycleSummary: { active: 0, degraded: 0, offline: 0 } } as never,
+      emptyRegistry: {
+        diagnostics: [],
+        endpoints: [],
+        lifecycleSummary: { active: 0, degraded: 0, offline: 0 },
+      } as never,
       host: "127.0.0.1",
       overrides: {},
       port: 0,
       projectCliStartupReadiness: (state) => state,
       readBootstrapState: () => ({ status: "ready" }),
-      resolveBackend: () => ({ effectiveRegistry: { diagnostics: [], endpoints: [], lifecycleSummary: { active: 0, degraded: 0, offline: 0 } } }),
+      resolveBackend: () => ({
+        effectiveRegistry: {
+          diagnostics: [],
+          endpoints: [],
+          lifecycleSummary: { active: 0, degraded: 0, offline: 0 },
+        },
+      }),
     });
     // SAFETY: the legacy owner is a plain object; the cast only feeds the facade's backend input.
     const legacy = { id: "legacy-owner", options: composed.options } as never;
-    await expect(startBridgeServer(composed.options, { backend: legacy, handlerFactory, transport: fake.transport }))
-      .rejects.toThrow(/composition DAG/);
+    await expect(
+      startBridgeServer(composed.options, {
+        backend: legacy,
+        handlerFactory,
+        transport: fake.transport,
+      }),
+    ).rejects.toThrow(/composition DAG/);
   });
 
   test("cli threads the composed BackendOwner into startBridgeServer (S554 regression guard)", () => {
     const source = readFileSync(new URL("../src/cli.ts", import.meta.url), "utf8");
     expect(source).toContain("let backendOwner:");
     expect(source).toContain("backendOwner = owner;");
-    expect(source).toMatch(/startBridgeServer\(serverOptions,\s*backendOwner === undefined \? undefined : \{ backend: backendOwner/);
+    expect(source).toMatch(
+      /startBridgeServer\(serverOptions,\s*backendOwner === undefined \? undefined : \{ backend: backendOwner/,
+    );
   });
 
   test("bare options are refused outside the explicit test seam (production-style path)", async () => {
     const fake = makeTransport();
     // SAFETY: a plain options object with no DAG-composed Backend owner; the facade must refuse it.
     const plainOptions = { host: "127.0.0.1", port: 0 } as never;
-    await expect(startBridgeServer(plainOptions, { handlerFactory, transport: fake.transport }))
-      .rejects.toThrow(/composeBackendOwner|test seam/);
+    await expect(
+      startBridgeServer(plainOptions, { handlerFactory, transport: fake.transport }),
+    ).rejects.toThrow(/composeBackendOwner|test seam/);
   });
 });

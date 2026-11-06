@@ -1,12 +1,23 @@
-import { createServer, type Server as NodeServer } from "node:http";
+import { type Server as NodeServer, createServer } from "node:http";
 import { Effect } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { makeHostRuntime, makeHostRuntimeServerFirst, type HostRuntimeFactories } from "../src/host-runtime-resource.js";
+import {
+  type HostRuntimeFactories,
+  makeHostRuntime,
+  makeHostRuntimeServerFirst,
+} from "../src/host-runtime-resource.js";
 
-interface Backend { readonly id: "backend" }
-interface Server { readonly node: NodeServer; readonly port: number }
-interface Packaged { readonly id: "packaged" }
+interface Backend {
+  readonly id: "backend";
+}
+interface Server {
+  readonly node: NodeServer;
+  readonly port: number;
+}
+interface Packaged {
+  readonly id: "packaged";
+}
 
 interface Options {
   readonly failPackaged?: boolean;
@@ -112,14 +123,23 @@ describe("s63a HostRuntimeResource (backend+server pair)", () => {
 
   test("a failed packaged acquisition after bind closes the server once and the backend", async () => {
     const events: string[] = [];
-    await expect(Effect.runPromise(makeHostRuntime(factories(events, { failPackaged: true })))).rejects.toThrow();
-    expect(events).toEqual(["acquire:backend", "acquire:server", "release:server", "release:backend"]);
+    await expect(
+      Effect.runPromise(makeHostRuntime(factories(events, { failPackaged: true }))),
+    ).rejects.toThrow();
+    expect(events).toEqual([
+      "acquire:backend",
+      "acquire:server",
+      "release:server",
+      "release:backend",
+    ]);
     expect(events.filter((event) => event === "release:server")).toHaveLength(1);
   });
 
   test("a throwing packaged finalizer still releases server and backend and surfaces the failure", async () => {
     const events: string[] = [];
-    const host = await Effect.runPromise(makeHostRuntime(factories(events, { throwPackagedRelease: true })));
+    const host = await Effect.runPromise(
+      makeHostRuntime(factories(events, { throwPackagedRelease: true })),
+    );
     await expect(Effect.runPromise(host.close)).rejects.toThrow();
     expect(events).toContain("release:packaged");
     expect(events).toContain("release:server");
@@ -134,15 +154,25 @@ describe("s63a HostRuntimeResource (backend+server pair)", () => {
         events.push("acquire:backend");
         return Effect.fail(new Error("backend failed"));
       }),
-      acquirePackagedRuntime: (_server, _backend) => Effect.sync(() => ({ id: "packaged" as const })),
+      acquirePackagedRuntime: (_server, _backend) =>
+        Effect.sync(() => ({ id: "packaged" as const })),
       acquireServer: (_backend) =>
         Effect.sync(() => {
           events.push("acquire:server");
           return { node: createServer(), port: 0 };
         }),
-      releaseBackend: (_backend) => Effect.sync(() => { events.push("release:backend"); }),
-      releasePackagedRuntime: (_packaged) => Effect.sync(() => { events.push("release:packaged"); }),
-      releaseServer: (_server) => Effect.sync(() => { events.push("release:server"); }),
+      releaseBackend: (_backend) =>
+        Effect.sync(() => {
+          events.push("release:backend");
+        }),
+      releasePackagedRuntime: (_packaged) =>
+        Effect.sync(() => {
+          events.push("release:packaged");
+        }),
+      releaseServer: (_server) =>
+        Effect.sync(() => {
+          events.push("release:server");
+        }),
     };
     await expect(Effect.runPromise(makeHostRuntime(failing))).rejects.toThrow();
     expect(events).toEqual(["acquire:backend"]);
@@ -159,7 +189,8 @@ describe("s63a HostRuntimeResource (backend+server pair)", () => {
         events.push("acquire:backend");
         return { id: "backend" as const };
       }),
-      acquirePackagedRuntime: (_server, _backend) => Effect.sync(() => ({ id: "packaged" as const })),
+      acquirePackagedRuntime: (_server, _backend) =>
+        Effect.sync(() => ({ id: "packaged" as const })),
       acquireServer: (_backend) =>
         Effect.tryPromise({
           catch: (error) => error,
@@ -173,9 +204,18 @@ describe("s63a HostRuntimeResource (backend+server pair)", () => {
               });
             }),
         }),
-      releaseBackend: (_backend) => Effect.sync(() => { events.push("release:backend"); }),
-      releasePackagedRuntime: (_packaged) => Effect.sync(() => { events.push("release:packaged"); }),
-      releaseServer: (_server) => Effect.sync(() => { events.push("release:server"); }),
+      releaseBackend: (_backend) =>
+        Effect.sync(() => {
+          events.push("release:backend");
+        }),
+      releasePackagedRuntime: (_packaged) =>
+        Effect.sync(() => {
+          events.push("release:packaged");
+        }),
+      releaseServer: (_server) =>
+        Effect.sync(() => {
+          events.push("release:server");
+        }),
     };
     try {
       await expect(Effect.runPromise(makeHostRuntime(failing))).rejects.toThrow();

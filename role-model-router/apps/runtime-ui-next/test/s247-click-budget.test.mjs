@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readdir, readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 
@@ -41,7 +41,7 @@ const BUDGET = {
   // S635: untouched Save baseline and non-default posture paths.
   "s635-router-posture-hydration.test.ts": 2,
   // S634: Week range switch to prove the Requests charts re-query window.
-  "s634-observe-requests-charts.test.ts": 1
+  "s634-observe-requests-charts.test.ts": 1,
 };
 
 /** S247 policy: every budgeted click site names the user path it proves. */
@@ -60,11 +60,15 @@ const RATIONALE = {
   "s589-local-policy-wired.test.ts": "Save local policy (ttl 900)",
   "s591-router-weights-editor.test.ts": "Save routing strategy from three weight drafts",
   "s595-storage-retention.test.ts": "Save retention, dry-run, execute, mode update, rollback",
-  "s619-learning-controls.test.ts": "Scope-wide pack rollback with operator token; engage then release the learning kill switch",
-  "s635-router-posture-hydration.test.ts": "Save routing strategy without select interaction (baseline and non-default posture)",
+  "s619-learning-controls.test.ts":
+    "Scope-wide pack rollback with operator token; engage then release the learning kill switch",
+  "s635-router-posture-hydration.test.ts":
+    "Save routing strategy without select interaction (baseline and non-default posture)",
   "s620-roles-parity.test.ts": "Expand Task detail in the role catalog",
-  "s628-charts-data-binding.test.ts": "Week-range metrics re-read assertion on Requests and ObserveRouting volume charts",
-  "s634-observe-requests-charts.test.ts": "Week-range re-query assertion for the nine Requests analytics charts"
+  "s628-charts-data-binding.test.ts":
+    "Week-range metrics re-read assertion on Requests and ObserveRouting volume charts",
+  "s634-observe-requests-charts.test.ts":
+    "Week-range re-query assertion for the nine Requests analytics charts",
 };
 
 const testDirectory = path.join(import.meta.dirname);
@@ -74,7 +78,11 @@ const countClicks = async () => {
   for (const file of (await readdir(testDirectory)).filter((name) => name.endsWith(".test.ts"))) {
     const source = await readFile(path.join(testDirectory, file), "utf8");
     // Strip comments first: a doc comment that mentions element.click() is documentation, not a click.
-    const code = source.replace(/\/\*[\s\S]*?\*\//g, "").split("\n").filter((line) => !line.trim().startsWith("//")).join("\n");
+    const code = source
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//"))
+      .join("\n");
     const clicks = (code.match(/\.click\(\)/g) ?? []).length;
     if (clicks > 0) counts[file] = clicks;
   }
@@ -84,7 +92,11 @@ const countClicks = async () => {
 test("S247: no test may exceed its recorded synthetic-click budget", async () => {
   const counts = await countClicks();
   const over = Object.entries(counts).filter(([file, n]) => n > (BUDGET[file] ?? 0));
-  assert.deepEqual(over, [], "lower the site count with a scene/story conversion instead of adding clicks");
+  assert.deepEqual(
+    over,
+    [],
+    "lower the site count with a scene/story conversion instead of adding clicks",
+  );
 });
 
 test("S247: every file with clicks is recorded in the budget", async () => {
@@ -97,7 +109,10 @@ test("S247: the total click count does not grow", async () => {
   const counts = await countClicks();
   const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
   const budgetTotal = Object.values(BUDGET).reduce((sum, n) => sum + n, 0);
-  assert.ok(total <= budgetTotal, "synthetic clicks " + String(total) + " > budget " + String(budgetTotal));
+  assert.ok(
+    total <= budgetTotal,
+    `synthetic clicks ${String(total)} > budget ${String(budgetTotal)}`,
+  );
 });
 
 test("S247: every recorded budget entry names the user path it exercises", () => {

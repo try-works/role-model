@@ -83,9 +83,7 @@ const safeDetach = (waiter: Waiter): void => {
 
 const buildResponse = (response: Response, body: string): Response => {
   if (response.status < 200 || response.status > 599) {
-    throw new Error(
-      "readback transport cannot reconstruct status " + String(response.status),
-    );
+    throw new Error(`readback transport cannot reconstruct status ${String(response.status)}`);
   }
   return new Response(NULL_BODY_STATUS.has(response.status) ? null : body, {
     headers: new Headers(response.headers),

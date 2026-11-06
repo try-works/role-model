@@ -72,7 +72,11 @@ export interface LearningLadderRow {
   readonly nextEligibleAtMs: number | null;
   readonly rankedCount: number | null;
   readonly roleId: string;
-  readonly rolledBack: { readonly atMs: number | null; readonly on: boolean; readonly reason: string | null } | null;
+  readonly rolledBack: {
+    readonly atMs: number | null;
+    readonly on: boolean;
+    readonly reason: string | null;
+  } | null;
   readonly rungs?: readonly LearningLadderEndpoint[];
   readonly taskTypeId: string;
   readonly taxonomyVersion: string | null;
@@ -113,7 +117,9 @@ const rowOfDecoded = (row: DecodedLadderRow): LearningLadderRow | null => {
   return row.rungs === undefined ? mapped : { ...mapped, rungs: row.rungs.map(endpointOfDecoded) };
 };
 
-export const parseLearningLadderPayload = (body: LearningPayloadJson): LearningLadderParseResult => {
+export const parseLearningLadderPayload = (
+  body: LearningPayloadJson,
+): LearningLadderParseResult => {
   try {
     const decoded = Schema.decodeUnknownSync(LearningLadderPayloadSchema)(body);
     const rows: LearningLadderRow[] = [];
@@ -143,7 +149,9 @@ export const learningLadderRowKey = (
   row: Pick<LearningLadderRow, "roleId" | "taskTypeId">,
   scopeId?: string,
 ): string =>
-  (scopeId === undefined || scopeId.length === 0 ? "" : scopeId + "\u0000") + row.roleId + "\u0000" + row.taskTypeId;
+  `${
+    (scopeId === undefined || scopeId.length === 0 ? "" : `${scopeId}\u0000`) + row.roleId
+  }\u0000${row.taskTypeId}`;
 
 export interface LearningRollbackPayload {
   readonly reason: "operator_ui_ladder_activate" | "operator_ui_ladder_rollback";
@@ -197,14 +205,22 @@ export const createLearningRankingClient = (
 ): LearningRankingClient => ({
   rollbackLadder: async (payload) => {
     const fetchImpl = options.fetchImpl ?? fetch;
-    const headers: HeadersInit = options.token === undefined
-      ? { accept: "application/json", "content-type": "application/json" }
-      : { accept: "application/json", authorization: "Bearer " + options.token, "content-type": "application/json" };
-    const response = await fetchImpl((options.baseUrl ?? "") + "/api/role-model/operator/learning/rollback-pack", {
-      body: JSON.stringify(payload),
-      headers,
-      method: "POST",
-    });
+    const headers: HeadersInit =
+      options.token === undefined
+        ? { accept: "application/json", "content-type": "application/json" }
+        : {
+            accept: "application/json",
+            authorization: `Bearer ${options.token}`,
+            "content-type": "application/json",
+          };
+    const response = await fetchImpl(
+      `${options.baseUrl ?? ""}/api/role-model/operator/learning/rollback-pack`,
+      {
+        body: JSON.stringify(payload),
+        headers,
+        method: "POST",
+      },
+    );
     const parsed: LearningPayloadJson = await response.json();
     if (!response.ok) {
       let detail = "learning ladder rollback failed";

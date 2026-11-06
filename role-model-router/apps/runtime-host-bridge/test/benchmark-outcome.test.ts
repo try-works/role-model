@@ -5,8 +5,17 @@ import path from "node:path";
 import { describe, expect, test } from "vitest";
 
 import { writeBenchmarkRunManifest } from "../src/benchmark-artifacts.js";
-import { benchmarkCaseCounts, benchmarkOutcomeFields, benchmarkRunOutcome } from "../src/benchmark-outcome.js";
-import { EMPTY_BENCHMARK_SUMMARY, listBenchmarkRuns, readLatestBenchmarkSummary, writeBenchmarkRunResult } from "../src/benchmark-summary.js";
+import {
+  benchmarkCaseCounts,
+  benchmarkOutcomeFields,
+  benchmarkRunOutcome,
+} from "../src/benchmark-outcome.js";
+import {
+  EMPTY_BENCHMARK_SUMMARY,
+  listBenchmarkRuns,
+  readLatestBenchmarkSummary,
+  writeBenchmarkRunResult,
+} from "../src/benchmark-summary.js";
 import { startBridgeServer } from "../src/index.js";
 
 const grade = (scores: readonly number[]) => ({
@@ -15,7 +24,11 @@ const grade = (scores: readonly number[]) => ({
   sourceType: "remote" as const,
   overallScore: 0.5,
   byDifficulty: {},
-  caseResults: scores.map((score, index) => ({ caseId: "case-" + String(index), difficultyBucket: "easy" as const, score })),
+  caseResults: scores.map((score, index) => ({
+    caseId: `case-${String(index)}`,
+    difficultyBucket: "easy" as const,
+    score,
+  })),
 });
 
 describe("benchmark outcome", () => {
@@ -32,28 +45,73 @@ describe("benchmark outcome", () => {
     const pending = benchmarkCaseCounts([]);
     expect(pending).toEqual({ failed: 0, passed: 0, total: 0 });
     expect(benchmarkRunOutcome(pending)).toBeNull();
-    expect(benchmarkOutcomeFields([])).toEqual({ caseCounts: { failed: 0, passed: 0, total: 0 }, outcome: null });
-    expect(benchmarkOutcomeFields([grade([0, 1])])).toEqual({ caseCounts: { failed: 1, passed: 1, total: 2 }, outcome: "partial" });
+    expect(benchmarkOutcomeFields([])).toEqual({
+      caseCounts: { failed: 0, passed: 0, total: 0 },
+      outcome: null,
+    });
+    expect(benchmarkOutcomeFields([grade([0, 1])])).toEqual({
+      caseCounts: { failed: 1, passed: 1, total: 2 },
+      outcome: "partial",
+    });
   });
 
   test("serves caseCounts and outcome on the runs, active-progress and summary HTTP payloads", async () => {
     const fields = { caseCounts: { failed: 1, passed: 2, total: 3 }, outcome: "partial" as const };
-    const run = { runId: "run-http", mode: "quick" as const, completedAtMs: 3, suiteId: "suite", caseCount: 3, endpointIds: ["endpoint.a"], ...fields };
-    const summary = { ...EMPTY_BENCHMARK_SUMMARY, runId: "run-http", completedAtMs: 3, mode: "quick" as const, suiteId: "suite", ...fields };
-    const active = { runId: "run-http", status: "completed" as const, mode: "quick" as const, startedAtMs: 1, updatedAtMs: 3, totalSteps: 3, completedSteps: 3, endpointIndex: 1, endpointCount: 1, currentEndpointId: null, currentEndpointModelId: null, caseIndex: 3, caseCount: 3, currentCaseId: null, currentPhase: null, runPhase: "complete" as const, judgeEndpointId: null, activeJudgeEndpointId: null, artifactRoot: "root", ...fields };
-    const server = await startBridgeServer({
-      host: "127.0.0.1",
-      listBenchmarkRuns: async () => [run],
-      port: 0,
-      readActiveBenchmarkRun: async () => active,
-      readBenchmarkSummary: async () => summary,
-    } as never, { allowTestSeamBackend: true });
+    const run = {
+      runId: "run-http",
+      mode: "quick" as const,
+      completedAtMs: 3,
+      suiteId: "suite",
+      caseCount: 3,
+      endpointIds: ["endpoint.a"],
+      ...fields,
+    };
+    const summary = {
+      ...EMPTY_BENCHMARK_SUMMARY,
+      runId: "run-http",
+      completedAtMs: 3,
+      mode: "quick" as const,
+      suiteId: "suite",
+      ...fields,
+    };
+    const active = {
+      runId: "run-http",
+      status: "completed" as const,
+      mode: "quick" as const,
+      startedAtMs: 1,
+      updatedAtMs: 3,
+      totalSteps: 3,
+      completedSteps: 3,
+      endpointIndex: 1,
+      endpointCount: 1,
+      currentEndpointId: null,
+      currentEndpointModelId: null,
+      caseIndex: 3,
+      caseCount: 3,
+      currentCaseId: null,
+      currentPhase: null,
+      runPhase: "complete" as const,
+      judgeEndpointId: null,
+      activeJudgeEndpointId: null,
+      artifactRoot: "root",
+      ...fields,
+    };
+    const server = await startBridgeServer(
+      {
+        host: "127.0.0.1",
+        listBenchmarkRuns: async () => [run],
+        port: 0,
+        readActiveBenchmarkRun: async () => active,
+        readBenchmarkSummary: async () => summary,
+      } as never,
+      { allowTestSeamBackend: true },
+    );
     try {
-      const base = "http://127.0.0.1:" + String(server.port);
+      const base = `http://127.0.0.1:${String(server.port)}`;
       const [runs, activeResponse, summaryResponse] = await Promise.all([
-        fetch(base + "/api/role-model/benchmark/runs").then((response) => response.json()),
-        fetch(base + "/api/role-model/benchmark/runs/active").then((response) => response.json()),
-        fetch(base + "/api/role-model/benchmark/summary").then((response) => response.json()),
+        fetch(`${base}/api/role-model/benchmark/runs`).then((response) => response.json()),
+        fetch(`${base}/api/role-model/benchmark/runs/active`).then((response) => response.json()),
+        fetch(`${base}/api/role-model/benchmark/summary`).then((response) => response.json()),
       ]);
       expect(runs[0]).toMatchObject(fields);
       expect(activeResponse).toMatchObject(fields);
@@ -100,7 +158,10 @@ describe("benchmark outcome", () => {
       runId: "run-partial",
     });
 
-    const summary = await readLatestBenchmarkSummary({ artifactRoot: root, resolveModelId: () => null });
+    const summary = await readLatestBenchmarkSummary({
+      artifactRoot: root,
+      resolveModelId: () => null,
+    });
     expect(summary.caseCounts).toEqual({ failed: 1, passed: 2, total: 3 });
     expect(summary.outcome).toBe("partial");
     expect(summary.subjects[0]?.passingCaseIds).toEqual(["case-0", "case-2"]);

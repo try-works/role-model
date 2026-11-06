@@ -821,8 +821,14 @@ export function startAutoReplayLoop(input: {
       const onAbort = () => reject(new Error("sweep aborted"));
       sweepAbort.signal.addEventListener("abort", onAbort, { once: true });
       work.then(
-        (value) => { sweepAbort.signal.removeEventListener("abort", onAbort); resolve(value); },
-        (error) => { sweepAbort.signal.removeEventListener("abort", onAbort); reject(error); },
+        (value) => {
+          sweepAbort.signal.removeEventListener("abort", onAbort);
+          resolve(value);
+        },
+        (error) => {
+          sweepAbort.signal.removeEventListener("abort", onAbort);
+          reject(error);
+        },
       );
     });
   };
@@ -1146,12 +1152,14 @@ export function startAutoReplayLoop(input: {
       if (typeof input.operations.resumePendingEvaluations === "function") {
         try {
           // SAFETY: the sweep table's declared return shape is validated field-by-field below.
-          const sweep = (await withSweepAbort(input.operations.resumePendingEvaluations({
-            window,
-            policySetDigest: input.policySet.policySetDigest,
-            signal: sweepSignal(),
-            ...(evaluationQueueAuthoritative ? { resolvedOnly: true } : {}),
-          }))) as { readonly resumed?: unknown } | null;
+          const sweep = (await withSweepAbort(
+            input.operations.resumePendingEvaluations({
+              window,
+              policySetDigest: input.policySet.policySetDigest,
+              signal: sweepSignal(),
+              ...(evaluationQueueAuthoritative ? { resolvedOnly: true } : {}),
+            }),
+          )) as { readonly resumed?: unknown } | null;
           if (sweep && Number.isSafeInteger(sweep.resumed) && Number(sweep.resumed) >= 0) {
             resumed = Number(sweep.resumed);
           }
@@ -1231,11 +1239,13 @@ export function startAutoReplayLoop(input: {
       if (typeof input.operations.sweepFinalizationSignals === "function") {
         try {
           // SAFETY: the sweep table's declared return shape is validated field-by-field below.
-          const sweep = (await withSweepAbort(input.operations.sweepFinalizationSignals({
-            window,
-            policySetDigest: input.policySet.policySetDigest,
-            signal: sweepSignal(),
-          }))) as { readonly analyzed?: unknown; readonly deferred?: unknown } | null;
+          const sweep = (await withSweepAbort(
+            input.operations.sweepFinalizationSignals({
+              window,
+              policySetDigest: input.policySet.policySetDigest,
+              signal: sweepSignal(),
+            }),
+          )) as { readonly analyzed?: unknown; readonly deferred?: unknown } | null;
           if (sweep) {
             finalizationSignals = countOf(sweep.analyzed);
             finalizationSignalsDeferred = countOf(sweep.deferred);
@@ -1294,11 +1304,13 @@ export function startAutoReplayLoop(input: {
       ) {
         try {
           // SAFETY: the sweep table's declared return shape is validated field-by-field below.
-          const sweep = (await withSweepAbort(input.operations.learnFromUnconsumedCandidates({
-            window,
-            policySetDigest: input.policySet.policySetDigest,
-            signal: sweepSignal(),
-          }))) as { readonly consumed?: unknown; readonly remaining?: unknown } | null;
+          const sweep = (await withSweepAbort(
+            input.operations.learnFromUnconsumedCandidates({
+              window,
+              policySetDigest: input.policySet.policySetDigest,
+              signal: sweepSignal(),
+            }),
+          )) as { readonly consumed?: unknown; readonly remaining?: unknown } | null;
           if (sweep) {
             learned = countOf(sweep.consumed);
             learnersPending = countOf(sweep.remaining);
@@ -1321,11 +1333,13 @@ export function startAutoReplayLoop(input: {
       ) {
         try {
           // SAFETY: the sweep table's declared return shape is validated field-by-field below.
-          const sweep = (await withSweepAbort(input.operations.deriveLearnerCandidates({
-            window,
-            policySetDigest: input.policySet.policySetDigest,
-            signal: sweepSignal(),
-          }))) as { readonly derived?: unknown; readonly pending?: unknown } | null;
+          const sweep = (await withSweepAbort(
+            input.operations.deriveLearnerCandidates({
+              window,
+              policySetDigest: input.policySet.policySetDigest,
+              signal: sweepSignal(),
+            }),
+          )) as { readonly derived?: unknown; readonly pending?: unknown } | null;
           if (sweep) {
             derivedCandidates = countOf(sweep.derived);
             derivationBacklog = countOf(sweep.pending);
@@ -1395,11 +1409,13 @@ export function startAutoReplayLoop(input: {
       if (typeof input.operations.recoverHandedOffEvaluations === "function") {
         try {
           // SAFETY: the sweep table's declared return shape is validated field-by-field below.
-          const sweep = (await withSweepAbort(input.operations.recoverHandedOffEvaluations({
-            window,
-            policySetDigest: input.policySet.policySetDigest,
-            signal: sweepSignal(),
-          }))) as { readonly recovered?: unknown } | null;
+          const sweep = (await withSweepAbort(
+            input.operations.recoverHandedOffEvaluations({
+              window,
+              policySetDigest: input.policySet.policySetDigest,
+              signal: sweepSignal(),
+            }),
+          )) as { readonly recovered?: unknown } | null;
           if (sweep && Number.isSafeInteger(sweep.recovered) && Number(sweep.recovered) >= 0) {
             recovered = Number(sweep.recovered);
           }

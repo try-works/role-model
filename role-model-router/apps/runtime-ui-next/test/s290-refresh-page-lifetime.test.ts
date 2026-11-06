@@ -107,9 +107,10 @@ const startStream = (
   lifecycle?: FakeLifecycle,
 ): RunningStream => {
   const messages: Message[] = [];
-  const stream = lifecycle === undefined
-    ? refreshRevisionStream(factory)
-    : refreshRevisionStream(factory, lifecycle);
+  const stream =
+    lifecycle === undefined
+      ? refreshRevisionStream(factory)
+      : refreshRevisionStream(factory, lifecycle);
   const fiber = Effect.runFork(
     Stream.runForEach(stream, (message) =>
       Effect.sync(() => {
@@ -138,7 +139,7 @@ const revisionMessages = (messages: readonly Message[]): Message[] =>
 
 const sourceAt = (sources: readonly FakeSource[], index: number): FakeSource => {
   const source = sources[index];
-  if (source === undefined) throw new Error("expected a source at index " + String(index));
+  if (source === undefined) throw new Error(`expected a source at index ${String(index)}`);
   return source;
 };
 
@@ -166,7 +167,16 @@ const createTestUpdate = (fetchImpl: typeof fetch) => {
     body: { records: [], state: "empty" },
     status: 200,
   }));
-  return createUpdate(readDiagnostics, undefined, undefined, readReadback, undefined, undefined, undefined, undefined);
+  return createUpdate(
+    readDiagnostics,
+    undefined,
+    undefined,
+    readReadback,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+  );
 };
 
 describe("S290 refresh EventSource page lifetime", () => {
@@ -314,7 +324,14 @@ describe("S290 refresh EventSource page lifetime", () => {
     source.emit("revision.update", "{bad json");
     source.emit("revision.update", JSON.stringify({ revision: 1.5 }));
     source.emit("telemetry.update", "{bad json");
-    source.emit("telemetry.update", JSON.stringify({ emittedAtMs: 1.5, eventName: "telemetry.update", request: { requestId: "x" } }));
+    source.emit(
+      "telemetry.update",
+      JSON.stringify({
+        emittedAtMs: 1.5,
+        eventName: "telemetry.update",
+        request: { requestId: "x" },
+      }),
+    );
     await settle();
     expect(running.messages).toHaveLength(0);
     source.emit("revision.update", revisionPayload(41));
@@ -404,7 +421,9 @@ describe("S290 refresh EventSource page lifetime", () => {
     };
     const { factory, sources } = createFactory();
     const stream = refreshRevisionStream(factory, lifecycle);
-    await expect(Effect.runPromise(Stream.runCollect(stream))).rejects.toThrow("pageshow registration boom");
+    await expect(Effect.runPromise(Stream.runCollect(stream))).rejects.toThrow(
+      "pageshow registration boom",
+    );
     expect(sources[0]?.closeCount()).toBe(1);
     expect(lifecycle.listenerCount("pagehide")).toBe(0);
   });

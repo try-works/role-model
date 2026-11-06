@@ -4,25 +4,63 @@ import { defineMessageUnion } from "@role-model-router/foldkit/message";
 import { Schema } from "effect";
 
 import { ControlKeySchema, ControlState } from "./control";
+import {
+  DeviceAuthFieldSchema,
+  DeviceAuthSessionSchema,
+  DeviceAuthSessionsSchema,
+} from "./device-auth";
 import { DiagnosticsSnapshot } from "./diagnostics";
-import { ObservabilityState } from "./observability";
-import { ReadbackKeySchema, ReadbackState } from "./readback";
-import { DeviceAuthFieldSchema, DeviceAuthSessionSchema, DeviceAuthSessionsSchema } from "./device-auth";
-import { LearningRankingStateSchema } from "./learning-ranking";
-import { RequestsRankingFieldSchema, RequestsRankingRowsSchema } from "./requests-ranking";
 import { EndpointAdmissionFieldSchema } from "./endpoint-admission";
+import { LearningRankingStateSchema } from "./learning-ranking";
+import { ObservabilityState } from "./observability";
 import { ProviderAccountFieldSchema } from "./provider-account";
+import { ReadbackKeySchema, ReadbackState } from "./readback";
+import { type RequestsRankingFieldSchema, RequestsRankingRowsSchema } from "./requests-ranking";
 import { StudioFieldSchema, StudioTabSchema } from "./studio";
 
 type EmptyFields = Record<never, never>;
 
-const RouterPostureFieldSchema = Schema.Literals(["mode", "scoringStrategy", "executionMode", "pinWeights", "weightQuality", "weightLatency", "weightThroughput", "weightCost", "weightReliability", "weightPreference"]);
+const RouterPostureFieldSchema = Schema.Literals([
+  "mode",
+  "scoringStrategy",
+  "executionMode",
+  "pinWeights",
+  "weightQuality",
+  "weightLatency",
+  "weightThroughput",
+  "weightCost",
+  "weightReliability",
+  "weightPreference",
+]);
 const RouterEntryFieldSchema = Schema.Literals(["name", "role", "model", "description"]);
 const RouterBlockSchema = Schema.Literals(["agent_strategies", "workloads"]);
 const RoleActionKindSchema = Schema.Literals(["create", "edit", "tasks"] as const);
 const ReplayAutomationActionSchema = Schema.Literals(["pause", "resume"]);
-const RoleDraftFieldSchema = Schema.Literals(["roleId", "name", "description", "instructions", "kind", "toolPolicy", "allowedTools", "defaultSystemInstructions", "forbiddenCapabilities", "outputContracts", "preferredCapabilities", "requiredCapabilities", "roleKind", "routingOverridesText", "safetyPolicyRefs", "taskTypesSupported", "toolPolicyMode"]);
-const RequestsFilterFieldSchema = Schema.Literals(["breakdown", "difficulty", "source", "statusFamily"]);
+const RoleDraftFieldSchema = Schema.Literals([
+  "roleId",
+  "name",
+  "description",
+  "instructions",
+  "kind",
+  "toolPolicy",
+  "allowedTools",
+  "defaultSystemInstructions",
+  "forbiddenCapabilities",
+  "outputContracts",
+  "preferredCapabilities",
+  "requiredCapabilities",
+  "roleKind",
+  "routingOverridesText",
+  "safetyPolicyRefs",
+  "taskTypesSupported",
+  "toolPolicyMode",
+]);
+const RequestsFilterFieldSchema = Schema.Literals([
+  "breakdown",
+  "difficulty",
+  "source",
+  "statusFamily",
+]);
 const ObserveFilterFieldSchema = Schema.Literals([
   "breakdown",
   "difficulty",
@@ -72,15 +110,30 @@ export const Message: MessageUnion<{
     readonly snapshot: typeof ControlState;
     readonly token: typeof Schema.Number;
   };
-  readonly DeviceAuthFieldChanged: { readonly field: typeof DeviceAuthFieldSchema; readonly value: typeof Schema.String };
+  readonly DeviceAuthFieldChanged: {
+    readonly field: typeof DeviceAuthFieldSchema;
+    readonly value: typeof Schema.String;
+  };
   readonly GotDeviceAuthDialogMessage: { readonly message: typeof Schema.Unknown };
   readonly DeviceAuthModelAdded: EmptyFields;
   readonly DeviceAuthModelRemoved: { readonly modelId: typeof Schema.String };
   readonly DeviceAuthStartRequested: EmptyFields;
-  readonly DeviceAuthSessionsLoaded: { readonly sessions: typeof DeviceAuthSessionsSchema; readonly token: typeof Schema.Number };
-  readonly DeviceAuthStarted: { readonly session: typeof DeviceAuthSessionSchema; readonly token: typeof Schema.Number };
-  readonly DeviceAuthPolled: { readonly session: typeof DeviceAuthSessionSchema; readonly token: typeof Schema.Number };
-  readonly DeviceAuthFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly DeviceAuthSessionsLoaded: {
+    readonly sessions: typeof DeviceAuthSessionsSchema;
+    readonly token: typeof Schema.Number;
+  };
+  readonly DeviceAuthStarted: {
+    readonly session: typeof DeviceAuthSessionSchema;
+    readonly token: typeof Schema.Number;
+  };
+  readonly DeviceAuthPolled: {
+    readonly session: typeof DeviceAuthSessionSchema;
+    readonly token: typeof Schema.Number;
+  };
+  readonly DeviceAuthFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly DeviceAuthRetryRequested: EmptyFields;
   readonly DeviceAuthCancelled: EmptyFields;
   readonly DeviceAuthPollCancelCompleted: EmptyFields;
@@ -105,67 +158,162 @@ export const Message: MessageUnion<{
   };
   readonly GotRequestsRankingMetricListboxMessage: { readonly message: typeof Schema.Unknown };
   readonly GotRequestsRankingTargetListboxMessage: { readonly message: typeof Schema.Unknown };
-  readonly RequestsRankingFieldChanged: { readonly field: typeof RequestsRankingFieldSchema; readonly value: typeof Schema.String };
+  readonly RequestsRankingFieldChanged: {
+    readonly field: typeof RequestsRankingFieldSchema;
+    readonly value: typeof Schema.String;
+  };
   readonly RequestsRankingSubmitRequested: EmptyFields;
-  readonly RequestsRankingLoaded: { readonly rows: typeof RequestsRankingRowsSchema; readonly token: typeof Schema.Number };
-  readonly RequestsRankingFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly RoutingChartsLoaded: { readonly entriesJson: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly RoutingChartsFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly RequestsChartsLoaded: { readonly entriesJson: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly RequestsChartsFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly RequestsRankingLoaded: {
+    readonly rows: typeof RequestsRankingRowsSchema;
+    readonly token: typeof Schema.Number;
+  };
+  readonly RequestsRankingFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly RoutingChartsLoaded: {
+    readonly entriesJson: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly RoutingChartsFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly RequestsChartsLoaded: {
+    readonly entriesJson: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly RequestsChartsFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly ReplayAutoQueueToggleChanged: { readonly value: typeof Schema.String };
   readonly ReplayAutoQueueCapChanged: { readonly value: typeof Schema.String };
   readonly ReplayAutoQueueSaveRequested: EmptyFields;
   readonly ReplayAutoQueueSaved: { readonly token: typeof Schema.Number };
-  readonly ReplayAutoQueueSaveFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly ReplayAutoQueueSaveFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly ModelCardSelected: { readonly modelId: typeof Schema.String };
-  readonly ModelsRoleToggled: { readonly enabled: typeof Schema.Boolean; readonly modelId: typeof Schema.String; readonly roleId: typeof Schema.String };
-  readonly RoleDraftChanged: { readonly field: typeof RoleDraftFieldSchema; readonly value: typeof Schema.String };
+  readonly ModelsRoleToggled: {
+    readonly enabled: typeof Schema.Boolean;
+    readonly modelId: typeof Schema.String;
+    readonly roleId: typeof Schema.String;
+  };
+  readonly RoleDraftChanged: {
+    readonly field: typeof RoleDraftFieldSchema;
+    readonly value: typeof Schema.String;
+  };
   readonly RoleDraftReset: EmptyFields;
   readonly RoleCreateRequested: EmptyFields;
   readonly RoleAdvancedPolicyToggled: EmptyFields;
-  readonly RoleEditDraftChanged: { readonly field: typeof RoleDraftFieldSchema; readonly value: typeof Schema.String };
+  readonly RoleEditDraftChanged: {
+    readonly field: typeof RoleDraftFieldSchema;
+    readonly value: typeof Schema.String;
+  };
   readonly RoleSelected: { readonly roleId: typeof Schema.String };
   readonly RoleTaskDetailToggled: { readonly roleId: typeof Schema.String };
-  readonly RoleTaskRoleToggled: { readonly roleId: typeof Schema.String; readonly taskType: typeof Schema.String };
+  readonly RoleTaskRoleToggled: {
+    readonly roleId: typeof Schema.String;
+    readonly taskType: typeof Schema.String;
+  };
   readonly RoleTaskAllowlistsSaveRequested: EmptyFields;
   readonly RoleEditReset: EmptyFields;
   readonly RoleEditSaveRequested: EmptyFields;
-  readonly RolePolicyWriteSucceeded: { readonly kind: typeof RoleActionKindSchema; readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly RolePolicyWriteFailed: { readonly kind: typeof RoleActionKindSchema; readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly RolePolicyWriteSucceeded: {
+    readonly kind: typeof RoleActionKindSchema;
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly RolePolicyWriteFailed: {
+    readonly kind: typeof RoleActionKindSchema;
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly BenchmarkModeChanged: { readonly value: typeof Schema.String };
   readonly BenchmarkJudgeChanged: { readonly value: typeof Schema.String };
   readonly BenchmarkRunRequested: EmptyFields;
   readonly BenchmarkClearRequested: EmptyFields;
   readonly BenchmarkClearConfirmed: EmptyFields;
   readonly BenchmarkClearCancelled: EmptyFields;
-  readonly BenchmarkEndpointSelected: { readonly endpointId: typeof Schema.String; readonly selected: typeof Schema.Boolean };
+  readonly BenchmarkEndpointSelected: {
+    readonly endpointId: typeof Schema.String;
+    readonly selected: typeof Schema.Boolean;
+  };
   readonly BenchmarkEndpointClearRequested: { readonly endpointId: typeof Schema.String };
   readonly BenchmarkEndpointClearConfirmed: { readonly endpointId: typeof Schema.String };
   readonly BenchmarkEndpointClearCancelled: EmptyFields;
-  readonly BenchmarkEndpointCleared: { readonly endpointId: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly BenchmarkEndpointClearFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly BenchmarkEndpointCleared: {
+    readonly endpointId: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly BenchmarkEndpointClearFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly BenchmarkPreferencesSaveRequested: { readonly judgeEndpointId: typeof Schema.String };
-  readonly BenchmarkPreferencesSaved: { readonly judgeEndpointId: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly BenchmarkPreferencesSaveFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly BenchmarkRunStarted: { readonly runId: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly BenchmarkRunStartFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly BenchmarkRunPollRequested: { readonly runId: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly BenchmarkRunPolled: { readonly progressJson: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly BenchmarkRunPollFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly BenchmarkPreferencesSaved: {
+    readonly judgeEndpointId: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly BenchmarkPreferencesSaveFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly BenchmarkRunStarted: {
+    readonly runId: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly BenchmarkRunStartFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly BenchmarkRunPollRequested: {
+    readonly runId: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly BenchmarkRunPolled: {
+    readonly progressJson: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly BenchmarkRunPollFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly BenchmarkRunDetailRequested: { readonly runId: typeof Schema.String };
-  readonly BenchmarkRunDetailLoaded: { readonly json: typeof Schema.String; readonly runId: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly BenchmarkRunDetailFailed: { readonly message: typeof Schema.String; readonly runId: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly BenchmarkTaxonomyFilterChanged: { readonly filter: typeof Schema.String; readonly value: typeof Schema.String };
+  readonly BenchmarkRunDetailLoaded: {
+    readonly json: typeof Schema.String;
+    readonly runId: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly BenchmarkRunDetailFailed: {
+    readonly message: typeof Schema.String;
+    readonly runId: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly BenchmarkTaxonomyFilterChanged: {
+    readonly filter: typeof Schema.String;
+    readonly value: typeof Schema.String;
+  };
   readonly ModelsRemoveRequested: { readonly modelId: typeof Schema.String };
   readonly ModelsControllerSetRequested: { readonly modelId: typeof Schema.String };
   readonly ModelsControllerEjectRequested: { readonly modelId: typeof Schema.String };
-  readonly ModelsActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly ModelsActionSucceeded: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly RequestsRangeChanged: { readonly value: typeof Schema.String };
-  readonly RequestsFilterChanged: { readonly field: typeof RequestsFilterFieldSchema; readonly value: typeof Schema.String };
+  readonly RequestsFilterChanged: {
+    readonly field: typeof RequestsFilterFieldSchema;
+    readonly value: typeof Schema.String;
+  };
   readonly RequestsAdvancedToggled: EmptyFields;
   readonly ObserveRangeChanged: { readonly value: typeof Schema.String };
-  readonly ObserveFilterChanged: { readonly field: typeof ObserveFilterFieldSchema; readonly value: typeof Schema.String };
+  readonly ObserveFilterChanged: {
+    readonly field: typeof ObserveFilterFieldSchema;
+    readonly value: typeof Schema.String;
+  };
   readonly ObserveAdvancedToggled: EmptyFields;
   readonly LocalPeerUrlChanged: { readonly value: typeof Schema.String };
   readonly LocalPeerTokenChanged: { readonly value: typeof Schema.String };
@@ -174,11 +322,23 @@ export const Message: MessageUnion<{
   readonly LocalPeerRemoveRequested: { readonly peerId: typeof Schema.String };
   readonly SystemExtensionsPauseRequested: { readonly extensionId: typeof Schema.String };
   readonly SystemExtensionsDownloadRequested: EmptyFields;
-  readonly SystemExtensionsRecommendationApplyRequested: { readonly recommendationId: typeof Schema.String };
-  readonly SystemExtensionsRecommendationDismissRequested: { readonly recommendationId: typeof Schema.String };
-  readonly SystemReplayAutomationControlRequested: { readonly action: typeof ReplayAutomationActionSchema };
-  readonly SystemExtensionsActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly SystemExtensionsActionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly SystemExtensionsRecommendationApplyRequested: {
+    readonly recommendationId: typeof Schema.String;
+  };
+  readonly SystemExtensionsRecommendationDismissRequested: {
+    readonly recommendationId: typeof Schema.String;
+  };
+  readonly SystemReplayAutomationControlRequested: {
+    readonly action: typeof ReplayAutomationActionSchema;
+  };
+  readonly SystemExtensionsActionSucceeded: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly SystemExtensionsActionFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly SystemOperatorTraceRootChanged: { readonly value: typeof Schema.String };
   readonly SystemOperatorReplayCountChanged: { readonly value: typeof Schema.String };
   readonly SystemOperatorLoadRequested: EmptyFields;
@@ -186,75 +346,180 @@ export const Message: MessageUnion<{
   readonly SystemOperatorReplayCancelRequested: { readonly jobId: typeof Schema.String };
   readonly SystemOperatorEvaluationCancelRequested: { readonly jobId: typeof Schema.String };
   readonly SystemOperatorEvaluationRetryRequested: { readonly jobId: typeof Schema.String };
-  readonly SystemOperatorActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly SystemOperatorActionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly SystemOperatorActionSucceeded: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly SystemOperatorActionFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly LocalLlamaSwapModelIdChanged: { readonly value: typeof Schema.String };
   readonly LocalLlamaSwapModelLoadRequested: EmptyFields;
   readonly LocalLlamaSwapAllRolesRequested: EmptyFields;
-  readonly LocalLlamaSwapActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly LocalLlamaSwapActionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly LocalLlamaSwapActionSucceeded: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly LocalLlamaSwapActionFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly LocalPeerModelIdChanged: { readonly value: typeof Schema.String };
   readonly LocalPeerModelLoadRequested: EmptyFields;
-  readonly LocalPeerModelActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly LocalPeerModelActionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly LocalPeersActionSucceeded: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly LocalPeersActionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly LocalPeerModelActionSucceeded: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly LocalPeerModelActionFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly LocalPeersActionSucceeded: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly LocalPeersActionFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly LocalLogsAutoRefreshToggled: { readonly value: typeof Schema.Boolean };
   readonly ObserveLogsSourceChanged: { readonly value: typeof Schema.String };
   readonly ObservabilityRefreshRequested: EmptyFields;
   readonly StoreReceiptsRefreshRequested: EmptyFields;
-  readonly ModelsActionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly LearningLadderToggleRequested: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly taskTypeId: typeof Schema.String };
-  readonly LearningLadderUpdated: { readonly rolledBack: typeof Schema.Boolean; readonly roleId: typeof Schema.String; readonly scopeId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly LearningLadderFailed: { readonly message: typeof Schema.String; readonly roleId: typeof Schema.String; readonly scopeId: typeof Schema.String; readonly taskTypeId: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly ModelsActionFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly LearningLadderToggleRequested: {
+    readonly rolledBack: typeof Schema.Boolean;
+    readonly roleId: typeof Schema.String;
+    readonly taskTypeId: typeof Schema.String;
+  };
+  readonly LearningLadderUpdated: {
+    readonly rolledBack: typeof Schema.Boolean;
+    readonly roleId: typeof Schema.String;
+    readonly scopeId: typeof Schema.String;
+    readonly taskTypeId: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly LearningLadderFailed: {
+    readonly message: typeof Schema.String;
+    readonly roleId: typeof Schema.String;
+    readonly scopeId: typeof Schema.String;
+    readonly taskTypeId: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly LearningOperatorTokenChanged: { readonly value: typeof Schema.String };
-  readonly LearningDecisionFilterChanged: { readonly filter: typeof Schema.String; readonly value: typeof Schema.String };
+  readonly LearningDecisionFilterChanged: {
+    readonly filter: typeof Schema.String;
+    readonly value: typeof Schema.String;
+  };
   readonly LearningPackRollbackRequested: EmptyFields;
   readonly LearningPackRollbackSucceeded: { readonly token: typeof Schema.Number };
-  readonly LearningPackRollbackFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly LearningPackRollbackFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly LearningKillSwitchRequested: { readonly engaged: typeof Schema.Boolean };
   readonly LearningKillSwitchSucceeded: { readonly token: typeof Schema.Number };
-  readonly LearningKillSwitchFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly LearningKillSwitchFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly LocalPolicyAutoUnloadToggled: EmptyFields;
   readonly LocalPolicyMaxConcurrencyChanged: { readonly value: typeof Schema.Number };
   readonly LocalPolicyResetRequested: EmptyFields;
-  readonly LocalPolicySaveFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly LocalPolicySaveFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly LocalPolicySaveRequested: EmptyFields;
-  readonly LocalPolicySaved: { readonly policy: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly LocalPolicySaved: {
+    readonly policy: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly LocalPolicyTtlChanged: { readonly value: typeof Schema.Number };
-  readonly ChartPointShown: { readonly label: typeof Schema.String; readonly seriesId: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly ChartPointShown: {
+    readonly label: typeof Schema.String;
+    readonly seriesId: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly ChartTooltipDismissed: { readonly token: typeof Schema.Number };
-  readonly ChartSeriesToggled: { readonly seriesId: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly EndpointAdmissionFieldChanged: { readonly field: typeof EndpointAdmissionFieldSchema; readonly value: typeof Schema.String };
+  readonly ChartSeriesToggled: {
+    readonly seriesId: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly EndpointAdmissionFieldChanged: {
+    readonly field: typeof EndpointAdmissionFieldSchema;
+    readonly value: typeof Schema.String;
+  };
   readonly EndpointAdmissionModelAdded: EmptyFields;
   readonly EndpointAdmissionModelRemoved: { readonly modelId: typeof Schema.String };
   readonly EndpointAdmissionSubmitRequested: EmptyFields;
   readonly EndpointAdmissionResetRequested: EmptyFields;
-  readonly EndpointAdmissionSucceeded: { readonly activationId: typeof Schema.String; readonly generation: typeof Schema.Number };
-  readonly EndpointAdmissionFailed: { readonly activationId: typeof Schema.String; readonly generation: typeof Schema.Number; readonly message: typeof Schema.String };
+  readonly EndpointAdmissionSucceeded: {
+    readonly activationId: typeof Schema.String;
+    readonly generation: typeof Schema.Number;
+  };
+  readonly EndpointAdmissionFailed: {
+    readonly activationId: typeof Schema.String;
+    readonly generation: typeof Schema.Number;
+    readonly message: typeof Schema.String;
+  };
   readonly RetentionSizeChanged: { readonly value: typeof Schema.String };
   readonly RetentionAgeChanged: { readonly value: typeof Schema.String };
   readonly LearningModeSelectChanged: { readonly mode: typeof Schema.String };
   readonly LearningModeUpdateRequested: { readonly mode: typeof Schema.String };
   readonly LearningRollbackRequested: EmptyFields;
   readonly LearningModeSucceeded: { readonly token: typeof Schema.Number };
-  readonly LearningModeFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly RetentionPolicySaveRequested: { readonly maxAgeDays: typeof Schema.Number; readonly maxSizeGb: typeof Schema.Number };
+  readonly LearningModeFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly RetentionPolicySaveRequested: {
+    readonly maxAgeDays: typeof Schema.Number;
+    readonly maxSizeGb: typeof Schema.Number;
+  };
   readonly RetentionDryRunRequested: EmptyFields;
   readonly RetentionExecuteRequested: EmptyFields;
-  readonly RetentionSucceeded: { readonly manifestHash: Schema.optional<typeof Schema.String>; readonly token: typeof Schema.Number };
-  readonly RetentionFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly RetentionSucceeded: {
+    readonly manifestHash: Schema.optional<typeof Schema.String>;
+    readonly token: typeof Schema.Number;
+  };
+  readonly RetentionFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly LocalLogsRefreshRequested: EmptyFields;
-  readonly RouterPostureFieldChanged: { readonly field: typeof RouterPostureFieldSchema; readonly value: typeof Schema.String };
-  readonly RouterBlockChanged: { readonly block: typeof RouterBlockSchema; readonly value: typeof Schema.String };
-  readonly RouterEntryFieldChanged: { readonly field: typeof RouterEntryFieldSchema; readonly value: typeof Schema.String };
+  readonly RouterPostureFieldChanged: {
+    readonly field: typeof RouterPostureFieldSchema;
+    readonly value: typeof Schema.String;
+  };
+  readonly RouterBlockChanged: {
+    readonly block: typeof RouterBlockSchema;
+    readonly value: typeof Schema.String;
+  };
+  readonly RouterEntryFieldChanged: {
+    readonly field: typeof RouterEntryFieldSchema;
+    readonly value: typeof Schema.String;
+  };
   readonly RouterPostureSaveRequested: EmptyFields;
   readonly RouterBlockSaveRequested: { readonly block: typeof RouterBlockSchema };
   readonly RouterPostureSaved: { readonly token: typeof Schema.Number };
-  readonly RouterPostureFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly RouterPostureFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly RouterPostureResetRequested: EmptyFields;
-  readonly ProviderAccountFieldChanged: { readonly field: typeof ProviderAccountFieldSchema; readonly value: typeof Schema.String };
-  readonly ProviderAccountSelectionChanged: { readonly providerId: typeof Schema.String; readonly variantId: typeof Schema.String };
+  readonly ProviderAccountFieldChanged: {
+    readonly field: typeof ProviderAccountFieldSchema;
+    readonly value: typeof Schema.String;
+  };
+  readonly ProviderAccountSelectionChanged: {
+    readonly providerId: typeof Schema.String;
+    readonly variantId: typeof Schema.String;
+  };
   readonly ProviderAccountModelChosen: { readonly modelId: typeof Schema.String };
   readonly ProviderAccountModelAdded: EmptyFields;
   readonly ProviderAccountModelRemoved: { readonly modelId: typeof Schema.String };
@@ -264,8 +529,14 @@ export const Message: MessageUnion<{
   readonly ProviderAccountUpdateKeyRequested: EmptyFields;
   readonly ProviderAccountKeyUpdated: { readonly token: typeof Schema.Number };
   readonly ProviderAccountModelDeleteRequested: { readonly modelId: typeof Schema.String };
-  readonly ProviderAccountModelDeleted: { readonly modelId: typeof Schema.String; readonly token: typeof Schema.Number };
-  readonly ProviderAccountFailed: { readonly message: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly ProviderAccountModelDeleted: {
+    readonly modelId: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
+  readonly ProviderAccountFailed: {
+    readonly message: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly ReadbackFailed: {
     readonly key: typeof ReadbackKeySchema;
     readonly message: typeof Schema.String;
@@ -276,16 +547,24 @@ export const Message: MessageUnion<{
     readonly snapshot: typeof ReadbackState;
     readonly token: typeof Schema.Number;
   };
-  readonly StudioTabSelected: { readonly tab: typeof StudioTabSchema; };
+  readonly StudioTabSelected: { readonly tab: typeof StudioTabSchema };
   readonly StudioTabKey: { readonly key: typeof Schema.String };
-  readonly StudioFieldChanged: { readonly field: typeof StudioFieldSchema; readonly value: typeof Schema.String; };
+  readonly StudioFieldChanged: {
+    readonly field: typeof StudioFieldSchema;
+    readonly value: typeof Schema.String;
+  };
   readonly StudioLoaded: {
     readonly responseText: typeof Schema.String;
     readonly statusCode: typeof Schema.Number;
     readonly tab: typeof StudioTabSchema;
     readonly token: typeof Schema.Number;
   };
-  readonly StudioFailed: { readonly message: typeof Schema.String; readonly statusCode: typeof Schema.Number; readonly responseText: typeof Schema.String; readonly token: typeof Schema.Number };
+  readonly StudioFailed: {
+    readonly message: typeof Schema.String;
+    readonly statusCode: typeof Schema.Number;
+    readonly responseText: typeof Schema.String;
+    readonly token: typeof Schema.Number;
+  };
   readonly StudioRunRequested: { readonly token: typeof Schema.Number };
   readonly SelectedOverviewWindow: {
     readonly windowMs: typeof Schema.Number;
@@ -308,8 +587,16 @@ export const Message: MessageUnion<{
   readonly RuntimeConfigTextChanged: { readonly text: typeof Schema.String };
   readonly RuntimeConfigSaveRequested: EmptyFields;
   readonly RuntimeConfigConfirmRequested: { readonly token: typeof Schema.Number };
-  readonly RuntimeConfigSaved: { readonly recordJson: typeof Schema.String; readonly status: typeof Schema.Number; readonly token: typeof Schema.Number };
-  readonly RuntimeConfigSaveFailed: { readonly message: typeof Schema.String; readonly status: typeof Schema.Number; readonly token: typeof Schema.Number };
+  readonly RuntimeConfigSaved: {
+    readonly recordJson: typeof Schema.String;
+    readonly status: typeof Schema.Number;
+    readonly token: typeof Schema.Number;
+  };
+  readonly RuntimeConfigSaveFailed: {
+    readonly message: typeof Schema.String;
+    readonly status: typeof Schema.Number;
+    readonly token: typeof Schema.Number;
+  };
   readonly RuntimeRevisionReceived: { readonly revision: typeof Schema.Number };
   readonly RuntimeTelemetryReceived: {
     readonly emittedAtMs: typeof Schema.Number;
@@ -324,13 +611,22 @@ export const Message: MessageUnion<{
   ClickedLink: { request: Navigation.UrlRequest },
   ControllerEndpointSelected: { endpointId: Schema.String },
   ControllerSaveRequested: { endpointId: Schema.String },
-  ControlActionCompleted: { key: ControlKeySchema, message: Schema.String, token: Schema.Number, serverEndpointId: Schema.optional(Schema.String) },
+  ControlActionCompleted: {
+    key: ControlKeySchema,
+    message: Schema.String,
+    token: Schema.Number,
+    serverEndpointId: Schema.optional(Schema.String),
+  },
   ControlActionFailed: { key: ControlKeySchema, message: Schema.String, token: Schema.Number },
-  ControlActionRequested: { key: ControlKeySchema, targetId: Schema.optional(Schema.String), token: Schema.Number },
+  ControlActionRequested: {
+    key: ControlKeySchema,
+    targetId: Schema.optional(Schema.String),
+    token: Schema.Number,
+  },
   ControlFailed: { key: ControlKeySchema, message: Schema.String, token: Schema.Number },
   ControlLoaded: { key: ControlKeySchema, snapshot: ControlState, token: Schema.Number },
   DeviceAuthFieldChanged: { field: DeviceAuthFieldSchema, value: Schema.String },
-GotDeviceAuthDialogMessage: { message: Schema.Unknown },
+  GotDeviceAuthDialogMessage: { message: Schema.Unknown },
   DeviceAuthModelAdded: {},
   DeviceAuthModelRemoved: { modelId: Schema.String },
   DeviceAuthStartRequested: {},
@@ -349,8 +645,11 @@ GotDeviceAuthDialogMessage: { message: Schema.Unknown },
   ObservabilityFailed: { message: Schema.String, token: Schema.Number },
   ObservabilityLoaded: { snapshot: ObservabilityState, token: Schema.Number },
   GotRequestsRankingMetricListboxMessage: { message: Schema.Unknown },
-GotRequestsRankingTargetListboxMessage: { message: Schema.Unknown },
-RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"]), value: Schema.String },
+  GotRequestsRankingTargetListboxMessage: { message: Schema.Unknown },
+  RequestsRankingFieldChanged: {
+    field: Schema.Literals(["metric", "rankingTarget"]),
+    value: Schema.String,
+  },
   RequestsRankingSubmitRequested: {},
   RequestsRankingLoaded: { rows: RequestsRankingRowsSchema, token: Schema.Number },
   RequestsRankingFailed: { message: Schema.String, token: Schema.Number },
@@ -376,8 +675,16 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   RoleTaskAllowlistsSaveRequested: {},
   RoleEditReset: {},
   RoleEditSaveRequested: {},
-  RolePolicyWriteSucceeded: { kind: RoleActionKindSchema, message: Schema.String, token: Schema.Number },
-  RolePolicyWriteFailed: { kind: RoleActionKindSchema, message: Schema.String, token: Schema.Number },
+  RolePolicyWriteSucceeded: {
+    kind: RoleActionKindSchema,
+    message: Schema.String,
+    token: Schema.Number,
+  },
+  RolePolicyWriteFailed: {
+    kind: RoleActionKindSchema,
+    message: Schema.String,
+    token: Schema.Number,
+  },
   BenchmarkModeChanged: { value: Schema.String },
   BenchmarkJudgeChanged: { value: Schema.String },
   BenchmarkRunRequested: {},
@@ -449,9 +756,25 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   ObserveLogsSourceChanged: { value: Schema.String },
   ObservabilityRefreshRequested: {},
   StoreReceiptsRefreshRequested: {},
-  LearningLadderToggleRequested: { rolledBack: Schema.Boolean, roleId: Schema.String, taskTypeId: Schema.String },
-  LearningLadderUpdated: { rolledBack: Schema.Boolean, roleId: Schema.String, scopeId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
-  LearningLadderFailed: { message: Schema.String, roleId: Schema.String, scopeId: Schema.String, taskTypeId: Schema.String, token: Schema.Number },
+  LearningLadderToggleRequested: {
+    rolledBack: Schema.Boolean,
+    roleId: Schema.String,
+    taskTypeId: Schema.String,
+  },
+  LearningLadderUpdated: {
+    rolledBack: Schema.Boolean,
+    roleId: Schema.String,
+    scopeId: Schema.String,
+    taskTypeId: Schema.String,
+    token: Schema.Number,
+  },
+  LearningLadderFailed: {
+    message: Schema.String,
+    roleId: Schema.String,
+    scopeId: Schema.String,
+    taskTypeId: Schema.String,
+    token: Schema.Number,
+  },
   LearningOperatorTokenChanged: { value: Schema.String },
   LearningDecisionFilterChanged: { filter: Schema.String, value: Schema.String },
   LearningPackRollbackRequested: {},
@@ -476,7 +799,11 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   EndpointAdmissionSubmitRequested: {},
   EndpointAdmissionResetRequested: {},
   EndpointAdmissionSucceeded: { activationId: Schema.String, generation: Schema.Number },
-  EndpointAdmissionFailed: { activationId: Schema.String, generation: Schema.Number, message: Schema.String },
+  EndpointAdmissionFailed: {
+    activationId: Schema.String,
+    generation: Schema.Number,
+    message: Schema.String,
+  },
   RetentionSizeChanged: { value: Schema.String },
   RetentionAgeChanged: { value: Schema.String },
   LearningModeSelectChanged: { mode: Schema.String },
@@ -516,8 +843,18 @@ RequestsRankingFieldChanged: { field: Schema.Literals(["metric", "rankingTarget"
   StudioTabSelected: { tab: StudioTabSchema },
   StudioTabKey: { key: Schema.String },
   StudioFieldChanged: { field: StudioFieldSchema, value: Schema.String },
-  StudioLoaded: { responseText: Schema.String, statusCode: Schema.Number, tab: StudioTabSchema, token: Schema.Number },
-  StudioFailed: { message: Schema.String, statusCode: Schema.Number, responseText: Schema.String, token: Schema.Number },
+  StudioLoaded: {
+    responseText: Schema.String,
+    statusCode: Schema.Number,
+    tab: StudioTabSchema,
+    token: Schema.Number,
+  },
+  StudioFailed: {
+    message: Schema.String,
+    statusCode: Schema.Number,
+    responseText: Schema.String,
+    token: Schema.Number,
+  },
   StudioRunRequested: { token: Schema.Number },
   SelectedOverviewWindow: { windowMs: Schema.Number },
   OverviewFilterChanged: { filter: Schema.String, value: Schema.String },

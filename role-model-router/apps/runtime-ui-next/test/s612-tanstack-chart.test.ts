@@ -10,8 +10,24 @@ import { shellModel } from "./support/runtime-shell.js";
 /** S612 (R9/R10): TanStack Charts is the chart engine behind the Foldkit Html surface. */
 
 const series = [
-  { id: "latency", label: "Latency", points: [{ label: "00:00", value: 10 }, { label: "01:00", value: 30 }, { label: "02:00", value: null }] },
-  { id: "tokens", label: "Tokens", points: [{ label: "00:00", value: 4 }, { label: "01:00", value: 8 }, { label: "02:00", value: 2 }] },
+  {
+    id: "latency",
+    label: "Latency",
+    points: [
+      { label: "00:00", value: 10 },
+      { label: "01:00", value: 30 },
+      { label: "02:00", value: null },
+    ],
+  },
+  {
+    id: "tokens",
+    label: "Tokens",
+    points: [
+      { label: "00:00", value: 4 },
+      { label: "01:00", value: 8 },
+      { label: "02:00", value: 2 },
+    ],
+  },
 ];
 
 describe("S612 TanStack chart adapter", () => {
@@ -48,23 +64,28 @@ const renderCard = async (input: {
   readonly series: typeof series;
   readonly state: "empty" | "error" | "loading" | "ready";
 }): Promise<HTMLElement> => {
-  const rendered = await Effect.runPromise(renderToString({
-    init: () => ({ model: shellModel({ route: { _tag: "Index" } }), commands: [] }),
-    view: (_model, h) => ({
-      body: telemetryChartCard({
-        description: "card test",
-        emptyMessage: "No data yet",
-        // SAFETY: renderToString infers Message=unknown for this fixture view; the card emits no handlers.
-        h: h as Parameters<typeof telemetryChartCard>[0]["h"],
-        hasData: input.hasData,
-        kind: input.kind,
-        series: input.series,
-        state: input.state,
-        title: "Latency trend",
-      }),
-      title: "chart card test",
-    }),
-  }, { isHydratable: false }));
+  const rendered = await Effect.runPromise(
+    renderToString(
+      {
+        init: () => ({ model: shellModel({ route: { _tag: "Index" } }), commands: [] }),
+        view: (_model, h) => ({
+          body: telemetryChartCard({
+            description: "card test",
+            emptyMessage: "No data yet",
+            // SAFETY: renderToString infers Message=unknown for this fixture view; the card emits no handlers.
+            h: h as Parameters<typeof telemetryChartCard>[0]["h"],
+            hasData: input.hasData,
+            kind: input.kind,
+            series: input.series,
+            state: input.state,
+            title: "Latency trend",
+          }),
+          title: "chart card test",
+        }),
+      },
+      { isHydratable: false },
+    ),
+  );
   const container = document.createElement("div");
   container.innerHTML = rendered.html;
   return container;
@@ -84,7 +105,9 @@ describe("S612 telemetry chart card visible contract", () => {
     expect(table?.textContent).toContain("Latency trend");
     expect(table?.textContent).toContain("00:00");
     expect(table?.textContent).toContain("30");
-    const point = svg?.querySelector("[data-chart-series-id='latency'][data-chart-point-label='00:00']");
+    const point = svg?.querySelector(
+      "[data-chart-series-id='latency'][data-chart-point-label='00:00']",
+    );
     expect(point).not.toBeNull();
     expect(point?.getAttribute("data-chart-series-id")).toBe("latency");
     expect(point?.getAttribute("data-chart-point-label")).toBe("00:00");
@@ -98,7 +121,9 @@ describe("S612 telemetry chart card visible contract", () => {
     const svg = card.querySelector("[data-chart-part='chart']");
     expect(svg).not.toBeNull();
     expect(svg?.querySelectorAll("rect").length).toBeGreaterThan(0);
-    const bar = svg?.querySelector("rect[data-chart-series-id='latency'][data-chart-point-label='00:00']");
+    const bar = svg?.querySelector(
+      "rect[data-chart-series-id='latency'][data-chart-point-label='00:00']",
+    );
     expect(bar).not.toBeNull();
     expect(bar?.getAttribute("data-chart-series-id")).toBe("latency");
     expect(bar?.getAttribute("data-chart-point-label")).toBe("00:00");

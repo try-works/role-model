@@ -9,7 +9,10 @@ const mountAt = (fetchImpl: typeof fetch, localPolicyFetchImpl: typeof fetch) =>
   const container = document.createElement("div");
   container.id = "s589-local-policy";
   document.body.append(container);
-  const handle = mountShell(container, { readbackReaders: createReadbackClients({ fetchImpl }), localPolicyFetchImpl });
+  const handle = mountShell(container, {
+    readbackReaders: createReadbackClients({ fetchImpl }),
+    localPolicyFetchImpl,
+  });
   mounted.push({ container, handle });
 };
 
@@ -29,7 +32,7 @@ const waitFor = async (read: () => string | null, label: string): Promise<string
     if (last !== null && last !== "loading" && last !== "idle") return last;
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
-  throw new Error("Timed out waiting for " + label + " (last: " + String(last) + ")");
+  throw new Error(`Timed out waiting for ${label} (last: ${String(last)})`);
 };
 
 describe("S589 LocalPolicy wired surface", () => {
@@ -40,29 +43,55 @@ describe("S589 LocalPolicy wired surface", () => {
       const url = String(input);
       if (url.includes("/api/role-model/local/policy")) {
         if ((init?.method ?? "GET") === "PUT") {
-          puts.push({ body: init?.body === undefined ? undefined : JSON.parse(String(init.body)), url });
-          return new Response(JSON.stringify(policyBody), { headers: { "content-type": "application/json" }, status: 200 });
+          puts.push({
+            body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+            url,
+          });
+          return new Response(JSON.stringify(policyBody), {
+            headers: { "content-type": "application/json" },
+            status: 200,
+          });
         }
-        return new Response(JSON.stringify(policyBody), { headers: { "content-type": "application/json" }, status: 200 });
+        return new Response(JSON.stringify(policyBody), {
+          headers: { "content-type": "application/json" },
+          status: 200,
+        });
       }
-      return new Response(JSON.stringify({ rows: [] }), { headers: { "content-type": "application/json" }, status: 200 });
+      return new Response(JSON.stringify({ rows: [] }), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      });
     };
     mountAt(fetchImpl, async (input, init) => {
       const url = String(input);
       if ((init?.method ?? "GET") === "PUT" && url.includes("/api/role-model/local/policy")) {
-        puts.push({ body: init?.body === undefined ? undefined : JSON.parse(String(init.body)), url });
+        puts.push({
+          body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+          url,
+        });
       }
-      return new Response(JSON.stringify(policyBody), { headers: { "content-type": "application/json" }, status: 200 });
+      return new Response(JSON.stringify(policyBody), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      });
     });
-    expect(await waitFor(() => document.querySelector("[data-route='local-policy']")?.getAttribute("data-local-policy-state") ?? null, "policy loaded")).toBe("ok");
+    expect(
+      await waitFor(
+        () =>
+          document
+            .querySelector("[data-route='local-policy']")
+            ?.getAttribute("data-local-policy-state") ?? null,
+        "policy loaded",
+      ),
+    ).toBe("ok");
     const save = document.querySelector<HTMLButtonElement>("[data-local-policy-save]");
     expect(save, "wired save button missing").not.toBeNull();
     const ttl = document.querySelector<HTMLInputElement>("#local-policy-ttl");
     expect(ttl, "wired ttl input missing").not.toBeNull();
     ttl!.value = "900";
-    ttl!.dispatchEvent(new Event("input", { bubbles: true }));
+    ttl?.dispatchEvent(new Event("input", { bubbles: true }));
     await new Promise((resolve) => setTimeout(resolve, 50));
-    save!.click();
+    save?.click();
     await new Promise((resolve) => setTimeout(resolve, 200));
     expect(puts.length).toBeGreaterThan(0);
     expect(puts[0]?.url).toContain("/api/role-model/local/policy");

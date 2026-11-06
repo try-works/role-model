@@ -45,13 +45,17 @@ export const createStorageRetentionClient = (
   options: StorageRetentionClientOptions = {},
 ): StorageRetentionClient => {
   const fetchImpl = options.fetchImpl ?? fetch;
-  const request = async (path: string, method: "PUT" | "POST", body?: unknown): Promise<unknown> => {
+  const request = async (
+    path: string,
+    method: "PUT" | "POST",
+    body?: unknown,
+  ): Promise<unknown> => {
     const response = await fetchImpl(path, {
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       headers: {
         accept: "application/json",
         "content-type": "application/json",
-        ...(options.token === undefined ? {} : { authorization: "Bearer " + options.token }),
+        ...(options.token === undefined ? {} : { authorization: `Bearer ${options.token}` }),
       },
       method,
     });
@@ -78,7 +82,8 @@ export const createStorageRetentionClient = (
       const body = await request("/api/role-model/storage-retention/dry-run", "POST", {});
       return { manifestHash: manifestHashOf(body) };
     },
-    execute: async (manifestHash) => request("/api/role-model/storage-retention/execute", "POST", { manifestHash }),
+    execute: async (manifestHash) =>
+      request("/api/role-model/storage-retention/execute", "POST", { manifestHash }),
     savePolicy: async (payload) =>
       request("/api/role-model/storage-retention/policy", "PUT", {
         maxAgeDays: payload.maxAgeDays,

@@ -4,10 +4,10 @@ import { renderToString } from "@role-model-router/foldkit/experimental/server";
 import { given, message, model as modelStep, story } from "@role-model-router/foldkit/story";
 import { describe, expect, it } from "vitest";
 
-import { shellModel, shellUpdate } from "./support/runtime-shell";
-import type { Model } from "../src/model";
 import { Message } from "../src/message";
+import type { Model } from "../src/model";
 import { view } from "../src/view";
+import { shellModel, shellUpdate } from "./support/runtime-shell";
 
 /**
  * S566: the per-route STORY contract. Where S565 (scene) asserts what a page displays, this file
@@ -51,7 +51,9 @@ describe("S566 page stories — update", () => {
     );
     expect(selected).toBeDefined();
     const container = await render(selected as Model);
-    const headings = [...container.querySelectorAll("h1, h2, h3")].map((element) => (element.textContent ?? "").trim());
+    const headings = [...container.querySelectorAll("h1, h2, h3")].map((element) =>
+      (element.textContent ?? "").trim(),
+    );
     expect(headings.join(" | ")).toContain("Images workspace");
   });
 
@@ -83,15 +85,24 @@ describe("S566 page stories — update", () => {
   });
 
   it("the overview filter story: the reducer applies the filter the page renders from", () => {
-    const next = shellUpdate(at({ _tag: "Index" }), Message.OverviewFilterChanged({ filter: "source", value: "local" }));
+    const next = shellUpdate(
+      at({ _tag: "Index" }),
+      Message.OverviewFilterChanged({ filter: "source", value: "local" }),
+    );
     expect(next.model.overviewFilters?.source).toBe("local");
-    const after = shellUpdate(next.model, Message.OverviewFilterChanged({ filter: "status", value: "failure" }));
+    const after = shellUpdate(
+      next.model,
+      Message.OverviewFilterChanged({ filter: "status", value: "failure" }),
+    );
     expect(after.model.overviewFilters?.source).toBe("local");
     expect(after.model.overviewFilters?.status).toBe("failure");
   });
 
   it("the overview window story: the reducer applies the selected window", () => {
-    const next = shellUpdate(at({ _tag: "Index" }), Message.SelectedOverviewWindow({ windowMs: 604800000 }));
+    const next = shellUpdate(
+      at({ _tag: "Index" }),
+      Message.SelectedOverviewWindow({ windowMs: 604800000 }),
+    );
     expect(next.model.overviewWindowMs).toBe(604800000);
   });
 });

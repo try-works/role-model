@@ -13,7 +13,7 @@ const cli = readFileSync(path.join(import.meta.dirname, "..", "src", "cli.ts"), 
 
 const registrationBody = (kind: string): string => {
   const start = cli.indexOf(`hostScope.register("${kind}"`);
-  expect(start, kind + " registration missing").toBeGreaterThan(-1);
+  expect(start, `${kind} registration missing`).toBeGreaterThan(-1);
   return cli.slice(start, start + 400);
 };
 

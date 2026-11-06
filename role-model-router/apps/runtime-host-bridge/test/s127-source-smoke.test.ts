@@ -5,10 +5,14 @@ import { describe, expect, it } from "vitest";
 
 const root = path.resolve(import.meta.dirname, "../../../..");
 const run = (args: string[]) =>
-  spawnSync(process.execPath, [path.join(root, "scripts", "runtime", "smoke-host-source.mjs"), ...args], {
-    encoding: "utf8",
-    timeout: 120_000,
-  });
+  spawnSync(
+    process.execPath,
+    [path.join(root, "scripts", "runtime", "smoke-host-source.mjs"), ...args],
+    {
+      encoding: "utf8",
+      timeout: 120_000,
+    },
+  );
 
 /**
  * Run 115 S127: the source smoke fails closed. It must never report a pass without a host.
@@ -28,7 +32,12 @@ describe("S127 source-host smoke fail-closed", () => {
   });
 
   it("refuses a missing fixture root instead of running without one", () => {
-    const result = run(["--repo-root", root, "--fixture-root", path.join(root, "no-such-fixtures")]);
+    const result = run([
+      "--repo-root",
+      root,
+      "--fixture-root",
+      path.join(root, "no-such-fixtures"),
+    ]);
     expect(result.status).toBe(2);
     expect(result.stdout).toContain("fixture root does not exist");
   });

@@ -12,17 +12,30 @@ import { Effect, Ref } from "effect";
 export class BenchmarkBusyError extends Error {
   readonly code = "BENCHMARK_BUSY";
   readonly activeRunId: string;
-  constructor(activeRunId: string) { super("benchmark already running: " + activeRunId); this.name = "BenchmarkBusyError"; this.activeRunId = activeRunId; }
+  constructor(activeRunId: string) {
+    super(`benchmark already running: ${activeRunId}`);
+    this.name = "BenchmarkBusyError";
+    this.activeRunId = activeRunId;
+  }
 }
 
 export class BenchmarkCancelledError extends Error {
   readonly code = "BENCHMARK_CANCELLED";
   readonly runId: string;
-  constructor(runId: string) { super("benchmark cancelled: " + runId); this.name = "BenchmarkCancelledError"; this.runId = runId; }
+  constructor(runId: string) {
+    super(`benchmark cancelled: ${runId}`);
+    this.name = "BenchmarkCancelledError";
+    this.runId = runId;
+  }
 }
 
 export type BenchmarkGateBegin =
-  | { readonly ok: true; readonly runId: string; readonly signal: AbortSignal; readonly finish: () => void }
+  | {
+      readonly ok: true;
+      readonly runId: string;
+      readonly signal: AbortSignal;
+      readonly finish: () => void;
+    }
   | { readonly ok: false; readonly reason: "busy"; readonly activeRunId: string };
 
 export interface BenchmarkGateServiceContract {
@@ -32,12 +45,18 @@ export interface BenchmarkGateServiceContract {
   readonly running: () => boolean;
 }
 
-export const makeBenchmarkGateOwner = (options: { readonly mode: BenchmarkOverlapMode }): BenchmarkGateServiceContract => {
+export const makeBenchmarkGateOwner = (options: {
+  readonly mode: BenchmarkOverlapMode;
+}): BenchmarkGateServiceContract => {
   const inner = Effect.runSync(makeBenchmarkGate(options));
   let activeRunId: string | undefined;
   let controller: AbortController | null = null;
   const finish = (runId: string): void => {
-    if (activeRunId === runId) { activeRunId = undefined; controller = null; Effect.runSync(inner.end(runId)); }
+    if (activeRunId === runId) {
+      activeRunId = undefined;
+      controller = null;
+      Effect.runSync(inner.end(runId));
+    }
   };
   return {
     begin: (runId) => {

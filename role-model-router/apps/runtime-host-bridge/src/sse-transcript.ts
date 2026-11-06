@@ -110,9 +110,7 @@ const emitFrame = async (
   try {
     JSON.parse(payloadText);
   } catch {
-    throw final
-      ? new SseTranscriptIncompleteError()
-      : new SseTranscriptProtocolError(payloadText);
+    throw final ? new SseTranscriptIncompleteError() : new SseTranscriptProtocolError(payloadText);
   }
   await options.onPayload?.(payloadText);
 };

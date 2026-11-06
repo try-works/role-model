@@ -1,6 +1,9 @@
 import { Schema } from "effect";
 
-import { EndpointActivationRunSchema, initialEndpointActivationRun } from "./endpoint-activation-tracker";
+import {
+  EndpointActivationRunSchema,
+  initialEndpointActivationRun,
+} from "./endpoint-activation-tracker";
 
 /**
  * S396c (M8): endpoint admission form. Single mode posts ONE activation per selected model to
@@ -57,7 +60,9 @@ export const initialEndpointAdmissionState = (): EndpointAdmissionState => ({
 export const endpointAdmissionBusy = (state: EndpointAdmissionState): boolean =>
   state.run.pending.length > 0 || state.status === "saving" || state.pendingAction !== undefined;
 
-export const validateEndpointAdmissionDraft = (state: EndpointAdmissionState): readonly string[] => {
+export const validateEndpointAdmissionDraft = (
+  state: EndpointAdmissionState,
+): readonly string[] => {
   const errors: string[] = [];
   if (state.draft.providerAccountId.trim().length === 0) errors.push("Enter a provider account.");
   if (state.draft.selectedModelIds.length === 0) errors.push("Select at least one model.");
@@ -124,7 +129,7 @@ export const createEndpointAdmissionClient = (
       headers: {
         accept: "application/json",
         "content-type": "application/json",
-        ...(options.token === undefined ? {} : { authorization: "Bearer " + options.token }),
+        ...(options.token === undefined ? {} : { authorization: `Bearer ${options.token}` }),
       },
       method: "POST",
     });

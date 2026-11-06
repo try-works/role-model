@@ -176,7 +176,9 @@ describe("diagnostics page states", () => {
     expect(bodyText()).toContain("state, not an error");
     expect(bodyText()).toContain("build: missing");
     // Disabled is a calm state: it must not keep a danger or warning border.
-    const disabledPanel = document.querySelector<HTMLElement>('[data-diagnostics-state="disabled"]');
+    const disabledPanel = document.querySelector<HTMLElement>(
+      '[data-diagnostics-state="disabled"]',
+    );
     expect(disabledPanel?.className).toContain("border-dashed");
     expect(disabledPanel?.className).not.toContain("border-[var(--rm-danger)]");
     expect(disabledPanel?.className).not.toContain("border-[var(--rm-warning)]");
@@ -468,7 +470,10 @@ describe("diagnostics page states", () => {
     entry?.handle.dispose();
     entry?.container.remove();
 
-    await waitFor(() => (forwarded?.aborted === true ? true : undefined), "the forwarded signal abort");
+    await waitFor(
+      () => (forwarded?.aborted === true ? true : undefined),
+      "the forwarded signal abort",
+    );
     expect(abortedDuringRead).toBe(true);
   });
 
@@ -482,7 +487,9 @@ describe("diagnostics page states", () => {
     );
 
     await waitFor(() => stateNode("denied"), "the denied diagnostics state for a 403");
-    expect(bodyText()).toContain("Access denied: the server rejected this diagnostics read (HTTP 403).");
+    expect(bodyText()).toContain(
+      "Access denied: the server rejected this diagnostics read (HTTP 403).",
+    );
     expect(bodyText()).not.toContain("not authorized");
   });
 

@@ -2,10 +2,10 @@ import { Effect, Fiber, Layer } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
+  R27Host,
+  R27_RESOURCE_IDS,
   composeR27HostLayer,
   makeR27ReadinessOwner,
-  R27_RESOURCE_IDS,
-  R27Host,
 } from "../src/r27-layer-dag.js";
 
 const waitFor = async (read: () => boolean): Promise<void> => {
@@ -18,9 +18,13 @@ const waitFor = async (read: () => boolean): Promise<void> => {
 };
 
 const acquired = (events: readonly string[]): readonly string[] =>
-  events.filter((event) => event.startsWith("acquire:")).map((event) => event.slice("acquire:".length));
+  events
+    .filter((event) => event.startsWith("acquire:"))
+    .map((event) => event.slice("acquire:".length));
 const released = (events: readonly string[]): readonly string[] =>
-  events.filter((event) => event.startsWith("release:")).map((event) => event.slice("release:".length));
+  events
+    .filter((event) => event.startsWith("release:"))
+    .map((event) => event.slice("release:".length));
 
 describe("S593 R27 closed Layer DAG", () => {
   test("(a) composition performs no acquisition; every top-level resource is Layer-provided", async () => {
@@ -58,7 +62,9 @@ describe("S593 R27 closed Layer DAG", () => {
     try {
       await waitFor(() => readiness.ready());
       expect(readiness.state().status).toBe("ready");
-      expect(events.indexOf("ready")).toBeGreaterThan(events.findIndex((event) => event === "acquire:cli"));
+      expect(events.indexOf("ready")).toBeGreaterThan(
+        events.findIndex((event) => event === "acquire:cli"),
+      );
       expect(released(events)).toEqual([]);
     } finally {
       await Effect.runPromise(Fiber.interrupt(fiber));
@@ -97,9 +103,7 @@ describe("S593 R27 closed Layer DAG", () => {
       const host = yield* R27Host;
       expect(host.readiness.ready()).toBe(true);
       expect(() => assertComposedReadiness(host.readiness)).not.toThrow();
-    }).pipe(
-      Effect.provide(composeR27HostLayer({ events })),
-    );
+    }).pipe(Effect.provide(composeR27HostLayer({ events })));
     await Effect.runPromise(program);
     expect(events).toContain("ready");
   });

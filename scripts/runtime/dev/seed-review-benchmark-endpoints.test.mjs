@@ -1,10 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import {
-  REVIEW_ACCOUNTS,
-  REVIEW_ENDPOINT_REQUESTS,
-} from "./seed-review-benchmark-endpoints.mjs";
+import { REVIEW_ACCOUNTS, REVIEW_ENDPOINT_REQUESTS } from "./seed-review-benchmark-endpoints.mjs";
 
 test("review benchmark seed defines three accounts and three endpoints", () => {
   assert.equal(REVIEW_ACCOUNTS.length, 3);

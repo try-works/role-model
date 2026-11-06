@@ -41,7 +41,7 @@ export const createRouterConfigClient = (
       headers: {
         accept: "application/json",
         "content-type": "application/json",
-        ...(options.token === undefined ? {} : { authorization: "Bearer " + options.token }),
+        ...(options.token === undefined ? {} : { authorization: `Bearer ${options.token}` }),
       },
       method: "PUT",
     });
@@ -59,8 +59,17 @@ export const createRouterConfigClient = (
         execution_mode: payload.executionMode,
         routing:
           payload.scoringStrategy === "custom"
-            ? { mode: payload.mode, pin_weights: payload.pinWeights, scoring_strategy: payload.scoringStrategy, weights: payload.weights ?? {} }
-            : { mode: payload.mode, pin_weights: payload.pinWeights, scoring_strategy: payload.scoringStrategy },
+            ? {
+                mode: payload.mode,
+                pin_weights: payload.pinWeights,
+                scoring_strategy: payload.scoringStrategy,
+                weights: payload.weights ?? {},
+              }
+            : {
+                mode: payload.mode,
+                pin_weights: payload.pinWeights,
+                scoring_strategy: payload.scoringStrategy,
+              },
       }),
   };
 };

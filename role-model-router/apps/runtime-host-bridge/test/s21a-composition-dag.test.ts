@@ -226,22 +226,24 @@ describe("S21a composition DAG shape", () => {
       Effect.provide(
         Effect.scoped(
           Effect.gen(function* () {
-          const permits = yield* ProviderPermits;
-          const started = yield* Deferred.make<void>();
-          const fiber = yield* Effect.forkScoped(
-            permits.withPermit(Effect.andThen(Deferred.succeed(started, undefined), Effect.never)),
-          );
-          yield* Deferred.await(started);
-          const during = yield* permits.stats;
-          yield* Fiber.interrupt(fiber);
-          let afterInterrupt = yield* permits.stats;
-          for (let sample = 0; sample < 200 && afterInterrupt.active !== 0; sample += 1) {
-            yield* Effect.sleep("2 millis");
-            afterInterrupt = yield* permits.stats;
-          }
-          const ok = yield* permits.withPermit(Effect.succeed("after"));
-          const afterSecond = yield* permits.stats;
-          return { afterInterrupt, afterSecond, during, ok };
+            const permits = yield* ProviderPermits;
+            const started = yield* Deferred.make<void>();
+            const fiber = yield* Effect.forkScoped(
+              permits.withPermit(
+                Effect.andThen(Deferred.succeed(started, undefined), Effect.never),
+              ),
+            );
+            yield* Deferred.await(started);
+            const during = yield* permits.stats;
+            yield* Fiber.interrupt(fiber);
+            let afterInterrupt = yield* permits.stats;
+            for (let sample = 0; sample < 200 && afterInterrupt.active !== 0; sample += 1) {
+              yield* Effect.sleep("2 millis");
+              afterInterrupt = yield* permits.stats;
+            }
+            const ok = yield* permits.withPermit(Effect.succeed("after"));
+            const afterSecond = yield* permits.stats;
+            return { afterInterrupt, afterSecond, during, ok };
           }),
         ),
         makeCompositionLayer(config),

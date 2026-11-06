@@ -1,19 +1,19 @@
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 
 import { Message } from "../../message";
+import { type DeviceAuthDialogModel, deviceAuthDialogView } from "../../ui/dialog";
 import {
-  deviceAuthVerificationUrl,
   type DeviceAuthField,
   type DeviceAuthSession,
   type DeviceAuthState,
+  deviceAuthVerificationUrl,
 } from "./model";
-import { deviceAuthDialogView, type DeviceAuthDialogModel } from "../../ui/dialog";
 
 const renderDeviceAuthSession = (session: DeviceAuthSession, h: HtmlBuilder<Message>): Html => {
   if (session.status === "connected") {
     return h.p(
       [h.DataAttribute("device-auth-session", "connected")],
-      ["Connected" + (session.userCode === undefined ? "" : " (code " + session.userCode + ")")],
+      [`Connected${session.userCode === undefined ? "" : ` (code ${session.userCode})`}`],
     );
   }
   if (session.status === "pending") {
@@ -45,18 +45,21 @@ const renderDeviceAuthSession = (session: DeviceAuthSession, h: HtmlBuilder<Mess
               ),
             ]
           : [
-              h.p([h.Class("mt-1 text-[12px]")], [
-                h.a(
-                  [
-                    h.Href(verificationUrl),
-                    h.Target("_blank"),
-                    h.Rel("noreferrer noopener"),
-                    h.DataAttribute("device-auth-verification-link", ""),
-                    h.Class("underline"),
-                  ],
-                  ["Open verification page"],
-                ),
-              ]),
+              h.p(
+                [h.Class("mt-1 text-[12px]")],
+                [
+                  h.a(
+                    [
+                      h.Href(verificationUrl),
+                      h.Target("_blank"),
+                      h.Rel("noreferrer noopener"),
+                      h.DataAttribute("device-auth-verification-link", ""),
+                      h.Class("underline"),
+                    ],
+                    ["Open verification page"],
+                  ),
+                ],
+              ),
             ]),
         ...(session.lastError === undefined
           ? []
@@ -99,17 +102,26 @@ export const renderDeviceAuthorizationDialog = (
   return deviceAuthDialogView(
     {
       model: dialogModel,
-      content: h.div([], [
-        renderDeviceAuthSession(session, h),
-        ...(busy
-          ? [
-              h.button(
-                [h.Class("ml-2 mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] px-3 py-1.5 text-[12px]"), h.OnClick(Message.DeviceAuthCancelled({})), h.Type("button")],
-                ["Cancel"],
-              ),
-            ]
-          : []),
-      ]),
+      content: h.div(
+        [],
+        [
+          renderDeviceAuthSession(session, h),
+          ...(busy
+            ? [
+                h.button(
+                  [
+                    h.Class(
+                      "ml-2 mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] px-3 py-1.5 text-[12px]",
+                    ),
+                    h.OnClick(Message.DeviceAuthCancelled({})),
+                    h.Type("button"),
+                  ],
+                  ["Cancel"],
+                ),
+              ]
+            : []),
+        ],
+      ),
       toParentMessage: (message) => Message.GotDeviceAuthDialogMessage({ message }),
     },
     h,
@@ -129,7 +141,9 @@ export const renderDeviceAuthorizationForm = (
         h.span([], [label]),
         h.input([
           h.AriaLabel(label),
-          h.Class("w-full max-w-[420px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1.5 text-[12px]"),
+          h.Class(
+            "w-full max-w-[420px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1.5 text-[12px]",
+          ),
           h.OnInput((next) => Message.DeviceAuthFieldChanged({ field, value: next })),
           h.Type("text"),
           h.Value(value),
@@ -138,7 +152,11 @@ export const renderDeviceAuthorizationForm = (
     );
   const busy = state.status === "starting" || state.status === "pending";
   const form = h.section(
-    [h.Class("rm3-next-route mt-6"), h.DataAttribute("route", "device-authorization"), h.DataAttribute("device-auth-state", state.status)],
+    [
+      h.Class("rm3-next-route mt-6"),
+      h.DataAttribute("route", "device-authorization"),
+      h.DataAttribute("device-auth-state", state.status),
+    ],
     [
       h.h3([h.Class("text-[14px] font-semibold")], ["Provider connection"]),
       textField("Provider", "providerId", state.draft.providerId),
@@ -146,30 +164,60 @@ export const renderDeviceAuthorizationForm = (
       textField("Variant", "variantId", state.draft.variantId),
       textField("Auth mode", "authMode", state.draft.authMode),
       textField("Region", "region", state.draft.region),
-      h.label([h.Class("mt-3 flex flex-col gap-1 text-[12px]")], [
-        h.span([], ["Model"]),
-        h.input([
-          h.AriaLabel("Model"),
-          h.Class("w-full max-w-[420px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1.5 text-[12px]"),
-          h.OnInput((next) => Message.DeviceAuthFieldChanged({ field: "modelInput", value: next })),
-          h.Type("text"),
-          h.Value(state.draft.modelInput),
-        ]),
-      ]),
+      h.label(
+        [h.Class("mt-3 flex flex-col gap-1 text-[12px]")],
+        [
+          h.span([], ["Model"]),
+          h.input([
+            h.AriaLabel("Model"),
+            h.Class(
+              "w-full max-w-[420px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1.5 text-[12px]",
+            ),
+            h.OnInput((next) =>
+              Message.DeviceAuthFieldChanged({ field: "modelInput", value: next }),
+            ),
+            h.Type("text"),
+            h.Value(state.draft.modelInput),
+          ]),
+        ],
+      ),
       h.button(
-        [h.AriaLabel("Add model"), h.Class("mt-2 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3 py-1.5 text-[12px]"), h.OnClick(Message.DeviceAuthModelAdded({})), h.Type("button")],
+        [
+          h.AriaLabel("Add model"),
+          h.Class(
+            "mt-2 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3 py-1.5 text-[12px]",
+          ),
+          h.OnClick(Message.DeviceAuthModelAdded({})),
+          h.Type("button"),
+        ],
         ["Add model"],
       ),
       h.ul(
         [h.Class("mt-2 text-[12px]")],
         state.draft.selectedModelIds.map((modelId) =>
-          h.li([], [modelId + " ", h.button([h.AriaLabel("Remove model " + modelId), h.Class("underline"), h.OnClick(Message.DeviceAuthModelRemoved({ modelId })), h.Type("button")], ["Remove"])]),
+          h.li(
+            [],
+            [
+              `${modelId} `,
+              h.button(
+                [
+                  h.AriaLabel(`Remove model ${modelId}`),
+                  h.Class("underline"),
+                  h.OnClick(Message.DeviceAuthModelRemoved({ modelId })),
+                  h.Type("button"),
+                ],
+                ["Remove"],
+              ),
+            ],
+          ),
         ),
       ),
       h.button(
         [
           h.AriaLabel("Start device authorization"),
-          h.Class("mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3 py-1.5 text-[12px]"),
+          h.Class(
+            "mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3 py-1.5 text-[12px]",
+          ),
           h.AriaDisabled(busy),
           h.DataAttribute("device-auth-start", ""),
           h.OnClick(Message.DeviceAuthStartRequested({})),
@@ -182,7 +230,9 @@ export const renderDeviceAuthorizationForm = (
             h.button(
               [
                 h.AriaLabel("Retry"),
-                h.Class("ml-2 mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] px-3 py-1.5 text-[12px]"),
+                h.Class(
+                  "ml-2 mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] px-3 py-1.5 text-[12px]",
+                ),
                 h.DataAttribute("device-auth-retry", ""),
                 h.OnClick(Message.DeviceAuthRetryRequested({})),
                 h.Type("button"),
@@ -196,8 +246,8 @@ export const renderDeviceAuthorizationForm = (
         : [h.p([h.Role("alert"), h.DataAttribute("device-auth-error", "")], [state.error])]),
     ],
   );
-  return h.div([], [
-    form,
-    ...(includeDialog ? [renderDeviceAuthorizationDialog(state, dialogModel, h)] : []),
-  ]);
+  return h.div(
+    [],
+    [form, ...(includeDialog ? [renderDeviceAuthorizationDialog(state, dialogModel, h)] : [])],
+  );
 };

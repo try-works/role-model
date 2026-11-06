@@ -8,16 +8,20 @@ import {
   type ReadDiagnosticsCommand,
   type ReadObservabilityCommand,
   type ReadReadbackCommand,
-  type RoutingChartsCommands,
-  noopRoutingChartsCommands,
   type RequestsChartsCommands,
+  type RoutingChartsCommands,
   noopRequestsChartsCommands,
+  noopRoutingChartsCommands,
 } from "./commands";
-import { buildRoutingChartQueries, routingBreakdownDimension, routingChartFilters } from "./features/observe/routing-charts";
-import { buildRequestsChartQueries } from "./features/observe/requests-charts";
-import { windowForRange } from "./features/overview/chart-data";
 import { type ControlKey, controlKeyForRouteTag, emptyControls, loadingControl } from "./control";
 import { idleDiagnostics, loadingDiagnostics } from "./diagnostics";
+import { buildRequestsChartQueries } from "./features/observe/requests-charts";
+import {
+  buildRoutingChartQueries,
+  routingBreakdownDimension,
+  routingChartFilters,
+} from "./features/observe/routing-charts";
+import { windowForRange } from "./features/overview/chart-data";
 import { replaceLegacyUrlCommand } from "./legacy-redirects";
 import type { Message } from "./message";
 import type { Model } from "./model";
@@ -55,46 +59,92 @@ const observeFiltersFromSearch = (search: string): Model["observeRoutingFilters"
   const rawTaxonomyCapabilityIds = params.get("taxCapability");
   const rawTaxonomyModalityIds = params.get("taxModality");
   const rawTaxonomyToolClassIds = params.get("taxTool");
-  const basicPresent = rawSource !== null || rawBreakdown !== null || rawDifficulty !== null || rawRange !== null;
+  const basicPresent =
+    rawSource !== null || rawBreakdown !== null || rawDifficulty !== null || rawRange !== null;
   const advancedValues = [
-    rawRequestedRoleId, rawSelectedStrategy, rawReasoningEfforts, rawEffortSources, rawTaxonomyGroupId,
-    rawTaxonomyRoleId, rawTaxonomyTaskType, rawTaxonomyTaskVariant, rawTaxonomyCapabilityIds,
-    rawTaxonomyModalityIds, rawTaxonomyToolClassIds,
+    rawRequestedRoleId,
+    rawSelectedStrategy,
+    rawReasoningEfforts,
+    rawEffortSources,
+    rawTaxonomyGroupId,
+    rawTaxonomyRoleId,
+    rawTaxonomyTaskType,
+    rawTaxonomyTaskVariant,
+    rawTaxonomyCapabilityIds,
+    rawTaxonomyModalityIds,
+    rawTaxonomyToolClassIds,
   ];
   const advancedPresent = advancedValues.some((value) => value !== null && value.trim().length > 0);
   if (!basicPresent && !advancedPresent) return undefined;
-  const source = rawSource === "local" ? "Local only"
-    : rawSource === "remote" ? "Remote only"
-      : rawSource ?? "All sources";
-  const breakdown = rawBreakdown === "modelId" ? "By upstream model"
-    : rawBreakdown === "endpointId" ? "By endpoint variant"
-      : rawBreakdown === "providerId" ? "By provider"
-        : rawBreakdown ?? "Total";
-  const difficulty = rawDifficulty === "easy" ? "Easy only"
-    : rawDifficulty === "medium" ? "Medium only"
-      : rawDifficulty === "hard" ? "Hard only"
-        : rawDifficulty ?? "All buckets";
-  const range = rawRange === "week" ? "Week"
-    : rawRange === "month" ? "Month"
-      : rawRange === "90days" ? "90 days"
-        : "Day";
+  const source =
+    rawSource === "local"
+      ? "Local only"
+      : rawSource === "remote"
+        ? "Remote only"
+        : (rawSource ?? "All sources");
+  const breakdown =
+    rawBreakdown === "modelId"
+      ? "By upstream model"
+      : rawBreakdown === "endpointId"
+        ? "By endpoint variant"
+        : rawBreakdown === "providerId"
+          ? "By provider"
+          : (rawBreakdown ?? "Total");
+  const difficulty =
+    rawDifficulty === "easy"
+      ? "Easy only"
+      : rawDifficulty === "medium"
+        ? "Medium only"
+        : rawDifficulty === "hard"
+          ? "Hard only"
+          : (rawDifficulty ?? "All buckets");
+  const range =
+    rawRange === "week"
+      ? "Week"
+      : rawRange === "month"
+        ? "Month"
+        : rawRange === "90days"
+          ? "90 days"
+          : "Day";
   return {
     breakdown,
     difficulty,
     expanded: advancedPresent,
     range,
     source,
-    ...(rawRequestedRoleId === null || rawRequestedRoleId.trim().length === 0 ? {} : { requestedRoleId: rawRequestedRoleId.trim() }),
-    ...(rawSelectedStrategy === null || rawSelectedStrategy.trim().length === 0 ? {} : { selectedStrategy: rawSelectedStrategy.trim() }),
-    ...(rawReasoningEfforts === null || rawReasoningEfforts.trim().length === 0 ? {} : { reasoningEfforts: rawReasoningEfforts.trim() }),
-    ...(rawEffortSources === null || rawEffortSources.trim().length === 0 ? {} : { effortSources: rawEffortSources.trim() }),
-    ...(rawTaxonomyGroupId === null || rawTaxonomyGroupId.trim().length === 0 ? {} : { taxonomyGroupId: rawTaxonomyGroupId.trim() }),
-    ...(rawTaxonomyRoleId === null || rawTaxonomyRoleId.trim().length === 0 ? {} : { taxonomyRoleId: rawTaxonomyRoleId.trim() }),
-    ...(rawTaxonomyTaskType === null || rawTaxonomyTaskType.trim().length === 0 ? {} : { taxonomyTaskType: rawTaxonomyTaskType.trim() }),
-    ...(rawTaxonomyTaskVariant === null || rawTaxonomyTaskVariant.trim().length === 0 ? {} : { taxonomyTaskVariant: rawTaxonomyTaskVariant.trim() }),
-    ...(rawTaxonomyCapabilityIds === null || rawTaxonomyCapabilityIds.trim().length === 0 ? {} : { taxonomyCapabilityIds: rawTaxonomyCapabilityIds.trim() }),
-    ...(rawTaxonomyModalityIds === null || rawTaxonomyModalityIds.trim().length === 0 ? {} : { taxonomyModalityIds: rawTaxonomyModalityIds.trim() }),
-    ...(rawTaxonomyToolClassIds === null || rawTaxonomyToolClassIds.trim().length === 0 ? {} : { taxonomyToolClassIds: rawTaxonomyToolClassIds.trim() }),
+    ...(rawRequestedRoleId === null || rawRequestedRoleId.trim().length === 0
+      ? {}
+      : { requestedRoleId: rawRequestedRoleId.trim() }),
+    ...(rawSelectedStrategy === null || rawSelectedStrategy.trim().length === 0
+      ? {}
+      : { selectedStrategy: rawSelectedStrategy.trim() }),
+    ...(rawReasoningEfforts === null || rawReasoningEfforts.trim().length === 0
+      ? {}
+      : { reasoningEfforts: rawReasoningEfforts.trim() }),
+    ...(rawEffortSources === null || rawEffortSources.trim().length === 0
+      ? {}
+      : { effortSources: rawEffortSources.trim() }),
+    ...(rawTaxonomyGroupId === null || rawTaxonomyGroupId.trim().length === 0
+      ? {}
+      : { taxonomyGroupId: rawTaxonomyGroupId.trim() }),
+    ...(rawTaxonomyRoleId === null || rawTaxonomyRoleId.trim().length === 0
+      ? {}
+      : { taxonomyRoleId: rawTaxonomyRoleId.trim() }),
+    ...(rawTaxonomyTaskType === null || rawTaxonomyTaskType.trim().length === 0
+      ? {}
+      : { taxonomyTaskType: rawTaxonomyTaskType.trim() }),
+    ...(rawTaxonomyTaskVariant === null || rawTaxonomyTaskVariant.trim().length === 0
+      ? {}
+      : { taxonomyTaskVariant: rawTaxonomyTaskVariant.trim() }),
+    ...(rawTaxonomyCapabilityIds === null || rawTaxonomyCapabilityIds.trim().length === 0
+      ? {}
+      : { taxonomyCapabilityIds: rawTaxonomyCapabilityIds.trim() }),
+    ...(rawTaxonomyModalityIds === null || rawTaxonomyModalityIds.trim().length === 0
+      ? {}
+      : { taxonomyModalityIds: rawTaxonomyModalityIds.trim() }),
+    ...(rawTaxonomyToolClassIds === null || rawTaxonomyToolClassIds.trim().length === 0
+      ? {}
+      : { taxonomyToolClassIds: rawTaxonomyToolClassIds.trim() }),
   };
 };
 
@@ -115,7 +165,7 @@ const initRoute =
     const route = resolved.route;
     // S269: a legacy Studio path carries its tab in the canonical `?tab=` alias.
     const studioTab =
-      route._tag === "Studio" ? studioTabFromUrl(resolved.canonicalUrl) ?? "chat" : undefined;
+      route._tag === "Studio" ? (studioTabFromUrl(resolved.canonicalUrl) ?? "chat") : undefined;
     const initial = (): UpdateReturn<Model, Message> => {
       if (route._tag === "Diagnostics") {
         return {
@@ -152,32 +202,119 @@ const initRoute =
         const token = 1;
         return {
           commands: [readReadback({ key: "localPolicy", token })],
-          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), localPolicy: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
+          model: {
+            clicks: 0,
+            controls: emptyControls(),
+            diagnostics: idleDiagnostics(),
+            observability: idleObservability(),
+            readbacks: { ...emptyReadbacks(), localPolicy: loadingReadback(token) },
+            refresh: initialRuntimeRefreshState(),
+            route,
+            theme,
+          },
         };
       }
       if (route._tag === "LocalLlamaSwapModels" || route._tag === "SystemExtensions") {
         const token = 1;
-        const key: "localLlamaSwapModels" | "extensions" = route._tag === "LocalLlamaSwapModels" ? "localLlamaSwapModels" : "extensions";
+        const key: "localLlamaSwapModels" | "extensions" =
+          route._tag === "LocalLlamaSwapModels" ? "localLlamaSwapModels" : "extensions";
         return {
-          commands: route._tag === "SystemExtensions"
-            ? [readReadback({ key: "extensions", token }), readReadback({ key: "contribution", token }), readReadback({ key: "recommendations", token }), readReadback({ key: "replayAutomation", token })]
-            : [readReadback({ key, token })],
-          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: route._tag === "SystemExtensions" ? { ...emptyReadbacks(), extensions: loadingReadback(token), contribution: loadingReadback(token), recommendations: loadingReadback(token), replayAutomation: loadingReadback(token) } : { ...emptyReadbacks(), [key]: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
+          commands:
+            route._tag === "SystemExtensions"
+              ? [
+                  readReadback({ key: "extensions", token }),
+                  readReadback({ key: "contribution", token }),
+                  readReadback({ key: "recommendations", token }),
+                  readReadback({ key: "replayAutomation", token }),
+                ]
+              : [readReadback({ key, token })],
+          model: {
+            clicks: 0,
+            controls: emptyControls(),
+            diagnostics: idleDiagnostics(),
+            observability: idleObservability(),
+            readbacks:
+              route._tag === "SystemExtensions"
+                ? {
+                    ...emptyReadbacks(),
+                    extensions: loadingReadback(token),
+                    contribution: loadingReadback(token),
+                    recommendations: loadingReadback(token),
+                    replayAutomation: loadingReadback(token),
+                  }
+                : { ...emptyReadbacks(), [key]: loadingReadback(token) },
+            refresh: initialRuntimeRefreshState(),
+            route,
+            theme,
+          },
         };
       }
       if (route._tag === "SystemOperator") {
         const token = 1;
         return {
-          commands: [readReadback({ key: "operatorStatus", token }), readReadback({ key: "operatorTraceRoots", token }), readReadback({ key: "replayJobs", token }), readReadback({ key: "evaluationJobs", token }), readReadback({ key: "learningProfile", token }), readReadback({ key: "learningAdvisory", token })],
-          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), operatorStatus: loadingReadback(token), operatorTraceRoots: loadingReadback(token), replayJobs: loadingReadback(token), evaluationJobs: loadingReadback(token), learningProfile: loadingReadback(token), learningAdvisory: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
+          commands: [
+            readReadback({ key: "operatorStatus", token }),
+            readReadback({ key: "operatorTraceRoots", token }),
+            readReadback({ key: "replayJobs", token }),
+            readReadback({ key: "evaluationJobs", token }),
+            readReadback({ key: "learningProfile", token }),
+            readReadback({ key: "learningAdvisory", token }),
+          ],
+          model: {
+            clicks: 0,
+            controls: emptyControls(),
+            diagnostics: idleDiagnostics(),
+            observability: idleObservability(),
+            readbacks: {
+              ...emptyReadbacks(),
+              operatorStatus: loadingReadback(token),
+              operatorTraceRoots: loadingReadback(token),
+              replayJobs: loadingReadback(token),
+              evaluationJobs: loadingReadback(token),
+              learningProfile: loadingReadback(token),
+              learningAdvisory: loadingReadback(token),
+            },
+            refresh: initialRuntimeRefreshState(),
+            route,
+            theme,
+          },
         };
       }
-      if (route._tag === "LearningConfiguration" || route._tag === "LearningPacks" || route._tag === "LearningDecisions" || route._tag === "LearningEvidence" || route._tag === "LearningHistory") {
+      if (
+        route._tag === "LearningConfiguration" ||
+        route._tag === "LearningPacks" ||
+        route._tag === "LearningDecisions" ||
+        route._tag === "LearningEvidence" ||
+        route._tag === "LearningHistory"
+      ) {
         const token = 1;
-        const key: "learningConfiguration" | "learningPacks" | "learningDecisions" | "learningEvidence" | "learningHistory" = route._tag === "LearningConfiguration" ? "learningConfiguration" : route._tag === "LearningPacks" ? "learningPacks" : route._tag === "LearningDecisions" ? "learningDecisions" : route._tag === "LearningEvidence" ? "learningEvidence" : "learningHistory";
+        const key:
+          | "learningConfiguration"
+          | "learningPacks"
+          | "learningDecisions"
+          | "learningEvidence"
+          | "learningHistory" =
+          route._tag === "LearningConfiguration"
+            ? "learningConfiguration"
+            : route._tag === "LearningPacks"
+              ? "learningPacks"
+              : route._tag === "LearningDecisions"
+                ? "learningDecisions"
+                : route._tag === "LearningEvidence"
+                  ? "learningEvidence"
+                  : "learningHistory";
         return {
           commands: [readReadback({ key, token })],
-          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), [key]: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
+          model: {
+            clicks: 0,
+            controls: emptyControls(),
+            diagnostics: idleDiagnostics(),
+            observability: idleObservability(),
+            readbacks: { ...emptyReadbacks(), [key]: loadingReadback(token) },
+            refresh: initialRuntimeRefreshState(),
+            route,
+            theme,
+          },
         };
       }
       if (route._tag === "Router") {
@@ -190,14 +327,51 @@ const initRoute =
             readReadback({ key: "runtimeConfig", token }),
             readReadback({ key: "health", token }),
           ],
-          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), router: loadingReadback(token), routerConfig: loadingReadback(token), routerCandidates: loadingReadback(token), runtimeConfig: loadingReadback(token), health: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
+          model: {
+            clicks: 0,
+            controls: emptyControls(),
+            diagnostics: idleDiagnostics(),
+            observability: idleObservability(),
+            readbacks: {
+              ...emptyReadbacks(),
+              router: loadingReadback(token),
+              routerConfig: loadingReadback(token),
+              routerCandidates: loadingReadback(token),
+              runtimeConfig: loadingReadback(token),
+              health: loadingReadback(token),
+            },
+            refresh: initialRuntimeRefreshState(),
+            route,
+            theme,
+          },
         };
       }
-      if (route._tag === "RouterStrategy" || route._tag === "RouterWorkloads" || route._tag === "RouterConfig" || route._tag === "RouterAgentStrategy") {
+      if (
+        route._tag === "RouterStrategy" ||
+        route._tag === "RouterWorkloads" ||
+        route._tag === "RouterConfig" ||
+        route._tag === "RouterAgentStrategy"
+      ) {
         const token = 1;
         return {
-          commands: [readReadback({ key: "routerConfig", token }), readReadback({ key: "runtimeConfig", token })],
-          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), routerConfig: loadingReadback(token), runtimeConfig: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
+          commands: [
+            readReadback({ key: "routerConfig", token }),
+            readReadback({ key: "runtimeConfig", token }),
+          ],
+          model: {
+            clicks: 0,
+            controls: emptyControls(),
+            diagnostics: idleDiagnostics(),
+            observability: idleObservability(),
+            readbacks: {
+              ...emptyReadbacks(),
+              routerConfig: loadingReadback(token),
+              runtimeConfig: loadingReadback(token),
+            },
+            refresh: initialRuntimeRefreshState(),
+            route,
+            theme,
+          },
         };
       }
       if (route._tag === "Endpoints" || route._tag === "Providers") {
@@ -218,7 +392,15 @@ const initRoute =
             controls: { ...emptyControls(), [controlKey]: loadingControl(token) },
             diagnostics: idleDiagnostics(),
             observability: idleObservability(),
-            readbacks: { ...emptyReadbacks(), configuredModels: loadingReadback(token), modelEndpoints: loadingReadback(token), integrationProviders: loadingReadback(token), providerCatalog: loadingReadback(token), providerAccounts: loadingReadback(token), roles: loadingReadback(token) },
+            readbacks: {
+              ...emptyReadbacks(),
+              configuredModels: loadingReadback(token),
+              modelEndpoints: loadingReadback(token),
+              integrationProviders: loadingReadback(token),
+              providerCatalog: loadingReadback(token),
+              providerAccounts: loadingReadback(token),
+              roles: loadingReadback(token),
+            },
             refresh: initialRuntimeRefreshState(),
             route,
             theme,
@@ -228,8 +410,26 @@ const initRoute =
       if (route._tag === "Models" || route._tag === "ModelsRoles") {
         const token = 1;
         return {
-          commands: [readReadback({ key: "configuredModels", token }), readReadback({ key: "modelEndpoints", token }), readReadback({ key: "rolePolicy", token })],
-          model: { clicks: 0, controls: emptyControls(), diagnostics: idleDiagnostics(), observability: idleObservability(), readbacks: { ...emptyReadbacks(), configuredModels: loadingReadback(token), modelEndpoints: loadingReadback(token), rolePolicy: loadingReadback(token) }, refresh: initialRuntimeRefreshState(), route, theme },
+          commands: [
+            readReadback({ key: "configuredModels", token }),
+            readReadback({ key: "modelEndpoints", token }),
+            readReadback({ key: "rolePolicy", token }),
+          ],
+          model: {
+            clicks: 0,
+            controls: emptyControls(),
+            diagnostics: idleDiagnostics(),
+            observability: idleObservability(),
+            readbacks: {
+              ...emptyReadbacks(),
+              configuredModels: loadingReadback(token),
+              modelEndpoints: loadingReadback(token),
+              rolePolicy: loadingReadback(token),
+            },
+            refresh: initialRuntimeRefreshState(),
+            route,
+            theme,
+          },
         };
       }
       if (route._tag === "Studio") {
@@ -266,7 +466,13 @@ const initRoute =
             controls: emptyControls(),
             diagnostics: idleDiagnostics(),
             observability: idleObservability(),
-            readbacks: { ...emptyReadbacks(), learning: loadingReadback(token), learningPacks: loadingReadback(token), replayJobs: loadingReadback(token), evaluationJobs: loadingReadback(token) },
+            readbacks: {
+              ...emptyReadbacks(),
+              learning: loadingReadback(token),
+              learningPacks: loadingReadback(token),
+              replayJobs: loadingReadback(token),
+              evaluationJobs: loadingReadback(token),
+            },
             refresh: initialRuntimeRefreshState(),
             route,
             theme,
@@ -276,8 +482,15 @@ const initRoute =
       const controlKey = controlKeyForRouteTag(route._tag);
       if (controlKey !== null) {
         const token = 1;
-        const controls = { ...emptyControls(), [controlKey]: loadingControl(token), ...(controlKey === "controlController" ? { endpoints: loadingControl(token) } : {}) };
-      const controlCommands = controlKey === "controlController" ? [readControl({ key: controlKey, token }), readControl({ key: "endpoints", token })] : [readControl({ key: controlKey, token })];
+        const controls = {
+          ...emptyControls(),
+          [controlKey]: loadingControl(token),
+          ...(controlKey === "controlController" ? { endpoints: loadingControl(token) } : {}),
+        };
+        const controlCommands =
+          controlKey === "controlController"
+            ? [readControl({ key: controlKey, token }), readControl({ key: "endpoints", token })]
+            : [readControl({ key: controlKey, token })];
         return {
           commands: controlCommands,
           model: {
@@ -304,33 +517,74 @@ const initRoute =
           : undefined;
         // The entry batch uses the same range->window mapping as the live reload path; a fresh load is Day.
         const entryWindowMs = windowForRange(restoredObserveFilters?.range);
-        const restoreCharts = restoredObserveFilters === undefined
-          ? buildRoutingChartQueries(entryWindowMs)
-          : buildRoutingChartQueries(
-              entryWindowMs,
-              routingBreakdownDimension(restoredObserveFilters.breakdown),
-              routingChartFilters(restoredObserveFilters),
-            );
-        const readbacks = route._tag === "Benchmark"
-          ? { ...emptyReadbacks(), benchmarkRuns: loadingReadback(token), benchmarkSummary: loadingReadback(token), benchmarkSuite: loadingReadback(token), benchmarkPreferences: loadingReadback(token), benchmarkActiveRun: loadingReadback(token), modelEndpoints: loadingReadback(token) }
-          : observeVolume
-            ? { ...emptyReadbacks(), [readbackKey]: loadingReadback(token), overviewMetrics: loadingReadback(token) }
-            : { ...emptyReadbacks(), [readbackKey]: loadingReadback(token) };
+        const restoreCharts =
+          restoredObserveFilters === undefined
+            ? buildRoutingChartQueries(entryWindowMs)
+            : buildRoutingChartQueries(
+                entryWindowMs,
+                routingBreakdownDimension(restoredObserveFilters.breakdown),
+                routingChartFilters(restoredObserveFilters),
+              );
+        const readbacks =
+          route._tag === "Benchmark"
+            ? {
+                ...emptyReadbacks(),
+                benchmarkRuns: loadingReadback(token),
+                benchmarkSummary: loadingReadback(token),
+                benchmarkSuite: loadingReadback(token),
+                benchmarkPreferences: loadingReadback(token),
+                benchmarkActiveRun: loadingReadback(token),
+                modelEndpoints: loadingReadback(token),
+              }
+            : observeVolume
+              ? {
+                  ...emptyReadbacks(),
+                  [readbackKey]: loadingReadback(token),
+                  overviewMetrics: loadingReadback(token),
+                }
+              : { ...emptyReadbacks(), [readbackKey]: loadingReadback(token) };
         return {
           commands: [
-            readReadback({ id: route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail" ? route.requestId : route._tag === "Index" || route._tag === "Dashboard" ? "86400000" : undefined, key: readbackKey as ReadbackKey, token }),
-            ...(route._tag === "Benchmark" ? [readReadback({ key: "benchmarkSummary" as const, token }), readReadback({ key: "benchmarkRuns" as const, token }), readReadback({ key: "benchmarkPreferences" as const, token }), readReadback({ key: "benchmarkActiveRun" as const, token }), readReadback({ key: "modelEndpoints" as const, token })] : []),
-            ...(observeVolume ? [readReadback({ key: "overviewMetrics", query: "?windowMs=86400000", token })] : []),
-            ...(routingCharts ? [routingChartsCommands.load({ queriesJson: JSON.stringify(restoreCharts), token })] : []),
-            ...(requestsCharts ? [requestsChartsCommands.load({
-              queriesJson: JSON.stringify(buildRequestsChartQueries(86_400_000, {
-                breakdown: null,
-                filters: {},
-                rankingDimension: "endpointId",
-                rankingMetric: "averageLatencyMs",
-              })),
+            readReadback({
+              id:
+                route._tag === "RequestDetail" || route._tag === "RouterDecisionDetail"
+                  ? route.requestId
+                  : route._tag === "Index" || route._tag === "Dashboard"
+                    ? "86400000"
+                    : undefined,
+              key: readbackKey as ReadbackKey,
               token,
-            })] : []),
+            }),
+            ...(route._tag === "Benchmark"
+              ? [
+                  readReadback({ key: "benchmarkSummary" as const, token }),
+                  readReadback({ key: "benchmarkRuns" as const, token }),
+                  readReadback({ key: "benchmarkPreferences" as const, token }),
+                  readReadback({ key: "benchmarkActiveRun" as const, token }),
+                  readReadback({ key: "modelEndpoints" as const, token }),
+                ]
+              : []),
+            ...(observeVolume
+              ? [readReadback({ key: "overviewMetrics", query: "?windowMs=86400000", token })]
+              : []),
+            ...(routingCharts
+              ? [routingChartsCommands.load({ queriesJson: JSON.stringify(restoreCharts), token })]
+              : []),
+            ...(requestsCharts
+              ? [
+                  requestsChartsCommands.load({
+                    queriesJson: JSON.stringify(
+                      buildRequestsChartQueries(86_400_000, {
+                        breakdown: null,
+                        filters: {},
+                        rankingDimension: "endpointId",
+                        rankingMetric: "averageLatencyMs",
+                      }),
+                    ),
+                    token,
+                  }),
+                ]
+              : []),
           ],
           model: {
             clicks: 0,
@@ -340,11 +594,17 @@ const initRoute =
             readbacks,
             refresh: initialRuntimeRefreshState(),
             route,
-            ...(routingCharts ? {
-              routingCharts: { entries: [], status: "loading" as const, token },
-              ...(restoredObserveFilters === undefined ? {} : { observeRoutingFilters: restoredObserveFilters }),
-            } : {}),
-            ...(requestsCharts ? { requestsCharts: { entries: [], status: "loading" as const, token } } : {}),
+            ...(routingCharts
+              ? {
+                  routingCharts: { entries: [], status: "loading" as const, token },
+                  ...(restoredObserveFilters === undefined
+                    ? {}
+                    : { observeRoutingFilters: restoredObserveFilters }),
+                }
+              : {}),
+            ...(requestsCharts
+              ? { requestsCharts: { entries: [], status: "loading" as const, token } }
+              : {}),
             theme,
           },
         };
@@ -366,7 +626,10 @@ const initRoute =
     if (resolved.redirectHref === undefined) return result;
     return {
       ...result,
-      commands: [...(result.commands ?? []), replaceLegacyUrlCommand({ href: resolved.redirectHref })],
+      commands: [
+        ...(result.commands ?? []),
+        replaceLegacyUrlCommand({ href: resolved.redirectHref }),
+      ],
       model: { ...result.model, pendingRedirectHref: resolved.redirectHref },
     };
   };
@@ -381,9 +644,24 @@ export const createInit =
     requestsChartsCommands: RequestsChartsCommands = noopRequestsChartsCommands,
   ) =>
   (url: Url): UpdateReturn<Model, Message> => {
-    const result = initRoute(readDiagnostics, readObservability, readReadback, readControl, routingChartsCommands, requestsChartsCommands)(url);
+    const result = initRoute(
+      readDiagnostics,
+      readObservability,
+      readReadback,
+      readControl,
+      routingChartsCommands,
+      requestsChartsCommands,
+    )(url);
     if (!loadRail) return result;
-    const railKeys = ["models", "runtimeSummary", "health", "dashboard", "router", "overviewMetrics", "routerCandidates"] as const;
+    const railKeys = [
+      "models",
+      "runtimeSummary",
+      "health",
+      "dashboard",
+      "router",
+      "overviewMetrics",
+      "routerCandidates",
+    ] as const;
     const token = 1;
     const readbacks = { ...result.model.readbacks };
     const commands = [...(result.commands ?? [])];

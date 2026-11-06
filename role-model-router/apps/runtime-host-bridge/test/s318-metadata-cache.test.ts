@@ -16,10 +16,18 @@ import {
 
 describe("S318 metadata cache identity", () => {
   test("keys include authority, generation and model (NUL separated)", () => {
-    const key = metadataCacheKey({ authorityId: "auth-a", configGeneration: 3, modelId: "model-x" });
+    const key = metadataCacheKey({
+      authorityId: "auth-a",
+      configGeneration: 3,
+      modelId: "model-x",
+    });
     expect(key).toBe("auth-a\u00003\u0000model-x");
-    expect(metadataCacheKey({ authorityId: "auth-a", configGeneration: 4, modelId: "model-x" })).not.toBe(key);
-    expect(metadataCacheKey({ authorityId: "auth-b", configGeneration: 3, modelId: "model-x" })).not.toBe(key);
+    expect(
+      metadataCacheKey({ authorityId: "auth-a", configGeneration: 4, modelId: "model-x" }),
+    ).not.toBe(key);
+    expect(
+      metadataCacheKey({ authorityId: "auth-b", configGeneration: 3, modelId: "model-x" }),
+    ).not.toBe(key);
   });
 
   test("config change bumps the generation and invalidates the previous generation", () => {
@@ -27,10 +35,12 @@ describe("S318 metadata cache identity", () => {
     const first = owner.noteConfig(metadataConfigIdentity({ executionMode: "local" }));
     expect(first.generation).toBeGreaterThanOrEqual(1);
     const key = owner.keyFor("model-x");
-    expect(key).toContain("\u0000" + String(first.generation) + "\u0000");
+    expect(key).toContain(`\u0000${String(first.generation)}\u0000`);
     owner.setSync(key, "value-under-gen-1", 1000);
     expect(owner.sizeSync()).toBe(1);
-    expect(owner.noteConfig(metadataConfigIdentity({ executionMode: "local" })).generation).toBe(first.generation);
+    expect(owner.noteConfig(metadataConfigIdentity({ executionMode: "local" })).generation).toBe(
+      first.generation,
+    );
     const second = owner.noteConfig(metadataConfigIdentity({ executionMode: "remote" }));
     expect(second.generation).toBeGreaterThan(first.generation);
     expect(second.invalidated).toBeGreaterThanOrEqual(1);

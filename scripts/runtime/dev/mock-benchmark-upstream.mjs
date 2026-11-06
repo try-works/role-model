@@ -26,17 +26,20 @@ let requestCount = 0;
 
 const isJudge = (body) => {
   const messages = Array.isArray(body?.messages) ? body.messages : [];
-  return messages.some((message) => /judge|grading|grade this|score/i.test(String(message?.content ?? "")));
+  return messages.some((message) =>
+    /judge|grading|grade this|score/i.test(String(message?.content ?? "")),
+  );
 };
 
-const completion = (body, content) => JSON.stringify({
-  id: "chatcmpl-mock-" + String(++requestCount),
-  object: "chat.completion",
-  created: Math.floor(Date.now() / 1000),
-  model: body?.model ?? "mock-model",
-  choices: [{ index: 0, message: { role: "assistant", content }, finish_reason: "stop" }],
-  usage: { prompt_tokens: 12, completion_tokens: 8, total_tokens: 20 },
-});
+const completion = (body, content) =>
+  JSON.stringify({
+    id: `chatcmpl-mock-${String(++requestCount)}`,
+    object: "chat.completion",
+    created: Math.floor(Date.now() / 1000),
+    model: body?.model ?? "mock-model",
+    choices: [{ index: 0, message: { role: "assistant", content }, finish_reason: "stop" }],
+    usage: { prompt_tokens: 12, completion_tokens: 8, total_tokens: 20 },
+  });
 
 const server = http.createServer((request, response) => {
   const chunks = [];
@@ -44,21 +47,44 @@ const server = http.createServer((request, response) => {
   request.on("end", () => {
     const raw = Buffer.concat(chunks).toString("utf8");
     let body = {};
-    try { body = raw.length > 0 ? JSON.parse(raw) : {}; } catch { body = { raw }; }
+    try {
+      body = raw.length > 0 ? JSON.parse(raw) : {};
+    } catch {
+      body = { raw };
+    }
     requestCount += 1;
-    appendFileSync(logPath, JSON.stringify({ at: Date.now(), mode, port, requestCount, method: request.method, url: request.url, body }) + "\n");
+    appendFileSync(
+      logPath,
+      `${JSON.stringify({
+        at: Date.now(),
+        mode,
+        port,
+        requestCount,
+        method: request.method,
+        url: request.url,
+        body,
+      })}\n`,
+    );
     response.setHeader("content-type", "application/json");
     if (mode === "fail-after-first" && requestCount > succeedFirst) {
       response.statusCode = 500;
-      response.end(JSON.stringify({ error: { message: "mock upstream failure", type: "server_error" } }));
+      response.end(
+        JSON.stringify({ error: { message: "mock upstream failure", type: "server_error" } }),
+      );
       return;
     }
-    const content = mode === "invalid-judge" && isJudge(body)
-      ? "not valid judge json"
-      : isJudge(body)
-        ? JSON.stringify({ score: 0.82, rationale: "Mock judge: the deliverable addresses the requested capability." })
-        : "mock answer for benchmark proof";
+    const content =
+      mode === "invalid-judge" && isJudge(body)
+        ? "not valid judge json"
+        : isJudge(body)
+          ? JSON.stringify({
+              score: 0.82,
+              rationale: "Mock judge: the deliverable addresses the requested capability.",
+            })
+          : "mock answer for benchmark proof";
     response.end(completion(body, content));
   });
 });
-server.listen(port, "127.0.0.1", () => console.log(JSON.stringify({ status: "listening", port, mode, logPath })));
+server.listen(port, "127.0.0.1", () =>
+  console.log(JSON.stringify({ status: "listening", port, mode, logPath })),
+);

@@ -46,8 +46,8 @@ import {
   writeBenchmarkRunManifest,
 } from "./benchmark-artifacts.js";
 
-import { writeBenchmarkRunResult } from "./benchmark-summary.js";
 import { benchmarkOutcomeFields } from "./benchmark-outcome.js";
+import { writeBenchmarkRunResult } from "./benchmark-summary.js";
 
 import {
   completeBenchmarkRunProgress,
@@ -736,7 +736,11 @@ async function executeJudgeRequest(
       messages,
       temperature: 0,
       ...(structuredOutput
-        ? { response_format: isDeepSeekBenchmarkModel(judgeEndpoint.modelId) ? { type: "json_object" as const } : JUDGE_RESPONSE_FORMAT }
+        ? {
+            response_format: isDeepSeekBenchmarkModel(judgeEndpoint.modelId)
+              ? { type: "json_object" as const }
+              : JUDGE_RESPONSE_FORMAT,
+          }
         : {}),
     };
 
@@ -1393,7 +1397,9 @@ async function gradeCompareAcrossModels(input: {
 
           temperature: 0,
 
-          response_format: isDeepSeekBenchmarkModel(input.judgeEndpoint.modelId) ? { type: "json_object" } : COMPARE_RESPONSE_FORMAT,
+          response_format: isDeepSeekBenchmarkModel(input.judgeEndpoint.modelId)
+            ? { type: "json_object" }
+            : COMPARE_RESPONSE_FORMAT,
         },
 
         requestId,
@@ -1677,7 +1683,9 @@ export async function runRoutingCapabilityBenchmark(
   const cases = selectBenchmarkCases(suite, { mode, caseIds: request.caseIds });
 
   const runId = request.runId ?? randomUUID();
-  const throwIfCancelled = (): void => { if (deps.signal?.aborted) throw new BenchmarkCancelledError(runId); };
+  const throwIfCancelled = (): void => {
+    if (deps.signal?.aborted) throw new BenchmarkCancelledError(runId);
+  };
   throwIfCancelled();
 
   const startedAtMs = Date.now();
@@ -1717,15 +1725,18 @@ export async function runRoutingCapabilityBenchmark(
     const requestedEndpointIds = request.endpointIds?.length
       ? [...new Set(request.endpointIds)]
       : configuredEndpoints.map((endpoint) => endpoint.endpointId);
-    const skippedEndpoints: ReadonlyArray<import("./benchmark-outcome.js").BenchmarkSkippedEndpoint> =
-      requestedEndpointIds.flatMap((endpointId): ReadonlyArray<import("./benchmark-outcome.js").BenchmarkSkippedEndpoint> => {
+    const skippedEndpoints: ReadonlyArray<
+      import("./benchmark-outcome.js").BenchmarkSkippedEndpoint
+    > = requestedEndpointIds.flatMap(
+      (endpointId): ReadonlyArray<import("./benchmark-outcome.js").BenchmarkSkippedEndpoint> => {
         if (!configuredEndpoints.some((endpoint) => endpoint.endpointId === endpointId)) {
           return [{ endpointId, reason: "not_configured" as const }];
         }
         return endpoints.some((endpoint) => endpoint.endpointId === endpointId)
           ? []
           : [{ endpointId, reason: "unhealthy" as const }];
-      });
+      },
+    );
 
     const targetEligibility = evaluateBenchmarkTargetEligibility({
       endpointIds: request.endpointIds,
@@ -1812,13 +1823,13 @@ export async function runRoutingCapabilityBenchmark(
     }
 
     for (const [endpointIndex, endpoint] of targetEndpoints.entries()) {
-    throwIfCancelled();
+      throwIfCancelled();
       const endpointExecutions = new Map<string, BenchmarkCaseExecution>();
 
       executionByEndpoint.set(endpoint.endpointId, endpointExecutions);
 
       for (const [caseIndex, caseItem] of cases.entries()) {
-    throwIfCancelled();
+        throwIfCancelled();
         const requestId = `bench-${runId}-${caseItem.case_id}-${endpoint.endpointId}`;
 
         // The step counter is the authoritative progress position at case start:
@@ -1986,7 +1997,7 @@ export async function runRoutingCapabilityBenchmark(
     >();
 
     for (const [endpointIndex, endpoint] of gradingEndpoints.entries()) {
-    throwIfCancelled();
+      throwIfCancelled();
       const caseResults: Array<BenchmarkEndpointGrade["caseResults"][number]> = [];
 
       const endpointExecutions = executionByEndpoint.get(endpoint.endpointId);
@@ -2171,7 +2182,7 @@ export async function runRoutingCapabilityBenchmark(
     }
 
     for (const endpoint of targetEndpoints) {
-    throwIfCancelled();
+      throwIfCancelled();
       const caseResults = caseResultsByEndpoint.get(endpoint.endpointId) ?? [];
 
       endpointGrades.push({

@@ -78,7 +78,10 @@ const sseResponse = (chunks: ReadonlyArray<string>): Response =>
     { headers: { "content-type": "text/event-stream" }, status: 200 },
   );
 
-const cleanupOf = (): { readonly releases: SseCleanupKind[]; readonly onRelease: (kind: SseCleanupKind) => void } => {
+const cleanupOf = (): {
+  readonly releases: SseCleanupKind[];
+  readonly onRelease: (kind: SseCleanupKind) => void;
+} => {
   const releases: SseCleanupKind[] = [];
   return { onRelease: (kind) => releases.push(kind), releases };
 };
@@ -177,9 +180,9 @@ describe("S17b SSE typed failures are distinct", () => {
     ).catch((error: unknown) => error);
     expect(aborted).toBeInstanceOf(SseTranscriptAbortError);
 
-    const incomplete = await readSseTranscript(fakeStream(['data: {"n":1}\n\ndata: {"n":2']).response).catch(
-      (error: unknown) => error,
-    );
+    const incomplete = await readSseTranscript(
+      fakeStream(['data: {"n":1}\n\ndata: {"n":2']).response,
+    ).catch((error: unknown) => error);
     expect(incomplete).toBeInstanceOf(SseTranscriptIncompleteError);
 
     const protocol = await readSseTranscript(fakeStream(["data: nope\n\n"]).response).catch(
@@ -209,14 +212,17 @@ describe("S17b SSE typed failures are distinct", () => {
   it("drains a valid final frame and reports [DONE] once without forwarding it as data", async () => {
     const doneCalls: number[] = [];
     const payloads: string[] = [];
-    await readSseTranscript(fakeStream([frame({ n: 1 }), 'data: {"n":2}', "\n\ndata: [DONE]\n\n"]).response, {
-      onDone: () => {
-        doneCalls.push(1);
+    await readSseTranscript(
+      fakeStream([frame({ n: 1 }), 'data: {"n":2}', "\n\ndata: [DONE]\n\n"]).response,
+      {
+        onDone: () => {
+          doneCalls.push(1);
+        },
+        onPayload: (payloadText) => {
+          payloads.push(payloadText);
+        },
       },
-      onPayload: (payloadText) => {
-        payloads.push(payloadText);
-      },
-    });
+    );
     expect(payloads).toEqual([JSON.stringify({ n: 1 }), JSON.stringify({ n: 2 })]);
     expect(doneCalls.length).toBe(1);
   });
@@ -245,7 +251,11 @@ describe("S17b SSE frame preservation", () => {
       (payload) => {
         written.push(payload);
       },
-      { adapterFamily: "openai-chat-completions", endpointId: "endpoint-s17b", reasoningRequested: false },
+      {
+        adapterFamily: "openai-chat-completions",
+        endpointId: "endpoint-s17b",
+        reasoningRequested: false,
+      },
     );
 
     // The first reasoning-only frame is dropped (not substantive); the fragmented content frame is

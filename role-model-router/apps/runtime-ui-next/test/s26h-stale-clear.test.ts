@@ -56,7 +56,11 @@ const bodies: Record<string, unknown> = {
   routerCandidates: [{ id: "c", modelId: "m" }],
   routerDecisions: { decisions: [{ modelId: "m", requestId: "r" }] },
   runtime: { config: { channel: "development" } },
-  sessionReadiness: { observedAt: "2026-10-25T05:46:08.202Z", overall: "unobserved", context: { channel: "development", scope: "standalone-runtime-dev" } },
+  sessionReadiness: {
+    observedAt: "2026-10-25T05:46:08.202Z",
+    overall: "unobserved",
+    context: { channel: "development", scope: "standalone-runtime-dev" },
+  },
   storeReceipts: { store: { receipts: [{ code: "x", id: "r" }] }, worker: { receipts: [] } },
 };
 const paths: Record<string, string> = {
@@ -92,10 +96,7 @@ describe("S26h stale clears on successful gap refetch", () => {
       // Requests now also reads the metrics page for its volume chart, so its route plan is two reads.
       // Use >= thresholds: pages with their own refresh timers (local logs) can add reads concurrently.
       const readsPerPlan = key === "requests" ? 2 : 1;
-      await waitFor(
-        () => (calls >= readsPerPlan ? true : undefined),
-        `${key} initial`,
-      );
+      await waitFor(() => (calls >= readsPerPlan ? true : undefined), `${key} initial`);
       listeners.get("revision.update")?.({
         data: JSON.stringify({ revision: 1 }),
       } as MessageEvent<string>);
@@ -127,10 +128,7 @@ describe("S26h stale clears on successful gap refetch", () => {
       }),
       runtimeEventSourceFactory: factory,
     });
-    await waitFor(
-      () => (calls >= 1 ? true : undefined),
-      "observability initial",
-    );
+    await waitFor(() => (calls >= 1 ? true : undefined), "observability initial");
     listeners.get("revision.update")?.({
       data: JSON.stringify({ revision: 1 }),
     } as MessageEvent<string>);
@@ -161,10 +159,7 @@ describe("S26h stale clears on successful gap refetch", () => {
       }),
       runtimeEventSourceFactory: factory,
     });
-    await waitFor(
-      () => (calls >= 1 ? true : undefined),
-      "initial",
-    );
+    await waitFor(() => (calls >= 1 ? true : undefined), "initial");
     listeners.get("revision.update")?.({
       data: JSON.stringify({ revision: 1 }),
     } as MessageEvent<string>);
@@ -194,7 +189,8 @@ describe("S26h stale clears on successful gap refetch", () => {
       },
     });
     await waitFor(
-      () => (document.body.textContent?.includes("metric row(s) in the registry") ? true : undefined),
+      () =>
+        document.body.textContent?.includes("metric row(s) in the registry") ? true : undefined,
       "stored token read",
     );
     expect(headers).toEqual(["Bearer stored-token"]);
@@ -219,20 +215,32 @@ describe("S26h stale clears on successful gap refetch", () => {
     const unauthorized = mountAt("s26h-401", "/requests", {
       readbackReaders: createReadbackClients({ fetchImpl: async () => json({}, 401) }),
     });
-    await waitFor(() => (document.querySelector("h1")?.textContent === "Telemetry request ledger" ? true : undefined), "requests shell title");
+    await waitFor(
+      () =>
+        document.querySelector("h1")?.textContent === "Telemetry request ledger" ? true : undefined,
+      "requests shell title",
+    );
     expect(document.body.textContent).not.toContain("m-legacy");
     unauthorized.dispose();
 
     const forbidden = mountAt("s26h-403", "/requests", {
       readbackReaders: createReadbackClients({ fetchImpl: async () => json({}, 403) }),
     });
-    await waitFor(() => (document.querySelector("h1")?.textContent === "Telemetry request ledger" ? true : undefined), "requests shell title");
+    await waitFor(
+      () =>
+        document.querySelector("h1")?.textContent === "Telemetry request ledger" ? true : undefined,
+      "requests shell title",
+    );
     expect(document.body.textContent).not.toContain("m-legacy");
     forbidden.dispose();
 
     const invalid = mountAt("s26h-invalid", "/requests", {
       readbackReaders: createReadbackClients({ fetchImpl: async () => json({ bad: true }) }),
     });
-    await waitFor(() => (document.querySelector("h1")?.textContent === "Telemetry request ledger" ? true : undefined), "invalid requests shell title");
+    await waitFor(
+      () =>
+        document.querySelector("h1")?.textContent === "Telemetry request ledger" ? true : undefined,
+      "invalid requests shell title",
+    );
   });
 });

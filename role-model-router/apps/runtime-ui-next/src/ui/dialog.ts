@@ -1,7 +1,7 @@
+import * as Dialog from "@role-model-router/foldkit-ui/dialog";
 import type { Command as FoldCommand } from "@role-model-router/foldkit/command";
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 import type { View as SubmodelView } from "@role-model-router/foldkit/submodel";
-import * as Dialog from "@role-model-router/foldkit-ui/dialog";
 
 /**
  * Workspace W1b (S499): the device-auth session Dialog facade.
@@ -15,20 +15,22 @@ const dialogView: SubmodelView<DeviceAuthDialogModel, Dialog.Message, Dialog.Vie
   Dialog.view;
 
 export const initDeviceAuthDialog = (): DeviceAuthDialogModel =>
-  Dialog.boot({ focusSelector: "[data-device-auth-dialog-dismiss]", id: "device-auth-modal" }).model;
+  Dialog.boot({ focusSelector: "[data-device-auth-dialog-dismiss]", id: "device-auth-modal" })
+    .model;
 
 export interface DeviceAuthDialogUpdate {
   readonly model: DeviceAuthDialogModel;
   readonly commands: readonly FoldCommand<Dialog.Message>[];
 }
 
-export const openDeviceAuthDialog = (model: DeviceAuthDialogModel | undefined): DeviceAuthDialogModel =>
-  Dialog.open(model ?? initDeviceAuthDialog()).model;
+export const openDeviceAuthDialog = (
+  model: DeviceAuthDialogModel | undefined,
+): DeviceAuthDialogModel => Dialog.open(model ?? initDeviceAuthDialog()).model;
 
 export const deviceAuthModalKeyFor = (session: {
   readonly authRequestId: string;
   readonly userCode?: string;
-}): string => session.authRequestId + ":" + (session.userCode ?? "");
+}): string => `${session.authRequestId}:${session.userCode ?? ""}`;
 
 export const updateDeviceAuthDialog = (
   model: DeviceAuthDialogModel | undefined,
@@ -54,27 +56,35 @@ export const deviceAuthDialogView = <ParentMessage>(
       hasDescription: true,
       toView: (render) =>
         render.isVisible
-          ? h.dialog([
-              ...render.dialog,
-              h.DataAttribute("device-auth-modal", ""),
-            ], [
-              h.div([...render.backdrop], []),
-              h.div([...render.panel], [
-                h.h2([...render.title], ["OpenAI verification code"]),
-                h.p([...render.description], [
-                  "Keep this code visible, then enter it on the OpenAI page after you sign in.",
-                ]),
-                config.content,
-                h.button(
+          ? h.dialog(
+              [...render.dialog, h.DataAttribute("device-auth-modal", "")],
+              [
+                h.div([...render.backdrop], []),
+                h.div(
+                  [...render.panel],
                   [
-                    ...render.closeButton,
-                    h.DataAttribute("device-auth-dialog-dismiss", ""),
-                    h.Class("mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] px-3 py-1.5 text-[12px]"),
+                    h.h2([...render.title], ["OpenAI verification code"]),
+                    h.p(
+                      [...render.description],
+                      [
+                        "Keep this code visible, then enter it on the OpenAI page after you sign in.",
+                      ],
+                    ),
+                    config.content,
+                    h.button(
+                      [
+                        ...render.closeButton,
+                        h.DataAttribute("device-auth-dialog-dismiss", ""),
+                        h.Class(
+                          "mt-4 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] px-3 py-1.5 text-[12px]",
+                        ),
+                      ],
+                      ["Dismiss"],
+                    ),
                   ],
-                  ["Dismiss"],
                 ),
-              ]),
-            ])
+              ],
+            )
           : h.span([], []),
     },
     toParentMessage: config.toParentMessage,

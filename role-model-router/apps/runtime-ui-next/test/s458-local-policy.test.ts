@@ -4,34 +4,40 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Url } from "@role-model-router/foldkit";
 
 import { defineLocalPolicyCommands, localPolicyCommands } from "../src/commands";
-import { OPERATOR_TOKEN_STORAGE_KEY } from "../src/operator-token";
-import { READBACK_PATHS } from "../src/runtime-endpoints";
 import { createInit } from "../src/init";
 import { Message } from "../src/message";
+import { OPERATOR_TOKEN_STORAGE_KEY } from "../src/operator-token";
 import {
   READBACK_SPECS,
   localPolicyDraftFromReadback,
   localPolicyFromReadback,
 } from "../src/readback";
-import { shellModel, shellUpdate } from "./support/runtime-shell";
 import { resolveAppUrl, routeFromUrl } from "../src/route";
+import { READBACK_PATHS } from "../src/runtime-endpoints";
+import { shellModel, shellUpdate } from "./support/runtime-shell";
 
 /** S458: original local-policy route + exact redirects; strict RED before implementation. */
 
-const urlOf = (href: string) => Option.getOrThrow(Url.fromString("http://localhost" + href));
+const urlOf = (href: string) => Option.getOrThrow(Url.fromString(`http://localhost${href}`));
 describe("S458 local policy port RED", () => {
   it("parses /local/llama-swap/policy as the LocalPolicy route", () => {
     expect(routeFromUrl(urlOf("/local/llama-swap/policy"))).toMatchObject({ _tag: "LocalPolicy" });
   });
 
   it("registers a real localPolicy readback for GET /api/role-model/local/policy", () => {
-    expect(READBACK_SPECS.localPolicy.parse({ autoUnload: false, maxConcurrency: 2, ttl: 120 }, 1)).toMatchObject({ status: "ok" });
+    expect(
+      READBACK_SPECS.localPolicy.parse({ autoUnload: false, maxConcurrency: 2, ttl: 120 }, 1),
+    ).toMatchObject({ status: "ok" });
   });
 
   it("replaces the original policy and matrix URLs with the canonical targets", () => {
     expect(resolveAppUrl(urlOf("/app/local/policy")).redirectHref).toBe("/local/llama-swap/policy");
-    expect(resolveAppUrl(urlOf("/app/local/matrix")).redirectHref).toBe("/local/llama-swap/models?view=grid");
-    expect(resolveAppUrl(urlOf("/app/local/llama-swap/matrix")).redirectHref).toBe("/local/llama-swap/models?view=grid");
+    expect(resolveAppUrl(urlOf("/app/local/matrix")).redirectHref).toBe(
+      "/local/llama-swap/models?view=grid",
+    );
+    expect(resolveAppUrl(urlOf("/app/local/llama-swap/matrix")).redirectHref).toBe(
+      "/local/llama-swap/models?view=grid",
+    );
   });
 });
 
@@ -54,8 +60,18 @@ describe("S458 local policy behavior", () => {
     expect(saved).toEqual(policyBody);
     const reset = shellUpdate(edited.model, Message.LocalPolicyResetRequested({}));
     expect(localPolicyDraftFromReadback(reset.model.readbacks.localPolicy)).toEqual(policyBody);
-    expect(localPolicyDraftFromReadback(shellUpdate(edited.model, Message.LocalPolicyMaxConcurrencyChanged({ value: 0 })).model.readbacks.localPolicy)?.maxConcurrency).toBe(1);
-    expect(localPolicyDraftFromReadback(shellUpdate(edited.model, Message.LocalPolicyTtlChanged({ value: -3 })).model.readbacks.localPolicy)?.ttl).toBe(0);
+    expect(
+      localPolicyDraftFromReadback(
+        shellUpdate(edited.model, Message.LocalPolicyMaxConcurrencyChanged({ value: 0 })).model
+          .readbacks.localPolicy,
+      )?.maxConcurrency,
+    ).toBe(1);
+    expect(
+      localPolicyDraftFromReadback(
+        shellUpdate(edited.model, Message.LocalPolicyTtlChanged({ value: -3 })).model.readbacks
+          .localPolicy,
+      )?.ttl,
+    ).toBe(0);
   });
 
   it("save sends the whole exact draft including unknown fields and success re-reads policy", async () => {
@@ -67,7 +83,12 @@ describe("S458 local policy behavior", () => {
     expect(JSON.parse(args.payload)).toEqual(policyBody);
     const seen: unknown[] = [];
     const merged = { ...policyBody, hostMerged: true };
-    const commands = defineLocalPolicyCommands({ save: async (payload) => { seen.push(payload); return merged; } });
+    const commands = defineLocalPolicyCommands({
+      save: async (payload) => {
+        seen.push(payload);
+        return merged;
+      },
+    });
     const message = await Effect.runPromise(commands.save(args).effect);
     expect(message._tag).toBe("LocalPolicySaved");
     expect(message).toMatchObject({ token: args.token });
@@ -76,7 +97,14 @@ describe("S458 local policy behavior", () => {
     expect(saved.commands ?? []).toEqual([]);
     expect(localPolicyFromReadback(saved.model.readbacks.localPolicy)).toEqual(merged);
     expect(localPolicyDraftFromReadback(saved.model.readbacks.localPolicy)).toEqual(merged);
-    const failedRefresh = shellUpdate(saved.model, Message.ReadbackFailed({ key: "localPolicy", message: "refresh failed", token: saved.model.readbacks.localPolicy.token }));
+    const failedRefresh = shellUpdate(
+      saved.model,
+      Message.ReadbackFailed({
+        key: "localPolicy",
+        message: "refresh failed",
+        token: saved.model.readbacks.localPolicy.token,
+      }),
+    );
     expect(localPolicyFromReadback(failedRefresh.model.readbacks.localPolicy)).toEqual(merged);
     expect(failedRefresh.model.readbacks.localPolicy.message).toBe("refresh failed");
   });
@@ -84,7 +112,10 @@ describe("S458 local policy behavior", () => {
   it("save failure keeps the draft and surfaces the bounded error", () => {
     const submitted = shellUpdate(policyModel(), Message.LocalPolicySaveRequested({}));
     const token = submitted.model.readbacks.localPolicy.token;
-    const failed = shellUpdate(submitted.model, Message.LocalPolicySaveFailed({ message: "policy conflict", token }));
+    const failed = shellUpdate(
+      submitted.model,
+      Message.LocalPolicySaveFailed({ message: "policy conflict", token }),
+    );
     expect(localPolicyDraftFromReadback(failed.model.readbacks.localPolicy)).toEqual(policyBody);
     expect(failed.model.readbacks.localPolicy.message).toBe("policy conflict");
     expect(failed.model.readbacks.localPolicy.status).toBe("ok");
@@ -113,9 +144,14 @@ describe("S458 local policy behavior", () => {
     expect(matrix.route._tag).toBe("LocalLlamaSwapModels");
     const direct = resolveAppUrl(urlOf("/app/local/llama-swap/matrix?incoming=1"));
     expect(direct.redirectHref).toBe("/local/llama-swap/models?view=grid");
-    const replaced = shellUpdate(shellModel(), Message.ChangedUrl({ url: urlOf("/app/local/policy") }));
+    const replaced = shellUpdate(
+      shellModel(),
+      Message.ChangedUrl({ url: urlOf("/app/local/policy") }),
+    );
     expect((replaced.commands ?? []).map((command) => command.name)).toContain("ReplaceLegacyUrl");
-    expect((replaced.commands ?? []).find((command) => command.name === "ReplaceLegacyUrl")?.args?.href).toBe("/local/llama-swap/policy");
+    expect(
+      (replaced.commands ?? []).find((command) => command.name === "ReplaceLegacyUrl")?.args?.href,
+    ).toBe("/local/llama-swap/policy");
   });
 });
 describe("S488 shared runtime HTTP client (local policy)", () => {

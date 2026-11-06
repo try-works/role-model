@@ -30,17 +30,28 @@ export const overviewQuery = (filters: OverviewFilters, windowMs: number): strin
   if (filters.status !== "all") params.set("statusFamilies", filters.status);
   if (filters.difficulty !== "all") params.set("difficultyBuckets", filters.difficulty);
   if (filters.breakdown !== "all" && filters.breakdownValue.length > 0) {
-    params.set(filters.breakdown === "endpoint" ? "endpointIds" : filters.breakdown === "model" ? "modelIds" : "providerIds", filters.breakdownValue);
+    params.set(
+      filters.breakdown === "endpoint"
+        ? "endpointIds"
+        : filters.breakdown === "model"
+          ? "modelIds"
+          : "providerIds",
+      filters.breakdownValue,
+    );
   }
-  return "?" + params.toString();
+  return `?${params.toString()}`;
 };
 
 export const overviewSummary = (filters: OverviewFilters): string => {
   const parts = [
-    "Source: " + (filters.source === "all" ? "all" : filters.source),
-    "Status: " + (filters.status === "all" ? "all" : filters.status),
-    "Difficulty: " + (filters.difficulty === "all" ? "all" : filters.difficulty),
-    "Breakdown: " + (filters.breakdown === "all" ? "all" : filters.breakdown + (filters.breakdownValue === "" ? "" : "=" + filters.breakdownValue)),
+    `Source: ${filters.source === "all" ? "all" : filters.source}`,
+    `Status: ${filters.status === "all" ? "all" : filters.status}`,
+    `Difficulty: ${filters.difficulty === "all" ? "all" : filters.difficulty}`,
+    `Breakdown: ${
+      filters.breakdown === "all"
+        ? "all"
+        : filters.breakdown + (filters.breakdownValue === "" ? "" : `=${filters.breakdownValue}`)
+    }`,
   ];
   return parts.join(" · ");
 };

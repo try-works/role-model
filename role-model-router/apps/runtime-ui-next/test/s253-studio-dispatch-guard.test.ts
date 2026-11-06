@@ -22,7 +22,11 @@ describe("S253 studio dispatch guard", () => {
     const next = shellUpdate(model(), Message.StudioRunRequested({ token: 0 }));
     const commands = next.commands ?? [];
     assert.equal(commands.length, 1, "one command per run request");
-    assert.equal(commands[0]?.name, "DispatchStudio", "the reducer returned the production command");
+    assert.equal(
+      commands[0]?.name,
+      "DispatchStudio",
+      "the reducer returned the production command",
+    );
     assert.equal(commands[0]?.args?.token, 0, "the command carries the request token");
     assert.deepEqual(
       commands[0]?.args?.state,
@@ -35,8 +39,16 @@ describe("S253 studio dispatch guard", () => {
   it("a second run while loading returns no command", () => {
     const first = shellUpdate(model(), Message.StudioRunRequested({ token: 0 }));
     const second = shellUpdate(first.model, Message.StudioRunRequested({ token: 0 }));
-    assert.equal(second.commands?.length ?? 0, 0, "two clicks while loading must not dispatch twice");
-    assert.equal(second.model.studio?.token, first.model.studio?.token, "the loading token is unchanged");
+    assert.equal(
+      second.commands?.length ?? 0,
+      0,
+      "two clicks while loading must not dispatch twice",
+    );
+    assert.equal(
+      second.model.studio?.token,
+      first.model.studio?.token,
+      "the loading token is unchanged",
+    );
     assert.equal(second.model.studio?.status, "loading");
   });
 });

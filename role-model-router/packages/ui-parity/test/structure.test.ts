@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  compareStructureSnapshots,
   type StructureControlNode,
   type StructureDifference,
   type StructureNode,
   type StructureRect,
   type StructureStyle,
   type StructureTextNode,
+  compareStructureSnapshots,
 } from "../src/structure.js";
 
 function rect(x = 0, y = 0, width = 100, height = 20): StructureRect {
@@ -56,22 +56,37 @@ function codes(differences: readonly StructureDifference[]): readonly string[] {
 }
 
 describe("compareStructureSnapshots", () => {
-  it.each([Number.NaN, Number.POSITIVE_INFINITY, -1])("rejects invalid explicit tolerance %s", (tolerance) => {
-    expect(() => compareStructureSnapshots([], [], { tolerance })).toThrow(RangeError);
-  });
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, -1])(
+    "rejects invalid explicit tolerance %s",
+    (tolerance) => {
+      expect(() => compareStructureSnapshots([], [], { tolerance })).toThrow(RangeError);
+    },
+  );
   it("detects removal of every captured style property", () => {
     const expected = text("A", { styles: styles({ color: "red", display: "block" }) });
     expect(groups(compareStructureSnapshots([expected], [text("A")]))).toEqual([
-      "style_changed|color|1|0|0", "style_changed|display|1|0|0",
+      "style_changed|color|1|0|0",
+      "style_changed|display|1|0|0",
     ]);
   });
-  it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])("rejects non-finite captured geometry %s", (x) => {
-    const invalid = text("A", { rect: rect(x, 0) });
-    expect(compareStructureSnapshots([invalid], [invalid]).some((difference) => difference.code === "invalid_capture")).toBe(true);
-  });
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])(
+    "rejects non-finite captured geometry %s",
+    (x) => {
+      const invalid = text("A", { rect: rect(x, 0) });
+      expect(
+        compareStructureSnapshots([invalid], [invalid]).some(
+          (difference) => difference.code === "invalid_capture",
+        ),
+      ).toBe(true);
+    },
+  );
   it("rejects a negative rectangle size", () => {
     const invalid = text("A", { rect: rect(0, 0, -1, 20) });
-    expect(compareStructureSnapshots([invalid], [invalid]).some((difference) => difference.code === "invalid_capture")).toBe(true);
+    expect(
+      compareStructureSnapshots([invalid], [invalid]).some(
+        (difference) => difference.code === "invalid_capture",
+      ),
+    ).toBe(true);
   });
   it("returns no findings for identical text and control captures", () => {
     const capture: readonly StructureNode[] = [
@@ -92,9 +107,7 @@ describe("compareStructureSnapshots", () => {
   });
 
   it("reports an extra node against an empty expected snapshot", () => {
-    expect(groups(compareStructureSnapshots([], [text("Only")]))).toEqual([
-      "extra_node|text|1||0",
-    ]);
+    expect(groups(compareStructureSnapshots([], [text("Only")]))).toEqual(["extra_node|text|1||0"]);
   });
 
   it("reports a missing node against an empty actual snapshot", () => {
@@ -144,9 +157,7 @@ describe("compareStructureSnapshots", () => {
 
   it("reports an extra repeated occurrence", () => {
     const row = text("Row", { rect: rect(0, 0, 10, 10) });
-    expect(groups(compareStructureSnapshots([row], [row, row]))).toEqual([
-      "extra_node|text|1||1",
-    ]);
+    expect(groups(compareStructureSnapshots([row], [row, row]))).toEqual(["extra_node|text|1||1"]);
   });
 
   it("reports a changed text identity", () => {
@@ -158,26 +169,21 @@ describe("compareStructureSnapshots", () => {
   it("reports a changed control accessible name", () => {
     expect(
       groups(
-        compareStructureSnapshots(
-          [control("button", "Save")],
-          [control("button", "Save changes")],
-        ),
+        compareStructureSnapshots([control("button", "Save")], [control("button", "Save changes")]),
       ),
     ).toEqual(["name_changed||1|0|0"]);
   });
 
   it("reports a changed control role", () => {
     expect(
-      groups(
-        compareStructureSnapshots([control("button", "Save")], [control("link", "Save")]),
-      ),
+      groups(compareStructureSnapshots([control("button", "Save")], [control("link", "Save")])),
     ).toEqual(["role_changed||1|0|0"]);
   });
 
   it("reports a text/control kind change at the same position", () => {
-    expect(
-      groups(compareStructureSnapshots([text("Save")], [control("button", "Save")])),
-    ).toEqual(["kind_changed||1|0|0"]);
+    expect(groups(compareStructureSnapshots([text("Save")], [control("button", "Save")]))).toEqual([
+      "kind_changed||1|0|0",
+    ]);
   });
 
   it("reports a geometry change without missing or extra findings", () => {
@@ -191,9 +197,7 @@ describe("compareStructureSnapshots", () => {
   });
 
   it("reports a lost computed style property", () => {
-    const expected = [
-      text("Total", { styles: styles({ color: "red", display: "block" }) }),
-    ];
+    const expected = [text("Total", { styles: styles({ color: "red", display: "block" }) })];
     const actual = [text("Total", { styles: styles({ display: "block" }) })];
     expect(groups(compareStructureSnapshots(expected, actual))).toEqual([
       "style_changed|color|1|0|0",
@@ -201,12 +205,8 @@ describe("compareStructureSnapshots", () => {
   });
 
   it("separates different changed style properties into groups", () => {
-    const expected = [
-      text("Total", { styles: styles({ color: "red", display: "block" }) }),
-    ];
-    const actual = [
-      text("Total", { styles: styles({ color: "blue", display: "none" }) }),
-    ];
+    const expected = [text("Total", { styles: styles({ color: "red", display: "block" }) })];
+    const actual = [text("Total", { styles: styles({ color: "blue", display: "none" }) })];
     expect(groups(compareStructureSnapshots(expected, actual))).toEqual([
       "style_changed|color|1|0|0",
       "style_changed|display|1|0|0",
@@ -238,9 +238,9 @@ describe("compareStructureSnapshots", () => {
     expect(
       groups(compareStructureSnapshots(expected, [text("A", { rect: rect(0.01, 0) })])),
     ).toEqual(["geometry_changed|x|1|0|0"]);
-    expect(
-      groups(compareStructureSnapshots(expected, [text("A", { rect: rect(5, 0) })])),
-    ).toEqual(["geometry_changed|x|1|0|0"]);
+    expect(groups(compareStructureSnapshots(expected, [text("A", { rect: rect(5, 0) })]))).toEqual([
+      "geometry_changed|x|1|0|0",
+    ]);
   });
 
   it("applies only the explicit geometry tolerance", () => {
@@ -248,9 +248,9 @@ describe("compareStructureSnapshots", () => {
     const within = [text("A", { rect: rect(0.5, 0) })];
     const outside = [text("A", { rect: rect(0.51, 0) })];
     expect(compareStructureSnapshots(expected, within, { tolerance: 0.5 })).toEqual([]);
-    expect(
-      groups(compareStructureSnapshots(expected, outside, { tolerance: 0.5 })),
-    ).toEqual(["geometry_changed|x|1|0|0"]);
+    expect(groups(compareStructureSnapshots(expected, outside, { tolerance: 0.5 }))).toEqual([
+      "geometry_changed|x|1|0|0",
+    ]);
   });
 
   it("canonicalizes style key order without reporting a difference", () => {
@@ -275,9 +275,7 @@ describe("compareStructureSnapshots", () => {
   });
 
   it("does not copy text or style values into findings", () => {
-    const expected = [
-      text("secret text", { styles: styles({ color: "#123456" }) }),
-    ];
+    const expected = [text("secret text", { styles: styles({ color: "#123456" }) })];
     const actual = [text("secret text", { styles: styles({ color: "#abcdef" }) })];
     const summary = JSON.stringify(compareStructureSnapshots(expected, actual));
     expect(summary).toContain("color");
@@ -296,10 +294,7 @@ describe("compareStructureSnapshots", () => {
     const actual = [make("blue", 0), make("blue", 10)];
 
     const forward = compareStructureSnapshots(expected, actual);
-    const reversed = compareStructureSnapshots(
-      [...expected].reverse(),
-      [...actual].reverse(),
-    );
+    const reversed = compareStructureSnapshots([...expected].reverse(), [...actual].reverse());
     expect(groups(forward)).toEqual(["style_changed|color|2|0,1|0,1"]);
     expect(groups(reversed)).toEqual(groups(forward));
   });

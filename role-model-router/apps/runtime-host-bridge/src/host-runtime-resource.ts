@@ -14,7 +14,10 @@ import { Effect, Exit, Ref, Scope } from "effect";
 export interface HostRuntimeFactories<Backend, Server, PackagedRuntime> {
   readonly acquireBackend: Effect.Effect<Backend>;
   readonly acquireServer: (backend: Backend) => Effect.Effect<Server>;
-  readonly acquirePackagedRuntime: (server: Server, backend: Backend) => Effect.Effect<PackagedRuntime>;
+  readonly acquirePackagedRuntime: (
+    server: Server,
+    backend: Backend,
+  ) => Effect.Effect<PackagedRuntime>;
   readonly releaseBackend: (backend: Backend) => Effect.Effect<void>;
   readonly releaseServer: (server: Server) => Effect.Effect<void>;
   readonly releasePackagedRuntime: (runtime: PackagedRuntime) => Effect.Effect<void>;
@@ -30,7 +33,10 @@ export interface HostRuntime<Backend, Server, PackagedRuntime> {
 export interface ServerFirstFactories<Backend, Server, PackagedRuntime> {
   readonly acquireServer: Effect.Effect<Server>;
   readonly acquireBackend: Effect.Effect<Backend>;
-  readonly acquirePackagedRuntime: (server: Server, backend: Backend) => Effect.Effect<PackagedRuntime>;
+  readonly acquirePackagedRuntime: (
+    server: Server,
+    backend: Backend,
+  ) => Effect.Effect<PackagedRuntime>;
   readonly releaseServer: (server: Server) => Effect.Effect<void>;
   readonly releaseBackend: (backend: Backend) => Effect.Effect<void>;
   readonly releasePackagedRuntime: (runtime: PackagedRuntime) => Effect.Effect<void>;
@@ -44,7 +50,10 @@ export const makeHostRuntimeServerFirst = <Backend, Server, PackagedRuntime>(
     const closed = yield* Ref.make(false);
     const stack = Effect.gen(function* () {
       const server = yield* Effect.acquireRelease(factories.acquireServer, factories.releaseServer);
-      const backend = yield* Effect.acquireRelease(factories.acquireBackend, factories.releaseBackend);
+      const backend = yield* Effect.acquireRelease(
+        factories.acquireBackend,
+        factories.releaseBackend,
+      );
       const packagedRuntime = yield* Effect.acquireRelease(
         factories.acquirePackagedRuntime(server, backend),
         factories.releasePackagedRuntime,

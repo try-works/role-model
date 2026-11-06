@@ -130,7 +130,10 @@ export const refreshRevisionStream = (
           }
         };
         const open = (announceRestore: boolean): void => {
-          const generation: RefreshGeneration = { active: true, source: factory(REFRESH_STREAM_URL) };
+          const generation: RefreshGeneration = {
+            active: true,
+            source: factory(REFRESH_STREAM_URL),
+          };
           current = generation;
           const publish = (message: Message): void => {
             if (generation.active) Queue.offerUnsafe(queue, message);
@@ -223,7 +226,10 @@ export const makeRefreshSubscriptions = (
         modelToDependencies: (model: Model) => ({ enabled: model.localLogsAutoRefresh === true }),
         dependenciesToStream: ({ enabled }) =>
           enabled
-            ? Stream.fromEffectSchedule(Effect.succeed(Message.LocalLogsRefreshRequested({})), Schedule.spaced("3 seconds"))
+            ? Stream.fromEffectSchedule(
+                Effect.succeed(Message.LocalLogsRefreshRequested({})),
+                Schedule.spaced("3 seconds"),
+              )
             : Stream.empty,
       },
     ),

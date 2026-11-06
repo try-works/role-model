@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { Url } from "@role-model-router/foldkit";
 
-import { mountShell } from "../src/mount";
 import { Message } from "../src/message";
+import { mountShell } from "../src/mount";
 import { createReadbackClients } from "../src/readback";
 import { routeFromUrl } from "../src/route";
 import { shellModel, shellUpdate } from "./support/runtime-shell";
@@ -32,28 +32,43 @@ const mountAt = (path: string, id: string, fetchImpl: typeof fetch) => {
   const handle = mountShell(container, { readbackReaders: createReadbackClients({ fetchImpl }) });
   pageMounted.push({ container, handle });
 };
-const waitForRouteState = async (routeName: string, expected: string, label: string): Promise<string> => {
+const waitForRouteState = async (
+  routeName: string,
+  expected: string,
+  label: string,
+): Promise<string> => {
   const end = Date.now() + 3000;
   let last: string | null = null;
   while (Date.now() < end) {
-    last = document.querySelector("[data-route='" + routeName + "'][data-router-family-state='" + expected + "']")?.getAttribute("data-router-family-state") ?? null;
+    last =
+      document
+        .querySelector(`[data-route='${routeName}'][data-router-family-state='${expected}']`)
+        ?.getAttribute("data-router-family-state") ?? null;
     if (last === expected) return last;
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
-  throw new Error("Timed out waiting for " + label + " (last: " + String(last) + " | path: " + window.location.pathname + " | firstRoute: " + (document.querySelector("[data-route]")?.getAttribute("data-route") ?? "none") + ")");
+  throw new Error(
+    `Timed out waiting for ${label} (last: ${String(last)} | path: ${window.location.pathname} | firstRoute: ${document.querySelector("[data-route]")?.getAttribute("data-route") ?? "none"})`,
+  );
 };
 const waitForState = async (expected: string, label: string): Promise<string> => {
   const end = Date.now() + 3000;
   let last: string | null = null;
   while (Date.now() < end) {
-    last = document.querySelector("[data-router-family-state]")?.getAttribute("data-router-family-state") ?? null;
+    last =
+      document
+        .querySelector("[data-router-family-state]")
+        ?.getAttribute("data-router-family-state") ?? null;
     if (last === expected) return last;
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
-  throw new Error("Timed out waiting for " + label + " (last: " + String(last) + ")");
+  throw new Error(`Timed out waiting for ${label} (last: ${String(last)})`);
 };
 afterEach(() => {
-  for (const entry of pageMounted.splice(0)) { entry.handle.dispose(); entry.container.remove(); }
+  for (const entry of pageMounted.splice(0)) {
+    entry.handle.dispose();
+    entry.container.remove();
+  }
   window.history.replaceState({}, "", "/");
 });
 
@@ -99,18 +114,26 @@ describe("S379b Router family canonical URLs", () => {
 
   it("canonicalises the original router URLs to their canonical targets", async () => {
     const module = await legacy();
-    expect(module.legacyRedirectForUrl(urlOf("/app/router/strategy"))?.href).toBe("/router/strategy");
-    expect(module.legacyRedirectForUrl(urlOf("/app/router/agent-strategy"))?.href).toBe("/router/agent-strategy");
-    expect(module.legacyRedirectForUrl(urlOf("/app/router/workloads"))?.href).toBe("/router/workloads");
+    expect(module.legacyRedirectForUrl(urlOf("/app/router/strategy"))?.href).toBe(
+      "/router/strategy",
+    );
+    expect(module.legacyRedirectForUrl(urlOf("/app/router/agent-strategy"))?.href).toBe(
+      "/router/agent-strategy",
+    );
+    expect(module.legacyRedirectForUrl(urlOf("/app/router/workloads"))?.href).toBe(
+      "/router/workloads",
+    );
     expect(module.legacyRedirectForUrl(urlOf("/app/router/config"))?.href).toBe("/router/strategy");
-    expect(module.legacyRedirectForUrl(urlOf("/app/control/routing-strategy"))?.href).toBe("/router/strategy");
+    expect(module.legacyRedirectForUrl(urlOf("/app/control/routing-strategy"))?.href).toBe(
+      "/router/strategy",
+    );
   });
 
   it("keeps the existing redirects resolving with query/hash and exactly one replace Command", async () => {
     const module = await legacy();
-    expect(module.legacyRedirectForUrl(urlOf("/app/control/routing-strategy?scope=live#strategy"))?.href).toBe(
-      "/router/strategy?scope=live#strategy",
-    );
+    expect(
+      module.legacyRedirectForUrl(urlOf("/app/control/routing-strategy?scope=live#strategy"))?.href,
+    ).toBe("/router/strategy?scope=live#strategy");
     const result = shellUpdate(
       shellModel(),
       Message.ChangedUrl({ url: urlOf("/app/control/routing-strategy") }),
@@ -148,12 +171,19 @@ describe("S379b Router family canonical URLs", () => {
 describe("S379b Router family pages (one real router/config readback)", () => {
   it("renders the strategy projection with honest loading then ok", async () => {
     let release: (() => void) | undefined;
-    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
     mountAt("/router/strategy", "s383-strategy", async () => {
       await gate;
-      return new Response(JSON.stringify(routerConfigBody), { headers: { "content-type": "application/json" }, status: 200 });
+      return new Response(JSON.stringify(routerConfigBody), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      });
     });
-    expect(await waitForRouteState("router-strategy", "loading", "strategy loading")).toBe("loading");
+    expect(await waitForRouteState("router-strategy", "loading", "strategy loading")).toBe(
+      "loading",
+    );
     release?.();
     expect(await waitForRouteState("router-strategy", "ok", "strategy ok")).toBe("ok");
     const text = document.querySelector("[data-route='router-strategy']")?.textContent ?? "";
@@ -162,19 +192,44 @@ describe("S379b Router family pages (one real router/config readback)", () => {
   });
 
   it("renders error honestly when the router/config readback fails", async () => {
-    mountAt("/router/strategy", "s383-error", async () => new Response("{}", { status: 200, headers: { "content-type": "application/json" } }));
+    mountAt(
+      "/router/strategy",
+      "s383-error",
+      async () =>
+        new Response("{}", { status: 200, headers: { "content-type": "application/json" } }),
+    );
     expect(await waitForRouteState("router-strategy", "error", "strategy error")).toBe("error");
-    expect(document.querySelector("[data-route='router-strategy']")?.textContent).toMatch(/read failed/i);
+    expect(document.querySelector("[data-route='router-strategy']")?.textContent).toMatch(
+      /read failed/i,
+    );
   });
 
   it("renders the workload and agent-strategy projections from the same readback", async () => {
-    mountAt("/router/workloads", "s383-workloads", async () =>
-      new Response(JSON.stringify(routerConfigBody), { headers: { "content-type": "application/json" }, status: 200 }));
+    mountAt(
+      "/router/workloads",
+      "s383-workloads",
+      async () =>
+        new Response(JSON.stringify(routerConfigBody), {
+          headers: { "content-type": "application/json" },
+          status: 200,
+        }),
+    );
     expect(await waitForRouteState("router-workloads", "ok", "workloads ok")).toBe("ok");
-    expect(document.querySelector("[data-route='router-workloads']")?.textContent).toContain("batch");
-    mountAt("/router/agent-strategy", "s383-agent", async () =>
-      new Response(JSON.stringify(routerConfigBody), { headers: { "content-type": "application/json" }, status: 200 }));
+    expect(document.querySelector("[data-route='router-workloads']")?.textContent).toContain(
+      "batch",
+    );
+    mountAt(
+      "/router/agent-strategy",
+      "s383-agent",
+      async () =>
+        new Response(JSON.stringify(routerConfigBody), {
+          headers: { "content-type": "application/json" },
+          status: 200,
+        }),
+    );
     expect(await waitForRouteState("router-agent-strategy", "ok", "agent ok")).toBe("ok");
-    expect(document.querySelector("[data-route='router-agent-strategy']")?.textContent).toContain("coder");
+    expect(document.querySelector("[data-route='router-agent-strategy']")?.textContent).toContain(
+      "coder",
+    );
   });
 });

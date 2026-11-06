@@ -14,7 +14,15 @@ export const studioTabFromSearch = (search: string | undefined): StudioTab | und
 
 export const studioTabFromUrl = (url: Url): StudioTab | undefined =>
   studioTabFromSearch(Option.getOrUndefined(url.search));
-export const StudioFieldSchema = Schema.Literals(["advancedBody", "documents", "mode", "model", "prompt", "query", "size"]);
+export const StudioFieldSchema = Schema.Literals([
+  "advancedBody",
+  "documents",
+  "mode",
+  "model",
+  "prompt",
+  "query",
+  "size",
+]);
 export type StudioField = typeof StudioFieldSchema.Type;
 export const StudioStatusSchema = Schema.Literals(["idle", "loading", "success", "error"]);
 export const StudioState = Schema.Struct({
@@ -76,29 +84,67 @@ export interface StudioResponse {
 }
 export type StudioClient = (request: StudioRequest, signal: AbortSignal) => Promise<StudioResponse>;
 
-export const studioRequestFor = (state: StudioState): StudioRequest | { readonly error: string } => {
+export const studioRequestFor = (
+  state: StudioState,
+): StudioRequest | { readonly error: string } => {
   if (state.tab === "chat") {
-    return { body: { messages: [{ content: state.prompt, role: "user" }], model: state.model, stream: false }, method: "POST", path: "/v1/chat/completions", tab: state.tab };
+    return {
+      body: {
+        messages: [{ content: state.prompt, role: "user" }],
+        model: state.model,
+        stream: false,
+      },
+      method: "POST",
+      path: "/v1/chat/completions",
+      tab: state.tab,
+    };
   }
   if (state.tab === "images") {
-    return { body: { mode: state.mode, model: state.model, prompt: state.prompt, size: state.size }, method: "POST", path: "/v1/images/generations", tab: state.tab };
+    return {
+      body: { mode: state.mode, model: state.model, prompt: state.prompt, size: state.size },
+      method: "POST",
+      path: "/v1/images/generations",
+      tab: state.tab,
+    };
   }
   if (state.tab === "audio") {
-    return { body: { input: state.prompt, model: state.model, response_format: "mp3", voice: "alloy" }, method: "POST", path: "/v1/audio/speech", tab: state.tab };
+    return {
+      body: { input: state.prompt, model: state.model, response_format: "mp3", voice: "alloy" },
+      method: "POST",
+      path: "/v1/audio/speech",
+      tab: state.tab,
+    };
   }
   if (state.tab === "rerank") {
-    return { body: { documents: state.documents.split("\n").filter((line) => line.length > 0), model: state.model, query: state.query, top_n: 5 }, method: "POST", path: "/v1/rerank", tab: state.tab };
+    return {
+      body: {
+        documents: state.documents.split("\n").filter((line) => line.length > 0),
+        model: state.model,
+        query: state.query,
+        top_n: 5,
+      },
+      method: "POST",
+      path: "/v1/rerank",
+      tab: state.tab,
+    };
   }
   try {
     const parsed = JSON.parse(state.advancedBody) as unknown;
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return { error: "Advanced body must be a JSON object." };
-    return { body: parsed as Record<string, unknown>, method: "POST", path: "/v1/responses", tab: state.tab };
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed))
+      return { error: "Advanced body must be a JSON object." };
+    return {
+      body: parsed as Record<string, unknown>,
+      method: "POST",
+      path: "/v1/responses",
+      tab: state.tab,
+    };
   } catch {
     return { error: "Advanced body is not valid JSON." };
   }
 };
 
-export const createStudioClient = (options: { readonly baseUrl?: string; readonly fetchImpl?: typeof fetch } = {}): StudioClient =>
+export const createStudioClient =
+  (options: { readonly baseUrl?: string; readonly fetchImpl?: typeof fetch } = {}): StudioClient =>
   async (request, signal) => {
     const base = options.baseUrl ?? "";
     const response = await (options.fetchImpl ?? fetch)(base + request.path, {
@@ -107,5 +153,9 @@ export const createStudioClient = (options: { readonly baseUrl?: string; readonl
       method: request.method,
       signal,
     });
-    return { contentType: response.headers.get("content-type") ?? "", status: response.status, text: await response.text() };
+    return {
+      contentType: response.headers.get("content-type") ?? "",
+      status: response.status,
+      text: await response.text(),
+    };
   };

@@ -1,13 +1,13 @@
 import {
-  endpointActivationFailureText,
-  type EndpointActivationRun,
-  resetEndpointActivationRun,
-} from "./model";
-import {
-  endpointAdmissionBusy,
   type EndpointAdmissionField,
   type EndpointAdmissionState,
+  endpointAdmissionBusy,
 } from "../../endpoint-admission";
+import {
+  type EndpointActivationRun,
+  endpointActivationFailureText,
+  resetEndpointActivationRun,
+} from "./model";
 import { endpointActivationNeedsReset } from "./model";
 
 /** W1c (S511): pure endpoint-admission update decisions. Parent createUpdate owns Commands. */
@@ -50,7 +50,9 @@ export const endpointAdmissionModelRemovedState = (
   };
 };
 
-export const endpointAdmissionResetState = (state: EndpointAdmissionState): EndpointAdmissionState | undefined =>
+export const endpointAdmissionResetState = (
+  state: EndpointAdmissionState,
+): EndpointAdmissionState | undefined =>
   state.run.pending.length > 0
     ? undefined
     : {

@@ -156,21 +156,24 @@ export async function runRestartRehydrationValidation(
       const endpoints = await restartedBackend.listEndpoints();
       const mixedAliasId = "baseline.hybrid";
 
-      const server = await startBridgeServer({
-        host: "127.0.0.1",
-        port: 0,
-        observabilityScope,
-        registry: restartedBackend.registry,
-        getRegistry: () => restartedBackend.registry,
-        executeChatCompletions: restartedBackend.executeChatCompletions,
-        executeResponses: restartedBackend.executeResponses,
-        readRuntimeSummary: restartedBackend.readRuntimeSummary,
-        readRuntimeConfig: restartedBackend.readRuntimeConfig,
-        updateRuntimeConfig: restartedBackend.updateRuntimeConfig,
-        readHealthStatus: restartedBackend.readHealthStatus,
-        getRoutableInventory: restartedBackend.getRoutableInventory,
-        listEndpoints: restartedBackend.listEndpoints,
-      }, { allowTestSeamBackend: true });
+      const server = await startBridgeServer(
+        {
+          host: "127.0.0.1",
+          port: 0,
+          observabilityScope,
+          registry: restartedBackend.registry,
+          getRegistry: () => restartedBackend.registry,
+          executeChatCompletions: restartedBackend.executeChatCompletions,
+          executeResponses: restartedBackend.executeResponses,
+          readRuntimeSummary: restartedBackend.readRuntimeSummary,
+          readRuntimeConfig: restartedBackend.readRuntimeConfig,
+          updateRuntimeConfig: restartedBackend.updateRuntimeConfig,
+          readHealthStatus: restartedBackend.readHealthStatus,
+          getRoutableInventory: restartedBackend.getRoutableInventory,
+          listEndpoints: restartedBackend.listEndpoints,
+        },
+        { allowTestSeamBackend: true },
+      );
 
       try {
         const baseUrl = `http://127.0.0.1:${server.port}`;

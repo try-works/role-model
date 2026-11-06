@@ -61,7 +61,9 @@ const diagnosticsRequest = (authorization: string) => ({
   url: "/api/role-model/operator/diagnostics",
 });
 
-const authorizedRead = (source: ReturnType<NonNullable<ReturnType<typeof createModuleHealthComposition>>["source"]>) =>
+const authorizedRead = (
+  source: ReturnType<NonNullable<ReturnType<typeof createModuleHealthComposition>>["source"]>,
+) =>
   handleLocalDiagnosticsRead(diagnosticsRequest("Bearer diagnostics-secret"), {
     deviceOwnerTrust: "off",
     host: "0.0.0.0",

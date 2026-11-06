@@ -64,21 +64,24 @@ interface SnapshotPayload {
 const observabilityScope: ObservabilityScope = createObservabilityScope(operatorContext.scope);
 
 const startServer = () =>
-  startBridgeServer({
-    host: "127.0.0.1",
-    port: 0,
-    operatorAuthToken: "operator-secret",
-    deviceOwnerTrust: "off",
-    operatorContext,
-    observabilityScope,
-    registry,
-    executeChatCompletions: async () => {
-      throw new Error("not used");
+  startBridgeServer(
+    {
+      host: "127.0.0.1",
+      port: 0,
+      operatorAuthToken: "operator-secret",
+      deviceOwnerTrust: "off",
+      operatorContext,
+      observabilityScope,
+      registry,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+      executeResponses: async () => {
+        throw new Error("not used");
+      },
     },
-    executeResponses: async () => {
-      throw new Error("not used");
-    },
-  }, { allowTestSeamBackend: true });
+    { allowTestSeamBackend: true },
+  );
 
 const readSnapshot = async (server: { port: number }): Promise<SnapshotPayload> => {
   const response = await fetch(`http://127.0.0.1:${server.port}${SNAPSHOT_PATH}`, {

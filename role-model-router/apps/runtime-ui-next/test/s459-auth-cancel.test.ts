@@ -2,7 +2,11 @@ import { Effect, Fiber } from "effect";
 import { describe, expect, it } from "vitest";
 
 import { defineDeviceAuthCommands, defineReadDiagnostics } from "../src/commands";
-import { type DeviceAuthClient, type DeviceAuthSession, initialDeviceAuthState } from "../src/device-auth";
+import {
+  type DeviceAuthClient,
+  type DeviceAuthSession,
+  initialDeviceAuthState,
+} from "../src/device-auth";
 import { Message } from "../src/message";
 import { createUpdate } from "../src/update";
 import { shellModel } from "./support/runtime-shell";
@@ -94,7 +98,9 @@ describe("S459 device-auth poll cancellation lifetime", () => {
   it("R1 cancel immediately after the poll is scheduled issues no poll request", async () => {
     const { counter, update } = makeHarness();
     const started = update(
-      shellModel({ deviceAuth: { ...initialDeviceAuthState(), inflight: true, status: "pending" } }),
+      shellModel({
+        deviceAuth: { ...initialDeviceAuthState(), inflight: true, status: "pending" },
+      }),
       Message.DeviceAuthStarted({ session: pending("auth-1"), token: 0 }),
     );
     const poll = scheduledPoll(started);
@@ -111,7 +117,9 @@ describe("S459 device-auth poll cancellation lifetime", () => {
   it("R2 cancel during the poll delay issues no poll request", async () => {
     const { counter, update } = makeHarness();
     const started = update(
-      shellModel({ deviceAuth: { ...initialDeviceAuthState(), inflight: true, status: "pending" } }),
+      shellModel({
+        deviceAuth: { ...initialDeviceAuthState(), inflight: true, status: "pending" },
+      }),
       Message.DeviceAuthStarted({ session: pending("auth-2"), token: 0 }),
     );
     const fiber = Effect.runFork(scheduledPoll(started).effect);
@@ -135,7 +143,9 @@ describe("S459 device-auth poll cancellation lifetime", () => {
       token: 2,
     };
     const retried = update(shellModel({ deviceAuth: state }), Message.DeviceAuthRetryRequested({}));
-    const first = await Effect.runPromise(scheduledPoll(retried).effect.pipe(Effect.map((message) => message)));
+    const first = await Effect.runPromise(
+      scheduledPoll(retried).effect.pipe(Effect.map((message) => message)),
+    );
     counter.polls = 1;
     // SAFETY: executing the production poll command yields its declared Message result (DeviceAuthPolled/Failed).
     const polled = update(retried.model, first as Message);
@@ -152,7 +162,9 @@ describe("S459 device-auth poll cancellation lifetime", () => {
   it("R4 a restart after cancel schedules a new authorization whose poll still runs", async () => {
     const { counter, update } = makeHarness();
     const started = update(
-      shellModel({ deviceAuth: { ...initialDeviceAuthState(), inflight: true, status: "pending" } }),
+      shellModel({
+        deviceAuth: { ...initialDeviceAuthState(), inflight: true, status: "pending" },
+      }),
       Message.DeviceAuthStarted({ session: pending("auth-4"), token: 0 }),
     );
     const firstFiber = Effect.runFork(scheduledPoll(started).effect);
@@ -161,7 +173,9 @@ describe("S459 device-auth poll cancellation lifetime", () => {
     await settle(60);
 
     const restarted = update(cancelled.model, Message.DeviceAuthStartRequested({}));
-    expect((restarted.commands ?? []).map((command) => command.name)).toEqual(["ReadDeviceAuthorizations"]);
+    expect((restarted.commands ?? []).map((command) => command.name)).toEqual([
+      "ReadDeviceAuthorizations",
+    ]);
 
     // DeviceAuthStartRequested advances the token, so the restarted session answers that token.
     const nextToken = restarted.model.deviceAuth?.token ?? 0;
@@ -179,7 +193,9 @@ describe("S459 device-auth poll cancellation lifetime", () => {
   it("R5 cancel with no scheduled poll stays state-only", () => {
     const { update } = makeHarness();
     const cancelled = update(
-      shellModel({ deviceAuth: { ...initialDeviceAuthState(), inflight: false, status: "starting" } }),
+      shellModel({
+        deviceAuth: { ...initialDeviceAuthState(), inflight: false, status: "starting" },
+      }),
       Message.DeviceAuthCancelled({}),
     );
     expect(cancelled.commands ?? []).toHaveLength(0);

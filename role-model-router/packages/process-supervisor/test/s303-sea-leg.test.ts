@@ -17,7 +17,8 @@ import { ProcessSupervisor } from "../src/index.js";
  */
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
-const SEA_PATH = "E:/role-model-run115/package-s293-public/role-model-router/dist/release/win32-x64/role-model-dev.exe";
+const SEA_PATH =
+  "E:/role-model-run115/package-s293-public/role-model-router/dist/release/win32-x64/role-model-dev.exe";
 const REQUIRED_TEMP_DRIVE = process.env.S303_REQUIRED_TEMP_DRIVE ?? "E:";
 const SEA_IDENTITY = {
   sha256: "d2bc6231f5b5751f4f0b8bc4a970a7593d27a63497b0f7bfa1e41d53beccd67b",
@@ -71,7 +72,9 @@ afterEach(async () => {
     const supervisor = supervisors.pop();
     await supervisor?.shutdown();
   }
-  await Promise.all(stateRoots.splice(0).map(async (root) => rm(root, { recursive: true, force: true })));
+  await Promise.all(
+    stateRoots.splice(0).map(async (root) => rm(root, { recursive: true, force: true })),
+  );
 });
 
 // The candidate is a Windows .exe; the leg is meaningful on win32 only.
@@ -89,21 +92,21 @@ describe("S303 SEA supervision", () => {
     "starts the pinned sealed SEA, becomes healthy, stops it, and asserts its identity",
     async (context) => {
       if (!existsSync(SEA_PATH)) {
-        throw new Error("SEA candidate missing (pinned sealed package not found): " + SEA_PATH);
+        throw new Error(`SEA candidate missing (pinned sealed package not found): ${SEA_PATH}`);
       }
       const port = await allocatePort();
       // Hermetic: keep the ambient temp root only when it is on the required drive; otherwise create the
       // state root deterministically AT the required drive root, and skip cleanly (recorded reason) when that
       // drive is unavailable and no S303_REQUIRED_TEMP_DRIVE override was given.
-      const stateRootBase = rootOnDrive(os.tmpdir(), REQUIRED_TEMP_DRIVE) ? os.tmpdir() : REQUIRED_TEMP_DRIVE + "/";
+      const stateRootBase = rootOnDrive(os.tmpdir(), REQUIRED_TEMP_DRIVE)
+        ? os.tmpdir()
+        : `${REQUIRED_TEMP_DRIVE}/`;
       let stateRoot: string;
       try {
         stateRoot = await mkdtemp(path.join(stateRootBase, "s303-sea-state-"));
       } catch (error) {
         console.warn(
-          "[s303-sea-leg] skipped: ambient temp root " + os.tmpdir() + " is not on " + REQUIRED_TEMP_DRIVE +
-          " and the required drive is unavailable (" + String(error) + "); set S303_REQUIRED_TEMP_DRIVE or provide " +
-          REQUIRED_TEMP_DRIVE + " to run the SEA leg.",
+          `[s303-sea-leg] skipped: ambient temp root ${os.tmpdir()} is not on ${REQUIRED_TEMP_DRIVE} and the required drive is unavailable (${String(error)}); set S303_REQUIRED_TEMP_DRIVE or provide ${REQUIRED_TEMP_DRIVE} to run the SEA leg.`,
         );
         context.skip();
         return;
@@ -122,14 +125,20 @@ describe("S303 SEA supervision", () => {
         vendorId: "s303-sea",
         command: SEA_PATH,
         args: [
-          "--repo-root", path.dirname(SEA_PATH),
-          "--runtime-state-root", stateRoot,
-          "--host", "127.0.0.1",
-          "--port", String(port),
-          "--fixture-root", path.join(REPO_ROOT, "testdata/router-runtime/fixtures"),
-          "--static-root", path.join(REPO_ROOT, "role-model-router/apps/runtime-ui-next/dist/client"),
+          "--repo-root",
+          path.dirname(SEA_PATH),
+          "--runtime-state-root",
+          stateRoot,
+          "--host",
+          "127.0.0.1",
+          "--port",
+          String(port),
+          "--fixture-root",
+          path.join(REPO_ROOT, "testdata/router-runtime/fixtures"),
+          "--static-root",
+          path.join(REPO_ROOT, "role-model-router/apps/runtime-ui-next/dist/client"),
         ],
-        healthCheckUrl: "http://127.0.0.1:" + String(port) + "/healthz",
+        healthCheckUrl: `http://127.0.0.1:${String(port)}/healthz`,
         required: true,
         shutdownTimeoutMs: 30_000,
         startupTimeoutMs: 120_000,
@@ -143,15 +152,27 @@ describe("S303 SEA supervision", () => {
       const stopStarted = Date.now();
       await vendor.stop();
       const stopMs = Date.now() - stopStarted;
-      writeFileSync(EVIDENCE_PATH, JSON.stringify({
-        candidate: { path: SEA_PATH, sha256, size, version: manifest.version === undefined ? null : String(manifest.version) },
-        result: "PASSED",
-        runtimeStateRoot: stateRoot,
-        startupMs,
-        stopMs,
-        vendorPid: vendor.pid,
-      }, null, 2) + "\n");
-      await expect(fetch("http://127.0.0.1:" + String(port) + "/healthz")).rejects.toBeDefined();
+      writeFileSync(
+        EVIDENCE_PATH,
+        `${JSON.stringify(
+          {
+            candidate: {
+              path: SEA_PATH,
+              sha256,
+              size,
+              version: manifest.version === undefined ? null : String(manifest.version),
+            },
+            result: "PASSED",
+            runtimeStateRoot: stateRoot,
+            startupMs,
+            stopMs,
+            vendorPid: vendor.pid,
+          },
+          null,
+          2,
+        )}\n`,
+      );
+      await expect(fetch(`http://127.0.0.1:${String(port)}/healthz`)).rejects.toBeDefined();
     },
     180_000,
   );

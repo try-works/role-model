@@ -705,7 +705,10 @@ export class VendorScope {
     }
     this.releases.length = 0;
     if (failures.length > 0) {
-      throw new AggregateError(failures, "VendorScope close failed " + String(failures.length) + " release(s)");
+      throw new AggregateError(
+        failures,
+        `VendorScope close failed ${String(failures.length)} release(s)`,
+      );
     }
   }
 }

@@ -173,8 +173,7 @@ export const SUPPORTED_ORIGINAL_PATHS: readonly string[] = [
 export const MISSING_ORIGINAL_TARGETS: readonly {
   readonly path: string;
   readonly reason: string;
-}[] = [
-];
+}[] = [];
 
 const normalizePath = (pathname: string): string => {
   if (pathname.length <= 1) return pathname;
@@ -251,7 +250,7 @@ const FIXED_SEARCH_ORIGINAL_PATHS: ReadonlySet<string> = new Set([
 
 const fixedTargetHref = (target: string): string => {
   const { hash, pathname, query } = splitTarget(target);
-  return pathname + (query === undefined || query.length === 0 ? "" : "?" + query) + hash;
+  return pathname + (query === undefined || query.length === 0 ? "" : `?${query}`) + hash;
 };
 
 const canonicalHref = (target: string, url: Url): string => {
@@ -271,7 +270,9 @@ const canonicalHref = (target: string, url: Url): string => {
 export const legacyRedirectForUrl = (url: Url): LegacyRedirect | undefined => {
   const target = canonicalTargetForPath(url.pathname);
   if (target === undefined) return undefined;
-  const href = FIXED_SEARCH_ORIGINAL_PATHS.has(normalizePath(url.pathname)) ? fixedTargetHref(target) : canonicalHref(target, url);
+  const href = FIXED_SEARCH_ORIGINAL_PATHS.has(normalizePath(url.pathname))
+    ? fixedTargetHref(target)
+    : canonicalHref(target, url);
   const parsed = Option.getOrThrow(urlFromString(`http://foldkit.local${href}`));
   return { href, originalPath: url.pathname, url: parsed };
 };
@@ -284,5 +285,6 @@ export const legacyRedirectForUrl = (url: Url): LegacyRedirect | undefined => {
 export const replaceLegacyUrlCommand = Command.define("ReplaceLegacyUrl", {
   args: { href: Schema.String },
   messages: [Message.NavigationCompleted],
-  execute: ({ href }) => Navigation.replaceUrl(href).pipe(Effect.map(() => Message.NavigationCompleted())),
+  execute: ({ href }) =>
+    Navigation.replaceUrl(href).pipe(Effect.map(() => Message.NavigationCompleted())),
 });

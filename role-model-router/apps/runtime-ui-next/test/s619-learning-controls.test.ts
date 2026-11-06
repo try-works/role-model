@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { Message } from "../src/message";
 import { mountShell } from "../src/mount";
-import { createReadbackClients } from "../src/readback";
 import { readStoredOperatorToken } from "../src/operator-token";
+import { createReadbackClients } from "../src/readback";
 import { shellModel, shellUpdate } from "./support/runtime-shell";
 
 /**
@@ -22,7 +22,11 @@ afterEach(() => {
   window.history.replaceState({}, "", "/");
 });
 
-const json = (body: unknown) => new Response(JSON.stringify(body), { headers: { "content-type": "application/json" }, status: 200 });
+const json = (body: unknown) =>
+  new Response(JSON.stringify(body), {
+    headers: { "content-type": "application/json" },
+    status: 200,
+  });
 const readbackFetch: typeof fetch = async (input) => {
   const url = String(input);
   if (url.includes("/operator/learning/records")) {
@@ -32,7 +36,10 @@ const readbackFetch: typeof fetch = async (input) => {
       schemaVersion: "role-model.knowledge-learning-records.v1",
     });
   }
-  return json({ records: [{ id: "row-1", label: "row-1", status: "active" }], scopeId: "scope-learning-test" });
+  return json({
+    records: [{ id: "row-1", label: "row-1", status: "active" }],
+    scopeId: "scope-learning-test",
+  });
 };
 const waitForPacks = async () => {
   const end = Date.now() + 5000;
@@ -45,7 +52,7 @@ const waitForPacks = async () => {
 const mountAt = (path: string, operatorLearningFetchImpl: typeof fetch) => {
   window.history.replaceState({}, "", path);
   const container = document.createElement("div");
-  container.id = "s619-" + String(mounted.length);
+  container.id = `s619-${String(mounted.length)}`;
   document.body.append(container);
   const handle = mountShell(container, {
     readbackReaders: createReadbackClients({ fetchImpl: readbackFetch }),
@@ -54,7 +61,9 @@ const mountAt = (path: string, operatorLearningFetchImpl: typeof fetch) => {
   mounted.push({ container, handle });
 };
 const setToken = (value: string) => {
-  const input = document.querySelector("input[aria-label='Operator token']") as HTMLInputElement | null;
+  const input = document.querySelector(
+    "input[aria-label='Operator token']",
+  ) as HTMLInputElement | null;
   if (!input) throw new Error("operator token input absent");
   input.value = value;
   input.dispatchEvent(new Event("input", { bubbles: true }));
@@ -74,29 +83,44 @@ describe("S619 Learning route family controls", () => {
     });
     await waitForPacks();
     setToken("token-abc");
-    const rollback = [...document.querySelectorAll("button")].find((button) => button.textContent?.trim() === "Roll back active pack (scope-wide)");
+    const rollback = [...document.querySelectorAll("button")].find(
+      (button) => button.textContent?.trim() === "Roll back active pack (scope-wide)",
+    );
     if (!rollback) throw new Error("rollback button absent");
     rollback.click();
     const end = Date.now() + 3000;
-    while (calls.length === 0 && Date.now() < end) await new Promise((resolve) => setTimeout(resolve, 10));
+    while (calls.length === 0 && Date.now() < end)
+      await new Promise((resolve) => setTimeout(resolve, 10));
     expect(calls).toHaveLength(1);
     expect(calls[0]?.url).toBe("/api/role-model/operator/learning/rollback-pack");
-    expect(calls[0]?.body).toEqual({ scopeId: "scope-learning-test", reason: "operator_ui_rollback" });
+    expect(calls[0]?.body).toEqual({
+      scopeId: "scope-learning-test",
+      reason: "operator_ui_rollback",
+    });
     expect(calls[0]?.headers.get("authorization")).toBe("Bearer token-abc");
     expect(window.localStorage.getItem("role-model.learning.operator-token")).toBe("token-abc");
   });
 
   it("persists the token and decision filters in shell state", () => {
     const model = shellModel({ route: { _tag: "LearningPacks" } });
-    const token = shellUpdate(model, Message.LearningOperatorTokenChanged({ value: "token-state" }));
+    const token = shellUpdate(
+      model,
+      Message.LearningOperatorTokenChanged({ value: "token-state" }),
+    );
     expect(token.model.learningOperatorToken).toBe("token-state");
     expect(window.localStorage.getItem("role-model.learning.operator-token")).toBe("token-state");
     expect(readStoredOperatorToken()).toBe("token-state");
-    const filtered = shellUpdate(token.model, Message.LearningDecisionFilterChanged({ filter: "outcome", value: "tie" }));
+    const filtered = shellUpdate(
+      token.model,
+      Message.LearningDecisionFilterChanged({ filter: "outcome", value: "tie" }),
+    );
     expect(filtered.model.learningDecisionFilters).toMatchObject({ outcome: "tie" });
     const packs = shellUpdate(filtered.model, Message.LearningPackRollbackRequested());
     expect((packs.commands ?? []).map((command) => command.name)).toEqual(["LearningPackRollback"]);
-    const kill = shellUpdate(filtered.model, Message.LearningKillSwitchRequested({ engaged: false }));
+    const kill = shellUpdate(
+      filtered.model,
+      Message.LearningKillSwitchRequested({ engaged: false }),
+    );
     expect((kill.commands ?? []).map((command) => command.name)).toEqual(["LearningKillSwitch"]);
   });
 
@@ -121,16 +145,22 @@ describe("S619 Learning route family controls", () => {
       return json({ ok: true });
     });
     await waitForPacks();
-    const engage = [...document.querySelectorAll("button")].find((button) => button.textContent?.trim() === "Engage kill switch");
+    const engage = [...document.querySelectorAll("button")].find(
+      (button) => button.textContent?.trim() === "Engage kill switch",
+    );
     engage?.click();
     let end = Date.now() + 3000;
-    while (calls.length < 1 && Date.now() < end) await new Promise((resolve) => setTimeout(resolve, 10));
+    while (calls.length < 1 && Date.now() < end)
+      await new Promise((resolve) => setTimeout(resolve, 10));
     expect(calls[0]?.url).toBe("/api/role-model/operator/learning/kill-switch");
     expect(calls[0]?.body).toEqual({ scopeId: "scope-learning-test" });
-    const release = [...document.querySelectorAll("button")].find((button) => button.textContent?.trim() === "Release kill switch");
+    const release = [...document.querySelectorAll("button")].find(
+      (button) => button.textContent?.trim() === "Release kill switch",
+    );
     release?.click();
     end = Date.now() + 3000;
-    while (calls.length < 2 && Date.now() < end) await new Promise((resolve) => setTimeout(resolve, 10));
+    while (calls.length < 2 && Date.now() < end)
+      await new Promise((resolve) => setTimeout(resolve, 10));
     expect(calls[1]?.body).toEqual({ scopeId: "scope-learning-test", engaged: false });
   });
 });

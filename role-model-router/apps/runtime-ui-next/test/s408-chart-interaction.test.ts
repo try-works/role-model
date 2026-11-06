@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
-import { chartPointKeyAction } from "@role-model/ui/foldkit-chart";
 import { Url } from "@role-model-router/foldkit";
+import { chartPointKeyAction } from "@role-model/ui/foldkit-chart";
 import { Option } from "effect";
+import { describe, expect, it } from "vitest";
 
 import {
   chartInteractionForRoute,
@@ -16,7 +16,7 @@ import { shellModel, shellUpdate } from "./support/runtime-shell";
 
 /** S408: Overview token chart tooltip/toggle/Escape, route-change cleanup and honest status. */
 
-const urlOf = (href: string) => Option.getOrThrow(Url.fromString("http://localhost" + href));
+const urlOf = (href: string) => Option.getOrThrow(Url.fromString(`http://localhost${href}`));
 
 const stateFor = (tag = "Index") => chartInteractionForRoute(emptyChartInteraction(tag), tag);
 const modelWith = (state: ReturnType<typeof stateFor>) => shellModel({ chartInteraction: state });
@@ -57,7 +57,11 @@ describe("S408 chart interaction state", () => {
     const base = { message: "boom", rows: [], token: 1 } as const;
     expect(chartStateForReadback({ ...base, status: "idle" })).toEqual({ status: "loading" });
     expect(chartStateForReadback({ ...base, status: "loading" })).toEqual({ status: "loading" });
-    expect(chartStateForReadback({ ...base, status: "error" })).toEqual({ message: undefined, reason: "boom", status: "error" });
+    expect(chartStateForReadback({ ...base, status: "error" })).toEqual({
+      message: undefined,
+      reason: "boom",
+      status: "error",
+    });
     expect(chartStateForReadback({ ...base, status: "empty" })).toEqual({ status: "empty" });
     expect(chartStateForReadback({ ...base, status: "ok" })).toEqual({ status: "ready" });
   });
@@ -66,13 +70,22 @@ describe("S408 chart interaction state", () => {
 describe("S408 chart interaction update", () => {
   it("applies show/hide/toggle through the shell model with the token fence", () => {
     const model = modelWith(stateFor());
-    const shown = shellUpdate(model, Message.ChartPointShown({ label: "12:00", seriesId: "tokens", token: 0 }));
+    const shown = shellUpdate(
+      model,
+      Message.ChartPointShown({ label: "12:00", seriesId: "tokens", token: 0 }),
+    );
     expect(shown.model.chartInteraction?.tooltip).toEqual({ label: "12:00", seriesId: "tokens" });
     const hidden = shellUpdate(shown.model, Message.ChartTooltipDismissed({ token: 0 }));
     expect(hidden.model.chartInteraction?.tooltip).toBeNull();
-    const toggled = shellUpdate(hidden.model, Message.ChartSeriesToggled({ seriesId: "tokens", token: 0 }));
+    const toggled = shellUpdate(
+      hidden.model,
+      Message.ChartSeriesToggled({ seriesId: "tokens", token: 0 }),
+    );
     expect(toggled.model.chartInteraction?.hiddenSeriesIds).toEqual(["tokens"]);
-    const stale = shellUpdate(toggled.model, Message.ChartPointShown({ label: "late", seriesId: "tokens", token: 9 }));
+    const stale = shellUpdate(
+      toggled.model,
+      Message.ChartPointShown({ label: "late", seriesId: "tokens", token: 9 }),
+    );
     expect(stale.model.chartInteraction).toEqual(toggled.model.chartInteraction);
   });
 });

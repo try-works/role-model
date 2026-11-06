@@ -27,10 +27,7 @@ import { Schema } from "effect";
  * has not expired, and its evidence row is present. A rejected completion leaves
  * the queue's own row untouched, so the store retries instead of acking.
  */
-export type AttemptFenceRejection =
-  | "evidence_missing"
-  | "killed"
-  | "lease_expired";
+export type AttemptFenceRejection = "evidence_missing" | "killed" | "lease_expired";
 
 export class AttemptFenceRejectedError extends Error {
   readonly reason: AttemptFenceRejection | "lease_held" | "already_completed";
@@ -179,7 +176,9 @@ function evidenceFromRow(row: SqliteRow): AttemptEvidence | null {
 }
 
 function digestPayload(payload: FencePayload): string {
-  return createHash("sha256").update(JSON.stringify(payload) ?? "null").digest("hex");
+  return createHash("sha256")
+    .update(JSON.stringify(payload) ?? "null")
+    .digest("hex");
 }
 
 /**
@@ -276,13 +275,17 @@ export function openAttemptFenceStore({
         throw new AttemptFenceRejectedError("killed", "attempt fence rejected: job is killed");
       }
       // SAFETY: queue_attempt_fence rows are written only by this module.
-      const existing = asAttemptRow(selectAttempt.get(input.jobId, input.attempt) as SqliteRow | undefined);
+      const existing = asAttemptRow(
+        selectAttempt.get(input.jobId, input.attempt) as SqliteRow | undefined,
+      );
       if (existing !== null) {
         if (existing.state === "completed") {
           // Crash window: fence.complete() landed but the queue never acked. The retry of the
           // same attempt is an idempotent success only when the durable evidence is still there.
           // SAFETY: queue_attempt_evidence rows are written only by this module.
-          const evidenceRaw = selectEvidence.get(input.jobId, input.attempt) as SqliteRow | undefined;
+          const evidenceRaw = selectEvidence.get(input.jobId, input.attempt) as
+            | SqliteRow
+            | undefined;
           const evidence = evidenceRaw === undefined ? null : evidenceFromRow(evidenceRaw);
           if (evidence !== null && evidence.leaseId === existing.lease_id) {
             return {
@@ -294,10 +297,16 @@ export function openAttemptFenceStore({
               owner: existing.owner,
             };
           }
-          throw new AttemptFenceRejectedError("already_completed", "attempt fence rejected: attempt already completed without durable evidence");
+          throw new AttemptFenceRejectedError(
+            "already_completed",
+            "attempt fence rejected: attempt already completed without durable evidence",
+          );
         }
         if (existing.state === "active" && existing.expires_at > at) {
-          throw new AttemptFenceRejectedError("lease_held", "attempt fence rejected: attempt lease is held");
+          throw new AttemptFenceRejectedError(
+            "lease_held",
+            "attempt fence rejected: attempt lease is held",
+          );
         }
         if (existing.state === "active") {
           expireAttempt.run(input.jobId, input.attempt, existing.lease_id);
@@ -311,7 +320,14 @@ export function openAttemptFenceStore({
         leaseId: randomUUID(),
         owner: input.owner,
       };
-      upsertAttempt.run(input.jobId, input.attempt, lease.leaseId, lease.owner, lease.expiresAtMs, at);
+      upsertAttempt.run(
+        input.jobId,
+        input.attempt,
+        lease.leaseId,
+        lease.owner,
+        lease.expiresAtMs,
+        at,
+      );
       return lease;
     },
 
@@ -330,7 +346,9 @@ export function openAttemptFenceStore({
           : { accepted: false, reason: "evidence_missing" };
       }
       // SAFETY: queue_attempt_fence rows are written only by this module.
-      const row = asAttemptRow(selectAttempt.get(lease.jobId, lease.attempt) as SqliteRow | undefined);
+      const row = asAttemptRow(
+        selectAttempt.get(lease.jobId, lease.attempt) as SqliteRow | undefined,
+      );
       if (row === null || row.state !== "active" || row.lease_id !== lease.leaseId) {
         return { accepted: false, reason: "lease_expired" };
       }
@@ -346,7 +364,9 @@ export function openAttemptFenceStore({
       }
       const completedAt = now();
       const updated = completeAttempt.run(completedAt, lease.jobId, lease.attempt, lease.leaseId);
-      return Number(updated.changes) > 0 ? { accepted: true } : { accepted: false, reason: "lease_expired" };
+      return Number(updated.changes) > 0
+        ? { accepted: true }
+        : { accepted: false, reason: "lease_expired" };
     },
 
     isKilled(jobId) {
@@ -383,17 +403,32 @@ export function openAttemptFenceStore({
         throw new AttemptFenceRejectedError("killed", "attempt fence rejected: job is killed");
       }
       // SAFETY: queue_attempt_fence rows are written only by this module.
-      const row = asAttemptRow(selectAttempt.get(lease.jobId, lease.attempt) as SqliteRow | undefined);
+      const row = asAttemptRow(
+        selectAttempt.get(lease.jobId, lease.attempt) as SqliteRow | undefined,
+      );
       if (row === null || row.state !== "active" || row.lease_id !== lease.leaseId) {
-        throw new AttemptFenceRejectedError("lease_expired", "attempt fence rejected: attempt lease expired or was replaced");
+        throw new AttemptFenceRejectedError(
+          "lease_expired",
+          "attempt fence rejected: attempt lease expired or was replaced",
+        );
       }
       if (row.expires_at <= now()) {
         expireAttempt.run(lease.jobId, lease.attempt, lease.leaseId);
-        throw new AttemptFenceRejectedError("lease_expired", "attempt fence rejected: attempt lease expired");
+        throw new AttemptFenceRejectedError(
+          "lease_expired",
+          "attempt fence rejected: attempt lease expired",
+        );
       }
       const at = now();
       const digest = digestPayload(payload);
-      upsertEvidence.run(lease.jobId, lease.attempt, lease.leaseId, JSON.stringify(payload), digest, at);
+      upsertEvidence.run(
+        lease.jobId,
+        lease.attempt,
+        lease.leaseId,
+        JSON.stringify(payload),
+        digest,
+        at,
+      );
       return { digest, leaseId: lease.leaseId, payload, recordedAtMs: at };
     },
   };

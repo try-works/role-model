@@ -5,8 +5,12 @@ import { canonicalTaxonomy } from "@role-model-router/core";
 import type { TaxonomyDimensionScoreMap } from "@role-model/protocol-types";
 
 import type { BenchmarkCompareRecord, BenchmarkRunManifest } from "./benchmark-artifacts.js";
-import { type BenchmarkCaseCounts, type BenchmarkRunOutcomeOrPending, benchmarkOutcomeFields } from "./benchmark-outcome.js";
 import { resolveBenchmarkRunArtifactDir } from "./benchmark-artifacts.js";
+import {
+  type BenchmarkCaseCounts,
+  type BenchmarkRunOutcomeOrPending,
+  benchmarkOutcomeFields,
+} from "./benchmark-outcome.js";
 
 interface CompletedBenchmarkRun {
   readonly runId: string;
@@ -573,16 +577,16 @@ export async function listBenchmarkRuns(
     .map(({ runId, manifest, result }) => {
       const outcomeFields = benchmarkOutcomeFields(result?.endpointGrades ?? []);
       return {
-      runId,
-      mode: manifest.mode ?? result?.mode ?? "full",
-      completedAtMs: manifest.gradingCompletedAtMs ?? result?.completedAtMs ?? 0,
-      suiteId: manifest.suiteId ?? result?.suiteId ?? "",
-      caseCount: resolveRunCaseCount(manifest, result),
-      ...outcomeFields,
-      endpointIds:
-        manifest.endpointIds.length > 0
-          ? manifest.endpointIds
-          : (result?.endpointGrades.map((grade) => grade.endpointId) ?? []),
+        runId,
+        mode: manifest.mode ?? result?.mode ?? "full",
+        completedAtMs: manifest.gradingCompletedAtMs ?? result?.completedAtMs ?? 0,
+        suiteId: manifest.suiteId ?? result?.suiteId ?? "",
+        caseCount: resolveRunCaseCount(manifest, result),
+        ...outcomeFields,
+        endpointIds:
+          manifest.endpointIds.length > 0
+            ? manifest.endpointIds
+            : (result?.endpointGrades.map((grade) => grade.endpointId) ?? []),
       };
     })
     .sort((left, right) => right.completedAtMs - left.completedAtMs);

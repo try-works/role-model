@@ -198,7 +198,8 @@ test("a deliberately wrong citation fails", () => {
   );
 
   const missingFile = structuredClone(inventory);
-  missingFile.entries[0].callers[0].file = "role-model-router/apps/runtime-host-bridge/src/does-not-exist.ts";
+  missingFile.entries[0].callers[0].file =
+    "role-model-router/apps/runtime-host-bridge/src/does-not-exist.ts";
   assert.ok(
     validateInventory(missingFile).some((issue) => issue.includes("missing file")),
     "a missing caller file must fail",
@@ -228,24 +229,42 @@ export const validateSqlServiceCoverage = (inventory) => {
   const excluded = Array.isArray(inventory?.scope?.excluded) ? inventory.scope.excluded : [];
   for (const entry of excluded) {
     const area = String(entry?.area ?? "");
-    if (/sqlite/i.test(area)) issues.push("sql-service-excluded: " + area);
+    if (/sqlite/i.test(area)) issues.push(`sql-service-excluded: ${area}`);
   }
   const entries = Array.isArray(inventory?.entries) ? inventory.entries : [];
-  const sqlEntries = entries.filter((entry) => String(entry?.definition?.file ?? "").startsWith(SQL_PACKAGE_ROOT));
+  const sqlEntries = entries.filter((entry) =>
+    String(entry?.definition?.file ?? "").startsWith(SQL_PACKAGE_ROOT),
+  );
   const serviceEntries = sqlEntries.filter((entry) => entry.definition.file === SQL_SERVICE_FILE);
   if (serviceEntries.length < 7) {
-    issues.push("sql-service-not-inventoried: found " + String(serviceEntries.length) + " service entries");
+    issues.push(
+      `sql-service-not-inventoried: found ${String(serviceEntries.length)} service entries`,
+    );
   }
-  if (!sqlEntries.some((entry) => entry.definition.file === SQL_SERVICE_FILE && Number.isInteger(entry.definition.line) && entry.definition.line > 0)) {
+  if (
+    !sqlEntries.some(
+      (entry) =>
+        entry.definition.file === SQL_SERVICE_FILE &&
+        Number.isInteger(entry.definition.line) &&
+        entry.definition.line > 0,
+    )
+  ) {
     issues.push("sql-service-package-path: no positive service.ts line citation");
   }
-  const cited = sqlEntries.flatMap((entry) => (Array.isArray(entry.callers) ? entry.callers : []).map((caller) => String(caller?.file) + ":" + String(caller?.line)));
+  const cited = sqlEntries.flatMap((entry) =>
+    (Array.isArray(entry.callers) ? entry.callers : []).map(
+      (caller) => `${String(caller?.file)}:${String(caller?.line)}`,
+    ),
+  );
   for (const [file, line] of SQL_PRODUCT_CALLERS) {
-    if (!cited.includes(file + ":" + line)) issues.push("sql-service-caller-missing: " + file + ":" + line);
+    if (!cited.includes(`${file}:${line}`))
+      issues.push(`sql-service-caller-missing: ${file}:${line}`);
   }
   for (const entry of sqlEntries) {
-    if (!DISPOSITIONS.has(entry.disposition)) issues.push("sql-service-disposition: " + String(entry.id));
-    if (String(entry.reason ?? "").trim().length === 0) issues.push("sql-service-reason: " + String(entry.id));
+    if (!DISPOSITIONS.has(entry.disposition))
+      issues.push(`sql-service-disposition: ${String(entry.id)}`);
+    if (String(entry.reason ?? "").trim().length === 0)
+      issues.push(`sql-service-reason: ${String(entry.id)}`);
   }
   if (JSON.stringify(excluded).includes("Effect SQLite service has no product caller")) {
     issues.push("sql-service-false-claim: the removed sentence is back");
@@ -267,7 +286,7 @@ test("S301 reworded false SQL exclusion is rejected by the structured guard", ()
   const issues = validateSqlServiceCoverage(reworded);
   assert.ok(
     issues.some((issue) => issue.startsWith("sql-service-excluded")),
-    "a reworded SQL exclusion must be rejected, got: " + issues.join("; "),
+    `a reworded SQL exclusion must be rejected, got: ${issues.join("; ")}`,
   );
 });
 

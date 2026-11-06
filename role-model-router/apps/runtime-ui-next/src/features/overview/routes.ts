@@ -1,9 +1,9 @@
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 
 import type { ChartInteractionState } from "../../chart-interaction";
+import type { Message } from "../../message";
 import type { OverviewFilters } from "../../overview-filters";
 import type { ReadbacksState } from "../../readback";
-import type { Message } from "../../message";
 
 export interface OverviewRouteContext {
   readonly chartInteraction: ChartInteractionState | undefined;
@@ -22,4 +22,11 @@ export interface OverviewRouteContext {
 }
 
 export const indexRoute = (ctx: OverviewRouteContext): Html =>
-  ctx.overviewPage(ctx.readbacks.overviewMetrics, ctx.readbacks.routerCandidates, ctx.overviewWindowMs, ctx.h, ctx.overviewFilters, ctx.chartInteraction);
+  ctx.overviewPage(
+    ctx.readbacks.overviewMetrics,
+    ctx.readbacks.routerCandidates,
+    ctx.overviewWindowMs,
+    ctx.h,
+    ctx.overviewFilters,
+    ctx.chartInteraction,
+  );

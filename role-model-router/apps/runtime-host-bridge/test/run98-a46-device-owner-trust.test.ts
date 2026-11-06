@@ -16,25 +16,28 @@ import { resolveDeviceOwnerTrust, startBridgeServer } from "../src/index.js";
 const registry = { endpoints: [] } as never;
 
 const startServer = async (options: Record<string, unknown>) => {
-  const server = await startBridgeServer({
-    host: "127.0.0.1",
-    port: 0,
-    registry,
-    getRegistry: () => registry,
-    executeChatCompletions: async () => {
-      throw new Error("not used");
-    },
-    executeResponses: async () => {
-      throw new Error("not used");
-    },
-    readRuntimeSummary: async () => ({ status: "ok" }),
-    readHealthStatus: async () => ({ status: "ok" }),
-    readLearningState: async () => ({ schemaVersion: "probe", state: "read" }),
-    // A runtime with a single configured context accepts a header-less request, so these tests exercise the
-    // credential rule rather than the context rule.
-    operatorContext: { channel: "development", scope: "run98-a46", authorizationEpoch: 1 },
-    ...options,
-  } as never, { allowTestSeamBackend: true });
+  const server = await startBridgeServer(
+    {
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      getRegistry: () => registry,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+      executeResponses: async () => {
+        throw new Error("not used");
+      },
+      readRuntimeSummary: async () => ({ status: "ok" }),
+      readHealthStatus: async () => ({ status: "ok" }),
+      readLearningState: async () => ({ schemaVersion: "probe", state: "read" }),
+      // A runtime with a single configured context accepts a header-less request, so these tests exercise the
+      // credential rule rather than the context rule.
+      operatorContext: { channel: "development", scope: "run98-a46", authorizationEpoch: 1 },
+      ...options,
+    } as never,
+    { allowTestSeamBackend: true },
+  );
   return server;
 };
 

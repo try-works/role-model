@@ -16,9 +16,11 @@ const view = await readFile(path.join(appDir, "src", "view.ts"), "utf8");
 const theme = await readFile(path.join(appDir, "..", "runtime-ui", "app", "app.css"), "utf8");
 
 test("S205: every --rm token referenced by the port is defined", () => {
-  const referenced = [...new Set([...view.matchAll(/var\((--rm-[a-z0-9-]+)\)/g)].map((match) => match[1]))].sort();
+  const referenced = [
+    ...new Set([...view.matchAll(/var\((--rm-[a-z0-9-]+)\)/g)].map((match) => match[1])),
+  ].sort();
   assert.ok(referenced.length > 5, "the port still references design tokens");
-  const undefinedTokens = referenced.filter((name) => !theme.includes(name + ":"));
+  const undefinedTokens = referenced.filter((name) => !theme.includes(`${name}:`));
   assert.deepEqual(undefinedTokens, [], "undefined design tokens render as invalid CSS");
 });
 

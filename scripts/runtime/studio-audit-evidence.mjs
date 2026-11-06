@@ -42,7 +42,10 @@ export const summarizeStudioBody = (postData) => {
   };
 };
 
-export const createStudioCollector = ({ now = Date.now, requestCap = DEFAULT_REQUEST_CAP } = {}) => {
+export const createStudioCollector = ({
+  now = Date.now,
+  requestCap = DEFAULT_REQUEST_CAP,
+} = {}) => {
   const startedAt = now();
   const studioRequests = [];
   const pageEvents = [];
@@ -54,7 +57,9 @@ export const createStudioCollector = ({ now = Date.now, requestCap = DEFAULT_REQ
   let enabledAtMs;
   let dropped = 0;
   const elapsed = () => Math.max(0, now() - startedAt);
-  const find = (requestId) => studioRequests.find((entry) => entry.requestId === requestId) ?? catalogues.find((entry) => entry.requestId === requestId);
+  const find = (requestId) =>
+    studioRequests.find((entry) => entry.requestId === requestId) ??
+    catalogues.find((entry) => entry.requestId === requestId);
   const handle = (method, params = {}) => {
     if (method === "Network.enable") {
       enabledAtMs = elapsed();
@@ -67,7 +72,14 @@ export const createStudioCollector = ({ now = Date.now, requestCap = DEFAULT_REQ
     }
     if (method === "Page.frameNavigated" || method === "Page.loadEventFired") {
       if (pageEvents.length < PAGE_EVENT_CAP) {
-        pageEvents.push({ elapsedMs: elapsed(), method, url: method === "Page.frameNavigated" ? String(params.frame?.url ?? "").slice(0, 200) : undefined });
+        pageEvents.push({
+          elapsedMs: elapsed(),
+          method,
+          url:
+            method === "Page.frameNavigated"
+              ? String(params.frame?.url ?? "").slice(0, 200)
+              : undefined,
+        });
       }
       return;
     }
@@ -96,7 +108,16 @@ export const createStudioCollector = ({ now = Date.now, requestCap = DEFAULT_REQ
       }
       if (request.method === "GET" && pathname === CATALOGUE_PATH) {
         catalogueTotal += 1;
-        catalogues.push({ durationMs: undefined, finishedElapsedMs: undefined, method: "GET", path: pathname, phase: currentPhase, requestId, startElapsedMs: elapsed(), status: undefined });
+        catalogues.push({
+          durationMs: undefined,
+          finishedElapsedMs: undefined,
+          method: "GET",
+          path: pathname,
+          phase: currentPhase,
+          requestId,
+          startElapsedMs: elapsed(),
+          status: undefined,
+        });
         if (catalogues.length > CATALOGUE_CAP) {
           catalogues.shift();
           catalogueDropped += 1;
@@ -114,13 +135,15 @@ export const createStudioCollector = ({ now = Date.now, requestCap = DEFAULT_REQ
       if (entry) {
         entry.finishedElapsedMs = elapsed();
         entry.durationMs = entry.finishedElapsedMs - entry.startElapsedMs;
-        if (method === "Network.loadingFailed") entry.failure = String(params.errorText ?? "failed").slice(0, 120);
+        if (method === "Network.loadingFailed")
+          entry.failure = String(params.errorText ?? "failed").slice(0, 120);
       }
     }
   };
   return {
     catalogueDropped: () => catalogueDropped,
-    catalogueRequest: () => (catalogues.length === 0 ? undefined : { ...catalogues[catalogues.length - 1] }),
+    catalogueRequest: () =>
+      catalogues.length === 0 ? undefined : { ...catalogues[catalogues.length - 1] },
     catalogues: () => catalogues.map((entry) => ({ ...entry })),
     catalogueTotal: () => catalogueTotal,
     dropped: () => dropped,
@@ -148,24 +171,34 @@ export const classifyStudioOutcome = ({ entry, buttonDisabledAtClick, rawStateAt
   if (entry.failure !== undefined) return "failed";
   if (entry.status === undefined || entry.status === null) return "in-flight";
   if (entry.status >= 400) return "http-error";
-  if (entry.status >= 200 && entry.status < 300) return rawStateAtEnd === "success" ? "applied" : "responded-unapplied";
+  if (entry.status >= 200 && entry.status < 300)
+    return rawStateAtEnd === "success" ? "applied" : "responded-unapplied";
   return "unknown";
 };
 
 export const formatStudioEvidence = ({ evidence, click = {}, outcome, maxLines = 30 }) => {
   const header = [
-    "studio-evidence: enabledAtMs=" + String(evidence.enabledAtMs ?? "n/a") + " phases=" + evidence.phases.map((entry) => entry.phase).join(",") + " requests=" + String(evidence.studioRequests.length) + " dropped=" + String(evidence.dropped) + " catalogueTotal=" + String(evidence.catalogueTotal ?? 0) + " catalogueDropped=" + String(evidence.catalogueDropped ?? 0),
+    `studio-evidence: enabledAtMs=${String(evidence.enabledAtMs ?? "n/a")} phases=${evidence.phases.map((entry) => entry.phase).join(",")} requests=${String(evidence.studioRequests.length)} dropped=${String(evidence.dropped)} catalogueTotal=${String(evidence.catalogueTotal ?? 0)} catalogueDropped=${String(evidence.catalogueDropped ?? 0)}`,
   ];
   const catalogue = evidence.catalogue;
-  header.push(catalogue === undefined
-    ? "catalogue GET " + CATALOGUE_PATH + " not observed"
-    : "catalogue GET " + catalogue.path + " latest phase=" + String(catalogue.phase) + " status=" + String(catalogue.status) + " start=" + String(catalogue.startElapsedMs) + "ms duration=" + String(catalogue.durationMs ?? "n/a") + "ms count=" + String((evidence.catalogues ?? []).length));
-  const requestLines = evidence.studioRequests.map((entry) => "studio POST " + entry.path + " phase=" + entry.phase + " model=" + (entry.body.model === null || entry.body.model === undefined ? "unavailable" : String(entry.body.model)) + " stream=" + String(entry.body.stream) + " messages=" + String(entry.body.messageCount) + " start=" + String(entry.startElapsedMs) + "ms status=" + String(entry.status) + " duration=" + String(entry.durationMs ?? "n/a") + "ms" + (entry.failure === undefined ? "" : " failure=" + entry.failure));
+  header.push(
+    catalogue === undefined
+      ? `catalogue GET ${CATALOGUE_PATH} not observed`
+      : `catalogue GET ${catalogue.path} latest phase=${String(catalogue.phase)} status=${String(catalogue.status)} start=${String(catalogue.startElapsedMs)}ms duration=${String(catalogue.durationMs ?? "n/a")}ms count=${String((evidence.catalogues ?? []).length)}`,
+  );
+  const requestLines = evidence.studioRequests.map(
+    (entry) =>
+      `studio POST ${entry.path} phase=${entry.phase} model=${
+        entry.body.model === null || entry.body.model === undefined
+          ? "unavailable"
+          : String(entry.body.model)
+      } stream=${String(entry.body.stream)} messages=${String(entry.body.messageCount)} start=${String(entry.startElapsedMs)}ms status=${String(entry.status)} duration=${String(entry.durationMs ?? "n/a")}ms${entry.failure === undefined ? "" : ` failure=${entry.failure}`}`,
+  );
   // Click and outcome are reserved: a long request list may drop request lines, never the verdict.
   const tail = [
-    "click: buttonDisabled=" + String(click.buttonDisabled) + " rawAtClick=" + String(click.rawAtClick) + " errorAtClick=" + String(click.errorAtClick ?? "none") + " samePathname=" + String(click.navigatedSameUrl) + " selectedModelDom=" + String(click.selectedModelDom) + " clickedAt=" + String(click.clickedAt),
+    `click: buttonDisabled=${String(click.buttonDisabled)} rawAtClick=${String(click.rawAtClick)} errorAtClick=${String(click.errorAtClick ?? "none")} samePathname=${String(click.navigatedSameUrl)} selectedModelDom=${String(click.selectedModelDom)} clickedAt=${String(click.clickedAt)}`,
     "note: modelStateInferred=false (selectedModelDom is the DOM field, not readback status)",
-    "outcome: " + String(outcome),
+    `outcome: ${String(outcome)}`,
   ];
   const budget = Math.max(0, maxLines - header.length - tail.length);
   return [...header, ...requestLines.slice(0, budget), ...tail];

@@ -48,11 +48,7 @@
       "maxAgeDays": 1,
       "watermarkPct": 90,
       "lowWatermarkPct": 70,
-      "downgradeChain": [
-        "compact",
-        "summarized",
-        "routing_only"
-      ],
+      "downgradeChain": ["compact", "summarized", "routing_only"],
       "expiryAction": "downgrade",
       "payloadKinds": [
         "transcript",
@@ -77,16 +73,9 @@
       "maxAgeDays": 7,
       "watermarkPct": 90,
       "lowWatermarkPct": 70,
-      "downgradeChain": [
-        "summarized",
-        "routing_only"
-      ],
+      "downgradeChain": ["summarized", "routing_only"],
       "expiryAction": "summarize_then_downgrade",
-      "payloadKinds": [
-        "transcript",
-        "tool_summary",
-        "replay_branch"
-      ],
+      "payloadKinds": ["transcript", "tool_summary", "replay_branch"],
       "source": "canonical_machine_readable",
       "sourceRegistryVersion": "2.0.0"
     },
@@ -102,15 +91,9 @@
       "maxAgeDays": 30,
       "watermarkPct": 90,
       "lowWatermarkPct": 70,
-      "downgradeChain": [
-        "routing_only"
-      ],
+      "downgradeChain": ["routing_only"],
       "expiryAction": "downgrade",
-      "payloadKinds": [
-        "trajectory_summary",
-        "experience_evidence",
-        "score_summary"
-      ],
+      "payloadKinds": ["trajectory_summary", "experience_evidence", "score_summary"],
       "source": "canonical_machine_readable",
       "sourceRegistryVersion": "2.0.0"
     },
@@ -126,16 +109,9 @@
       "maxAgeDays": 730,
       "watermarkPct": 90,
       "lowWatermarkPct": 70,
-      "downgradeChain": [
-        "routing_only"
-      ],
+      "downgradeChain": ["routing_only"],
       "expiryAction": "compact_rollup",
-      "payloadKinds": [
-        "route_decision",
-        "endpoint_observation",
-        "routing_outcome",
-        "rollup"
-      ],
+      "payloadKinds": ["route_decision", "endpoint_observation", "routing_outcome", "rollup"],
       "source": "canonical_machine_readable",
       "sourceRegistryVersion": "2.0.0"
     },
@@ -151,16 +127,9 @@
       "maxAgeDays": 90,
       "watermarkPct": 85,
       "lowWatermarkPct": 65,
-      "downgradeChain": [
-        "normalized_samples"
-      ],
+      "downgradeChain": ["normalized_samples"],
       "expiryAction": "compact_rollup",
-      "payloadKinds": [
-        "performance_sample",
-        "hourly_rollup",
-        "daily_rollup",
-        "monthly_rollup"
-      ],
+      "payloadKinds": ["performance_sample", "hourly_rollup", "daily_rollup", "monthly_rollup"],
       "source": "canonical_machine_readable",
       "sourceRegistryVersion": "2.0.0"
     },
@@ -176,14 +145,9 @@
       "maxAgeDays": 3,
       "watermarkPct": 80,
       "lowWatermarkPct": 50,
-      "downgradeChain": [
-        "cloud_staging"
-      ],
+      "downgradeChain": ["cloud_staging"],
       "expiryAction": "delete_content_keep_receipt",
-      "payloadKinds": [
-        "authorized_aggregate_bundle",
-        "upload_retry_body"
-      ],
+      "payloadKinds": ["authorized_aggregate_bundle", "upload_retry_body"],
       "source": "canonical_machine_readable",
       "sourceRegistryVersion": "2.0.0"
     },
@@ -199,15 +163,9 @@
       "maxAgeDays": 1,
       "watermarkPct": 80,
       "lowWatermarkPct": 50,
-      "downgradeChain": [
-        "materialized_export"
-      ],
+      "downgradeChain": ["materialized_export"],
       "expiryAction": "evict_materialization",
-      "payloadKinds": [
-        "verifiers_export",
-        "training_sample_export",
-        "diagnostic_bundle"
-      ],
+      "payloadKinds": ["verifiers_export", "training_sample_export", "diagnostic_bundle"],
       "source": "canonical_machine_readable",
       "sourceRegistryVersion": "2.0.0"
     },
@@ -223,15 +181,9 @@
       "maxAgeDays": 3650,
       "watermarkPct": 95,
       "lowWatermarkPct": 80,
-      "downgradeChain": [
-        "external_archive"
-      ],
+      "downgradeChain": ["external_archive"],
       "expiryAction": "retain",
-      "payloadKinds": [
-        "encrypted_artifact",
-        "archive_manifest",
-        "restore_receipt"
-      ],
+      "payloadKinds": ["encrypted_artifact", "archive_manifest", "restore_receipt"],
       "source": "canonical_machine_readable",
       "sourceRegistryVersion": "2.0.0"
     }
@@ -288,13 +240,9 @@
         "measurementSource": "storage-audit",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "runtime-host"
-        ],
+        "owners": ["runtime-host"],
         "owner": "runtime-host",
-        "logicalClassIds": [
-          "runtime_logs"
-        ],
+        "logicalClassIds": ["runtime_logs"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -311,9 +259,7 @@
         "measurementSource": "local-filesystem",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "sqlite-memory"
-        ],
+        "owners": ["sqlite-memory"],
         "owner": "sqlite-memory",
         "logicalClassIds": [
           "sqlite_migration_journal",
@@ -338,13 +284,9 @@
         "measurementSource": "storage-audit",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "runtime-operations"
-        ],
+        "owners": ["runtime-operations"],
         "owner": "runtime-operations",
-        "logicalClassIds": [
-          "retention_archives"
-        ],
+        "logicalClassIds": ["retention_archives"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -361,13 +303,9 @@
         "measurementSource": "local-filesystem",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "artifact-store"
-        ],
+        "owners": ["artifact-store"],
         "owner": "artifact-store",
-        "logicalClassIds": [
-          "artifact_graph"
-        ],
+        "logicalClassIds": ["artifact_graph"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -384,13 +322,9 @@
         "measurementSource": "local-filesystem",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "capture-queue"
-        ],
+        "owners": ["capture-queue"],
         "owner": "capture-queue",
-        "logicalClassIds": [
-          "capture_queue"
-        ],
+        "logicalClassIds": ["capture_queue"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -407,13 +341,9 @@
         "measurementSource": "local-filesystem",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "event-log"
-        ],
+        "owners": ["event-log"],
         "owner": "event-log",
-        "logicalClassIds": [
-          "event_log"
-        ],
+        "logicalClassIds": ["event_log"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -430,13 +360,9 @@
         "measurementSource": "local-filesystem",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "evaluation-core"
-        ],
+        "owners": ["evaluation-core"],
         "owner": "evaluation-core",
-        "logicalClassIds": [
-          "evaluation_store"
-        ],
+        "logicalClassIds": ["evaluation_store"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -453,13 +379,9 @@
         "measurementSource": "local-filesystem",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "knowledge-store"
-        ],
+        "owners": ["knowledge-store"],
         "owner": "knowledge-store",
-        "logicalClassIds": [
-          "knowledge_store"
-        ],
+        "logicalClassIds": ["knowledge_store"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -476,13 +398,9 @@
         "measurementSource": "local-filesystem",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "knowledge-worker"
-        ],
+        "owners": ["knowledge-worker"],
         "owner": "knowledge-worker",
-        "logicalClassIds": [
-          "knowledge_worker_store"
-        ],
+        "logicalClassIds": ["knowledge_worker_store"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -499,13 +417,9 @@
         "measurementSource": "storage-audit",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "profile-learner"
-        ],
+        "owners": ["profile-learner"],
         "owner": "profile-learner",
-        "logicalClassIds": [
-          "profile_store"
-        ],
+        "logicalClassIds": ["profile_store"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -522,13 +436,9 @@
         "measurementSource": "storage-audit",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "replay-core"
-        ],
+        "owners": ["replay-core"],
         "owner": "replay-core",
-        "logicalClassIds": [
-          "replay_checkpoints"
-        ],
+        "logicalClassIds": ["replay_checkpoints"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -545,13 +455,9 @@
         "measurementSource": "storage-audit",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "trajectory-signals"
-        ],
+        "owners": ["trajectory-signals"],
         "owner": "trajectory-signals",
-        "logicalClassIds": [
-          "trajectory_signals"
-        ],
+        "logicalClassIds": ["trajectory_signals"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -568,13 +474,9 @@
         "measurementSource": "local-filesystem",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "runtime-operations"
-        ],
+        "owners": ["runtime-operations"],
         "owner": "runtime-operations",
-        "logicalClassIds": [
-          "runtime_retention_state"
-        ],
+        "logicalClassIds": ["runtime_retention_state"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       }
@@ -1135,13 +1037,9 @@
         "measurementSource": "storage-audit",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "runtime-host"
-        ],
+        "owners": ["runtime-host"],
         "owner": "runtime-host",
-        "logicalClassIds": [
-          "runtime_logs"
-        ],
+        "logicalClassIds": ["runtime_logs"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -1158,9 +1056,7 @@
         "measurementSource": "local-filesystem",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "sqlite-memory"
-        ],
+        "owners": ["sqlite-memory"],
         "owner": "sqlite-memory",
         "logicalClassIds": [
           "sqlite_migration_journal",
@@ -1185,13 +1081,9 @@
         "measurementSource": "storage-audit",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "runtime-operations"
-        ],
+        "owners": ["runtime-operations"],
         "owner": "runtime-operations",
-        "logicalClassIds": [
-          "retention_archives"
-        ],
+        "logicalClassIds": ["retention_archives"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -1208,13 +1100,9 @@
         "measurementSource": "local-filesystem",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "artifact-store"
-        ],
+        "owners": ["artifact-store"],
         "owner": "artifact-store",
-        "logicalClassIds": [
-          "artifact_graph"
-        ],
+        "logicalClassIds": ["artifact_graph"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -1231,13 +1119,9 @@
         "measurementSource": "local-filesystem",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "capture-queue"
-        ],
+        "owners": ["capture-queue"],
         "owner": "capture-queue",
-        "logicalClassIds": [
-          "capture_queue"
-        ],
+        "logicalClassIds": ["capture_queue"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -1254,13 +1138,9 @@
         "measurementSource": "local-filesystem",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "event-log"
-        ],
+        "owners": ["event-log"],
         "owner": "event-log",
-        "logicalClassIds": [
-          "event_log"
-        ],
+        "logicalClassIds": ["event_log"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -1277,13 +1157,9 @@
         "measurementSource": "local-filesystem",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "evaluation-core"
-        ],
+        "owners": ["evaluation-core"],
         "owner": "evaluation-core",
-        "logicalClassIds": [
-          "evaluation_store"
-        ],
+        "logicalClassIds": ["evaluation_store"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -1300,13 +1176,9 @@
         "measurementSource": "local-filesystem",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "knowledge-store"
-        ],
+        "owners": ["knowledge-store"],
         "owner": "knowledge-store",
-        "logicalClassIds": [
-          "knowledge_store"
-        ],
+        "logicalClassIds": ["knowledge_store"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -1323,13 +1195,9 @@
         "measurementSource": "local-filesystem",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "knowledge-worker"
-        ],
+        "owners": ["knowledge-worker"],
         "owner": "knowledge-worker",
-        "logicalClassIds": [
-          "knowledge_worker_store"
-        ],
+        "logicalClassIds": ["knowledge_worker_store"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -1346,13 +1214,9 @@
         "measurementSource": "storage-audit",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "profile-learner"
-        ],
+        "owners": ["profile-learner"],
         "owner": "profile-learner",
-        "logicalClassIds": [
-          "profile_store"
-        ],
+        "logicalClassIds": ["profile_store"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -1369,13 +1233,9 @@
         "measurementSource": "storage-audit",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "replay-core"
-        ],
+        "owners": ["replay-core"],
         "owner": "replay-core",
-        "logicalClassIds": [
-          "replay_checkpoints"
-        ],
+        "logicalClassIds": ["replay_checkpoints"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -1392,13 +1252,9 @@
         "measurementSource": "storage-audit",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "trajectory-signals"
-        ],
+        "owners": ["trajectory-signals"],
         "owner": "trajectory-signals",
-        "logicalClassIds": [
-          "trajectory_signals"
-        ],
+        "logicalClassIds": ["trajectory_signals"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       },
@@ -1415,13 +1271,9 @@
         "measurementSource": "local-filesystem",
         "observedAt": null,
         "freshUntil": null,
-        "owners": [
-          "runtime-operations"
-        ],
+        "owners": ["runtime-operations"],
         "owner": "runtime-operations",
-        "logicalClassIds": [
-          "runtime_retention_state"
-        ],
+        "logicalClassIds": ["runtime_retention_state"],
         "heldItems": 0,
         "retentionState": "measured_uncovered"
       }
@@ -2055,13 +1907,9 @@
       "measurementSource": "storage-audit",
       "observedAt": null,
       "freshUntil": null,
-      "owners": [
-        "runtime-host"
-      ],
+      "owners": ["runtime-host"],
       "owner": "runtime-host",
-      "logicalClassIds": [
-        "runtime_logs"
-      ],
+      "logicalClassIds": ["runtime_logs"],
       "heldItems": 0,
       "retentionState": "measured_uncovered"
     },
@@ -2078,9 +1926,7 @@
       "measurementSource": "local-filesystem",
       "observedAt": null,
       "freshUntil": null,
-      "owners": [
-        "sqlite-memory"
-      ],
+      "owners": ["sqlite-memory"],
       "owner": "sqlite-memory",
       "logicalClassIds": [
         "sqlite_migration_journal",
@@ -2105,13 +1951,9 @@
       "measurementSource": "storage-audit",
       "observedAt": null,
       "freshUntil": null,
-      "owners": [
-        "runtime-operations"
-      ],
+      "owners": ["runtime-operations"],
       "owner": "runtime-operations",
-      "logicalClassIds": [
-        "retention_archives"
-      ],
+      "logicalClassIds": ["retention_archives"],
       "heldItems": 0,
       "retentionState": "measured_uncovered"
     },
@@ -2128,13 +1970,9 @@
       "measurementSource": "local-filesystem",
       "observedAt": null,
       "freshUntil": null,
-      "owners": [
-        "artifact-store"
-      ],
+      "owners": ["artifact-store"],
       "owner": "artifact-store",
-      "logicalClassIds": [
-        "artifact_graph"
-      ],
+      "logicalClassIds": ["artifact_graph"],
       "heldItems": 0,
       "retentionState": "measured_uncovered"
     },
@@ -2151,13 +1989,9 @@
       "measurementSource": "local-filesystem",
       "observedAt": null,
       "freshUntil": null,
-      "owners": [
-        "capture-queue"
-      ],
+      "owners": ["capture-queue"],
       "owner": "capture-queue",
-      "logicalClassIds": [
-        "capture_queue"
-      ],
+      "logicalClassIds": ["capture_queue"],
       "heldItems": 0,
       "retentionState": "measured_uncovered"
     },
@@ -2174,13 +2008,9 @@
       "measurementSource": "local-filesystem",
       "observedAt": null,
       "freshUntil": null,
-      "owners": [
-        "event-log"
-      ],
+      "owners": ["event-log"],
       "owner": "event-log",
-      "logicalClassIds": [
-        "event_log"
-      ],
+      "logicalClassIds": ["event_log"],
       "heldItems": 0,
       "retentionState": "measured_uncovered"
     },
@@ -2197,13 +2027,9 @@
       "measurementSource": "local-filesystem",
       "observedAt": null,
       "freshUntil": null,
-      "owners": [
-        "evaluation-core"
-      ],
+      "owners": ["evaluation-core"],
       "owner": "evaluation-core",
-      "logicalClassIds": [
-        "evaluation_store"
-      ],
+      "logicalClassIds": ["evaluation_store"],
       "heldItems": 0,
       "retentionState": "measured_uncovered"
     },
@@ -2220,13 +2046,9 @@
       "measurementSource": "local-filesystem",
       "observedAt": null,
       "freshUntil": null,
-      "owners": [
-        "knowledge-store"
-      ],
+      "owners": ["knowledge-store"],
       "owner": "knowledge-store",
-      "logicalClassIds": [
-        "knowledge_store"
-      ],
+      "logicalClassIds": ["knowledge_store"],
       "heldItems": 0,
       "retentionState": "measured_uncovered"
     },
@@ -2243,13 +2065,9 @@
       "measurementSource": "local-filesystem",
       "observedAt": null,
       "freshUntil": null,
-      "owners": [
-        "knowledge-worker"
-      ],
+      "owners": ["knowledge-worker"],
       "owner": "knowledge-worker",
-      "logicalClassIds": [
-        "knowledge_worker_store"
-      ],
+      "logicalClassIds": ["knowledge_worker_store"],
       "heldItems": 0,
       "retentionState": "measured_uncovered"
     },
@@ -2266,13 +2084,9 @@
       "measurementSource": "storage-audit",
       "observedAt": null,
       "freshUntil": null,
-      "owners": [
-        "profile-learner"
-      ],
+      "owners": ["profile-learner"],
       "owner": "profile-learner",
-      "logicalClassIds": [
-        "profile_store"
-      ],
+      "logicalClassIds": ["profile_store"],
       "heldItems": 0,
       "retentionState": "measured_uncovered"
     },
@@ -2289,13 +2103,9 @@
       "measurementSource": "storage-audit",
       "observedAt": null,
       "freshUntil": null,
-      "owners": [
-        "replay-core"
-      ],
+      "owners": ["replay-core"],
       "owner": "replay-core",
-      "logicalClassIds": [
-        "replay_checkpoints"
-      ],
+      "logicalClassIds": ["replay_checkpoints"],
       "heldItems": 0,
       "retentionState": "measured_uncovered"
     },
@@ -2312,13 +2122,9 @@
       "measurementSource": "storage-audit",
       "observedAt": null,
       "freshUntil": null,
-      "owners": [
-        "trajectory-signals"
-      ],
+      "owners": ["trajectory-signals"],
       "owner": "trajectory-signals",
-      "logicalClassIds": [
-        "trajectory_signals"
-      ],
+      "logicalClassIds": ["trajectory_signals"],
       "heldItems": 0,
       "retentionState": "measured_uncovered"
     },
@@ -2335,13 +2141,9 @@
       "measurementSource": "local-filesystem",
       "observedAt": null,
       "freshUntil": null,
-      "owners": [
-        "runtime-operations"
-      ],
+      "owners": ["runtime-operations"],
       "owner": "runtime-operations",
-      "logicalClassIds": [
-        "runtime_retention_state"
-      ],
+      "logicalClassIds": ["runtime_retention_state"],
       "heldItems": 0,
       "retentionState": "measured_uncovered"
     }
@@ -2995,11 +2797,7 @@
       "artifact_graph": {
         "id": "artifact_graph",
         "owner": "artifact-store",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 10737418240,
           "maxRecords": 1000000,
@@ -3047,11 +2845,7 @@
       "capture_queue": {
         "id": "capture_queue",
         "owner": "capture-queue",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 268435456,
           "maxRecords": 100000,
@@ -3099,11 +2893,7 @@
       "cloud_aggregate_d1": {
         "id": "cloud_aggregate_d1",
         "owner": "aggregate-ingestion",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 8589934592,
           "maxRecords": 5000000,
@@ -3151,11 +2941,7 @@
       "cloud_aggregate_r2": {
         "id": "cloud_aggregate_r2",
         "owner": "aggregate-ingestion",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 67108864,
           "maxRecords": 10000,
@@ -3203,11 +2989,7 @@
       "cloud_history_d1": {
         "id": "cloud_history_d1",
         "owner": "history-service",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 8589934592,
           "maxRecords": 5000000,
@@ -3255,11 +3037,7 @@
       "cloud_history_r2": {
         "id": "cloud_history_r2",
         "owner": "history-service",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 67108864,
           "maxRecords": 10000,
@@ -3307,11 +3085,7 @@
       "cloud_recommendation_d1": {
         "id": "cloud_recommendation_d1",
         "owner": "recommendation-service",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 8589934592,
           "maxRecords": 5000000,
@@ -3359,11 +3133,7 @@
       "cloud_recommendation_r2": {
         "id": "cloud_recommendation_r2",
         "owner": "recommendation-service",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 67108864,
           "maxRecords": 10000,
@@ -3411,11 +3181,7 @@
       "contribution_outbox": {
         "id": "contribution_outbox",
         "owner": "crowdsourced-learning",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 67108864,
           "maxRecords": 1000,
@@ -3463,11 +3229,7 @@
       "evaluation_store": {
         "id": "evaluation_store",
         "owner": "evaluation-core",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 2147483648,
           "maxRecords": 5000000,
@@ -3515,11 +3277,7 @@
       "event_log": {
         "id": "event_log",
         "owner": "event-log",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 2147483648,
           "maxRecords": 5000000,
@@ -3567,11 +3325,7 @@
       "frontend_runtime_materializations": {
         "id": "frontend_runtime_materializations",
         "owner": "runtime-ui",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 134217728,
           "maxRecords": 100000,
@@ -3619,11 +3373,7 @@
       "knowledge_store": {
         "id": "knowledge_store",
         "owner": "knowledge-store",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 16777216,
           "maxRecords": 10000,
@@ -3671,11 +3421,7 @@
       "knowledge_worker_store": {
         "id": "knowledge_worker_store",
         "owner": "knowledge-worker",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 16777216,
           "maxRecords": 10000,
@@ -3723,11 +3469,7 @@
       "memory_store": {
         "id": "memory_store",
         "owner": "memory-store",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 16777216,
           "maxRecords": 100000,
@@ -3775,11 +3517,7 @@
       "profile_store": {
         "id": "profile_store",
         "owner": "profile-learner",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 16777216,
           "maxRecords": 128,
@@ -3827,11 +3565,7 @@
       "queue_store": {
         "id": "queue_store",
         "owner": "queue-runtime",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 268435456,
           "maxRecords": 100000,
@@ -3879,11 +3613,7 @@
       "replay_checkpoints": {
         "id": "replay_checkpoints",
         "owner": "replay-core",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 2147483648,
           "maxRecords": 5000000,
@@ -3931,11 +3661,7 @@
       "repository_context": {
         "id": "repository_context",
         "owner": "repository-context",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 16384,
           "maxRecords": 10000,
@@ -3983,11 +3709,7 @@
       "retention_archives": {
         "id": "retention_archives",
         "owner": "runtime-operations",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 67108864,
           "maxRecords": 100000,
@@ -4035,11 +3757,7 @@
       "runtime_caches": {
         "id": "runtime_caches",
         "owner": "runtime-host",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 1073741824,
           "maxRecords": 1000000,
@@ -4087,11 +3805,7 @@
       "runtime_logs": {
         "id": "runtime_logs",
         "owner": "runtime-host",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 268435456,
           "maxRecords": 1000000,
@@ -4139,11 +3853,7 @@
       "runtime_retention_state": {
         "id": "runtime_retention_state",
         "owner": "runtime-operations",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 67108864,
           "maxRecords": 100000,
@@ -4191,11 +3901,7 @@
       "scheduler_state": {
         "id": "scheduler_state",
         "owner": "background-evidence-scheduler",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 2147483648,
           "maxRecords": 5000000,
@@ -4243,11 +3949,7 @@
       "sqlite_migration_journal": {
         "id": "sqlite_migration_journal",
         "owner": "sqlite-memory",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 2147483648,
           "maxRecords": 5000000,
@@ -4295,11 +3997,7 @@
       "sqlite_performance_history": {
         "id": "sqlite_performance_history",
         "owner": "sqlite-memory",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 2147483648,
           "maxRecords": 5000000,
@@ -4347,11 +4045,7 @@
       "sqlite_profiles": {
         "id": "sqlite_profiles",
         "owner": "sqlite-memory",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 2147483648,
           "maxRecords": 5000000,
@@ -4399,11 +4093,7 @@
       "sqlite_runtime_observations": {
         "id": "sqlite_runtime_observations",
         "owner": "sqlite-memory",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 2147483648,
           "maxRecords": 5000000,
@@ -4451,11 +4141,7 @@
       "sqlite_telemetry": {
         "id": "sqlite_telemetry",
         "owner": "sqlite-memory",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 2147483648,
           "maxRecords": 5000000,
@@ -4503,11 +4189,7 @@
       "trajectory_signals": {
         "id": "trajectory_signals",
         "owner": "trajectory-signals",
-        "channels": [
-          "development",
-          "stage",
-          "production"
-        ],
+        "channels": ["development", "stage", "production"],
         "capacity": {
           "maxBytes": 16777216,
           "maxRecords": 1000,

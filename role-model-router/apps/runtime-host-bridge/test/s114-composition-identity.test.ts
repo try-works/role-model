@@ -1,7 +1,11 @@
 import { Context, Effect, Layer } from "effect";
 import { describe, expect, it } from "vitest";
 
-import { ArtifactStoreAuthority, CompositionConfig, CompositionLayer } from "../src/composition-dag.js";
+import {
+  ArtifactStoreAuthority,
+  CompositionConfig,
+  CompositionLayer,
+} from "../src/composition-dag.js";
 
 /**
  * Run 115 S114 (R27): "graph is closed once per owner not recreated per request".

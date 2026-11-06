@@ -51,10 +51,7 @@ export interface ReplayQueueRuntimeOptions {
   /** Where the shipped policy lives when no state-root document exists yet. */
   readonly shippedRoot?: string;
   /** What a claimed replay job should do. Omitted means "shadow only": nothing claims. */
-  readonly handler?: (
-    job: ReplayDispatchJob,
-    context: QueueAttemptContext,
-  ) => Promise<void>;
+  readonly handler?: (job: ReplayDispatchJob, context: QueueAttemptContext) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: ReplayDispatchJob) => void;
 }
 
@@ -229,10 +226,7 @@ export interface EvaluationQueueRuntimeOptions {
    * evidence-before-ack: it finalizes (and records) the comparison before
    * returning, and a throw leaves the job claimable.
    */
-  readonly handler?: (
-    job: EvaluationScoreJob,
-    context: QueueAttemptContext,
-  ) => Promise<void>;
+  readonly handler?: (job: EvaluationScoreJob, context: QueueAttemptContext) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: EvaluationScoreJob) => void;
 }
 
@@ -330,15 +324,9 @@ export interface LearnerQueueRuntimeOptions {
    * Runs one derivation for the job's group. A named skip is a throw, which is
    * what keeps the group claimable instead of consuming it.
    */
-  readonly deriveHandler?: (
-    job: LearnerDeriveJob,
-    context: QueueAttemptContext,
-  ) => Promise<void>;
+  readonly deriveHandler?: (job: LearnerDeriveJob, context: QueueAttemptContext) => Promise<void>;
   /** Promotes one candidate; serialized by the queue's concurrency. */
-  readonly promoteHandler?: (
-    job: LearnerPromoteJob,
-    context: QueueAttemptContext,
-  ) => Promise<void>;
+  readonly promoteHandler?: (job: LearnerPromoteJob, context: QueueAttemptContext) => Promise<void>;
   readonly onDeriveFailure?: (error: unknown, job: LearnerDeriveJob) => void;
   readonly onPromoteFailure?: (error: unknown, job: LearnerPromoteJob) => void;
 }

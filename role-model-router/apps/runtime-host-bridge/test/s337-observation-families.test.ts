@@ -30,9 +30,15 @@ describe("S338 observation family migration behavior", () => {
   test("a different hydration key falls back instead of serving the other key's cache", async () => {
     const storage = makeObservationStorage(4);
     let fallbackCalls = 0;
-    storage.readHydrated("observed-profiles:a", () => { fallbackCalls += 1; return { value: "a" }; });
+    storage.readHydrated("observed-profiles:a", () => {
+      fallbackCalls += 1;
+      return { value: "a" };
+    });
     await storage.drain();
-    const other = storage.readHydrated("observed-profiles:b", () => { fallbackCalls += 1; return { value: "b" }; });
+    const other = storage.readHydrated("observed-profiles:b", () => {
+      fallbackCalls += 1;
+      return { value: "b" };
+    });
     expect(other).toEqual({ value: "b" });
     expect(fallbackCalls).toBe(2);
   });
@@ -51,7 +57,13 @@ describe("S338 observation family migration behavior", () => {
   test("persist families write synchronously then hydrate the same key for later reads", async () => {
     const storage = makeObservationStorage(4);
     let writes = 0;
-    storage.persist(() => { writes += 1; }, async () => ({ persisted: true }), "observation:request-1");
+    storage.persist(
+      () => {
+        writes += 1;
+      },
+      async () => ({ persisted: true }),
+      "observation:request-1",
+    );
     expect(writes).toBe(1);
     expect(storage.read("observation:request-1", () => null)).toBeNull();
     await storage.drain();

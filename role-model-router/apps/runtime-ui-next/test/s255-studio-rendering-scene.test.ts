@@ -2,7 +2,7 @@ import { describe, test } from "vitest";
 
 import { expect, given, label, scene, text } from "@role-model-router/foldkit/scene";
 
-import { studioIdle, type StudioTab } from "../src/studio";
+import { type StudioTab, studioIdle } from "../src/studio";
 import { view } from "../src/view";
 import { shellModel, shellUpdate } from "./support/runtime-shell";
 
@@ -27,11 +27,41 @@ const workspaces: ReadonlyArray<{
   readonly fields: readonly string[];
   readonly run: string;
 }> = [
-  { tab: "chat", requestTitle: "Request", resultTitle: "Result workspace", fields: ["Model", "Prompt"], run: "Run request" },
-  { tab: "images", requestTitle: "Image request modes", resultTitle: "Image result stage", fields: ["Mode", "Model", "Prompt", "Size"], run: "Run image request" },
-  { tab: "audio", requestTitle: "Audio mode and request", resultTitle: "Audio result stage", fields: ["Mode", "Model", "Voice", "Input"], run: "Run audio request" },
-  { tab: "rerank", requestTitle: "Rerank request", resultTitle: "Ranked results", fields: ["Contract", "Model", "Query", "Candidate documents"], run: "Submit rerank request" },
-  { tab: "advanced", requestTitle: "Endpoint family", resultTitle: "Response workspace", fields: ["Family", "Model", "JSON payload"], run: "Submit advanced request" },
+  {
+    tab: "chat",
+    requestTitle: "Request",
+    resultTitle: "Result workspace",
+    fields: ["Model", "Prompt"],
+    run: "Run request",
+  },
+  {
+    tab: "images",
+    requestTitle: "Image request modes",
+    resultTitle: "Image result stage",
+    fields: ["Mode", "Model", "Prompt", "Size"],
+    run: "Run image request",
+  },
+  {
+    tab: "audio",
+    requestTitle: "Audio mode and request",
+    resultTitle: "Audio result stage",
+    fields: ["Mode", "Model", "Voice", "Input"],
+    run: "Run audio request",
+  },
+  {
+    tab: "rerank",
+    requestTitle: "Rerank request",
+    resultTitle: "Ranked results",
+    fields: ["Contract", "Model", "Query", "Candidate documents"],
+    run: "Submit rerank request",
+  },
+  {
+    tab: "advanced",
+    requestTitle: "Endpoint family",
+    resultTitle: "Response workspace",
+    fields: ["Family", "Model", "JSON payload"],
+    run: "Submit advanced request",
+  },
 ];
 
 describe("S255 studio workspace rendering", () => {

@@ -22,7 +22,7 @@ const post = (requestId, body, extra = {}) => ({
   requestId,
   request: {
     method: "POST",
-    url: "http://127.0.0.1:1" + STUDIO_CHAT_PATH,
+    url: `http://127.0.0.1:1${STUDIO_CHAT_PATH}`,
     postData: JSON.stringify(body),
     headers: { authorization: "Bearer super-secret-token" },
   },
@@ -42,12 +42,14 @@ const collect = (events, options = {}) => {
 };
 
 test("S286 summarises only whitelisted body fields and never leaks prompt, messages, auth or tokens", () => {
-  const summary = summarizeStudioBody(JSON.stringify({
-    model: "moonshot/kimi-k2.5",
-    stream: false,
-    temperature: 0.2,
-    messages: [{ role: "user", content: "A quiet harbour at dawn" }],
-  }));
+  const summary = summarizeStudioBody(
+    JSON.stringify({
+      model: "moonshot/kimi-k2.5",
+      stream: false,
+      temperature: 0.2,
+      messages: [{ role: "user", content: "A quiet harbour at dawn" }],
+    }),
+  );
   assert.equal(summary.model, "moonshot/kimi-k2.5");
   assert.equal(summary.stream, false);
   assert.equal(summary.messageCount, 1);
@@ -57,26 +59,42 @@ test("S286 summarises only whitelisted body fields and never leaks prompt, messa
 
   const unparsable = summarizeStudioBody("{not json");
   assert.equal(unparsable.unparsable, true);
-  assert.ok(!JSON.stringify(unparsable).includes("not json"), "unparsable raw body must not be echoed");
+  assert.ok(
+    !JSON.stringify(unparsable).includes("not json"),
+    "unparsable raw body must not be echoed",
+  );
 
-  const withSecrets = summarizeStudioBody(JSON.stringify({
-    model: "m",
-    stream: true,
-    prompt: "secret prompt",
-    messages: [{ role: "user", content: "secret message" }],
-    auth: "Bearer sk-123",
-  }));
+  const withSecrets = summarizeStudioBody(
+    JSON.stringify({
+      model: "m",
+      stream: true,
+      prompt: "secret prompt",
+      messages: [{ role: "user", content: "secret message" }],
+      auth: "Bearer sk-123",
+    }),
+  );
   const secrets = JSON.stringify(withSecrets).toLowerCase();
   assert.ok(!secrets.includes("bearer"), "auth must never be captured");
-  assert.ok(!secrets.includes("secret prompt") && !secrets.includes("secret message"), "prompt/messages must never be captured");
+  assert.ok(
+    !secrets.includes("secret prompt") && !secrets.includes("secret message"),
+    "prompt/messages must never be captured",
+  );
 });
 
 test("S286 records a Studio POST start, phase, response status and finish with elapsed timings", () => {
   const { collector } = collect([
     ["Network.enable", {}, 0],
     ["StudioPhase", { phase: "seed" }, 5],
-    ["Network.requestWillBeSent", post("1", { model: "seed-model", stream: false, messages: [] }), 0],
-    ["Network.responseReceived", { requestId: "1", response: { status: 200, mimeType: "application/json" } }, 12],
+    [
+      "Network.requestWillBeSent",
+      post("1", { model: "seed-model", stream: false, messages: [] }),
+      0,
+    ],
+    [
+      "Network.responseReceived",
+      { requestId: "1", response: { status: 200, mimeType: "application/json" } },
+      12,
+    ],
     ["Network.loadingFinished", { requestId: "1" }, 20],
   ]);
   const requests = collector.studioRequests();
@@ -98,8 +116,20 @@ test("S286 records a Studio POST start, phase, response status and finish with e
 test("S286 records the catalogue GET status and timing separately from the Studio POST", () => {
   const { collector } = collect([
     ["Network.enable", {}, 0],
-    ["Network.requestWillBeSent", { requestId: "cat-1", request: { method: "GET", url: "http://127.0.0.1:1" + CATALOGUE_PATH }, timestamp: 0.1 }, 3],
-    ["Network.responseReceived", { requestId: "cat-1", response: { status: 200, mimeType: "application/json" } }, 9],
+    [
+      "Network.requestWillBeSent",
+      {
+        requestId: "cat-1",
+        request: { method: "GET", url: `http://127.0.0.1:1${CATALOGUE_PATH}` },
+        timestamp: 0.1,
+      },
+      3,
+    ],
+    [
+      "Network.responseReceived",
+      { requestId: "cat-1", response: { status: 200, mimeType: "application/json" } },
+      9,
+    ],
     ["Network.loadingFinished", { requestId: "cat-1" }, 11],
     ["Network.requestWillBeSent", post("1", { model: "m", stream: false, messages: [] }), 4],
     ["Network.responseReceived", { requestId: "1", response: { status: 200 } }, 30],
@@ -117,17 +147,36 @@ test("S286 tracks the LATEST catalogue GET (phase-labelled), so a final-click re
   const { collector } = collect([
     ["Network.enable", {}, 0],
     ["StudioPhase", { phase: "sweep" }, 1],
-    ["Network.requestWillBeSent", { requestId: "cat-old", request: { method: "GET", url: "http://h" + CATALOGUE_PATH }, timestamp: 0.1 }, 1],
+    [
+      "Network.requestWillBeSent",
+      {
+        requestId: "cat-old",
+        request: { method: "GET", url: `http://h${CATALOGUE_PATH}` },
+        timestamp: 0.1,
+      },
+      1,
+    ],
     ["Network.responseReceived", { requestId: "cat-old", response: { status: 200 } }, 2],
     ["Network.loadingFinished", { requestId: "cat-old" }, 2],
     ["StudioPhase", { phase: "final" }, 3],
-    ["Network.requestWillBeSent", { requestId: "cat-new", request: { method: "GET", url: "http://h" + CATALOGUE_PATH }, timestamp: 0.2 }, 4],
+    [
+      "Network.requestWillBeSent",
+      {
+        requestId: "cat-new",
+        request: { method: "GET", url: `http://h${CATALOGUE_PATH}` },
+        timestamp: 0.2,
+      },
+      4,
+    ],
     ["Network.responseReceived", { requestId: "cat-new", response: { status: 200 } }, 5],
     ["Network.loadingFinished", { requestId: "cat-new" }, 5],
   ]);
   const catalogues = collector.catalogues();
   assert.equal(catalogues.length, 2, "each catalogue GET is kept (bounded)");
-  assert.deepEqual(catalogues.map((entry) => entry.phase), ["sweep", "final"]);
+  assert.deepEqual(
+    catalogues.map((entry) => entry.phase),
+    ["sweep", "final"],
+  );
   const latest = collector.catalogueRequest();
   assert.equal(latest.requestId, "cat-new", "the latest GET must win, not the first route's");
   assert.equal(latest.phase, "final");
@@ -137,8 +186,14 @@ test("S286 tracks the LATEST catalogue GET (phase-labelled), so a final-click re
 test("S286 bounds collected entries and counts dropped ones instead of growing without limit", () => {
   const collector = createStudioCollector({ now: () => 0, requestCap: 1 });
   collector.handle("Network.enable", {});
-  collector.handle("Network.requestWillBeSent", post("1", { model: "a", stream: false, messages: [] }));
-  collector.handle("Network.requestWillBeSent", post("2", { model: "b", stream: false, messages: [] }));
+  collector.handle(
+    "Network.requestWillBeSent",
+    post("1", { model: "a", stream: false, messages: [] }),
+  );
+  collector.handle(
+    "Network.requestWillBeSent",
+    post("2", { model: "b", stream: false, messages: [] }),
+  );
   assert.equal(collector.studioRequests().length, 1);
   assert.equal(collector.dropped(), 1);
 });
@@ -147,19 +202,35 @@ test("S286 classifies no POST, in-flight, http error, responded-unapplied and ap
   assert.equal(classifyStudioOutcome({ buttonDisabledAtClick: true }), "no-post-disabled");
   assert.equal(classifyStudioOutcome({ buttonDisabledAtClick: false }), "no-post");
   assert.equal(
-    classifyStudioOutcome({ buttonDisabledAtClick: false, entry: { startElapsedMs: 1, status: undefined }, rawStateAtEnd: "loading" }),
+    classifyStudioOutcome({
+      buttonDisabledAtClick: false,
+      entry: { startElapsedMs: 1, status: undefined },
+      rawStateAtEnd: "loading",
+    }),
     "in-flight",
   );
   assert.equal(
-    classifyStudioOutcome({ buttonDisabledAtClick: false, entry: { status: 500 }, rawStateAtEnd: "loading" }),
+    classifyStudioOutcome({
+      buttonDisabledAtClick: false,
+      entry: { status: 500 },
+      rawStateAtEnd: "loading",
+    }),
     "http-error",
   );
   assert.equal(
-    classifyStudioOutcome({ buttonDisabledAtClick: false, entry: { status: 200 }, rawStateAtEnd: "loading" }),
+    classifyStudioOutcome({
+      buttonDisabledAtClick: false,
+      entry: { status: 200 },
+      rawStateAtEnd: "loading",
+    }),
     "responded-unapplied",
   );
   assert.equal(
-    classifyStudioOutcome({ buttonDisabledAtClick: false, entry: { status: 200 }, rawStateAtEnd: "success" }),
+    classifyStudioOutcome({
+      buttonDisabledAtClick: false,
+      entry: { status: 200 },
+      rawStateAtEnd: "success",
+    }),
     "applied",
   );
 });
@@ -168,11 +239,19 @@ test("S286 tags each request with the phase current when it started (seed vs fin
   const { collector } = collect([
     ["Network.enable", {}, 0],
     ["StudioPhase", { phase: "seed" }, 1],
-    ["Network.requestWillBeSent", post("seed-1", { model: "seed", stream: false, messages: [] }), 1],
+    [
+      "Network.requestWillBeSent",
+      post("seed-1", { model: "seed", stream: false, messages: [] }),
+      1,
+    ],
     ["Network.responseReceived", { requestId: "seed-1", response: { status: 200 } }, 2],
     ["Network.loadingFinished", { requestId: "seed-1" }, 2],
     ["StudioPhase", { phase: "final" }, 3],
-    ["Network.requestWillBeSent", post("final-1", { model: "final", stream: false, messages: [] }), 3],
+    [
+      "Network.requestWillBeSent",
+      post("final-1", { model: "final", stream: false, messages: [] }),
+      3,
+    ],
     ["Network.responseReceived", { requestId: "final-1", response: { status: 200 } }, 4],
     ["Network.loadingFinished", { requestId: "final-1" }, 4],
   ]);
@@ -184,20 +263,40 @@ test("S286 tags each request with the phase current when it started (seed vs fin
 test("S286 formats bounded evidence lines without body content or secrets", () => {
   const { collector } = collect([
     ["Network.enable", {}, 0],
-    ["Network.requestWillBeSent", { requestId: "cat-1", request: { method: "GET", url: "http://h" + CATALOGUE_PATH }, timestamp: 0.1 }, 2],
+    [
+      "Network.requestWillBeSent",
+      {
+        requestId: "cat-1",
+        request: { method: "GET", url: `http://h${CATALOGUE_PATH}` },
+        timestamp: 0.1,
+      },
+      2,
+    ],
     ["Network.responseReceived", { requestId: "cat-1", response: { status: 200 } }, 4],
     ["Network.loadingFinished", { requestId: "cat-1" }, 5],
-    ["Network.requestWillBeSent", post("1", { model: "moonshot/kimi-k2.5", stream: false, messages: [{ content: "A quiet harbour at dawn" }] }), 6],
+    [
+      "Network.requestWillBeSent",
+      post("1", {
+        model: "moonshot/kimi-k2.5",
+        stream: false,
+        messages: [{ content: "A quiet harbour at dawn" }],
+      }),
+      6,
+    ],
     ["Network.responseReceived", { requestId: "1", response: { status: 200 } }, 7],
   ]);
   const lines = formatStudioEvidence({
     click: { buttonDisabled: false, rawAtClick: "idle", selectedModel: "moonshot/kimi-k2.5" },
     evidence: collector.evidence(),
     maxLines: 25,
-    outcome: classifyStudioOutcome({ buttonDisabledAtClick: false, entry: collector.studioRequests()[0], rawStateAtEnd: "loading" }),
+    outcome: classifyStudioOutcome({
+      buttonDisabledAtClick: false,
+      entry: collector.studioRequests()[0],
+      rawStateAtEnd: "loading",
+    }),
   });
   assert.ok(Array.isArray(lines));
-  assert.ok(lines.length <= 25, "evidence must be bounded to " + lines.length + " lines");
+  assert.ok(lines.length <= 25, `evidence must be bounded to ${lines.length} lines`);
   const text = lines.join("\n");
   assert.match(text, /studio POST/);
   assert.match(text, /model=moonshot\/kimi-k2\.5/);
@@ -223,14 +322,24 @@ test("S288/S286 reports samePathname as raw evidence but makes no no-POST causal
       rawAtClick: "loading",
       selectedModelDom: "moonshot/kimi-k2.5",
     },
-    evidence: { catalogue: undefined, dropped: 0, enabledAtMs: 0, pageEvents: [], phases: [], studioRequests: [] },
+    evidence: {
+      catalogue: undefined,
+      dropped: 0,
+      enabledAtMs: 0,
+      pageEvents: [],
+      phases: [],
+      studioRequests: [],
+    },
     outcome,
   });
   const text = lines.join("\n");
   assert.match(text, /rawAtClick=loading/);
   assert.match(text, /samePathname=true/);
   assert.match(text, /outcome: no-post-disabled/);
-  assert.ok(!/no POST was observed|cannot dispatch|preserved the existing page state/i.test(text), "same pathname is not the same document, so no causal no-POST claim");
+  assert.ok(
+    !/no POST was observed|cannot dispatch|preserved the existing page state/i.test(text),
+    "same pathname is not the same document, so no causal no-POST claim",
+  );
 });
 
 test("S288 catalogue ring always keeps the latest GET with total/dropped counters past the cap", () => {
@@ -239,13 +348,23 @@ test("S288 catalogue ring always keeps the latest GET with total/dropped counter
   collector.handle("Network.enable", {});
   for (let index = 0; index < 22; index += 1) {
     clock += 1;
-    collector.handle("Network.requestWillBeSent", { requestId: "cat-" + index, request: { method: "GET", url: "http://h" + CATALOGUE_PATH } });
-    collector.handle("Network.responseReceived", { requestId: "cat-" + index, response: { status: 200 } });
-    collector.handle("Network.loadingFinished", { requestId: "cat-" + index });
+    collector.handle("Network.requestWillBeSent", {
+      requestId: `cat-${index}`,
+      request: { method: "GET", url: `http://h${CATALOGUE_PATH}` },
+    });
+    collector.handle("Network.responseReceived", {
+      requestId: `cat-${index}`,
+      response: { status: 200 },
+    });
+    collector.handle("Network.loadingFinished", { requestId: `cat-${index}` });
   }
   const evidence = collector.evidence();
   assert.equal(evidence.catalogues.length, 20, "the ring stays bounded");
-  assert.equal(evidence.catalogue.requestId, "cat-21", "the latest GET must always win, even after the ring wraps");
+  assert.equal(
+    evidence.catalogue.requestId,
+    "cat-21",
+    "the latest GET must always win, even after the ring wraps",
+  );
   assert.equal(evidence.catalogueTotal, 22);
   assert.equal(evidence.catalogueDropped, 2);
 });
@@ -256,9 +375,19 @@ test("S288 reserves click and outcome report lines even when more than 30 reques
   collector.handle("Network.enable", {});
   for (let index = 0; index < 35; index += 1) {
     clock += 1;
-    collector.handle("Network.requestWillBeSent", { requestId: "r-" + index, request: { method: "POST", url: "http://h" + STUDIO_CHAT_PATH, postData: JSON.stringify({ messages: [], model: "m" + index, stream: false }) } });
-    collector.handle("Network.responseReceived", { requestId: "r-" + index, response: { status: 200 } });
-    collector.handle("Network.loadingFinished", { requestId: "r-" + index });
+    collector.handle("Network.requestWillBeSent", {
+      requestId: `r-${index}`,
+      request: {
+        method: "POST",
+        url: `http://h${STUDIO_CHAT_PATH}`,
+        postData: JSON.stringify({ messages: [], model: `m${index}`, stream: false }),
+      },
+    });
+    collector.handle("Network.responseReceived", {
+      requestId: `r-${index}`,
+      response: { status: 200 },
+    });
+    collector.handle("Network.loadingFinished", { requestId: `r-${index}` });
   }
   const lines = formatStudioEvidence({
     click: { buttonDisabled: false, rawAtClick: "loading", selectedModelDom: null },
@@ -274,10 +403,13 @@ test("S288 reserves click and outcome report lines even when more than 30 reques
 });
 
 test("S288 prints model=unavailable when postData is missing, instead of null or an inferred model", () => {
-  let clock = 0;
+  const clock = 0;
   const collector = createStudioCollector({ now: () => clock });
   collector.handle("Network.enable", {});
-  collector.handle("Network.requestWillBeSent", { requestId: "no-body", request: { method: "POST", url: "http://h" + STUDIO_CHAT_PATH } });
+  collector.handle("Network.requestWillBeSent", {
+    requestId: "no-body",
+    request: { method: "POST", url: `http://h${STUDIO_CHAT_PATH}` },
+  });
   collector.handle("Network.responseReceived", { requestId: "no-body", response: { status: 200 } });
   collector.handle("Network.loadingFinished", { requestId: "no-body" });
   const lines = formatStudioEvidence({
@@ -293,7 +425,14 @@ test("S288 prints model=unavailable when postData is missing, instead of null or
 test("S286 never presents the DOM field value as the actual model state", () => {
   const lines = formatStudioEvidence({
     click: { buttonDisabled: false, rawAtClick: "idle", selectedModelDom: "moonshot/kimi-k2.5" },
-    evidence: { catalogue: undefined, dropped: 0, enabledAtMs: 0, pageEvents: [], phases: [], studioRequests: [] },
+    evidence: {
+      catalogue: undefined,
+      dropped: 0,
+      enabledAtMs: 0,
+      pageEvents: [],
+      phases: [],
+      studioRequests: [],
+    },
     outcome: "no-post",
   });
   const text = lines.join("\n");

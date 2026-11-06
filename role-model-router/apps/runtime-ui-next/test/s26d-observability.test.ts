@@ -125,7 +125,8 @@ describe("S26d observability page", () => {
       }),
     });
     await waitFor(
-      () => (document.body.textContent?.includes("No metric rows in the registry.") ? true : undefined),
+      () =>
+        document.body.textContent?.includes("No metric rows in the registry.") ? true : undefined,
       "empty state",
     );
     expect(document.body.textContent).toContain("No metric rows in the registry.");
@@ -145,7 +146,8 @@ describe("S26d observability page", () => {
     expect(document.body.textContent).not.toContain("router.decisions");
     resolveRead?.(jsonResponse({ metrics: {}, schemaVersion: "x" }));
     await waitFor(
-      () => (document.body.textContent?.includes("No metric rows in the registry.") ? true : undefined),
+      () =>
+        document.body.textContent?.includes("No metric rows in the registry.") ? true : undefined,
       "loading resolved to empty",
     );
   });
@@ -156,7 +158,11 @@ describe("S26d observability page", () => {
         fetchImpl: async () => jsonResponse({ reason: "unavailable" }, 503),
       }),
     });
-    await waitFor(() => (document.querySelector("h1")?.textContent === "Observability snapshot" ? true : undefined), "observability shell title");
+    await waitFor(
+      () =>
+        document.querySelector("h1")?.textContent === "Observability snapshot" ? true : undefined,
+      "observability shell title",
+    );
     expect(document.body.textContent).not.toContain("router.decisions");
     expect(document.body.textContent).toContain("No metric rows in the registry.");
   });
@@ -187,7 +193,8 @@ describe("S26d observability page", () => {
       runtimeEventSourceFactory: factory,
     });
     await waitFor(
-      () => (document.body.textContent?.includes("metric row(s) in the registry") ? true : undefined),
+      () =>
+        document.body.textContent?.includes("metric row(s) in the registry") ? true : undefined,
       "initial observability read",
     );
     expect(fetchCalls).toBe(1);

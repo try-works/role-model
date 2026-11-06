@@ -4,10 +4,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { readQueueJobState } from "../src/queue-runtime/admin.js";
-import {
-  AttemptFenceRejectedError,
-  openAttemptFenceStore,
-} from "../src/queue-runtime/fence.js";
+import { AttemptFenceRejectedError, openAttemptFenceStore } from "../src/queue-runtime/fence.js";
 import { startReplayQueueRuntime } from "../src/queue-runtime/index.js";
 import { runReplayDispatchWorker } from "../src/queue-runtime/workers.js";
 
@@ -72,16 +69,24 @@ const waitForQueueState = async (jobId: string, state: string): Promise<void> =>
     if (last === state) return;
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
-  throw new Error("timed out waiting for " + jobId + " to reach " + state + " (last: " + last + ")");
+  throw new Error(`timed out waiting for ${jobId} to reach ${state} (last: ${last})`);
 };
 
 describe("R30 attempt fence", () => {
   it("does not acknowledge an attempt until its evidence is durable", () => {
     const fence = open();
-    const lease = fence.beginAttempt({ jobId: "job-evidence", attempt: 1, owner: "worker-a", leaseMs: 60_000 });
+    const lease = fence.beginAttempt({
+      jobId: "job-evidence",
+      attempt: 1,
+      owner: "worker-a",
+      leaseMs: 60_000,
+    });
 
     expect(fence.complete(lease)).toEqual({ accepted: false, reason: "evidence_missing" });
-    expect(fence.readAttempt("job-evidence", 1)).toMatchObject({ state: "active", leaseId: lease.leaseId });
+    expect(fence.readAttempt("job-evidence", 1)).toMatchObject({
+      state: "active",
+      leaseId: lease.leaseId,
+    });
 
     fence.recordEvidence(lease, { output: "mapped", tokens: 12 });
     expect(fence.complete(lease)).toEqual({ accepted: true });
@@ -99,10 +104,17 @@ describe("R30 attempt fence", () => {
 
   it("fences evidence and completion after a kill", () => {
     const fence = open();
-    const lease = fence.beginAttempt({ jobId: "job-killed", attempt: 1, owner: "worker-a", leaseMs: 60_000 });
+    const lease = fence.beginAttempt({
+      jobId: "job-killed",
+      attempt: 1,
+      owner: "worker-a",
+      leaseMs: 60_000,
+    });
     fence.kill("job-killed");
 
-    expect(() => fence.recordEvidence(lease, { output: "late" })).toThrow(AttemptFenceRejectedError);
+    expect(() => fence.recordEvidence(lease, { output: "late" })).toThrow(
+      AttemptFenceRejectedError,
+    );
     expect(fence.complete(lease)).toEqual({ accepted: false, reason: "killed" });
     expect(() =>
       fence.beginAttempt({ jobId: "job-killed", attempt: 2, owner: "worker-b", leaseMs: 60_000 }),
@@ -112,15 +124,27 @@ describe("R30 attempt fence", () => {
 
   it("fences a late completion after lease expiry and admits only the new lease", () => {
     const fence = open();
-    const first = fence.beginAttempt({ jobId: "job-lease", attempt: 1, owner: "worker-a", leaseMs: 100 });
+    const first = fence.beginAttempt({
+      jobId: "job-lease",
+      attempt: 1,
+      owner: "worker-a",
+      leaseMs: 100,
+    });
 
     clock.now = 1_101;
     expect(fence.complete(first)).toEqual({ accepted: false, reason: "lease_expired" });
     expect(() => fence.recordEvidence(first, { output: "late" })).toThrow(/expired|lease|lapsed/);
 
-    const second = fence.beginAttempt({ jobId: "job-lease", attempt: 2, owner: "worker-b", leaseMs: 60_000 });
+    const second = fence.beginAttempt({
+      jobId: "job-lease",
+      attempt: 2,
+      owner: "worker-b",
+      leaseMs: 60_000,
+    });
     expect(fence.complete(first)).toEqual({ accepted: false, reason: "lease_expired" });
-    expect(() => fence.recordEvidence(first, { output: "late" })).toThrow(AttemptFenceRejectedError);
+    expect(() => fence.recordEvidence(first, { output: "late" })).toThrow(
+      AttemptFenceRejectedError,
+    );
 
     fence.recordEvidence(second, { output: "fresh" });
     expect(fence.complete(second)).toEqual({ accepted: true });
@@ -131,13 +155,23 @@ describe("R30 attempt fence", () => {
 
   it("refuses a second active lease for the same attempt", () => {
     const fence = open();
-    const first = fence.beginAttempt({ jobId: "job-held", attempt: 1, owner: "worker-a", leaseMs: 60_000 });
+    const first = fence.beginAttempt({
+      jobId: "job-held",
+      attempt: 1,
+      owner: "worker-a",
+      leaseMs: 60_000,
+    });
     expect(() =>
       fence.beginAttempt({ jobId: "job-held", attempt: 1, owner: "worker-b", leaseMs: 60_000 }),
     ).toThrow(/lease|held/);
 
     clock.now += 60_001;
-    const replacement = fence.beginAttempt({ jobId: "job-held", attempt: 1, owner: "worker-b", leaseMs: 60_000 });
+    const replacement = fence.beginAttempt({
+      jobId: "job-held",
+      attempt: 1,
+      owner: "worker-b",
+      leaseMs: 60_000,
+    });
     expect(replacement.leaseId).not.toBe(first.leaseId);
     expect(fence.complete(first)).toEqual({ accepted: false, reason: "lease_expired" });
     fence.recordEvidence(replacement, { output: "reclaimed" });
@@ -147,13 +181,23 @@ describe("R30 attempt fence", () => {
 
   it("replays a completed attempt idempotently after a crash before the queue ack", () => {
     const fence = open();
-    const first = fence.beginAttempt({ jobId: "job-crash", attempt: 1, owner: "worker-a", leaseMs: 60_000 });
+    const first = fence.beginAttempt({
+      jobId: "job-crash",
+      attempt: 1,
+      owner: "worker-a",
+      leaseMs: 60_000,
+    });
     fence.recordEvidence(first, { output: "durable" });
     expect(fence.complete(first)).toEqual({ accepted: true });
 
     // Crash window: the fence says completed but the queue never received its ack. The retry
     // arrives with the same attempt number; it must be an idempotent success, not already_completed.
-    const replay = fence.beginAttempt({ jobId: "job-crash", attempt: 1, owner: "worker-b", leaseMs: 60_000 });
+    const replay = fence.beginAttempt({
+      jobId: "job-crash",
+      attempt: 1,
+      owner: "worker-b",
+      leaseMs: 60_000,
+    });
     expect(replay.completed).toBe(true);
     expect(replay.leaseId).toBe(first.leaseId);
     expect(fence.complete(replay)).toEqual({ accepted: true });
@@ -165,7 +209,12 @@ describe("R30 attempt fence", () => {
     await publishQueuePolicy(1);
     const runtime = startReplayQueueRuntime({ stateRoot });
     const fence = open("worker-fence-crash.sqlite");
-    const first = fence.beginAttempt({ jobId: "req-fence-crash", attempt: 1, owner: "crashed-worker", leaseMs: 60_000 });
+    const first = fence.beginAttempt({
+      jobId: "req-fence-crash",
+      attempt: 1,
+      owner: "crashed-worker",
+      leaseMs: 60_000,
+    });
     fence.recordEvidence(first, { output: "durable-before-crash" });
     expect(fence.complete(first)).toEqual({ accepted: true });
 
@@ -189,7 +238,9 @@ describe("R30 attempt fence", () => {
       });
       await waitForQueueState("req-fence-crash", "completed");
       expect(handlerRan).toBe(false);
-      expect(fence.readEvidence("req-fence-crash", 1)?.payload).toEqual({ output: "durable-before-crash" });
+      expect(fence.readEvidence("req-fence-crash", 1)?.payload).toEqual({
+        output: "durable-before-crash",
+      });
     } finally {
       await worker.stop();
       await runtime.stop();

@@ -14,12 +14,14 @@ const cli = readFileSync(path.join(import.meta.dirname, "..", "src", "cli.ts"), 
 
 describe("S120 CLI ownership guard", () => {
   it("registers only known kinds, and each kind at most once", () => {
-    const kinds = [...cli.matchAll(/hostScope\.register\(\s*"([a-zA-Z]+)"/g)].map((match) => match[1]);
+    const kinds = [...cli.matchAll(/hostScope\.register\(\s*"([a-zA-Z]+)"/g)].map(
+      (match) => match[1],
+    );
     expect(kinds.length).toBeGreaterThan(0);
     for (const kind of kinds) {
       expect(HOST_RUNTIME_KINDS, kind).toContain(kind);
     }
-    expect(new Set(kinds).size, "duplicate registration: " + kinds.join(",")).toBe(kinds.length);
+    expect(new Set(kinds).size, `duplicate registration: ${kinds.join(",")}`).toBe(kinds.length);
     // The contract is that every owner the runtime can hold is registered exactly once.
     expect([...kinds].sort()).toEqual([...HOST_RUNTIME_KINDS].sort());
   });
@@ -43,10 +45,16 @@ describe("S120 CLI ownership guard", () => {
     const closeAt = body.indexOf("await hostScope.close()");
     expect(closeAt).toBeGreaterThan(-1);
     // Only the RUNTIME HOLDERS matter; loop/watchdog handles are nulled before the close by design.
-    for (const holder of ["server = null", "extensionRuntimeOwner = null", "extensionRuntime = null", "packagedRuntime = null", "backend = null"]) {
+    for (const holder of [
+      "server = null",
+      "extensionRuntimeOwner = null",
+      "extensionRuntime = null",
+      "packagedRuntime = null",
+      "backend = null",
+    ]) {
       const at = body.indexOf(holder);
-      expect(at, holder + " not found").toBeGreaterThan(-1);
-      expect(at, holder + " nulled before hostScope.close()").toBeGreaterThan(closeAt);
+      expect(at, `${holder} not found`).toBeGreaterThan(-1);
+      expect(at, `${holder} nulled before hostScope.close()`).toBeGreaterThan(closeAt);
     }
   });
 });

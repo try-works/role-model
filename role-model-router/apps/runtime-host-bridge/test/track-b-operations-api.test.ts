@@ -113,12 +113,15 @@ describe("Track B operations APIs", () => {
       runtimeChannel: "development",
       reason: "not_configured",
     };
-    const server = await startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry: { revision: 0, endpoints: [] },
-      readDevelopmentVerificationStatus: async () => expected,
-    }, { allowTestSeamBackend: true });
+    const server = await startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry: { revision: 0, endpoints: [] },
+        readDevelopmentVerificationStatus: async () => expected,
+      },
+      { allowTestSeamBackend: true },
+    );
     try {
       const response = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/development-verification`,
@@ -710,69 +713,72 @@ describe("Track B operations APIs", () => {
       }),
       rollbackGraphMigration: async () => ({ action: "rollback", state: "legacy_primary" }),
     };
-    const server = await startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry: backend.registry,
-      getRegistry: () => backend.registry,
-      executeChatCompletions: backend.executeChatCompletions,
-      executeResponses: backend.executeResponses,
-      listExtensions: async () => extensions,
-      readGraphMigration: async () => ({
-        state: "graph_primary",
-        migrationId: "tb04-legacy-graph-performance-v1",
-      }),
-      ...graphMutationCallbacks,
-      readStorageRetention: async () => summary,
-      dryRunStorageRetention: async (body: Record<string, unknown>) => {
-        receivedDryRunBody = body;
-        return {
+    const server = await startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry: backend.registry,
+        getRegistry: () => backend.registry,
+        executeChatCompletions: backend.executeChatCompletions,
+        executeResponses: backend.executeResponses,
+        listExtensions: async () => extensions,
+        readGraphMigration: async () => ({
+          state: "graph_primary",
+          migrationId: "tb04-legacy-graph-performance-v1",
+        }),
+        ...graphMutationCallbacks,
+        readStorageRetention: async () => summary,
+        dryRunStorageRetention: async (body: Record<string, unknown>) => {
+          receivedDryRunBody = body;
+          return {
+            ...summary,
+            receipts: [
+              {
+                id: `dry-${++dryRunCount}`,
+                status: "preview",
+                affectedCount: 2,
+                rollbackAvailable: true,
+              },
+            ],
+          };
+        },
+        updateStorageRetentionPolicy: async (body) => ({ ...summary, policies: [body] }),
+        executeStorageRetention: async () => ({
           ...summary,
-          receipts: [
-            {
-              id: `dry-${++dryRunCount}`,
-              status: "preview",
-              affectedCount: 2,
-              rollbackAvailable: true,
-            },
-          ],
-        };
+          activeJob: { id: "job-1", status: "running", progress: 0 },
+        }),
+        cancelStorageRetentionJob: async () => ({
+          ...summary,
+          activeJob: { id: "job-1", status: "cancelled", progress: 0 },
+        }),
+        rollbackStorageRetention: async () => ({
+          ...summary,
+          receipts: [{ id: "rollback-1", status: "rolled_back" }],
+        }),
+        readContributionState: async () => ({
+          mode: "contributor",
+          authorizationState: "pending_disclosure",
+        }),
+        updateContributionState: async (body) => ({
+          mode: body.action === "opt_out" ? "consumer" : "contributor",
+          authorizationState: "revoked",
+        }),
+        listRecommendations: async () => [{ id: "pack-1", signatureValid: true }],
+        applyRecommendation: async () => ({ activePack: { id: "pack-1", version: "1" } }),
+        readActivePack: async () => ({ id: "pack-1", version: "1" }),
+        exportVerifiersTrace: async (body) => ({
+          schemaVersion: "role-model.verifiers-live-export.v1",
+          requestId: body.requestId,
+          graphRootArtifactId: body.graphRootArtifactId,
+        }),
+        recoverLegacyTerminalFailure: async (body) => ({
+          schemaVersion: "role-model.legacy-terminal-failure-recovery.v1",
+          requestId: body.requestId,
+          status: "recovered",
+        }),
       },
-      updateStorageRetentionPolicy: async (body) => ({ ...summary, policies: [body] }),
-      executeStorageRetention: async () => ({
-        ...summary,
-        activeJob: { id: "job-1", status: "running", progress: 0 },
-      }),
-      cancelStorageRetentionJob: async () => ({
-        ...summary,
-        activeJob: { id: "job-1", status: "cancelled", progress: 0 },
-      }),
-      rollbackStorageRetention: async () => ({
-        ...summary,
-        receipts: [{ id: "rollback-1", status: "rolled_back" }],
-      }),
-      readContributionState: async () => ({
-        mode: "contributor",
-        authorizationState: "pending_disclosure",
-      }),
-      updateContributionState: async (body) => ({
-        mode: body.action === "opt_out" ? "consumer" : "contributor",
-        authorizationState: "revoked",
-      }),
-      listRecommendations: async () => [{ id: "pack-1", signatureValid: true }],
-      applyRecommendation: async () => ({ activePack: { id: "pack-1", version: "1" } }),
-      readActivePack: async () => ({ id: "pack-1", version: "1" }),
-      exportVerifiersTrace: async (body) => ({
-        schemaVersion: "role-model.verifiers-live-export.v1",
-        requestId: body.requestId,
-        graphRootArtifactId: body.graphRootArtifactId,
-      }),
-      recoverLegacyTerminalFailure: async (body) => ({
-        schemaVersion: "role-model.legacy-terminal-failure-recovery.v1",
-        requestId: body.requestId,
-        status: "recovered",
-      }),
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
     try {
       const base = `http://127.0.0.1:${server.port}`;
       expect(await (await fetch(`${base}/api/role-model/extensions`)).json()).toEqual(extensions);
@@ -891,14 +897,17 @@ describe("Track B operations APIs", () => {
       runtimeStateRoot,
       scopeId: "track-b-operations-absent",
     });
-    const server = await startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      registry: backend.registry,
-      getRegistry: () => backend.registry,
-      executeChatCompletions: backend.executeChatCompletions,
-      executeResponses: backend.executeResponses,
-    }, { allowTestSeamBackend: true });
+    const server = await startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        registry: backend.registry,
+        getRegistry: () => backend.registry,
+        executeChatCompletions: backend.executeChatCompletions,
+        executeResponses: backend.executeResponses,
+      },
+      { allowTestSeamBackend: true },
+    );
     try {
       expect(
         (await fetch(`http://127.0.0.1:${server.port}/api/role-model/extensions`)).status,
@@ -1298,15 +1307,18 @@ describe("Track B operations APIs", () => {
           taskIndex: 3,
         }),
       ).toMatchObject({ responseNodeIndex: 1, tokenExactDisposition: "refused_missing_evidence" });
-      const exportServer = await startBridgeServer({
-        host: "127.0.0.1",
-        port: 0,
-        registry: backend.registry,
-        getRegistry: () => backend.registry,
-        executeChatCompletions: backend.executeChatCompletions,
-        executeResponses: backend.executeResponses,
-        exportVerifiersTrace: backend.exportVerifiersTrace,
-      }, { allowTestSeamBackend: true });
+      const exportServer = await startBridgeServer(
+        {
+          host: "127.0.0.1",
+          port: 0,
+          registry: backend.registry,
+          getRegistry: () => backend.registry,
+          executeChatCompletions: backend.executeChatCompletions,
+          executeResponses: backend.executeResponses,
+          exportVerifiersTrace: backend.exportVerifiersTrace,
+        },
+        { allowTestSeamBackend: true },
+      );
       try {
         const response = await fetch(
           `http://127.0.0.1:${exportServer.port}/api/role-model/track-b/verifiers-export`,
@@ -2792,15 +2804,18 @@ describe("Track B operations APIs", () => {
       runtimeStateRoot,
       scopeId: "production",
     });
-    const server = await startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      listExtensions: () => backend.listExtensions(),
-      mutateExtension: (body) => backend.mutateExtension(body),
-      listRecommendations: () => backend.listRecommendations(),
-      dismissRecommendation: (body) => backend.dismissRecommendation(body),
-      applyRecommendation: (body) => backend.applyRecommendation(body),
-    }, { allowTestSeamBackend: true });
+    const server = await startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        listExtensions: () => backend.listExtensions(),
+        mutateExtension: (body) => backend.mutateExtension(body),
+        listRecommendations: () => backend.listRecommendations(),
+        dismissRecommendation: (body) => backend.dismissRecommendation(body),
+        applyRecommendation: (body) => backend.applyRecommendation(body),
+      },
+      { allowTestSeamBackend: true },
+    );
     try {
       const base = `http://127.0.0.1:${server.port}`;
       const mutateResponse = await fetch(`${base}/api/role-model/extensions/mutate`, {

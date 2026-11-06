@@ -1,6 +1,4 @@
 import { spawn } from "node:child_process";
-import { Effect, Exit, Layer, Scope } from "effect";
-import { composeR27HostLayer, type R27HostContract } from "./r27-layer-dag.js";
 import { createHash, createPublicKey, randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
@@ -8,12 +6,24 @@ import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { parseArgs } from "node:util";
+import { Effect, Exit, Layer, Scope } from "effect";
+import { type R27HostContract, composeR27HostLayer } from "./r27-layer-dag.js";
 
 import { type SqliteService, makeSync } from "@effect/sql-sqlite-node/service";
 
 import type { NormalizedCatalog } from "@role-model-router/catalog";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 
+import {
+  type ShutdownDrain,
+  assertComposedBackendOwner,
+  backendStorageRefOf,
+  benchmarkGate,
+  bindBackendStorageRef,
+  composeBackendOwner,
+  composeReadinessOwner,
+  onceClose,
+} from "./composition-dag.js";
 import {
   type DevelopmentVerificationAuthorization,
   negotiateDevelopmentVerificationCapability,
@@ -22,18 +32,18 @@ import {
 // Run 100 addendum `evaluation-lease-wedge-repair.addendum-02` S3: a give-up must terminalize the
 // evaluation half of the handoff too, or the row stays "in flight" with no lease forever.
 import { terminalizeAbandonedEvaluation } from "./evaluation-orphan-terminalization.js";
+import { createHostRuntimeScope } from "./host-runtime-scope.js";
 import {
+  type BridgeServer,
   type CreateRuntimeBridgeBackendOptions,
   type RuntimeBridgeBackend,
   type RuntimeOperatorContext,
-  type BridgeServer,
   type StartBridgeServerOptions,
   createRuntimeBridgeBackend,
-  resolveBridgeServerOptions,
   drainDeferredRouteCapture,
+  resolveBridgeServerOptions,
   startBridgeServer,
 } from "./index.js";
-import { assertComposedBackendOwner, backendStorageRefOf, benchmarkGate, bindBackendStorageRef, composeBackendOwner, composeReadinessOwner, onceClose, type ShutdownDrain } from "./composition-dag.js";
 import { validateRun88PrivateDistributionIdentity } from "./kw-private-loader.js";
 import {
   describeRouterPolicyResolution,
@@ -41,6 +51,7 @@ import {
   resolveLearningPolicyStateRoot,
 } from "./learning-policy-file.js";
 import { readRouteLearningDefaults } from "./product-defaults-file.js";
+import { releaseHostResources } from "./release-host-resources.js";
 import { readRouteLadderCensus } from "./route-ladder-census.js";
 import {
   CURRENT_RUNTIME_CHANNEL_VERSION,
@@ -51,8 +62,6 @@ import {
   negotiateRuntimeChannelStartup,
   readPackagedRuntimeProfile,
 } from "./runtime-channel.js";
-import { releaseHostResources } from "./release-host-resources.js";
-import { createHostRuntimeScope } from "./host-runtime-scope.js";
 
 import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 import { resolveRun88StageRuntimeIdentity } from "./runtime-version.js";
@@ -212,9 +221,7 @@ export const openReadOnlyStateDatabase = (file: string): DatabaseSync =>
  * reset it with undefined. (The setup/read-only options stay owned by this module.)
  */
 let stateDatabaseServiceFactory: typeof makeSync = makeSync;
-export function setStateDatabaseServiceFactoryForTests(
-  factory: typeof makeSync | undefined,
-): void {
+export function setStateDatabaseServiceFactoryForTests(factory: typeof makeSync | undefined): void {
   stateDatabaseServiceFactory = factory ?? makeSync;
 }
 
@@ -543,10 +550,7 @@ export function resolveChannelScopedReplayLedgerLimits(input: {
       unifiedRuntimeConfigPath: input.unifiedRuntimeConfigPath,
     }),
   );
-  const withCap = applyAutoQueueDailyCap(
-    resolved,
-    autoQueue.enabled ? autoQueue.dailyCap : 0,
-  );
+  const withCap = applyAutoQueueDailyCap(resolved, autoQueue.enabled ? autoQueue.dailyCap : 0);
   if (resolved.enforced !== undefined) return withCap;
   const snapshot = readLearningPolicyFile({
     repoRoot: input.repoRoot,
@@ -634,6 +638,7 @@ import {
   decodeExternalizedOperatorReadback,
   digestTrackBSemanticEvaluationCriteria,
   evaluateProductionExtensionRuntimeReadiness,
+  extensionHostTiming,
   normalizeTrackBSemanticEvaluationCriteria,
   readTrackBAdvisoryMeasurement,
   readTrackBRouteAdvisorySourceFromRuntime,
@@ -649,7 +654,6 @@ import {
   runTrackBShadowPipeline,
   trackBDistributionRequiresSQLiteMaintenance,
   validateProductionExtensionSet,
-  extensionHostTiming,
   validateRecoveredReplayCapture,
   validateRun88ProviderResponseObservation,
   verifyTrackBExtensionClosureAfterRestart,
@@ -3473,7 +3477,12 @@ export async function runQaStartupInvoke<T>(input: {
       input.invoke(),
       new Promise<never>((_, reject) => {
         timer = setTimeout(
-          () => reject(new Error(`QA extension startup invoke timed out after ${input.timeoutMs}ms: ${input.extensionId}`)),
+          () =>
+            reject(
+              new Error(
+                `QA extension startup invoke timed out after ${input.timeoutMs}ms: ${input.extensionId}`,
+              ),
+            ),
           input.timeoutMs,
         );
       }),
@@ -4383,9 +4392,10 @@ export async function runCliBackendBranch(input: {
   completeCliStartupReadiness(input.bootstrapState);
 }
 
-export function completeCliStartupReadiness(
-  bootstrapState: { status: CliBootstrapState["status"]; message?: string },
-): void {
+export function completeCliStartupReadiness(bootstrapState: {
+  status: CliBootstrapState["status"];
+  message?: string;
+}): void {
   bootstrapState.status = "ready";
   delete bootstrapState.message;
 }
@@ -4441,7 +4451,8 @@ export function createCliServerOptions(
       return method(...args);
     }) as unknown;
 
-  const storageRef: { current: import("./composition-dag.js").BackendStorageContract | undefined } = { current: undefined };
+  const storageRef: { current: import("./composition-dag.js").BackendStorageContract | undefined } =
+    { current: undefined };
   const owner = composeBackendOwner({
     storageRef,
     host: options.host,
@@ -4464,114 +4475,116 @@ export function createCliServerOptions(
     emptyCatalog: EMPTY_CATALOG,
     closeBackend,
     overrides: {
-    readCaptureEvidence: (bindBackendMethod as unknown as (method: string) => unknown)(
-    "readCaptureEvidence",
-    ) as StartBridgeServerOptions["readCaptureEvidence"],
-    readLogs: async () =>
-    (
-    (await (bindBackendMethod("getLocalLogs") as CliBackend["getLocalLogs"])()) as {
-    logs: string;
-    }
-    ).logs,
-    readHealthStatus: async () => {
-    const bootstrapState = readBootstrapState();
-    if (bootstrapState.status !== "ready") {
-    return createPendingHealthStatus(bootstrapState);
-    }
-    const resolver = isCliBackendResolver(backendOrResolver) ? backendOrResolver : null;
-    const extensionRuntime = resolver?.readExtensionRuntime
-    ? resolver.readExtensionRuntime()
-    : null;
-    if (extensionRuntime) {
-    const readiness = evaluateProductionExtensionRuntimeReadiness(extensionRuntime);
-    if (readiness.state === "degraded") {
-    // Routing stays available; the probe reports the degradation without
-    // invoking the fatal extension-runtime teardown.
-    return createPendingHealthStatus({
-    status: "degraded",
-    message: readiness.message,
-    });
-    }
-    if (readiness.state === "failed") {
-    if (resolver?.onExtensionRuntimeFailure) {
-    await resolver.onExtensionRuntimeFailure(new Error(readiness.message));
-    }
-    return createPendingHealthStatus(readBootstrapState());
-    }
-    if (readiness.state === "pending") {
-    // Keep the probe honest while a supervised transition is in flight
-    // without permanently failing an otherwise healthy runtime.
-    return createPendingHealthStatus({ status: "pending", message: readiness.message });
-    }
-    }
-    const backend = resolveBackend();
-    return backend ? backend.readHealthStatus() : createPendingHealthStatus(readBootstrapState());
-    },
-    readTrackBReplayStatus: () => activeAutoReplayLoop?.status() ?? null,
-    controlTrackBReplay: async (body: Record<string, unknown>) => {
-    const action = typeof body?.action === "string" ? body.action : "";
-    if (action === "pause") activeAutoReplayLoop?.pause();
-    else if (action === "resume") activeAutoReplayLoop?.resume();
-    else throw new Error("replay control action must be pause or resume");
-    return { action, status: activeAutoReplayLoop?.status() ?? null };
-    },
-    readTrackBLearningSummary: async () => {
-    return activeLearningSummaryReader ? activeLearningSummaryReader() : null;
-    },
-    readStoreDegradationReceipts: (() => {
-    const read = async (
-    query: Readonly<Record<string, string>> = {},
-    ): Promise<StoreDegradationReceiptReadback> => {
-    void query;
-    const resolver = isCliBackendResolver(backendOrResolver) ? backendOrResolver : null;
-    const runtime = resolver?.readExtensionRuntime ? resolver.readExtensionRuntime() : null;
-    // The readback is served by the operator host, so the envelope carries the operator
-    // context's scope - the same binding every other operator readback uses (the extensions
-    // enforce channel/scope/epoch from the envelope itself). The fallback keeps a host whose
-    // options were built without an explicit context from sending an EMPTY scope, which the
-    // capability boundary would refuse as an unbound request.
-    const scope = options.operatorContext?.scope ?? "operator";
-    const envelopeFor = (
-    extensionId: string,
-    capability: string,
-    value: Record<string, unknown>,
-    ) => ({
-    requestId: `operator-store-degradation-receipts:${capability}:${Date.now()}`,
-    sessionId: `operator-store-degradation-receipts:${scope}`,
-    protocolVersion: "1.1.0",
-    channel: options.runtimeChannel ?? options.operatorContext?.channel ?? "development",
-    scope,
-    authorizationEpoch: 1,
-    capability,
-    value,
-    ...(extensionId === "knowledge-store" ? { payload: value } : {}),
-    });
-    const unavailable = (reason: string): StoreDegradationReceiptSource => ({
-    available: false,
-    reason,
-    receipts: [],
-    });
-    if (runtime === null || typeof runtime.invoke !== "function") {
-    return {
-    schemaVersion: "role-model.store-degradation-receipts.v1",
-    store: unavailable("extension runtime is not available"),
-    worker: unavailable("extension runtime is not available"),
-    };
-    }
-    // The narrowed method is captured BEFORE the closure: property narrowing (the
-    // `typeof runtime.invoke !== "function"` guard above) does not survive into a callback,
-    // so calling `runtime.invoke` inside the arrow widens it back to optional (TS2722). The
-    // captured function keeps the call typechecking with no non-null assertion.
-    const invoke = runtime.invoke;
-    return readStoreDegradationReceiptsFromRuntime({
-    invoke,
-    envelopeFor,
-    stateRoot: options.runtimeStateRoot ?? "",
-    scopeId: scope,
-    });
-    };
-    return read as StartBridgeServerOptions["readStoreDegradationReceipts"];
-    })(),
+      readCaptureEvidence: (bindBackendMethod as unknown as (method: string) => unknown)(
+        "readCaptureEvidence",
+      ) as StartBridgeServerOptions["readCaptureEvidence"],
+      readLogs: async () =>
+        (
+          (await (bindBackendMethod("getLocalLogs") as CliBackend["getLocalLogs"])()) as {
+            logs: string;
+          }
+        ).logs,
+      readHealthStatus: async () => {
+        const bootstrapState = readBootstrapState();
+        if (bootstrapState.status !== "ready") {
+          return createPendingHealthStatus(bootstrapState);
+        }
+        const resolver = isCliBackendResolver(backendOrResolver) ? backendOrResolver : null;
+        const extensionRuntime = resolver?.readExtensionRuntime
+          ? resolver.readExtensionRuntime()
+          : null;
+        if (extensionRuntime) {
+          const readiness = evaluateProductionExtensionRuntimeReadiness(extensionRuntime);
+          if (readiness.state === "degraded") {
+            // Routing stays available; the probe reports the degradation without
+            // invoking the fatal extension-runtime teardown.
+            return createPendingHealthStatus({
+              status: "degraded",
+              message: readiness.message,
+            });
+          }
+          if (readiness.state === "failed") {
+            if (resolver?.onExtensionRuntimeFailure) {
+              await resolver.onExtensionRuntimeFailure(new Error(readiness.message));
+            }
+            return createPendingHealthStatus(readBootstrapState());
+          }
+          if (readiness.state === "pending") {
+            // Keep the probe honest while a supervised transition is in flight
+            // without permanently failing an otherwise healthy runtime.
+            return createPendingHealthStatus({ status: "pending", message: readiness.message });
+          }
+        }
+        const backend = resolveBackend();
+        return backend
+          ? backend.readHealthStatus()
+          : createPendingHealthStatus(readBootstrapState());
+      },
+      readTrackBReplayStatus: () => activeAutoReplayLoop?.status() ?? null,
+      controlTrackBReplay: async (body: Record<string, unknown>) => {
+        const action = typeof body?.action === "string" ? body.action : "";
+        if (action === "pause") activeAutoReplayLoop?.pause();
+        else if (action === "resume") activeAutoReplayLoop?.resume();
+        else throw new Error("replay control action must be pause or resume");
+        return { action, status: activeAutoReplayLoop?.status() ?? null };
+      },
+      readTrackBLearningSummary: async () => {
+        return activeLearningSummaryReader ? activeLearningSummaryReader() : null;
+      },
+      readStoreDegradationReceipts: (() => {
+        const read = async (
+          query: Readonly<Record<string, string>> = {},
+        ): Promise<StoreDegradationReceiptReadback> => {
+          void query;
+          const resolver = isCliBackendResolver(backendOrResolver) ? backendOrResolver : null;
+          const runtime = resolver?.readExtensionRuntime ? resolver.readExtensionRuntime() : null;
+          // The readback is served by the operator host, so the envelope carries the operator
+          // context's scope - the same binding every other operator readback uses (the extensions
+          // enforce channel/scope/epoch from the envelope itself). The fallback keeps a host whose
+          // options were built without an explicit context from sending an EMPTY scope, which the
+          // capability boundary would refuse as an unbound request.
+          const scope = options.operatorContext?.scope ?? "operator";
+          const envelopeFor = (
+            extensionId: string,
+            capability: string,
+            value: Record<string, unknown>,
+          ) => ({
+            requestId: `operator-store-degradation-receipts:${capability}:${Date.now()}`,
+            sessionId: `operator-store-degradation-receipts:${scope}`,
+            protocolVersion: "1.1.0",
+            channel: options.runtimeChannel ?? options.operatorContext?.channel ?? "development",
+            scope,
+            authorizationEpoch: 1,
+            capability,
+            value,
+            ...(extensionId === "knowledge-store" ? { payload: value } : {}),
+          });
+          const unavailable = (reason: string): StoreDegradationReceiptSource => ({
+            available: false,
+            reason,
+            receipts: [],
+          });
+          if (runtime === null || typeof runtime.invoke !== "function") {
+            return {
+              schemaVersion: "role-model.store-degradation-receipts.v1",
+              store: unavailable("extension runtime is not available"),
+              worker: unavailable("extension runtime is not available"),
+            };
+          }
+          // The narrowed method is captured BEFORE the closure: property narrowing (the
+          // `typeof runtime.invoke !== "function"` guard above) does not survive into a callback,
+          // so calling `runtime.invoke` inside the arrow widens it back to optional (TS2722). The
+          // captured function keeps the call typechecking with no non-null assertion.
+          const invoke = runtime.invoke;
+          return readStoreDegradationReceiptsFromRuntime({
+            invoke,
+            envelopeFor,
+            stateRoot: options.runtimeStateRoot ?? "",
+            scopeId: scope,
+          });
+        };
+        return read as StartBridgeServerOptions["readStoreDegradationReceipts"];
+      })(),
     },
   });
   assertComposedBackendOwner(owner);
@@ -5210,9 +5223,20 @@ export async function main(): Promise<void> {
   // S327 (R27 Drain): the shutdown phase steps are registered here and executed by the DAG Server
   // owner between join and interrupt (bounded, release-all).
   const shutdownDrains: ShutdownDrain[] = [];
-  shutdownDrains.push({ name: "auto-replay", run: () => { activeAutoReplayLoop?.stop(); activeAutoReplayLoop = null; } });
+  shutdownDrains.push({
+    name: "auto-replay",
+    run: () => {
+      activeAutoReplayLoop?.stop();
+      activeAutoReplayLoop = null;
+    },
+  });
   shutdownDrains.push({ name: "route-capture", run: drainDeferredRouteCapture });
-  shutdownDrains.push({ name: "benchmark", run: () => { benchmarkGate.cancel("shutdown"); } });
+  shutdownDrains.push({
+    name: "benchmark",
+    run: () => {
+      benchmarkGate.cancel("shutdown");
+    },
+  });
   // S324 (R27 early readiness): the production readiness owner consumed by the Server admission gate.
   // S593 (R27): the closed Layer DAG now owns production acquisition order and readiness: the CLI
   // builds the DAG scope, so its nodes acquire in the closed order (readiness -> permits -> backend ->
@@ -5254,9 +5278,11 @@ export async function main(): Promise<void> {
       packagedRuntime = null;
       const firstFailure = failureRelease.errors[0];
       if (firstFailure !== undefined) {
-        bootstrapState.message =
-          "Release failed at " + firstFailure.step + ": " +
-          (firstFailure.error instanceof Error ? firstFailure.error.message : String(firstFailure.error));
+        bootstrapState.message = `Release failed at ${firstFailure.step}: ${
+          firstFailure.error instanceof Error
+            ? firstFailure.error.message
+            : String(firstFailure.error)
+        }`;
       }
     })();
     return extensionRuntimeFailurePromise;
@@ -5270,9 +5296,13 @@ export async function main(): Promise<void> {
       stopExtensionRuntimeWatchdog?.();
       stopExtensionRuntimeWatchdog = null;
       if (closeR27Dag !== null) {
-        try { await closeR27Dag(); } catch (error) {
+        try {
+          await closeR27Dag();
+        } catch (error) {
           process.exitCode = 1;
-          console.error("release failed at r27-dag: " + (error instanceof Error ? error.message : String(error)));
+          console.error(
+            `release failed at r27-dag: ${error instanceof Error ? error.message : String(error)}`,
+          );
         }
       }
       const releaseResult = await hostScope.close();
@@ -5284,7 +5314,9 @@ export async function main(): Promise<void> {
       if (releaseResult.errors.length > 0) {
         process.exitCode = 1;
         for (const failure of releaseResult.errors) {
-          console.error("release failed at " + failure.step + ": " + (failure.error instanceof Error ? failure.error.message : String(failure.error)));
+          console.error(
+            `release failed at ${failure.step}: ${failure.error instanceof Error ? failure.error.message : String(failure.error)}`,
+          );
         }
       }
       process.exit(releaseResult.errors.length > 0 ? 1 : 0);
@@ -5356,7 +5388,12 @@ export async function main(): Promise<void> {
       },
       closePackagedRuntimeOnce,
     );
-    return startBridgeServer(serverOptions, backendOwner === undefined ? undefined : { backend: backendOwner, drains: shutdownDrains, readiness: readinessOwner });
+    return startBridgeServer(
+      serverOptions,
+      backendOwner === undefined
+        ? undefined
+        : { backend: backendOwner, drains: shutdownDrains, readiness: readinessOwner },
+    );
   };
 
   /**
@@ -5369,30 +5406,43 @@ export async function main(): Promise<void> {
   const r27DagScope = Effect.runSync(Scope.make());
   let r27Host: R27HostContract | undefined;
   let r27DagClosePromise: Promise<void> | null = null;
-  closeR27Dag = () => (r27DagClosePromise ??= Effect.runPromise(Scope.close(r27DagScope, Exit.void)));
+  closeR27Dag = () =>
+    (r27DagClosePromise ??= Effect.runPromise(Scope.close(r27DagScope, Exit.void)));
   try {
     await Effect.runPromise(
       Layer.buildWithScope(
         composeR27HostLayer({
-        events: r27DagEvents,
-        readiness: readinessOwner,
-        onHost: (host) => { r27Host = host; },
-        acquire: {
-          // bootstrap, drains and benchmarks are owned by their nodes now; their handles are the
-          // same objects the server owner consumes, and the DAG scope releases them after the server.
-          bootstrap: async () => ({ handle: bootstrapState, release: async () => {} }),
-          drains: async () => ({ handle: shutdownDrains, release: async () => { shutdownDrains.length = 0; } }),
-          benchmarks: async () => ({ handle: benchmarkGate, release: async () => { benchmarkGate.cancel("r27-scope-close"); } }),
-          // backend/refresh remain records: the backend is created inside the branch/sidecar
-          // acquire path that startServer owns, and refresh starts only after extension-runtime
-          // readiness. Moving either before the server would invert the locked acquisition order;
-          // recorded follow-up rather than a silent imperative acquisition.
-          server: async () => {
-            const value = await startServer();
-            return { handle: value, release: () => value.close() };
+          events: r27DagEvents,
+          readiness: readinessOwner,
+          onHost: (host) => {
+            r27Host = host;
           },
-        },
-      }),
+          acquire: {
+            // bootstrap, drains and benchmarks are owned by their nodes now; their handles are the
+            // same objects the server owner consumes, and the DAG scope releases them after the server.
+            bootstrap: async () => ({ handle: bootstrapState, release: async () => {} }),
+            drains: async () => ({
+              handle: shutdownDrains,
+              release: async () => {
+                shutdownDrains.length = 0;
+              },
+            }),
+            benchmarks: async () => ({
+              handle: benchmarkGate,
+              release: async () => {
+                benchmarkGate.cancel("r27-scope-close");
+              },
+            }),
+            // backend/refresh remain records: the backend is created inside the branch/sidecar
+            // acquire path that startServer owns, and refresh starts only after extension-runtime
+            // readiness. Moving either before the server would invert the locked acquisition order;
+            // recorded follow-up rather than a silent imperative acquisition.
+            server: async () => {
+              const value = await startServer();
+              return { handle: value, release: () => value.close() };
+            },
+          },
+        }),
         r27DagScope,
       ),
     );
@@ -5401,7 +5451,10 @@ export async function main(): Promise<void> {
     throw error;
   }
   const acquiredServer = r27Host?.handles.server?.handle;
-  if (!(acquiredServer instanceof Object) || typeof (acquiredServer as { close?: unknown }).close !== "function") {
+  if (
+    !(acquiredServer instanceof Object) ||
+    typeof (acquiredServer as { close?: unknown }).close !== "function"
+  ) {
     await closeR27Dag().catch(() => undefined);
     throw new Error("r27 DAG did not expose the acquired BridgeServer handle");
   }
@@ -6029,8 +6082,26 @@ export async function main(): Promise<void> {
          * Run 99 R33: one bounded evaluation-resume sweep per auto-replay tick, delegated to the
          * implementation that lives with the replay command handler.
          */
-        async resumePendingEvaluations(input: { readonly signal?: AbortSignal; readonly candidateId?: string; readonly window?: unknown; readonly policySetDigest?: string; readonly limit?: number; readonly onlyGroupIds?: readonly string[]; readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void } = {}): Promise<{ resumed: number; completed: number; failed: number; outsideRetentionWindow: number; renewedFromDrain: number; remaining: number }> {
-          if (input.signal instanceof AbortSignal && input.signal.aborted) throw new Error("sweep aborted");
+        async resumePendingEvaluations(
+          input: {
+            readonly signal?: AbortSignal;
+            readonly candidateId?: string;
+            readonly window?: unknown;
+            readonly policySetDigest?: string;
+            readonly limit?: number;
+            readonly onlyGroupIds?: readonly string[];
+            readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void;
+          } = {},
+        ): Promise<{
+          resumed: number;
+          completed: number;
+          failed: number;
+          outsideRetentionWindow: number;
+          renewedFromDrain: number;
+          remaining: number;
+        }> {
+          if (input.signal instanceof AbortSignal && input.signal.aborted)
+            throw new Error("sweep aborted");
           if (!resumeEvaluationsRef.current) {
             return {
               resumed: 0,
@@ -6089,8 +6160,19 @@ export async function main(): Promise<void> {
          *   `knowledge:promote-candidate` when the receipt says `validate` -> `knowledge:record-learning` (pack).
          * It never dispatches a provider call and never mutates a route.
          */
-        async learnFromUnconsumedCandidates(input: { readonly signal?: AbortSignal; readonly candidateId?: string; readonly window?: unknown; readonly policySetDigest?: string; readonly limit?: number; readonly onlyGroupIds?: readonly string[]; readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void } = {}): Promise<{ scanned: number; consumed: number; remaining: number; activated?: number }> {
-          if (input.signal instanceof AbortSignal && input.signal.aborted) throw new Error("sweep aborted");
+        async learnFromUnconsumedCandidates(
+          input: {
+            readonly signal?: AbortSignal;
+            readonly candidateId?: string;
+            readonly window?: unknown;
+            readonly policySetDigest?: string;
+            readonly limit?: number;
+            readonly onlyGroupIds?: readonly string[];
+            readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void;
+          } = {},
+        ): Promise<{ scanned: number; consumed: number; remaining: number; activated?: number }> {
+          if (input.signal instanceof AbortSignal && input.signal.aborted)
+            throw new Error("sweep aborted");
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { scanned: 0, consumed: 0, remaining: 0 };
           const authority = await (async () => {
@@ -7054,8 +7136,19 @@ export async function main(): Promise<void> {
          * estimate over the comparison's own rows, and the two receipts minted with the durable authority. Bounded to
          * two groups per tick, idempotent, and it never dispatches a provider call or invents a trajectory.
          */
-        async deriveLearnerCandidates(input: { readonly signal?: AbortSignal; readonly candidateId?: string; readonly window?: unknown; readonly policySetDigest?: string; readonly limit?: number; readonly onlyGroupIds?: readonly string[]; readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void } = {}): Promise<{ examined: number; derived: number; pending: number }> {
-          if (input.signal instanceof AbortSignal && input.signal.aborted) throw new Error("sweep aborted");
+        async deriveLearnerCandidates(
+          input: {
+            readonly signal?: AbortSignal;
+            readonly candidateId?: string;
+            readonly window?: unknown;
+            readonly policySetDigest?: string;
+            readonly limit?: number;
+            readonly onlyGroupIds?: readonly string[];
+            readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void;
+          } = {},
+        ): Promise<{ examined: number; derived: number; pending: number }> {
+          if (input.signal instanceof AbortSignal && input.signal.aborted)
+            throw new Error("sweep aborted");
           /**
            * Run 105 Phase 3.5 follow-up: the ladder materialization must NOT ride the legacy
            * consumer-secret derivation path - a runtime whose durable-evaluation authority secret
@@ -7287,8 +7380,25 @@ export async function main(): Promise<void> {
          * its captures are still in the retention ring. Bounded page, bounded computes, wall-clock budget, and
          * idempotent: a group whose own report already exists is settled and never re-analyzed.
          */
-        async sweepFinalizationSignals(input: { readonly signal?: AbortSignal; readonly candidateId?: string; readonly window?: unknown; readonly policySetDigest?: string; readonly limit?: number; readonly onlyGroupIds?: readonly string[]; readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void } = {}): Promise<{ examined: number; analyzed: number; skipped: number; refused: number; deferred: number }> {
-          if (input.signal instanceof AbortSignal && input.signal.aborted) throw new Error("sweep aborted");
+        async sweepFinalizationSignals(
+          input: {
+            readonly signal?: AbortSignal;
+            readonly candidateId?: string;
+            readonly window?: unknown;
+            readonly policySetDigest?: string;
+            readonly limit?: number;
+            readonly onlyGroupIds?: readonly string[];
+            readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void;
+          } = {},
+        ): Promise<{
+          examined: number;
+          analyzed: number;
+          skipped: number;
+          refused: number;
+          deferred: number;
+        }> {
+          if (input.signal instanceof AbortSignal && input.signal.aborted)
+            throw new Error("sweep aborted");
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { examined: 0, analyzed: 0, skipped: 0, refused: 0, deferred: 0 };
           const authority = await (async () => {
@@ -7461,8 +7571,19 @@ export async function main(): Promise<void> {
          * resume entry the existing sweep already knows how to complete (the entry's criteria, capture and
          * branch captures are all re-derived from durable state by that completion).
          */
-        async recoverHandedOffEvaluations(input: { readonly signal?: AbortSignal; readonly candidateId?: string; readonly window?: unknown; readonly policySetDigest?: string; readonly limit?: number; readonly onlyGroupIds?: readonly string[]; readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void } = {}): Promise<{ scanned: number; recovered: number; skipped: number }> {
-          if (input.signal instanceof AbortSignal && input.signal.aborted) throw new Error("sweep aborted");
+        async recoverHandedOffEvaluations(
+          input: {
+            readonly signal?: AbortSignal;
+            readonly candidateId?: string;
+            readonly window?: unknown;
+            readonly policySetDigest?: string;
+            readonly limit?: number;
+            readonly onlyGroupIds?: readonly string[];
+            readonly onDerivedCandidate?: (candidateId: string, groupId: string) => void;
+          } = {},
+        ): Promise<{ scanned: number; recovered: number; skipped: number }> {
+          if (input.signal instanceof AbortSignal && input.signal.aborted)
+            throw new Error("sweep aborted");
           const runtime = extensionRuntimeRef.current;
           if (!runtime) return { scanned: 0, recovered: 0, skipped: 0 };
           // Cadence guard (measured need): the listing used to clone every durable job of the scope on every
@@ -8734,7 +8855,12 @@ export async function main(): Promise<void> {
           return autoReplayExecutionFromCommandReceipt(decodedReplayReceipt);
         },
       });
-      shutdownDrains.push({ name: "queue-runtime:replay", run: async () => { await queueRuntime?.stop(); } });
+      shutdownDrains.push({
+        name: "queue-runtime:replay",
+        run: async () => {
+          await queueRuntime?.stop();
+        },
+      });
       queueRuntime = startReplayQueueRuntime({
         stateRoot: queueStateRoot,
         shippedRoot: options.repoRoot,
@@ -8762,7 +8888,12 @@ export async function main(): Promise<void> {
        * the tick's sweep uses (`resumeEvaluationsRef`), which is what keeps
        * evidence writing in one place.
        */
-      shutdownDrains.push({ name: "queue-runtime:evaluation", run: async () => { await evaluationQueueRuntime?.stop(); } });
+      shutdownDrains.push({
+        name: "queue-runtime:evaluation",
+        run: async () => {
+          await evaluationQueueRuntime?.stop();
+        },
+      });
       evaluationQueueRuntime = startEvaluationQueueRuntime({
         stateRoot: queueStateRoot,
         shippedRoot: options.repoRoot,
@@ -8817,7 +8948,12 @@ export async function main(): Promise<void> {
        * comparison) and promotion consumes candidates the worker has not yet
        * validated, one at a time.
        */
-      shutdownDrains.push({ name: "queue-runtime:learner-derive", run: async () => { await learnerDeriveQueueRuntime?.stop(); } });
+      shutdownDrains.push({
+        name: "queue-runtime:learner-derive",
+        run: async () => {
+          await learnerDeriveQueueRuntime?.stop();
+        },
+      });
       learnerDeriveQueueRuntime = startLearnerQueueRuntime({
         kind: "learner.derive",
         options: {
@@ -8875,7 +9011,12 @@ export async function main(): Promise<void> {
           },
         },
       });
-      shutdownDrains.push({ name: "queue-runtime:learner-promote", run: async () => { await learnerPromoteQueueRuntime?.stop(); } });
+      shutdownDrains.push({
+        name: "queue-runtime:learner-promote",
+        run: async () => {
+          await learnerPromoteQueueRuntime?.stop();
+        },
+      });
       learnerPromoteQueueRuntime = startLearnerQueueRuntime({
         kind: "learner.promote",
         options: {
@@ -9024,7 +9165,12 @@ export async function main(): Promise<void> {
             )
           : runTrackBPostObservation(runtime, observation, processingInput);
       };
-    shutdownDrains.push({ name: "post-observation-outbox", run: async () => { if (extensionRuntime !== null) await drainPostObservationOutbox(extensionRuntime); } });
+    shutdownDrains.push({
+      name: "post-observation-outbox",
+      run: async () => {
+        if (extensionRuntime !== null) await drainPostObservationOutbox(extensionRuntime);
+      },
+    });
     const drainPostObservationOutbox = async (
       runtime: Awaited<ReturnType<typeof createProductionExtensionRuntime>>,
     ) => postObservationOutbox.drain(postObservationHandler(runtime));
@@ -11994,7 +12140,7 @@ export async function main(): Promise<void> {
             publicGeneration: "N",
           },
         });
-      }
+      };
       // Run 99 R23: one definition of the Track B state root, shared with the policy resolver.
       const trackBStateRoot = resolveLearningPolicyStateRoot({
         runtimeStateRoot: options.runtimeStateRoot,
@@ -12176,62 +12322,64 @@ export async function main(): Promise<void> {
         packagedRuntime = await Effect.runPromise(
           Scope.provide(
             Effect.acquireRelease(
-              Effect.promise(() => createPackagedProductionRuntime({
-        stateRoot: trackBStateRoot,
-        sidecar: createOwnedTrackBSidecarSpec({
-          artifactPath: path.resolve(distributionRoot, manifest.sidecar.modulePath),
-          artifactSha256: manifest.sidecar.artifactSha256,
-          stateRoot: trackBStateRoot,
-          channel: runtimeChannel,
-          // Run 98 R17: the operator boundary must validate the same runtime scope
-          // identity the host sends on operator requests.
-          runtimeScope: options.scopeId,
-          // Run 98 R7/R17: the sidecar composes its supervised evaluation and rollout
-          // domains from the same staged manifest the host reads.
-          ...(trackBManifestPath ? { manifestPath: trackBManifestPath } : {}),
-          artifactDigestKeyFile: artifactKeyFiles.artifactDigestKeyFile,
-          artifactEncryptionKeyFile: artifactKeyFiles.artifactEncryptionKeyFile,
-          trustMaterialFile: destinationTrustMaterialFile,
-          aggregateEndpoint,
-          aggregateScope,
-          developmentVerificationLeaseFile,
-          developmentVerificationTrustKeyFile,
-          developmentVerificationDeploymentIds,
-          developmentVerificationRevocationEpoch,
-          ...(aggregateCorrelationReleaseId && aggregateCorrelationCohortId
-            ? {
-                aggregateCorrelationReleaseId,
-                aggregateCorrelationCohortId,
-                aggregateCorrelationOperationId: "aggregate.upload",
-              }
-            : {}),
-          ...(manifest.publicRuntimeAdapter
-            ? {
-                sqliteDatabasePath: path.join(
-                  options.runtimeStateRoot,
-                  options.scopeId,
-                  "memory",
-                  "memory.sqlite",
-                ),
-                publicRuntimeAdapterPath: path.resolve(
-                  distributionRoot,
-                  manifest.publicRuntimeAdapter.modulePath,
-                ),
-                publicRouterRoot: path.resolve(
-                  distributionRoot,
-                  manifest.publicRuntimeAdapter.routerRoot,
-                ),
-                migrationScope: options.scopeId,
-              }
-            : {}),
-        }),
-        createBackend: ({ trackBOperationsEndpoint, trackBOperationsToken }) =>
-          createBackend(
-            trackBOperationsEndpoint,
-            trackBOperationsToken,
-            trackBDistributionRequiresSQLiteMaintenance(manifest),
-          ),
-      })),
+              Effect.promise(() =>
+                createPackagedProductionRuntime({
+                  stateRoot: trackBStateRoot,
+                  sidecar: createOwnedTrackBSidecarSpec({
+                    artifactPath: path.resolve(distributionRoot, manifest.sidecar.modulePath),
+                    artifactSha256: manifest.sidecar.artifactSha256,
+                    stateRoot: trackBStateRoot,
+                    channel: runtimeChannel,
+                    // Run 98 R17: the operator boundary must validate the same runtime scope
+                    // identity the host sends on operator requests.
+                    runtimeScope: options.scopeId,
+                    // Run 98 R7/R17: the sidecar composes its supervised evaluation and rollout
+                    // domains from the same staged manifest the host reads.
+                    ...(trackBManifestPath ? { manifestPath: trackBManifestPath } : {}),
+                    artifactDigestKeyFile: artifactKeyFiles.artifactDigestKeyFile,
+                    artifactEncryptionKeyFile: artifactKeyFiles.artifactEncryptionKeyFile,
+                    trustMaterialFile: destinationTrustMaterialFile,
+                    aggregateEndpoint,
+                    aggregateScope,
+                    developmentVerificationLeaseFile,
+                    developmentVerificationTrustKeyFile,
+                    developmentVerificationDeploymentIds,
+                    developmentVerificationRevocationEpoch,
+                    ...(aggregateCorrelationReleaseId && aggregateCorrelationCohortId
+                      ? {
+                          aggregateCorrelationReleaseId,
+                          aggregateCorrelationCohortId,
+                          aggregateCorrelationOperationId: "aggregate.upload",
+                        }
+                      : {}),
+                    ...(manifest.publicRuntimeAdapter
+                      ? {
+                          sqliteDatabasePath: path.join(
+                            options.runtimeStateRoot,
+                            options.scopeId,
+                            "memory",
+                            "memory.sqlite",
+                          ),
+                          publicRuntimeAdapterPath: path.resolve(
+                            distributionRoot,
+                            manifest.publicRuntimeAdapter.modulePath,
+                          ),
+                          publicRouterRoot: path.resolve(
+                            distributionRoot,
+                            manifest.publicRuntimeAdapter.routerRoot,
+                          ),
+                          migrationScope: options.scopeId,
+                        }
+                      : {}),
+                  }),
+                  createBackend: ({ trackBOperationsEndpoint, trackBOperationsToken }) =>
+                    createBackend(
+                      trackBOperationsEndpoint,
+                      trackBOperationsToken,
+                      trackBDistributionRequiresSQLiteMaintenance(manifest),
+                    ),
+                }),
+              ),
               (value) => Effect.promise(() => value.close()),
             ),
             packagedScope,
@@ -12241,7 +12389,6 @@ export async function main(): Promise<void> {
         await Effect.runPromise(Scope.close(packagedScope, Exit.void)).catch(() => undefined);
         throw error;
       }
-;
       extensionRuntime = await awaitCliExtensionRuntime(
         extensionRuntimeOwner.promise,
         bootstrapState,
@@ -12289,15 +12436,16 @@ export async function main(): Promise<void> {
               const requestId = `run87:packaged-qa:${extension.descriptor.id}`;
               const receipt = await runQaStartupInvoke({
                 extensionId: extension.descriptor.id,
-                invoke: () => runtime.invoke(extension.descriptor.id, {
-                  requestId,
-                  protocolVersion: extension.descriptor.protocolVersion,
-                  channel: packagedProfile?.channel ?? "development",
-                  scope: options.scopeId,
-                  authorizationEpoch: 1,
-                  capability,
-                  payload: { packagedQa: true },
-                }),
+                invoke: () =>
+                  runtime.invoke(extension.descriptor.id, {
+                    requestId,
+                    protocolVersion: extension.descriptor.protocolVersion,
+                    channel: packagedProfile?.channel ?? "development",
+                    scope: options.scopeId,
+                    authorizationEpoch: 1,
+                    capability,
+                    payload: { packagedQa: true },
+                  }),
                 timeoutMs: qaInvokeTimeoutMs,
               });
               qaStartupReceipts.set(extension.descriptor.id, { ...receipt, requestId });
@@ -12327,14 +12475,16 @@ export async function main(): Promise<void> {
         },
       );
       backend = packagedRuntime.backend;
-      hostScope.register("packagedRuntime", async () => { await closePackagedRuntimeOnce(); });
+      hostScope.register("packagedRuntime", async () => {
+        await closePackagedRuntimeOnce();
+      });
       stopExtensionRuntimeWatchdog = startCliExtensionRuntimeWatchdog({
         getRuntime: () => extensionRuntimeRef.current,
         bootstrapState,
         expectedExtensionIds: TRACK_B_CANONICAL_EXTENSION_IDS,
         onFailure: failExtensionRuntime,
       });
-    };
+    }
     const runPlainBackend = async (): Promise<void> => {
       /**
        * S129 (R27 second rewiring slice): the non-packaged backend is owned by an Effect scope, the

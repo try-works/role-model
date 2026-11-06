@@ -1,16 +1,16 @@
 import { describe, it } from "vitest";
 
+import * as Dialog from "@role-model-router/foldkit-ui/dialog";
 import {
-  click,
   Command,
-  expect as sceneExpect,
-  given,
   Mount,
+  click,
+  given,
   role,
   scene,
+  expect as sceneExpect,
   selector,
 } from "@role-model-router/foldkit/scene";
-import * as Dialog from "@role-model-router/foldkit-ui/dialog";
 
 import { initialDeviceAuthState } from "../src/device-auth";
 import { view } from "../src/view";

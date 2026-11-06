@@ -55,7 +55,16 @@ describe("S256 runtime config editor rendering", () => {
   test("invalid JSON paints the alert and keeps the typed text", () => {
     scene(
       { update: shellUpdate, view },
-      given(model({ diff: [], message: "Unexpected end of JSON input", originalText: original, status: "invalid", text: "{bad", token: 0 })),
+      given(
+        model({
+          diff: [],
+          message: "Unexpected end of JSON input",
+          originalText: original,
+          status: "invalid",
+          text: "{bad",
+          token: 0,
+        }),
+      ),
       expect(selector("[data-runtime-config-error]")).toHaveAttr("role", "alert"),
       expect(selector("[data-runtime-config-error]")).toContainText("Unexpected end of JSON input"),
       expect(selector("[data-runtime-config-editor]")).toHaveValue("{bad"),
@@ -65,7 +74,15 @@ describe("S256 runtime config editor rendering", () => {
   test("confirming lists the changed top-level keys and offers Confirm save", () => {
     scene(
       { update: shellUpdate, view },
-      given(model({ diff: ["changed: b"], originalText: original, status: "confirming", text: edited, token: 0 })),
+      given(
+        model({
+          diff: ["changed: b"],
+          originalText: original,
+          status: "confirming",
+          text: edited,
+          token: 0,
+        }),
+      ),
       expect(selector("[data-runtime-config-confirm]")).toExist(),
       expect(text("changed: b")).toExist(),
       expect(role("button", { name: "Confirm save" })).toExist(),
@@ -76,9 +93,20 @@ describe("S256 runtime config editor rendering", () => {
   test("a saved state paints the applied-snapshot notice and the server text", () => {
     scene(
       { update: shellUpdate, view },
-      given(model({ diff: [], notice: "Applied snapshot from server", originalText: savedText, status: "saved", text: savedText, token: 1 })),
+      given(
+        model({
+          diff: [],
+          notice: "Applied snapshot from server",
+          originalText: savedText,
+          status: "saved",
+          text: savedText,
+          token: 1,
+        }),
+      ),
       expect(selector("[data-runtime-config-notice]")).toHaveAttr("role", "status"),
-      expect(selector("[data-runtime-config-notice]")).toContainText("Applied snapshot from server"),
+      expect(selector("[data-runtime-config-notice]")).toContainText(
+        "Applied snapshot from server",
+      ),
       expect(selector("[data-runtime-config-editor]")).toHaveValue(savedText),
     );
   });

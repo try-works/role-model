@@ -168,7 +168,6 @@ const reassembleLadderProvenance = async (
   }
 };
 
-
 const boundedText = (value: unknown): string | null =>
   typeof value === "string" && value.trim() ? value.trim() : null;
 
@@ -307,7 +306,7 @@ export async function readTrackBRouteAdvisoryFromRollout(
     const metadata =
       inlineMetadata === null
         ? undefined
-        : (await reassembleLadderProvenance(input.invoke, scopeId, inlineMetadata)) ?? undefined;
+        : ((await reassembleLadderProvenance(input.invoke, scopeId, inlineMetadata)) ?? undefined);
     if (process.env.ROLE_MODEL_ADVISORY_DIAG) {
       console.error(
         `[advisory-diag] doc keys=${Object.keys(document ?? {}).join(",")} type=${document?.type} ver=${document?.version} docScope=${document?.scope} scopeId=${scopeId} mScopeId=${metadata?.scopeId} mRole=${metadata?.roleId} roleId=${roleId} mTask=${metadata?.taskTypeId} taskId=${taskTypeId} mTax=${metadata?.taxonomyVersion} tax=${taxonomyVersion} digestMatch=${document ? documentDigest(document) === packId : false}`,

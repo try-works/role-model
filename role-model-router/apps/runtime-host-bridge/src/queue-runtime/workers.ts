@@ -19,6 +19,8 @@ import {
   type EvaluationScoreJob,
   makeEvaluationScoreQueue,
 } from "./evaluation.js";
+import type { AttemptEvidence, AttemptFenceStore, AttemptLease, FencePayload } from "./fence.js";
+import { AttemptFenceRejectedError } from "./fence.js";
 import {
   LEARNER_DERIVE_QUEUE,
   LEARNER_PROMOTE_QUEUE,
@@ -33,8 +35,6 @@ import {
   type ReplayDispatchJob,
   makeReplayDispatchQueue,
 } from "./queues.js";
-import type { AttemptEvidence, AttemptFenceStore, AttemptLease, FencePayload } from "./fence.js";
-import { AttemptFenceRejectedError } from "./fence.js";
 import { storeLayerForQueuePolicy } from "./store.js";
 
 /**
@@ -67,10 +67,7 @@ export interface ReplayDispatchWorkerOptions {
   readonly stateRoot: string;
   readonly policy: ResolvedQueuePolicy;
   /** Runs one attempt for one job; throwing makes the attempt retryable. */
-  readonly handler: (
-    job: ReplayDispatchJob,
-    context: QueueAttemptContext,
-  ) => Promise<void>;
+  readonly handler: (job: ReplayDispatchJob, context: QueueAttemptContext) => Promise<void>;
   /** Called after a failed attempt, before the store's backoff elapses. */
   readonly onAttemptFailure?: (error: unknown, job: ReplayDispatchJob) => void;
   /** Run 101 addendum 08: the attempt outcome (attempt, budget, willRetry) the guide's onJobFailure carries. */
@@ -104,10 +101,7 @@ export interface EvaluationScoreWorkerOptions {
    * it writes (or updates) the evaluation evidence row before returning, and a
    * throw leaves the job claimable so the store retries it.
    */
-  readonly handler: (
-    job: EvaluationScoreJob,
-    context: QueueAttemptContext,
-  ) => Promise<void>;
+  readonly handler: (job: EvaluationScoreJob, context: QueueAttemptContext) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: EvaluationScoreJob) => void;
   /** Run 101 addendum 08: the attempt outcome (attempt, budget, willRetry) the guide's onJobFailure carries. */
   readonly onAttemptOutcome?: (outcome: {
@@ -154,10 +148,7 @@ export interface LearnerPromoteWorkerOptions {
   readonly stateRoot: string;
   readonly policy: ResolvedQueuePolicy;
   /** Promotes one candidate; serialized by the queue's concurrency. */
-  readonly handler: (
-    job: LearnerPromoteJob,
-    context: QueueAttemptContext,
-  ) => Promise<void>;
+  readonly handler: (job: LearnerPromoteJob, context: QueueAttemptContext) => Promise<void>;
   readonly onAttemptFailure?: (error: unknown, job: LearnerPromoteJob) => void;
   /** Run 101 addendum 08: the attempt outcome (attempt, budget, willRetry) the guide's onJobFailure carries. */
   readonly onAttemptOutcome?: (outcome: {
@@ -379,7 +370,7 @@ function runClaimLoopWorker<Job>({
           const watch = Effect.gen(function* () {
             for (;;) {
               yield* Effect.sleep(Duration.millis(cancelPollMs));
-              if (fence !== undefined && fence.isKilled(String(info.id))) {
+              if (fence?.isKilled(String(info.id))) {
                 return yield* Effect.fail(new AttemptFenceRejectedError("killed"));
               }
               const row = readQueueJobState({

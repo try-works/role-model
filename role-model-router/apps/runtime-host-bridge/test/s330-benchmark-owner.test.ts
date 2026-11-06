@@ -17,7 +17,9 @@ describe("S330 benchmark gate", () => {
     expect(second.ok).toBe(false);
     if (!second.ok) {
       expect(second.activeRunId).toBe("run-a");
-      expect(() => { throw new BenchmarkBusyError(second.activeRunId); }).toThrow(BenchmarkBusyError);
+      expect(() => {
+        throw new BenchmarkBusyError(second.activeRunId);
+      }).toThrow(BenchmarkBusyError);
     }
     first.finish();
     const third = benchmarkGate.begin("run-b");

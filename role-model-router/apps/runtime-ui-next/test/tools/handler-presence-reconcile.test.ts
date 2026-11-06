@@ -6,10 +6,10 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
+  type ReconcileMapping,
   compareMapping,
   planReconcile,
   validateMappingShape,
-  type ReconcileMapping,
 } from "./handler-presence-reconcile";
 
 /**
@@ -22,12 +22,13 @@ import {
  * walkerPath/null convention the mapping must satisfy.
  */
 
-const repoRoot = fileURLToPath(new URL("../../../", "file://" + process.cwd() + "/"));
-const committedMappingPath = repoRoot + ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s617-handler-presence-mapping.json";
-const humanMarkdownPath = repoRoot + ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/ui-dead-controls-inventory.md";
-const baselineRoot = fileURLToPath(new URL("test/support/", "file://" + process.cwd() + "/"));
+const repoRoot = fileURLToPath(new URL("../../../", `file://${process.cwd()}/`));
+const committedMappingPath = `${repoRoot}.recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/s617-handler-presence-mapping.json`;
+const humanMarkdownPath = `${repoRoot}.recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/ui-dead-controls-inventory.md`;
+const baselineRoot = fileURLToPath(new URL("test/support/", `file://${process.cwd()}/`));
 
-const loadCommitted = (): ReconcileMapping => JSON.parse(readFileSync(committedMappingPath, "utf8"));
+const loadCommitted = (): ReconcileMapping =>
+  JSON.parse(readFileSync(committedMappingPath, "utf8"));
 
 const clone = (mapping: ReconcileMapping): ReconcileMapping => JSON.parse(JSON.stringify(mapping));
 
@@ -36,7 +37,7 @@ const withTempMapping = (mutate: (mapping: ReconcileMapping) => void) => {
   const mappingPath = join(dir, "mapping.json");
   const mapping = clone(loadCommitted());
   mutate(mapping);
-  writeFileSync(mappingPath, JSON.stringify(mapping, null, 2) + "\n");
+  writeFileSync(mappingPath, `${JSON.stringify(mapping, null, 2)}\n`);
   return { dir, mappingPath };
 };
 
@@ -91,7 +92,11 @@ describe("S617 reconciliation guard", () => {
 
   it("planReconcile reports unchanged without modifying the committed mapping", () => {
     const before = readFileSync(committedMappingPath, "utf8");
-    const plan = planReconcile({ baselineDir: baselineRoot, humanMarkdownPath, mappingPath: committedMappingPath });
+    const plan = planReconcile({
+      baselineDir: baselineRoot,
+      humanMarkdownPath,
+      mappingPath: committedMappingPath,
+    });
     expect(plan.status).toBe("unchanged");
     expect(plan.violations).toEqual([]);
     expect(readFileSync(committedMappingPath, "utf8")).toBe(before);

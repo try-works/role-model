@@ -116,7 +116,10 @@ export const endpointActivationCanSubmit = (run: EndpointActivationRun): boolean
 
 /** S439 policy: a settled run (saved/partial/error) requires an explicit reset before another submit. */
 export const endpointActivationNeedsReset = (run: EndpointActivationRun): boolean =>
-  run.settled.length > 0 || run.status === "saved" || run.status === "partial" || run.status === "error";
+  run.settled.length > 0 ||
+  run.status === "saved" ||
+  run.status === "partial" ||
+  run.status === "error";
 
 /** Clears displayed outcomes but keeps the generation monotonic, so late callbacks stay stale. */
 export const resetEndpointActivationRun = (run: EndpointActivationRun): EndpointActivationRun => ({
@@ -132,6 +135,10 @@ export const endpointActivationFailureText = (run: EndpointActivationRun): strin
   const failures = run.settled.filter((entry) => entry.outcome === "failed");
   if (failures.length === 0) return undefined;
   return failures
-    .map((entry) => (entry.message === undefined || entry.message.length === 0 ? entry.activationId + ": activation failed" : entry.activationId + ": " + entry.message))
+    .map((entry) =>
+      entry.message === undefined || entry.message.length === 0
+        ? `${entry.activationId}: activation failed`
+        : `${entry.activationId}: ${entry.message}`,
+    )
     .join("; ");
 };

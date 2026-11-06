@@ -16,7 +16,18 @@ describe("S103a R39 scripts fail closed", () => {
     expect(result.stdout).toMatch(/NOT RUN:/);
   });
   it("verify-client-journeys refuses operator ports", () => {
-    const result = script("verify-client-journeys.mjs", ["--executable", process.execPath, "--repo-root", root, "--static-root", root, "--port", "3456", "--state-root", path.join("E:/rm-tmp/s103a-test-state")]);
+    const result = script("verify-client-journeys.mjs", [
+      "--executable",
+      process.execPath,
+      "--repo-root",
+      root,
+      "--static-root",
+      root,
+      "--port",
+      "3456",
+      "--state-root",
+      path.join("E:/rm-tmp/s103a-test-state"),
+    ]);
     expect(result.status).toBe(2);
     expect(result.stdout).toContain("operator port");
   });
@@ -61,7 +72,8 @@ describe("S103a R39 scripts fail closed", () => {
 
   it("verify-packaged-candidate exits 2 and prints NOT RUN when the package directory is missing", () => {
     const result = script("verify-packaged-candidate.mjs", [
-      "--package-dir", path.join(root, "definitely-not-a-package"),
+      "--package-dir",
+      path.join(root, "definitely-not-a-package"),
     ]);
     expect(result.status).toBe(2);
     expect(result.stdout).toMatch(/NOT RUN:/);
@@ -75,9 +87,12 @@ describe("S103a R39 scripts fail closed", () => {
       JSON.stringify({ executable: "missing-runtime.exe", executable_sha256: "deadbeef" }),
     );
     const result = script("verify-packaged-candidate.mjs", [
-      "--package-dir", dir,
-      "--static-root", root,
-      "--fixture-root", path.join(root, "testdata", "router-runtime", "fixtures"),
+      "--package-dir",
+      dir,
+      "--static-root",
+      root,
+      "--fixture-root",
+      path.join(root, "testdata", "router-runtime", "fixtures"),
     ]);
     expect(result.status).toBe(2);
     expect(result.stdout).toContain("manifest does not name an executable present");
@@ -89,13 +104,20 @@ describe("S103a R39 scripts fail closed", () => {
     const manifest = path.join(dir, "manifest.json");
     writeFileSync(manifest, JSON.stringify({ executable_sha256: "deadbeef" }));
     const result = script("verify-client-journeys.mjs", [
-      "--manifest", manifest,
-      "--executable", process.execPath,
-      "--repo-root", root,
-      "--static-root", root,
-      "--port", "5939",
-      "--state-root", path.join(dir, "state"),
-      "--fixture-root", path.join(root, "testdata", "router-runtime", "fixtures"),
+      "--manifest",
+      manifest,
+      "--executable",
+      process.execPath,
+      "--repo-root",
+      root,
+      "--static-root",
+      root,
+      "--port",
+      "5939",
+      "--state-root",
+      path.join(dir, "state"),
+      "--fixture-root",
+      path.join(root, "testdata", "router-runtime", "fixtures"),
     ]);
     expect(result.status).toBe(2);
     expect(result.stdout).toContain("does not match manifest");
@@ -106,12 +128,18 @@ describe("S103a R39 scripts fail closed", () => {
     const dir = mkdtempSync(path.join(process.env.TEMP ?? "/tmp", "r39-dirty-"));
     writeFileSync(path.join(dir, "leftover.txt"), "x");
     const result = script("verify-client-journeys.mjs", [
-      "--executable", process.execPath,
-      "--repo-root", root,
-      "--static-root", root,
-      "--port", "5942",
-      "--state-root", dir,
-      "--fixture-root", path.join(root, "testdata", "router-runtime", "fixtures"),
+      "--executable",
+      process.execPath,
+      "--repo-root",
+      root,
+      "--static-root",
+      root,
+      "--port",
+      "5942",
+      "--state-root",
+      dir,
+      "--fixture-root",
+      path.join(root, "testdata", "router-runtime", "fixtures"),
     ]);
     expect(result.status).toBe(2);
     expect(result.stdout).toContain("state root is not empty");
@@ -126,12 +154,18 @@ describe("S103a R39 scripts fail closed", () => {
     writeFileSync(path.join(left, "role-model.exe"), "not a real binary");
     writeFileSync(path.join(right, "role-model-dev.exe"), "not a real binary");
     const result = script("compare-release.mjs", [
-      "--left-exe", path.join(left, "role-model.exe"),
-      "--left-port", "6041",
-      "--left-state", path.join(left, "state"),
-      "--right-exe", path.join(right, "role-model-dev.exe"),
-      "--right-port", "6042",
-      "--right-state", path.join(right, "state"),
+      "--left-exe",
+      path.join(left, "role-model.exe"),
+      "--left-port",
+      "6041",
+      "--left-state",
+      path.join(left, "state"),
+      "--right-exe",
+      path.join(right, "role-model-dev.exe"),
+      "--right-port",
+      "6042",
+      "--right-state",
+      path.join(right, "state"),
     ]);
     expect(result.status).toBe(2);
     expect(result.stdout).toContain("channels differ");
@@ -140,7 +174,10 @@ describe("S103a R39 scripts fail closed", () => {
 
   it("compare-release no longer forces a scope id on the child", async () => {
     const { readFileSync } = await import("node:fs");
-    const source = readFileSync(path.join(root, "scripts", "runtime", "compare-release.mjs"), "utf8");
+    const source = readFileSync(
+      path.join(root, "scripts", "runtime", "compare-release.mjs"),
+      "utf8",
+    );
     expect(source).not.toContain('"--scope-id"');
   });
 
@@ -154,10 +191,13 @@ describe("S103a R39 scripts fail closed", () => {
 
   it("verify-client-journeys logs a health failure and throws instead of exiting past its finally", async () => {
     const { readFileSync } = await import("node:fs");
-    const source = readFileSync(path.join(root, "scripts", "runtime", "verify-client-journeys.mjs"), "utf8");
+    const source = readFileSync(
+      path.join(root, "scripts", "runtime", "verify-client-journeys.mjs"),
+      "utf8",
+    );
     const start = source.indexOf("if (health === undefined) {");
-    const throwAt = source.indexOf("throw new Error(\"health not ready\")", start);
-    const end = throwAt < 0 ? -1 : throwAt + "throw new Error(\"health not ready\")".length;
+    const throwAt = source.indexOf('throw new Error("health not ready")', start);
+    const end = throwAt < 0 ? -1 : throwAt + 'throw new Error("health not ready")'.length;
     expect(start).toBeGreaterThan(-1);
     const healthBlock = source.slice(start, end);
     expect(healthBlock).toContain("throw new Error");
@@ -166,11 +206,16 @@ describe("S103a R39 scripts fail closed", () => {
 
   it("compare-release refuses the same port on both sides", () => {
     const result = script("compare-release.mjs", [
-      "--left-exe", "left.exe",
-      "--left-port", "6121",
-      "--right-exe", "right.exe",
-      "--right-port", "6121",
-      "--fixture-root", process.cwd(),
+      "--left-exe",
+      "left.exe",
+      "--left-port",
+      "6121",
+      "--right-exe",
+      "right.exe",
+      "--right-port",
+      "6121",
+      "--fixture-root",
+      process.cwd(),
     ]);
     expect(result.status).toBe(2);
     expect(result.stdout).toContain("must differ");
@@ -210,7 +255,8 @@ describe("S103a R39 scripts fail closed", () => {
         child.stdout.on("data", (chunk) => {
           buffer += String(chunk);
           const line = buffer.split("\n")[0];
-          if (line && /^\d+$/.test(line.trim())) resolve({ port: line.trim(), stop: () => child.kill() });
+          if (line && /^\d+$/.test(line.trim()))
+            resolve({ port: line.trim(), stop: () => child.kill() });
         });
         child.on("error", reject);
       });
@@ -218,9 +264,12 @@ describe("S103a R39 scripts fail closed", () => {
     const right = await startServer(true);
     try {
       const result = script("compare-release.mjs", [
-        "--left", `http://127.0.0.1:${left.port}`,
-        "--right", `http://127.0.0.1:${right.port}`,
-        "--fixture-root", process.cwd(),
+        "--left",
+        `http://127.0.0.1:${left.port}`,
+        "--right",
+        `http://127.0.0.1:${right.port}`,
+        "--fixture-root",
+        process.cwd(),
       ]);
       expect(result.status).toBe(1);
       expect(result.stdout).toContain("different /api/role-model/runtime/summary");
@@ -242,22 +291,29 @@ describe("S103a R39 scripts fail closed", () => {
         response.end(JSON.stringify({}));
       }).listen(0, "127.0.0.1", function () { console.log(String(this.address().port)); });
     `;
-    const start = (channel: string) => new Promise<{ port: string; stop: () => void }>((resolve) => {
-      const child = spawn(process.execPath, ["-e", source], { env: { ...process.env, CHANNEL: channel }, stdio: ["ignore", "pipe", "inherit"] });
-      let buffer = "";
-      child.stdout.on("data", (chunk) => {
-        buffer += String(chunk);
-        const line = buffer.split("\n")[0].trim();
-        if (/^\d+$/.test(line)) resolve({ port: line, stop: () => child.kill() });
+    const start = (channel: string) =>
+      new Promise<{ port: string; stop: () => void }>((resolve) => {
+        const child = spawn(process.execPath, ["-e", source], {
+          env: { ...process.env, CHANNEL: channel },
+          stdio: ["ignore", "pipe", "inherit"],
+        });
+        let buffer = "";
+        child.stdout.on("data", (chunk) => {
+          buffer += String(chunk);
+          const line = buffer.split("\n")[0].trim();
+          if (/^\d+$/.test(line)) resolve({ port: line, stop: () => child.kill() });
+        });
       });
-    });
     const left = await start("production");
     const right = await start("development");
     try {
       const result = script("compare-release.mjs", [
-        "--left", `http://127.0.0.1:${left.port}`,
-        "--right", `http://127.0.0.1:${right.port}`,
-        "--fixture-root", process.cwd(),
+        "--left",
+        `http://127.0.0.1:${left.port}`,
+        "--right",
+        `http://127.0.0.1:${right.port}`,
+        "--fixture-root",
+        process.cwd(),
       ]);
       expect(result.status).toBe(2);
       expect(result.stdout).toContain("channels differ");
@@ -269,30 +325,38 @@ describe("S103a R39 scripts fail closed", () => {
   }, 60_000);
 
   it("the rendered audit reports NOT RUN when CHROME_PATH is wrong instead of picking another browser", () => {
-    const result = script("audit-rendered-ui.mjs", ["--url", "http://127.0.0.1:1"], { CHROME_PATH: "C:/definitely-not-here/chrome.exe" });
+    const result = script("audit-rendered-ui.mjs", ["--url", "http://127.0.0.1:1"], {
+      CHROME_PATH: "C:/definitely-not-here/chrome.exe",
+    });
     expect(result.status).toBe(2);
     expect(result.stdout).toContain("NOT RUN: no Chromium-family browser found");
   });
 
   it("the packaged gate skips the rendered audit without a browser and fails only when required", () => {
-    const skipped = script("verify-packaged-candidate.mjs", [
-      "--package-dir", "no-such-package",
-      "--rendered",
-    ], { CHROME_PATH: "C:/definitely-not-here/chrome.exe" });
+    const skipped = script(
+      "verify-packaged-candidate.mjs",
+      ["--package-dir", "no-such-package", "--rendered"],
+      { CHROME_PATH: "C:/definitely-not-here/chrome.exe" },
+    );
     expect(skipped.status).not.toBe(0);
     expect(skipped.stdout + skipped.stderr).toContain("package directory does not exist");
   });
 
   it("the workflow carries the rendered UI step as advisory", async () => {
     const { readFileSync } = await import("node:fs");
-    const workflow = readFileSync(path.join(root, ".github", "workflows", "build-binaries.yml"), "utf8");
+    const workflow = readFileSync(
+      path.join(root, ".github", "workflows", "build-binaries.yml"),
+      "utf8",
+    );
     expect(workflow).toContain("Audit rendered UI (R39)");
     expect(workflow).toContain("audit-rendered-ui.mjs");
   });
   it("verify-client-journeys accepts a repeated --expect-model without failing argument validation", () => {
     const result = script("verify-client-journeys.mjs", [
-      "--expect-model", "deepseek-official/deepseek-flash",
-      "--expect-model", "second/model",
+      "--expect-model",
+      "deepseek-official/deepseek-flash",
+      "--expect-model",
+      "second/model",
     ]);
     // No --executable, so this still NOT RUNs on inputs - but the expectation flags must not be
     // treated as missing required arguments.
@@ -302,15 +366,24 @@ describe("S103a R39 scripts fail closed", () => {
 
   it("the worker-fixture flags exist on the gate and the journeys script", async () => {
     const { readFileSync } = await import("node:fs");
-    const gate = readFileSync(path.join(root, "scripts", "runtime", "verify-packaged-candidate.mjs"), "utf8");
-    const journeys = readFileSync(path.join(root, "scripts", "runtime", "verify-client-journeys.mjs"), "utf8");
+    const gate = readFileSync(
+      path.join(root, "scripts", "runtime", "verify-packaged-candidate.mjs"),
+      "utf8",
+    );
+    const journeys = readFileSync(
+      path.join(root, "scripts", "runtime", "verify-client-journeys.mjs"),
+      "utf8",
+    );
     expect(gate).toContain("--worker-fixtures");
     expect(gate).toContain("--expect-model");
     expect(journeys).toContain("--expect-model");
   });
   it("the journeys script exercises a real chat completion through the router", async () => {
     const { readFileSync } = await import("node:fs");
-    const source = readFileSync(path.join(root, "scripts", "runtime", "verify-client-journeys.mjs"), "utf8");
+    const source = readFileSync(
+      path.join(root, "scripts", "runtime", "verify-client-journeys.mjs"),
+      "utf8",
+    );
     expect(source).toContain("/v1/chat/completions");
     expect(source).toContain("chat completion");
     expect(source).toContain("total_tokens");

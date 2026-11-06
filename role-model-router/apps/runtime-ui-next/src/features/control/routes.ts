@@ -9,10 +9,10 @@ import {
 } from "../../control-view";
 import type { DeviceAuthState } from "../../device-auth";
 import type { EndpointAdmissionState } from "../../endpoint-admission";
+import type { Message } from "../../message";
 import type { ProviderAccountState } from "../../provider-account";
 import type { ReadbacksState } from "../../readback";
 import type { DeviceAuthDialogModel } from "../../ui/dialog";
-import type { Message } from "../../message";
 
 export interface ProvidersRouteContext {
   readonly controls: Pick<ControlsState, "providers">;
@@ -31,14 +31,20 @@ export interface EndpointsRouteContext {
 }
 
 export const providersRoute = (ctx: ProvidersRouteContext): Html =>
-  ctx.h.section([], [
-    renderControlPage(CONTROL_SPECS.providers, ctx.controls.providers, ctx.h),
-    renderDeviceAuthorizationForm(ctx.deviceAuth, ctx.deviceAuthDialog, ctx.h),
-    renderProviderAccountForm(ctx.providerAccount, ctx.h),
-  ]);
+  ctx.h.section(
+    [],
+    [
+      renderControlPage(CONTROL_SPECS.providers, ctx.controls.providers, ctx.h),
+      renderDeviceAuthorizationForm(ctx.deviceAuth, ctx.deviceAuthDialog, ctx.h),
+      renderProviderAccountForm(ctx.providerAccount, ctx.h),
+    ],
+  );
 
 export const endpointsRoute = (ctx: EndpointsRouteContext): Html =>
-  ctx.h.section([], [
-    renderControlPage(CONTROL_SPECS.endpoints, ctx.controls.endpoints, ctx.h),
-    renderEndpointAdmissionForm(ctx.endpointAdmission, ctx.h),
-  ]);
+  ctx.h.section(
+    [],
+    [
+      renderControlPage(CONTROL_SPECS.endpoints, ctx.controls.endpoints, ctx.h),
+      renderEndpointAdmissionForm(ctx.endpointAdmission, ctx.h),
+    ],
+  );

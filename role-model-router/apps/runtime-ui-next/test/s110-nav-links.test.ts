@@ -38,7 +38,7 @@ const NAV_HREFS = [
 
 describe("S110 navigation links resolve", () => {
   it.each(NAV_HREFS)("%s is a real route", (href) => {
-    const route = routeFromUrl(new URL("http://127.0.0.1:1" + href));
+    const route = routeFromUrl(new URL(`http://127.0.0.1:1${href}`));
     expect(route._tag).not.toBe("NotFound");
   });
 });

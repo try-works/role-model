@@ -49,14 +49,18 @@ describe("compareRequestTraces", () => {
     const write = trace({ step: "write", kind: "mutation", method: "POST", dependency: "initial" });
     const read = trace({ step: "readback", dependency: "write" });
     const differences = compareRequestTraces([initial, write, read], [initial, read, write]);
-    expect(differences.some((difference) => difference.code === "causal_order_mismatch")).toBe(true);
+    expect(differences.some((difference) => difference.code === "causal_order_mismatch")).toBe(
+      true,
+    );
   });
 
   it("rejects a write moved before the read that authorizes it", () => {
     const initial = trace({ step: "initial" });
     const write = trace({ step: "write", kind: "mutation", method: "POST", dependency: "initial" });
     const differences = compareRequestTraces([initial, write], [write, initial]);
-    expect(differences.some((difference) => difference.code === "causal_order_mismatch")).toBe(true);
+    expect(differences.some((difference) => difference.code === "causal_order_mismatch")).toBe(
+      true,
+    );
   });
   it("returns no differences for identical captures", () => {
     const expected: readonly RequestTrace[] = [
@@ -236,9 +240,7 @@ describe("compareRequestTraces", () => {
     ];
     const differences = compareRequestTraces(expected, actual);
 
-    expect(differences).toEqual([
-      { code: "body_mismatch", index: 0, step: "write-setting" },
-    ]);
+    expect(differences).toEqual([{ code: "body_mismatch", index: 0, step: "write-setting" }]);
     const serialized = JSON.stringify(differences);
     expect(serialized).not.toContain("expected-body-marker");
     expect(serialized).not.toContain("actual-body-marker");
@@ -263,12 +265,8 @@ describe("compareRequestTraces", () => {
   });
 
   it("reports a changed terminal error", () => {
-    const expected = [
-      trace({ terminalStream: "error", error: "upstream_timeout" }),
-    ];
-    const actual = [
-      trace({ terminalStream: "error", error: "upstream_unavailable" }),
-    ];
+    const expected = [trace({ terminalStream: "error", error: "upstream_timeout" })];
+    const actual = [trace({ terminalStream: "error", error: "upstream_unavailable" })];
 
     expect(compareRequestTraces(expected, actual)).toEqual([
       { code: "error_mismatch", index: 0, step: "read-config" },
@@ -276,17 +274,11 @@ describe("compareRequestTraces", () => {
   });
 
   it("reports a changed non-auth header without leaking its value", () => {
-    const expected = [
-      trace({ headers: [{ name: "x-request-class", value: "expected-private" }] }),
-    ];
-    const actual = [
-      trace({ headers: [{ name: "x-request-class", value: "actual-private" }] }),
-    ];
+    const expected = [trace({ headers: [{ name: "x-request-class", value: "expected-private" }] })];
+    const actual = [trace({ headers: [{ name: "x-request-class", value: "actual-private" }] })];
     const differences = compareRequestTraces(expected, actual);
 
-    expect(differences).toEqual([
-      { code: "header_mismatch", index: 0, step: "read-config" },
-    ]);
+    expect(differences).toEqual([{ code: "header_mismatch", index: 0, step: "read-config" }]);
     const serialized = JSON.stringify(differences);
     expect(serialized).not.toContain("expected-private");
     expect(serialized).not.toContain("actual-private");
@@ -295,16 +287,12 @@ describe("compareRequestTraces", () => {
   it("compares an authorization scheme case-insensitively", () => {
     const expected = [
       trace({
-        headers: [
-          { name: "Authorization", value: "Bearer <redacted:tenant-a>" },
-        ],
+        headers: [{ name: "Authorization", value: "Bearer <redacted:tenant-a>" }],
       }),
     ];
     const actual = [
       trace({
-        headers: [
-          { name: "authorization", value: "bearer <redacted:tenant-a>" },
-        ],
+        headers: [{ name: "authorization", value: "bearer <redacted:tenant-a>" }],
       }),
     ];
 
@@ -312,12 +300,8 @@ describe("compareRequestTraces", () => {
   });
 
   it("reports a changed authorization scheme", () => {
-    const expected = [
-      trace({ headers: [{ name: "authorization", value: "Bearer tenant-a" }] }),
-    ];
-    const actual = [
-      trace({ headers: [{ name: "authorization", value: "Basic tenant-a" }] }),
-    ];
+    const expected = [trace({ headers: [{ name: "authorization", value: "Bearer tenant-a" }] })];
+    const actual = [trace({ headers: [{ name: "authorization", value: "Basic tenant-a" }] })];
 
     expect(compareRequestTraces(expected, actual)).toEqual([
       { code: "auth_header_mismatch", index: 0, step: "read-config" },
@@ -327,9 +311,7 @@ describe("compareRequestTraces", () => {
   it("reports a changed authorization credential without leaking it", () => {
     const expected = [
       trace({
-        headers: [
-          { name: "authorization", value: "Bearer expected-auth-secret" },
-        ],
+        headers: [{ name: "authorization", value: "Bearer expected-auth-secret" }],
       }),
     ];
     const actual = [
@@ -339,26 +321,18 @@ describe("compareRequestTraces", () => {
     ];
     const differences = compareRequestTraces(expected, actual);
 
-    expect(differences).toEqual([
-      { code: "auth_header_mismatch", index: 0, step: "read-config" },
-    ]);
+    expect(differences).toEqual([{ code: "auth_header_mismatch", index: 0, step: "read-config" }]);
     const serialized = JSON.stringify(differences);
     expect(serialized).not.toContain("expected-auth-secret");
     expect(serialized).not.toContain("actual-auth-secret");
   });
 
   it("reports a changed api key as an auth-sensitive header", () => {
-    const expected = [
-      trace({ headers: [{ name: "x-api-key", value: "expected-api-key" }] }),
-    ];
-    const actual = [
-      trace({ headers: [{ name: "x-api-key", value: "actual-api-key" }] }),
-    ];
+    const expected = [trace({ headers: [{ name: "x-api-key", value: "expected-api-key" }] })];
+    const actual = [trace({ headers: [{ name: "x-api-key", value: "actual-api-key" }] })];
     const differences = compareRequestTraces(expected, actual);
 
-    expect(differences).toEqual([
-      { code: "auth_header_mismatch", index: 0, step: "read-config" },
-    ]);
+    expect(differences).toEqual([{ code: "auth_header_mismatch", index: 0, step: "read-config" }]);
     const serialized = JSON.stringify(differences);
     expect(serialized).not.toContain("expected-api-key");
     expect(serialized).not.toContain("actual-api-key");
@@ -564,8 +538,7 @@ describe("compareRequestTraces", () => {
     ]);
     expect(
       differences.every(
-        (difference) =>
-          difference.index === 0 && difference.step === "write-result",
+        (difference) => difference.index === 0 && difference.step === "write-result",
       ),
     ).toBe(true);
     const serialized = JSON.stringify(differences);

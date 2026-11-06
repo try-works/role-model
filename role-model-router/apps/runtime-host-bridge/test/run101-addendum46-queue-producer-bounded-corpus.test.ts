@@ -191,7 +191,11 @@ test("addendum46: the queue producer slices the pending page refs to the readbac
       sourceClass: "live",
       hasRecordedToolResults: false,
     }));
-    const corpusRequests: Array<{ roleId?: string; taskTypeId?: string; onlyCaptureRefs?: readonly string[] }> = [];
+    const corpusRequests: Array<{
+      roleId?: string;
+      taskTypeId?: string;
+      onlyCaptureRefs?: readonly string[];
+    }> = [];
     const offers: Array<Record<string, unknown>> = [];
     const { loop } = startLoop({ pending, corpusRequests, offers });
     await loop.tick().catch(() => undefined);
@@ -203,4 +207,3 @@ test("addendum46: the queue producer slices the pending page refs to the readbac
     h.cleanup();
   }
 });
-

@@ -22,7 +22,10 @@ test("S239: identical trees report no differences", () => {
   const left = makeRoot(files);
   const right = makeRoot(files);
   try {
-    assert.deepEqual(staticRootIdentity({ packageClient: right, staticRoot: left }).differences, []);
+    assert.deepEqual(
+      staticRootIdentity({ packageClient: right, staticRoot: left }).differences,
+      [],
+    );
   } finally {
     rmSync(left, { force: true, recursive: true });
     rmSync(right, { force: true, recursive: true });
@@ -33,7 +36,9 @@ test("S239: one changed byte is reported by name", () => {
   const left = makeRoot({ "assets/main.js": "console.log(1)", "index.html": "<html></html>" });
   const right = makeRoot({ "assets/main.js": "console.log(2)", "index.html": "<html></html>" });
   try {
-    assert.deepEqual(staticRootIdentity({ packageClient: right, staticRoot: left }).differences, ["assets/main.js differs"]);
+    assert.deepEqual(staticRootIdentity({ packageClient: right, staticRoot: left }).differences, [
+      "assets/main.js differs",
+    ]);
   } finally {
     rmSync(left, { force: true, recursive: true });
     rmSync(right, { force: true, recursive: true });
@@ -44,7 +49,9 @@ test("S239: an extra file on either side is a difference", () => {
   const left = makeRoot({ "assets/main.js": "x" });
   const right = makeRoot({ "assets/main.js": "x", "assets/extra.css": "y" });
   try {
-    assert.deepEqual(staticRootIdentity({ packageClient: right, staticRoot: left }).differences, ["file lists differ"]);
+    assert.deepEqual(staticRootIdentity({ packageClient: right, staticRoot: left }).differences, [
+      "file lists differ",
+    ]);
   } finally {
     rmSync(left, { force: true, recursive: true });
     rmSync(right, { force: true, recursive: true });

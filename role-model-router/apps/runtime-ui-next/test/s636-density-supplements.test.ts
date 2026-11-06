@@ -1,9 +1,9 @@
+import { renderToString } from "@role-model-router/foldkit/experimental/server";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
-import { renderToString } from "@role-model-router/foldkit/experimental/server";
 
-import { parseReadbackFixture } from "../src/readback";
 import type { Model } from "../src/model";
+import { parseReadbackFixture } from "../src/readback";
 import { view } from "../src/view";
 import { shellModel } from "./support/runtime-shell";
 
@@ -15,14 +15,19 @@ import { shellModel } from "./support/runtime-shell";
  */
 
 const routerConfigBody = {
-  agentStrategies: [{ name: "researcher", role_id: "researcher", routingMode: "hybrid", scoringStrategy: "cost" }],
+  agentStrategies: [
+    { name: "researcher", role_id: "researcher", routingMode: "hybrid", scoringStrategy: "cost" },
+  ],
   persisted: { executionMode: "decision_only", strategy: "hybrid" },
   postureDiagnostics: { violations: [], warnings: [] },
   routing: { mode: "hybrid", scoringStrategy: "cost" },
   workloads: [{ name: "batch", scoring_strategy: "cost" }],
 };
 
-const render = async (tag: string, readbackOverrides: Partial<Model["readbacks"]> = {}): Promise<HTMLElement> => {
+const render = async (
+  tag: string,
+  readbackOverrides: Partial<Model["readbacks"]> = {},
+): Promise<HTMLElement> => {
   const base = shellModel({ route: { _tag: tag } as Model["route"] });
   const model: Model = {
     ...base,
@@ -32,17 +37,23 @@ const render = async (tag: string, readbackOverrides: Partial<Model["readbacks"]
       ...readbackOverrides,
     },
   };
-  const rendered = await Effect.runPromise(renderToString({
-    init: () => ({ commands: [], model }),
-    view,
-  }, { isHydratable: false }));
+  const rendered = await Effect.runPromise(
+    renderToString(
+      {
+        init: () => ({ commands: [], model }),
+        view,
+      },
+      { isHydratable: false },
+    ),
+  );
   const container = document.createElement("div");
   container.innerHTML = rendered.html;
   return container;
 };
 
 const headingCount = (container: HTMLElement, text: string): number =>
-  [...container.querySelectorAll("h2,h3")].filter((heading) => heading.textContent?.trim() === text).length;
+  [...container.querySelectorAll("h2,h3")].filter((heading) => heading.textContent?.trim() === text)
+    .length;
 
 describe("S636 density supplements", () => {
   it("renders Workloads without the static duplicate/placeholder sections", async () => {

@@ -20,7 +20,7 @@ describe("S119 benchmark gate", () => {
         // Work that checks the token the way a benchmark loop would.
         for (let step = 0; step < 5; step += 1) {
           if (yield* gate.isCancelled("run-a")) {
-            observed.push("cancelled-at-" + String(step));
+            observed.push(`cancelled-at-${String(step)}`);
             break;
           }
           if (step === 2) yield* gate.begin("run-b");

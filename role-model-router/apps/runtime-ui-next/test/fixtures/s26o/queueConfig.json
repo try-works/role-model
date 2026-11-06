@@ -15,11 +15,7 @@
         {
           "name": "mode",
           "type": "enum",
-          "values": [
-            "legacy",
-            "shadow",
-            "queue"
-          ],
+          "values": ["legacy", "shadow", "queue"],
           "unit": "mode",
           "default": "queue",
           "uiEditable": true,
@@ -115,11 +111,7 @@
         {
           "name": "mode",
           "type": "enum",
-          "values": [
-            "legacy",
-            "shadow",
-            "queue"
-          ],
+          "values": ["legacy", "shadow", "queue"],
           "unit": "mode",
           "default": "queue",
           "uiEditable": true,
@@ -215,11 +207,7 @@
         {
           "name": "mode",
           "type": "enum",
-          "values": [
-            "legacy",
-            "shadow",
-            "queue"
-          ],
+          "values": ["legacy", "shadow", "queue"],
           "unit": "mode",
           "default": "queue",
           "uiEditable": true,
@@ -315,11 +303,7 @@
         {
           "name": "mode",
           "type": "enum",
-          "values": [
-            "legacy",
-            "shadow",
-            "queue"
-          ],
+          "values": ["legacy", "shadow", "queue"],
           "unit": "mode",
           "default": "queue",
           "uiEditable": true,

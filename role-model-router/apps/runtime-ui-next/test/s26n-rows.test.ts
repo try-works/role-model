@@ -18,19 +18,25 @@ const waitFor = async (read: () => string | undefined, label: string): Promise<s
     if (value !== undefined) return value;
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
-  throw new Error("Timed out waiting for " + label);
+  throw new Error(`Timed out waiting for ${label}`);
 };
 afterEach(() => {
-  for (const entry of mounted.splice(0)) { entry.handle.dispose(); entry.container.remove(); }
+  for (const entry of mounted.splice(0)) {
+    entry.handle.dispose();
+    entry.container.remove();
+  }
   window.history.replaceState({}, "", "/");
 });
 
 describe("S26n redirects and static rows", () => {
   it("renders local-choose as a static route", async () => {
     mountAt("/local/choose", "s26n-choose");
-    const text = await waitFor(() => document.querySelector("[data-route='local-choose']")?.textContent ?? undefined, "local-choose");
+    const text = await waitFor(
+      () => document.querySelector("[data-route='local-choose']")?.textContent ?? undefined,
+      "local-choose",
+    );
     expect(text).toContain("Peer-backed models");
-  expect(text).toContain("Llama-swap models");
+    expect(text).toContain("Llama-swap models");
   });
 
   it("redirects /local/models to the Local choose target view", async () => {

@@ -17,9 +17,15 @@ const mountAt = (candidates: unknown) => {
   const fetchImpl: typeof fetch = async (input) => {
     const url = String(input);
     if (url.includes("/api/role-model/router/candidates")) {
-      return new Response(JSON.stringify(candidates), { headers: { "content-type": "application/json" }, status: 200 });
+      return new Response(JSON.stringify(candidates), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      });
     }
-    return new Response(JSON.stringify({ rows: [] }), { headers: { "content-type": "application/json" }, status: 200 });
+    return new Response(JSON.stringify({ rows: [] }), {
+      headers: { "content-type": "application/json" },
+      status: 200,
+    });
   };
   const handle = mountShell(container, { readbackReaders: createReadbackClients({ fetchImpl }) });
   mounted.push({ container, handle });
@@ -41,7 +47,7 @@ const waitFor = async (read: () => string | null, label: string): Promise<string
     if (last !== null) return last;
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
-  throw new Error("Timed out waiting for " + label + " (last: " + String(last) + ")");
+  throw new Error(`Timed out waiting for ${label} (last: ${String(last)})`);
 };
 
 describe("S611 R13 model pool honesty", () => {
@@ -52,7 +58,10 @@ describe("S611 R13 model pool honesty", () => {
     window.history.pushState({}, "", "/router");
     window.dispatchEvent(new CustomEvent("foldkit:urlchange"));
     await waitFor(
-      () => (document.querySelector("[data-route]")?.getAttribute("data-route") === "router" ? "ok" : null),
+      () =>
+        document.querySelector("[data-route]")?.getAttribute("data-route") === "router"
+          ? "ok"
+          : null,
       "router page",
     );
     await new Promise((resolve) => setTimeout(resolve, 300));

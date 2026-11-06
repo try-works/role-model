@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 
 /**
@@ -28,7 +28,7 @@ export const staticRootIdentity = ({ packageClient, staticRoot }) => {
     if (!left.includes(file)) continue;
     const a = readFileSync(path.join(staticRoot, file));
     const b = readFileSync(path.join(packageClient, file));
-    if (Buffer.compare(a, b) !== 0) differences.push(file + " differs");
+    if (Buffer.compare(a, b) !== 0) differences.push(`${file} differs`);
   }
   return { differences };
 };

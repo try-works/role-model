@@ -1,6 +1,6 @@
-import { pathToFileURL } from "node:url";
-import path from "node:path";
 import { existsSync } from "node:fs";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -17,13 +17,11 @@ async function loadDependency(name, legacyRelativePath) {
     const legacyEntry = path.join(legacyModules, legacyRelativePath);
     if (!existsSync(legacyEntry)) {
       throw new Error(
-        `Cannot resolve ${name}. Install the workspace dependencies (corepack pnpm install) so ` +
-          `@role-model-router/runtime-ui-next has its own copy of the CSS toolchain.`,
+        `Cannot resolve ${name}. Install the workspace dependencies (corepack pnpm install) so @role-model-router/runtime-ui-next has its own copy of the CSS toolchain.`,
       );
     }
     console.warn(
-      `[style-build] falling back to ../runtime-ui/node_modules for ${name}; ` +
-        "run pnpm install so this package owns its toolchain.",
+      `[style-build] falling back to ../runtime-ui/node_modules for ${name}; run pnpm install so this package owns its toolchain.`,
     );
     return await import(pathToFileURL(legacyEntry).href);
   }

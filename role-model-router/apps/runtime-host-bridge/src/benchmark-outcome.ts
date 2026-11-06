@@ -28,9 +28,7 @@ export interface BenchmarkGradeLike {
   readonly caseResults: readonly BenchmarkCaseResultLike[];
 }
 
-export const benchmarkCaseCounts = (
-  grades: readonly BenchmarkGradeLike[],
-): BenchmarkCaseCounts => {
+export const benchmarkCaseCounts = (grades: readonly BenchmarkGradeLike[]): BenchmarkCaseCounts => {
   let total = 0;
   let passed = 0;
   for (const grade of grades) {

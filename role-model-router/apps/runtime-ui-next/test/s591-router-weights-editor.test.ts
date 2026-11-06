@@ -13,14 +13,28 @@ import { createReadbackClients } from "../src/readback";
  * - the input value is the numeric weight (0..1);
  * - saving the strategy sends routing.weights with all six metrics.
  */
-const WEIGHT_METRICS = ["quality", "latency", "throughput", "cost", "reliability", "preference"] as const;
+const WEIGHT_METRICS = [
+  "quality",
+  "latency",
+  "throughput",
+  "cost",
+  "reliability",
+  "preference",
+] as const;
 
 const routerConfigBody = {
   persisted: { strategy: "hybrid", executionMode: "decision_only" },
   routing: {
     mode: "hybrid",
     scoringStrategy: "custom",
-    weights: { quality: 0.4, latency: 0.2, throughput: 0.1, cost: 0.1, reliability: 0.1, preference: 0.1 },
+    weights: {
+      quality: 0.4,
+      latency: 0.2,
+      throughput: 0.1,
+      cost: 0.1,
+      reliability: 0.1,
+      preference: 0.1,
+    },
   },
   agentStrategies: [],
   workloads: [],
@@ -56,7 +70,7 @@ const waitFor = async (read: () => string | null, label: string): Promise<string
     if (last !== null && last !== "idle" && last !== "loading") return last;
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
-  throw new Error("Timed out waiting for " + label + " (last: " + String(last) + ")");
+  throw new Error(`Timed out waiting for ${label} (last: ${String(last)})`);
 };
 
 const setInput = (input: HTMLInputElement, value: string) => {
@@ -71,53 +85,90 @@ describe("S591 router weights editor", () => {
     const readbackFetch: typeof fetch = async (input) => {
       const url = String(input);
       if (url.includes("/api/role-model/router/config")) {
-        return new Response(JSON.stringify(routerConfigBody), { headers: { "content-type": "application/json" }, status: 200 });
+        return new Response(JSON.stringify(routerConfigBody), {
+          headers: { "content-type": "application/json" },
+          status: 200,
+        });
       }
       if (url.includes("/api/role-model/runtime/config")) {
-        return new Response(JSON.stringify({ applied: true, path: "runtime-config.yaml", config: {} }), { headers: { "content-type": "application/json" }, status: 200 });
+        return new Response(
+          JSON.stringify({ applied: true, path: "runtime-config.yaml", config: {} }),
+          { headers: { "content-type": "application/json" }, status: 200 },
+        );
       }
-      return new Response(JSON.stringify({ rows: [] }), { headers: { "content-type": "application/json" }, status: 200 });
+      return new Response(JSON.stringify({ rows: [] }), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      });
     };
     const routerConfigFetch: typeof fetch = async (input, init) => {
-      writes.push({ body: init?.body === undefined ? undefined : JSON.parse(String(init.body)), url: String(input) });
-      return new Response(JSON.stringify({ applied: true, path: "runtime-config.yaml", config: {} }), { headers: { "content-type": "application/json" }, status: 200 });
+      writes.push({
+        body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+        url: String(input),
+      });
+      return new Response(
+        JSON.stringify({ applied: true, path: "runtime-config.yaml", config: {} }),
+        { headers: { "content-type": "application/json" }, status: 200 },
+      );
     };
 
     mountAt(readbackFetch, routerConfigFetch);
-    expect(await waitFor(() => document.querySelector("[data-route='router-strategy']")?.getAttribute("data-router-family-state") ?? null, "strategy ok")).toBe("ok");
+    expect(
+      await waitFor(
+        () =>
+          document
+            .querySelector("[data-route='router-strategy']")
+            ?.getAttribute("data-router-family-state") ?? null,
+        "strategy ok",
+      ),
+    ).toBe("ok");
 
     const inputs = WEIGHT_METRICS.map((metric) => {
-      const input = document.querySelector<HTMLInputElement>('[data-router-weight="' + metric + '"]');
-      expect(input, "missing weight input for " + metric).not.toBeNull();
-      if (input === null) throw new Error("missing weight input for " + metric);
+      const input = document.querySelector<HTMLInputElement>(`[data-router-weight="${metric}"]`);
+      expect(input, `missing weight input for ${metric}`).not.toBeNull();
+      if (input === null) throw new Error(`missing weight input for ${metric}`);
       if (!(input.getAttribute("aria-label") ?? "").toLowerCase().includes(metric)) {
-        throw new Error("weight input for " + metric + " lacks an accessible name containing the metric");
+        throw new Error(
+          `weight input for ${metric} lacks an accessible name containing the metric`,
+        );
       }
       return { metric, input };
     });
 
     // Hydration: inputs start from the host weights, not the defaults.
-    expect(inputs.find((entry) => entry.metric === "quality")!.input.value).toBe("0.4");
-    expect(inputs.find((entry) => entry.metric === "cost")!.input.value).toBe("0.1");
+    expect(inputs.find((entry) => entry.metric === "quality")?.input.value).toBe("0.4");
+    expect(inputs.find((entry) => entry.metric === "cost")?.input.value).toBe("0.1");
 
-    const scoring = [...document.querySelectorAll<HTMLSelectElement>("main select")].find((element) => element.getAttribute("aria-label") === "Scoring strategy");
+    const scoring = [...document.querySelectorAll<HTMLSelectElement>("main select")].find(
+      (element) => element.getAttribute("aria-label") === "Scoring strategy",
+    );
     expect(scoring).toBeDefined();
     scoring!.value = "custom";
-    scoring!.dispatchEvent(new Event("change", { bubbles: true }));
+    scoring?.dispatchEvent(new Event("change", { bubbles: true }));
     await new Promise((resolve) => setTimeout(resolve, 30));
 
-    setInput(inputs.find((entry) => entry.metric === "quality")!.input, "0.3");
-    setInput(inputs.find((entry) => entry.metric === "latency")!.input, "0.1");
-    setInput(inputs.find((entry) => entry.metric === "throughput")!.input, "0.1");
-    setInput(inputs.find((entry) => entry.metric === "cost")!.input, "0.2");
-    setInput(inputs.find((entry) => entry.metric === "reliability")!.input, "0.2");
-    setInput(inputs.find((entry) => entry.metric === "preference")!.input, "0.1");
+    setInput(inputs.find((entry) => entry.metric === "quality")?.input, "0.3");
+    setInput(inputs.find((entry) => entry.metric === "latency")?.input, "0.1");
+    setInput(inputs.find((entry) => entry.metric === "throughput")?.input, "0.1");
+    setInput(inputs.find((entry) => entry.metric === "cost")?.input, "0.2");
+    setInput(inputs.find((entry) => entry.metric === "reliability")?.input, "0.2");
+    setInput(inputs.find((entry) => entry.metric === "preference")?.input, "0.1");
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    const save = [...document.querySelectorAll<HTMLButtonElement>("main button")].find((element) => element.textContent?.trim() === "Save routing strategy");
+    const save = [...document.querySelectorAll<HTMLButtonElement>("main button")].find(
+      (element) => element.textContent?.trim() === "Save routing strategy",
+    );
     expect(save).toBeDefined();
     save?.click();
-    expect(await waitFor(() => document.querySelector("[data-router-posture-status]")?.getAttribute("data-router-posture-status") ?? null, "saved status")).toBe("saved");
+    expect(
+      await waitFor(
+        () =>
+          document
+            .querySelector("[data-router-posture-status]")
+            ?.getAttribute("data-router-posture-status") ?? null,
+        "saved status",
+      ),
+    ).toBe("saved");
     expect(writes).toHaveLength(1);
     expect(writes[0]?.url).toBe("/api/role-model/runtime/config");
     expect(writes[0]?.body).toMatchObject({
@@ -136,23 +187,59 @@ describe("S591 router weights editor", () => {
   });
 
   it("omits routing.weights for non-custom scoring strategies", async () => {
-    const writes: Array<{ readonly body: { routing?: Record<string, unknown> }; readonly url: string }> = [];
+    const writes: Array<{
+      readonly body: { routing?: Record<string, unknown> };
+      readonly url: string;
+    }> = [];
     const readbackFetch: typeof fetch = async (input) => {
       const url = String(input);
       if (url.includes("/api/role-model/router/config")) {
-        return new Response(JSON.stringify({ ...routerConfigBody, routing: { mode: "hybrid", scoringStrategy: "cost" } }), { headers: { "content-type": "application/json" }, status: 200 });
+        return new Response(
+          JSON.stringify({
+            ...routerConfigBody,
+            routing: { mode: "hybrid", scoringStrategy: "cost" },
+          }),
+          { headers: { "content-type": "application/json" }, status: 200 },
+        );
       }
-      return new Response(JSON.stringify({ rows: [] }), { headers: { "content-type": "application/json" }, status: 200 });
+      return new Response(JSON.stringify({ rows: [] }), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      });
     };
     const routerConfigFetch: typeof fetch = async (input, init) => {
-      writes.push({ body: init?.body === undefined ? undefined : JSON.parse(String(init.body)), url: String(input) });
-      return new Response(JSON.stringify({ applied: true, path: "runtime-config.yaml", config: {} }), { headers: { "content-type": "application/json" }, status: 200 });
+      writes.push({
+        body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+        url: String(input),
+      });
+      return new Response(
+        JSON.stringify({ applied: true, path: "runtime-config.yaml", config: {} }),
+        { headers: { "content-type": "application/json" }, status: 200 },
+      );
     };
     mountAt(readbackFetch, routerConfigFetch);
-    expect(await waitFor(() => document.querySelector("[data-route='router-strategy']")?.getAttribute("data-router-family-state") ?? null, "strategy ok")).toBe("ok");
-    const save = [...document.querySelectorAll<HTMLButtonElement>("main button")].find((element) => element.textContent?.trim() === "Save routing strategy");
+    expect(
+      await waitFor(
+        () =>
+          document
+            .querySelector("[data-route='router-strategy']")
+            ?.getAttribute("data-router-family-state") ?? null,
+        "strategy ok",
+      ),
+    ).toBe("ok");
+    const save = [...document.querySelectorAll<HTMLButtonElement>("main button")].find(
+      (element) => element.textContent?.trim() === "Save routing strategy",
+    );
     save?.click();
-    expect(await waitFor(() => document.querySelector("[data-router-posture-status]")?.getAttribute("data-router-posture-status") ?? null, "saved status")).toBe("saved");
+    expect(
+      await waitFor(
+        () =>
+          document
+            .querySelector("[data-router-posture-status]")
+            ?.getAttribute("data-router-posture-status") ?? null,
+        "saved status",
+      ),
+    ).toBe("saved");
     expect(writes).toHaveLength(1);
     expect(writes[0]?.body?.routing).toBeDefined();
     expect(writes[0]?.body?.routing?.weights).toBeUndefined();
@@ -160,27 +247,67 @@ describe("S591 router weights editor", () => {
   });
 
   it("persists hydrated host weights when saved without editing", async () => {
-    const writes: Array<{ readonly body: { routing?: Record<string, unknown> }; readonly url: string }> = [];
+    const writes: Array<{
+      readonly body: { routing?: Record<string, unknown> };
+      readonly url: string;
+    }> = [];
     const readbackFetch: typeof fetch = async (input) => {
       const url = String(input);
       if (url.includes("/api/role-model/router/config")) {
-        return new Response(JSON.stringify(routerConfigBody), { headers: { "content-type": "application/json" }, status: 200 });
+        return new Response(JSON.stringify(routerConfigBody), {
+          headers: { "content-type": "application/json" },
+          status: 200,
+        });
       }
-      return new Response(JSON.stringify({ rows: [] }), { headers: { "content-type": "application/json" }, status: 200 });
+      return new Response(JSON.stringify({ rows: [] }), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      });
     };
     const routerConfigFetch: typeof fetch = async (input, init) => {
-      writes.push({ body: init?.body === undefined ? undefined : JSON.parse(String(init.body)), url: String(input) });
-      return new Response(JSON.stringify({ applied: true, path: "runtime-config.yaml", config: {} }), { headers: { "content-type": "application/json" }, status: 200 });
+      writes.push({
+        body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+        url: String(input),
+      });
+      return new Response(
+        JSON.stringify({ applied: true, path: "runtime-config.yaml", config: {} }),
+        { headers: { "content-type": "application/json" }, status: 200 },
+      );
     };
     mountAt(readbackFetch, routerConfigFetch);
-    expect(await waitFor(() => document.querySelector("[data-route='router-strategy']")?.getAttribute("data-router-family-state") ?? null, "strategy ok")).toBe("ok");
-    const save = [...document.querySelectorAll<HTMLButtonElement>("main button")].find((element) => element.textContent?.trim() === "Save routing strategy");
+    expect(
+      await waitFor(
+        () =>
+          document
+            .querySelector("[data-route='router-strategy']")
+            ?.getAttribute("data-router-family-state") ?? null,
+        "strategy ok",
+      ),
+    ).toBe("ok");
+    const save = [...document.querySelectorAll<HTMLButtonElement>("main button")].find(
+      (element) => element.textContent?.trim() === "Save routing strategy",
+    );
     save?.click();
-    expect(await waitFor(() => document.querySelector("[data-router-posture-status]")?.getAttribute("data-router-posture-status") ?? null, "saved status")).toBe("saved");
+    expect(
+      await waitFor(
+        () =>
+          document
+            .querySelector("[data-router-posture-status]")
+            ?.getAttribute("data-router-posture-status") ?? null,
+        "saved status",
+      ),
+    ).toBe("saved");
     expect(writes).toHaveLength(1);
     expect(writes[0]?.body?.routing).toMatchObject({
       scoring_strategy: "custom",
-      weights: { quality: 0.4, latency: 0.2, throughput: 0.1, cost: 0.1, reliability: 0.1, preference: 0.1 },
+      weights: {
+        quality: 0.4,
+        latency: 0.2,
+        throughput: 0.1,
+        cost: 0.1,
+        reliability: 0.1,
+        preference: 0.1,
+      },
     });
   });
 });

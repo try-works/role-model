@@ -50,7 +50,7 @@ const createFakeCdp = () => {
     async send(method, params, sessionId) {
       calls.push({ method, params, sessionId });
       const handler = handlers.get(method);
-      if (handler === undefined) throw new Error("unexpected CDP method: " + method);
+      if (handler === undefined) throw new Error(`unexpected CDP method: ${method}`);
       return await handler(params, sessionId);
     },
   };
@@ -64,10 +64,28 @@ const routeEvaluate = (cdp, { recorder, readiness, readyState }) => {
     // Readiness is matched first: its expression deliberately includes both `fontsReady` and the
     // in-page `__parityCapture` mutation counter, while the recorder read only has the latter.
     if (expression.includes("fontsReady")) {
-      return { result: { value: JSON.stringify(readiness?.() ?? { fontsReady: true, imagesReady: true, mutations: 0, pendingRequests: 0, readyState: "complete" }) } };
+      return {
+        result: {
+          value: JSON.stringify(
+            readiness?.() ?? {
+              fontsReady: true,
+              imagesReady: true,
+              mutations: 0,
+              pendingRequests: 0,
+              readyState: "complete",
+            },
+          ),
+        },
+      };
     }
     if (expression.includes("__parityCapture")) {
-      return { result: { value: JSON.stringify(recorder?.() ?? { consoleErrors: [], mutations: 0, networkErrors: [] }) } };
+      return {
+        result: {
+          value: JSON.stringify(
+            recorder?.() ?? { consoleErrors: [], mutations: 0, networkErrors: [] },
+          ),
+        },
+      };
     }
     if (expression === "document.readyState") {
       return { result: { value: readyState?.() ?? "complete" } };
@@ -75,7 +93,7 @@ const routeEvaluate = (cdp, { recorder, readiness, readyState }) => {
     if (expression.includes("caret-color")) {
       return { result: { value: true } };
     }
-    throw new Error("unexpected evaluate expression: " + expression);
+    throw new Error(`unexpected evaluate expression: ${expression}`);
   });
 };
 
@@ -119,15 +137,22 @@ test("S282 installs deterministic clock/random, fixed viewport/timezone and hide
 
   assert.deepEqual(result.viewport, VIEWPORT);
   assert.equal(result.timezone, TIMEZONE);
-  const metricsCall = cdp.calls.find((call) => call.method === "Emulation.setDeviceMetricsOverride");
+  const metricsCall = cdp.calls.find(
+    (call) => call.method === "Emulation.setDeviceMetricsOverride",
+  );
   assert.ok(metricsCall, "viewport must be fixed through Emulation.setDeviceMetricsOverride");
   assert.deepEqual(metricsCall.params, { ...VIEWPORT, mobile: false });
   const timezoneCall = cdp.calls.find((call) => call.method === "Emulation.setTimezoneOverride");
   assert.ok(timezoneCall, "timezone must be fixed");
   assert.equal(timezoneCall.params?.timezoneId, TIMEZONE);
 
-  const bootstrapCalls = cdp.calls.filter((call) => call.method === "Page.addScriptToEvaluateOnNewDocument");
-  assert.ok(bootstrapCalls.length >= 1, "determinism must be installed with addScriptToEvaluateOnNewDocument");
+  const bootstrapCalls = cdp.calls.filter(
+    (call) => call.method === "Page.addScriptToEvaluateOnNewDocument",
+  );
+  assert.ok(
+    bootstrapCalls.length >= 1,
+    "determinism must be installed with addScriptToEvaluateOnNewDocument",
+  );
   const script = String(bootstrapCalls[0].params?.source ?? "");
   assert.match(script, /Math\.random/, "Math.random must be seeded");
   assert.match(script, /Date/, "the clock must be frozen");
@@ -142,11 +167,13 @@ test("S282 installs deterministic clock/random, fixed viewport/timezone and hide
   ]) {
     assert.ok(
       cdp.methods().indexOf(required) >= 0 && cdp.methods().indexOf(required) < navigateIndex,
-      required + " must run BEFORE navigation",
+      `${required} must run BEFORE navigation`,
     );
   }
   const styleIndex = cdp.calls.findIndex(
-    (call) => call.method === "Runtime.evaluate" && String(call.params?.expression ?? "").includes("caret-color"),
+    (call) =>
+      call.method === "Runtime.evaluate" &&
+      String(call.params?.expression ?? "").includes("caret-color"),
   );
   assert.ok(styleIndex >= 0, "animations/carets must be hidden with an injected style");
   const firstShot = cdp.methods().indexOf("Page.captureScreenshot");
@@ -158,10 +185,16 @@ const runBootstrap = (source, overrides = {}) => {
   const observed = [];
   const xhrListeners = [];
   class MutationObserverStub {
-    constructor(callback) { this.callback = callback; }
-    observe(target) { observed.push(target); }
+    constructor(callback) {
+      this.callback = callback;
+    }
+    observe(target) {
+      observed.push(target);
+    }
   }
-  function XMLHttpRequestStub() { this.listeners = new Map(); }
+  function XMLHttpRequestStub() {
+    this.listeners = new Map();
+  }
   XMLHttpRequestStub.prototype.open = function open() {};
   XMLHttpRequestStub.prototype.send = function send() {};
   XMLHttpRequestStub.prototype.addEventListener = function addEventListener(type, listener) {
@@ -213,7 +246,13 @@ test("S282 waits for fonts/images and a bounded DOM-quiet window before the firs
       if (ready === 1) mutations = 5;
       if (ready === 2) mutations = 9;
       if (ready >= 3 && quietStartedAt === null) quietStartedAt = Date.now();
-      return { fontsReady: ready >= 2, imagesReady: ready >= 3, mutations, pendingRequests: 0, readyState: "complete" };
+      return {
+        fontsReady: ready >= 2,
+        imagesReady: ready >= 3,
+        mutations,
+        pendingRequests: 0,
+        readyState: "complete",
+      };
     },
   });
   const started = Date.now();
@@ -247,7 +286,7 @@ test("S282 requires consecutive byte-identical screenshots and returns exact PNG
 
 test("S282 fails with a bounded diagnostic error when screenshots never stabilise, and rejects non-finite deadlines", async () => {
   const cdp = createFakeCdp();
-  baseHandlers(cdp, { screenshots: (index) => Buffer.from("frame-" + index) });
+  baseHandlers(cdp, { screenshots: (index) => Buffer.from(`frame-${index}`) });
   routeEvaluate(cdp, {});
   const started = Date.now();
   await assert.rejects(
@@ -256,7 +295,10 @@ test("S282 fails with a bounded diagnostic error when screenshots never stabilis
       assert.ok(error instanceof ParityCaptureError, "a typed capture error is required");
       assert.equal(error.code, "capture_unstable");
       assert.match(error.message, /stable|identical/i);
-      assert.ok(error.diagnostics && error.diagnostics.screenshots >= 2, "diagnostics must be attached");
+      assert.ok(
+        error.diagnostics && error.diagnostics.screenshots >= 2,
+        "diagnostics must be attached",
+      );
       return true;
     },
   );
@@ -280,7 +322,11 @@ test("S282 fails with a bounded diagnostic error when navigation never completes
     captureParityScreenshot(captureOptions(cdp, { deadlineMs: 120, pollMs: 5 })),
     (error) => {
       assert.equal(error.code, "capture_timeout");
-      assert.equal(cdp.methods().includes("Page.captureScreenshot"), false, "no screenshot may be taken before load");
+      assert.equal(
+        cdp.methods().includes("Page.captureScreenshot"),
+        false,
+        "no screenshot may be taken before load",
+      );
       return true;
     },
   );
@@ -309,12 +355,21 @@ test("S282 surfaces CDP event-channel failures and records an unavailable channe
   routeEvaluate(withEvents, {});
   withEvents.handle("Page.navigate", () => {
     withEvents.emit("Runtime.exceptionThrown", { exceptionDetails: { text: "boom-event" } });
-    withEvents.emit("Network.loadingFailed", { errorText: "net::ERR_FAILED", requestId: "1", type: "Fetch" });
+    withEvents.emit("Network.loadingFailed", {
+      errorText: "net::ERR_FAILED",
+      requestId: "1",
+      type: "Fetch",
+    });
     return {};
   });
-  const withEventsResult = await captureParityScreenshot(captureOptions(withEvents, { cdp: withEvents }));
+  const withEventsResult = await captureParityScreenshot(
+    captureOptions(withEvents, { cdp: withEvents }),
+  );
   assert.equal(withEventsResult.events.channel, "subscribed");
-  assert.ok(withEventsResult.consoleErrors.some((line) => line.includes("boom-event")), "CDP exceptions must be surfaced");
+  assert.ok(
+    withEventsResult.consoleErrors.some((line) => line.includes("boom-event")),
+    "CDP exceptions must be surfaced",
+  );
   assert.ok(withEventsResult.networkErrors.length >= 1, "CDP network failures must be surfaced");
   assert.equal(withEventsResult.clean, false);
 
@@ -324,7 +379,11 @@ test("S282 surfaces CDP event-channel failures and records an unavailable channe
   routeEvaluate(noEvents, {});
   const noEventsResult = await captureParityScreenshot(captureOptions(noEvents, { cdp: noEvents }));
   assert.equal(noEventsResult.events.channel, "unavailable");
-  assert.equal(noEventsResult.events.complete, false, "an unavailable event channel cannot be reported as clean");
+  assert.equal(
+    noEventsResult.events.complete,
+    false,
+    "an unavailable event channel cannot be reported as clean",
+  );
 });
 
 test("S282 is deterministic: two identical runs produce identical PNG, sha256 and metadata", async () => {
@@ -333,7 +392,15 @@ test("S282 is deterministic: two identical runs produce identical PNG, sha256 an
     baseHandlers(cdp, { screenshots: (index) => (index < 1 ? PNG_A : PNG_B) });
     routeEvaluate(cdp, {});
     const result = await captureParityScreenshot(captureOptions(cdp));
-    return { bytes: result.bytes, clock: result.clock, png: result.png, sha256: result.sha256, stable: result.stable, timezone: result.timezone, viewport: result.viewport };
+    return {
+      bytes: result.bytes,
+      clock: result.clock,
+      png: result.png,
+      sha256: result.sha256,
+      stable: result.stable,
+      timezone: result.timezone,
+      viewport: result.viewport,
+    };
   };
   const first = await run();
   const second = await run();
@@ -352,13 +419,25 @@ test("S285 enables the Runtime/Log/Network domains and disables the cache before
   await captureParityScreenshot(captureOptions(cdp));
   const methods = cdp.methods();
   for (const required of ["Runtime.enable", "Log.enable", "Network.enable"]) {
-    assert.ok(methods.includes(required), required + " must be enabled or the event channel stays silent");
+    assert.ok(
+      methods.includes(required),
+      `${required} must be enabled or the event channel stays silent`,
+    );
   }
   const cache = cdp.calls.find((call) => call.method === "Network.setCacheDisabled");
-  assert.deepEqual(cache?.params, { cacheDisabled: true }, "caching must be disabled for deterministic bytes");
+  assert.deepEqual(
+    cache?.params,
+    { cacheDisabled: true },
+    "caching must be disabled for deterministic bytes",
+  );
   const navigateIndex = methods.indexOf("Page.navigate");
-  for (const required of ["Runtime.enable", "Log.enable", "Network.enable", "Network.setCacheDisabled"]) {
-    assert.ok(methods.indexOf(required) < navigateIndex, required + " must run BEFORE navigation");
+  for (const required of [
+    "Runtime.enable",
+    "Log.enable",
+    "Network.enable",
+    "Network.setCacheDisabled",
+  ]) {
+    assert.ok(methods.indexOf(required) < navigateIndex, `${required} must run BEFORE navigation`);
   }
 });
 
@@ -369,53 +448,100 @@ test("S285 preserves callable/constructible Date semantics (bootstrap executed i
   assert.equal(vm.runInContext("Date.now()", context), fixed);
   assert.equal(vm.runInContext("new Date().getTime()", context), fixed);
   assert.equal(vm.runInContext("typeof Date()", context), "string", "Date() must stay callable");
-  assert.equal(vm.runInContext("new Date(0).getTime()", context), 0, "explicit arguments must be preserved");
-  assert.equal(vm.runInContext("Date.parse('1970-01-01T00:00:00.000Z')", context), 0, "Date.parse must survive");
-  assert.ok(Number.isFinite(vm.runInContext("Date.UTC(2020, 0, 1)", context)), "Date.UTC must survive");
-  assert.equal(vm.runInContext("new Date() instanceof Date", context), true, "Date.prototype identity must hold");
+  assert.equal(
+    vm.runInContext("new Date(0).getTime()", context),
+    0,
+    "explicit arguments must be preserved",
+  );
+  assert.equal(
+    vm.runInContext("Date.parse('1970-01-01T00:00:00.000Z')", context),
+    0,
+    "Date.parse must survive",
+  );
+  assert.ok(
+    Number.isFinite(vm.runInContext("Date.UTC(2020, 0, 1)", context)),
+    "Date.UTC must survive",
+  );
+  assert.equal(
+    vm.runInContext("new Date() instanceof Date", context),
+    true,
+    "Date.prototype identity must hold",
+  );
   assert.equal(vm.runInContext("typeof Date.prototype.getTime", context), "function");
   const first = [...vm.runInContext("[Math.random(), Math.random(), Math.random()]", context)];
   const { context: second } = runBootstrap(source);
-  const secondValues = [...vm.runInContext("[Math.random(), Math.random(), Math.random()]", second)];
+  const secondValues = [
+    ...vm.runInContext("[Math.random(), Math.random(), Math.random()]", second),
+  ];
   assert.deepEqual(secondValues, first, "the seeded PRNG must be deterministic across runs");
 });
 
 test("S285 attaches the mutation observer even while documentElement is null (executed bootstrap)", async () => {
   const source = await bootstrapOf();
   const withElement = runBootstrap(source);
-  assert.equal(withElement.observed.length, 1, "the observer must attach to documentElement when present");
+  assert.equal(
+    withElement.observed.length,
+    1,
+    "the observer must attach to documentElement when present",
+  );
   assert.equal(withElement.observed[0], withElement.documentElement);
   const withoutElement = runBootstrap(source, { document: { documentElement: null } });
-  assert.equal(withoutElement.observed.length, 1, "the observer must still attach when documentElement is null");
+  assert.equal(
+    withoutElement.observed.length,
+    1,
+    "the observer must still attach when documentElement is null",
+  );
   assert.equal(withoutElement.observed[0], withoutElement.sandbox.document);
 });
 
 test("S285 tracks pending fetch/XHR as readiness, not networkidle, and an SSE response cannot block it", async () => {
   const source = await bootstrapOf();
   let resolveFetch;
-  const pending = new Promise((resolve) => { resolveFetch = resolve; });
+  const pending = new Promise((resolve) => {
+    resolveFetch = resolve;
+  });
   const pendingRun = runBootstrap(source, { fetch: () => pending });
   const inFlight = pendingRun.sandbox.fetch("http://127.0.0.1/pending");
-  assert.equal(pendingRun.sandbox.__parityCapture.pendingRequests, 1, "an unsettled fetch must be counted as pending");
+  assert.equal(
+    pendingRun.sandbox.__parityCapture.pendingRequests,
+    1,
+    "an unsettled fetch must be counted as pending",
+  );
   resolveFetch({ headers: { get: () => "application/json" }, ok: true, status: 200 });
   await inFlight;
-  assert.equal(pendingRun.sandbox.__parityCapture.pendingRequests, 0, "response headers settle readiness, not networkidle");
+  assert.equal(
+    pendingRun.sandbox.__parityCapture.pendingRequests,
+    0,
+    "response headers settle readiness, not networkidle",
+  );
 
   const sseRun = runBootstrap(source, {
     fetch: async () => ({ headers: { get: () => "text/event-stream" }, ok: true, status: 200 }),
   });
   await sseRun.sandbox.fetch("http://127.0.0.1/sse");
-  assert.equal(sseRun.sandbox.__parityCapture.pendingRequests, 0, "an SSE response must not hold readiness");
+  assert.equal(
+    sseRun.sandbox.__parityCapture.pendingRequests,
+    0,
+    "an SSE response must not hold readiness",
+  );
 
   const xhrRun = runBootstrap(source);
   const xhr = new xhrRun.sandbox.XMLHttpRequest();
   xhr.open("GET", "/xhr");
   xhr.send();
-  assert.equal(xhrRun.sandbox.__parityCapture.pendingRequests, 1, "an in-flight XHR must be counted");
+  assert.equal(
+    xhrRun.sandbox.__parityCapture.pendingRequests,
+    1,
+    "an in-flight XHR must be counted",
+  );
   for (const entry of xhrRun.xhrListeners) {
     if (entry.instance === xhr && entry.type === "loadend") entry.listener();
   }
-  assert.equal(xhrRun.sandbox.__parityCapture.pendingRequests, 0, "XHR completion must clear the count");
+  assert.equal(
+    xhrRun.sandbox.__parityCapture.pendingRequests,
+    0,
+    "XHR completion must clear the count",
+  );
 });
 
 test("S285 does not capture while requests are pending and times out when they never settle", async () => {
@@ -438,17 +564,26 @@ test("S285 does not capture while requests are pending and times out when they n
   const firstShot = cdp.methods().indexOf("Page.captureScreenshot");
   const readinessBeforeShot = cdp.calls
     .slice(0, firstShot)
-    .filter((call) => call.method === "Runtime.evaluate" && String(call.params?.expression ?? "").includes("fontsReady"))
-    .length;
+    .filter(
+      (call) =>
+        call.method === "Runtime.evaluate" &&
+        String(call.params?.expression ?? "").includes("fontsReady"),
+    ).length;
   assert.ok(
     readinessBeforeShot >= 11,
-    "capture must wait until pendingRequests reaches 0 (saw " + readinessBeforeShot + " readiness polls)",
+    `capture must wait until pendingRequests reaches 0 (saw ${readinessBeforeShot} readiness polls)`,
   );
 
   const stuck = createFakeCdp();
   baseHandlers(stuck, { screenshots: () => PNG_A });
   routeEvaluate(stuck, {
-    readiness: () => ({ fontsReady: true, imagesReady: true, mutations: 0, pendingRequests: 1, readyState: "complete" }),
+    readiness: () => ({
+      fontsReady: true,
+      imagesReady: true,
+      mutations: 0,
+      pendingRequests: 1,
+      readyState: "complete",
+    }),
   });
   await assert.rejects(
     captureParityScreenshot(captureOptions(stuck, { deadlineMs: 120, pollMs: 2 })),
@@ -471,7 +606,11 @@ test("S285 bounds EVERY cdp.send by the remaining deadline, including hung sends
     ),
     new Promise((resolve) => setTimeout(() => resolve("hung"), 1_200)),
   ]);
-  assert.equal(shotOutcome, "capture_timeout", "a hung captureScreenshot must be bounded by the deadline");
+  assert.equal(
+    shotOutcome,
+    "capture_timeout",
+    "a hung captureScreenshot must be bounded by the deadline",
+  );
 
   const hungEnable = createFakeCdp();
   baseHandlers(hungEnable, { screenshots: () => PNG_A });

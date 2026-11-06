@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  resolvePackagedValidationScope,
-  type PackagedValidationManifest,
-} from "../src/validate-packaging.js";
-import {
   CURRENT_RUNTIME_CHANNEL_VERSION,
   negotiateRuntimeChannelStartup,
 } from "../src/runtime-channel.js";
+import {
+  type PackagedValidationManifest,
+  resolvePackagedValidationScope,
+} from "../src/validate-packaging.js";
 
 describe("S27b packaged validator scope", () => {
   const manifest: PackagedValidationManifest = {

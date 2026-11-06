@@ -600,7 +600,7 @@ const buildService = (config: SqliteServiceConfig, database: DatabaseSync): Sqli
   const readPragmas = (): MaintenancePragmaSnapshot => {
     const snapshot: Record<string, string> = {};
     for (const name of PRAGMA_NAMES) {
-      const row = database.prepare("PRAGMA " + name).get();
+      const row = database.prepare(`PRAGMA ${name}`).get();
       const first = Object.values(Object(row))[0];
       snapshot[name] = String(first ?? "");
     }
@@ -616,7 +616,7 @@ const buildService = (config: SqliteServiceConfig, database: DatabaseSync): Sqli
         continue;
       }
       try {
-        database.exec("PRAGMA " + name + " = " + value);
+        database.exec(`PRAGMA ${name} = ${value}`);
       } catch {
         // Best-effort re-apply: a read-only pragma keeps its value; the store's primary pragmas
         // (busy_timeout/foreign_keys/synchronous/journal_mode) are writable in this connection.
@@ -630,11 +630,14 @@ const buildService = (config: SqliteServiceConfig, database: DatabaseSync): Sqli
     database.exec("PRAGMA synchronous = OFF");
   };
 
-  const quoteSqlLiteral = (value: string): string => "'" + value.replaceAll("'", "''") + "'";
+  const quoteSqlLiteral = (value: string): string => `'${value.replaceAll("'", "''")}'`;
 
   let maintenanceActive = false;
 
-  const drainMaintenanceOwners = async (operation: string, drainTimeoutMs: number): Promise<void> => {
+  const drainMaintenanceOwners = async (
+    operation: string,
+    drainTimeoutMs: number,
+  ): Promise<void> => {
     const ownerHolds = (): boolean => Ref.getUnsafe(activeTransaction) !== null;
     if (!ownerHolds()) {
       return;
@@ -693,7 +696,9 @@ const buildService = (config: SqliteServiceConfig, database: DatabaseSync): Sqli
           reapplyPragmas(storePragmas, options?.reapplyFailurePragma);
           if (primary === undefined) {
             const after = readPragmas();
-            const drifted = Object.keys(storePragmas).filter((name) => after[name] !== storePragmas[name]);
+            const drifted = Object.keys(storePragmas).filter(
+              (name) => after[name] !== storePragmas[name],
+            );
             if (drifted.length > 0) {
               throw new MaintenancePragmaVerificationError(operation, drifted);
             }
@@ -715,9 +720,14 @@ const buildService = (config: SqliteServiceConfig, database: DatabaseSync): Sqli
 
   const maintenance: SqliteMaintenance = {
     backup: (targetPath, options) =>
-      runMaintenance("backup", options, () => {
-        database.exec("VACUUM INTO " + quoteSqlLiteral(targetPath));
-      }, targetPath),
+      runMaintenance(
+        "backup",
+        options,
+        () => {
+          database.exec(`VACUUM INTO ${quoteSqlLiteral(targetPath)}`);
+        },
+        targetPath,
+      ),
     pragmas: readPragmas,
     reset: (options) =>
       runMaintenance("reset", options, () => {

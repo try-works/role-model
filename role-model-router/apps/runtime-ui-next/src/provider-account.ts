@@ -80,7 +80,8 @@ export const providerAccountBusy = (state: ProviderAccountState): boolean =>
 export const validateProviderAccountDraft = (state: ProviderAccountState): readonly string[] => {
   const errors: string[] = [];
   if (state.draft.providerId.trim().length === 0) errors.push("Select a provider.");
-  if (state.draft.providerAccountId.trim().length === 0) errors.push("Enter a provider account id.");
+  if (state.draft.providerAccountId.trim().length === 0)
+    errors.push("Enter a provider account id.");
   if (state.draft.authMode.startsWith("api-key") && state.draft.apiKey.trim().length === 0) {
     errors.push("Enter an API key.");
   }
@@ -88,7 +89,14 @@ export const validateProviderAccountDraft = (state: ProviderAccountState): reado
 };
 
 export const modelRoleBindingsForModels = (modelIds: readonly string[], roleIdsInput: string) => {
-  const roleIds = [...new Set(roleIdsInput.split(",").map((value) => value.trim()).filter((value) => value.length > 0))].sort((left, right) => left.localeCompare(right, "en"));
+  const roleIds = [
+    ...new Set(
+      roleIdsInput
+        .split(",")
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0),
+    ),
+  ].sort((left, right) => left.localeCompare(right, "en"));
   return [...new Set(modelIds)].map((modelId) => ({
     disabledRoleIds: [] as string[],
     enabledRoleIds: [...roleIds],
@@ -126,23 +134,45 @@ export const createProviderAccountPayload = (
   const providerAccountId = draft.providerAccountId.trim();
   const apiKeyMode = draft.authMode === "api-key-static";
   const preserveExisting = draft.existingStatus.trim().length > 0;
-  const keepExistingActive = draft.existingStatus === "active" && draft.existingHealthStatus === "healthy";
+  const keepExistingActive =
+    draft.existingStatus === "active" && draft.existingHealthStatus === "healthy";
   const lifecycle = keepExistingActive
-    ? { healthStatus: "healthy", rotationState: draft.existingRotationState || "stable", status: "active" }
+    ? {
+        healthStatus: "healthy",
+        rotationState: draft.existingRotationState || "stable",
+        status: "active",
+      }
     : apiKeyMode
-    ? preserveExisting && draft.existingStatus === "disabled" && draft.existingHealthStatus === "credentials-missing"
-      ? { healthStatus: draft.existingHealthStatus, rotationState: draft.existingRotationState || "not-required", status: draft.existingStatus }
-      : { healthStatus: "healthy", rotationState: "stable", status: "active" }
-    : draft.oauthConnected === "true"
-      ? { healthStatus: "healthy", rotationState: "stable", status: "active" }
-      : preserveExisting && draft.existingStatus === "active" && draft.existingHealthStatus === "healthy"
-        ? { healthStatus: draft.existingHealthStatus, rotationState: draft.existingRotationState || "stable", status: draft.existingStatus }
-        : { healthStatus: "credentials-missing", rotationState: "in-progress", status: "disabled" };
-  const chosenModels = draft.selectedModelIds.length > 0
-    ? draft.selectedModelIds
-    : draft.modelInput.trim().length > 0
-      ? [draft.modelInput.trim()]
-      : [];
+      ? preserveExisting &&
+        draft.existingStatus === "disabled" &&
+        draft.existingHealthStatus === "credentials-missing"
+        ? {
+            healthStatus: draft.existingHealthStatus,
+            rotationState: draft.existingRotationState || "not-required",
+            status: draft.existingStatus,
+          }
+        : { healthStatus: "healthy", rotationState: "stable", status: "active" }
+      : draft.oauthConnected === "true"
+        ? { healthStatus: "healthy", rotationState: "stable", status: "active" }
+        : preserveExisting &&
+            draft.existingStatus === "active" &&
+            draft.existingHealthStatus === "healthy"
+          ? {
+              healthStatus: draft.existingHealthStatus,
+              rotationState: draft.existingRotationState || "stable",
+              status: draft.existingStatus,
+            }
+          : {
+              healthStatus: "credentials-missing",
+              rotationState: "in-progress",
+              status: "disabled",
+            };
+  const chosenModels =
+    draft.selectedModelIds.length > 0
+      ? draft.selectedModelIds
+      : draft.modelInput.trim().length > 0
+        ? [draft.modelInput.trim()]
+        : [];
   return {
     accountScope: "workspace-default",
     allowedModels: [...new Set(chosenModels)],
@@ -153,7 +183,7 @@ export const createProviderAccountPayload = (
       ? { backend: "env", ref: draft.credentialRef }
       : {
           backend: "local-file",
-          ref: "oauth/" + draft.providerId.trim() + "/" + providerAccountId,
+          ref: `oauth/${draft.providerId.trim()}/${providerAccountId}`,
         },
     deniedModels: [],
     entitlementTags: ["chat"],
@@ -177,14 +207,22 @@ export const updateProviderKeyPayload = (
 
 export interface ProviderAccountActivationBatch {
   readonly activationBatchId: string;
-  readonly activations: ReadonlyArray<{ readonly providerAccountId: string; readonly modelId: string; readonly region: string; readonly reasoningEffort?: string }>;
+  readonly activations: ReadonlyArray<{
+    readonly providerAccountId: string;
+    readonly modelId: string;
+    readonly region: string;
+    readonly reasoningEffort?: string;
+  }>;
 }
 
 export interface ProviderAccountClient {
   readonly activate: (payload: ProviderAccountActivationBatch) => Promise<unknown>;
   readonly create: (payload: ProviderAccountCreatePayload) => Promise<unknown>;
   readonly deleteModel: (providerAccountId: string, modelId: string) => Promise<unknown>;
-  readonly updateKey: (payload: { readonly apiKey: string; readonly providerAccountId: string }) => Promise<unknown>;
+  readonly updateKey: (payload: {
+    readonly apiKey: string;
+    readonly providerAccountId: string;
+  }) => Promise<unknown>;
 }
 
 interface ProviderAccountClientOptions {
@@ -198,13 +236,17 @@ export const createProviderAccountClient = (
 ): ProviderAccountClient => {
   const fetchImpl = options.fetchImpl ?? fetch;
   const base = options.baseUrl ?? "";
-  const request = async (path: string, method: "DELETE" | "POST", body?: unknown): Promise<unknown> => {
+  const request = async (
+    path: string,
+    method: "DELETE" | "POST",
+    body?: unknown,
+  ): Promise<unknown> => {
     const response = await fetchImpl(base + path, {
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       headers: {
         accept: "application/json",
         "content-type": "application/json",
-        ...(options.token === undefined ? {} : { authorization: "Bearer " + options.token }),
+        ...(options.token === undefined ? {} : { authorization: `Bearer ${options.token}` }),
       },
       method,
     });
@@ -214,7 +256,9 @@ export const createProviderAccountClient = (
         parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)
           ? (parsed as Readonly<Record<string, unknown>>)
           : undefined;
-      throw new Error(String(record?.error ?? record?.message ?? "provider account request failed"));
+      throw new Error(
+        String(record?.error ?? record?.message ?? "provider account request failed"),
+      );
     }
     return parsed;
   };
@@ -223,10 +267,7 @@ export const createProviderAccountClient = (
     create: async (payload) => request("/api/role-model/accounts", "POST", payload),
     deleteModel: async (providerAccountId, modelId) =>
       request(
-        "/api/role-model/accounts/" +
-          encodeURIComponent(providerAccountId) +
-          "/models/" +
-          encodeURIComponent(modelId),
+        `/api/role-model/accounts/${encodeURIComponent(providerAccountId)}/models/${encodeURIComponent(modelId)}`,
         "DELETE",
       ),
     updateKey: async (payload) =>

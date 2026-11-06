@@ -3,15 +3,20 @@ import { Effect } from "effect";
 import { renderToString } from "@role-model-router/foldkit/experimental/server";
 import { describe, expect, it } from "vitest";
 
-import { shellModel } from "./support/runtime-shell";
 import type { Model } from "../src/model";
 import { view } from "../src/view";
+import { shellModel } from "./support/runtime-shell";
 
 const render = async (route: Model["route"]) => {
-  const rendered = await Effect.runPromise(renderToString({
-    init: () => ({ model: shellModel({ route }), commands: [] }),
-    view,
-  }, { isHydratable: false }));
+  const rendered = await Effect.runPromise(
+    renderToString(
+      {
+        init: () => ({ model: shellModel({ route }), commands: [] }),
+        view,
+      },
+      { isHydratable: false },
+    ),
+  );
   const container = document.createElement("div");
   container.innerHTML = rendered.html;
   return container;
@@ -26,7 +31,16 @@ describe("S560 reference shell layout", () => {
     expect(aside?.textContent).toContain("role-model");
     const links = [...container.querySelectorAll("aside nav[data-shell-nav] a[data-nav]")];
     expect(links.map((a) => a.textContent)).toEqual([
-      "Overview", "Studio", "Local", "Remote", "Models", "Router", "Observe", "Connect", "System", "Learning",
+      "Overview",
+      "Studio",
+      "Local",
+      "Remote",
+      "Models",
+      "Router",
+      "Observe",
+      "Connect",
+      "System",
+      "Learning",
     ]);
     expect(container.querySelector("[data-shell-rail]")).toBeNull();
     expect((container.textContent ?? "").includes("Runtime UI")).toBe(false);
@@ -53,7 +67,9 @@ describe("S560 reference shell layout", () => {
 
   it("marks the section containing the current route active", async () => {
     const container = await render({ _tag: "LearningConfiguration" });
-    const active = [...container.querySelectorAll("aside nav[data-shell-nav] a[data-active]")].map((a) => a.textContent);
+    const active = [...container.querySelectorAll("aside nav[data-shell-nav] a[data-active]")].map(
+      (a) => a.textContent,
+    );
     expect(active).toEqual(["Learning"]);
     const header = container.querySelector('header[data-slot="role-model-sub-page-header"]');
     expect(header?.querySelector("h1")?.textContent).toBe("Learning configuration");

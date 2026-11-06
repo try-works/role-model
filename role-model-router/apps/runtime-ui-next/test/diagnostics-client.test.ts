@@ -1,8 +1,8 @@
 import { Effect, Exit } from "effect";
 import { describe, expect, it } from "vitest";
 
-import { createDiagnosticsClient, DiagnosticsTrustRequiredError } from "../src/diagnostics-client";
 import { diagnosticsRenderText, parseDiagnosticsSnapshot } from "../src/diagnostics";
+import { DiagnosticsTrustRequiredError, createDiagnosticsClient } from "../src/diagnostics-client";
 
 /**
  * Run 115 S15e/S15g (R21 client half): the diagnostics page's real request path, proven against a
@@ -65,9 +65,7 @@ describe("S15e diagnostics fetch client", () => {
 
     expect(stub.calls.length).toBe(1);
     const call = stub.calls[0];
-    expect(call?.url.toString()).toBe(
-      "http://127.0.0.1:3458/api/role-model/operator/diagnostics",
-    );
+    expect(call?.url.toString()).toBe("http://127.0.0.1:3458/api/role-model/operator/diagnostics");
     expect(call?.init?.method).toBe("GET");
     const headers = new Headers(call?.init?.headers);
     expect(headers.get("accept")).toBe("application/json");
@@ -146,14 +144,22 @@ describe("S15e diagnostics fetch client", () => {
   it("refuses a token-less read for a non-loopback or non-same-origin base URL", () => {
     // Non-loopback base, no token.
     expect(() =>
-      createDiagnosticsClient({ baseUrl: "https://diagnostics.example.com", fetchImpl: stubFetch(jsonResponse({})).fetchImpl }),
+      createDiagnosticsClient({
+        baseUrl: "https://diagnostics.example.com",
+        fetchImpl: stubFetch(jsonResponse({})).fetchImpl,
+      }),
     ).toThrow(/refuses a token-less read/u);
     // Loopback base but not the page origin (cross-origin in browser terms), no token.
     expect(() =>
-      createDiagnosticsClient({ baseUrl: "http://127.0.0.1:3458", fetchImpl: stubFetch(jsonResponse({})).fetchImpl }),
+      createDiagnosticsClient({
+        baseUrl: "http://127.0.0.1:3458",
+        fetchImpl: stubFetch(jsonResponse({})).fetchImpl,
+      }),
     ).toThrow(/non-same-origin/u);
     // Same origin + no token is allowed (loopback page assumption).
-    expect(() => createDiagnosticsClient({ fetchImpl: stubFetch(jsonResponse({})).fetchImpl })).not.toThrow();
+    expect(() =>
+      createDiagnosticsClient({ fetchImpl: stubFetch(jsonResponse({})).fetchImpl }),
+    ).not.toThrow();
   });
 
   it("surfaces a transport rejection and a non-JSON 200 body as failures", async () => {

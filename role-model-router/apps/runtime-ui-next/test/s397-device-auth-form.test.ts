@@ -3,27 +3,27 @@ import { describe, expect, it } from "vitest";
 
 import {
   Command,
+  type SceneSimulation,
   click,
-  expect as sceneExpect,
   given,
   role,
   scene,
+  expect as sceneExpect,
   tap,
   text,
-  type SceneSimulation,
 } from "@role-model-router/foldkit/scene";
 
 import { defineDeviceAuthCommands } from "../src/commands";
-import { Message } from "../src/message";
-import type { Model } from "../src/model";
 import {
+  type DeviceAuthSession,
   activationPlanForConnectedSession,
   createDeviceAuthClient,
   deviceAuthStartPlan,
   initialDeviceAuthState,
   validateDeviceAuthDraft,
-  type DeviceAuthSession,
 } from "../src/device-auth";
+import { Message } from "../src/message";
+import type { Model } from "../src/model";
 import { view } from "../src/view";
 import { shellModel, shellUpdate } from "./support/runtime-shell";
 
@@ -59,7 +59,8 @@ const stateWithDraft = (extra: Partial<ReturnType<typeof initialDeviceAuthState>
   ...extra,
 });
 
-const authOf = (model: ReturnType<typeof shellModel>) => model.deviceAuth ?? initialDeviceAuthState();
+const authOf = (model: ReturnType<typeof shellModel>) =>
+  model.deviceAuth ?? initialDeviceAuthState();
 
 const modelWith = (deviceAuth: ReturnType<typeof initialDeviceAuthState>) =>
   shellModel({ deviceAuth });
@@ -68,13 +69,20 @@ const commandNames = (result: ReturnType<typeof shellUpdate>) =>
   (result.commands ?? []).map((command) => command.name);
 
 describe("S396a device-authorization client (exact HTTP)", () => {
-  interface RecordedInit { readonly body?: string; readonly method?: string }
+  interface RecordedInit {
+    readonly body?: string;
+    readonly method?: string;
+  }
   const recordingFetch = () => {
-    const calls: Array<{ readonly body?: string; readonly method?: string; readonly url: string }> = [];
+    const calls: Array<{ readonly body?: string; readonly method?: string; readonly url: string }> =
+      [];
     // SAFETY: the production client always sends a JSON string body; this test stub only records it.
     const fetchImpl = (async (url: string, init?: RecordedInit) => {
       calls.push({ body: init?.body, method: init?.method, url });
-      return new Response(JSON.stringify(session()), { headers: { "content-type": "application/json" }, status: 200 });
+      return new Response(JSON.stringify(session()), {
+        headers: { "content-type": "application/json" },
+        status: 200,
+      });
     }) as typeof fetch;
     return { calls, fetchImpl };
   };
@@ -125,7 +133,11 @@ describe("S396a device-authorization client (exact HTTP)", () => {
   it("POSTs exactly one activation per selected model", async () => {
     const { calls, fetchImpl } = recordingFetch();
     const client = createDeviceAuthClient({ fetchImpl });
-    await client.activate({ modelId: "gpt-6", providerAccountId: "openai.personal.x", region: "global" });
+    await client.activate({
+      modelId: "gpt-6",
+      providerAccountId: "openai.personal.x",
+      region: "global",
+    });
     expect(calls[0]?.method).toBe("POST");
     expect(calls[0]?.url).toBe("/api/role-model/endpoints");
     expect(JSON.parse(calls[0]?.body ?? "{}")).toEqual({
@@ -138,10 +150,9 @@ describe("S396a device-authorization client (exact HTTP)", () => {
 
 describe("S396a device-authorization form state", () => {
   it("validates provider/models/region without dropping the draft", () => {
-    expect(validateDeviceAuthDraft({ ...draft, modelInput: "", providerId: "", selectedModelIds: [] })).toEqual([
-      "Select a provider.",
-      "Select at least one model.",
-    ]);
+    expect(
+      validateDeviceAuthDraft({ ...draft, modelInput: "", providerId: "", selectedModelIds: [] }),
+    ).toEqual(["Select a provider.", "Select at least one model."]);
   });
 
   it("restores a pending session instead of starting a duplicate (conflict)", () => {
@@ -187,7 +198,11 @@ describe("S396a device-authorization update transitions", () => {
     expect(commandNames(result)).toEqual(["PollDeviceAuthorization"]);
     expect(authOf(result.model).session?.authRequestId).toBe("auth-1");
     const poll = (result.commands ?? [])[0];
-    expect(poll?.args).toMatchObject({ authRequestId: "auth-1", delayMs: 5_000, intervalMs: 5_000 });
+    expect(poll?.args).toMatchObject({
+      authRequestId: "auth-1",
+      delayMs: 5_000,
+      intervalMs: 5_000,
+    });
   });
 
   it("no pending session starts once with the exact payload", () => {
@@ -202,29 +217,53 @@ describe("S396a device-authorization update transitions", () => {
 
   it("keeps authRequestId on retry and issues ONE poll in flight", () => {
     const state = stateWithDraft({ session: session(), status: "pending" as const });
-    const failed = shellUpdate(modelWith(state), Message.DeviceAuthFailed({ message: "network", token: 1 }));
+    const failed = shellUpdate(
+      modelWith(state),
+      Message.DeviceAuthFailed({ message: "network", token: 1 }),
+    );
     expect(authOf(failed.model).status).toBe("error");
     expect(authOf(failed.model).draft).toEqual(state.draft);
     expect(authOf(failed.model).session?.authRequestId).toBe("auth-1");
     const retried = shellUpdate(failed.model, Message.DeviceAuthRetryRequested({}));
     expect(commandNames(retried)).toEqual(["PollDeviceAuthorization"]);
-    expect((retried.commands ?? [])[0]?.args).toMatchObject({ authRequestId: "auth-1", delayMs: 0 });
+    expect((retried.commands ?? [])[0]?.args).toMatchObject({
+      authRequestId: "auth-1",
+      delayMs: 0,
+    });
   });
 
   it("refuses a second start while a poll is in flight or one is starting", () => {
-    const inFlight = stateWithDraft({ inflight: true, session: session(), status: "pending" as const });
-    expect(commandNames(shellUpdate(modelWith(inFlight), Message.DeviceAuthStartRequested({})))).toEqual([]);
+    const inFlight = stateWithDraft({
+      inflight: true,
+      session: session(),
+      status: "pending" as const,
+    });
+    expect(
+      commandNames(shellUpdate(modelWith(inFlight), Message.DeviceAuthStartRequested({}))),
+    ).toEqual([]);
     const starting = stateWithDraft({ status: "starting" as const });
-    expect(commandNames(shellUpdate(modelWith(starting), Message.DeviceAuthStartRequested({})))).toEqual([]);
+    expect(
+      commandNames(shellUpdate(modelWith(starting), Message.DeviceAuthStartRequested({}))),
+    ).toEqual([]);
     const idle = stateWithDraft();
-    expect(commandNames(shellUpdate(modelWith(idle), Message.DeviceAuthStartRequested({})))).toEqual(["ReadDeviceAuthorizations"]);
+    expect(
+      commandNames(shellUpdate(modelWith(idle), Message.DeviceAuthStartRequested({}))),
+    ).toEqual(["ReadDeviceAuthorizations"]);
   });
 
   it("refuses a retry while a poll is in flight and allows it once settled", () => {
-    const inFlight = stateWithDraft({ inflight: true, session: session(), status: "pending" as const });
+    const inFlight = stateWithDraft({
+      inflight: true,
+      session: session(),
+      status: "pending" as const,
+    });
     const refused = shellUpdate(modelWith(inFlight), Message.DeviceAuthRetryRequested({}));
     expect(commandNames(refused)).toEqual([]);
-    const settled = stateWithDraft({ inflight: false, session: session(), status: "pending" as const });
+    const settled = stateWithDraft({
+      inflight: false,
+      session: session(),
+      status: "pending" as const,
+    });
     const retried = shellUpdate(modelWith(settled), Message.DeviceAuthRetryRequested({}));
     expect(commandNames(retried)).toEqual(["PollDeviceAuthorization"]);
   });
@@ -237,14 +276,20 @@ describe("S396a device-authorization update transitions", () => {
     // S459: cancel now interrupts the scheduled poll; the advanced token still fences a late result.
     expect(commandNames(cancelled)).toEqual(["PollDeviceAuthorization.Interrupt"]);
     expect((cancelled.commands ?? [])[0]?.args).toEqual({ authRequestId: "auth-1" });
-    const late = shellUpdate(cancelled.model, Message.DeviceAuthPolled({ session: session({ status: "connected" }), token: 1 }));
+    const late = shellUpdate(
+      cancelled.model,
+      Message.DeviceAuthPolled({ session: session({ status: "connected" }), token: 1 }),
+    );
     expect(commandNames(late)).toEqual([]);
     expect(authOf(late.model).status).toBe("draft");
   });
 
   it("on connected activates ONE command per selected model", () => {
     const state = stateWithDraft({ session: session(), status: "pending" as const });
-    const result = shellUpdate(modelWith(state), Message.DeviceAuthPolled({ session: session({ status: "connected" }), token: 1 }));
+    const result = shellUpdate(
+      modelWith(state),
+      Message.DeviceAuthPolled({ session: session({ status: "connected" }), token: 1 }),
+    );
     expect(commandNames(result)).toEqual(["ActivateDeviceEndpoint"]);
     expect(JSON.parse(String((result.commands ?? [])[0]?.args?.payload))).toMatchObject({
       modelId: "gpt-6",
@@ -267,7 +312,10 @@ describe("S398 device-authorization retry control (scene + real client)", () => 
     // SAFETY: this test stub only records the request; the production client calls fetch with the same signature.
     const fetchImpl = (async (url: string, init?: { body?: string; method?: string }) => {
       deviceReads.push({ body: init?.body, method: init?.method ?? "GET", url: String(url) });
-      return new Response(JSON.stringify({ error: "device read failed" }), { headers: { "content-type": "application/json" }, status: 500 });
+      return new Response(JSON.stringify({ error: "device read failed" }), {
+        headers: { "content-type": "application/json" },
+        status: 500,
+      });
     }) as typeof fetch;
     const commands = defineDeviceAuthCommands(createDeviceAuthClient({ fetchImpl }));
     // S442: ONE exact args object per read is used to execute the production Command against the real
@@ -289,14 +337,18 @@ describe("S398 device-authorization retry control (scene + real client)", () => 
     ]);
     scene(
       { update: shellUpdate, view },
-      given(shellModel({
-        deviceAuth: { ...initialDeviceAuthState(), draft },
-        route: { _tag: "Providers" },
-      })),
+      given(
+        shellModel({
+          deviceAuth: { ...initialDeviceAuthState(), draft },
+          route: { _tag: "Providers" },
+        }),
+      ),
       sceneExpect(role("button", { name: "Start device authorization" })).toExist(),
       click(role("button", { name: "Start device authorization" })),
       tap((simulation: ShellScene) => {
-        const pending = [...simulation.commands].reverse().find((command) => command.name === "ReadDeviceAuthorizations");
+        const pending = [...simulation.commands]
+          .reverse()
+          .find((command) => command.name === "ReadDeviceAuthorizations");
         expect(pending?.args).toEqual(startReadArgs);
       }),
       Command.expectHas({ name: "ReadDeviceAuthorizations", args: startReadArgs }),
@@ -305,7 +357,9 @@ describe("S398 device-authorization retry control (scene + real client)", () => 
       sceneExpect(role("button", { name: "Retry" })).toExist(),
       click(role("button", { name: "Retry" })),
       tap((simulation: ShellScene) => {
-        const pending = [...simulation.commands].reverse().find((command) => command.name === "ReadDeviceAuthorizations");
+        const pending = [...simulation.commands]
+          .reverse()
+          .find((command) => command.name === "ReadDeviceAuthorizations");
         expect(pending?.args).toEqual(retryReadArgs);
       }),
       Command.expectHas({ name: "ReadDeviceAuthorizations", args: retryReadArgs }),

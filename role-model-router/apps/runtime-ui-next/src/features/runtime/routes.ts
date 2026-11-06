@@ -1,8 +1,8 @@
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 
+import type { Message } from "../../message";
 import type { Model } from "../../model";
 import { READBACK_SPECS, type ReadbacksState, renderReadbackPage } from "../../readback";
-import { Message } from "../../message";
 import { referenceCard, referenceDescription, referenceSection } from "../layout/reference";
 
 export interface RuntimeRouteContext {
@@ -19,10 +19,20 @@ export interface RuntimeRouteContext {
 
 export const runtimeConfigRoute = (ctx: RuntimeRouteContext): Html => {
   const { h, readbacks } = ctx;
-  return h.section([h.Class("rm3-next-route space-y-6"), h.DataAttribute("route", "runtime-config"), h.DataAttribute("page-layout", "reference")], [
-    referenceDescription("Load, edit, review and confirm the runtime configuration against the applied snapshot.", h),
-    ctx.runtimeConfigPage(ctx.runtimeConfigEditor, readbacks.runtimeConfig, readbacks.runtime, h),
-  ]);
+  return h.section(
+    [
+      h.Class("rm3-next-route space-y-6"),
+      h.DataAttribute("route", "runtime-config"),
+      h.DataAttribute("page-layout", "reference"),
+    ],
+    [
+      referenceDescription(
+        "Load, edit, review and confirm the runtime configuration against the applied snapshot.",
+        h,
+      ),
+      ctx.runtimeConfigPage(ctx.runtimeConfigEditor, readbacks.runtimeConfig, readbacks.runtime, h),
+    ],
+  );
 };
 
 export const runtimeRoute = (ctx: RuntimeRouteContext): Html => {
@@ -47,11 +57,29 @@ export const runtimeRoute = (ctx: RuntimeRouteContext): Html => {
     return undefined;
   };
   const versionFacts: ReadonlyArray<readonly [string, string]> = [
-    ["Version", factFromHealth(["version"]) ?? runtimeFact(["version"]) ?? summaryValue("version") ?? "—"],
-    ["Release", factFromHealth(["release", "release_version"]) ?? summaryValue("release_version") ?? summaryValue("releaseVersion") ?? "—"],
+    [
+      "Version",
+      factFromHealth(["version"]) ?? runtimeFact(["version"]) ?? summaryValue("version") ?? "—",
+    ],
+    [
+      "Release",
+      factFromHealth(["release", "release_version"]) ??
+        summaryValue("release_version") ??
+        summaryValue("releaseVersion") ??
+        "—",
+    ],
     ["Commit", factFromHealth(["commit"]) ?? summaryValue("commit") ?? "—"],
-    ["Build date", factFromHealth(["build date", "build_date"]) ?? summaryValue("build_date") ?? "—"],
-    ["State root", summaryValue("runtime_state_root") ?? summaryValue("runtimeStateRoot") ?? runtimeFact(["state root"]) ?? "—"],
+    [
+      "Build date",
+      factFromHealth(["build date", "build_date"]) ?? summaryValue("build_date") ?? "—",
+    ],
+    [
+      "State root",
+      summaryValue("runtime_state_root") ??
+        summaryValue("runtimeStateRoot") ??
+        runtimeFact(["state root"]) ??
+        "—",
+    ],
     ["Summary API", "/api/role-model/runtime/summary"],
   ];
   const summaryLabel = (candidates: ReadonlyArray<string>): string | undefined => {
@@ -66,46 +94,104 @@ export const runtimeRoute = (ctx: RuntimeRouteContext): Html => {
     degraded: summaryLabel(["degraded", "degraded_count"]) ?? "0",
     offline: summaryLabel(["offline", "offline_count"]) ?? "0",
   };
-  const eyebrow = "font-sans text-[11px] font-semibold uppercase leading-[14px] tracking-[0.04em] text-[var(--rm-muted)]";
+  const eyebrow =
+    "font-sans text-[11px] font-semibold uppercase leading-[14px] tracking-[0.04em] text-[var(--rm-muted)]";
   const factLabel = "font-sans text-[13px] leading-[18px] text-[var(--rm-muted)]";
-  const factValue = "text-right font-sans text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]";
+  const factValue =
+    "text-right font-sans text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]";
   const factRows = (facts: ReadonlyArray<readonly [string, string]>, emptyLabel: string) =>
     facts.length === 0
       ? h.p([h.Class("text-sm leading-5 text-muted-foreground")], [emptyLabel])
       : h.dl(
           [h.Class("space-y-2")],
           facts.map(([label, value]) =>
-            h.div([h.Class("flex items-baseline justify-between gap-3")], [
-              h.dt([h.Class(factLabel)], [label]),
-              h.dd([h.Class(factValue)], [value]),
-            ]),
+            h.div(
+              [h.Class("flex items-baseline justify-between gap-3")],
+              [h.dt([h.Class(factLabel)], [label]), h.dd([h.Class(factValue)], [value])],
+            ),
           ),
         );
   const statTile = (label: string, value: string) =>
-    h.div([h.Class("flex flex-col gap-1 rounded-lg border border-border bg-card px-4 py-3")], [
-      h.span([h.Class("font-sans text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground")], [label]),
-      h.span([h.Class("font-mono text-[20px] font-semibold leading-7 text-foreground")], [value]),
-    ]);
+    h.div(
+      [h.Class("flex flex-col gap-1 rounded-lg border border-border bg-card px-4 py-3")],
+      [
+        h.span(
+          [
+            h.Class(
+              "font-sans text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground",
+            ),
+          ],
+          [label],
+        ),
+        h.span([h.Class("font-mono text-[20px] font-semibold leading-7 text-foreground")], [value]),
+      ],
+    );
   const linkButton = (href: string, label: string) =>
-    h.a([h.Href(href), h.Class("inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground")], [label]);
-  return referenceSection("runtime", "ok", [
-    h.div([h.Class("flex flex-wrap gap-4")], [statTile("Active", lifecycle.active), statTile("Degraded", lifecycle.degraded), statTile("Offline", lifecycle.offline)]),
-    h.div([h.Class("grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]")], [
-      h.div([h.Class("space-y-4")], [
-        referenceCard("Applied runtime policy", "Execution mode, routing strategy, and local plus remote inventory.", [
-          factRows(runtimeFacts, "No applied runtime policy rows recorded yet."),
-          h.div([h.Class("mt-4 flex flex-wrap gap-3")], [linkButton("/runtime/config", "Runtime config"), linkButton("/session-readiness", "Session readiness")]),
-        ], h),
-        referenceCard("Execution readiness", "Lifecycle authority and blocking credential rows.", [
-          factRows(healthFacts, "No health rows recorded yet."),
-        ], h),
-        referenceCard("Controller posture", "Pinned controller endpoint for routing decisions.", [
-          factRows(routerFacts, "No controller assignment recorded yet."),
-        ], h),
-      ]),
-      referenceCard("Version facts", "Host provenance and summary contract.", [
-        factRows(versionFacts, "No version facts recorded yet."),
-      ], h),
-    ]),
-  ], h);
+    h.a(
+      [
+        h.Href(href),
+        h.Class(
+          "inline-flex h-[34px] items-center rounded-md border border-border bg-background px-3 font-sans text-sm font-medium text-foreground",
+        ),
+      ],
+      [label],
+    );
+  return referenceSection(
+    "runtime",
+    "ok",
+    [
+      h.div(
+        [h.Class("flex flex-wrap gap-4")],
+        [
+          statTile("Active", lifecycle.active),
+          statTile("Degraded", lifecycle.degraded),
+          statTile("Offline", lifecycle.offline),
+        ],
+      ),
+      h.div(
+        [h.Class("grid gap-4 xl:grid-cols-[minmax(0,8fr)_minmax(0,4fr)]")],
+        [
+          h.div(
+            [h.Class("space-y-4")],
+            [
+              referenceCard(
+                "Applied runtime policy",
+                "Execution mode, routing strategy, and local plus remote inventory.",
+                [
+                  factRows(runtimeFacts, "No applied runtime policy rows recorded yet."),
+                  h.div(
+                    [h.Class("mt-4 flex flex-wrap gap-3")],
+                    [
+                      linkButton("/runtime/config", "Runtime config"),
+                      linkButton("/session-readiness", "Session readiness"),
+                    ],
+                  ),
+                ],
+                h,
+              ),
+              referenceCard(
+                "Execution readiness",
+                "Lifecycle authority and blocking credential rows.",
+                [factRows(healthFacts, "No health rows recorded yet.")],
+                h,
+              ),
+              referenceCard(
+                "Controller posture",
+                "Pinned controller endpoint for routing decisions.",
+                [factRows(routerFacts, "No controller assignment recorded yet.")],
+                h,
+              ),
+            ],
+          ),
+          referenceCard(
+            "Version facts",
+            "Host provenance and summary contract.",
+            [factRows(versionFacts, "No version facts recorded yet.")],
+            h,
+          ),
+        ],
+      ),
+    ],
+    h,
+  );
 };

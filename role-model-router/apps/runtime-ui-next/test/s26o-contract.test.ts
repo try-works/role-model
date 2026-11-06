@@ -3,31 +3,77 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { parseControlFixture, type ControlKey } from "../src/control";
-import { parseReadbackFixture, type ReadbackKey } from "../src/readback";
+import { type ControlKey, parseControlFixture } from "../src/control";
+import { type ReadbackKey, parseReadbackFixture } from "../src/readback";
 
 const fixtureDir = path.join(import.meta.dirname, "fixtures", "s26o");
-const read = (key: string): unknown => JSON.parse(readFileSync(path.join(fixtureDir, key + ".json"), "utf8"));
+const read = (key: string): unknown =>
+  JSON.parse(readFileSync(path.join(fixtureDir, `${key}.json`), "utf8"));
 
 const readbackKeys: readonly ReadbackKey[] = [
-  "storeReceipts","queues","localLogs","routerCandidates","requests","routerDecisions",
-  "localPeers","systemPeers","runtime","sessionReadiness","dashboard","localSwap",
-  "observeActivity","observeLogs","observeRouting","router","localPeerModels","queueConfig","downstreamOpenAI","integrationProviders","benchmarkSuite","storageRetention","models","runtimeSummary","health",
+  "storeReceipts",
+  "queues",
+  "localLogs",
+  "routerCandidates",
+  "requests",
+  "routerDecisions",
+  "localPeers",
+  "systemPeers",
+  "runtime",
+  "sessionReadiness",
+  "dashboard",
+  "localSwap",
+  "observeActivity",
+  "observeLogs",
+  "observeRouting",
+  "router",
+  "localPeerModels",
+  "queueConfig",
+  "downstreamOpenAI",
+  "integrationProviders",
+  "benchmarkSuite",
+  "storageRetention",
+  "models",
+  "runtimeSummary",
+  "health",
 ];
 const controlKeys: readonly ControlKey[] = ["providers", "endpoints", "controlController"];
 const expectedStatus: Partial<Record<ReadbackKey, string>> = {
-  dashboard: "ok", localLogs: "empty", localPeers: "empty", localSwap: "empty",
-  observeActivity: "ok", observeLogs: "empty", observeRouting: "empty",
-  requests: "empty", routerDecisions: "empty", storeReceipts: "empty", systemPeers: "empty",
-  queues: "ok", router: "ok", routerCandidates: "ok", runtime: "ok", sessionReadiness: "ok",
-  localPeerModels: "empty", queueConfig: "ok", downstreamOpenAI: "ok", integrationProviders: "ok", benchmarkSuite: "ok", storageRetention: "ok", models: "ok", runtimeSummary: "ok", health: "ok",
+  dashboard: "ok",
+  localLogs: "empty",
+  localPeers: "empty",
+  localSwap: "empty",
+  observeActivity: "ok",
+  observeLogs: "empty",
+  observeRouting: "empty",
+  requests: "empty",
+  routerDecisions: "empty",
+  storeReceipts: "empty",
+  systemPeers: "empty",
+  queues: "ok",
+  router: "ok",
+  routerCandidates: "ok",
+  runtime: "ok",
+  sessionReadiness: "ok",
+  localPeerModels: "empty",
+  queueConfig: "ok",
+  downstreamOpenAI: "ok",
+  integrationProviders: "ok",
+  benchmarkSuite: "ok",
+  storageRetention: "ok",
+  models: "ok",
+  runtimeSummary: "ok",
+  health: "ok",
 };
 
 describe("S26o captured-host parser contracts", () => {
   it("asserts the fixture manifest hashes and capture identity", () => {
     const manifest = JSON.parse(readFileSync(path.join(fixtureDir, "manifest.json"), "utf8")) as {
       artifact: { version: string; commit: string; sourceTree: string; sha: string };
-      entries: Record<string, { url: string; status: number; capturedAt: string; sha256: string; artifact: unknown }>;
+      entries: Record<
+        string,
+        { url: string; status: number; capturedAt: string; sha256: string; artifact: unknown }
+      >;
     };
     expect(manifest.artifact.version).toBe("0.0.20-18-g6c9aeba1");
     expect(manifest.artifact.commit).toBe("6c9aeba15acd09be4fc6776cef66a1041394b65a");

@@ -4,8 +4,8 @@ import { describe, it } from "vitest";
 
 import { emptyControls } from "../src/control";
 import { idleDiagnostics } from "../src/diagnostics";
-import { Model } from "../src/model";
 import { Message } from "../src/message";
+import { Model } from "../src/model";
 import { idleObservability } from "../src/observability";
 import { emptyReadbacks } from "../src/readback";
 import { initialRuntimeRefreshState } from "../src/refresh";
@@ -19,10 +19,16 @@ import { createUpdate } from "../src/update";
  * JSON reports "invalid" with a message, and a save with no diff stays out of "confirming".
  */
 const noop = undefined as never;
-const reduce = createUpdate(noop, undefined, undefined, undefined, undefined, undefined, undefined, undefined) as unknown as (
-  model: unknown,
-  message: unknown,
-) => { model: Record<string, unknown> };
+const reduce = createUpdate(
+  noop,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+) as unknown as (model: unknown, message: unknown) => { model: Record<string, unknown> };
 
 const base = () =>
   Schema.decodeUnknownSync(Model)({
@@ -37,7 +43,9 @@ const base = () =>
   }) as unknown as Record<string, unknown>;
 
 const editorOf = (model: Record<string, unknown>) =>
-  model.runtimeConfigEditor as { status?: string; text?: string; message?: string; diff?: readonly string[] } | undefined;
+  model.runtimeConfigEditor as
+    | { status?: string; text?: string; message?: string; diff?: readonly string[] }
+    | undefined;
 
 describe("S220 runtime config editor transitions", () => {
   it("a text change moves the editor into editing with the typed text", () => {

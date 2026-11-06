@@ -105,7 +105,8 @@ function assertHasAccessibleName(
   // SAFETY: the declared union is exactly Html (a VNode object) | string, so a child is a string
   // exactly when it carries a callable `trim`; a VNode does not. This also avoids a runtime typeof
   // check that would widen the type back to unknown.
-  const asText = (child: Html | string): string => (child as string).trim === undefined ? "" : (child as string);
+  const asText = (child: Html | string): string =>
+    (child as string).trim === undefined ? "" : (child as string);
   const hasTextChild = children.some((child) => asText(child).trim().length > 0);
   if (!hasAriaLabel && !hasTextChild) {
     throw new Error(

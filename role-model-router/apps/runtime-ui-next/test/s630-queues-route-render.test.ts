@@ -1,6 +1,6 @@
+import { Url } from "@role-model-router/foldkit";
 import { Option } from "effect";
 import { afterEach, describe, expect, it } from "vitest";
-import { Url } from "@role-model-router/foldkit";
 
 import { mountShell } from "../src/mount";
 import { createReadbackClients } from "../src/readback";
@@ -17,13 +17,19 @@ const waitFor = async (read: () => boolean, label: string, timeoutMs = 8000): Pr
     if (read()) return;
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
-  throw new Error("Timed out waiting for " + label + " at " + window.location.pathname + " | title " + document.title + " | body " + (document.body.textContent ?? "").slice(0, 500));
+  throw new Error(
+    `Timed out waiting for ${label} at ${window.location.pathname} | title ${document.title} | body ${(document.body.textContent ?? "").slice(0, 500)}`,
+  );
 };
 
 const json = (body: unknown): Response =>
-  new Response(JSON.stringify(body), { headers: { "content-type": "application/json" }, status: 200 });
+  new Response(JSON.stringify(body), {
+    headers: { "content-type": "application/json" },
+    status: 200,
+  });
 
-const mounted: Array<{ readonly container: HTMLElement; readonly handle: { dispose(): void } }> = [];
+const mounted: Array<{ readonly container: HTMLElement; readonly handle: { dispose(): void } }> =
+  [];
 afterEach(() => {
   for (const entry of mounted.splice(0)) {
     entry.handle.dispose();
@@ -32,11 +38,16 @@ afterEach(() => {
   window.history.replaceState({}, "", "/");
 });
 
-const urlOf = (href: string) => Option.getOrThrow(Url.fromString("http://localhost" + href));
+const urlOf = (href: string) => Option.getOrThrow(Url.fromString(`http://localhost${href}`));
 
 describe("S630 /observe/queues route", () => {
   it("parses the canonical and variant URLs as the Queues route", () => {
-    for (const href of ["/observe/queues", "/observe/queues/", "/observe/queues?windowMs=3600000", "/observe/queues#top"]) {
+    for (const href of [
+      "/observe/queues",
+      "/observe/queues/",
+      "/observe/queues?windowMs=3600000",
+      "/observe/queues#top",
+    ]) {
       expect(routeFromUrl(urlOf(href))._tag).toBe("Queues");
     }
   });
@@ -50,14 +61,19 @@ describe("S630 /observe/queues route", () => {
       readbackReaders: createReadbackClients({
         fetchImpl: async (input) => {
           const url = String(input);
-          return json(url.includes("/api/role-model/operator/queues")
-            ? { available: true, queues: [{ active: 0, failed: 0, name: "replay", waiting: 0 }] }
-            : {});
+          return json(
+            url.includes("/api/role-model/operator/queues")
+              ? { available: true, queues: [{ active: 0, failed: 0, name: "replay", waiting: 0 }] }
+              : {},
+          );
         },
       }),
     });
     mounted.push({ container, handle });
-    await waitFor(() => document.body.textContent?.includes("Queue truth from the shared store") === true, "Queues page copy");
+    await waitFor(
+      () => document.body.textContent?.includes("Queue truth from the shared store") === true,
+      "Queues page copy",
+    );
     expect(window.location.pathname).toBe("/observe/queues");
     expect(document.title).toBe("Queues | RM3 Foldkit shell");
     expect(document.body.textContent).toContain("Queue truth from the shared store");

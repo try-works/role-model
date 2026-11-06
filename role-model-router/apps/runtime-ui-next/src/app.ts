@@ -1,58 +1,58 @@
 import {
   type RefreshSnapshotReader,
-  defineDispatchStudio,
-  defineDeviceAuthCommands,
+  createLocalPeersClient,
   createLocalPolicyCommands,
+  createModelsClient,
   createOperatorLearningClient,
-  defineOperatorLearningCommands,
-  defineStorageRetentionCommands,
-  defineProviderAccountCommands,
-  defineLearningRankingCommands,
-  defineRequestsRankingCommands,
   createRequestsChartsClient,
   createRoutingChartsClient,
-  defineRequestsChartsCommands,
-  defineRoutingChartsCommands,
-  defineEndpointAdmissionCommands,
-  defineRouterConfigCommands,
+  createSystemExtensionsClient,
+  createSystemOperatorClient,
+  defineDeviceAuthCommands,
   defineDispatchControl,
+  defineDispatchStudio,
+  defineEndpointAdmissionCommands,
+  defineLearningRankingCommands,
+  defineLocalPeersCommands,
+  defineModelsCommands,
+  defineOperatorLearningCommands,
+  defineProviderAccountCommands,
   defineReadControl,
   defineReadDiagnostics,
   defineReadObservability,
   defineReadReadback,
   defineRefreshSnapshot,
-  defineSaveRuntimeConfig,
   defineReplayAutoQueueCommands,
-  createModelsClient,
-  defineModelsCommands,
-  createLocalPeersClient,
-  defineLocalPeersCommands,
-  createSystemOperatorClient,
-  defineSystemOperatorCommands,
-  createSystemExtensionsClient,
+  defineRequestsChartsCommands,
+  defineRequestsRankingCommands,
+  defineRouterConfigCommands,
+  defineRoutingChartsCommands,
+  defineSaveRuntimeConfig,
+  defineStorageRetentionCommands,
   defineSystemExtensionsCommands,
+  defineSystemOperatorCommands,
 } from "./commands";
-import { createDeviceAuthClient } from "./device-auth";
-import { createEndpointAdmissionClient } from "./endpoint-admission";
-import { createLearningRankingClient } from "./learning-ranking";
-import { createRequestsRankingClient } from "./requests-ranking";
-import { createProviderAccountClient } from "./provider-account";
-import { createRouterConfigClient } from "./router-config";
-import { createStorageRetentionClient } from "./storage-retention";
-import { createRuntimeHttpClient } from "./http/runtime-client";
 import { type ControlClient, createControlClients } from "./control";
+import { createDeviceAuthClient } from "./device-auth";
 import type { DiagnosticsReader } from "./diagnostics";
+import { createEndpointAdmissionClient } from "./endpoint-admission";
+import { createRuntimeHttpClient } from "./http/runtime-client";
 import { createInit } from "./init";
+import { createLearningRankingClient } from "./learning-ranking";
 import { Model } from "./model";
 import { type ObservabilityReader, createObservabilityClient } from "./observability";
 import { readStoredOperatorToken } from "./operator-token";
+import { createProviderAccountClient } from "./provider-account";
 import { type ReadbackKey, type ReadbackReader, createReadbackClients } from "./readback";
-import { createRuntimeConfigClient } from "./runtime-config";
 import {
   type RuntimeEventSourceFactory,
   defaultRuntimeEventSourceFactory,
   makeRefreshSubscriptions,
 } from "./refresh";
+import { createRequestsRankingClient } from "./requests-ranking";
+import { createRouterConfigClient } from "./router-config";
+import { createRuntimeConfigClient } from "./runtime-config";
+import { createStorageRetentionClient } from "./storage-retention";
 import { createStudioClient } from "./studio";
 import { createUpdate } from "./update";
 import { view } from "./view";
@@ -160,21 +160,45 @@ export const createShellApp = (options: ShellOptions = {}) => {
     });
   const readControl = defineReadControl(controlClient);
   const dispatchControl = defineDispatchControl(controlClient);
-  const runtimeConfigClient = createRuntimeConfigClient({ fetchImpl: options.runtimeConfigFetchImpl, token: controlToken });
+  const runtimeConfigClient = createRuntimeConfigClient({
+    fetchImpl: options.runtimeConfigFetchImpl,
+    token: controlToken,
+  });
   const saveRuntimeConfig = defineSaveRuntimeConfig(runtimeConfigClient);
   const replayAutoQueueCommands = defineReplayAutoQueueCommands(runtimeConfigClient);
   const readReadback = defineReadReadback(readbackReaders);
-  const studioClient = options.studioClient ?? createStudioClient({ ...(options.studioBaseUrl === undefined ? {} : { baseUrl: options.studioBaseUrl }), ...(options.studioFetchImpl === undefined ? {} : { fetchImpl: options.studioFetchImpl }) });
+  const studioClient =
+    options.studioClient ??
+    createStudioClient({
+      ...(options.studioBaseUrl === undefined ? {} : { baseUrl: options.studioBaseUrl }),
+      ...(options.studioFetchImpl === undefined ? {} : { fetchImpl: options.studioFetchImpl }),
+    });
   const dispatchStudio = defineDispatchStudio(studioClient);
-  const routingChartsCommands = defineRoutingChartsCommands(createRoutingChartsClient({
-    ...(options.routingChartsFetchImpl === undefined ? {} : { fetchImpl: options.routingChartsFetchImpl }),
-  }));
-  const requestsChartsCommands = defineRequestsChartsCommands(createRequestsChartsClient({
-    ...(options.requestsChartsFetchImpl === undefined ? {} : { fetchImpl: options.requestsChartsFetchImpl }),
-  }));
+  const routingChartsCommands = defineRoutingChartsCommands(
+    createRoutingChartsClient({
+      ...(options.routingChartsFetchImpl === undefined
+        ? {}
+        : { fetchImpl: options.routingChartsFetchImpl }),
+    }),
+  );
+  const requestsChartsCommands = defineRequestsChartsCommands(
+    createRequestsChartsClient({
+      ...(options.requestsChartsFetchImpl === undefined
+        ? {}
+        : { fetchImpl: options.requestsChartsFetchImpl }),
+    }),
+  );
   return {
     Model,
-    init: createInit(readDiagnostics, readObservability, readReadback, readControl, options.readbackReaders === undefined, routingChartsCommands, requestsChartsCommands),
+    init: createInit(
+      readDiagnostics,
+      readObservability,
+      readReadback,
+      readControl,
+      options.readbackReaders === undefined,
+      routingChartsCommands,
+      requestsChartsCommands,
+    ),
     subscriptions: makeRefreshSubscriptions(
       options.runtimeEventSourceFactory ?? defaultRuntimeEventSourceFactory,
     ),
@@ -187,23 +211,74 @@ export const createShellApp = (options: ShellOptions = {}) => {
       dispatchControl,
       dispatchStudio,
       saveRuntimeConfig,
-      defineDeviceAuthCommands(createDeviceAuthClient({ ...(options.deviceAuthFetchImpl === undefined ? {} : { fetchImpl: options.deviceAuthFetchImpl }) })),
-      defineProviderAccountCommands(createProviderAccountClient({ ...(options.providerAccountFetchImpl === undefined ? {} : { fetchImpl: options.providerAccountFetchImpl }) })),
-      defineEndpointAdmissionCommands(createEndpointAdmissionClient({ ...(options.endpointAdmissionFetchImpl === undefined ? {} : { fetchImpl: options.endpointAdmissionFetchImpl }) })),
-      defineLearningRankingCommands(createLearningRankingClient({ ...(options.learningRankingFetchImpl === undefined ? {} : { fetchImpl: options.learningRankingFetchImpl }) })),
-      defineRequestsRankingCommands(createRequestsRankingClient({ fetchImpl: options.requestsRankingFetchImpl })),
-      defineRouterConfigCommands(createRouterConfigClient({ ...(options.routerConfigFetchImpl === undefined ? {} : { fetchImpl: options.routerConfigFetchImpl }), ...(controlToken === undefined ? {} : { token: controlToken }) })),
+      defineDeviceAuthCommands(
+        createDeviceAuthClient({
+          ...(options.deviceAuthFetchImpl === undefined
+            ? {}
+            : { fetchImpl: options.deviceAuthFetchImpl }),
+        }),
+      ),
+      defineProviderAccountCommands(
+        createProviderAccountClient({
+          ...(options.providerAccountFetchImpl === undefined
+            ? {}
+            : { fetchImpl: options.providerAccountFetchImpl }),
+        }),
+      ),
+      defineEndpointAdmissionCommands(
+        createEndpointAdmissionClient({
+          ...(options.endpointAdmissionFetchImpl === undefined
+            ? {}
+            : { fetchImpl: options.endpointAdmissionFetchImpl }),
+        }),
+      ),
+      defineLearningRankingCommands(
+        createLearningRankingClient({
+          ...(options.learningRankingFetchImpl === undefined
+            ? {}
+            : { fetchImpl: options.learningRankingFetchImpl }),
+        }),
+      ),
+      defineRequestsRankingCommands(
+        createRequestsRankingClient({ fetchImpl: options.requestsRankingFetchImpl }),
+      ),
+      defineRouterConfigCommands(
+        createRouterConfigClient({
+          ...(options.routerConfigFetchImpl === undefined
+            ? {}
+            : { fetchImpl: options.routerConfigFetchImpl }),
+          ...(controlToken === undefined ? {} : { token: controlToken }),
+        }),
+      ),
       createLocalPolicyCommands(options.localPolicyFetchImpl ?? globalThis.fetch),
-      defineStorageRetentionCommands(createStorageRetentionClient({ ...(options.retentionFetchImpl === undefined ? {} : { fetchImpl: options.retentionFetchImpl }), ...(controlToken === undefined ? {} : { token: controlToken }) })),
+      defineStorageRetentionCommands(
+        createStorageRetentionClient({
+          ...(options.retentionFetchImpl === undefined
+            ? {}
+            : { fetchImpl: options.retentionFetchImpl }),
+          ...(controlToken === undefined ? {} : { token: controlToken }),
+        }),
+      ),
       // oxlint-disable-next-line no-conditional-empty-object-spread -- pre-existing option spread, only the trailing comma changed here.
-      defineOperatorLearningCommands(createOperatorLearningClient(createRuntimeHttpClient({ ...(options.operatorLearningFetchImpl === undefined ? {} : { fetchImpl: options.operatorLearningFetchImpl }), tokenProvider: readStoredOperatorToken }))),
+      defineOperatorLearningCommands(
+        createOperatorLearningClient(
+          createRuntimeHttpClient({
+            ...(options.operatorLearningFetchImpl === undefined
+              ? {}
+              : { fetchImpl: options.operatorLearningFetchImpl }),
+            tokenProvider: readStoredOperatorToken,
+          }),
+        ),
+      ),
       replayAutoQueueCommands,
       defineModelsCommands(createModelsClient({ fetchImpl: options.modelsFetchImpl })),
       defineLocalPeersCommands(createLocalPeersClient(options.localPeersFetchImpl)),
       routingChartsCommands,
       requestsChartsCommands,
       defineSystemOperatorCommands(createSystemOperatorClient(options.systemOperatorFetchImpl)),
-      defineSystemExtensionsCommands(createSystemExtensionsClient(options.systemExtensionsFetchImpl))
+      defineSystemExtensionsCommands(
+        createSystemExtensionsClient(options.systemExtensionsFetchImpl),
+      ),
     ),
     view,
   };

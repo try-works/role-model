@@ -51,9 +51,7 @@
         "logicalAccountId": "anthropic.team.shared",
         "providerAccountId": "anthropic.team.shared",
         "providerId": "anthropic",
-        "sourceProvenance": [
-          "manual"
-        ],
+        "sourceProvenance": ["manual"],
         "authMode": "api-key-rotating-ref",
         "credentialStorageMode": "unknown",
         "credentialBackendCanonical": "local-keychain",
@@ -61,20 +59,14 @@
         "reasonCode": "active-without-endpoint",
         "blocking": true,
         "activeEndpointIds": [],
-        "configuredModelIds": [
-          "anthropic/claude-3.7-sonnet"
-        ],
-        "availableActions": [
-          "activate-endpoint"
-        ]
+        "configuredModelIds": ["anthropic/claude-3.7-sonnet"],
+        "availableActions": ["activate-endpoint"]
       },
       {
         "logicalAccountId": "openai.personal.primary",
         "providerAccountId": "openai.personal.primary",
         "providerId": "openai",
-        "sourceProvenance": [
-          "manual"
-        ],
+        "sourceProvenance": ["manual"],
         "authMode": "api-key-static",
         "credentialStorageMode": "env-ref",
         "credentialBackendCanonical": "env",
@@ -82,20 +74,14 @@
         "reasonCode": "env-var-missing",
         "blocking": true,
         "activeEndpointIds": [],
-        "configuredModelIds": [
-          "openai/gpt-4.1-mini-fast"
-        ],
-        "availableActions": [
-          "set-env"
-        ]
+        "configuredModelIds": ["openai/gpt-4.1-mini-fast"],
+        "availableActions": ["set-env"]
       }
     ],
     "providerRollups": [
       {
         "providerId": "anthropic",
-        "accountIds": [
-          "anthropic.team.shared"
-        ],
+        "accountIds": ["anthropic.team.shared"],
         "countsByLifecycle": {
           "executionReady": 0,
           "connectedNoEndpoint": 1,
@@ -106,16 +92,12 @@
           "archivedStale": 0
         },
         "readyAccountIds": [],
-        "attentionAccountIds": [
-          "anthropic.team.shared"
-        ],
+        "attentionAccountIds": ["anthropic.team.shared"],
         "hasArchivedArtifacts": false
       },
       {
         "providerId": "openai",
-        "accountIds": [
-          "openai.personal.primary"
-        ],
+        "accountIds": ["openai.personal.primary"],
         "countsByLifecycle": {
           "executionReady": 0,
           "connectedNoEndpoint": 0,
@@ -126,9 +108,7 @@
           "archivedStale": 0
         },
         "readyAccountIds": [],
-        "attentionAccountIds": [
-          "openai.personal.primary"
-        ],
+        "attentionAccountIds": ["openai.personal.primary"],
         "hasArchivedArtifacts": false
       }
     ],

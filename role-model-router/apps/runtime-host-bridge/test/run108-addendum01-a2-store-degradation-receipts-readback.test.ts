@@ -37,20 +37,23 @@ const json = (response: Response): Promise<unknown> => response.json();
 
 describe("run108 addendum-01 A2 store degradation receipts readback", () => {
   test("answers 503 operator_capability_unavailable when the host has no readback bound", async () => {
-    const server = await startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      operatorAuthToken: "operator-secret",
-      deviceOwnerTrust: "off",
-      operatorContext,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    const server = await startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        operatorAuthToken: "operator-secret",
+        deviceOwnerTrust: "off",
+        operatorContext,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        executeResponses: async () => {
+          throw new Error("not used");
+        },
       },
-      executeResponses: async () => {
-        throw new Error("not used");
-      },
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
     try {
       const response = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/operator/store-degradation-receipts`,
@@ -93,24 +96,27 @@ describe("run108 addendum-01 A2 store degradation receipts readback", () => {
         ],
       },
     };
-    const server = await startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      operatorAuthToken: "operator-secret",
-      deviceOwnerTrust: "off",
-      operatorContext,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    const server = await startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        operatorAuthToken: "operator-secret",
+        deviceOwnerTrust: "off",
+        operatorContext,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        executeResponses: async () => {
+          throw new Error("not used");
+        },
+        readStoreDegradationReceipts: async (query) => {
+          expect(query).toEqual({});
+          return payload;
+        },
       },
-      executeResponses: async () => {
-        throw new Error("not used");
-      },
-      readStoreDegradationReceipts: async (query) => {
-        expect(query).toEqual({});
-        return payload;
-      },
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
     try {
       const response = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/operator/store-degradation-receipts`,
@@ -124,20 +130,23 @@ describe("run108 addendum-01 A2 store degradation receipts readback", () => {
   });
 
   test("keeps the receipts readback behind the operator authentication gate", async () => {
-    const server = await startBridgeServer({
-      host: "127.0.0.1",
-      port: 0,
-      operatorAuthToken: "operator-secret",
-      deviceOwnerTrust: "off",
-      operatorContext,
-      registry,
-      executeChatCompletions: async () => {
-        throw new Error("not used");
+    const server = await startBridgeServer(
+      {
+        host: "127.0.0.1",
+        port: 0,
+        operatorAuthToken: "operator-secret",
+        deviceOwnerTrust: "off",
+        operatorContext,
+        registry,
+        executeChatCompletions: async () => {
+          throw new Error("not used");
+        },
+        executeResponses: async () => {
+          throw new Error("not used");
+        },
       },
-      executeResponses: async () => {
-        throw new Error("not used");
-      },
-    }, { allowTestSeamBackend: true });
+      { allowTestSeamBackend: true },
+    );
     try {
       const response = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/operator/store-degradation-receipts`,

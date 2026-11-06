@@ -1,11 +1,15 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 function invoke(args) {
-  return spawnSync(process.execPath, ["--import", "tsx", "scripts/runtime-parity.mjs", ...args], { cwd: root, encoding: "utf8", timeout: 15000 });
+  return spawnSync(process.execPath, ["--import", "tsx", "scripts/runtime-parity.mjs", ...args], {
+    cwd: root,
+    encoding: "utf8",
+    timeout: 15000,
+  });
 }
 test("request-only selfcheck executes controls without claiming browser parity", () => {
   const result = invoke(["--request-selfcheck"]);

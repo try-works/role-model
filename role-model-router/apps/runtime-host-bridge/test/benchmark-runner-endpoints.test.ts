@@ -19,11 +19,18 @@ function initBenchmarkDatabase(databasePath: string): void {
   database.close();
 }
 
-const endpoint = (endpointId: string, modelId: string, healthStatus = "healthy") => ({ endpointId, modelId, sourceType: "remote" as const, healthStatus });
+const endpoint = (endpointId: string, modelId: string, healthStatus = "healthy") => ({
+  endpointId,
+  modelId,
+  sourceType: "remote" as const,
+  healthStatus,
+});
 
 describe("benchmark runner endpoint accounting", () => {
   let artifactRoot = "";
-  afterEach(() => { artifactRoot = ""; });
+  afterEach(() => {
+    artifactRoot = "";
+  });
 
   async function setup() {
     artifactRoot = await mkdtemp(path.join(os.tmpdir(), "bench-runner-endpoints-"));
@@ -35,60 +42,78 @@ describe("benchmark runner endpoint accounting", () => {
 
   test("executes every requested endpoint, including two sharing a model, and keeps step progress aligned with the case cursor", async () => {
     const databasePath = await setup();
-    const endpoints = [endpoint("ep-a", "shared/model"), endpoint("ep-b", "shared/model"), endpoint("ep-c", "other/model")];
+    const endpoints = [
+      endpoint("ep-a", "shared/model"),
+      endpoint("ep-b", "shared/model"),
+      endpoint("ep-c", "other/model"),
+    ];
     const runId = "run-three-endpoints";
     const progressAtCaseStart: number[] = [];
     let executionCalls = 0;
-    const result = await runRoutingCapabilityBenchmark({
-      databasePath,
-      benchmarkArtifactRoot: artifactRoot,
-      listConfiguredEndpoints: async () => endpoints,
-      deriveEndpointVersion: () => "v1",
-      executeChatCompletions: async () => {
-        const progress = readBenchmarkRunProgress(runId);
-        expect(progress?.endpointCount).toBe(3);
-        expect(progress?.requestedEndpointCount).toBe(3);
-        expect(progress?.executedEndpointCount).toBe(3);
-        expect(progress?.skippedEndpoints).toEqual([]);
-        progressAtCaseStart.push(progress?.completedSteps ?? -1);
-        executionCalls += 1;
-        return { contentText: '{"answer":"ok"}' };
+    const result = await runRoutingCapabilityBenchmark(
+      {
+        databasePath,
+        benchmarkArtifactRoot: artifactRoot,
+        listConfiguredEndpoints: async () => endpoints,
+        deriveEndpointVersion: () => "v1",
+        executeChatCompletions: async () => {
+          const progress = readBenchmarkRunProgress(runId);
+          expect(progress?.endpointCount).toBe(3);
+          expect(progress?.requestedEndpointCount).toBe(3);
+          expect(progress?.executedEndpointCount).toBe(3);
+          expect(progress?.skippedEndpoints).toEqual([]);
+          progressAtCaseStart.push(progress?.completedSteps ?? -1);
+          executionCalls += 1;
+          return { contentText: '{"answer":"ok"}' };
+        },
       },
-    }, {
-      runId,
-      endpointIds: endpoints.map((entry) => entry.endpointId),
-      judgeEndpointId: null,
-      mode: "quick",
-      caseIds: ["h04-tool-read-router"],
-      useJudge: false,
-    });
+      {
+        runId,
+        endpointIds: endpoints.map((entry) => entry.endpointId),
+        judgeEndpointId: null,
+        mode: "quick",
+        caseIds: ["h04-tool-read-router"],
+        useJudge: false,
+      },
+    );
     expect(executionCalls).toBeGreaterThanOrEqual(3);
     expect([...new Set(progressAtCaseStart)]).toEqual([0, 1, 2]);
     expect(result.requestedEndpointCount).toBe(3);
     expect(result.executedEndpointCount).toBe(3);
     expect(result.skippedEndpoints).toEqual([]);
     expect(result.endpointGrades).toHaveLength(3);
-    expect(readBenchmarkRunProgress(runId)).toMatchObject({ completedSteps: 3, status: "completed", totalSteps: 3 });
+    expect(readBenchmarkRunProgress(runId)).toMatchObject({
+      completedSteps: 3,
+      status: "completed",
+      totalSteps: 3,
+    });
   });
 
   test("reports an unhealthy requested endpoint instead of silently dropping it", async () => {
     const databasePath = await setup();
-    const endpoints = [endpoint("ep-a", "model/a"), endpoint("ep-b", "model/b", "unhealthy"), endpoint("ep-c", "model/c")];
+    const endpoints = [
+      endpoint("ep-a", "model/a"),
+      endpoint("ep-b", "model/b", "unhealthy"),
+      endpoint("ep-c", "model/c"),
+    ];
     const runId = "run-skipped-endpoint";
-    const result = await runRoutingCapabilityBenchmark({
-      databasePath,
-      benchmarkArtifactRoot: artifactRoot,
-      listConfiguredEndpoints: async () => endpoints,
-      deriveEndpointVersion: () => "v1",
-      executeChatCompletions: async () => ({ contentText: '{"answer":"ok"}' }),
-    }, {
-      runId,
-      endpointIds: endpoints.map((entry) => entry.endpointId),
-      judgeEndpointId: null,
-      mode: "quick",
-      caseIds: ["h04-tool-read-router"],
-      useJudge: false,
-    });
+    const result = await runRoutingCapabilityBenchmark(
+      {
+        databasePath,
+        benchmarkArtifactRoot: artifactRoot,
+        listConfiguredEndpoints: async () => endpoints,
+        deriveEndpointVersion: () => "v1",
+        executeChatCompletions: async () => ({ contentText: '{"answer":"ok"}' }),
+      },
+      {
+        runId,
+        endpointIds: endpoints.map((entry) => entry.endpointId),
+        judgeEndpointId: null,
+        mode: "quick",
+        caseIds: ["h04-tool-read-router"],
+        useJudge: false,
+      },
+    );
     expect(result.requestedEndpointCount).toBe(3);
     expect(result.executedEndpointCount).toBe(2);
     expect(result.skippedEndpoints).toEqual([{ endpointId: "ep-b", reason: "unhealthy" }]);

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { spawnSync } from "node:child_process";
 /**
  * Run 115 R39: verify a packaged candidate with no arguments.
  *
@@ -7,13 +8,12 @@
  * maintained flow (validate-packaging) can call one command instead of remembering five
  * arguments - and so the arguments cannot drift between callers.
  */
-import { existsSync, mkdtempSync, readFileSync, rmSync, readdirSync } from "node:fs";
-import { spawnSync } from "node:child_process";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 
-import { staticRootIdentity } from "./ui-identity.mjs";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
+import { staticRootIdentity } from "./ui-identity.mjs";
 
 const args = process.argv.slice(2);
 const value = (name) => {
@@ -21,24 +21,27 @@ const value = (name) => {
   return index >= 0 ? args[index + 1] : undefined;
 };
 
-const packageDirInput = value("--package-dir") ?? path.join(
-  "role-model-router",
-  "dist",
-  "release",
-  process.platform === "win32" ? "win32-x64" : `${process.platform}-${process.arch}`,
-);
+const packageDirInput =
+  value("--package-dir") ??
+  path.join(
+    "role-model-router",
+    "dist",
+    "release",
+    process.platform === "win32" ? "win32-x64" : `${process.platform}-${process.arch}`,
+  );
 const packageDir = path.resolve(packageDirInput);
 const staticRoot = path.resolve(
-  value("--static-root") ?? path.join("role-model-router", "apps", "runtime-ui-next", "dist", "client"),
+  value("--static-root") ??
+    path.join("role-model-router", "apps", "runtime-ui-next", "dist", "client"),
 );
 const fixtureRoot = path.resolve(
   value("--fixture-root") ?? path.join("testdata", "router-runtime", "fixtures"),
 );
 
 const problems = [];
-if (!existsSync(packageDir)) problems.push("package directory does not exist: " + packageDir);
-if (!existsSync(staticRoot)) problems.push("static root does not exist: " + staticRoot);
-if (!existsSync(fixtureRoot)) problems.push("fixture root does not exist: " + fixtureRoot);
+if (!existsSync(packageDir)) problems.push(`package directory does not exist: ${packageDir}`);
+if (!existsSync(staticRoot)) problems.push(`static root does not exist: ${staticRoot}`);
+if (!existsSync(fixtureRoot)) problems.push(`fixture root does not exist: ${fixtureRoot}`);
 
 const manifest = path.join(packageDir, "manifest.json");
 let executable;
@@ -59,12 +62,12 @@ if (problems.length === 0) {
       .filter((candidate) => candidate !== undefined)
       .find((candidate) => existsSync(candidate));
     if (executable === undefined) {
-      problems.push("manifest does not name an executable present in " + packageDir);
+      problems.push(`manifest does not name an executable present in ${packageDir}`);
     }
   }
 }
 if (problems.length > 0) {
-  console.log("NOT RUN: " + problems.join("; "));
+  console.log(`NOT RUN: ${problems.join("; ")}`);
   process.exit(2);
 }
 
@@ -82,7 +85,9 @@ const port = await new Promise((resolve) => {
   const probe = net.createServer();
   probe.once("listening", () => {
     const address = probe.address();
-    probe.close(() => resolve(typeof address === "object" && address !== null ? address.port : undefined));
+    probe.close(() =>
+      resolve(typeof address === "object" && address !== null ? address.port : undefined),
+    );
   });
   probe.listen(0, "127.0.0.1");
 });
@@ -94,7 +99,11 @@ if (port === undefined) {
 // S174: a fixed state directory collides between concurrent runs (the review flagged the same
 // shape in compare-release). A per-run directory cannot collide and is removed on exit.
 const stateRoot = mkdtempSync(path.join(os.tmpdir(), "r39-candidate-state-"));
-process.on("exit", () => { try { rmSync(stateRoot, { force: true, recursive: true }); } catch {} });
+process.on("exit", () => {
+  try {
+    rmSync(stateRoot, { force: true, recursive: true });
+  } catch {}
+});
 
 // S213: the package ships the UI copied at distribution-build time. A gate pointed at the worktree
 // build can pass while the package carries older UI - which happened for several rounds (S212).
@@ -103,10 +112,12 @@ const packageClient = path.join(packageDir, "build", "client");
 if (existsSync(packageClient) && path.resolve(staticRoot) !== path.resolve(packageClient)) {
   const { differences } = staticRootIdentity({ packageClient, staticRoot });
   if (differences.length > 0) {
-    console.log("FAIL ui identity: the static root is not the bytes this package ships (" + differences.slice(0, 4).join("; ") + ")");
-    console.log("  static:  " + path.resolve(staticRoot));
-    console.log("  package: " + path.resolve(packageClient));
-    console.log("Pass --static-root " + path.resolve(packageClient) + ", or rebuild the distribution.");
+    console.log(
+      `FAIL ui identity: the static root is not the bytes this package ships (${differences.slice(0, 4).join("; ")})`,
+    );
+    console.log(`  static:  ${path.resolve(staticRoot)}`);
+    console.log(`  package: ${path.resolve(packageClient)}`);
+    console.log(`Pass --static-root ${path.resolve(packageClient)}, or rebuild the distribution.`);
     process.exit(2);
   }
 }
@@ -114,13 +125,20 @@ const result = spawnSync(
   process.execPath,
   [
     path.join("scripts", "runtime", "verify-client-journeys.mjs"),
-    "--manifest", manifest,
-    "--executable", executable,
-    "--repo-root", packageDir,
-    "--static-root", staticRoot,
-    "--port", String(port),
-    "--state-root", stateRoot,
-    "--fixture-root", fixtureRoot,
+    "--manifest",
+    manifest,
+    "--executable",
+    executable,
+    "--repo-root",
+    packageDir,
+    "--static-root",
+    staticRoot,
+    "--port",
+    String(port),
+    "--state-root",
+    stateRoot,
+    "--fixture-root",
+    fixtureRoot,
   ],
   { encoding: "utf8", stdio: "inherit" },
 );
@@ -132,19 +150,27 @@ if (result.status !== 0) process.exit(result.status ?? 2);
 const workerFixtures = value("--worker-fixtures");
 const workerModel = value("--expect-model");
 if (workerFixtures !== undefined && workerModel !== undefined) {
-  console.log("worker fixtures: " + workerFixtures + " (expecting " + workerModel + ")");
+  console.log(`worker fixtures: ${workerFixtures} (expecting ${workerModel})`);
   const workerResult = spawnSync(
     process.execPath,
     [
       path.join("scripts", "runtime", "verify-client-journeys.mjs"),
-      "--manifest", manifest,
-      "--executable", executable,
-      "--repo-root", packageDir,
-      "--static-root", staticRoot,
-      "--port", String(port + 2),
-      "--state-root", stateRoot + "-workers",
-      "--fixture-root", path.resolve(workerFixtures),
-      "--expect-model", workerModel,
+      "--manifest",
+      manifest,
+      "--executable",
+      executable,
+      "--repo-root",
+      packageDir,
+      "--static-root",
+      staticRoot,
+      "--port",
+      String(port + 2),
+      "--state-root",
+      `${stateRoot}-workers`,
+      "--fixture-root",
+      path.resolve(workerFixtures),
+      "--expect-model",
+      workerModel,
     ],
     { encoding: "utf8", stdio: "inherit", env: { ...process.env, R39_CHAT_MODEL: workerModel } },
   );
@@ -159,17 +185,25 @@ if (args.includes("--rendered")) {
     process.execPath,
     [
       path.join("scripts", "runtime", "audit-rendered-ui.mjs"),
-      "--exe", executable,
-      "--static-root", staticRoot,
-      "--fixture-root", fixtureRoot,
-      "--port", String(port + 1),
-      "--width", "1440",
-      "--height", "900",
+      "--exe",
+      executable,
+      "--static-root",
+      staticRoot,
+      "--fixture-root",
+      fixtureRoot,
+      "--port",
+      String(port + 1),
+      "--width",
+      "1440",
+      "--height",
+      "900",
       "--focus",
       "--seed-chat",
-      "--expect-overview-cards", "3",
+      "--expect-overview-cards",
+      "3",
       "--studio-run",
-      "--theme", "light",
+      "--theme",
+      "light",
       "--control-action",
       "--click-sweep",
     ],
@@ -182,7 +216,9 @@ if (args.includes("--rendered")) {
     // there was the asymmetry review #2 flagged.
     const blocking = process.env.R39_VERIFY_BLOCKING === "true";
     if (args.includes("--require-rendered") || blocking) {
-      console.log("FAIL rendered: a rendered audit was required (--require-rendered or R39_VERIFY_BLOCKING=true) and no browser is available");
+      console.log(
+        "FAIL rendered: a rendered audit was required (--require-rendered or R39_VERIFY_BLOCKING=true) and no browser is available",
+      );
       process.exit(2);
     }
   } else if (audit.status !== 0) {

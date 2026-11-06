@@ -1,9 +1,13 @@
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 import { Schema } from "effect";
 
+import {
+  type LearningPayloadJson,
+  learningLadderRowKey,
+  parseLearningLadderPayload,
+} from "./learning-ranking";
 import type { Message } from "./message";
 import { createReadbackFlightTransport } from "./readback-flight";
-import { type LearningPayloadJson, learningLadderRowKey, parseLearningLadderPayload } from "./learning-ranking";
 import { READBACK_PATHS } from "./runtime-endpoints";
 
 /** S26e/R13 wave 2: one shared readback surface for four read routes. */
@@ -302,7 +306,11 @@ export interface ReadbackResult {
   readonly status: number;
 }
 
-export type ReadbackReader = (input: { readonly signal: AbortSignal; readonly id?: string; readonly query?: string }) => Promise<ReadbackResult>;
+export type ReadbackReader = (input: {
+  readonly signal: AbortSignal;
+  readonly id?: string;
+  readonly query?: string;
+}) => Promise<ReadbackResult>;
 
 const asRecord = (value: unknown): Readonly<Record<string, unknown>> | undefined =>
   typeof value === "object" && value !== null && !Array.isArray(value)
@@ -393,7 +401,18 @@ const parseLocalPeers = (body: unknown, token: number): ReadbackState => {
     const peer = asRecord(value);
     if (peer === undefined) return [];
     const id = String(peer.id ?? index);
-    return [row(id, String(peer.url ?? id), peer.authToken === undefined ? "no auth" : "auth", JSON.stringify({ authToken: typeof peer.authToken === "string" ? peer.authToken : null, id, url: String(peer.url ?? id) }))];
+    return [
+      row(
+        id,
+        String(peer.url ?? id),
+        peer.authToken === undefined ? "no auth" : "auth",
+        JSON.stringify({
+          authToken: typeof peer.authToken === "string" ? peer.authToken : null,
+          id,
+          url: String(peer.url ?? id),
+        }),
+      ),
+    ];
   });
   return okRows(rows, token);
 };
@@ -419,12 +438,18 @@ const parseRuntime = (body: unknown, token: number): ReadbackState => {
 
 const parseSessionReadiness = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
-  if (record === undefined) return failedReadback("Session readiness read failed: invalid response", token);
+  if (record === undefined)
+    return failedReadback("Session readiness read failed: invalid response", token);
   const overall = typeof record.overall === "string" ? record.overall : undefined;
   if (overall === undefined) return { rows: [], status: "empty", token };
   const context = asRecord(record.context);
   const rows = [
-    row("overall", "Overall", overall, typeof record.observationSource === "string" ? record.observationSource : ""),
+    row(
+      "overall",
+      "Overall",
+      overall,
+      typeof record.observationSource === "string" ? record.observationSource : "",
+    ),
     row("channel", "Channel", String(context?.channel ?? "—"), String(context?.scope ?? "")),
     row("observedAt", "Observed", String(record.observedAt ?? "—"), "timestamp"),
   ];
@@ -442,10 +467,25 @@ const parseDashboard = (body: unknown, token: number): ReadbackState => {
   };
   if (record.requestCount === 0) return { rows: [], status: "empty", token };
   const rows = [
-    row("requestCount", "Requests", value("requestCount"), `${value("successCount")} success / ${value("failureCount")} failed`),
-    row("tokens", "Tokens", value("totalTokens"), `${value("totalInputTokens")} in / ${value("totalOutputTokens")} out`),
+    row(
+      "requestCount",
+      "Requests",
+      value("requestCount"),
+      `${value("successCount")} success / ${value("failureCount")} failed`,
+    ),
+    row(
+      "tokens",
+      "Tokens",
+      value("totalTokens"),
+      `${value("totalInputTokens")} in / ${value("totalOutputTokens")} out`,
+    ),
     row("latency", "Latency", value("averageLatencyMs"), `p95 ${value("p95LatencyMs")} ms`),
-    row("cost", "Cost", value("totalEffectiveCostUsd"), `actual ${value("totalActualCostUsd")} / estimated ${value("totalEstimatedCostUsd")}`),
+    row(
+      "cost",
+      "Cost",
+      value("totalEffectiveCostUsd"),
+      `actual ${value("totalActualCostUsd")} / estimated ${value("totalEstimatedCostUsd")}`,
+    ),
     row("cached", "Cached requests", value("cachedRequestCount"), "prompt cache"),
     row("excluded", "Excluded", value("excludedRequestCount"), "traffic-class exclusion"),
   ];
@@ -499,7 +539,14 @@ const parseObserveLogs = (body: unknown, token: number): ReadbackState => {
     const trimmed = line.trim();
     if (trimmed.length === 0) return [];
     const match = trimmed.match(/^(\S+)\s+(\S+)\s+(.*)$/);
-    return [row("log:" + String(index), match?.[1] ?? "log:" + String(index), match?.[2] ?? "combined", trimmed)];
+    return [
+      row(
+        `log:${String(index)}`,
+        match?.[1] ?? `log:${String(index)}`,
+        match?.[2] ?? "combined",
+        trimmed,
+      ),
+    ];
   });
   return okRows(rows, token);
 };
@@ -634,29 +681,49 @@ const parseRouterCandidates = (body: unknown, token: number): ReadbackState => {
         id,
         String(candidate.modelId ?? candidate.id ?? "candidate"),
         String(candidate.score ?? candidate.totalScore ?? ""),
-        JSON.stringify({ endpointId: candidate.endpointId ?? null, healthStatus: candidate.healthStatus ?? null, pricing: candidate.pricing ?? null, providerId: candidate.providerId ?? null, routingEligible: candidate.routingEligible ?? null, speed: candidate.recentSamples ?? null }),
+        JSON.stringify({
+          endpointId: candidate.endpointId ?? null,
+          healthStatus: candidate.healthStatus ?? null,
+          pricing: candidate.pricing ?? null,
+          providerId: candidate.providerId ?? null,
+          routingEligible: candidate.routingEligible ?? null,
+          speed: candidate.recentSamples ?? null,
+        }),
       ),
     ];
   });
   return okRows(rows, token);
 };
 
-const parseScalarRows = (label: string) => (body: unknown, token: number): ReadbackState => {
-  const record = asRecord(body);
-  if (record === undefined) return failedReadback(label + " read failed: invalid response", token);
-  const rows = Object.entries(record)
-    .filter(([, value]) => typeof value === "string" || typeof value === "number" || typeof value === "boolean")
-    .slice(0, 40)
-    .map(([key, value]) => row(key, key, String(value), label));
-  return okRows(rows, token);
-};
+const parseScalarRows =
+  (label: string) =>
+  (body: unknown, token: number): ReadbackState => {
+    const record = asRecord(body);
+    if (record === undefined)
+      return failedReadback(`${label} read failed: invalid response`, token);
+    const rows = Object.entries(record)
+      .filter(
+        ([, value]) =>
+          typeof value === "string" || typeof value === "number" || typeof value === "boolean",
+      )
+      .slice(0, 40)
+      .map(([key, value]) => row(key, key, String(value), label));
+    return okRows(rows, token);
+  };
 const parseLocalPeerModels = (body: unknown, token: number): ReadbackState => {
   const list = Array.isArray(body) ? body : asArray(asRecord(body)?.models);
   const rows = list.flatMap((value, index) => {
     const model = asRecord(value);
     if (model === undefined) return [];
     const id = String(model.modelId ?? model.id ?? index);
-    return [row(id, String(model.modelId ?? model.id ?? id), String(model.status ?? model.provider ?? ""), String(model.peerId ?? model.endpointId ?? ""))];
+    return [
+      row(
+        id,
+        String(model.modelId ?? model.id ?? id),
+        String(model.status ?? model.provider ?? ""),
+        String(model.peerId ?? model.endpointId ?? ""),
+      ),
+    ];
   });
   return okRows(rows, token);
 };
@@ -668,66 +735,134 @@ const parseIntegrationProviders = (body: unknown, token: number): ReadbackState 
     const provider = asRecord(value);
     if (provider === undefined) return [];
     const id = String(provider.providerId ?? provider.id ?? index);
-    return [row(id, String(provider.providerId ?? provider.id ?? id), String(provider.providerKind ?? provider.kind ?? ""), String(provider.status ?? ""))];
+    return [
+      row(
+        id,
+        String(provider.providerId ?? provider.id ?? id),
+        String(provider.providerKind ?? provider.kind ?? ""),
+        String(provider.status ?? ""),
+      ),
+    ];
   });
   return okRows(rows, token);
 };
 
 const parseConfiguredModels = (body: unknown, token: number): ReadbackState => {
   const list = Array.isArray(body) ? body : asRecord(body)?.data;
-  if (!Array.isArray(list)) return failedReadback("Configured models read failed: invalid response", token);
+  if (!Array.isArray(list))
+    return failedReadback("Configured models read failed: invalid response", token);
   const rows = list.flatMap((value, index) => {
     const model = asRecord(value);
     if (model === undefined) return [];
-    const id = typeof model.id === "string" ? model.id : typeof model.modelId === "string" ? model.modelId : undefined;
+    const id =
+      typeof model.id === "string"
+        ? model.id
+        : typeof model.modelId === "string"
+          ? model.modelId
+          : undefined;
     if (id === undefined) return [];
-    return [row(id, String(model.displayName ?? id), String(model.providerId ?? "—"), JSON.stringify({ endpointIds: model.endpoint_ids ?? model.endpointIds ?? [], capabilities: model.capabilities ?? [], contextWindow: model.contextWindow ?? null, id, providerId: model.providerId ?? null }))];
+    return [
+      row(
+        id,
+        String(model.displayName ?? id),
+        String(model.providerId ?? "—"),
+        JSON.stringify({
+          endpointIds: model.endpoint_ids ?? model.endpointIds ?? [],
+          capabilities: model.capabilities ?? [],
+          contextWindow: model.contextWindow ?? null,
+          id,
+          providerId: model.providerId ?? null,
+        }),
+      ),
+    ];
   });
-  if (list.length > 0 && rows.length === 0) return failedReadback("Configured models read failed: invalid response", token);
+  if (list.length > 0 && rows.length === 0)
+    return failedReadback("Configured models read failed: invalid response", token);
   return okRows(rows, token);
 };
 const parseModelEndpoints = (body: unknown, token: number): ReadbackState => {
   const list = Array.isArray(body) ? body : asRecord(body)?.endpoints;
-  if (!Array.isArray(list)) return failedReadback("Model endpoints read failed: invalid response", token);
+  if (!Array.isArray(list))
+    return failedReadback("Model endpoints read failed: invalid response", token);
   const rows = list.flatMap((value, index) => {
     const endpoint = asRecord(value);
     if (endpoint === undefined) return [];
-    const id = typeof endpoint.endpointId === "string" ? endpoint.endpointId : typeof endpoint.id === "string" ? endpoint.id : undefined;
+    const id =
+      typeof endpoint.endpointId === "string"
+        ? endpoint.endpointId
+        : typeof endpoint.id === "string"
+          ? endpoint.id
+          : undefined;
     if (id === undefined) return [];
-    return [row(id, id, String(endpoint.modelId ?? "—"), JSON.stringify({ benchmarkEligible: endpoint.benchmarkEligible ?? endpoint.benchmark_eligible ?? null, endpointId: id, executionModeEligible: endpoint.executionModeEligible ?? endpoint.execution_mode_eligible ?? null, healthStatus: endpoint.healthStatus ?? null, modelId: endpoint.modelId ?? null, providerAccountId: endpoint.providerAccountId ?? null, providerId: endpoint.providerId ?? null, reasoningEffort: endpoint.reasoningEffort ?? null, reasoningEffortLevels: endpoint.reasoningEffortLevels ?? [], roleIds: endpoint.roleIds ?? [], sourceType: endpoint.sourceType ?? null, status: endpoint.status ?? null }))];
+    return [
+      row(
+        id,
+        id,
+        String(endpoint.modelId ?? "—"),
+        JSON.stringify({
+          benchmarkEligible: endpoint.benchmarkEligible ?? endpoint.benchmark_eligible ?? null,
+          endpointId: id,
+          executionModeEligible:
+            endpoint.executionModeEligible ?? endpoint.execution_mode_eligible ?? null,
+          healthStatus: endpoint.healthStatus ?? null,
+          modelId: endpoint.modelId ?? null,
+          providerAccountId: endpoint.providerAccountId ?? null,
+          providerId: endpoint.providerId ?? null,
+          reasoningEffort: endpoint.reasoningEffort ?? null,
+          reasoningEffortLevels: endpoint.reasoningEffortLevels ?? [],
+          roleIds: endpoint.roleIds ?? [],
+          sourceType: endpoint.sourceType ?? null,
+          status: endpoint.status ?? null,
+        }),
+      ),
+    ];
   });
-  if (list.length > 0 && rows.length === 0) return failedReadback("Model endpoints read failed: invalid response", token);
+  if (list.length > 0 && rows.length === 0)
+    return failedReadback("Model endpoints read failed: invalid response", token);
   return okRows(rows, token);
 };
-const parseLearningFamily = (label: string) => (body: unknown, token: number): ReadbackState => {
-  if (body === null || body === undefined) return failedReadback(label + " read failed: invalid response", token);
-  const record = asRecord(body);
-  const rawScope = record?.scopeId;
-  const scopeId = Schema.is(Schema.String)(rawScope) && rawScope.trim().length > 0 ? rawScope.trim() : undefined;
-  const list = Array.isArray(body)
-    ? body
-    : Array.isArray(record?.records)
-      ? record.records
-      : Array.isArray(record?.items)
-        ? record.items
-        : Array.isArray(record?.rows)
-          ? record.rows
-          : record?.data !== undefined
-            ? (Array.isArray(record.data) ? record.data : [record.data])
-            : record === undefined
-              ? []
-              : [record];
-  const rows = list.slice(0, 40).flatMap((value, index) => {
-    const entry = asRecord(value);
-    if (entry === undefined) return [row(String(index), label + " " + String(index), String(value), "readback")];
-    const id = String(entry.id ?? entry.decisionId ?? entry.packId ?? entry.recordId ?? index);
-    const labelText = String(entry.label ?? entry.title ?? entry.kind ?? entry.name ?? id);
-    const valueText = String(entry.value ?? entry.status ?? entry.outcome ?? entry.summary ?? entry.origin ?? "");
-    return [row(labelText, labelText, valueText, JSON.stringify(entry))];
-  });
-  const scoped = scopeId === undefined ? undefined : { scopeId };
-  return rows.length === 0 ? { rows: [], status: "empty", token, ...scoped } : { ...okRows(rows, token), ...scoped };
-};
+const parseLearningFamily =
+  (label: string) =>
+  (body: unknown, token: number): ReadbackState => {
+    if (body === null || body === undefined)
+      return failedReadback(`${label} read failed: invalid response`, token);
+    const record = asRecord(body);
+    const rawScope = record?.scopeId;
+    const scopeId =
+      Schema.is(Schema.String)(rawScope) && rawScope.trim().length > 0
+        ? rawScope.trim()
+        : undefined;
+    const list = Array.isArray(body)
+      ? body
+      : Array.isArray(record?.records)
+        ? record.records
+        : Array.isArray(record?.items)
+          ? record.items
+          : Array.isArray(record?.rows)
+            ? record.rows
+            : record?.data !== undefined
+              ? Array.isArray(record.data)
+                ? record.data
+                : [record.data]
+              : record === undefined
+                ? []
+                : [record];
+    const rows = list.slice(0, 40).flatMap((value, index) => {
+      const entry = asRecord(value);
+      if (entry === undefined)
+        return [row(String(index), `${label} ${String(index)}`, String(value), "readback")];
+      const id = String(entry.id ?? entry.decisionId ?? entry.packId ?? entry.recordId ?? index);
+      const labelText = String(entry.label ?? entry.title ?? entry.kind ?? entry.name ?? id);
+      const valueText = String(
+        entry.value ?? entry.status ?? entry.outcome ?? entry.summary ?? entry.origin ?? "",
+      );
+      return [row(labelText, labelText, valueText, JSON.stringify(entry))];
+    });
+    const scoped = scopeId === undefined ? undefined : { scopeId };
+    return rows.length === 0
+      ? { rows: [], status: "empty", token, ...scoped }
+      : { ...okRows(rows, token), ...scoped };
+  };
 export const localPolicyReadback = (policy: LocalPolicyObject, token: number): ReadbackState =>
   // SAFETY: LocalPolicyObject is a JSON object record; parseLocalPolicy re-validates the body.
   parseLocalPolicy(policy as LearningPayloadJson, token);
@@ -752,7 +887,8 @@ export const localPolicyControls = (draft: LocalPolicyObject | undefined): Local
 
 const parseLocalPolicy = (body: LearningPayloadJson, token: number): ReadbackState => {
   const policy = asRecord(body);
-  if (policy === undefined) return failedReadback("Local policy read failed: invalid response", token);
+  if (policy === undefined)
+    return failedReadback("Local policy read failed: invalid response", token);
   const meta = JSON.stringify(policy);
   return {
     rows: [row("policy", "Persisted policy", "", meta), row("draft", "Draft policy", "", meta)],
@@ -772,7 +908,9 @@ export const localPolicyFromReadback = (state: ReadbackState): LocalPolicyObject
   }
 };
 
-export const localPolicyDraftFromReadback = (state: ReadbackState): LocalPolicyObject | undefined => {
+export const localPolicyDraftFromReadback = (
+  state: ReadbackState,
+): LocalPolicyObject | undefined => {
   const meta = state.rows.find((entry) => entry.id === "draft")?.meta;
   if (meta === undefined) return undefined;
   try {
@@ -783,83 +921,151 @@ export const localPolicyDraftFromReadback = (state: ReadbackState): LocalPolicyO
   }
 };
 
-export const withLocalPolicyDraft = (state: ReadbackState, draft: LocalPolicyObject): ReadbackState => {
+export const withLocalPolicyDraft = (
+  state: ReadbackState,
+  draft: LocalPolicyObject,
+): ReadbackState => {
   const meta = JSON.stringify(draft);
   return {
     ...state,
-    rows: state.rows.map((entry) => entry.id === "draft" ? { ...entry, meta } : entry),
+    rows: state.rows.map((entry) => (entry.id === "draft" ? { ...entry, meta } : entry)),
   };
 };
 
 const parseLearning = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
   const knowledge = asRecord(record?.knowledge);
-  if (knowledge === undefined) return failedReadback("Learning read failed: invalid response", token);
+  if (knowledge === undefined)
+    return failedReadback("Learning read failed: invalid response", token);
   if (knowledge.available === false) return { rows: [], status: "empty", token };
   const rows = [
     row("available", "Available", String(knowledge.available ?? "—"), "knowledge"),
-    row("schema", "Schema", String(knowledge.schemaVersion ?? "—"), String(knowledge.backend ?? "")),
+    row(
+      "schema",
+      "Schema",
+      String(knowledge.schemaVersion ?? "—"),
+      String(knowledge.backend ?? ""),
+    ),
     row("candidates", "Candidates", String(knowledge.candidates ?? "—"), "knowledge"),
     row("documents", "Indexed documents", String(knowledge.indexedDocuments ?? "—"), "knowledge"),
-    row("production", "Production activation", knowledge.productionActivation === true ? "active" : knowledge.productionActivation === false ? "disabled" : "unknown (field absent)", "knowledge"),
-    row("receipts", "Receipts", String(knowledge.retrievalReceipts ?? 0) + " retrieval / " + String(knowledge.rollbackReceipts ?? 0) + " rollback / " + String(knowledge.recoveryReceipts ?? 0) + " recovery", "knowledge"),
+    row(
+      "production",
+      "Production activation",
+      knowledge.productionActivation === true
+        ? "active"
+        : knowledge.productionActivation === false
+          ? "disabled"
+          : "unknown (field absent)",
+      "knowledge",
+    ),
+    row(
+      "receipts",
+      "Receipts",
+      `${String(knowledge.retrievalReceipts ?? 0)} retrieval / ${String(knowledge.rollbackReceipts ?? 0)} rollback / ${String(knowledge.recoveryReceipts ?? 0)} recovery`,
+      "knowledge",
+    ),
     row("degradation", "Degradation count", String(knowledge.degradationCount ?? 0), "knowledge"),
   ];
   if (body !== null && body !== undefined && asRecord(body)?.ladders !== undefined) {
     // SAFETY: readback bodies are decoded JSON; the parser validates the ladder shape before use.
     const parsed = parseLearningLadderPayload(body as LearningPayloadJson);
-    if (!parsed.ok) return failedReadback("Learning ranking read failed: " + parsed.error, token);
+    if (!parsed.ok) return failedReadback(`Learning ranking read failed: ${parsed.error}`, token);
     for (const ladder of parsed.rows) {
-      rows.push(row("ladder:" + learningLadderRowKey(ladder), ladder.roleId + " \u00b7 " + ladder.taskTypeId, ladder.rolledBack?.on === true ? "rolled back" : "active", JSON.stringify(ladder)));
+      rows.push(
+        row(
+          `ladder:${learningLadderRowKey(ladder)}`,
+          `${ladder.roleId} \u00b7 ${ladder.taskTypeId}`,
+          ladder.rolledBack?.on === true ? "rolled back" : "active",
+          JSON.stringify(ladder),
+        ),
+      );
     }
   }
   return okRows(rows, token);
 };
-const parseJobList = (label: string) => (body: unknown, token: number): ReadbackState => {
-  const list = Array.isArray(body) ? body : asArray(asRecord(body)?.jobs);
-  const rows = list.flatMap((value, index) => {
-    const job = asRecord(value);
-    if (job === undefined) return [];
-    const id = typeof job.id === "string" ? job.id : typeof job.jobId === "string" ? job.jobId : undefined;
-    const status = typeof job.status === "string" ? job.status : typeof job.state === "string" ? job.state : undefined;
-    if (id === undefined || (status === undefined && job.createdAt === undefined)) return [];
-    return [row(id, id, status ?? "recorded", String(job.createdAt ?? ""))];
-  });
-  if (list.length > 0 && rows.length === 0) return failedReadback(label + " read failed: invalid response", token);
-  return okRows(rows, token);
-};
+const parseJobList =
+  (label: string) =>
+  (body: unknown, token: number): ReadbackState => {
+    const list = Array.isArray(body) ? body : asArray(asRecord(body)?.jobs);
+    const rows = list.flatMap((value, index) => {
+      const job = asRecord(value);
+      if (job === undefined) return [];
+      const id =
+        typeof job.id === "string" ? job.id : typeof job.jobId === "string" ? job.jobId : undefined;
+      const status =
+        typeof job.status === "string"
+          ? job.status
+          : typeof job.state === "string"
+            ? job.state
+            : undefined;
+      if (id === undefined || (status === undefined && job.createdAt === undefined)) return [];
+      return [row(id, id, status ?? "recorded", String(job.createdAt ?? ""))];
+    });
+    if (list.length > 0 && rows.length === 0)
+      return failedReadback(`${label} read failed: invalid response`, token);
+    return okRows(rows, token);
+  };
 const parseReplayJobs = parseJobList("Replay jobs");
 const parseEvaluationJobs = parseJobList("Evaluation jobs");
 const parseOverviewMetrics = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
-  if (record === undefined || !Array.isArray(record.items) || asRecord(record.window) === undefined) {
+  if (
+    record === undefined ||
+    !Array.isArray(record.items) ||
+    asRecord(record.window) === undefined
+  ) {
     return failedReadback("Overview metrics read failed: invalid response", token);
   }
   if (record.items.length === 0) return { rows: [], status: "empty", token };
-  return okRows([row("overview", "Items", String(record.items.length), JSON.stringify({ items: record.items, window: record.window }))], token);
+  return okRows(
+    [
+      row(
+        "overview",
+        "Items",
+        String(record.items.length),
+        JSON.stringify({ items: record.items, window: record.window }),
+      ),
+    ],
+    token,
+  );
 };
 const parseModelList = (body: unknown, token: number): ReadbackState => {
   const list = Array.isArray(body) ? body : asArray(asRecord(body)?.data);
   const rows = list.flatMap((value, index) => {
     const model = asRecord(value);
     if (model === undefined || (model.id === undefined && model.modelId === undefined)) return [];
-    return [row(String(model.id ?? model.modelId ?? index), String(model.displayName ?? model.id ?? index), String(model.providerId ?? ""), "model")];
+    return [
+      row(
+        String(model.id ?? model.modelId ?? index),
+        String(model.displayName ?? model.id ?? index),
+        String(model.providerId ?? ""),
+        "model",
+      ),
+    ];
   });
-  if (list.length > 0 && rows.length === 0) return failedReadback("Models read failed: invalid response", token);
+  if (list.length > 0 && rows.length === 0)
+    return failedReadback("Models read failed: invalid response", token);
   return okRows(rows, token);
 };
 const parseRouterConfig = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
-  if (record === undefined) return failedReadback("Router config read failed: invalid response", token);
+  if (record === undefined)
+    return failedReadback("Router config read failed: invalid response", token);
   const rows: ReadbackRow[] = [];
   const persisted = asRecord(record.persisted);
-  if (persisted?.strategy !== undefined) rows.push(row("strategy", "Routing strategy", String(persisted.strategy), "persisted"));
-  if (persisted?.executionMode !== undefined) rows.push(row("executionMode", "Execution mode", String(persisted.executionMode), "persisted"));
+  if (persisted?.strategy !== undefined)
+    rows.push(row("strategy", "Routing strategy", String(persisted.strategy), "persisted"));
+  if (persisted?.executionMode !== undefined)
+    rows.push(row("executionMode", "Execution mode", String(persisted.executionMode), "persisted"));
   const routing = asRecord(record.routing);
   if (routing !== undefined) {
     for (const [key, value] of Object.entries(routing)) {
-      if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") rows.push(row("routing." + key, "Routing posture: " + key, String(value), "routing"));
-      else if (key === "weights" && value !== null && typeof value === "object") rows.push(row("routing.weights", "Routing posture: weights", "custom", JSON.stringify(value)));
+      if (typeof value === "string" || typeof value === "number" || typeof value === "boolean")
+        rows.push(row(`routing.${key}`, `Routing posture: ${key}`, String(value), "routing"));
+      else if (key === "weights" && value !== null && typeof value === "object")
+        rows.push(
+          row("routing.weights", "Routing posture: weights", "custom", JSON.stringify(value)),
+        );
     }
   }
   for (const kind of ["agentStrategies", "workloads"] as const) {
@@ -868,44 +1074,89 @@ const parseRouterConfig = (body: unknown, token: number): ReadbackState => {
       const entry = asRecord(value);
       if (entry === undefined) continue;
       const name = String(entry.name ?? kind);
-      const detail = [entry.routingMode, entry.scoringStrategy].filter((part) => typeof part === "string" && part.length > 0).join(" / ");
-      rows.push(row(prefix + name, (kind === "agentStrategies" ? "Agent strategy: " : "Workload: ") + name, detail, "posture"));
+      const detail = [entry.routingMode, entry.scoringStrategy]
+        .filter((part) => typeof part === "string" && part.length > 0)
+        .join(" / ");
+      rows.push(
+        row(
+          prefix + name,
+          (kind === "agentStrategies" ? "Agent strategy: " : "Workload: ") + name,
+          detail,
+          "posture",
+        ),
+      );
     }
   }
   const diagnostics = asRecord(record.postureDiagnostics);
-  if (rows.length === 0 && persisted === undefined && routing === undefined && record.agentStrategies === undefined && record.workloads === undefined) {
+  if (
+    rows.length === 0 &&
+    persisted === undefined &&
+    routing === undefined &&
+    record.agentStrategies === undefined &&
+    record.workloads === undefined
+  ) {
     return failedReadback("Router config read failed: invalid response", token);
   }
   const violations = asArray(diagnostics?.violations);
   for (const [index, value] of violations.entries()) {
     const violation = asRecord(value);
-    rows.push(row("diagnostics.violation." + String(index), "Posture violation", String(violation?.message ?? value), "diagnostics"));
+    rows.push(
+      row(
+        `diagnostics.violation.${String(index)}`,
+        "Posture violation",
+        String(violation?.message ?? value),
+        "diagnostics",
+      ),
+    );
   }
   return okRows(rows, token);
 };
 const parseRuntimeConfig = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
-  if (record === undefined || !("config" in record)) return failedReadback("Runtime config read failed: invalid response", token);
+  if (record === undefined || !("config" in record))
+    return failedReadback("Runtime config read failed: invalid response", token);
   const config = record.config === null ? {} : asRecord(record.config);
-  if (config === undefined) return failedReadback("Runtime config read failed: invalid response", token);
+  if (config === undefined)
+    return failedReadback("Runtime config read failed: invalid response", token);
   const replay = asRecord(config.replay);
   const autoQueue = asRecord(replay?.autoQueue) ?? asRecord(replay?.auto_queue);
   const enabled = autoQueue?.enabled === undefined ? true : autoQueue.enabled === true;
   const rawCap = Number(autoQueue?.dailyCap ?? autoQueue?.daily_cap);
   const dailyCap = Number.isInteger(rawCap) && rawCap >= 1 && rawCap <= 1_000_000 ? rawCap : 100;
-  return okRows([
-    row("runtimeConfig", "Runtime config", JSON.stringify(config, null, 2), JSON.stringify({ applied: record.applied === true, config, path: record.path === undefined ? null : String(record.path) })),
-    row("replay.autoQueue", "Replay auto-queue", enabled ? "on" : "off", JSON.stringify({ dailyCap, enabled })),
-  ], token);
+  return okRows(
+    [
+      row(
+        "runtimeConfig",
+        "Runtime config",
+        JSON.stringify(config, null, 2),
+        JSON.stringify({
+          applied: record.applied === true,
+          config,
+          path: record.path === undefined ? null : String(record.path),
+        }),
+      ),
+      row(
+        "replay.autoQueue",
+        "Replay auto-queue",
+        enabled ? "on" : "off",
+        JSON.stringify({ dailyCap, enabled }),
+      ),
+    ],
+    token,
+  );
 };
 /** Test-only typed entry to the same parser; the readback client still passes its unknown JSON body. */
-export const parseRuntimeConfigFixture = (body: { readonly applied?: unknown; readonly config?: unknown; readonly path?: unknown }, token: number): ReadbackState =>
-  parseRuntimeConfig(body, token);
+export const parseRuntimeConfigFixture = (
+  body: { readonly applied?: unknown; readonly config?: unknown; readonly path?: unknown },
+  token: number,
+): ReadbackState => parseRuntimeConfig(body, token);
 const parseRuntimeSummary = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
-  if (record === undefined) return failedReadback("Runtime summary read failed: invalid response", token);
+  if (record === undefined)
+    return failedReadback("Runtime summary read failed: invalid response", token);
   const runtime = asRecord(record.runtime);
-  if (runtime === undefined || typeof record.endpointCount !== "number") return failedReadback("Runtime summary read failed: invalid response", token);
+  if (runtime === undefined || typeof record.endpointCount !== "number")
+    return failedReadback("Runtime summary read failed: invalid response", token);
   const rows = [
     row("endpoint", "Endpoint", String(runtime?.endpoint ?? "—"), String(runtime?.channel ?? "")),
     row("endpointCount", "Endpoints", String(record.endpointCount ?? "—"), "runtime"),
@@ -932,44 +1183,83 @@ const parseBenchmarkSuite = (body: unknown, token: number): ReadbackState => {
   const rows = list.flatMap((value, index) => {
     const item = asRecord(value);
     if (item === undefined) return [];
-    return [row(String(item.case_id ?? index), String(item.case_id ?? index), String(item.difficulty_bucket ?? ""), JSON.stringify({
-      benchmarkEligible: item.benchmark_eligible === true,
-      category: String(item.category ?? ""),
-      difficulty: String(item.difficulty_bucket ?? ""),
-      quickBenchmark: item.quick_benchmark === true,
-    }))];
+    return [
+      row(
+        String(item.case_id ?? index),
+        String(item.case_id ?? index),
+        String(item.difficulty_bucket ?? ""),
+        JSON.stringify({
+          benchmarkEligible: item.benchmark_eligible === true,
+          category: String(item.category ?? ""),
+          difficulty: String(item.difficulty_bucket ?? ""),
+          quickBenchmark: item.quick_benchmark === true,
+        }),
+      ),
+    ];
   });
   return okRows(rows, token);
 };
 const parseBenchmarkSummary = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
-  if (record === undefined) return failedReadback("Benchmark summary read failed: invalid response", token);
-  const header = row("summary", "Benchmark summary", String(record.mode ?? ""), JSON.stringify({
-    completedAtMs: record.completedAtMs ?? null,
-    judgeEndpointId: record.judgeEndpointId ?? null,
-    judgeModelId: record.judgeModelId ?? null,
-    mode: record.mode ?? null,
-    caseAudits: record.caseAudits ?? [],
-    runId: record.runId ?? null,
-    suiteId: record.suiteId ?? null,
-  }));
+  if (record === undefined)
+    return failedReadback("Benchmark summary read failed: invalid response", token);
+  const header = row(
+    "summary",
+    "Benchmark summary",
+    String(record.mode ?? ""),
+    JSON.stringify({
+      completedAtMs: record.completedAtMs ?? null,
+      judgeEndpointId: record.judgeEndpointId ?? null,
+      judgeModelId: record.judgeModelId ?? null,
+      mode: record.mode ?? null,
+      caseAudits: record.caseAudits ?? [],
+      runId: record.runId ?? null,
+      suiteId: record.suiteId ?? null,
+    }),
+  );
   const subjects = asArray(record.subjects).flatMap((value) => {
     const subject = asRecord(value);
     if (subject === undefined) return [];
-    return [row(String(subject.endpointId ?? ""), String(subject.displayName ?? subject.modelId ?? subject.endpointId ?? ""), String(subject.overallScore ?? ""), JSON.stringify(subject))];
+    return [
+      row(
+        String(subject.endpointId ?? ""),
+        String(subject.displayName ?? subject.modelId ?? subject.endpointId ?? ""),
+        String(subject.overallScore ?? ""),
+        JSON.stringify(subject),
+      ),
+    ];
   });
   return okRows([header, ...subjects], token);
 };
 const parseBenchmarkPreferences = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
-  if (record === undefined) return failedReadback("Benchmark preferences read failed: invalid response", token);
-  return { rows: [row("preferences", "Benchmark preferences", String(record.judgeEndpointId ?? ""), JSON.stringify(record))], status: "ok", token };
+  if (record === undefined)
+    return failedReadback("Benchmark preferences read failed: invalid response", token);
+  return {
+    rows: [
+      row(
+        "preferences",
+        "Benchmark preferences",
+        String(record.judgeEndpointId ?? ""),
+        JSON.stringify(record),
+      ),
+    ],
+    status: "ok",
+    token,
+  };
 };
 
 const parseBenchmarkActiveRun = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
-  if (record === undefined || record.status !== "running") return { rows: [], status: "empty", token };
-  return { rows: [row("active-run", "Active benchmark run", String(record.runId ?? ""), JSON.stringify(record))], status: "ok", token };
+  if (record === undefined || record.status !== "running")
+    return { rows: [], status: "empty", token };
+  return {
+    rows: [
+      row("active-run", "Active benchmark run", String(record.runId ?? ""), JSON.stringify(record)),
+    ],
+    status: "ok",
+    token,
+  };
 };
 
 const parseBenchmarkRuns = (body: unknown, token: number): ReadbackState => {
@@ -977,15 +1267,28 @@ const parseBenchmarkRuns = (body: unknown, token: number): ReadbackState => {
   const rows = list.flatMap((value, index) => {
     const entry = asRecord(value);
     if (entry === undefined) return [];
-    return [row(String(entry.runId ?? index), String(entry.mode ?? ""), String(entry.caseCount ?? ""), JSON.stringify(entry))];
+    return [
+      row(
+        String(entry.runId ?? index),
+        String(entry.mode ?? ""),
+        String(entry.caseCount ?? ""),
+        JSON.stringify(entry),
+      ),
+    ];
   });
   if (rows.length === 0) return { rows: [], status: "empty", token };
   return okRows(rows, token);
 };
 const parseStorageRetention = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
-  if (record === undefined) return failedReadback("Storage retention read failed: invalid response", token);
-  if (record.totalCount === 0 && asArray(record.categories).length === 0 && asArray(record.receipts).length === 0) return { rows: [], status: "empty", token };
+  if (record === undefined)
+    return failedReadback("Storage retention read failed: invalid response", token);
+  if (
+    record.totalCount === 0 &&
+    asArray(record.categories).length === 0 &&
+    asArray(record.receipts).length === 0
+  )
+    return { rows: [], status: "empty", token };
   const rows = [
     row("totalBytes", "Total bytes", String(record.totalBytes ?? "—"), "retention"),
     row("totalCount", "Total rows", String(record.totalCount ?? "—"), "retention"),
@@ -1004,7 +1307,12 @@ const parseObservationDetail = (body: unknown, token: number): ReadbackState => 
   const rows = [
     row("request", "Request", String(record.requestId ?? "—"), "requestId"),
     row("decision", "Decision", String(record.routingDecisionId ?? "—"), "routingDecisionId"),
-    row("endpoint", "Endpoint", String(record.endpointId ?? record.selectedEndpointId ?? "—"), "endpoint"),
+    row(
+      "endpoint",
+      "Endpoint",
+      String(record.endpointId ?? record.selectedEndpointId ?? "—"),
+      "endpoint",
+    ),
     row("status", "Status", String(record.statusFamily ?? record.status ?? "—"), "status"),
   ];
   return okRows(rows, token);
@@ -1015,7 +1323,14 @@ const parseProviderCatalog = (body: unknown, token: number): ReadbackState => {
   const rows = list.flatMap((value, index) => {
     const entry = asRecord(value);
     if (entry === undefined || typeof entry.providerId !== "string") return [];
-    return [row("provider:" + String(index), typeof entry.displayName === "string" ? entry.displayName : entry.providerId, typeof entry.providerKind === "string" ? entry.providerKind : "", JSON.stringify(entry))];
+    return [
+      row(
+        `provider:${String(index)}`,
+        typeof entry.displayName === "string" ? entry.displayName : entry.providerId,
+        typeof entry.providerKind === "string" ? entry.providerKind : "",
+        JSON.stringify(entry),
+      ),
+    ];
   });
   return okRows(rows, token);
 };
@@ -1025,7 +1340,14 @@ const parseProviderAccounts = (body: unknown, token: number): ReadbackState => {
   const rows = list.flatMap((value, index) => {
     const entry = asRecord(value);
     if (entry === undefined || typeof entry.providerAccountId !== "string") return [];
-    return [row("account:" + String(index), entry.providerAccountId, typeof entry.providerKind === "string" ? entry.providerKind : "", JSON.stringify(entry))];
+    return [
+      row(
+        `account:${String(index)}`,
+        entry.providerAccountId,
+        typeof entry.providerKind === "string" ? entry.providerKind : "",
+        JSON.stringify(entry),
+      ),
+    ];
   });
   return okRows(rows, token);
 };
@@ -1039,12 +1361,14 @@ const parseRolePolicy = (body: unknown, token: number): ReadbackState => {
   }
   if (roles.length === 0 && tasks.length === 0) return { rows: [], status: "empty", token };
   return {
-    rows: [row(
-      "role-policy",
-      "Runtime role policy",
-      String(roles.length) + " roles · " + String(tasks.length) + " tasks",
-      JSON.stringify({ roleDefinitions: roles, taskDefinitions: tasks }),
-    )],
+    rows: [
+      row(
+        "role-policy",
+        "Runtime role policy",
+        `${String(roles.length)} roles · ${String(tasks.length)} tasks`,
+        JSON.stringify({ roleDefinitions: roles, taskDefinitions: tasks }),
+      ),
+    ],
     status: "ok",
     token,
   };
@@ -1055,7 +1379,14 @@ const parseRoles = (body: unknown, token: number): ReadbackState => {
   const rows = list.flatMap((value, index) => {
     const entry = asRecord(value);
     if (entry === undefined || typeof entry.roleId !== "string") return [];
-    return [row("role:" + String(index), typeof entry.label === "string" ? entry.label : entry.roleId, entry.roleId, JSON.stringify(entry))];
+    return [
+      row(
+        `role:${String(index)}`,
+        typeof entry.label === "string" ? entry.label : entry.roleId,
+        entry.roleId,
+        JSON.stringify(entry),
+      ),
+    ];
   });
   return okRows(rows, token);
 };
@@ -1096,7 +1427,8 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     parse: parseDashboard,
     path: READBACK_PATHS.dashboard,
     // An empty id used to produce "?windowMs=" (owner-reported malformed query). Default to one day.
-    pathFor: (windowMs) => `${READBACK_PATHS.dashboard}?windowMs=${encodeURIComponent(windowMs.length > 0 ? windowMs : "86400000")}`,
+    pathFor: (windowMs) =>
+      `${READBACK_PATHS.dashboard}?windowMs=${encodeURIComponent(windowMs.length > 0 ? windowMs : "86400000")}`,
   },
   localSwap: {
     emptyText: "No local swap events recorded yet.",
@@ -1296,12 +1628,48 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     parse: parseLearning,
     path: READBACK_PATHS.learning,
   },
-  learningConfiguration: { emptyText: "No learning configuration rows.", key: "learningConfiguration", label: "Learning configuration", parse: parseLearningFamily("Learning configuration"), path: READBACK_PATHS.learningConfiguration },
-  learningPacks: { emptyText: "No learning packs rows.", key: "learningPacks", label: "Learning packs", parse: parseLearningFamily("Learning packs"), path: READBACK_PATHS.learningPacks },
-  learningDecisions: { emptyText: "No learning decisions rows.", key: "learningDecisions", label: "Learning decisions", parse: parseLearningFamily("Learning decisions"), path: READBACK_PATHS.learningDecisions },
-  learningEvidence: { emptyText: "No learning evidence rows.", key: "learningEvidence", label: "Learning evidence", parse: parseLearningFamily("Learning evidence"), path: READBACK_PATHS.learningEvidence },
-  learningHistory: { emptyText: "No learning history rows.", key: "learningHistory", label: "Learning history", parse: parseLearningFamily("Learning history"), path: READBACK_PATHS.learningHistory },
-  localLlamaSwapModels: { emptyText: "No llama-swap models rows.", key: "localLlamaSwapModels", label: "llama-swap models", parse: parseLearningFamily("llama-swap models"), path: READBACK_PATHS.localLlamaSwapModels },
+  learningConfiguration: {
+    emptyText: "No learning configuration rows.",
+    key: "learningConfiguration",
+    label: "Learning configuration",
+    parse: parseLearningFamily("Learning configuration"),
+    path: READBACK_PATHS.learningConfiguration,
+  },
+  learningPacks: {
+    emptyText: "No learning packs rows.",
+    key: "learningPacks",
+    label: "Learning packs",
+    parse: parseLearningFamily("Learning packs"),
+    path: READBACK_PATHS.learningPacks,
+  },
+  learningDecisions: {
+    emptyText: "No learning decisions rows.",
+    key: "learningDecisions",
+    label: "Learning decisions",
+    parse: parseLearningFamily("Learning decisions"),
+    path: READBACK_PATHS.learningDecisions,
+  },
+  learningEvidence: {
+    emptyText: "No learning evidence rows.",
+    key: "learningEvidence",
+    label: "Learning evidence",
+    parse: parseLearningFamily("Learning evidence"),
+    path: READBACK_PATHS.learningEvidence,
+  },
+  learningHistory: {
+    emptyText: "No learning history rows.",
+    key: "learningHistory",
+    label: "Learning history",
+    parse: parseLearningFamily("Learning history"),
+    path: READBACK_PATHS.learningHistory,
+  },
+  localLlamaSwapModels: {
+    emptyText: "No llama-swap models rows.",
+    key: "localLlamaSwapModels",
+    label: "llama-swap models",
+    parse: parseLearningFamily("llama-swap models"),
+    path: READBACK_PATHS.localLlamaSwapModels,
+  },
   localPolicy: {
     emptyText: "No local policy configured. Save a policy to see it here.",
     key: "localPolicy",
@@ -1310,14 +1678,62 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     parse: (body, token) => parseLocalPolicy(body as LearningPayloadJson, token),
     path: READBACK_PATHS.localPolicy,
   },
-  operatorStatus: { emptyText: "No operator status rows.", key: "operatorStatus", label: "Operator status", parse: parseLearningFamily("Operator status"), path: READBACK_PATHS.operatorStatus },
-  operatorTraceRoots: { emptyText: "No operator trace-root rows.", key: "operatorTraceRoots", label: "Operator trace roots", parse: parseLearningFamily("Operator trace roots"), path: READBACK_PATHS.operatorTraceRoots },
-  learningProfile: { emptyText: "No learning profile rows.", key: "learningProfile", label: "Learning profile", parse: parseLearningFamily("Learning profile"), path: READBACK_PATHS.learningProfile },
-  learningAdvisory: { emptyText: "No learning advisory rows.", key: "learningAdvisory", label: "Learning advisory", parse: parseLearningFamily("Learning advisory"), path: READBACK_PATHS.learningAdvisory },
-  contribution: { emptyText: "No contribution policy rows.", key: "contribution", label: "Contribution policy", parse: parseLearningFamily("Contribution policy"), path: READBACK_PATHS.contribution },
-  recommendations: { emptyText: "No recommendation rows.", key: "recommendations", label: "Recommendations", parse: parseLearningFamily("Recommendations"), path: READBACK_PATHS.recommendations },
-  replayAutomation: { emptyText: "No replay automation rows.", key: "replayAutomation", label: "Replay automation", parse: parseLearningFamily("Replay automation"), path: READBACK_PATHS.replayAutomation },
-  extensions: { emptyText: "No extension rows.", key: "extensions", label: "Extensions", parse: parseLearningFamily("Extensions"), path: READBACK_PATHS.extensions },
+  operatorStatus: {
+    emptyText: "No operator status rows.",
+    key: "operatorStatus",
+    label: "Operator status",
+    parse: parseLearningFamily("Operator status"),
+    path: READBACK_PATHS.operatorStatus,
+  },
+  operatorTraceRoots: {
+    emptyText: "No operator trace-root rows.",
+    key: "operatorTraceRoots",
+    label: "Operator trace roots",
+    parse: parseLearningFamily("Operator trace roots"),
+    path: READBACK_PATHS.operatorTraceRoots,
+  },
+  learningProfile: {
+    emptyText: "No learning profile rows.",
+    key: "learningProfile",
+    label: "Learning profile",
+    parse: parseLearningFamily("Learning profile"),
+    path: READBACK_PATHS.learningProfile,
+  },
+  learningAdvisory: {
+    emptyText: "No learning advisory rows.",
+    key: "learningAdvisory",
+    label: "Learning advisory",
+    parse: parseLearningFamily("Learning advisory"),
+    path: READBACK_PATHS.learningAdvisory,
+  },
+  contribution: {
+    emptyText: "No contribution policy rows.",
+    key: "contribution",
+    label: "Contribution policy",
+    parse: parseLearningFamily("Contribution policy"),
+    path: READBACK_PATHS.contribution,
+  },
+  recommendations: {
+    emptyText: "No recommendation rows.",
+    key: "recommendations",
+    label: "Recommendations",
+    parse: parseLearningFamily("Recommendations"),
+    path: READBACK_PATHS.recommendations,
+  },
+  replayAutomation: {
+    emptyText: "No replay automation rows.",
+    key: "replayAutomation",
+    label: "Replay automation",
+    parse: parseLearningFamily("Replay automation"),
+    path: READBACK_PATHS.replayAutomation,
+  },
+  extensions: {
+    emptyText: "No extension rows.",
+    key: "extensions",
+    label: "Extensions",
+    parse: parseLearningFamily("Extensions"),
+    path: READBACK_PATHS.extensions,
+  },
   replayJobs: {
     emptyText: "No replay jobs.",
     key: "replayJobs",
@@ -1338,7 +1754,8 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     label: "Overview metrics",
     parse: parseOverviewMetrics,
     path: READBACK_PATHS.overviewMetrics,
-    pathFor: (windowMs) => `${READBACK_PATHS.overviewMetrics}?windowMs=${encodeURIComponent(windowMs.length > 0 ? windowMs : "86400000")}`,
+    pathFor: (windowMs) =>
+      `${READBACK_PATHS.overviewMetrics}?windowMs=${encodeURIComponent(windowMs.length > 0 ? windowMs : "86400000")}`,
   },
   requests: {
     emptyText: "No telemetry requests recorded yet.",
@@ -1459,7 +1876,7 @@ export const createReadbackClients = (
     routerDecisions: client(READBACK_SPECS.routerDecisions),
     runtime: client(READBACK_SPECS.runtime),
     runtimeConfig: client(READBACK_SPECS.runtimeConfig),
-  routerConfig: client(READBACK_SPECS.routerConfig),
+    routerConfig: client(READBACK_SPECS.routerConfig),
     sessionReadiness: client(READBACK_SPECS.sessionReadiness),
     storeReceipts: client(READBACK_SPECS.storeReceipts),
     requestDetail: client(READBACK_SPECS.requestDetail),
@@ -1468,13 +1885,13 @@ export const createReadbackClients = (
     queueConfig: client(READBACK_SPECS.queueConfig),
     downstreamOpenAI: client(READBACK_SPECS.downstreamOpenAI),
     integrationProviders: client(READBACK_SPECS.integrationProviders),
-  providerCatalog: client(READBACK_SPECS.providerCatalog),
-  providerAccounts: client(READBACK_SPECS.providerAccounts),
-  roles: client(READBACK_SPECS.roles),
-  rolePolicy: client(READBACK_SPECS.rolePolicy),
+    providerCatalog: client(READBACK_SPECS.providerCatalog),
+    providerAccounts: client(READBACK_SPECS.providerAccounts),
+    roles: client(READBACK_SPECS.roles),
+    rolePolicy: client(READBACK_SPECS.rolePolicy),
     benchmarkSuite: client(READBACK_SPECS.benchmarkSuite),
-  benchmarkPreferences: client(READBACK_SPECS.benchmarkPreferences),
-  benchmarkActiveRun: client(READBACK_SPECS.benchmarkActiveRun),
+    benchmarkPreferences: client(READBACK_SPECS.benchmarkPreferences),
+    benchmarkActiveRun: client(READBACK_SPECS.benchmarkActiveRun),
     benchmarkSummary: client(READBACK_SPECS.benchmarkSummary),
     benchmarkRuns: client(READBACK_SPECS.benchmarkRuns),
     storageRetention: client(READBACK_SPECS.storageRetention),
@@ -1482,21 +1899,21 @@ export const createReadbackClients = (
     runtimeSummary: client(READBACK_SPECS.runtimeSummary),
     health: client(READBACK_SPECS.health),
     learning: client(READBACK_SPECS.learning),
-  learningConfiguration: client(READBACK_SPECS.learningConfiguration),
-  learningPacks: client(READBACK_SPECS.learningPacks),
-  learningDecisions: client(READBACK_SPECS.learningDecisions),
-  learningEvidence: client(READBACK_SPECS.learningEvidence),
-  learningHistory: client(READBACK_SPECS.learningHistory),
-  localLlamaSwapModels: client(READBACK_SPECS.localLlamaSwapModels),
-  localPolicy: client(READBACK_SPECS.localPolicy),
-  operatorStatus: client(READBACK_SPECS.operatorStatus),
-  operatorTraceRoots: client(READBACK_SPECS.operatorTraceRoots),
-  learningProfile: client(READBACK_SPECS.learningProfile),
-  learningAdvisory: client(READBACK_SPECS.learningAdvisory),
-  contribution: client(READBACK_SPECS.contribution),
-  recommendations: client(READBACK_SPECS.recommendations),
-  replayAutomation: client(READBACK_SPECS.replayAutomation),
-  extensions: client(READBACK_SPECS.extensions),
+    learningConfiguration: client(READBACK_SPECS.learningConfiguration),
+    learningPacks: client(READBACK_SPECS.learningPacks),
+    learningDecisions: client(READBACK_SPECS.learningDecisions),
+    learningEvidence: client(READBACK_SPECS.learningEvidence),
+    learningHistory: client(READBACK_SPECS.learningHistory),
+    localLlamaSwapModels: client(READBACK_SPECS.localLlamaSwapModels),
+    localPolicy: client(READBACK_SPECS.localPolicy),
+    operatorStatus: client(READBACK_SPECS.operatorStatus),
+    operatorTraceRoots: client(READBACK_SPECS.operatorTraceRoots),
+    learningProfile: client(READBACK_SPECS.learningProfile),
+    learningAdvisory: client(READBACK_SPECS.learningAdvisory),
+    contribution: client(READBACK_SPECS.contribution),
+    recommendations: client(READBACK_SPECS.recommendations),
+    replayAutomation: client(READBACK_SPECS.replayAutomation),
+    extensions: client(READBACK_SPECS.extensions),
     configuredModels: client(READBACK_SPECS.configuredModels),
     modelEndpoints: client(READBACK_SPECS.modelEndpoints),
     replayJobs: client(READBACK_SPECS.replayJobs),
@@ -1576,8 +1993,24 @@ export const renderReadbackPage = (
                   ],
                   [
                     h.span([h.Class("break-all font-mono text-[var(--rm-fg)]")], [item.label]),
-                    h.span([h.Class("ml-auto min-w-0 max-w-full break-words text-right font-medium text-[var(--rm-fg)]"), h.Title(item.value)], [item.value]),
-                    h.span([h.Class("min-w-0 max-w-full break-words text-[11px] text-[var(--rm-secondary)]"), h.Title(item.meta)], [item.meta]),
+                    h.span(
+                      [
+                        h.Class(
+                          "ml-auto min-w-0 max-w-full break-words text-right font-medium text-[var(--rm-fg)]",
+                        ),
+                        h.Title(item.value),
+                      ],
+                      [item.value],
+                    ),
+                    h.span(
+                      [
+                        h.Class(
+                          "min-w-0 max-w-full break-words text-[11px] text-[var(--rm-secondary)]",
+                        ),
+                        h.Title(item.meta),
+                      ],
+                      [item.meta],
+                    ),
                   ],
                 ),
               ),
@@ -1597,86 +2030,94 @@ export const readbackKeyForRouteTag = (tag: string): ReadbackKey | null =>
   tag === "RuntimeConfig"
     ? "runtimeConfig"
     : tag === "LocalPolicy"
-    ? "localPolicy"
-    : tag === "LearningConfiguration"
-    ? "learningConfiguration"
-    : tag === "LearningPacks"
-      ? "learningPacks"
-      : tag === "LearningDecisions"
-        ? "learningDecisions"
-        : tag === "LearningEvidence"
-          ? "learningEvidence"
-          : tag === "LearningHistory"
-            ? "learningHistory"
-            : tag === "LocalLlamaSwapModels"
-              ? "localLlamaSwapModels"
-              : tag === "SystemExtensions"
-                ? "extensions"
-                : tag === "ModelsRoles"
-                  ? "configuredModels"
-                  : tag === "SystemOperator"
-                    ? "operatorStatus"
-    :  tag === "RouterStrategy" || tag === "RouterWorkloads" || tag === "RouterConfig" || tag === "RouterAgentStrategy"
-    ? "routerConfig"
-    :
-  tag === "StoreReceipts"
-    ? "storeReceipts"
-    : tag === "Queues"
-      ? "queues"
-      : tag === "LocalLogs"
-        ? "localLogs"
-        : tag === "RouterCandidates"
-          ? "routerCandidates"
-          : tag === "Requests"
-            ? "requests"
-            : tag === "RouterDecisions"
-              ? "routerDecisions"
-              : tag === "LocalPeers"
-                ? "localPeers"
-                : tag === "SystemPeers"
-                  ? "systemPeers"
-                  : tag === "Runtime"
-                    ? "runtime"
-                    : tag === "SessionReadiness"
-                      ? "sessionReadiness"
-                      : tag === "Index"
-                        ? "overviewMetrics"
-                        : tag === "Models"
-                        ? "configuredModels"
-                        : tag === "Providers"
-                        ? "integrationProviders"
-                        : tag === "Endpoints"
-                        ? "modelEndpoints"
-                        : tag === "Learning"
-                        ? "learning"
-                        : tag === "Dashboard"
-                          ? "dashboard"
-                        : tag === "LocalSwap"
-                          ? "localSwap"
-                          : tag === "ObserveActivity"
-                            ? "observeActivity"
-                            : tag === "ObserveLogs"
-                              ? "observeLogs"
-                              : tag === "ObserveRouting"
-                                ? "observeRouting"
-                                : tag === "Router"
-                                  ? "router"
-                                  : tag === "RequestDetail"
-                                    ? "requestDetail"
-                                    : tag === "RouterDecisionDetail"
-                                      ? "routerDecisionDetail"
-                                      : tag === "LocalPeerModels"
-                                        ? "localPeerModels"
-                                        : tag === "QueuesConfiguration"
-                                          ? "queueConfig"
-                                          : tag === "IntegrationsDownstream"
-                                            ? "downstreamOpenAI"
-                                            : tag === "IntegrationsUpstream"
-                                              ? "integrationProviders"
-                                              : tag === "Benchmark"
-                                                ? "benchmarkSuite"
-                                                : tag === "StorageRetention"
-                                                  ? "storageRetention"
-                                              : null;
+      ? "localPolicy"
+      : tag === "LearningConfiguration"
+        ? "learningConfiguration"
+        : tag === "LearningPacks"
+          ? "learningPacks"
+          : tag === "LearningDecisions"
+            ? "learningDecisions"
+            : tag === "LearningEvidence"
+              ? "learningEvidence"
+              : tag === "LearningHistory"
+                ? "learningHistory"
+                : tag === "LocalLlamaSwapModels"
+                  ? "localLlamaSwapModels"
+                  : tag === "SystemExtensions"
+                    ? "extensions"
+                    : tag === "ModelsRoles"
+                      ? "configuredModels"
+                      : tag === "SystemOperator"
+                        ? "operatorStatus"
+                        : tag === "RouterStrategy" ||
+                            tag === "RouterWorkloads" ||
+                            tag === "RouterConfig" ||
+                            tag === "RouterAgentStrategy"
+                          ? "routerConfig"
+                          : tag === "StoreReceipts"
+                            ? "storeReceipts"
+                            : tag === "Queues"
+                              ? "queues"
+                              : tag === "LocalLogs"
+                                ? "localLogs"
+                                : tag === "RouterCandidates"
+                                  ? "routerCandidates"
+                                  : tag === "Requests"
+                                    ? "requests"
+                                    : tag === "RouterDecisions"
+                                      ? "routerDecisions"
+                                      : tag === "LocalPeers"
+                                        ? "localPeers"
+                                        : tag === "SystemPeers"
+                                          ? "systemPeers"
+                                          : tag === "Runtime"
+                                            ? "runtime"
+                                            : tag === "SessionReadiness"
+                                              ? "sessionReadiness"
+                                              : tag === "Index"
+                                                ? "overviewMetrics"
+                                                : tag === "Models"
+                                                  ? "configuredModels"
+                                                  : tag === "Providers"
+                                                    ? "integrationProviders"
+                                                    : tag === "Endpoints"
+                                                      ? "modelEndpoints"
+                                                      : tag === "Learning"
+                                                        ? "learning"
+                                                        : tag === "Dashboard"
+                                                          ? "dashboard"
+                                                          : tag === "LocalSwap"
+                                                            ? "localSwap"
+                                                            : tag === "ObserveActivity"
+                                                              ? "observeActivity"
+                                                              : tag === "ObserveLogs"
+                                                                ? "observeLogs"
+                                                                : tag === "ObserveRouting"
+                                                                  ? "observeRouting"
+                                                                  : tag === "Router"
+                                                                    ? "router"
+                                                                    : tag === "RequestDetail"
+                                                                      ? "requestDetail"
+                                                                      : tag ===
+                                                                          "RouterDecisionDetail"
+                                                                        ? "routerDecisionDetail"
+                                                                        : tag === "LocalPeerModels"
+                                                                          ? "localPeerModels"
+                                                                          : tag ===
+                                                                              "QueuesConfiguration"
+                                                                            ? "queueConfig"
+                                                                            : tag ===
+                                                                                "IntegrationsDownstream"
+                                                                              ? "downstreamOpenAI"
+                                                                              : tag ===
+                                                                                  "IntegrationsUpstream"
+                                                                                ? "integrationProviders"
+                                                                                : tag ===
+                                                                                    "Benchmark"
+                                                                                  ? "benchmarkSuite"
+                                                                                  : tag ===
+                                                                                      "StorageRetention"
+                                                                                    ? "storageRetention"
+                                                                                    : null;
 export const parseReadbackFixture = (key: ReadbackKey, body: unknown, token = 1): ReadbackState =>
   READBACK_SPECS[key].parse(body, token);

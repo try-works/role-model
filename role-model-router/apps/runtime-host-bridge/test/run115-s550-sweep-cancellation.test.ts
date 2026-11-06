@@ -13,8 +13,12 @@ interface SweepInput {
 }
 
 const baseOperations = () => ({
-  async listPendingReplayCaptures() { return { pending: [], pendingCount: 0 }; },
-  async recordReplayDisposition() { return { recorded: true }; },
+  async listPendingReplayCaptures() {
+    return { pending: [], pendingCount: 0 };
+  },
+  async recordReplayDisposition() {
+    return { recorded: true };
+  },
 });
 
 test("run115 s550 every production sweep body receives the loop abort signal", async () => {
@@ -29,11 +33,21 @@ test("run115 s550 every production sweep body receives the loop abort signal", a
     const loop = startAutoReplayLoop({
       operations: {
         ...baseOperations(),
-        async resumePendingEvaluations(input: SweepInput) { return record(input); },
-        async sweepFinalizationSignals(input: SweepInput) { return record(input); },
-        async learnFromUnconsumedCandidates(input: SweepInput) { return record(input); },
-        async deriveLearnerCandidates(input: SweepInput) { return record(input); },
-        async recoverHandedOffEvaluations(input: SweepInput) { return record(input); },
+        async resumePendingEvaluations(input: SweepInput) {
+          return record(input);
+        },
+        async sweepFinalizationSignals(input: SweepInput) {
+          return record(input);
+        },
+        async learnFromUnconsumedCandidates(input: SweepInput) {
+          return record(input);
+        },
+        async deriveLearnerCandidates(input: SweepInput) {
+          return record(input);
+        },
+        async recoverHandedOffEvaluations(input: SweepInput) {
+          return record(input);
+        },
       },
       ledger: createReplayLedger({ filePath: path.join(dir, "ledger.json") }),
       policySet: buildReplayPolicySet(),
@@ -77,7 +91,9 @@ test("run115 s550 a wedged sweep is aborted by stop instead of holding the tick 
     loop.stop();
     const outcome = await Promise.race([
       tick.then((result) => ({ status: "settled" as const, result })),
-      new Promise<{ status: "hung" }>((resolve) => setTimeout(() => resolve({ status: "hung" }), 500)),
+      new Promise<{ status: "hung" }>((resolve) =>
+        setTimeout(() => resolve({ status: "hung" }), 500),
+      ),
     ]);
     expect(outcome.status).toBe("settled");
     if (outcome.status !== "settled") throw new Error("wedged tick did not settle");

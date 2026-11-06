@@ -1,6 +1,6 @@
-import { Effect, Exit, Layer, Scope } from "effect";
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { Effect, Exit, Layer, Scope } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { composeReadinessOwner } from "../src/composition-dag.js";
@@ -23,11 +23,28 @@ describe("S603 CLI DAG nodes for remaining resources", () => {
     const layer = composeR27HostLayer({
       events,
       readiness: composeReadinessOwner(),
-      onHost: (value) => { host = value; },
+      onHost: (value) => {
+        host = value;
+      },
       acquire: {
-        bootstrap: async () => ({ handle: { kind: "bootstrap" }, release: async () => { events.push("release:bootstrap-handle"); } }),
-        drains: async () => ({ handle: { kind: "drains" }, release: async () => { events.push("release:drains-handle"); } }),
-        benchmarks: async () => ({ handle: { kind: "benchmarks" }, release: async () => { events.push("release:benchmarks-handle"); } }),
+        bootstrap: async () => ({
+          handle: { kind: "bootstrap" },
+          release: async () => {
+            events.push("release:bootstrap-handle");
+          },
+        }),
+        drains: async () => ({
+          handle: { kind: "drains" },
+          release: async () => {
+            events.push("release:drains-handle");
+          },
+        }),
+        benchmarks: async () => ({
+          handle: { kind: "benchmarks" },
+          release: async () => {
+            events.push("release:benchmarks-handle");
+          },
+        }),
       },
     });
     await Effect.runPromise(Layer.buildWithScope(layer, scope));
@@ -35,6 +52,12 @@ describe("S603 CLI DAG nodes for remaining resources", () => {
     expect(host?.handles.drains.handle).toMatchObject({ kind: "drains" });
     expect(host?.handles.benchmarks.handle).toMatchObject({ kind: "benchmarks" });
     await Effect.runPromise(Scope.close(scope, Exit.void));
-    expect(events).toEqual(expect.arrayContaining(["release:benchmarks-handle", "release:drains-handle", "release:bootstrap-handle"]));
+    expect(events).toEqual(
+      expect.arrayContaining([
+        "release:benchmarks-handle",
+        "release:drains-handle",
+        "release:bootstrap-handle",
+      ]),
+    );
   });
 });

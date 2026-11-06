@@ -20,12 +20,17 @@ test("S181: the shell offers a skip link to main content", () => {
 });
 
 test("S181: the skip link is a child of the shell, not one of its attributes", () => {
-  const shellStart = source.indexOf('h.Class("flex h-screen w-full overflow-hidden bg-background text-foreground")');
+  const shellStart = source.indexOf(
+    'h.Class("flex h-screen w-full overflow-hidden bg-background text-foreground")',
+  );
   assert.ok(shellStart > 0, "the shell div is still built as expected");
   // The shell div is h.div(<attributes>, <children>). The anchor must appear after the attribute
   // array closes, i.e. inside the children array.
   const childrenStart = source.indexOf("\n    [\n", shellStart);
   const anchorAt = source.indexOf('h.a([h.Href("#main-content")', shellStart);
   assert.ok(childrenStart > 0, "the shell still has an attributes array followed by children");
-  assert.ok(anchorAt > childrenStart, "the skip link must be a CHILD of the shell, not an attribute");
+  assert.ok(
+    anchorAt > childrenStart,
+    "the skip link must be a CHILD of the shell, not an attribute",
+  );
 });

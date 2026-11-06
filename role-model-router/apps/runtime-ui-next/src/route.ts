@@ -93,43 +93,95 @@ const localLogsRouter = Route.mapTo(AppRoute.LocalLogs)(
 const routerCandidatesRouter = Route.mapTo(AppRoute.RouterCandidates)(
   pipe(Route.literal("router"), Route.slash(Route.literal("candidates"))),
 );
-const requestDetailRouter = Route.mapTo(AppRoute.RequestDetail)(pipe(Route.literal("requests"), Route.slash(Route.string("requestId"))));
+const requestDetailRouter = Route.mapTo(AppRoute.RequestDetail)(
+  pipe(Route.literal("requests"), Route.slash(Route.string("requestId"))),
+);
 const requestsRouter = Route.mapTo(AppRoute.Requests)(Route.literal("requests"));
-const routerDecisionDetailRouter = Route.mapTo(AppRoute.RouterDecisionDetail)(pipe(Route.literal("router"), Route.slash(Route.literal("decisions")), Route.slash(Route.string("requestId"))));
+const routerDecisionDetailRouter = Route.mapTo(AppRoute.RouterDecisionDetail)(
+  pipe(
+    Route.literal("router"),
+    Route.slash(Route.literal("decisions")),
+    Route.slash(Route.string("requestId")),
+  ),
+);
 const routerDecisionsRouter = Route.mapTo(AppRoute.RouterDecisions)(
   pipe(Route.literal("router"), Route.slash(Route.literal("decisions"))),
 );
 const localPeersRouter = Route.mapTo(AppRoute.LocalPeers)(
   pipe(Route.literal("local"), Route.slash(Route.literal("peers"))),
 );
-const localPeerModelsRouter = Route.mapTo(AppRoute.LocalPeerModels)(pipe(Route.literal("local"), Route.slash(Route.literal("peer-models"))));
-const queuesConfigurationRouter = Route.mapTo(AppRoute.QueuesConfiguration)(pipe(Route.literal("control"), Route.slash(Route.literal("queues-config"))));
-const integrationsDownstreamRouter = Route.mapTo(AppRoute.IntegrationsDownstream)(pipe(Route.literal("integrations"), Route.slash(Route.literal("downstream"))));
-const integrationsUpstreamRouter = Route.mapTo(AppRoute.IntegrationsUpstream)(pipe(Route.literal("integrations"), Route.slash(Route.literal("upstream"))));
-const benchmarkRouter = Route.mapTo(AppRoute.Benchmark)(pipe(Route.literal("system"), Route.slash(Route.literal("benchmark"))));
-const storageRetentionRouter = Route.mapTo(AppRoute.StorageRetention)(pipe(Route.literal("system"), Route.slash(Route.literal("storage-retention"))));
+const localPeerModelsRouter = Route.mapTo(AppRoute.LocalPeerModels)(
+  pipe(Route.literal("local"), Route.slash(Route.literal("peer-models"))),
+);
+const queuesConfigurationRouter = Route.mapTo(AppRoute.QueuesConfiguration)(
+  pipe(Route.literal("control"), Route.slash(Route.literal("queues-config"))),
+);
+const integrationsDownstreamRouter = Route.mapTo(AppRoute.IntegrationsDownstream)(
+  pipe(Route.literal("integrations"), Route.slash(Route.literal("downstream"))),
+);
+const integrationsUpstreamRouter = Route.mapTo(AppRoute.IntegrationsUpstream)(
+  pipe(Route.literal("integrations"), Route.slash(Route.literal("upstream"))),
+);
+const benchmarkRouter = Route.mapTo(AppRoute.Benchmark)(
+  pipe(Route.literal("system"), Route.slash(Route.literal("benchmark"))),
+);
+const storageRetentionRouter = Route.mapTo(AppRoute.StorageRetention)(
+  pipe(Route.literal("system"), Route.slash(Route.literal("storage-retention"))),
+);
 const modelsRouter = Route.mapTo(AppRoute.Models)(Route.literal("models"));
 const modelsRolesRouter = Route.mapTo(AppRoute.ModelsRoles)(
   pipe(Route.literal("models"), Route.slash(Route.literal("roles"))),
 );
 const learningRouter = Route.mapTo(AppRoute.Learning)(Route.literal("learning"));
-const learningConfigurationRouter = Route.mapTo(AppRoute.LearningConfiguration)(pipe(Route.literal("learning"), Route.slash(Route.literal("configuration"))));
-const learningPacksRouter = Route.mapTo(AppRoute.LearningPacks)(pipe(Route.literal("learning"), Route.slash(Route.literal("packs"))));
-const learningDecisionsRouter = Route.mapTo(AppRoute.LearningDecisions)(pipe(Route.literal("learning"), Route.slash(Route.literal("decisions"))));
-const learningEvidenceRouter = Route.mapTo(AppRoute.LearningEvidence)(pipe(Route.literal("learning"), Route.slash(Route.literal("evidence"))));
-const localLlamaSwapModelsRouter = Route.mapTo(AppRoute.LocalLlamaSwapModels)(pipe(Route.literal("local"), Route.slash(Route.literal("llama-swap")), Route.slash(Route.literal("models"))));
-const localPolicyRouter = Route.mapTo(AppRoute.LocalPolicy)(pipe(Route.literal("local"), Route.slash(Route.literal("llama-swap")), Route.slash(Route.literal("policy"))));
-const systemOperatorRouter = Route.mapTo(AppRoute.SystemOperator)(pipe(Route.literal("system"), Route.slash(Route.literal("operator"))));
-const systemExtensionsRouter = Route.mapTo(AppRoute.SystemExtensions)(pipe(Route.literal("system"), Route.slash(Route.literal("extensions"))));
-const learningHistoryRouter = Route.mapTo(AppRoute.LearningHistory)(pipe(Route.literal("learning"), Route.slash(Route.literal("history"))));
+const learningConfigurationRouter = Route.mapTo(AppRoute.LearningConfiguration)(
+  pipe(Route.literal("learning"), Route.slash(Route.literal("configuration"))),
+);
+const learningPacksRouter = Route.mapTo(AppRoute.LearningPacks)(
+  pipe(Route.literal("learning"), Route.slash(Route.literal("packs"))),
+);
+const learningDecisionsRouter = Route.mapTo(AppRoute.LearningDecisions)(
+  pipe(Route.literal("learning"), Route.slash(Route.literal("decisions"))),
+);
+const learningEvidenceRouter = Route.mapTo(AppRoute.LearningEvidence)(
+  pipe(Route.literal("learning"), Route.slash(Route.literal("evidence"))),
+);
+const localLlamaSwapModelsRouter = Route.mapTo(AppRoute.LocalLlamaSwapModels)(
+  pipe(
+    Route.literal("local"),
+    Route.slash(Route.literal("llama-swap")),
+    Route.slash(Route.literal("models")),
+  ),
+);
+const localPolicyRouter = Route.mapTo(AppRoute.LocalPolicy)(
+  pipe(
+    Route.literal("local"),
+    Route.slash(Route.literal("llama-swap")),
+    Route.slash(Route.literal("policy")),
+  ),
+);
+const systemOperatorRouter = Route.mapTo(AppRoute.SystemOperator)(
+  pipe(Route.literal("system"), Route.slash(Route.literal("operator"))),
+);
+const systemExtensionsRouter = Route.mapTo(AppRoute.SystemExtensions)(
+  pipe(Route.literal("system"), Route.slash(Route.literal("extensions"))),
+);
+const learningHistoryRouter = Route.mapTo(AppRoute.LearningHistory)(
+  pipe(Route.literal("learning"), Route.slash(Route.literal("history"))),
+);
 const studioRouter = Route.mapTo(AppRoute.Studio)(Route.literal("studio"));
-const localChooseRouter = Route.mapTo(AppRoute.LocalChoose)(pipe(Route.literal("local"), Route.slash(Route.literal("choose"))));
-const localModelsRedirectRouter = Route.mapTo(AppRoute.LocalChoose)(pipe(Route.literal("local"), Route.slash(Route.literal("models"))));
+const localChooseRouter = Route.mapTo(AppRoute.LocalChoose)(
+  pipe(Route.literal("local"), Route.slash(Route.literal("choose"))),
+);
+const localModelsRedirectRouter = Route.mapTo(AppRoute.LocalChoose)(
+  pipe(Route.literal("local"), Route.slash(Route.literal("models"))),
+);
 const systemPeersRouter = Route.mapTo(AppRoute.SystemPeers)(
   pipe(Route.literal("system"), Route.slash(Route.literal("peers"))),
 );
 const runtimeRouter = Route.mapTo(AppRoute.Runtime)(Route.literal("runtime"));
-const runtimeConfigRouter = Route.mapTo(AppRoute.RuntimeConfig)(pipe(Route.literal("runtime"), Route.slash(Route.literal("config"))));
+const runtimeConfigRouter = Route.mapTo(AppRoute.RuntimeConfig)(
+  pipe(Route.literal("runtime"), Route.slash(Route.literal("config"))),
+);
 const sessionReadinessRouter = Route.mapTo(AppRoute.SessionReadiness)(
   Route.literal("session-readiness"),
 );
@@ -146,10 +198,18 @@ const observeLogsRouter = Route.mapTo(AppRoute.ObserveLogs)(
 const observeRoutingRouter = Route.mapTo(AppRoute.ObserveRouting)(
   pipe(Route.literal("observe"), Route.slash(Route.literal("routing"))),
 );
-const routerStrategyRouter = Route.mapTo(AppRoute.RouterStrategy)(pipe(Route.literal("router"), Route.slash(Route.literal("strategy"))));
-const routerWorkloadsRouter = Route.mapTo(AppRoute.RouterWorkloads)(pipe(Route.literal("router"), Route.slash(Route.literal("workloads"))));
-const routerConfigRouter = Route.mapTo(AppRoute.RouterConfig)(pipe(Route.literal("router"), Route.slash(Route.literal("config"))));
-const routerAgentStrategyRouter = Route.mapTo(AppRoute.RouterAgentStrategy)(pipe(Route.literal("router"), Route.slash(Route.literal("agent-strategy"))));
+const routerStrategyRouter = Route.mapTo(AppRoute.RouterStrategy)(
+  pipe(Route.literal("router"), Route.slash(Route.literal("strategy"))),
+);
+const routerWorkloadsRouter = Route.mapTo(AppRoute.RouterWorkloads)(
+  pipe(Route.literal("router"), Route.slash(Route.literal("workloads"))),
+);
+const routerConfigRouter = Route.mapTo(AppRoute.RouterConfig)(
+  pipe(Route.literal("router"), Route.slash(Route.literal("config"))),
+);
+const routerAgentStrategyRouter = Route.mapTo(AppRoute.RouterAgentStrategy)(
+  pipe(Route.literal("router"), Route.slash(Route.literal("agent-strategy"))),
+);
 const routerRouter = Route.mapTo(AppRoute.Router)(Route.literal("router"));
 const providersRouter = Route.mapTo(AppRoute.Providers)(
   pipe(Route.literal("control"), Route.slash(Route.literal("providers"))),

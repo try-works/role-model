@@ -90,7 +90,7 @@ const slugAccountSegment = (value: string): string =>
     .slice(0, 64) || "default";
 
 export const defaultProviderAccountId = (providerId: string, variantId: string): string =>
-  providerId.trim() + ".personal." + slugAccountSegment(variantId);
+  `${providerId.trim()}.personal.${slugAccountSegment(variantId)}`;
 
 export const validateDeviceAuthDraft = (draft: DeviceAuthDraft): readonly string[] => {
   const errors: string[] = [];
@@ -134,7 +134,8 @@ export const deviceAuthStartPlan = (
   if (errors.length > 0) return { errors, kind: "invalid" };
   const providerAccountId = defaultProviderAccountId(state.draft.providerId, state.draft.variantId);
   const pending = sessions.find(
-    (candidate) => candidate.providerAccountId === providerAccountId && candidate.status === "pending",
+    (candidate) =>
+      candidate.providerAccountId === providerAccountId && candidate.status === "pending",
   );
   if (pending !== undefined) return { kind: "restore", session: pending };
   return {
@@ -190,7 +191,8 @@ const positiveSeconds = (value: number | null | undefined): number | undefined =
  * readback entry carries intervalSeconds, so the host's real retry interval wins over the default.
  */
 export const deviceAuthPollDelayMs = (session: DeviceAuthSession): number => {
-  const seconds = positiveSeconds(session.retryAfterSeconds) ?? positiveSeconds(session.intervalSeconds) ?? 5;
+  const seconds =
+    positiveSeconds(session.retryAfterSeconds) ?? positiveSeconds(session.intervalSeconds) ?? 5;
   return Math.max(1_000, Math.round(seconds * 1_000));
 };
 
@@ -325,9 +327,13 @@ export const createDeviceAuthClient = (options: DeviceAuthFetchOptions = {}): De
   const headers: Record<string, string> = {
     accept: "application/json",
     "content-type": "application/json",
-    ...(options.token === undefined ? {} : { authorization: "Bearer " + options.token }),
+    ...(options.token === undefined ? {} : { authorization: `Bearer ${options.token}` }),
   };
-  const request = async (path: string, method: "GET" | "POST", body?: unknown): Promise<unknown> => {
+  const request = async (
+    path: string,
+    method: "GET" | "POST",
+    body?: unknown,
+  ): Promise<unknown> => {
     const response = await fetchImpl(base + path, {
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       headers,
@@ -336,16 +342,19 @@ export const createDeviceAuthClient = (options: DeviceAuthFetchOptions = {}): De
     const parsed: unknown = await response.json();
     if (!response.ok) {
       const record = asRecord(parsed);
-      throw new Error(String(record?.error ?? record?.message ?? "device authorization request failed"));
+      throw new Error(
+        String(record?.error ?? record?.message ?? "device authorization request failed"),
+      );
     }
     return parsed;
   };
   return {
-    activate: async (payload) =>
-      request("/api/role-model/endpoints", "POST", payload),
+    activate: async (payload) => request("/api/role-model/endpoints", "POST", payload),
     list: async () => parseList(await request("/api/role-model/accounts/device", "GET")),
     poll: async (authRequestId) =>
-      parseSession(await request("/api/role-model/accounts/device/poll", "POST", { authRequestId })),
+      parseSession(
+        await request("/api/role-model/accounts/device/poll", "POST", { authRequestId }),
+      ),
     start: async (payload) =>
       parseSession(await request("/api/role-model/accounts/device/start", "POST", payload)),
   };

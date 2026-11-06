@@ -42,8 +42,7 @@ test("every built browser entry resolves against the built effect wrapper", asyn
   assert.deepEqual(
     unexpected,
     [],
-    `every built browser entry must resolve; these imports failed (wrapper/subpath named): ` +
-      JSON.stringify(unexpected, null, 2),
+    `every built browser entry must resolve; these imports failed (wrapper/subpath named): ${JSON.stringify(unexpected, null, 2)}`,
   );
 
   assert.equal(
@@ -68,5 +67,9 @@ test("every built browser entry resolves against the built effect wrapper", asyn
     probe.total - failures.length,
     `loaded count must equal entries minus permitted non-loads: loaded=${probe.loaded} total=${probe.total}`,
   );
-  assert.equal(probe.loaded, EXPECTED_ENTRIES - 1, "84 of 85 entries load; the Vitest plugin entry is runner-only");
+  assert.equal(
+    probe.loaded,
+    EXPECTED_ENTRIES - 1,
+    "84 of 85 entries load; the Vitest plugin entry is runner-only",
+  );
 });

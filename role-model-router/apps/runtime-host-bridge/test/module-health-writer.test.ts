@@ -2,7 +2,10 @@ import { Cause, Effect, Exit, Option, Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import { readLocalDiagnostics } from "../src/local-diagnostics-read.js";
-import { MODULE_HEALTH_LIMITS_ENABLED, makeModuleHealthWriter } from "../src/module-health-writer.js";
+import {
+  MODULE_HEALTH_LIMITS_ENABLED,
+  makeModuleHealthWriter,
+} from "../src/module-health-writer.js";
 
 /**
  * Run 115 S10a (R20 first slice): the bounded module-health record writer.
@@ -322,13 +325,12 @@ describe("module health writer", () => {
     writer.recordEscape(Cause.die(new Error("die")));
     writer.recordEscape(Cause.interrupt(9));
     writer.recordEscape(Cause.combine(Cause.fail(new Error("mixed-fail")), Cause.interrupt(2)));
-    expect(writer.records().map((record) => record.code).sort()).toEqual([
-      "cause.die",
-      "cause.fail",
-      "cause.fail",
-      "cause.interrupt",
-      "cause.interrupt",
-    ]);
+    expect(
+      writer
+        .records()
+        .map((record) => record.code)
+        .sort(),
+    ).toEqual(["cause.die", "cause.fail", "cause.fail", "cause.interrupt", "cause.interrupt"]);
   });
 
   it("does not recurse on a cyclic or reused escape object", () => {

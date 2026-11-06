@@ -19,7 +19,11 @@ export const REVIEW_ACCOUNTS = [
 
 export const REVIEW_ENDPOINT_REQUESTS = [
   { providerAccountId: "review.subject.alpha", modelId: "chatgpt/gpt-5.4", region: "us-east-1" },
-  { providerAccountId: "review.subject.beta", modelId: "chatgpt/gpt-5.4-mini", region: "us-east-1" },
+  {
+    providerAccountId: "review.subject.beta",
+    modelId: "chatgpt/gpt-5.4-mini",
+    region: "us-east-1",
+  },
   { providerAccountId: "review.judge", modelId: "chatgpt/gpt-5.5", region: "us-east-1" },
 ];
 
@@ -29,7 +33,7 @@ const accountBody = (account) => ({
   providerKind: "provider-openai",
   orgScope: "personal",
   accountScope: "workspace-default",
-  credentialRef: { backend: "local-file", ref: "review/openai/" + account.providerAccountId },
+  credentialRef: { backend: "local-file", ref: `review/openai/${account.providerAccountId}` },
   authMode: "oauth2-device-code",
   regionPolicy: { mode: "prefer", regions: ["us-east-1"] },
   baseUrlOverride: null,
@@ -63,27 +67,47 @@ const post = async (url, body) => {
 export async function seedReviewEndpoints(baseUrl) {
   const results = [];
   for (const account of REVIEW_ACCOUNTS) {
-    results.push({ kind: "account", id: account.providerAccountId, ...(await post(baseUrl + "/api/role-model/accounts", accountBody(account))) });
+    results.push({
+      kind: "account",
+      id: account.providerAccountId,
+      ...(await post(`${baseUrl}/api/role-model/accounts`, accountBody(account))),
+    });
   }
   for (const request of REVIEW_ENDPOINT_REQUESTS) {
-    results.push({ kind: "endpoint", id: request.providerAccountId, ...(await post(baseUrl + "/api/role-model/endpoints", request)) });
+    results.push({
+      kind: "endpoint",
+      id: request.providerAccountId,
+      ...(await post(`${baseUrl}/api/role-model/endpoints`, request)),
+    });
   }
-  const response = await fetch(baseUrl + "/api/role-model/endpoints");
+  const response = await fetch(`${baseUrl}/api/role-model/endpoints`);
   const endpoints = await response.json();
-  if (!Array.isArray(endpoints)) throw new Error("GET /api/role-model/endpoints did not return an array");
+  if (!Array.isArray(endpoints))
+    throw new Error("GET /api/role-model/endpoints did not return an array");
   const review = endpoints.filter((entry) => String(entry.endpointId ?? "").startsWith("review."));
   const judge = review.find((entry) => entry.endpointId.startsWith("review.judge"));
   const subjects = review.filter((entry) => entry.endpointId.startsWith("review.subject"));
-  if (review.length < 3) throw new Error("expected at least 3 review endpoints, got " + review.length);
+  if (review.length < 3)
+    throw new Error(`expected at least 3 review endpoints, got ${review.length}`);
   if (judge === undefined) throw new Error("dedicated judge endpoint is missing");
-  if (subjects.some((entry) => entry.endpointId === judge.endpointId)) throw new Error("judge endpoint overlaps a subject");
-  if (review.some((entry) => entry.benchmarkEligible !== true || entry.healthStatus !== "healthy")) {
+  if (subjects.some((entry) => entry.endpointId === judge.endpointId))
+    throw new Error("judge endpoint overlaps a subject");
+  if (
+    review.some((entry) => entry.benchmarkEligible !== true || entry.healthStatus !== "healthy")
+  ) {
     throw new Error("review endpoints must be healthy and benchmark-eligible");
   }
-  return { liveCount: endpoints.length, reviewCount: review.length, reviewEndpointIds: review.map((entry) => entry.endpointId), results };
+  return {
+    liveCount: endpoints.length,
+    reviewCount: review.length,
+    reviewEndpointIds: review.map((entry) => entry.endpointId),
+    results,
+  };
 }
 
-const isMain = process.argv[1] !== undefined && import.meta.url === new URL("file://" + process.argv[1].replaceAll("\\", "/")).href;
+const isMain =
+  process.argv[1] !== undefined &&
+  import.meta.url === new URL(`file://${process.argv[1].replaceAll("\\", "/")}`).href;
 if (isMain) {
   const args = process.argv.slice(2);
   const at = args.indexOf("--url");

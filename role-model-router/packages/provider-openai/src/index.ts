@@ -13,7 +13,11 @@ export function createOpenAIProviderAdapter(adapterFamily = "ai-sdk-openai"): Pr
   return {
     adapterFamily,
     negotiateCapabilities: ({ executionRequest, target }) =>
-      getOpenAICapabilities(Boolean(executionRequest.structuredOutput), target.providerId, target.modelId),
+      getOpenAICapabilities(
+        Boolean(executionRequest.structuredOutput),
+        target.providerId,
+        target.modelId,
+      ),
     buildRequest: buildOpenAIRequest,
     normalizeResponse: normalizeOpenAIResponse,
   };
@@ -1000,7 +1004,8 @@ export function buildOpenAIRequest(
               ? {
                   response_format:
                     isDeepSeekModel(input.target.modelId) &&
-                    (input.executionRequest.responseFormat as { readonly type?: string }).type === "json_schema"
+                    (input.executionRequest.responseFormat as { readonly type?: string }).type ===
+                      "json_schema"
                       ? { type: "json_object" }
                       : input.executionRequest.responseFormat,
                 }

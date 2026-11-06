@@ -1,4 +1,4 @@
-import { barY, defineChart, lineY, createChartScene, renderChartSvg } from "@tanstack/charts";
+import { barY, createChartScene, defineChart, lineY, renderChartSvg } from "@tanstack/charts";
 import { scaleLinear } from "@tanstack/charts/scales/linear";
 import { scalePoint } from "@tanstack/charts/scales/point";
 
@@ -35,13 +35,7 @@ export const tanstackChartSvg = (
     value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
   const rendered = (() => {
     if (!hasPoints) {
-      return '<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="' +
-        options.ariaLabel.replaceAll('"', "&quot;") +
-        '" viewBox="0 0 ' +
-        String(options.width) +
-        " " +
-        String(options.height) +
-        '"></svg>';
+      return `<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${options.ariaLabel.replaceAll('"', "&quot;")}" viewBox="0 0 ${String(options.width)} ${String(options.height)}"></svg>`;
     }
     const kind = options.kind ?? "line";
     const definition = defineChart({
@@ -67,11 +61,9 @@ export const tanstackChartSvg = (
     for (const point of scene.points) {
       if (point.datum.value === null) continue;
       const key = escapeAttribute(point.key);
-      const attrs = ' data-chart-series-id="' + escapeAttribute(point.datum.series) +
-        '" data-chart-point-label="' + escapeAttribute(point.datum.label) +
-        '" data-chart-point=""';
-      const dotKey = 'data-ts-key="' + key + ':dot"';
-      const exactKey = 'data-ts-key="' + key + '"';
+      const attrs = ` data-chart-series-id="${escapeAttribute(point.datum.series)}" data-chart-point-label="${escapeAttribute(point.datum.label)}" data-chart-point=""`;
+      const dotKey = `data-ts-key="${key}:dot"`;
+      const exactKey = `data-ts-key="${key}"`;
       if (svg.includes(dotKey)) {
         svg = svg.replace(dotKey, dotKey + attrs);
       } else if (svg.includes(exactKey)) {
@@ -85,8 +77,6 @@ export const tanstackChartSvg = (
   const withoutTabindex = rendered.replace(' tabindex="0"', "");
   return withoutTabindex.replace(
     "<svg ",
-    '<svg data-chart-part="chart" data-chart-series-count="' +
-      String(series.length) +
-      '" ',
+    `<svg data-chart-part="chart" data-chart-series-count="${String(series.length)}" `,
   );
 };

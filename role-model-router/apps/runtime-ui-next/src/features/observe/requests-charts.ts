@@ -1,7 +1,7 @@
 import type { Html, HtmlBuilder } from "@role-model-router/foldkit/html";
 
 import type { Message } from "../../message";
-import { telemetryChartCards, type TelemetryChartDefinition } from "./telemetry-chart-suite";
+import { type TelemetryChartDefinition, telemetryChartCards } from "./telemetry-chart-suite";
 
 /**
  * S634: the Requests analytics chart suite ported from the :3456 reference
@@ -107,20 +107,31 @@ export const REQUESTS_CHARTS: ReadonlyArray<TelemetryChartDefinition> = [
 
 export const requestsBreakdownDimension = (breakdown: string | undefined): string | null => {
   switch (breakdown) {
-    case "By endpoint variant": return "endpointId";
-    case "By upstream model": return "modelId";
-    case "By provider": return "providerId";
-    default: return null;
+    case "By endpoint variant":
+      return "endpointId";
+    case "By upstream model":
+      return "modelId";
+    case "By provider":
+      return "providerId";
+    default:
+      return null;
   }
 };
 
 export const requestsChartFilters = (
   state: { readonly source?: string; readonly statusFamily?: string } | undefined,
 ): RequestsChartFilters => ({
-  ...(state?.source === "Local only" ? { sourceTypes: ["local"] } : state?.source === "Remote only" ? { sourceTypes: ["remote"] } : {}),
-  ...(state?.statusFamily === "Success only" ? { statusFamilies: ["success"] }
-    : state?.statusFamily === "Failure only" ? { statusFamilies: ["failure"] }
-      : state?.statusFamily === "Unknown only" ? { statusFamilies: ["unknown"] }
+  ...(state?.source === "Local only"
+    ? { sourceTypes: ["local"] }
+    : state?.source === "Remote only"
+      ? { sourceTypes: ["remote"] }
+      : {}),
+  ...(state?.statusFamily === "Success only"
+    ? { statusFamilies: ["success"] }
+    : state?.statusFamily === "Failure only"
+      ? { statusFamilies: ["failure"] }
+      : state?.statusFamily === "Unknown only"
+        ? { statusFamilies: ["unknown"] }
         : {}),
 });
 
@@ -131,12 +142,17 @@ export interface RequestsChartQuery {
     readonly filters: RequestsChartFilters;
     readonly granularity: "hour" | "day";
     readonly metrics: ReadonlyArray<string>;
-    readonly ranking: { readonly dimension: string; readonly limit: number; readonly metric: string } | null;
+    readonly ranking: {
+      readonly dimension: string;
+      readonly limit: number;
+      readonly metric: string;
+    } | null;
     readonly windowMs: number;
   };
 }
 
-export const requestsChartGranularity = (windowMs: number): "hour" | "day" => (windowMs <= 86_400_000 ? "hour" : "day");
+export const requestsChartGranularity = (windowMs: number): "hour" | "day" =>
+  windowMs <= 86_400_000 ? "hour" : "day";
 
 export const buildRequestsChartQueries = (
   windowMs: number,
@@ -147,13 +163,14 @@ export const buildRequestsChartQueries = (
     return {
       id: chart.title,
       query: {
-        breakdown: chart.usesSelectedBreakdown === true ? input.breakdown : chart.breakdown ?? null,
+        breakdown:
+          chart.usesSelectedBreakdown === true ? input.breakdown : (chart.breakdown ?? null),
         filters: input.filters,
         granularity: requestsChartGranularity(windowMs),
         metrics: isRankedComparison ? [input.rankingMetric] : chart.metrics,
         ranking: isRankedComparison
           ? { dimension: input.rankingDimension, limit: 8, metric: input.rankingMetric }
-          : chart.ranking ?? null,
+          : (chart.ranking ?? null),
         windowMs,
       },
     };
