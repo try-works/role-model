@@ -1,0 +1,65 @@
+### ui-parity selfcheck-surface RED
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/selfcheck-surface.test.ts [ test/selfcheck-surface.test.ts ]
+Error: Cannot find module '../src/selfcheck-surface.js' imported from 'D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity/test/selfcheck-surface.test.ts'
+ ❯ test/selfcheck-surface.test.ts:3:1
+      1| import { describe, expect, it } from "vitest";
+      2| 
+      3| import {
+       | ^
+      4|   SELFCHECK_ENTRIES,
+      5|   SELFCHECK_ROUTE,
+
+Caused by: Error: Failed to load url ../src/selfcheck-surface.js (resolved id: ../src/selfcheck-surface.js) in D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity/test/selfcheck-surface.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  14:28:41
+   Duration  4.38s (transform 317ms, setup 0ms, collect 0ms, tests 0ms, environment 1ms, prepare 1.02s)
+
+undefined
+D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\ui-parity:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/selfcheck-surface.test.ts
+
+### packaged lane selfcheck-surface RED
+node:internal/modules/esm/resolve:274
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\scripts\runtime\parity-selfcheck-surface.mjs' imported from D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\scripts\runtime\packaged-parity-lane.test.mjs
+    at finalizeResolution (node:internal/modules/esm/resolve:274:11)
+    at moduleResolve (node:internal/modules/esm/resolve:864:10)
+    at defaultResolve (node:internal/modules/esm/resolve:990:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:757:20)
+    at ModuleLoader.resolve (node:internal/modules/esm/loader:734:38)
+    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:317:38)
+    at #link (node:internal/modules/esm/module_job:208:49) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/runtime/parity-selfcheck-surface.mjs'
+}
+
+Node.js v24.11.0
+✖ scripts\runtime\packaged-parity-lane.test.mjs (387.5911ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 449.8262
+
+✖ failing tests:
+
+test at scripts\runtime\packaged-parity-lane.test.mjs:1:1
+✖ scripts\runtime\packaged-parity-lane.test.mjs (387.5911ms)
+  'test failed'

@@ -11,6 +11,10 @@ import {
   scanSelfcheckSurface,
   selfcheckSurfaceVerdict,
 } from "./packaged-parity-lane.mjs";
+import {
+  evaluateSelfcheckSurfaceRuns,
+  parseSelfcheckSurfaceDom,
+} from "./parity-selfcheck-surface.mjs";
 
 /**
  * S612 (R14): unit contract for the packaged parity lane's pure helpers.
@@ -123,5 +127,51 @@ describe("selfcheck surface scan is not fooled by minified bundles", () => {
     } finally {
       rmSync(root, { force: true, recursive: true });
     }
+  });
+});
+
+describe("served selfcheck surface", () => {
+  const html = (marker, theme) =>
+    `<main data-selfcheck-marker="${marker}">` +
+    `<div data-selfcheck-key="surface" data-selfcheck-value="rm3-selfcheck-v1"></div>` +
+    `<div data-selfcheck-key="theme" data-selfcheck-value="${theme}"></div>` +
+    "</main>";
+
+  it("extracts the served marker and ordered specimen entries from rendered DOM", () => {
+    const parsed = parseSelfcheckSurfaceDom(html("a1b2c3d4", "dark"), "react");
+    assert.equal(parsed.marker, "a1b2c3d4");
+    assert.deepEqual(parsed.entries, [
+      { key: "surface", value: "rm3-selfcheck-v1" },
+      { key: "theme", value: "dark" },
+    ]);
+    assert.equal(parsed.targetId, "react");
+  });
+
+  it("reports 0DIFF for identical packaged React and Foldkit surfaces across a double run", () => {
+    const run = [
+      parseSelfcheckSurfaceDom(html("a1b2c3d4", "dark"), "react"),
+      parseSelfcheckSurfaceDom(html("a1b2c3d4", "dark"), "foldkit"),
+    ];
+    const result = evaluateSelfcheckSurfaceRuns({ chromeAvailable: true, runs: [run, run] });
+    assert.equal(result.status, "PASSED");
+    assert.equal(result.verdict, "0DIFF");
+  });
+
+  it("reports the divergence instead of 0DIFF when an entry differs", () => {
+    const result = evaluateSelfcheckSurfaceRuns({
+      chromeAvailable: true,
+      runs: [
+        [
+          parseSelfcheckSurfaceDom(html("a1b2c3d4", "dark"), "react"),
+          parseSelfcheckSurfaceDom(html("a1b2c3d4", "light"), "foldkit"),
+        ],
+        [
+          parseSelfcheckSurfaceDom(html("a1b2c3d4", "dark"), "react"),
+          parseSelfcheckSurfaceDom(html("a1b2c3d4", "light"), "foldkit"),
+        ],
+      ],
+    });
+    assert.equal(result.status, "FAILED");
+    assert.match(String(result.reason), /mismatch|divergence/);
   });
 });
