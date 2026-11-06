@@ -1,0 +1,180 @@
+{
+  "executable": "role-model-dev.exe",
+  "platform": "win32",
+  "arch": "x64",
+  "target": "win32-x64",
+  "sha256": "1412aa7270d35e168a16fd5c4f2cefd8a5eafa5822d72849383e902db9336a9d",
+  "executable_sha256": "1412aa7270d35e168a16fd5c4f2cefd8a5eafa5822d72849383e902db9336a9d",
+  "core_payload_sha256": "1412aa7270d35e168a16fd5c4f2cefd8a5eafa5822d72849383e902db9336a9d",
+  "source_tree": "066f04da3860a08ce8836b5d717a272a269d313a",
+  "version": "0.0.20-722-ge07b60c3",
+  "package_build_id": "0.0.20-722-ge07b60c3@e07b60c3f4c1d74904ed7654d739d363264209f3",
+  "commit": "e07b60c3f4c1d74904ed7654d739d363264209f3",
+  "build_date": "2026-11-06T09:46:48.995Z",
+  "schema_version": 1,
+  "channel": "development",
+  "name": "role-model-dev",
+  "host": "127.0.0.1",
+  "port": 3458,
+  "state_root_name": "role-model-runtime-dev",
+  "scope_id": "standalone-runtime-dev",
+  "endpoint": "http://127.0.0.1:3458",
+  "track_b_runtime": {
+    "manifest": "track-b-runtime/track-b-runtime-manifest.json",
+    "sidecar": "track-b-runtime/runtime-operations-server.mjs",
+    "sidecar_sha256": "171f46908aabac6099ef98c779200ede6421ec40bcfc0dd2f67963c7e4fb6efb",
+    "manifest_sha256": "87ceebb8624f2254748c957dc40b27b15c543456a8cae7389682681a29a44ef5",
+    "compatibility_generation": "N",
+    "public_source_tree": "066f04da3860a08ce8836b5d717a272a269d313a",
+    "extension_count": 13
+  },
+  "artifact_closure": {
+    "schema_version": 1,
+    "runtime_ui": {
+      "kind": "tree",
+      "path": "build/client",
+      "sha256": "37a9e223a7303e29fc86a2a3d5c3bc67ecc8c30090cc91f8cd450c26dbdc7a14"
+    },
+    "track_b_runtime": {
+      "manifest": {
+        "kind": "file",
+        "path": "track-b-runtime/track-b-runtime-manifest.json",
+        "sha256": "87ceebb8624f2254748c957dc40b27b15c543456a8cae7389682681a29a44ef5"
+      },
+      "sidecar": {
+        "kind": "file",
+        "path": "track-b-runtime/runtime-operations-server.mjs",
+        "sha256": "171f46908aabac6099ef98c779200ede6421ec40bcfc0dd2f67963c7e4fb6efb"
+      },
+      "public_runtime_adapter": {
+        "kind": "file",
+        "path": "track-b-runtime/public-runtime-adapter.mjs",
+        "sha256": "48fa88c6294a21f1bb74c1fcc25ba2e8ad3d3b1ba8a36b4f690c6e831a1bb049"
+      },
+      "public_extension_host": {
+        "kind": "file",
+        "path": "track-b-runtime/public-extension-host.mjs",
+        "sha256": "5a079ea129429fe67b4923f0d05dc732f83aa66adf80d579fce5c953abfa6aac"
+      },
+      "worker": {
+        "kind": "file",
+        "path": "track-b-runtime/worker-runtime.mjs",
+        "sha256": "0277de1fb738a28fe322cc9ae88e2d89965af18a14d5d0d136242ba5c0ab49c6"
+      },
+      "router_assets": [
+        {
+          "kind": "file",
+          "path": "track-b-runtime/public-router/migrations/0001_tb04_legacy_graph_performance.sql",
+          "sha256": "375da274ec8d594afec3286d1a9d0e9eea96993f82d659d0e82290659e675e71"
+        },
+        {
+          "kind": "file",
+          "path": "track-b-runtime/public-router/migrations/0002_compact_stub_enforcement.sql",
+          "sha256": "b0e11f67521dee4db650511baf8042a7a7c878bed74b6e0e1c409a34bec2d146"
+        },
+        {
+          "kind": "file",
+          "path": "track-b-runtime/public-router/migrations/registry.json",
+          "sha256": "ac83d2129b7e59b48779b1121de4003729fb973f4163e56cd85c8165c29e3654"
+        }
+      ],
+      "source_authority_fixtures": [
+        {
+          "kind": "file",
+          "path": "fixtures/source-authority/crowdsourced-evals-docs/guidance/capacity-slo-contracts.json",
+          "sha256": "47bb9b1c59eea7c4990c672dc4b61ee0c9f9c9c683a99f301ae77bc41fa95b72"
+        },
+        {
+          "kind": "file",
+          "path": "fixtures/source-authority/crowdsourced-evals-docs/guidance/product-defaults.json",
+          "sha256": "01d35147e3ec3d71d3ee156cee34591b75d3a04fc48df6bc4bbc0dcadc439ea6"
+        },
+        {
+          "kind": "file",
+          "path": "fixtures/source-authority/crowdsourced-evals-docs/guidance/retention-policies.json",
+          "sha256": "3319467406f964ff4b894524e373ad76ed8539f063da778d8363c4dc89393983"
+        }
+      ],
+      "extensions": [
+        {
+          "kind": "file",
+          "path": "track-b-runtime/extensions/artifact-store.mjs",
+          "sha256": "1b4d05e26b99efb4a4ab7423b5fc5b6c0319dcd091d549d63730476d09df93ec",
+          "id": "artifact-store"
+        },
+        {
+          "kind": "file",
+          "path": "track-b-runtime/extensions/event-log.mjs",
+          "sha256": "230430508525d5bf6901d3796e58795c0fe2ca64a4b10e0ec4cc9797c62aef8e",
+          "id": "event-log"
+        },
+        {
+          "kind": "file",
+          "path": "track-b-runtime/extensions/repository-context.mjs",
+          "sha256": "758a74e817f03de6763a9f0ecb97a030a61b5b6e2e6dfb41d451d5e6fe833faa",
+          "id": "repository-context"
+        },
+        {
+          "kind": "file",
+          "path": "track-b-runtime/extensions/background-evidence-scheduler.mjs",
+          "sha256": "65d47807fbd813deaa7ba6ebd6281ff2bb10381288ed738cd446138d5e80ec57",
+          "id": "background-evidence-scheduler"
+        },
+        {
+          "kind": "file",
+          "path": "track-b-runtime/extensions/memory-store.mjs",
+          "sha256": "7e02011ea2d2cc388ffd07e771ffa854c4cf9fbd5eaeceae5e685df2a3b243a4",
+          "id": "memory-store"
+        },
+        {
+          "kind": "file",
+          "path": "track-b-runtime/extensions/knowledge-store.mjs",
+          "sha256": "9a98ec90dc4ea976bcaa58dab5ca3fe74a44fcb7d051155c5c7a18caff20f9b6",
+          "id": "knowledge-store"
+        },
+        {
+          "kind": "file",
+          "path": "track-b-runtime/extensions/evaluation-core.mjs",
+          "sha256": "b04166a1df6a968d59f2bf925a1c345ed4b9a122249d213fbd76eba53a0ac1b2",
+          "id": "evaluation-core"
+        },
+        {
+          "kind": "file",
+          "path": "track-b-runtime/extensions/crowdsourced-learning.mjs",
+          "sha256": "e7c0cb9673bfe10c6fc1cc800480713a53ab6935cb5d5a73b9f9c2b27ae1e8f3",
+          "id": "crowdsourced-learning"
+        },
+        {
+          "kind": "file",
+          "path": "track-b-runtime/extensions/replay-core.mjs",
+          "sha256": "f72f7bcf281e8da2513def314d0e689e5e1bf5781a847eeda9f19495ee2180ab",
+          "id": "replay-core"
+        },
+        {
+          "kind": "file",
+          "path": "track-b-runtime/extensions/evaluation-runner-local.mjs",
+          "sha256": "cb2f8d15fe626e74c5cf441a129db428bc4ff6fd73f88bf886428027379f32e7",
+          "id": "evaluation-runner-local"
+        },
+        {
+          "kind": "file",
+          "path": "track-b-runtime/extensions/trajectory-signals.mjs",
+          "sha256": "d15bbf0a88e24e10bf4543c4c7b546330c6a991446725fa96a56c78a288c6fad",
+          "id": "trajectory-signals"
+        },
+        {
+          "kind": "file",
+          "path": "track-b-runtime/extensions/profile-learner.mjs",
+          "sha256": "06c4ac68ba69920e408f053704ae092c5d90f0b358c1962e44c96d95de01d6d6",
+          "id": "profile-learner"
+        },
+        {
+          "kind": "file",
+          "path": "track-b-runtime/extensions/knowledge-worker.mjs",
+          "sha256": "7c57d37dfc501dfcaf90e648af71dadb63bb2e153a96aac5e54343166662b221",
+          "id": "knowledge-worker"
+        }
+      ]
+    }
+  }
+}

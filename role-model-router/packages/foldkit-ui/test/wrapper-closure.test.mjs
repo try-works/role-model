@@ -76,7 +76,7 @@ const sha256 = (file) => createHash("sha256").update(readFileSync(file)).digest(
 function validatePackagedReceipt(receipt) {
   assert.match(receipt.publicCommit, /^[a-f0-9]{40}$/);
   assert.match(receipt.publicSourceTree, /^[a-f0-9]{40}$/);
-  assert.match(receipt.executableSha256, /^[a-f0-9]{64}$/);
+  assert.ok(/^[a-f0-9]{64}$/.test(receipt.executableSha256), "missing executableSha256");
   assert.ok(path.isAbsolute(receipt.releaseRoot), "releaseRoot must be absolute");
   assert.equal(
     path.resolve(receipt.releaseManifestPath),
@@ -98,11 +98,25 @@ function validatePackagedReceipt(receipt) {
   assert.equal(sha256(evidenceBundle), receipt.clientBundleSha256);
   assert.equal(sha256(evidenceBundle), receipt.evidence.clientBundleSha256);
   assert.match(readFileSync(evidenceExeSha, "utf8"), new RegExp(`^\\s*${receipt.executableSha256}\\b`));
+  assert.equal(receipt.clientBundleIdentifiesWrapper, true, "packaged bundle does not identify the wrapper");
+  assert.equal(receipt.wrapperMarker, "foldkit-ui");
   assert.equal(receipt.entries.length, 30);
+  const wrapperManifest = JSON.parse(readFileSync(path.join(WRAPPER, "package.json"), "utf8"));
   for (const entry of receipt.entries) {
-    assert.equal(entry.embeddedInPackagedClient, true, entry.subpath);
     assert.match(entry.importSha256, /^[a-f0-9]{64}$/);
     assert.match(entry.typesSha256, /^[a-f0-9]{64}$/);
+    const target = wrapperManifest.exports[entry.subpath];
+    assert.ok(target, `receipt names unknown subpath ${entry.subpath}`);
+    assert.equal(
+      sha256(path.join(WRAPPER, target.import.replace(/^\.\//, ""))),
+      entry.importSha256,
+      `${entry.subpath} import hash does not match the local wrapper`,
+    );
+    assert.equal(
+      sha256(path.join(WRAPPER, target.types.replace(/^\.\//, ""))),
+      entry.typesSha256,
+      `${entry.subpath} types hash does not match the local wrapper`,
+    );
   }
   return receipt;
 }

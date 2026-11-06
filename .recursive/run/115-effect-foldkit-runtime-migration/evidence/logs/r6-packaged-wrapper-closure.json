@@ -1,9 +1,24 @@
 {
-  "schemaVersion": "role-model.foldkit-ui.packaged-closure.v1",
+  "schemaVersion": "role-model.foldkit-ui.packaged-closure.v2",
+  "publicCommit": "e07b60c3f4c1d74904ed7654d739d363264209f3",
+  "publicSourceTree": "066f04da3860a08ce8836b5d717a272a269d313a",
   "releaseRoot": "D:\\DEV\\rm-clean\\r5-lockstep-pub\\role-model-router\\dist\\release\\win32-x64",
-  "packagedClient": {
-    "assetCount": 1
+  "releaseManifestPath": "D:\\DEV\\rm-clean\\r5-lockstep-pub\\role-model-router\\dist\\release\\win32-x64\\manifest.json",
+  "releaseManifestSha256": "4a6e92866c940b8ca0cd25685d12711114551e77d467ed2d58c3862cf77be125",
+  "executablePath": "D:\\DEV\\rm-clean\\r5-lockstep-pub\\role-model-router\\dist\\release\\win32-x64\\role-model-dev.exe",
+  "executableSha256": "1412aa7270d35e168a16fd5c4f2cefd8a5eafa5822d72849383e902db9336a9d",
+  "executableSize": 104948224,
+  "clientBundlePath": "D:\\DEV\\rm-clean\\r5-lockstep-pub\\role-model-router\\dist\\release\\win32-x64\\build\\client\\assets\\main.js",
+  "clientBundleSha256": "e67be20b02ba7a500fdd7479440df857b317dfbacca82a031aa45aef464712bd",
+  "evidence": {
+    "releaseManifestPath": "r6-packaged-release/manifest.json",
+    "releaseManifestSha256": "4a6e92866c940b8ca0cd25685d12711114551e77d467ed2d58c3862cf77be125",
+    "clientBundlePath": "r6-packaged-release/main.js",
+    "clientBundleSha256": "e67be20b02ba7a500fdd7479440df857b317dfbacca82a031aa45aef464712bd",
+    "executableSha256Path": "r6-packaged-release/executable.sha256"
   },
+  "clientBundleIdentifiesWrapper": true,
+  "wrapperMarker": "foldkit-ui",
   "entries": [
     {
       "subpath": ".",
