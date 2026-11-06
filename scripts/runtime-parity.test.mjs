@@ -27,9 +27,18 @@ test("full React selfcheck is NOT RUN until actual captures are available", asyn
   // Chromium build, and this test asserts the honest NOT_RUN verdict for a machine with no browser,
   // not parity between captures.
   const { main } = await import("./runtime/parity-selfcheck.mjs");
-  const result = await main({
-    chromePath: join(root, "__no-browser-installed-for-selfcheck-test__"),
-  });
+  // CI exports PARITY_SELFCHECK_TEMP_DRIVE for the Windows lanes; on a Linux runner that guard would
+  // mask the no-browser verdict, so unset it for this call and restore it immediately after.
+  const previousTempDrive = process.env.PARITY_SELFCHECK_TEMP_DRIVE;
+  delete process.env.PARITY_SELFCHECK_TEMP_DRIVE;
+  let result;
+  try {
+    result = await main({
+      chromePath: join(root, "__no-browser-installed-for-selfcheck-test__"),
+    });
+  } finally {
+    if (previousTempDrive !== undefined) process.env.PARITY_SELFCHECK_TEMP_DRIVE = previousTempDrive;
+  }
   assert.equal(result.exitCode, 2, JSON.stringify(result));
   assert.equal(result.status, "NOT_RUN");
   assert.equal(result.scope, "browser-parity");
