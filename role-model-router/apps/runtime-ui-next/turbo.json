@@ -1,0 +1,15 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": [
+    "//"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": [
+        "@role-model-router/foldkit#build",
+        "@role-model-router/foldkit-ui#build",
+        "@role-model/ui#build"
+      ]
+    }
+  }
+}
