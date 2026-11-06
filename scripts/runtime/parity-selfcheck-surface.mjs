@@ -9,7 +9,7 @@
  * identical runs. A missing surface or browser is NOT_RUN, never a fabricated pass.
  */
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
@@ -151,9 +151,10 @@ const freePort = () =>
     const server = net.createServer();
     server.listen(0, "127.0.0.1", () => {
       const address = server.address();
+      const port = address === null ? undefined : Object(address).port;
       server.close(() => {
-        if (address === null || typeof address === "string") reject(new Error("no free port"));
-        else resolve(address.port);
+        if (Number.isInteger(port)) resolve(port);
+        else reject(new Error("no free port"));
       });
     });
     server.on("error", reject);
@@ -241,7 +242,7 @@ const resolveChrome = () => {
     "/usr/bin/google-chrome",
     "/usr/bin/chromium",
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  ].filter((candidate) => typeof candidate === "string" && candidate.length > 0);
+  ].filter((candidate) => candidate.length > 0);
   return candidates.find((candidate) => existsSync(candidate));
 };
 
@@ -272,7 +273,7 @@ const dumpDom = async ({ chromePath, url, timeoutMs = 45_000 }) => {
     const pending = new Map();
     socket.addEventListener("message", (event) => {
       const message = JSON.parse(String(event.data));
-      if (typeof message.id !== "number") return;
+      if (!Number.isInteger(message.id)) return;
       const settle = pending.get(message.id);
       if (settle === undefined) return;
       pending.delete(message.id);
@@ -295,7 +296,8 @@ const dumpDom = async ({ chromePath, url, timeoutMs = 45_000 }) => {
         returnByValue: true,
       });
       const value = evaluated?.result?.value;
-      if (typeof value === "string" && value.length > 0) return value;
+      const text = value === null || value === undefined ? "" : String(value);
+      if (text.length > 0) return text;
       await sleep(250);
     }
     throw new Error(`selfcheck surface did not render within ${String(timeoutMs)}ms: ${url}`);
