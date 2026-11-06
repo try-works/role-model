@@ -1,13 +1,15 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
-function invoke(args) {
+function invoke(args, env = {}) {
   return spawnSync(process.execPath, ["--import", "tsx", "scripts/runtime-parity.mjs", ...args], {
     cwd: root,
     encoding: "utf8",
+    env: { ...process.env, ...env },
     timeout: 15000,
   });
 }
@@ -21,7 +23,11 @@ test("request-only selfcheck executes controls without claiming browser parity",
   assert.ok(output.checks.every((check) => check.passed));
 });
 test("full React selfcheck is NOT RUN until actual captures are available", () => {
-  const result = invoke(["--selfcheck"]);
+  // Force the no-browser branch deterministically: CI images may ship a Chromium build, and this test
+  // asserts the honest NOT_RUN verdict for a machine with no browser, not parity between captures.
+  const result = invoke(["--selfcheck"], {
+    CHROME_PATH: join(root, "__no-browser-installed-for-selfcheck-test__"),
+  });
   assert.equal(result.status, 2);
   const output = JSON.parse(result.stdout);
   assert.equal(output.status, "NOT_RUN");
