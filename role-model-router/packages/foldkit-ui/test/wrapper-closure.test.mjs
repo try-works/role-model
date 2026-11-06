@@ -74,6 +74,10 @@ const EVIDENCE = path.join(REPO_ROOT, ".recursive/run/115-effect-foldkit-runtime
 const sha256 = (file) => createHash("sha256").update(readFileSync(file)).digest("hex");
 
 function validatePackagedReceipt(receipt) {
+  assert.equal(receipt.claim, "release-identity-and-local-wrapper-hashes");
+  assert.equal(receipt.wrapperEntriesEmbeddedInClient, false, "the receipt must not claim per-entry client embedding");
+  assert.match(receipt.reviewedHead, /^[a-f0-9]{40}$/);
+  assert.match(receipt.releaseCommit, /^[a-f0-9]{40}$/);
   assert.match(receipt.publicCommit, /^[a-f0-9]{40}$/);
   assert.match(receipt.publicSourceTree, /^[a-f0-9]{40}$/);
   assert.ok(/^[a-f0-9]{64}$/.test(receipt.executableSha256), "missing executableSha256");
@@ -92,14 +96,13 @@ function validatePackagedReceipt(receipt) {
   const manifest = JSON.parse(readFileSync(evidenceManifest, "utf8"));
   assert.equal(sha256(evidenceManifest), receipt.releaseManifestSha256);
   assert.equal(sha256(evidenceManifest), receipt.evidence.releaseManifestSha256);
+  assert.equal(receipt.releaseCommit, manifest.commit);
   assert.equal(manifest.commit, receipt.publicCommit);
   assert.equal(manifest.source_tree, receipt.publicSourceTree);
   assert.equal(manifest.executable_sha256, receipt.executableSha256);
   assert.equal(sha256(evidenceBundle), receipt.clientBundleSha256);
   assert.equal(sha256(evidenceBundle), receipt.evidence.clientBundleSha256);
   assert.match(readFileSync(evidenceExeSha, "utf8"), new RegExp(`^\\s*${receipt.executableSha256}\\b`));
-  assert.equal(receipt.clientBundleIdentifiesWrapper, true, "packaged bundle does not identify the wrapper");
-  assert.equal(receipt.wrapperMarker, "foldkit-ui");
   assert.equal(receipt.entries.length, 30);
   const wrapperManifest = JSON.parse(readFileSync(path.join(WRAPPER, "package.json"), "utf8"));
   for (const entry of receipt.entries) {
