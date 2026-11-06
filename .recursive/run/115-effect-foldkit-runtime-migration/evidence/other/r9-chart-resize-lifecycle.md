@@ -33,3 +33,11 @@ font measurement, DPR or timezone read exists in the renderer.
   classifies `same` / `approved-chart-change` / `unapproved-chart-change` / `invalid-capture`, with
   separate `chartChanges` / `approvedChartChanges` counts. It is exported from the harness package
   and unit-pinned in `test/chart-render-change.test.ts`.
+
+## Verification
+- RED: `evidence/logs/r9-chart-lifecycle-red.log` (3/4 new checks failed before implementation).
+- GREEN: `evidence/logs/r9-chart-lifecycle-green.log` (21 chart tests + 3 chart-policy tests).
+- Full runtime-ui-next suite: 122 files / 1027 tests passed with `vitest run --pool=forks
+  --poolOptions.forks.singleFork=true`; node invariants 21/21; tsc 0 for ui-parity, runtime-ui-next,
+  runtime-ui.
+- Commits: RED `e5005fcc`; GREEN `843ba8df`.
