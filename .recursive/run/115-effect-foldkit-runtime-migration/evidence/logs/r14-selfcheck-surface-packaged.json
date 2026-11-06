@@ -1,0 +1,19 @@
+{
+  "route": "/selfcheck",
+  "scope": "selfcheck-surface",
+  "comparisons": {
+    "deterministic": {
+      "equal": true
+    },
+    "reactVsFoldkit": {
+      "equal": true,
+      "marker": "06b996f0"
+    }
+  },
+  "markers": {
+    "foldkit": "06b996f0",
+    "react": "06b996f0"
+  },
+  "status": "PASSED",
+  "verdict": "0DIFF"
+}
