@@ -1,0 +1,36 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:11428) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/s650-r27-benchmark-overlap.test.ts (1 test | 1 failed) 191ms
+   × S650 R27 benchmark cancellation/overlap > a second real runner on the same judge is refused with the first id and makes no upstream call; cancel rejects the first and a third gets a fresh slot 185ms
+     → expected false to be true // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s650-r27-benchmark-overlap.test.ts > S650 R27 benchmark cancellation/overlap > a second real runner on the same judge is refused with the first id and makes no upstream call; cancel rejects the first and a third gets a fresh slot
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/s650-r27-benchmark-overlap.test.ts:85:31
+     83|     const runA = runRoutingCapabilityBenchmark(depsA, requestA);
+     84|     await enteredAPromise;
+     85|     expect(rawGate.running()).toBe(true);
+       |                               ^
+     86|     await expect(runRoutingCapabilityBenchmark(depsB, requestB)).rejec…
+     87|     expect(callsB).toBe(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  16:52:54
+   Duration  19.10s (transform 9.49s, setup 0ms, collect 16.44s, tests 191ms, environment 1ms, prepare 901ms)
+
