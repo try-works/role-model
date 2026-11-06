@@ -37,7 +37,8 @@ test("full React selfcheck is NOT RUN until actual captures are available", asyn
       chromePath: join(root, "__no-browser-installed-for-selfcheck-test__"),
     });
   } finally {
-    if (previousTempDrive !== undefined) process.env.PARITY_SELFCHECK_TEMP_DRIVE = previousTempDrive;
+    if (previousTempDrive !== undefined)
+      process.env.PARITY_SELFCHECK_TEMP_DRIVE = previousTempDrive;
   }
   assert.equal(result.exitCode, 2, JSON.stringify(result));
   assert.equal(result.status, "NOT_RUN");
