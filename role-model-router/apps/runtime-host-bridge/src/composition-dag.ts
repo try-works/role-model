@@ -296,9 +296,43 @@ export interface MetadataCacheKeyInput {
   readonly modelId: string;
 }
 
-/** Composite key: authority NUL generation NUL model. NUL cannot appear in an authority id. */
-export const metadataCacheKey = (input: MetadataCacheKeyInput): string =>
-  `${input.authorityId}\u0000${String(input.configGeneration)}\u0000${input.modelId}`;
+/**
+ * Composite key: authority NUL generation NUL model. NUL cannot appear in an authority id.
+ * Validated at the boundary so an empty/NaN identity can never become a shared cache slot.
+ */
+export const metadataCacheKey = (input: MetadataCacheKeyInput): string => {
+  if (typeof input.authorityId !== "string" || input.authorityId.trim().length === 0) {
+    throw new Error("metadata cache authorityId must be a non-empty string");
+  }
+  if (input.authorityId.includes("\u0000")) throw new Error("metadata cache authorityId must not contain NUL");
+  if (!Number.isSafeInteger(input.configGeneration) || input.configGeneration < 0) {
+    throw new Error("metadata cache configGeneration must be a non-negative integer");
+  }
+  if (typeof input.modelId !== "string" || input.modelId.trim().length === 0) {
+    throw new Error("metadata cache modelId must be a non-empty string");
+  }
+  if (input.modelId.includes("\u0000")) throw new Error("metadata cache modelId must not contain NUL");
+  return `${input.authorityId}\u0000${String(input.configGeneration)}\u0000${input.modelId}`;
+};
+
+/** The metadata cache never coalesces distinct stochastic inference attempts. */
+export const STOCHASTIC_INFERENCE_DEDUPE = false as const;
+
+export interface StochasticInferenceCacheKeyInput extends MetadataCacheKeyInput {
+  readonly attemptId: string;
+}
+
+/**
+ * A stochastic inference attempt gets its own cache slot even when authority/config/model match.
+ * Reusing a metadata key for two attempts would silently collapse distinct sampled outputs.
+ */
+export const stochasticInferenceCacheKey = (input: StochasticInferenceCacheKeyInput): string => {
+  if (typeof input.attemptId !== "string" || input.attemptId.trim().length === 0) {
+    throw new Error("stochastic inference attemptId must be a non-empty string");
+  }
+  if (input.attemptId.includes("\u0000")) throw new Error("stochastic inference attemptId must not contain NUL");
+  return `${metadataCacheKey(input)}\u0000stochastic\u0000${input.attemptId}`;
+};
 
 export type MetadataCacheValue =
   | string
