@@ -31,7 +31,16 @@ Status: GREEN in source/tests; packaged focus verification pending a clean share
 - Targeted GREEN: s26b 4/4, s654 3/3, s655 3/3; `runtime-ui-next` tsc 0 and client build PASS.
 - Commit: `10f385d1`.
 
+## Packaged-host focus check
+- Ran the current `runtime-ui-next/dist/client` under the packaged executable at
+  `E:/role-model-run115/r14-release-e07b60c3/win32-x64/role-model-dev.exe` (sha256 `1412aa72...`),
+  clicked the Models nav, and read the live DOM: `activeId=main-content`, `activeTag=MAIN`,
+  `title=Models | RM3 Foldkit shell`. Log: `evidence/logs/r11-focus-packaged-host.log`.
+- This proves the served client behaviour through the packaged host; a fresh SEA built at this exact
+  commit was blocked by concurrent shared-tree edits in `package-sea.ts`/`package-ui-shell.mjs`
+  (other lanes). The unit s26b mount test covers the same command against the same client.
+
 ## Remaining
-- Packaged/real-browser focus check: pending a clean worktree/matched package; the unit mount test
-  already exercises the real DOM focus command.
+- Fresh SEA at the final commit once the shared tree is clean; the packaged host focus result above
+  uses a prior executable with the current client bundle.
 - Palette/media remain owner-dispositioned, not implemented.
