@@ -15,6 +15,8 @@ async function listTrackedRecursiveJsonFiles() {
   const result = await execFileAsync("git", ["ls-files", ".recursive/run"], {
     cwd: repoRoot,
     windowsHide: true,
+    // The run tree carries >12k tracked paths (>1.2 MB of listing); Node's 1 MB default truncates it.
+    maxBuffer: 64 * 1024 * 1024,
   });
 
   return result.stdout
