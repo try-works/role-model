@@ -6,8 +6,8 @@
     "version": "0.0.20-269-g35103383"
   },
   "result": "PASSED",
-  "runtimeStateRoot": "E:\\rm-tmp\\s303-sea-state-AoHYGf",
-  "startupMs": 11362,
-  "stopMs": 1553,
-  "vendorPid": 70760
+  "runtimeStateRoot": "E:\\tmp\\s303-sea-state-yIEzug",
+  "startupMs": 27916,
+  "stopMs": 2120,
+  "vendorPid": 48644
 }
