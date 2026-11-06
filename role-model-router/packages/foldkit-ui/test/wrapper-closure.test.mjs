@@ -78,6 +78,19 @@ function validatePackagedReceipt(receipt) {
   assert.equal(receipt.claim, "packaged-release-identity-plus-local-wrapper-entry-hashes");
   assert.equal(receipt.packagedClientEntryEmbedding, "not-claimed");
   assert.match(receipt.reviewedHead, /^[a-f0-9]{40}$/);
+  assert.equal(receipt.releaseCommitBehindReviewedHead, true);
+  assert.equal(
+    execFileSync("git", ["merge-base", "--is-ancestor", receipt.reviewedHead, "HEAD"], { cwd: REPO_ROOT }).toString(),
+    "",
+  );
+  assert.equal(
+    execFileSync("git", ["diff", "--quiet", receipt.releaseCommit, receipt.reviewedHead, "--", "role-model-router/packages/foldkit-ui"], { cwd: REPO_ROOT }).toString(),
+    "",
+  );
+  assert.equal(
+    execFileSync("git", ["rev-parse", `${receipt.reviewedHead}:role-model-router/packages/foldkit-ui`], { cwd: REPO_ROOT, encoding: "utf8" }).trim(),
+    receipt.releaseWrapperTree,
+  );
   assert.match(receipt.releaseCommit, /^[a-f0-9]{40}$/);
   assert.match(receipt.publicCommit, /^[a-f0-9]{40}$/);
   assert.match(receipt.publicSourceTree, /^[a-f0-9]{40}$/);

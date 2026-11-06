@@ -1,0 +1,150 @@
+✔ publishes . with a built import and declaration (5003.7906ms)
+✔ publishes ./anchor with a built import and declaration (21.4658ms)
+✔ publishes ./animation with a built import and declaration (26.5999ms)
+✔ publishes ./button with a built import and declaration (14.803ms)
+✔ publishes ./calendar with a built import and declaration (47.2522ms)
+✔ publishes ./checkbox with a built import and declaration (18.9022ms)
+✔ publishes ./combobox with a built import and declaration (41.9555ms)
+✔ publishes ./datePicker with a built import and declaration (208.3716ms)
+✔ publishes ./dialog with a built import and declaration (79.0263ms)
+✔ publishes ./disclosure with a built import and declaration (22.9735ms)
+✔ publishes ./dragAndDrop with a built import and declaration (19.3193ms)
+✔ publishes ./fieldset with a built import and declaration (7.434ms)
+✔ publishes ./fileDrop with a built import and declaration (19.8808ms)
+✔ publishes ./hoverIntent with a built import and declaration (19.0255ms)
+✔ publishes ./input with a built import and declaration (17.9846ms)
+✔ publishes ./listbox with a built import and declaration (26.3961ms)
+✔ publishes ./menu with a built import and declaration (28.4009ms)
+✔ publishes ./meter with a built import and declaration (20.0183ms)
+✔ publishes ./nav with a built import and declaration (15.5664ms)
+✔ publishes ./popover with a built import and declaration (43.5913ms)
+✔ publishes ./progress with a built import and declaration (16.5011ms)
+✔ publishes ./radioGroup with a built import and declaration (21.7159ms)
+✔ publishes ./select with a built import and declaration (19.0009ms)
+✔ publishes ./slider with a built import and declaration (24.4985ms)
+✔ publishes ./switch with a built import and declaration (20.4585ms)
+✔ publishes ./tabs with a built import and declaration (16.2504ms)
+✔ publishes ./textarea with a built import and declaration (19.2843ms)
+✔ publishes ./toast with a built import and declaration (20.5139ms)
+✔ publishes ./tooltip with a built import and declaration (20.3159ms)
+✔ publishes ./virtualList with a built import and declaration (33.4111ms)
+✔ the wrapper exports map is exactly the derived entry surface (5.0635ms)
+✔ the built wrapper graph is browser-safe and excludes the Vite plugin (54.2752ms)
+✔ @foldkit/oxlint-plugin is pinned at 0.15.3 and vendored with the UI payload (9.622ms)
+✖ the packaged wrapper closure receipt is generated from and verified against the packaged release (12.4586ms)
+✖ a receipt with a foreign releaseRoot is rejected (11.8589ms)
+✖ a receipt with a missing executable hash is rejected (14.0883ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 33
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6753.9621
+
+✖ failing tests:
+
+test at role-model-router\packages\foldkit-ui\test\wrapper-closure.test.mjs:149:1
+✖ the packaged wrapper closure receipt is generated from and verified against the packaged release (12.4586ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - true
+  
+      at validatePackagedReceipt (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:81:10)
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:152:19)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at role-model-router\packages\foldkit-ui\test\wrapper-closure.test.mjs:156:1
+✖ a receipt with a foreign releaseRoot is rejected (11.8589ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /releaseRoot is foreign/. Input:
+  
+  'AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n' +
+    '+ actual - expected\n' +
+    '\n' +
+    '+ undefined\n' +
+    '- true\n'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:158:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+    + actual - expected
+    
+    + undefined
+    - true
+    
+        at validatePackagedReceipt (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:81:10)
+        at file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:159:11
+        at getActual (node:assert:611:5)
+        at strict.throws (node:assert:759:24)
+        at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:158:10)
+        at Test.runInAsyncScope (node:async_hooks:214:14)
+        at Test.run (node:internal/test_runner/test:1106:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+        at Test.postRun (node:internal/test_runner/test:1235:19)
+        at Test.run (node:internal/test_runner/test:1163:12),
+    expected: /releaseRoot is foreign/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at role-model-router\packages\foldkit-ui\test\wrapper-closure.test.mjs:164:1
+✖ a receipt with a missing executable hash is rejected (14.0883ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /executableSha256/. Input:
+  
+  'AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n' +
+    '+ actual - expected\n' +
+    '\n' +
+    '+ undefined\n' +
+    '- true\n'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:166:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+    + actual - expected
+    
+    + undefined
+    - true
+    
+        at validatePackagedReceipt (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:81:10)
+        at file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:167:11
+        at getActual (node:assert:611:5)
+        at strict.throws (node:assert:759:24)
+        at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:166:10)
+        at Test.runInAsyncScope (node:async_hooks:214:14)
+        at Test.run (node:internal/test_runner/test:1106:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+        at Test.postRun (node:internal/test_runner/test:1235:19)
+        at Test.run (node:internal/test_runner/test:1163:12),
+    expected: /executableSha256/,
+    operator: 'throws',
+    diff: 'simple'
+  }
