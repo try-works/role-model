@@ -34,7 +34,10 @@ const callTexts = (text: string): readonly string[] => {
   const token = "startBridgeServer(";
   const calls: string[] = [];
   let index = 0;
-  while ((index = text.indexOf(token, index)) >= 0) {
+  for (;;) {
+    const found = text.indexOf(token, index);
+    if (found < 0) break;
+    index = found;
     const open = index + token.length;
     let depth = 0;
     let quote: string | null = null;

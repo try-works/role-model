@@ -78,14 +78,19 @@ export interface R32DomainLayerOptions {
 
 const once = (release: () => Promise<void>): (() => Promise<void>) => {
   let pending: Promise<void> | null = null;
-  return () => (pending ??= release());
+  return () => {
+    pending ??= release();
+    return pending;
+  };
 };
 
 const nodeLayer = <I>(
   service: Context.Key<I, R32DomainNode>,
   id: R32DomainId,
   options: R32DomainLayerOptions,
+  // biome-ignore lint/suspicious/noExplicitAny: predecessor Layers carry heterogeneous service sets merged here.
   previous: Layer.Layer<any, never, never>,
+  // biome-ignore lint/suspicious/noExplicitAny: heterogeneous service sets are merged into the final Layer.
 ): Layer.Layer<any, never, never> => {
   const events = options.events ?? [];
   const leaf = Layer.effect(
@@ -115,6 +120,7 @@ const nodeLayer = <I>(
 
 const graphLeaf = (
   options: R32DomainLayerOptions,
+  // biome-ignore lint/suspicious/noExplicitAny: the predecessor Layer's service set is intentionally opaque.
   last: Layer.Layer<any, never, never>,
 ): Layer.Layer<R32DomainGraph, never, never> => {
   const events = options.events ?? [];
@@ -134,20 +140,23 @@ const graphLeaf = (
             retention: yield* R32Retention,
           };
           let closePromise: Promise<void> | null = null;
-          const graph: R32DomainGraphContract = {
-            close: () =>
-              (closePromise ??= (async () => {
-                const failures: unknown[] = [];
-                for (const id of [...R32_DOMAIN_IDS].reverse()) {
-                  try {
-                    await domains[id].release();
-                  } catch (error) {
-                    failures.push(error);
-                  }
+          const close = (): Promise<void> => {
+            closePromise ??= (async () => {
+              const failures: unknown[] = [];
+              for (const id of [...R32_DOMAIN_IDS].reverse()) {
+                try {
+                  await domains[id].release();
+                } catch (error) {
+                  failures.push(error);
                 }
-                if (failures.length > 0)
-                  throw new AggregateError(failures, "r32 domain release failures");
-              })()),
+              }
+              if (failures.length > 0)
+                throw new AggregateError(failures, "r32 domain release failures");
+            })();
+            return closePromise;
+          };
+          const graph: R32DomainGraphContract = {
+            close,
             domains,
             ready: true,
             shutdownOrder: [...R32_DOMAIN_IDS].reverse(),
@@ -167,6 +176,7 @@ export const composeR32DomainLayers = (
   options: R32DomainLayerOptions = {},
 ): Layer.Layer<R32DomainGraph, never, never> => {
   const normalized: R32DomainLayerOptions = { ...options, events: options.events ?? [] };
+  // biome-ignore lint/suspicious/noExplicitAny: context keys are heterogeneous per domain and narrowed by nodeLayer.
   const steps: ReadonlyArray<readonly [Context.Key<any, R32DomainNode>, R32DomainId]> = [
     [R32Retention, "retention"],
     [R32Evaluation, "evaluation"],
@@ -177,6 +187,7 @@ export const composeR32DomainLayers = (
     [R32Knowledge, "knowledge"],
     [R32Diagnostics, "diagnostics"],
   ];
+  // biome-ignore lint/suspicious/noExplicitAny: the accumulated Layer service set grows as each node is provided.
   let previous: Layer.Layer<any, never, never> = Layer.empty as Layer.Layer<any, never, never>;
   for (const [service, id] of steps) {
     previous = nodeLayer(service, id, normalized, previous);

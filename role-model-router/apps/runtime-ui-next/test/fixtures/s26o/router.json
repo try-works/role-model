@@ -12,7 +12,9 @@
   },
   "guidance": {
     "endpointId": "openai.personal.primary.us-east-1.fast",
-    "preferredEndpointIds": ["openai.personal.primary.us-east-1.fast"],
+    "preferredEndpointIds": [
+      "openai.personal.primary.us-east-1.fast"
+    ],
     "ignoredEndpointIds": []
   },
   "configuredCandidateCount": 3,

@@ -133,7 +133,9 @@ const nodeLeaf = <I>(
   service: Context.Key<I, R27Node>,
   id: R27ResourceId,
   options: R27LayerOptions,
+  // biome-ignore lint/suspicious/noExplicitAny: predecessor Layers carry heterogeneous service sets merged here.
   previous: Layer.Layer<any, never, never>,
+  // biome-ignore lint/suspicious/noExplicitAny: heterogeneous service sets are merged into the final Layer.
 ): Layer.Layer<any, never, never> => {
   const events = eventList(options);
   const leaf = Layer.effect(

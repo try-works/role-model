@@ -8,7 +8,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.302.ai/v1",
     "docsUrl": "https://doc.302.ai",
-    "envVars": ["302AI_API_KEY"],
+    "envVars": [
+      "302AI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -230,7 +232,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://routellm.abacus.ai/v1",
     "docsUrl": "https://abacus.ai/help/api",
-    "envVars": ["ABACUS_API_KEY"],
+    "envVars": [
+      "ABACUS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -474,11 +478,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.abliteration.ai/v1",
     "docsUrl": "https://docs.abliteration.ai/models",
-    "envVars": ["ABLIT_KEY"],
+    "envVars": [
+      "ABLIT_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["abliteration-ai/abliterated-model", "abliteration-ai/abliterated-model-large"],
+    "modelIds": [
+      "abliteration-ai/abliterated-model",
+      "abliteration-ai/abliterated-model-large"
+    ],
     "variants": [
       {
         "variantId": "abliteration-ai-api-key",
@@ -487,7 +496,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://api.abliteration.ai/v1",
-        "modelIds": ["abliteration-ai/abliterated-model", "abliteration-ai/abliterated-model-large"]
+        "modelIds": [
+          "abliteration-ai/abliterated-model",
+          "abliteration-ai/abliterated-model-large"
+        ]
       }
     ]
   },
@@ -500,7 +512,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.ai-router.dev/v1",
     "docsUrl": "https://ai-router.dev/openai-compatible-api-gateway/",
-    "envVars": ["AI_ROUTER_API_KEY"],
+    "envVars": [
+      "AI_ROUTER_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -538,7 +552,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.ai21.com/studio/v1",
     "docsUrl": null,
-    "envVars": ["AI21_API_KEY"],
+    "envVars": [
+      "AI21_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": true,
@@ -590,7 +606,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.aiand.com/v1",
     "docsUrl": "https://docs.aiand.com/",
-    "envVars": ["AIAND_API_KEY"],
+    "envVars": [
+      "AIAND_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -636,7 +654,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": "https://docs.aihubmix.com",
-    "envVars": ["AIHUBMIX_API_KEY"],
+    "envVars": [
+      "AIHUBMIX_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -804,7 +824,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["AIML_API_KEY"],
+    "envVars": [
+      "AIML_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -856,7 +878,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://aki.io/v1",
     "docsUrl": "https://aki.io/docs/",
-    "envVars": ["AKI_IO_API_KEY"],
+    "envVars": [
+      "AKI_IO_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -896,7 +920,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
     "docsUrl": "https://www.alibabacloud.com/help/en/model-studio/models",
-    "envVars": ["DASHSCOPE_API_KEY"],
+    "envVars": [
+      "DASHSCOPE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -1032,7 +1058,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://dashscope.aliyuncs.com/compatible-mode/v1",
     "docsUrl": "https://www.alibabacloud.com/help/en/model-studio/models",
-    "envVars": ["DASHSCOPE_API_KEY"],
+    "envVars": [
+      "DASHSCOPE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -1232,7 +1260,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://coding-intl.dashscope.aliyuncs.com/v1",
     "docsUrl": "https://www.alibabacloud.com/help/en/model-studio/coding-plan",
-    "envVars": ["ALIBABA_CODING_PLAN_API_KEY"],
+    "envVars": [
+      "ALIBABA_CODING_PLAN_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -1284,7 +1314,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://coding.dashscope.aliyuncs.com/v1",
     "docsUrl": "https://help.aliyun.com/zh/model-studio/coding-plan",
-    "envVars": ["ALIBABA_CODING_PLAN_API_KEY"],
+    "envVars": [
+      "ALIBABA_CODING_PLAN_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -1336,7 +1368,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1",
     "docsUrl": "https://www.alibabacloud.com/help/en/model-studio/token-plan-overview",
-    "envVars": ["ALIBABA_TOKEN_PLAN_API_KEY"],
+    "envVars": [
+      "ALIBABA_TOKEN_PLAN_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -1412,7 +1446,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://token-plan.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
     "docsUrl": "https://www.alibabacloud.com/help/zh/model-studio/token-plan-overview",
-    "envVars": ["ALIBABA_TOKEN_PLAN_API_KEY"],
+    "envVars": [
+      "ALIBABA_TOKEN_PLAN_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -1488,7 +1524,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["AMAZON_NOVA_API_KEY"],
+    "envVars": [
+      "AMAZON_NOVA_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -1779,7 +1817,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.ambient.xyz/v1",
     "docsUrl": "https://ambient.xyz",
-    "envVars": ["AMBIENT_API_KEY"],
+    "envVars": [
+      "AMBIENT_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -1827,9 +1867,13 @@
     "adapterFamily": "ai-sdk-anthropic",
     "apiBase": "https://api.anthropic.com/v1",
     "docsUrl": "https://docs.anthropic.com/en/docs/about-claude/models",
-    "envVars": ["ANTHROPIC_API_KEY"],
+    "envVars": [
+      "ANTHROPIC_API_KEY"
+    ],
     "supportedAuthModes": [],
-    "controlPlaneRequirements": ["workspace.required"],
+    "controlPlaneRequirements": [
+      "workspace.required"
+    ],
     "localOverrideApplied": true,
     "modelIds": [
       "anthropic/claude-fable-5",
@@ -1885,7 +1929,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.anyapi.ai/v1",
     "docsUrl": "https://docs.anyapi.ai",
-    "envVars": ["ANYAPI_API_KEY"],
+    "envVars": [
+      "ANYAPI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -1973,7 +2019,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["ANYSCALE_API_KEY"],
+    "envVars": [
+      "ANYSCALE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -2025,11 +2073,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["ASSEMBLYAI_API_KEY"],
+    "envVars": [
+      "ASSEMBLYAI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["assemblyai/best", "assemblyai/nano"],
+    "modelIds": [
+      "assemblyai/best",
+      "assemblyai/nano"
+    ],
     "variants": [
       {
         "variantId": "assemblyai-api-key",
@@ -2038,7 +2091,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["assemblyai/best", "assemblyai/nano"]
+        "modelIds": [
+          "assemblyai/best",
+          "assemblyai/nano"
+        ]
       }
     ]
   },
@@ -2051,7 +2107,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "http://127.0.0.1:1337/v1",
     "docsUrl": "https://atomic.chat",
-    "envVars": ["ATOMIC_CHAT_API_KEY"],
+    "envVars": [
+      "ATOMIC_CHAT_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -2089,7 +2147,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.auriko.ai/v1",
     "docsUrl": "https://docs.auriko.ai",
-    "envVars": ["AURIKO_API_KEY"],
+    "envVars": [
+      "AURIKO_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -2147,7 +2207,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["AWS_POLLY_API_KEY"],
+    "envVars": [
+      "AWS_POLLY_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -2183,7 +2245,10 @@
     "adapterFamily": "ai-sdk-azure",
     "apiBase": "https://{resource-name}.openai.azure.com",
     "docsUrl": "https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models",
-    "envVars": ["AZURE_API_KEY", "AZURE_RESOURCE_NAME"],
+    "envVars": [
+      "AZURE_API_KEY",
+      "AZURE_RESOURCE_NAME"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -2377,7 +2442,9 @@
     "adapterFamily": "ai-sdk-azure",
     "apiBase": "https://services.ai.azure.com/models",
     "docsUrl": null,
-    "envVars": ["AZURE_AI_API_KEY"],
+    "envVars": [
+      "AZURE_AI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": true,
@@ -2557,7 +2624,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["AZURE_TEXT_API_KEY"],
+    "envVars": [
+      "AZURE_TEXT_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -2583,7 +2652,10 @@
     "adapterFamily": "ai-sdk-azure",
     "apiBase": "",
     "docsUrl": "https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models",
-    "envVars": ["AZURE_COGNITIVE_SERVICES_API_KEY", "AZURE_COGNITIVE_SERVICES_RESOURCE_NAME"],
+    "envVars": [
+      "AZURE_COGNITIVE_SERVICES_API_KEY",
+      "AZURE_COGNITIVE_SERVICES_RESOURCE_NAME"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -2755,11 +2827,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.tbox.cn/api/llm/v1/chat/completions",
     "docsUrl": "https://alipaytbox.yuque.com/sxs0ba/ling/intro",
-    "envVars": ["BAILING_API_TOKEN"],
+    "envVars": [
+      "BAILING_API_TOKEN"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["bailing/Ling-1T", "bailing/Ring-1T"],
+    "modelIds": [
+      "bailing/Ling-1T",
+      "bailing/Ring-1T"
+    ],
     "variants": [
       {
         "variantId": "bailing-api-key",
@@ -2768,7 +2845,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://api.tbox.cn/api/llm/v1/chat/completions",
-        "modelIds": ["bailing/Ling-1T", "bailing/Ring-1T"]
+        "modelIds": [
+          "bailing/Ling-1T",
+          "bailing/Ring-1T"
+        ]
       }
     ]
   },
@@ -2781,7 +2861,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://inference.baseten.co/v1",
     "docsUrl": "https://docs.baseten.co/inference/model-apis/overview",
-    "envVars": ["BASETEN_API_KEY"],
+    "envVars": [
+      "BASETEN_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -2847,7 +2929,10 @@
     "adapterFamily": "ai-sdk-bedrock",
     "apiBase": "https://bedrock-runtime.us-east-1.amazonaws.com",
     "docsUrl": null,
-    "envVars": ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
+    "envVars": [
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": true,
@@ -3391,7 +3476,10 @@
     "adapterFamily": "ai-sdk-bedrock",
     "apiBase": "https://bedrock-runtime.us-east-1.amazonaws.com",
     "docsUrl": null,
-    "envVars": ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
+    "envVars": [
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": true,
@@ -3659,7 +3747,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["BEDROCK_MANTLE_API_KEY"],
+    "envVars": [
+      "BEDROCK_MANTLE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -3695,7 +3785,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.berget.ai/v1",
     "docsUrl": "https://api.berget.ai",
-    "envVars": ["BERGET_API_KEY"],
+    "envVars": [
+      "BERGET_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -3741,7 +3833,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["BLACK_FOREST_LABS_API_KEY"],
+    "envVars": [
+      "BLACK_FOREST_LABS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -3785,11 +3879,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://openai.blueclaw.network/v1",
     "docsUrl": "https://blueclaw.network",
-    "envVars": ["BLUECLAW_API_KEY"],
+    "envVars": [
+      "BLUECLAW_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["blueclaw/Qwen/Qwen3.6-35B-A3B-FP8", "blueclaw/Qwen3.6-27B"],
+    "modelIds": [
+      "blueclaw/Qwen/Qwen3.6-35B-A3B-FP8",
+      "blueclaw/Qwen3.6-27B"
+    ],
     "variants": [
       {
         "variantId": "blueclaw-api-key",
@@ -3798,7 +3897,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://openai.blueclaw.network/v1",
-        "modelIds": ["blueclaw/Qwen/Qwen3.6-35B-A3B-FP8", "blueclaw/Qwen3.6-27B"]
+        "modelIds": [
+          "blueclaw/Qwen/Qwen3.6-35B-A3B-FP8",
+          "blueclaw/Qwen3.6-27B"
+        ]
       }
     ]
   },
@@ -3811,11 +3913,17 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": "https://inference-docs.cerebras.ai/models/overview",
-    "envVars": ["CEREBRAS_API_KEY"],
+    "envVars": [
+      "CEREBRAS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["cerebras/gemma-4-31b", "cerebras/gpt-oss-120b", "cerebras/zai-glm-4.7"],
+    "modelIds": [
+      "cerebras/gemma-4-31b",
+      "cerebras/gpt-oss-120b",
+      "cerebras/zai-glm-4.7"
+    ],
     "variants": [
       {
         "variantId": "cerebras-api-key",
@@ -3824,7 +3932,11 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["cerebras/gemma-4-31b", "cerebras/gpt-oss-120b", "cerebras/zai-glm-4.7"]
+        "modelIds": [
+          "cerebras/gemma-4-31b",
+          "cerebras/gpt-oss-120b",
+          "cerebras/zai-glm-4.7"
+        ]
       }
     ]
   },
@@ -3837,7 +3949,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://llm.chutes.ai/v1",
     "docsUrl": "https://llm.chutes.ai/v1/models",
-    "envVars": ["CHUTES_API_KEY"],
+    "envVars": [
+      "CHUTES_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -3891,7 +4005,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.clarifai.com/v2/ext/openai/v1",
     "docsUrl": "https://docs.clarifai.com/compute/inference/",
-    "envVars": ["CLARIFAI_PAT"],
+    "envVars": [
+      "CLARIFAI_PAT"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -3943,11 +4059,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.claudin.io/v1",
     "docsUrl": "https://claudin.io",
-    "envVars": ["CLAUDINIO_API_KEY"],
+    "envVars": [
+      "CLAUDINIO_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["claudinio/claudinio", "claudinio/claudius"],
+    "modelIds": [
+      "claudinio/claudinio",
+      "claudinio/claudius"
+    ],
     "variants": [
       {
         "variantId": "claudinio-api-key",
@@ -3956,7 +4077,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://api.claudin.io/v1",
-        "modelIds": ["claudinio/claudinio", "claudinio/claudius"]
+        "modelIds": [
+          "claudinio/claudinio",
+          "claudinio/claudius"
+        ]
       }
     ]
   },
@@ -3969,7 +4093,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.cline.bot/api/v1",
     "docsUrl": "https://docs.cline.bot/getting-started/clinepass",
-    "envVars": ["CLINE_API_KEY"],
+    "envVars": [
+      "CLINE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -4019,7 +4145,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api-sherlock.cloudferro.com/openai/v1",
     "docsUrl": "https://docs.sherlock.cloudferro.com/",
-    "envVars": ["CLOUDFERRO_SHERLOCK_API_KEY"],
+    "envVars": [
+      "CLOUDFERRO_SHERLOCK_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -4057,7 +4185,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["CLOUDFLARE_API_KEY"],
+    "envVars": [
+      "CLOUDFLARE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -4093,7 +4223,11 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": "https://developers.cloudflare.com/ai-gateway/",
-    "envVars": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN", "CLOUDFLARE_GATEWAY_ID"],
+    "envVars": [
+      "CLOUDFLARE_ACCOUNT_ID",
+      "CLOUDFLARE_API_TOKEN",
+      "CLOUDFLARE_GATEWAY_ID"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -4255,7 +4389,10 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/v1",
     "docsUrl": "https://developers.cloudflare.com/workers-ai/models/",
-    "envVars": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_KEY"],
+    "envVars": [
+      "CLOUDFLARE_ACCOUNT_ID",
+      "CLOUDFLARE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -4331,11 +4468,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["CODESTRAL_API_KEY"],
+    "envVars": [
+      "CODESTRAL_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["codestral/codestral-2405", "codestral/codestral-latest"],
+    "modelIds": [
+      "codestral/codestral-2405",
+      "codestral/codestral-latest"
+    ],
     "variants": [
       {
         "variantId": "codestral-api-key",
@@ -4344,7 +4486,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["codestral/codestral-2405", "codestral/codestral-latest"]
+        "modelIds": [
+          "codestral/codestral-2405",
+          "codestral/codestral-latest"
+        ]
       }
     ]
   },
@@ -4357,7 +4502,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.cohere.com/v1",
     "docsUrl": "https://docs.cohere.com/docs/models",
-    "envVars": ["COHERE_API_KEY"],
+    "envVars": [
+      "COHERE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -4413,7 +4560,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["COHERE_CHAT_API_KEY"],
+    "envVars": [
+      "COHERE_CHAT_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -4455,11 +4604,17 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://inference.coralbricks.ai/v1",
     "docsUrl": "https://www.coralbricks.ai/docs",
-    "envVars": ["CORAL_API_KEY"],
+    "envVars": [
+      "CORAL_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["coralbricks/glm-5.2-fp4", "coralbricks/gpt-oss-120b", "coralbricks/kimi-k3"],
+    "modelIds": [
+      "coralbricks/glm-5.2-fp4",
+      "coralbricks/gpt-oss-120b",
+      "coralbricks/kimi-k3"
+    ],
     "variants": [
       {
         "variantId": "coralbricks-api-key",
@@ -4468,7 +4623,11 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://inference.coralbricks.ai/v1",
-        "modelIds": ["coralbricks/glm-5.2-fp4", "coralbricks/gpt-oss-120b", "coralbricks/kimi-k3"]
+        "modelIds": [
+          "coralbricks/glm-5.2-fp4",
+          "coralbricks/gpt-oss-120b",
+          "coralbricks/kimi-k3"
+        ]
       }
     ]
   },
@@ -4481,7 +4640,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.cortecs.ai/v1",
     "docsUrl": "https://api.cortecs.ai/v1/models",
-    "envVars": ["CORTECS_API_KEY"],
+    "envVars": [
+      "CORTECS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -4723,7 +4884,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://crof.ai/v1",
     "docsUrl": "https://crof.ai/docs",
-    "envVars": ["CROF_API_KEY"],
+    "envVars": [
+      "CROF_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -4803,7 +4966,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.crossmodel.ai/v1",
     "docsUrl": "https://www.crossmodel.ai/docs",
-    "envVars": ["CROSSMODEL_API_KEY"],
+    "envVars": [
+      "CROSSMODEL_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -4931,7 +5096,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.inference.crusoecloud.com/v1",
     "docsUrl": "https://docs.crusoecloud.com/managed-inference/overview",
-    "envVars": ["CRUSOE_API_KEY"],
+    "envVars": [
+      "CRUSOE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -4975,7 +5142,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://daoxe.com/v1",
     "docsUrl": "https://daoxe.com/pricing",
-    "envVars": ["DAOXE_API_KEY"],
+    "envVars": [
+      "DAOXE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -5021,7 +5190,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["DASHSCOPE_API_KEY"],
+    "envVars": [
+      "DASHSCOPE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -5117,7 +5288,10 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://${DATABRICKS_HOST}/ai-gateway/mlflow/v1",
     "docsUrl": "https://docs.databricks.com/aws/en/machine-learning/foundation-models/",
-    "envVars": ["DATABRICKS_HOST", "DATABRICKS_TOKEN"],
+    "envVars": [
+      "DATABRICKS_HOST",
+      "DATABRICKS_TOKEN"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -5205,11 +5379,15 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["DATAFORSEO_API_KEY"],
+    "envVars": [
+      "DATAFORSEO_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["dataforseo/search"],
+    "modelIds": [
+      "dataforseo/search"
+    ],
     "variants": [
       {
         "variantId": "dataforseo-api-key",
@@ -5218,7 +5396,9 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["dataforseo/search"]
+        "modelIds": [
+          "dataforseo/search"
+        ]
       }
     ]
   },
@@ -5231,7 +5411,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["DEEPGRAM_API_KEY"],
+    "envVars": [
+      "DEEPGRAM_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -5331,7 +5513,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": "https://deepinfra.com/models",
-    "envVars": ["DEEPINFRA_API_KEY"],
+    "envVars": [
+      "DEEPINFRA_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -5471,7 +5655,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.deepseek.com/v1",
     "docsUrl": "https://api-docs.deepseek.com/quick_start/pricing",
-    "envVars": ["DEEPSEEK_API_KEY"],
+    "envVars": [
+      "DEEPSEEK_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -5511,7 +5697,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://inference.do-ai.run/v1",
     "docsUrl": "https://docs.digitalocean.com/products/gradient-ai-platform/details/models/",
-    "envVars": ["DIGITALOCEAN_ACCESS_TOKEN"],
+    "envVars": [
+      "DIGITALOCEAN_ACCESS_TOKEN"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -5721,7 +5909,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.dinference.com/v1",
     "docsUrl": "https://dinference.com",
-    "envVars": ["DINFERENCE_API_KEY"],
+    "envVars": [
+      "DINFERENCE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -5761,11 +5951,17 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://chat.d.run/v1",
     "docsUrl": "https://www.d.run",
-    "envVars": ["DRUN_API_KEY"],
+    "envVars": [
+      "DRUN_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["drun/public/deepseek-r1", "drun/public/deepseek-v3", "drun/public/minimax-m25"],
+    "modelIds": [
+      "drun/public/deepseek-r1",
+      "drun/public/deepseek-v3",
+      "drun/public/minimax-m25"
+    ],
     "variants": [
       {
         "variantId": "drun-api-key",
@@ -5791,11 +5987,15 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["DUCKDUCKGO_API_KEY"],
+    "envVars": [
+      "DUCKDUCKGO_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["duckduckgo/search"],
+    "modelIds": [
+      "duckduckgo/search"
+    ],
     "variants": [
       {
         "variantId": "duckduckgo-api-key",
@@ -5804,7 +6004,9 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["duckduckgo/search"]
+        "modelIds": [
+          "duckduckgo/search"
+        ]
       }
     ]
   },
@@ -5817,7 +6019,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://maas-api.ebcloud.com/v1",
     "docsUrl": "https://docs.ebtech.com/ai/model-api.html",
-    "envVars": ["EBCLOUD_API_KEY"],
+    "envVars": [
+      "EBCLOUD_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -5853,7 +6057,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.edenai.run/v3",
     "docsUrl": "https://docs.edenai.co",
-    "envVars": ["EDENAI_API_KEY"],
+    "envVars": [
+      "EDENAI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -6321,7 +6527,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["ELEVENLABS_API_KEY"],
+    "envVars": [
+      "ELEVENLABS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -6357,7 +6565,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.empiriolabs.ai/v1",
     "docsUrl": "https://docs.empiriolabs.ai",
-    "envVars": ["EMPIRIOLABS_API_KEY"],
+    "envVars": [
+      "EMPIRIOLABS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -6473,7 +6683,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://models.think.evroc.com/v1",
     "docsUrl": "https://docs.evroc.com/products/think/overview.html",
-    "envVars": ["EVROC_API_KEY"],
+    "envVars": [
+      "EVROC_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -6531,11 +6743,15 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["EXA_AI_API_KEY"],
+    "envVars": [
+      "EXA_AI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["exa_ai/search"],
+    "modelIds": [
+      "exa_ai/search"
+    ],
     "variants": [
       {
         "variantId": "exa_ai-api-key",
@@ -6544,7 +6760,9 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["exa_ai/search"]
+        "modelIds": [
+          "exa_ai/search"
+        ]
       }
     ]
   },
@@ -6557,7 +6775,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["FAL_AI_API_KEY"],
+    "envVars": [
+      "FAL_AI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -6609,7 +6829,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://go.fastrouter.ai/api/v1",
     "docsUrl": "https://fastrouter.ai/models",
-    "envVars": ["FASTROUTER_API_KEY"],
+    "envVars": [
+      "FASTROUTER_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -6731,7 +6953,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["FEATHERLESS_AI_API_KEY"],
+    "envVars": [
+      "FEATHERLESS_AI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -6763,11 +6987,15 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["FIRECRAWL_API_KEY"],
+    "envVars": [
+      "FIRECRAWL_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["firecrawl/search"],
+    "modelIds": [
+      "firecrawl/search"
+    ],
     "variants": [
       {
         "variantId": "firecrawl-api-key",
@@ -6776,7 +7004,9 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["firecrawl/search"]
+        "modelIds": [
+          "firecrawl/search"
+        ]
       }
     ]
   },
@@ -6789,7 +7019,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.fireworks.ai/inference/v1",
     "docsUrl": null,
-    "envVars": ["FIREWORKS_API_KEY"],
+    "envVars": [
+      "FIREWORKS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": true,
@@ -7365,7 +7597,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["FIREWORKS_AI_EMBEDDING_MODELS_API_KEY"],
+    "envVars": [
+      "FIREWORKS_AI_EMBEDDING_MODELS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -7397,7 +7631,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.fireworks.ai/inference/v1",
     "docsUrl": "https://fireworks.ai/docs/",
-    "envVars": ["FIREWORKS_API_KEY"],
+    "envVars": [
+      "FIREWORKS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -7471,7 +7707,9 @@
     "adapterFamily": "ai-sdk-anthropic",
     "apiBase": "https://cc.freemodel.dev/v1",
     "docsUrl": "https://freemodel.dev",
-    "envVars": ["FREEMODEL_API_KEY"],
+    "envVars": [
+      "FREEMODEL_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -7519,7 +7757,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.friendli.ai/serverless/v1",
     "docsUrl": "https://friendli.ai/docs/guides/serverless_endpoints/introduction",
-    "envVars": ["FRIENDLI_TOKEN"],
+    "envVars": [
+      "FRIENDLI_TOKEN"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -7557,11 +7797,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://inference.friendli.ai/v1",
     "docsUrl": null,
-    "envVars": ["FRIENDLI_TOKEN"],
+    "envVars": [
+      "FRIENDLI_TOKEN"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": true,
-    "modelIds": ["friendliai/meta-llama-3.1-70b-instruct", "friendliai/meta-llama-3.1-8b-instruct"],
+    "modelIds": [
+      "friendliai/meta-llama-3.1-70b-instruct",
+      "friendliai/meta-llama-3.1-8b-instruct"
+    ],
     "variants": [
       {
         "variantId": "friendliai-api-key",
@@ -7586,7 +7831,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://app.frogbot.ai/api/v1",
     "docsUrl": "https://docs.frogbot.ai",
-    "envVars": ["FROGBOT_API_KEY"],
+    "envVars": [
+      "FROGBOT_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -7666,7 +7913,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://generativelanguage.googleapis.com/v1beta",
     "docsUrl": null,
-    "envVars": ["GEMINI_API_KEY"],
+    "envVars": [
+      "GEMINI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": true,
@@ -7806,7 +8055,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["GIGACHAT_API_KEY"],
+    "envVars": [
+      "GIGACHAT_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -7846,7 +8097,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["GITHUB_COPILOT_API_KEY"],
+    "envVars": [
+      "GITHUB_COPILOT_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -7936,7 +8189,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.githubcopilot.com",
     "docsUrl": "https://docs.github.com/en/copilot",
-    "envVars": ["GITHUB_TOKEN"],
+    "envVars": [
+      "GITHUB_TOKEN"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -8030,7 +8285,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": "https://docs.gitlab.com/user/duo_agent_platform/",
-    "envVars": ["GITLAB_TOKEN"],
+    "envVars": [
+      "GITLAB_TOKEN"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -8104,7 +8361,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["GMI_API_KEY"],
+    "envVars": [
+      "GMI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -8166,7 +8425,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.gmi-serving.com/v1",
     "docsUrl": "https://docs.gmicloud.ai/inference-engine/api-reference/llm-api-reference",
-    "envVars": ["GMICLOUD_API_KEY"],
+    "envVars": [
+      "GMICLOUD_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -8220,7 +8481,11 @@
     "adapterFamily": "ai-sdk-google",
     "apiBase": "",
     "docsUrl": "https://ai.google.dev/gemini-api/docs/models",
-    "envVars": ["GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY"],
+    "envVars": [
+      "GEMINI_API_KEY",
+      "GOOGLE_API_KEY",
+      "GOOGLE_GENERATIVE_AI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -8326,11 +8591,15 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["GOOGLE_PSE_API_KEY"],
+    "envVars": [
+      "GOOGLE_PSE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["google_pse/search"],
+    "modelIds": [
+      "google_pse/search"
+    ],
     "variants": [
       {
         "variantId": "google_pse-api-key",
@@ -8339,7 +8608,9 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["google_pse/search"]
+        "modelIds": [
+          "google_pse/search"
+        ]
       }
     ]
   },
@@ -8524,7 +8795,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["GRADIENT_AI_API_KEY"],
+    "envVars": [
+      "GRADIENT_AI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -8578,7 +8851,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.greenpt.ai/v1",
     "docsUrl": "https://docs.greenpt.ai",
-    "envVars": ["GREENPT_API_KEY"],
+    "envVars": [
+      "GREENPT_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -8680,7 +8955,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.groq.com/openai/v1",
     "docsUrl": "https://console.groq.com/docs/models",
-    "envVars": ["GROQ_API_KEY"],
+    "envVars": [
+      "GROQ_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -8738,7 +9015,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://ai-gateway.helicone.ai/v1",
     "docsUrl": "https://helicone.ai/models",
-    "envVars": ["HELICONE_API_KEY"],
+    "envVars": [
+      "HELICONE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -8946,7 +9225,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["HEROKU_API_KEY"],
+    "envVars": [
+      "HEROKU_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -8982,7 +9263,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://inference.hetzner.com/api/v1",
     "docsUrl": "https://experiments.hetzner.com/docs/inference",
-    "envVars": ["HETZNER_API_KEY"],
+    "envVars": [
+      "HETZNER_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -9018,7 +9301,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.hpc-ai.com/inference/v1",
     "docsUrl": "https://www.hpc-ai.com/doc/docs/quickstart/",
-    "envVars": ["HPC_AI_API_KEY"],
+    "envVars": [
+      "HPC_AI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -9064,7 +9349,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://router.huggingface.co/v1",
     "docsUrl": "https://huggingface.co/docs/inference-providers",
-    "envVars": ["HF_TOKEN"],
+    "envVars": [
+      "HF_TOKEN"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -9222,7 +9509,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://hyper.charm.land/v1",
     "docsUrl": "https://hyper.charm.land",
-    "envVars": ["HYPER_API_KEY"],
+    "envVars": [
+      "HYPER_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -9300,7 +9589,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["HYPERBOLIC_API_KEY"],
+    "envVars": [
+      "HYPERBOLIC_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -9360,7 +9651,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://apis.iflow.cn/v1",
     "docsUrl": "https://platform.iflow.cn/en/docs",
-    "envVars": ["IFLOW_API_KEY"],
+    "envVars": [
+      "IFLOW_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -9416,7 +9709,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.impossibl.com/v1",
     "docsUrl": "https://impossibl.com/docs/models",
-    "envVars": ["IMPOSSIBL_API_KEY"],
+    "envVars": [
+      "IMPOSSIBL_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -9596,11 +9891,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.inceptionlabs.ai/v1",
     "docsUrl": "https://platform.inceptionlabs.ai/docs",
-    "envVars": ["INCEPTION_API_KEY"],
+    "envVars": [
+      "INCEPTION_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["inception/mercury-2", "inception/mercury-edit-2"],
+    "modelIds": [
+      "inception/mercury-2",
+      "inception/mercury-edit-2"
+    ],
     "variants": [
       {
         "variantId": "inception-api-key",
@@ -9609,7 +9909,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://api.inceptionlabs.ai/v1",
-        "modelIds": ["inception/mercury-2", "inception/mercury-edit-2"]
+        "modelIds": [
+          "inception/mercury-2",
+          "inception/mercury-edit-2"
+        ]
       }
     ]
   },
@@ -9622,7 +9925,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.inceptron.io/v1",
     "docsUrl": "https://docs.inceptron.io",
-    "envVars": ["INCEPTRON_API_KEY"],
+    "envVars": [
+      "INCEPTRON_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -9660,7 +9965,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://inference.net/v1",
     "docsUrl": "https://inference.net/models",
-    "envVars": ["INFERENCE_API_KEY"],
+    "envVars": [
+      "INFERENCE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -9706,7 +10013,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://model.inferx.net/endpoints/v1",
     "docsUrl": "https://model.inferx.net/endpoints",
-    "envVars": ["INFERX_API_KEY"],
+    "envVars": [
+      "INFERX_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -9746,7 +10055,10 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.infomaniak.com/2/ai/${INFOMANIAK_PRODUCT_ID}/openai/v1",
     "docsUrl": "https://www.infomaniak.com/en/hosting/ai-services/open-source-models",
-    "envVars": ["INFOMANIAK_API_KEY", "INFOMANIAK_PRODUCT_ID"],
+    "envVars": [
+      "INFOMANIAK_API_KEY",
+      "INFOMANIAK_PRODUCT_ID"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -9794,7 +10106,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.intelligence.io.solutions/api/v1",
     "docsUrl": "https://io.net/docs/guides/intelligence/io-intelligence",
-    "envVars": ["IOINTELLIGENCE_API_KEY"],
+    "envVars": [
+      "IOINTELLIGENCE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -9856,7 +10170,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.jiekou.ai/openai",
     "docsUrl": "https://docs.jiekou.ai/docs/support/quickstart?utm_source=github_models.dev",
-    "envVars": ["JIEKOU_API_KEY"],
+    "envVars": [
+      "JIEKOU_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -10006,11 +10322,15 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["JINA_AI_API_KEY"],
+    "envVars": [
+      "JINA_AI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["jina_ai/jina-reranker-v2-base-multilingual"],
+    "modelIds": [
+      "jina_ai/jina-reranker-v2-base-multilingual"
+    ],
     "variants": [
       {
         "variantId": "jina_ai-api-key",
@@ -10019,7 +10339,9 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["jina_ai/jina-reranker-v2-base-multilingual"]
+        "modelIds": [
+          "jina_ai/jina-reranker-v2-base-multilingual"
+        ]
       }
     ]
   },
@@ -10032,7 +10354,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://kenari.id/v1",
     "docsUrl": "https://kenari.id/docs",
-    "envVars": ["KENARI_API_KEY"],
+    "envVars": [
+      "KENARI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -10136,7 +10460,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.kilo.ai/api/gateway",
     "docsUrl": "https://kilo.ai",
-    "envVars": ["KILO_API_KEY"],
+    "envVars": [
+      "KILO_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -10880,7 +11206,9 @@
     "adapterFamily": "ai-sdk-anthropic",
     "apiBase": "https://api.kimi.com/coding/v1",
     "docsUrl": "https://www.kimi.com/code/docs/en/third-party-tools/other-coding-agents.html",
-    "envVars": ["KIMI_API_KEY"],
+    "envVars": [
+      "KIMI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -10916,11 +11244,15 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://coding-plan-endpoint.kuaecloud.net/v1",
     "docsUrl": "https://docs.mthreads.com/kuaecloud/kuaecloud-doc-online/coding_plan/",
-    "envVars": ["KUAE_API_KEY"],
+    "envVars": [
+      "KUAE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["kuae-cloud-coding-plan/GLM-4.7"],
+    "modelIds": [
+      "kuae-cloud-coding-plan/GLM-4.7"
+    ],
     "variants": [
       {
         "variantId": "kuae-cloud-coding-plan-api-key",
@@ -10929,7 +11261,9 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://coding-plan-endpoint.kuaecloud.net/v1",
-        "modelIds": ["kuae-cloud-coding-plan/GLM-4.7"]
+        "modelIds": [
+          "kuae-cloud-coding-plan/GLM-4.7"
+        ]
       }
     ]
   },
@@ -10942,7 +11276,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["LAMBDA_AI_API_KEY"],
+    "envVars": [
+      "LAMBDA_AI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -11010,7 +11346,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["LEMONADE_API_KEY"],
+    "envVars": [
+      "LEMONADE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -11048,7 +11386,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.getlilac.com/v1",
     "docsUrl": "https://docs.getlilac.com/inference/models",
-    "envVars": ["LILAC_API_KEY"],
+    "envVars": [
+      "LILAC_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -11084,11 +11424,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["LINKUP_API_KEY"],
+    "envVars": [
+      "LINKUP_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["linkup/search", "linkup/search-deep"],
+    "modelIds": [
+      "linkup/search",
+      "linkup/search-deep"
+    ],
     "variants": [
       {
         "variantId": "linkup-api-key",
@@ -11097,7 +11442,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["linkup/search", "linkup/search-deep"]
+        "modelIds": [
+          "linkup/search",
+          "linkup/search-deep"
+        ]
       }
     ]
   },
@@ -11110,7 +11458,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.llama.com/compat/v1",
     "docsUrl": "https://llama.developer.meta.com/docs/models",
-    "envVars": ["LLAMA_API_KEY"],
+    "envVars": [
+      "LLAMA_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -11177,7 +11527,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["LLAMAGATE_API_KEY"],
+    "envVars": [
+      "LLAMAGATE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -11237,7 +11589,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.llmgateway.io/v1",
     "docsUrl": "https://llmgateway.io/docs",
-    "envVars": ["LLMGATEWAY_API_KEY"],
+    "envVars": [
+      "LLMGATEWAY_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -11643,7 +11997,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://llmtr.com/v1",
     "docsUrl": "https://llmtr.com/docs",
-    "envVars": ["LLMTR_API_KEY"],
+    "envVars": [
+      "LLMTR_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -11683,7 +12039,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "http://127.0.0.1:1234/v1",
     "docsUrl": "https://lmstudio.ai/models",
-    "envVars": ["LMSTUDIO_API_KEY"],
+    "envVars": [
+      "LMSTUDIO_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -11718,7 +12076,9 @@
     "apiBase": "http://127.0.0.1:1234/v1",
     "docsUrl": null,
     "envVars": [],
-    "supportedAuthModes": ["api-key-static"],
+    "supportedAuthModes": [
+      "api-key-static"
+    ],
     "controlPlaneRequirements": [],
     "localOverrideApplied": true,
     "modelIds": [],
@@ -11743,11 +12103,15 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.longcat.chat/openai",
     "docsUrl": "https://longcat.chat/platform/docs/",
-    "envVars": ["LONGCAT_API_KEY"],
+    "envVars": [
+      "LONGCAT_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["longcat/LongCat-2.0"],
+    "modelIds": [
+      "longcat/LongCat-2.0"
+    ],
     "variants": [
       {
         "variantId": "longcat-api-key",
@@ -11756,7 +12120,9 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://api.longcat.chat/openai",
-        "modelIds": ["longcat/LongCat-2.0"]
+        "modelIds": [
+          "longcat/LongCat-2.0"
+        ]
       }
     ]
   },
@@ -11769,7 +12135,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.lucidquery.com/v1",
     "docsUrl": "https://lucidquery.com/docs",
-    "envVars": ["LUCIDQUERY_API_KEY"],
+    "envVars": [
+      "LUCIDQUERY_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -11805,11 +12173,15 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "http://127.0.0.1:8081/v1",
     "docsUrl": "https://github.com/Fast-Editor/Lynkr",
-    "envVars": ["LYNKR_API_KEY"],
+    "envVars": [
+      "LYNKR_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["lynkr/lynkr-auto"],
+    "modelIds": [
+      "lynkr/lynkr-auto"
+    ],
     "variants": [
       {
         "variantId": "lynkr-api-key",
@@ -11818,7 +12190,9 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "http://127.0.0.1:8081/v1",
-        "modelIds": ["lynkr/lynkr-auto"]
+        "modelIds": [
+          "lynkr/lynkr-auto"
+        ]
       }
     ]
   },
@@ -11831,7 +12205,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.meganova.ai/v1",
     "docsUrl": "https://docs.meganova.ai",
-    "envVars": ["MEGANOVA_API_KEY"],
+    "envVars": [
+      "MEGANOVA_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -11897,7 +12273,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api-gateway.merge.dev/v1/ai-sdk",
     "docsUrl": "https://docs.merge.dev/merge-gateway",
-    "envVars": ["MERGE_GATEWAY_API_KEY"],
+    "envVars": [
+      "MERGE_GATEWAY_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -12263,11 +12641,17 @@
     "adapterFamily": "ai-sdk-openai",
     "apiBase": "https://api.meta.ai/v1",
     "docsUrl": "https://dev.meta.ai/docs",
-    "envVars": ["META_MODEL_API_KEY"],
+    "envVars": [
+      "META_MODEL_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["meta/muse-spark-1.1", "meta/muse-spark-1.2", "meta/muse-spark-1.2-contributor"],
+    "modelIds": [
+      "meta/muse-spark-1.1",
+      "meta/muse-spark-1.2",
+      "meta/muse-spark-1.2-contributor"
+    ],
     "variants": [
       {
         "variantId": "meta-api-key",
@@ -12293,7 +12677,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["META_LLAMA_API_KEY"],
+    "envVars": [
+      "META_LLAMA_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -12329,7 +12715,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.minimax.io/anthropic/v1",
     "docsUrl": "https://platform.minimax.io/docs/guides/quickstart",
-    "envVars": ["MINIMAX_API_KEY"],
+    "envVars": [
+      "MINIMAX_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -12371,7 +12759,9 @@
     "adapterFamily": "ai-sdk-anthropic",
     "apiBase": "https://api.minimaxi.com/anthropic/v1",
     "docsUrl": "https://platform.minimaxi.com/docs/guides/quickstart",
-    "envVars": ["MINIMAX_API_KEY"],
+    "envVars": [
+      "MINIMAX_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -12413,7 +12803,9 @@
     "adapterFamily": "ai-sdk-anthropic",
     "apiBase": "https://api.minimaxi.com/anthropic/v1",
     "docsUrl": "https://platform.minimaxi.com/docs/token-plan/intro",
-    "envVars": ["MINIMAX_API_KEY"],
+    "envVars": [
+      "MINIMAX_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -12455,7 +12847,9 @@
     "adapterFamily": "ai-sdk-anthropic",
     "apiBase": "https://api.minimax.io/anthropic/v1",
     "docsUrl": "https://platform.minimax.io/docs/token-plan/intro",
-    "envVars": ["MINIMAX_API_KEY"],
+    "envVars": [
+      "MINIMAX_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -12497,7 +12891,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.mistral.ai/v1",
     "docsUrl": "https://docs.mistral.ai/getting-started/models/",
-    "envVars": ["MISTRAL_API_KEY"],
+    "envVars": [
+      "MISTRAL_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -12591,7 +12987,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://models.mixlayer.ai/v1",
     "docsUrl": "https://docs.mixlayer.com",
-    "envVars": ["MIXLAYER_API_KEY"],
+    "envVars": [
+      "MIXLAYER_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -12629,11 +13027,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://moark.com/v1",
     "docsUrl": "https://moark.com/docs/openapi/v1#tag/%E6%96%87%E6%9C%AC%E7%94%9F%E6%88%90",
-    "envVars": ["MOARK_API_KEY"],
+    "envVars": [
+      "MOARK_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["moark/GLM-4.7", "moark/MiniMax-M2.1"],
+    "modelIds": [
+      "moark/GLM-4.7",
+      "moark/MiniMax-M2.1"
+    ],
     "variants": [
       {
         "variantId": "moark-api-key",
@@ -12642,7 +13045,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://moark.com/v1",
-        "modelIds": ["moark/GLM-4.7", "moark/MiniMax-M2.1"]
+        "modelIds": [
+          "moark/GLM-4.7",
+          "moark/MiniMax-M2.1"
+        ]
       }
     ]
   },
@@ -12655,11 +13061,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://inference.us-west.modal.direct/v1",
     "docsUrl": "https://modal.com/docs/guide/endpoints",
-    "envVars": ["MODAL_PROXY_TOKEN"],
+    "envVars": [
+      "MODAL_PROXY_TOKEN"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["modal/moonshotai/Kimi-K3", "modal/thinkingmachines/Inkling-NVFP4"],
+    "modelIds": [
+      "modal/moonshotai/Kimi-K3",
+      "modal/thinkingmachines/Inkling-NVFP4"
+    ],
     "variants": [
       {
         "variantId": "modal-api-key",
@@ -12668,7 +13079,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://inference.us-west.modal.direct/v1",
-        "modelIds": ["modal/moonshotai/Kimi-K3", "modal/thinkingmachines/Inkling-NVFP4"]
+        "modelIds": [
+          "modal/moonshotai/Kimi-K3",
+          "modal/thinkingmachines/Inkling-NVFP4"
+        ]
       }
     ]
   },
@@ -12681,7 +13095,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.modeloracle.com/api/v1",
     "docsUrl": "https://modeloracle.com/setup/",
-    "envVars": ["MODEL_ORACLE_API_KEY"],
+    "envVars": [
+      "MODEL_ORACLE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -12739,7 +13155,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://modelishub.com/v1",
     "docsUrl": "https://modelishub.com/pricing",
-    "envVars": ["MODELIS_API_KEY"],
+    "envVars": [
+      "MODELIS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -12785,7 +13203,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api-inference.modelscope.cn/v1",
     "docsUrl": "https://modelscope.cn/docs/model-service/API-Inference/intro",
-    "envVars": ["MODELSCOPE_API_KEY"],
+    "envVars": [
+      "MODELSCOPE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -12827,9 +13247,17 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.moonshot.ai/v1",
     "docsUrl": null,
-    "envVars": ["MOONSHOT_API_KEY"],
-    "supportedAuthModes": ["api-key-static", "oauth2-device-code"],
-    "controlPlaneRequirements": ["workspace.required", "kimi-code.oauth.device"],
+    "envVars": [
+      "MOONSHOT_API_KEY"
+    ],
+    "supportedAuthModes": [
+      "api-key-static",
+      "oauth2-device-code"
+    ],
+    "controlPlaneRequirements": [
+      "workspace.required",
+      "kimi-code.oauth.device"
+    ],
     "localOverrideApplied": true,
     "modelIds": [
       "moonshot/kimi-k2.5",
@@ -12931,7 +13359,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.moonshot.cn/v1",
     "docsUrl": "https://platform.moonshot.cn/docs/api/chat",
-    "envVars": ["MOONSHOT_API_KEY"],
+    "envVars": [
+      "MOONSHOT_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -12979,11 +13409,17 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.morphllm.com/v1",
     "docsUrl": "https://docs.morphllm.com/api-reference/introduction",
-    "envVars": ["MORPH_API_KEY"],
+    "envVars": [
+      "MORPH_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["morph/auto", "morph/morph-v3-fast", "morph/morph-v3-large"],
+    "modelIds": [
+      "morph/auto",
+      "morph/morph-v3-fast",
+      "morph/morph-v3-large"
+    ],
     "variants": [
       {
         "variantId": "morph-api-key",
@@ -12992,7 +13428,11 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://api.morphllm.com/v1",
-        "modelIds": ["morph/auto", "morph/morph-v3-fast", "morph/morph-v3-large"]
+        "modelIds": [
+          "morph/auto",
+          "morph/morph-v3-fast",
+          "morph/morph-v3-large"
+        ]
       }
     ]
   },
@@ -13005,7 +13445,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://nano-gpt.com/api/v1",
     "docsUrl": "https://docs.nano-gpt.com",
-    "envVars": ["NANO_GPT_API_KEY"],
+    "envVars": [
+      "NANO_GPT_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -14225,7 +14667,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://cloud-api.near.ai/v1",
     "docsUrl": "https://docs.near.ai/",
-    "envVars": ["NEARAI_API_KEY"],
+    "envVars": [
+      "NEARAI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -14327,7 +14771,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.tokenfactory.nebius.com/v1",
     "docsUrl": "https://docs.tokenfactory.nebius.com/",
-    "envVars": ["NEBIUS_API_KEY"],
+    "envVars": [
+      "NEBIUS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -14423,7 +14869,10 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "${NEON_AI_GATEWAY_BASE_URL}/v1",
     "docsUrl": "https://neon.com/docs",
-    "envVars": ["NEON_AI_GATEWAY_BASE_URL", "NEON_AI_GATEWAY_TOKEN"],
+    "envVars": [
+      "NEON_AI_GATEWAY_BASE_URL",
+      "NEON_AI_GATEWAY_TOKEN"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -14535,7 +14984,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.neuralwatt.com/v1",
     "docsUrl": "https://portal.neuralwatt.com/docs",
-    "envVars": ["NEURALWATT_API_KEY"],
+    "envVars": [
+      "NEURALWATT_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -14607,11 +15058,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["NLP_CLOUD_API_KEY"],
+    "envVars": [
+      "NLP_CLOUD_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["nlp_cloud/chatdolphin", "nlp_cloud/dolphin"],
+    "modelIds": [
+      "nlp_cloud/chatdolphin",
+      "nlp_cloud/dolphin"
+    ],
     "variants": [
       {
         "variantId": "nlp_cloud-api-key",
@@ -14620,7 +15076,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["nlp_cloud/chatdolphin", "nlp_cloud/dolphin"]
+        "modelIds": [
+          "nlp_cloud/chatdolphin",
+          "nlp_cloud/dolphin"
+        ]
       }
     ]
   },
@@ -14633,11 +15092,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.nova.amazon.com/v1",
     "docsUrl": "https://nova.amazon.com/dev/documentation",
-    "envVars": ["NOVA_API_KEY"],
+    "envVars": [
+      "NOVA_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["nova/nova-2-lite-v1", "nova/nova-2-pro-v1"],
+    "modelIds": [
+      "nova/nova-2-lite-v1",
+      "nova/nova-2-pro-v1"
+    ],
     "variants": [
       {
         "variantId": "nova-api-key",
@@ -14646,7 +15110,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://api.nova.amazon.com/v1",
-        "modelIds": ["nova/nova-2-lite-v1", "nova/nova-2-pro-v1"]
+        "modelIds": [
+          "nova/nova-2-lite-v1",
+          "nova/nova-2-pro-v1"
+        ]
       }
     ]
   },
@@ -14659,7 +15126,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["NOVITA_API_KEY"],
+    "envVars": [
+      "NOVITA_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -14857,7 +15326,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.novita.ai/openai",
     "docsUrl": "https://novita.ai/docs/guides/introduction",
-    "envVars": ["NOVITA_API_KEY"],
+    "envVars": [
+      "NOVITA_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -15099,7 +15570,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["NSCALE_API_KEY"],
+    "envVars": [
+      "NSCALE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -15159,7 +15632,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://integrate.api.nvidia.com/v1",
     "docsUrl": "https://docs.api.nvidia.com/nim/",
-    "envVars": ["NVIDIA_API_KEY"],
+    "envVars": [
+      "NVIDIA_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -15387,7 +15862,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://integrate.api.nvidia.com/v1",
     "docsUrl": null,
-    "envVars": ["NVIDIA_NIM_API_KEY"],
+    "envVars": [
+      "NVIDIA_NIM_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": true,
@@ -15421,7 +15898,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["OCI_API_KEY"],
+    "envVars": [
+      "OCI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -15523,7 +16002,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.ofox.ai/v1",
     "docsUrl": "https://ofox.ai/docs",
-    "envVars": ["OFOX_API_KEY"],
+    "envVars": [
+      "OFOX_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -15757,7 +16238,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["OLLAMA_API_KEY"],
+    "envVars": [
+      "OLLAMA_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -15843,7 +16326,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://ollama.com/v1",
     "docsUrl": "https://docs.ollama.com/cloud",
-    "envVars": ["OLLAMA_API_KEY"],
+    "envVars": [
+      "OLLAMA_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -15911,9 +16396,13 @@
     "adapterFamily": "ai-sdk-openai",
     "apiBase": "https://api.openai.com/v1",
     "docsUrl": "https://platform.openai.com/docs/models",
-    "envVars": ["OPENAI_API_KEY"],
+    "envVars": [
+      "OPENAI_API_KEY"
+    ],
     "supportedAuthModes": [],
-    "controlPlaneRequirements": ["organization.optional"],
+    "controlPlaneRequirements": [
+      "organization.optional"
+    ],
     "localOverrideApplied": true,
     "modelIds": [
       "gpt-4.1-mini",
@@ -16081,7 +16570,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://opencode.ai/zen/v1",
     "docsUrl": "https://opencode.ai/docs/zen",
-    "envVars": ["OPENCODE_API_KEY"],
+    "envVars": [
+      "OPENCODE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -16291,7 +16782,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://opencode.ai/zen/go/v1",
     "docsUrl": "https://opencode.ai/docs/zen",
-    "envVars": ["OPENCODE_API_KEY"],
+    "envVars": [
+      "OPENCODE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -16369,7 +16862,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://openrouter.ai/api/v1",
     "docsUrl": "https://openrouter.ai/models",
-    "envVars": ["OPENROUTER_API_KEY"],
+    "envVars": [
+      "OPENROUTER_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -17097,7 +17592,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.orcarouter.ai/v1",
     "docsUrl": "https://docs.orcarouter.ai",
-    "envVars": ["ORCAROUTER_API_KEY"],
+    "envVars": [
+      "ORCAROUTER_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -17287,7 +17784,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
     "docsUrl": "https://www.ovhcloud.com/en/public-cloud/ai-endpoints/catalog//",
-    "envVars": ["OVHCLOUD_API_KEY"],
+    "envVars": [
+      "OVHCLOUD_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -17343,7 +17842,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["PALM_API_KEY"],
+    "envVars": [
+      "PALM_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -17383,11 +17884,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["PARALLEL_AI_API_KEY"],
+    "envVars": [
+      "PARALLEL_AI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["parallel_ai/search", "parallel_ai/search-pro"],
+    "modelIds": [
+      "parallel_ai/search",
+      "parallel_ai/search-pro"
+    ],
     "variants": [
       {
         "variantId": "parallel_ai-api-key",
@@ -17396,7 +17902,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["parallel_ai/search", "parallel_ai/search-pro"]
+        "modelIds": [
+          "parallel_ai/search",
+          "parallel_ai/search-pro"
+        ]
       }
     ]
   },
@@ -17409,7 +17918,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.perplexity.ai",
     "docsUrl": "https://docs.perplexity.ai",
-    "envVars": ["PERPLEXITY_API_KEY"],
+    "envVars": [
+      "PERPLEXITY_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -17445,7 +17956,9 @@
     "adapterFamily": "ai-sdk-openai",
     "apiBase": "https://api.perplexity.ai/v1",
     "docsUrl": "https://docs.perplexity.ai/docs/agent-api/models",
-    "envVars": ["PERPLEXITY_API_KEY"],
+    "envVars": [
+      "PERPLEXITY_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -17517,7 +18030,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.pioneer.ai/v1",
     "docsUrl": "https://agent.pioneer.ai/llms.txt",
-    "envVars": ["PIONEER_API_KEY"],
+    "envVars": [
+      "PIONEER_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -17749,7 +18264,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.poe.com/v1",
     "docsUrl": "https://creator.poe.com/docs/external-applications/openai-compatible-api",
-    "envVars": ["POE_API_KEY"],
+    "envVars": [
+      "POE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -18051,7 +18568,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://inference.poolside.ai/v1",
     "docsUrl": "https://platform.poolside.ai",
-    "envVars": ["POOLSIDE_API_KEY"],
+    "envVars": [
+      "POOLSIDE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -18085,7 +18604,10 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "http://localhost:8080/v1",
     "docsUrl": "https://docs.privatemode.ai/api/overview",
-    "envVars": ["PRIVATEMODE_API_KEY", "PRIVATEMODE_ENDPOINT"],
+    "envVars": [
+      "PRIVATEMODE_API_KEY",
+      "PRIVATEMODE_ENDPOINT"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -18127,7 +18649,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["PUBLICAI_API_KEY"],
+    "envVars": [
+      "PUBLICAI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -18173,7 +18697,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.qhaigc.net/v1",
     "docsUrl": "https://www.qhaigc.net/docs",
-    "envVars": ["QIHANG_API_KEY"],
+    "envVars": [
+      "QIHANG_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -18219,7 +18745,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.qnaigc.com/v1",
     "docsUrl": "https://developer.qiniu.com/aitokenapi",
-    "envVars": ["QINIU_API_KEY"],
+    "envVars": [
+      "QINIU_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -18429,7 +18957,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": "https://www.npmjs.com/package/@qvac/ai-sdk-provider",
-    "envVars": ["QVAC_API_KEY"],
+    "envVars": [
+      "QVAC_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -18475,11 +19005,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["RECRAFT_API_KEY"],
+    "envVars": [
+      "RECRAFT_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["recraft/recraftv2", "recraft/recraftv3"],
+    "modelIds": [
+      "recraft/recraftv2",
+      "recraft/recraftv3"
+    ],
     "variants": [
       {
         "variantId": "recraft-api-key",
@@ -18488,7 +19023,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["recraft/recraftv2", "recraft/recraftv3"]
+        "modelIds": [
+          "recraft/recraftv2",
+          "recraft/recraftv3"
+        ]
       }
     ]
   },
@@ -18501,7 +19039,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.regolo.ai/v1",
     "docsUrl": "https://docs.regolo.ai/",
-    "envVars": ["REGOLO_API_KEY"],
+    "envVars": [
+      "REGOLO_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -18565,7 +19105,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["REPLICATE_API_KEY"],
+    "envVars": [
+      "REPLICATE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -18671,7 +19213,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://router.requesty.ai/v1",
     "docsUrl": "https://requesty.ai/solution/llm-routing/models",
-    "envVars": ["REQUESTY_API_KEY"],
+    "envVars": [
+      "REQUESTY_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -18797,7 +19341,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.routing.run/v1",
     "docsUrl": "https://docs.routing.run/api-reference/models",
-    "envVars": ["ROUTING_RUN_API_KEY"],
+    "envVars": [
+      "ROUTING_RUN_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -18855,7 +19401,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["RUNWAYML_API_KEY"],
+    "envVars": [
+      "RUNWAYML_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -18895,7 +19443,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["SAGEMAKER_API_KEY"],
+    "envVars": [
+      "SAGEMAKER_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -18935,11 +19485,17 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.sakana.ai/v1",
     "docsUrl": "https://console.sakana.ai/models",
-    "envVars": ["SAKANA_API_KEY"],
+    "envVars": [
+      "SAKANA_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["sakana/fugu", "sakana/fugu-ultra", "sakana/fugu-ultra-20260615"],
+    "modelIds": [
+      "sakana/fugu",
+      "sakana/fugu-ultra",
+      "sakana/fugu-ultra-20260615"
+    ],
     "variants": [
       {
         "variantId": "sakana-api-key",
@@ -18948,7 +19504,11 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://api.sakana.ai/v1",
-        "modelIds": ["sakana/fugu", "sakana/fugu-ultra", "sakana/fugu-ultra-20260615"]
+        "modelIds": [
+          "sakana/fugu",
+          "sakana/fugu-ultra",
+          "sakana/fugu-ultra-20260615"
+        ]
       }
     ]
   },
@@ -18961,11 +19521,15 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": "https://docs.salad.com/ai-gateway/explanation/overview",
-    "envVars": ["SALAD_CLOUD_API_KEY"],
+    "envVars": [
+      "SALAD_CLOUD_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["salad-cloud/qwen3.6-35b-a3b"],
+    "modelIds": [
+      "salad-cloud/qwen3.6-35b-a3b"
+    ],
     "variants": [
       {
         "variantId": "salad-cloud-api-key",
@@ -18974,7 +19538,9 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["salad-cloud/qwen3.6-35b-a3b"]
+        "modelIds": [
+          "salad-cloud/qwen3.6-35b-a3b"
+        ]
       }
     ]
   },
@@ -18987,7 +19553,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.sambanova.ai/v1",
     "docsUrl": null,
-    "envVars": ["SAMBANOVA_API_KEY"],
+    "envVars": [
+      "SAMBANOVA_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": true,
@@ -19049,7 +19617,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": "https://help.sap.com/docs/sap-ai-core",
-    "envVars": ["AICORE_SERVICE_KEY"],
+    "envVars": [
+      "AICORE_SERVICE_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -19163,11 +19733,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.sarvam.ai/v1",
     "docsUrl": "https://docs.sarvam.ai/api-reference-docs/getting-started/models",
-    "envVars": ["SARVAM_API_KEY"],
+    "envVars": [
+      "SARVAM_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["sarvam/sarvam-105b", "sarvam/sarvam-30b"],
+    "modelIds": [
+      "sarvam/sarvam-105b",
+      "sarvam/sarvam-30b"
+    ],
     "variants": [
       {
         "variantId": "sarvam-api-key",
@@ -19176,7 +19751,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://api.sarvam.ai/v1",
-        "modelIds": ["sarvam/sarvam-105b", "sarvam/sarvam-30b"]
+        "modelIds": [
+          "sarvam/sarvam-105b",
+          "sarvam/sarvam-30b"
+        ]
       }
     ]
   },
@@ -19189,7 +19767,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.scaleway.ai/v1",
     "docsUrl": "https://www.scaleway.com/en/docs/generative-apis/",
-    "envVars": ["SCALEWAY_API_KEY"],
+    "envVars": [
+      "SCALEWAY_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -19245,11 +19825,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.scx.ai/v1",
     "docsUrl": "https://platform.scx.ai/docs",
-    "envVars": ["SCX_API_KEY"],
+    "envVars": [
+      "SCX_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["scx/gpt-oss-120b", "scx/MiniMax-M2.7"],
+    "modelIds": [
+      "scx/gpt-oss-120b",
+      "scx/MiniMax-M2.7"
+    ],
     "variants": [
       {
         "variantId": "scx-api-key",
@@ -19258,7 +19843,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://api.scx.ai/v1",
-        "modelIds": ["scx/gpt-oss-120b", "scx/MiniMax-M2.7"]
+        "modelIds": [
+          "scx/gpt-oss-120b",
+          "scx/MiniMax-M2.7"
+        ]
       }
     ]
   },
@@ -19271,11 +19859,15 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["SEARXNG_API_KEY"],
+    "envVars": [
+      "SEARXNG_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["searxng/search"],
+    "modelIds": [
+      "searxng/search"
+    ],
     "variants": [
       {
         "variantId": "searxng-api-key",
@@ -19284,7 +19876,9 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["searxng/search"]
+        "modelIds": [
+          "searxng/search"
+        ]
       }
     ]
   },
@@ -19297,11 +19891,15 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["SERPER_API_KEY"],
+    "envVars": [
+      "SERPER_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["serper/search"],
+    "modelIds": [
+      "serper/search"
+    ],
     "variants": [
       {
         "variantId": "serper-api-key",
@@ -19310,7 +19908,9 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["serper/search"]
+        "modelIds": [
+          "serper/search"
+        ]
       }
     ]
   },
@@ -19323,7 +19923,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.siliconflow.com/v1",
     "docsUrl": "https://cloud.siliconflow.com/models",
-    "envVars": ["SILICONFLOW_API_KEY"],
+    "envVars": [
+      "SILICONFLOW_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -19449,7 +20051,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.siliconflow.cn/v1",
     "docsUrl": "https://cloud.siliconflow.com/models",
-    "envVars": ["SILICONFLOW_CN_API_KEY"],
+    "envVars": [
+      "SILICONFLOW_CN_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -19571,7 +20175,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["SNOWFLAKE_API_KEY"],
+    "envVars": [
+      "SNOWFLAKE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -19647,7 +20253,10 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://${SNOWFLAKE_ACCOUNT}.snowflakecomputing.com/api/v2/cortex/v1",
     "docsUrl": "https://docs.snowflake.com/en/user-guide/snowflake-cortex/cortex-rest-api",
-    "envVars": ["SNOWFLAKE_ACCOUNT", "SNOWFLAKE_CORTEX_PAT"],
+    "envVars": [
+      "SNOWFLAKE_ACCOUNT",
+      "SNOWFLAKE_CORTEX_PAT"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -19725,7 +20334,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["STABILITY_API_KEY"],
+    "envVars": [
+      "STABILITY_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -19824,7 +20435,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.openai-compat.model-serving.eu01.onstackit.cloud/v1",
     "docsUrl": "https://docs.stackit.cloud/products/data-and-ai/ai-model-serving/basics/available-shared-models",
-    "envVars": ["STACKIT_API_KEY"],
+    "envVars": [
+      "STACKIT_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -19868,7 +20481,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.stepfun.com/v1",
     "docsUrl": "https://platform.stepfun.com/docs/zh/overview/concept",
-    "envVars": ["STEPFUN_API_KEY"],
+    "envVars": [
+      "STEPFUN_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -19912,7 +20527,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.stepfun.ai/v1",
     "docsUrl": "https://platform.stepfun.ai/docs/en/overview/concept",
-    "envVars": ["STEPFUN_API_KEY"],
+    "envVars": [
+      "STEPFUN_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -19956,7 +20573,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.stepfun.ai/step_plan/v1",
     "docsUrl": "https://platform.stepfun.ai/docs/en/step-plan/integrations/reasoning-api",
-    "envVars": ["STEPFUN_API_KEY"],
+    "envVars": [
+      "STEPFUN_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -19990,7 +20609,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.stepfun.com/step_plan/v1",
     "docsUrl": "https://platform.stepfun.com/docs/zh/step-plan/integrations/reasoning-api",
-    "envVars": ["STEPFUN_API_KEY"],
+    "envVars": [
+      "STEPFUN_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -20026,11 +20647,16 @@
     "adapterFamily": "ai-sdk-anthropic",
     "apiBase": "https://api.subconscious.dev/v1",
     "docsUrl": "https://docs.subconscious.dev",
-    "envVars": ["SUBCONSCIOUS_API_KEY"],
+    "envVars": [
+      "SUBCONSCIOUS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["subconscious/subconscious/glm-5.2", "subconscious/subconscious/tim-qwen3.6-27b"],
+    "modelIds": [
+      "subconscious/subconscious/glm-5.2",
+      "subconscious/subconscious/tim-qwen3.6-27b"
+    ],
     "variants": [
       {
         "variantId": "subconscious-api-key",
@@ -20055,7 +20681,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://llm.submodel.ai/v1",
     "docsUrl": "https://submodel.gitbook.io",
-    "envVars": ["SUBMODEL_INSTAGEN_ACCESS_KEY"],
+    "envVars": [
+      "SUBMODEL_INSTAGEN_ACCESS_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -20101,7 +20729,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.synthetic.new/openai/v1",
     "docsUrl": "https://synthetic.new/pricing",
-    "envVars": ["SYNTHETIC_API_KEY"],
+    "envVars": [
+      "SYNTHETIC_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -20170,11 +20800,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["TAVILY_API_KEY"],
+    "envVars": [
+      "TAVILY_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["tavily/search", "tavily/search-advanced"],
+    "modelIds": [
+      "tavily/search",
+      "tavily/search-advanced"
+    ],
     "variants": [
       {
         "variantId": "tavily-api-key",
@@ -20183,7 +20818,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["tavily/search", "tavily/search-advanced"]
+        "modelIds": [
+          "tavily/search",
+          "tavily/search-advanced"
+        ]
       }
     ]
   },
@@ -20196,7 +20834,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.lkeap.cloud.tencent.com/coding/v3",
     "docsUrl": "https://cloud.tencent.com/document/product/1772/128947",
-    "envVars": ["TENCENT_CODING_PLAN_API_KEY"],
+    "envVars": [
+      "TENCENT_CODING_PLAN_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -20240,11 +20880,15 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.lkeap.cloud.tencent.com/plan/v3",
     "docsUrl": "https://cloud.tencent.com/document/product/1823/130060",
-    "envVars": ["TENCENT_TOKEN_PLAN_API_KEY"],
+    "envVars": [
+      "TENCENT_TOKEN_PLAN_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["tencent-token-plan/hy3"],
+    "modelIds": [
+      "tencent-token-plan/hy3"
+    ],
     "variants": [
       {
         "variantId": "tencent-token-plan-api-key",
@@ -20253,7 +20897,9 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://api.lkeap.cloud.tencent.com/plan/v3",
-        "modelIds": ["tencent-token-plan/hy3"]
+        "modelIds": [
+          "tencent-token-plan/hy3"
+        ]
       }
     ]
   },
@@ -20266,11 +20912,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://tokenhub.tencentmaas.com/v1",
     "docsUrl": "https://cloud.tencent.com/document/product/1823/130050",
-    "envVars": ["TENCENT_TOKENHUB_API_KEY"],
+    "envVars": [
+      "TENCENT_TOKENHUB_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["tencent-tokenhub/hy3", "tencent-tokenhub/hy3-preview"],
+    "modelIds": [
+      "tencent-tokenhub/hy3",
+      "tencent-tokenhub/hy3-preview"
+    ],
     "variants": [
       {
         "variantId": "tencent-tokenhub-api-key",
@@ -20279,7 +20930,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://tokenhub.tencentmaas.com/v1",
-        "modelIds": ["tencent-tokenhub/hy3", "tencent-tokenhub/hy3-preview"]
+        "modelIds": [
+          "tencent-tokenhub/hy3",
+          "tencent-tokenhub/hy3-preview"
+        ]
       }
     ]
   },
@@ -20292,7 +20946,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.tensorx.ai/v1",
     "docsUrl": "https://docs.tensorx.ai/",
-    "envVars": ["TENSORX_API_KEY"],
+    "envVars": [
+      "TENSORX_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -20370,7 +21026,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["TEXT_COMPLETION_CODESTRAL_API_KEY"],
+    "envVars": [
+      "TEXT_COMPLETION_CODESTRAL_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -20402,7 +21060,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["TEXT_COMPLETION_OPENAI_API_KEY"],
+    "envVars": [
+      "TEXT_COMPLETION_OPENAI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -20442,7 +21102,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.thegrid.ai/v1",
     "docsUrl": "https://thegrid.ai/docs",
-    "envVars": ["THEGRID_API_KEY"],
+    "envVars": [
+      "THEGRID_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -20488,7 +21150,9 @@
     "adapterFamily": "ai-sdk-anthropic",
     "apiBase": "https://tinker.thinkingmachines.dev/services/tinker-prod/anthropic/api/v1",
     "docsUrl": "https://tinker-docs.thinkingmachines.ai/tinker/compatible-apis/anthropic/",
-    "envVars": ["TINKER_API_KEY"],
+    "envVars": [
+      "TINKER_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -20520,7 +21184,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://inference.tinfoil.sh/v1",
     "docsUrl": "https://docs.tinfoil.sh",
-    "envVars": ["TINFOIL_API_KEY"],
+    "envVars": [
+      "TINFOIL_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -20564,7 +21230,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["TOGETHER_AI_API_KEY"],
+    "envVars": [
+      "TOGETHER_AI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -20678,7 +21346,9 @@
     "adapterFamily": "ai-sdk-togetherai",
     "apiBase": "",
     "docsUrl": "https://docs.together.ai/docs/serverless-models",
-    "envVars": ["TOGETHER_API_KEY"],
+    "envVars": [
+      "TOGETHER_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -20776,7 +21446,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.trustedrouter.com/v1",
     "docsUrl": "https://trustedrouter.com/docs",
-    "envVars": ["TRUSTEDROUTER_API_KEY"],
+    "envVars": [
+      "TRUSTEDROUTER_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -20818,7 +21490,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.code.umans.ai/v1",
     "docsUrl": "https://app.umans.ai/offers/code/docs/orgs",
-    "envVars": ["UMANS_AI_API_KEY"],
+    "envVars": [
+      "UMANS_AI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -20860,7 +21534,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.code.umans.ai/v1",
     "docsUrl": "https://app.umans.ai/offers/code/docs",
-    "envVars": ["UMANS_AI_CODING_PLAN_API_KEY"],
+    "envVars": [
+      "UMANS_AI_CODING_PLAN_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -20904,7 +21580,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.unorouter.com/v1",
     "docsUrl": "https://unorouter.com/models",
-    "envVars": ["UNOROUTER_API_KEY"],
+    "envVars": [
+      "UNOROUTER_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -20978,7 +21656,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.upstage.ai/v1/solar",
     "docsUrl": "https://developers.upstage.ai/docs/apis/chat",
-    "envVars": ["UPSTAGE_API_KEY"],
+    "envVars": [
+      "UPSTAGE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -21014,11 +21694,17 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": "https://sdk.vercel.ai/providers/ai-sdk-providers/vercel",
-    "envVars": ["V0_API_KEY"],
+    "envVars": [
+      "V0_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["v0/v0-1.0-md", "v0/v0-1.5-lg", "v0/v0-1.5-md"],
+    "modelIds": [
+      "v0/v0-1.0-md",
+      "v0/v0-1.5-lg",
+      "v0/v0-1.5-md"
+    ],
     "variants": [
       {
         "variantId": "v0-api-key",
@@ -21027,7 +21713,11 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["v0/v0-1.0-md", "v0/v0-1.5-lg", "v0/v0-1.5-md"]
+        "modelIds": [
+          "v0/v0-1.0-md",
+          "v0/v0-1.5-lg",
+          "v0/v0-1.5-md"
+        ]
       }
     ]
   },
@@ -21040,7 +21730,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": "https://docs.venice.ai",
-    "envVars": ["VENICE_API_KEY"],
+    "envVars": [
+      "VENICE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -21264,7 +21956,9 @@
     "adapterFamily": "ai-sdk-gateway",
     "apiBase": "",
     "docsUrl": "https://github.com/vercel/ai/tree/5eb85cc45a259553501f535b8ac79a77d0e79223/packages/gateway",
-    "envVars": ["AI_GATEWAY_API_KEY"],
+    "envVars": [
+      "AI_GATEWAY_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -21946,7 +22640,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["VERCEL_AI_GATEWAY_API_KEY"],
+    "envVars": [
+      "VERCEL_AI_GATEWAY_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -22176,7 +22872,9 @@
     "adapterFamily": "ai-sdk-vertex",
     "apiBase": "https://us-central1-aiplatform.googleapis.com/v1",
     "docsUrl": null,
-    "envVars": ["GOOGLE_APPLICATION_CREDENTIALS"],
+    "envVars": [
+      "GOOGLE_APPLICATION_CREDENTIALS"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": true,
@@ -22426,7 +23124,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["VERTEX_AI_AI21_MODELS_API_KEY"],
+    "envVars": [
+      "VERTEX_AI_AI21_MODELS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -22452,7 +23152,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["VERTEX_AI_ANTHROPIC_MODELS_API_KEY"],
+    "envVars": [
+      "VERTEX_AI_ANTHROPIC_MODELS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -22478,7 +23180,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["VERTEX_AI_DEEPSEEK_MODELS_API_KEY"],
+    "envVars": [
+      "VERTEX_AI_DEEPSEEK_MODELS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -22504,7 +23208,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["VERTEX_AI_EMBEDDING_MODELS_API_KEY"],
+    "envVars": [
+      "VERTEX_AI_EMBEDDING_MODELS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -22552,7 +23258,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["VERTEX_AI_IMAGE_MODELS_API_KEY"],
+    "envVars": [
+      "VERTEX_AI_IMAGE_MODELS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -22578,7 +23286,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["VERTEX_AI_LANGUAGE_MODELS_API_KEY"],
+    "envVars": [
+      "VERTEX_AI_LANGUAGE_MODELS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -22658,7 +23368,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["VERTEX_AI_LLAMA_MODELS_API_KEY"],
+    "envVars": [
+      "VERTEX_AI_LLAMA_MODELS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -22684,7 +23396,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["VERTEX_AI_MINIMAX_MODELS_API_KEY"],
+    "envVars": [
+      "VERTEX_AI_MINIMAX_MODELS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -22710,7 +23424,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["VERTEX_AI_MISTRAL_MODELS_API_KEY"],
+    "envVars": [
+      "VERTEX_AI_MISTRAL_MODELS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -22736,7 +23452,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["VERTEX_AI_MOONSHOT_MODELS_API_KEY"],
+    "envVars": [
+      "VERTEX_AI_MOONSHOT_MODELS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -22762,7 +23480,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["VERTEX_AI_OPENAI_MODELS_API_KEY"],
+    "envVars": [
+      "VERTEX_AI_OPENAI_MODELS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -22788,7 +23508,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["VERTEX_AI_QWEN_MODELS_API_KEY"],
+    "envVars": [
+      "VERTEX_AI_QWEN_MODELS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -22814,11 +23536,16 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["VERTEX_AI_TEXT_MODELS_API_KEY"],
+    "envVars": [
+      "VERTEX_AI_TEXT_MODELS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["vertex_ai-text-models/text-unicorn", "vertex_ai-text-models/text-unicorn@001"],
+    "modelIds": [
+      "vertex_ai-text-models/text-unicorn",
+      "vertex_ai-text-models/text-unicorn@001"
+    ],
     "variants": [
       {
         "variantId": "vertex_ai-text-models-api-key",
@@ -22827,7 +23554,10 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "",
-        "modelIds": ["vertex_ai-text-models/text-unicorn", "vertex_ai-text-models/text-unicorn@001"]
+        "modelIds": [
+          "vertex_ai-text-models/text-unicorn",
+          "vertex_ai-text-models/text-unicorn@001"
+        ]
       }
     ]
   },
@@ -22840,7 +23570,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["VERTEX_AI_VIDEO_MODELS_API_KEY"],
+    "envVars": [
+      "VERTEX_AI_VIDEO_MODELS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -22866,7 +23598,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["VERTEX_AI_ZAI_MODELS_API_KEY"],
+    "envVars": [
+      "VERTEX_AI_ZAI_MODELS_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -22892,7 +23626,9 @@
     "adapterFamily": "ai-sdk-openai",
     "apiBase": "https://api.vivgrid.com/v1",
     "docsUrl": "https://docs.vivgrid.com/models",
-    "envVars": ["VIVGRID_API_KEY"],
+    "envVars": [
+      "VIVGRID_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -22983,7 +23719,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": null,
-    "envVars": ["VOLCENGINE_API_KEY"],
+    "envVars": [
+      "VOLCENGINE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -23035,7 +23773,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.voyageai.com/v1",
     "docsUrl": null,
-    "envVars": ["VOYAGE_API_KEY"],
+    "envVars": [
+      "VOYAGE_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": true,
@@ -23101,7 +23841,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.vultrinference.com/v1",
     "docsUrl": "https://api.vultrinference.com/",
-    "envVars": ["VULTR_API_KEY"],
+    "envVars": [
+      "VULTR_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -23149,7 +23891,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://pass.wafer.ai/v1",
     "docsUrl": "https://docs.wafer.ai/wafer-pass",
-    "envVars": ["WAFER_API_KEY"],
+    "envVars": [
+      "WAFER_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -23187,7 +23931,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.inference.wandb.ai/v1",
     "docsUrl": "https://docs.wandb.ai/guides/integrations/inference/",
-    "envVars": ["WANDB_API_KEY"],
+    "envVars": [
+      "WANDB_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -23271,7 +24017,10 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "",
     "docsUrl": "https://www.ibm.com/docs/en/watsonx/saas?topic=solutions-supported-foundation-models",
-    "envVars": ["WATSONX_AI_APIKEY", "WATSONX_AI_PROJECT_ID"],
+    "envVars": [
+      "WATSONX_AI_APIKEY",
+      "WATSONX_AI_PROJECT_ID"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -23309,7 +24058,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.x.ai/v1",
     "docsUrl": "https://docs.x.ai/docs/models",
-    "envVars": ["XAI_API_KEY"],
+    "envVars": [
+      "XAI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -23359,7 +24110,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.xiaomimimo.com/v1",
     "docsUrl": "https://platform.xiaomimimo.com/#/docs",
-    "envVars": ["XIAOMI_API_KEY"],
+    "envVars": [
+      "XIAOMI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -23399,7 +24152,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://token-plan-ams.xiaomimimo.com/v1",
     "docsUrl": "https://platform.xiaomimimo.com/#/docs",
-    "envVars": ["XIAOMI_API_KEY"],
+    "envVars": [
+      "XIAOMI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -23441,7 +24196,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://token-plan-cn.xiaomimimo.com/v1",
     "docsUrl": "https://platform.xiaomimimo.com/#/docs",
-    "envVars": ["XIAOMI_API_KEY"],
+    "envVars": [
+      "XIAOMI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -23483,7 +24240,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://token-plan-sgp.xiaomimimo.com/v1",
     "docsUrl": "https://platform.xiaomimimo.com/#/docs",
-    "envVars": ["XIAOMI_API_KEY"],
+    "envVars": [
+      "XIAOMI_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -23525,7 +24284,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://www.xpersona.co/v1",
     "docsUrl": "https://www.xpersona.co/docs",
-    "envVars": ["XPERSONA_API_KEY"],
+    "envVars": [
+      "XPERSONA_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -23579,7 +24340,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.z.ai/api/paas/v4",
     "docsUrl": "https://docs.z.ai/guides/overview/pricing",
-    "envVars": ["ZHIPU_API_KEY"],
+    "envVars": [
+      "ZHIPU_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -23635,7 +24398,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.z.ai/api/coding/paas/v4",
     "docsUrl": "https://docs.z.ai/devpack/overview",
-    "envVars": ["ZHIPU_API_KEY"],
+    "envVars": [
+      "ZHIPU_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -23673,11 +24438,15 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://api.zeldoc.ai/v1",
     "docsUrl": "https://docs.zeldoc.ai",
-    "envVars": ["ZELDOC_API_KEY"],
+    "envVars": [
+      "ZELDOC_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["zeldoc/zdev"],
+    "modelIds": [
+      "zeldoc/zdev"
+    ],
     "variants": [
       {
         "variantId": "zeldoc-api-key",
@@ -23686,7 +24455,9 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://api.zeldoc.ai/v1",
-        "modelIds": ["zeldoc/zdev"]
+        "modelIds": [
+          "zeldoc/zdev"
+        ]
       }
     ]
   },
@@ -23699,11 +24470,15 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://ai.zenifra.com/v1",
     "docsUrl": "https://docs.zenifra.com",
-    "envVars": ["ZENIFRA_AI_KEY"],
+    "envVars": [
+      "ZENIFRA_AI_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
-    "modelIds": ["zenifra/alibaba/qwen3.6-35b-a3b"],
+    "modelIds": [
+      "zenifra/alibaba/qwen3.6-35b-a3b"
+    ],
     "variants": [
       {
         "variantId": "zenifra-api-key",
@@ -23712,7 +24487,9 @@
         "authMode": "api-key-static",
         "availability": "ready",
         "baseUrl": "https://ai.zenifra.com/v1",
-        "modelIds": ["zenifra/alibaba/qwen3.6-35b-a3b"]
+        "modelIds": [
+          "zenifra/alibaba/qwen3.6-35b-a3b"
+        ]
       }
     ]
   },
@@ -23725,7 +24502,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://zenmux.ai/api/v1",
     "docsUrl": "https://docs.zenmux.ai",
-    "envVars": ["ZENMUX_API_KEY"],
+    "envVars": [
+      "ZENMUX_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -23993,7 +24772,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://open.bigmodel.cn/api/paas/v4",
     "docsUrl": "https://docs.z.ai/guides/overview/pricing",
-    "envVars": ["ZHIPU_API_KEY"],
+    "envVars": [
+      "ZHIPU_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,
@@ -24047,7 +24828,9 @@
     "adapterFamily": "ai-sdk-openai-compatible",
     "apiBase": "https://open.bigmodel.cn/api/coding/paas/v4",
     "docsUrl": "https://docs.bigmodel.cn/cn/coding-plan/overview",
-    "envVars": ["ZHIPU_API_KEY"],
+    "envVars": [
+      "ZHIPU_API_KEY"
+    ],
     "supportedAuthModes": [],
     "controlPlaneRequirements": [],
     "localOverrideApplied": false,

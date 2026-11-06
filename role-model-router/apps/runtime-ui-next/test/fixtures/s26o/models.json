@@ -5,9 +5,16 @@
     "owned_by": "role-model",
     "providerId": "anthropic",
     "displayName": "Claude 3.7 Sonnet",
-    "endpoint_ids": ["anthropic.team.shared.us-east-1.default"],
-    "capabilities": ["text.chat", "tools.function_calling"],
-    "modalities": ["text"],
+    "endpoint_ids": [
+      "anthropic.team.shared.us-east-1.default"
+    ],
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling"
+    ],
+    "modalities": [
+      "text"
+    ],
     "contextWindow": 200000,
     "maxOutputTokens": 8192,
     "pricing": {
@@ -30,7 +37,9 @@
     "owned_by": "role-model",
     "providerId": "unknown",
     "displayName": "gpt-5.4",
-    "endpoint_ids": ["cli.local.coder"],
+    "endpoint_ids": [
+      "cli.local.coder"
+    ],
     "capabilities": [],
     "modalities": [],
     "contextWindow": null,
@@ -55,14 +64,18 @@
     "owned_by": "role-model",
     "providerId": "openai",
     "displayName": "GPT-4.1 Mini Fast",
-    "endpoint_ids": ["openai.personal.primary.us-east-1.fast"],
+    "endpoint_ids": [
+      "openai.personal.primary.us-east-1.fast"
+    ],
     "capabilities": [
       "latency.optimized",
       "structured.output",
       "text.chat",
       "tools.function_calling"
     ],
-    "modalities": ["text"],
+    "modalities": [
+      "text"
+    ],
     "contextWindow": 1047576,
     "maxOutputTokens": 32768,
     "pricing": {

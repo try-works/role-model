@@ -147,12 +147,18 @@ describe("S591 router weights editor", () => {
     scoring?.dispatchEvent(new Event("change", { bubbles: true }));
     await new Promise((resolve) => setTimeout(resolve, 30));
 
-    setInput(inputs.find((entry) => entry.metric === "quality")?.input, "0.3");
-    setInput(inputs.find((entry) => entry.metric === "latency")?.input, "0.1");
-    setInput(inputs.find((entry) => entry.metric === "throughput")?.input, "0.1");
-    setInput(inputs.find((entry) => entry.metric === "cost")?.input, "0.2");
-    setInput(inputs.find((entry) => entry.metric === "reliability")?.input, "0.2");
-    setInput(inputs.find((entry) => entry.metric === "preference")?.input, "0.1");
+    const inputFor = (metric: string): HTMLInputElement => {
+      const input = inputs.find((entry) => entry.metric === metric)?.input;
+      if (!input) throw new Error(`missing weights input for ${metric}`);
+      return input;
+    };
+
+    setInput(inputFor("quality"), "0.3");
+    setInput(inputFor("latency"), "0.1");
+    setInput(inputFor("throughput"), "0.1");
+    setInput(inputFor("cost"), "0.2");
+    setInput(inputFor("reliability"), "0.2");
+    setInput(inputFor("preference"), "0.1");
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     const save = [...document.querySelectorAll<HTMLButtonElement>("main button")].find(

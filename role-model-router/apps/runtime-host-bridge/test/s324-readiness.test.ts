@@ -48,8 +48,6 @@ const makeBackend = (readiness?: ServerAdmissionReadiness) =>
     resolveBackend: () => fakeBackend(),
   });
 
-type Captured = { listener?: (request: TestRequest, response: TestResponse) => Promise<void> };
-
 const makeTransport = (captured: Captured = {}): ServerTransport => ({
   close: async () => {},
   createListener: (_options, factory) => {

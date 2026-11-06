@@ -101,8 +101,6 @@ const cleanup = () => {
     rmSync(userDataDir, { force: true, recursive: true });
   } catch {}
 };
-let chrome;
-
 if (base === undefined) {
   const exe = value("--exe");
   if (!exe) {
@@ -143,7 +141,7 @@ if (base === undefined) {
   }
 }
 
-chrome = spawn(
+const chrome = spawn(
   chromePath,
   [
     "--headless=new",
@@ -384,7 +382,7 @@ for (const route of routes) {
     );
     const seen = String(applied.result?.value ?? "");
     if (!seen.startsWith(currentTheme))
-      problems.push(`theme ${currentTheme} did not apply (saw ${seen})`);
+      failures.push(`theme ${currentTheme} did not apply (saw ${seen})`);
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
   const settleDeadline = Date.now() + Number(process.env.AUDIT_READYSTATE_TIMEOUT_MS ?? 8000);

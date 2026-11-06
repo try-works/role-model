@@ -57,6 +57,7 @@ const checkCitation = (issues, id, label, citation) => {
   }
 };
 
+// biome-ignore lint/suspicious/noExportsInTest: shared helper imported by sibling contract tests.
 export const validateInventory = (inventory) => {
   const issues = [];
   if (inventory === null || typeof inventory !== "object") {
@@ -224,6 +225,7 @@ const SQL_PRODUCT_CALLERS = [
  * reworded "no product caller" claim (e.g. area "Effect SQLite service", reason "No product code calls it").
  * Returns issue codes; an empty array means the workspace-level truth holds.
  */
+// biome-ignore lint/suspicious/noExportsInTest: shared helper imported by sibling contract tests.
 export const validateSqlServiceCoverage = (inventory) => {
   const issues = [];
   const excluded = Array.isArray(inventory?.scope?.excluded) ? inventory.scope.excluded : [];

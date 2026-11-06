@@ -4410,9 +4410,10 @@ export const createUpdate = (
           catalogueState.status === "ok"
             ? catalogueState.rows.map((entry) => entry.id).filter((id) => id.length > 0)
             : [];
+        const firstAvailable = catalogue[0];
         const modelForRequest =
-          catalogue.length > 0 && !catalogue.includes(current.model)
-            ? catalogue[0]!
+          firstAvailable !== undefined && !catalogue.includes(current.model)
+            ? firstAvailable
             : current.model;
         const next = {
           ...studioLoading(token),

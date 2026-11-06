@@ -603,7 +603,8 @@ const connectCdp = async (wsUrl) => {
     },
     send: (method, params, sessionId) =>
       new Promise((resolve, reject) => {
-        const id = (nextId += 1);
+        nextId += 1;
+        const id = nextId;
         pending.set(id, { reject, resolve });
         socket.send(
           JSON.stringify(

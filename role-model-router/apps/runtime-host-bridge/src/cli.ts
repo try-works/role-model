@@ -5406,8 +5406,10 @@ export async function main(): Promise<void> {
   const r27DagScope = Effect.runSync(Scope.make());
   let r27Host: R27HostContract | undefined;
   let r27DagClosePromise: Promise<void> | null = null;
-  closeR27Dag = () =>
-    (r27DagClosePromise ??= Effect.runPromise(Scope.close(r27DagScope, Exit.void)));
+  closeR27Dag = () => {
+    r27DagClosePromise ??= Effect.runPromise(Scope.close(r27DagScope, Exit.void));
+    return r27DagClosePromise;
+  };
   try {
     await Effect.runPromise(
       Layer.buildWithScope(

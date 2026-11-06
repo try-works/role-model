@@ -85,31 +85,30 @@ const createDraft = (overrides: Partial<Record<string, string>> = {}) => ({
 const renderRoles = async (
   modelsView?: Parameters<typeof modelsRolesRoute>[3],
   rolePolicy = rolePolicyReadback(),
-) =>
-  (document.createElement("div").innerHTML = await (async () => {
-    const rendered = await Effect.runPromise(
-      renderToString(
-        {
-          init: () => ({ model: shellModel({ route: { _tag: "ModelsRoles" } }), commands: [] }),
-          // SAFETY: renderToString infers Message=unknown; the route only emits typed messages.
-          view: (_model, h) => ({
-            body: modelsRolesRoute(
-              { rows: [], status: "ok", token: 0 },
-              { rows: [], status: "ok", token: 0 },
-              h as Parameters<typeof modelsRolesRoute>[2],
-              modelsView,
-              rolePolicy,
-            ),
-            title: "roles",
-          }),
-        },
-        { isHydratable: false },
-      ),
-    );
-    const container = document.createElement("div");
-    container.innerHTML = rendered.html;
-    return container.innerHTML;
-  })());
+): Promise<string> => {
+  const rendered = await Effect.runPromise(
+    renderToString(
+      {
+        init: () => ({ model: shellModel({ route: { _tag: "ModelsRoles" } }), commands: [] }),
+        // SAFETY: renderToString infers Message=unknown; the route only emits typed messages.
+        view: (_model, h) => ({
+          body: modelsRolesRoute(
+            { rows: [], status: "ok", token: 0 },
+            { rows: [], status: "ok", token: 0 },
+            h as Parameters<typeof modelsRolesRoute>[2],
+            modelsView,
+            rolePolicy,
+          ),
+          title: "roles",
+        }),
+      },
+      { isHydratable: false },
+    ),
+  );
+  const container = document.createElement("div");
+  container.innerHTML = rendered.html;
+  return container.innerHTML;
+};
 
 describe("S620 roles page parity", () => {
   it("renders the catalog, task detail expansion, create options, edit values, and task allowlists", async () => {

@@ -365,7 +365,7 @@ export const modelsRoute = (
                                   h.Type("button"),
                                   h.DataAttribute("model-card", card.id),
                                   h.AriaPressed(
-                                    index === cards.indexOf(selected ?? cards[0]!)
+                                    index === (selected === null ? 0 : cards.indexOf(selected))
                                       ? "true"
                                       : "false",
                                   ),

@@ -445,7 +445,10 @@ describe("S623 per-route verification matrix", () => {
 
   it("ties every route to a committed behavioural family test", () => {
     for (const entry of MATRIX) {
-      const path = new URL(`./${entry.behavior}`, import.meta.url);
+      // Vite rewrites `new URL(`template`, import.meta.url)` into an asset URL, which loses the file: base
+      // used to resolve the sibling test file, so keep the concatenation form.
+      // biome-ignore lint/style/useTemplate: Vite's asset transform would rewrite a template literal here.
+      const path = new URL("./" + entry.behavior, import.meta.url);
       expect(existsSync(path), `missing behaviour test ${entry.behavior}`).toBe(true);
       const source = readFileSync(path, "utf8");
       expect(source.includes("describe("), `${entry.behavior} has no describe block`).toBe(true);

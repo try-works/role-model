@@ -1,58 +1,38 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "ui": "stream",
-  "globalDependencies": [
-    "tsconfig*.json",
-    "role-model-router/tsconfig*.json"
-  ],
+  "globalDependencies": ["tsconfig*.json", "role-model-router/tsconfig*.json"],
   "tasks": {
     "build": {
-      "outputs": [
-        "dist/**",
-        "build/**",
-        ".react-router/**",
-        "tsconfig.tsbuildinfo"
-      ]
+      "outputs": ["dist/**", "build/**", ".react-router/**", "tsconfig.tsbuildinfo"]
     },
     "test": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "outputs": [],
       "cache": false
     },
     "test:critical": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "outputs": [],
       "cache": false
     },
     "test:ci": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "outputs": [],
       "cache": false
     },
     "test:critical:ci": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "outputs": [],
       "cache": false
     },
     "test:router:ci": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "outputs": [],
       "cache": false
     },
     "typecheck": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "outputs": []
     },
     "docs:taxonomy-v1-check": {

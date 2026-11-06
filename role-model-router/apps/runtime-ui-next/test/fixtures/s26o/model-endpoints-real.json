@@ -101,7 +101,10 @@
     "healthStatus": "healthy",
     "routingEligible": true,
     "benchmarkEligible": true,
-    "capabilities": ["text.chat", "tools.function_calling"],
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling"
+    ],
     "toolCallingSupported": true,
     "toolCallingStyle": "openai",
     "displayName": "Claude 3.7 Sonnet",
@@ -156,7 +159,11 @@
     "healthStatus": "healthy",
     "routingEligible": true,
     "benchmarkEligible": true,
-    "capabilities": ["code.edit", "reasoning.multi_step", "tools.function_calling"],
+    "capabilities": [
+      "code.edit",
+      "reasoning.multi_step",
+      "tools.function_calling"
+    ],
     "toolCallingSupported": true,
     "toolCallingStyle": "openai",
     "displayName": "gpt-5.4",

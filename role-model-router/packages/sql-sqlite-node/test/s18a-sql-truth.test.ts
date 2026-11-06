@@ -111,12 +111,14 @@ const captureInitializerConnection = <A>(
       foreign_keys: readForeignKeys(this),
       synchronous: readSynchronous(this),
     });
-    return originalClose.call(this);
+    originalClose.call(this);
   };
   try {
     const value = run();
     expect(snapshots).toHaveLength(1);
-    return { snapshot: snapshots[0]!, value };
+    const [snapshot] = snapshots;
+    if (snapshot === undefined) throw new Error("expected one captured connection snapshot");
+    return { snapshot, value };
   } finally {
     DatabaseSync.prototype.close = originalClose;
   }

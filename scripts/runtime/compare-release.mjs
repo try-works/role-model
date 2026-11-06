@@ -371,10 +371,8 @@ const shapeDeltas = {};
 const valueDeltas = {};
 try {
   for (const endpoint of endpoints) {
-    let leftResult;
-    let rightResult;
-    leftResult = await readJson(leftBase + endpoint);
-    rightResult = await readJson(rightBase + endpoint);
+    const leftResult = await readJson(leftBase + endpoint);
+    const rightResult = await readJson(rightBase + endpoint);
     const lj = leftResult.body;
     const rj = rightResult.body;
     const ls = leftResult.response?.status;
@@ -456,10 +454,10 @@ for (const [endpoint, delta] of Object.entries(shapeDeltas)) {
     `shape-delta keys ${endpoint}: ${delta.slice(0, 12).join(", ")}${delta.length > 12 ? ` (+${String(delta.length - 12)} more)` : ""}`,
   );
 }
-const counts = rows.reduce(
-  (map, row) => ({ ...map, [row.classification]: (map[row.classification] ?? 0) + 1 }),
-  {},
-);
+const counts = {};
+for (const row of rows) {
+  counts[row.classification] = (counts[row.classification] ?? 0) + 1;
+}
 console.log(JSON.stringify(counts));
 const notRun = counts["not-run"] ?? 0;
 if (notRun > 0) {

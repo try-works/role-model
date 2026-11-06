@@ -306,7 +306,9 @@ export function readLocalDiagnostics(input: {
   // The cursor is added after selection, so a possible cursor is reserved while shrinking records.
   const page: LocalDiagnosticRecord[] = [];
   for (let index = start; index < total && page.length < limit; index += 1) {
-    page.push(boundedRecord(all[index]!, nowMs));
+    const record = all[index];
+    if (record === undefined) break;
+    page.push(boundedRecord(record, nowMs));
     if (
       serializedBytes(buildBody(page, null)) + CURSOR_BYTE_RESERVE >
       MAX_DIAGNOSTICS_RESPONSE_BYTES

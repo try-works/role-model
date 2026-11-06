@@ -618,8 +618,13 @@ const shellSecondaryNav = (model: Model, h: HtmlBuilder<Message>): Html | null =
   );
 };
 
-const shellSectionFor = (route: Model["route"]): ShellSection =>
-  shellSections.find((section) => section.tags.includes(route._tag)) ?? shellSections[0]!;
+const shellSectionFor = (route: Model["route"]): ShellSection => {
+  const matched = shellSections.find((section) => section.tags.includes(route._tag));
+  if (matched !== undefined) return matched;
+  const [first] = shellSections;
+  if (first === undefined) throw new Error("shellSections must not be empty");
+  return first;
+};
 
 const shellNavLinkClass = (active: boolean): string =>
   active

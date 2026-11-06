@@ -92,17 +92,23 @@
       "evaluations": {
         "easy": {
           "eligible": false,
-          "rejectionReasons": ["no-profile"],
+          "rejectionReasons": [
+            "no-profile"
+          ],
           "profile": null
         },
         "medium": {
           "eligible": false,
-          "rejectionReasons": ["no-profile"],
+          "rejectionReasons": [
+            "no-profile"
+          ],
           "profile": null
         },
         "hard": {
           "eligible": false,
-          "rejectionReasons": ["no-profile"],
+          "rejectionReasons": [
+            "no-profile"
+          ],
           "profile": null
         }
       }
@@ -152,7 +158,10 @@
       "translator",
       "writer"
     ],
-    "capabilities": ["text.chat", "tools.function_calling"],
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling"
+    ],
     "toolCallingSupported": true,
     "toolCallingStyle": "openai",
     "webSearchSupport": {
@@ -196,17 +205,23 @@
       "evaluations": {
         "easy": {
           "eligible": false,
-          "rejectionReasons": ["no-profile"],
+          "rejectionReasons": [
+            "no-profile"
+          ],
           "profile": null
         },
         "medium": {
           "eligible": false,
-          "rejectionReasons": ["no-profile"],
+          "rejectionReasons": [
+            "no-profile"
+          ],
           "profile": null
         },
         "hard": {
           "eligible": false,
-          "rejectionReasons": ["no-profile"],
+          "rejectionReasons": [
+            "no-profile"
+          ],
           "profile": null
         }
       }
@@ -256,7 +271,11 @@
       "translator",
       "writer"
     ],
-    "capabilities": ["code.edit", "reasoning.multi_step", "tools.function_calling"],
+    "capabilities": [
+      "code.edit",
+      "reasoning.multi_step",
+      "tools.function_calling"
+    ],
     "toolCallingSupported": true,
     "toolCallingStyle": "openai",
     "webSearchSupport": {
@@ -300,17 +319,23 @@
       "evaluations": {
         "easy": {
           "eligible": false,
-          "rejectionReasons": ["no-profile"],
+          "rejectionReasons": [
+            "no-profile"
+          ],
           "profile": null
         },
         "medium": {
           "eligible": false,
-          "rejectionReasons": ["no-profile"],
+          "rejectionReasons": [
+            "no-profile"
+          ],
           "profile": null
         },
         "hard": {
           "eligible": false,
-          "rejectionReasons": ["no-profile"],
+          "rejectionReasons": [
+            "no-profile"
+          ],
           "profile": null
         }
       }

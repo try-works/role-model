@@ -667,9 +667,13 @@
           "measurementSource": "storage-audit",
           "observedAt": null,
           "freshUntil": null,
-          "owners": ["runtime-host"],
+          "owners": [
+            "runtime-host"
+          ],
           "owner": "runtime-host",
-          "logicalClassIds": ["runtime_logs"],
+          "logicalClassIds": [
+            "runtime_logs"
+          ],
           "heldItems": 0,
           "retentionState": "measured_uncovered"
         },
@@ -685,7 +689,9 @@
           "measurementSource": "local-filesystem",
           "observedAt": null,
           "freshUntil": null,
-          "owners": ["sqlite-memory"],
+          "owners": [
+            "sqlite-memory"
+          ],
           "owner": "sqlite-memory",
           "logicalClassIds": [
             "sqlite_migration_journal",
@@ -709,9 +715,13 @@
           "measurementSource": "storage-audit",
           "observedAt": null,
           "freshUntil": null,
-          "owners": ["runtime-operations"],
+          "owners": [
+            "runtime-operations"
+          ],
           "owner": "runtime-operations",
-          "logicalClassIds": ["retention_archives"],
+          "logicalClassIds": [
+            "retention_archives"
+          ],
           "heldItems": 0,
           "retentionState": "measured_uncovered"
         },
@@ -727,9 +737,13 @@
           "measurementSource": "local-filesystem",
           "observedAt": null,
           "freshUntil": null,
-          "owners": ["artifact-store"],
+          "owners": [
+            "artifact-store"
+          ],
           "owner": "artifact-store",
-          "logicalClassIds": ["artifact_graph"],
+          "logicalClassIds": [
+            "artifact_graph"
+          ],
           "heldItems": 0,
           "retentionState": "measured_uncovered"
         },
@@ -745,9 +759,13 @@
           "measurementSource": "local-filesystem",
           "observedAt": null,
           "freshUntil": null,
-          "owners": ["capture-queue"],
+          "owners": [
+            "capture-queue"
+          ],
           "owner": "capture-queue",
-          "logicalClassIds": ["capture_queue"],
+          "logicalClassIds": [
+            "capture_queue"
+          ],
           "heldItems": 0,
           "retentionState": "measured_uncovered"
         },
@@ -763,9 +781,13 @@
           "measurementSource": "local-filesystem",
           "observedAt": null,
           "freshUntil": null,
-          "owners": ["event-log"],
+          "owners": [
+            "event-log"
+          ],
           "owner": "event-log",
-          "logicalClassIds": ["event_log"],
+          "logicalClassIds": [
+            "event_log"
+          ],
           "heldItems": 0,
           "retentionState": "measured_uncovered"
         },
@@ -781,9 +803,13 @@
           "measurementSource": "local-filesystem",
           "observedAt": null,
           "freshUntil": null,
-          "owners": ["evaluation-core"],
+          "owners": [
+            "evaluation-core"
+          ],
           "owner": "evaluation-core",
-          "logicalClassIds": ["evaluation_store"],
+          "logicalClassIds": [
+            "evaluation_store"
+          ],
           "heldItems": 0,
           "retentionState": "measured_uncovered"
         },
@@ -799,9 +825,13 @@
           "measurementSource": "local-filesystem",
           "observedAt": null,
           "freshUntil": null,
-          "owners": ["knowledge-store"],
+          "owners": [
+            "knowledge-store"
+          ],
           "owner": "knowledge-store",
-          "logicalClassIds": ["knowledge_store"],
+          "logicalClassIds": [
+            "knowledge_store"
+          ],
           "heldItems": 0,
           "retentionState": "measured_uncovered"
         },
@@ -817,9 +847,13 @@
           "measurementSource": "local-filesystem",
           "observedAt": null,
           "freshUntil": null,
-          "owners": ["knowledge-worker"],
+          "owners": [
+            "knowledge-worker"
+          ],
           "owner": "knowledge-worker",
-          "logicalClassIds": ["knowledge_worker_store"],
+          "logicalClassIds": [
+            "knowledge_worker_store"
+          ],
           "heldItems": 0,
           "retentionState": "measured_uncovered"
         },
@@ -835,9 +869,13 @@
           "measurementSource": "storage-audit",
           "observedAt": null,
           "freshUntil": null,
-          "owners": ["profile-learner"],
+          "owners": [
+            "profile-learner"
+          ],
           "owner": "profile-learner",
-          "logicalClassIds": ["profile_store"],
+          "logicalClassIds": [
+            "profile_store"
+          ],
           "heldItems": 0,
           "retentionState": "measured_uncovered"
         },
@@ -853,9 +891,13 @@
           "measurementSource": "storage-audit",
           "observedAt": null,
           "freshUntil": null,
-          "owners": ["replay-core"],
+          "owners": [
+            "replay-core"
+          ],
           "owner": "replay-core",
-          "logicalClassIds": ["replay_checkpoints"],
+          "logicalClassIds": [
+            "replay_checkpoints"
+          ],
           "heldItems": 0,
           "retentionState": "measured_uncovered"
         },
@@ -871,9 +913,13 @@
           "measurementSource": "storage-audit",
           "observedAt": null,
           "freshUntil": null,
-          "owners": ["trajectory-signals"],
+          "owners": [
+            "trajectory-signals"
+          ],
           "owner": "trajectory-signals",
-          "logicalClassIds": ["trajectory_signals"],
+          "logicalClassIds": [
+            "trajectory_signals"
+          ],
           "heldItems": 0,
           "retentionState": "measured_uncovered"
         },
@@ -889,9 +935,13 @@
           "measurementSource": "local-filesystem",
           "observedAt": null,
           "freshUntil": null,
-          "owners": ["runtime-operations"],
+          "owners": [
+            "runtime-operations"
+          ],
           "owner": "runtime-operations",
-          "logicalClassIds": ["runtime_retention_state"],
+          "logicalClassIds": [
+            "runtime_retention_state"
+          ],
           "heldItems": 0,
           "retentionState": "measured_uncovered"
         }

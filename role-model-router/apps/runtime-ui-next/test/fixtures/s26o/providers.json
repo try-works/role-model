@@ -12,13 +12,19 @@
     "authMode": "api-key-rotating-ref",
     "regionPolicy": {
       "mode": "allow",
-      "regions": ["us-east-1"]
+      "regions": [
+        "us-east-1"
+      ]
     },
     "baseUrlOverride": null,
-    "allowedModels": ["anthropic/claude-3.7-sonnet"],
+    "allowedModels": [
+      "anthropic/claude-3.7-sonnet"
+    ],
     "modelRoleBindings": [],
     "deniedModels": [],
-    "entitlementTags": ["chat"],
+    "entitlementTags": [
+      "chat"
+    ],
     "budgetPolicyRef": "budget.team",
     "quotaPolicyRef": "quota.team",
     "status": "active",
@@ -38,13 +44,21 @@
     "authMode": "api-key-static",
     "regionPolicy": {
       "mode": "prefer",
-      "regions": ["us-east-1", "us-west-2"]
+      "regions": [
+        "us-east-1",
+        "us-west-2"
+      ]
     },
     "baseUrlOverride": null,
-    "allowedModels": ["openai/gpt-4.1-mini-fast"],
+    "allowedModels": [
+      "openai/gpt-4.1-mini-fast"
+    ],
     "modelRoleBindings": [],
     "deniedModels": [],
-    "entitlementTags": ["chat", "reasoning"],
+    "entitlementTags": [
+      "chat",
+      "reasoning"
+    ],
     "budgetPolicyRef": "budget.default",
     "quotaPolicyRef": "quota.default",
     "status": "active",
