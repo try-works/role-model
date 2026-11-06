@@ -1,7 +1,7 @@
 {
-  "schemaVersion": "role-model.r37.db-preservation.v2",
+  "schemaVersion": "role-model.r37.db-preservation.v3",
   "stateRoot": "D:/DEV/rm-clean/r37-state",
-  "command": "walk stateRoot for *.sqlite/*.db/state.json; sha256 each; aggregate sha256(path NUL sha NUL)",
+  "command": "walk stateRoot for *.sqlite/*.db (+ -wal/-shm) and state.json; sha256 each; aggregate sha256(path NUL sha NUL)",
   "files": [
     {
       "path": "standalone-runtime-dev/track-b/extensions/extension-runtime-state.json",

@@ -62,14 +62,20 @@ export function selectShell({ releaseDir, shell }) {
   const previous = path.join(releaseDir, "build", ".client-previous");
   rmSync(temporary, { recursive: true, force: true });
   cpSync(source, temporary, { recursive: true });
-  if (existsSync(client)) {
-    rmSync(previous, { recursive: true, force: true });
-    renameSync(client, previous);
-  }
-  renameSync(temporary, client);
   const next = { ...registry, active: shell };
   writeRegistry(releaseDir, next);
-  rmSync(previous, { recursive: true, force: true });
+  try {
+    if (existsSync(client)) {
+      rmSync(previous, { recursive: true, force: true });
+      renameSync(client, previous);
+    }
+    renameSync(temporary, client);
+    rmSync(previous, { recursive: true, force: true });
+  } catch (error) {
+    if (!existsSync(client) && existsSync(previous)) renameSync(previous, client);
+    writeRegistry(releaseDir, registry);
+    throw error;
+  }
   return next;
 }
 
