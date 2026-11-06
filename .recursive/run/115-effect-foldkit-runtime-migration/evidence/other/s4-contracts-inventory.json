@@ -5,7 +5,7 @@
     "included": [
       "role-model-router/packages/** (first-party workspace packages)",
       "role-model-router/apps/runtime-host-bridge/src/** (host application)",
-      "EXHAUSTIVE: every top-level export in the host index.ts/cli.ts plus every package src/index.ts is an operation entry; scripts/s4-contracts-inventory.test.mjs enumerates them and fails on omission."
+      "DECLARATION-FORM RUNTIME ROOT OPERATIONS ONLY: every top-level export function/const/class (including async) in host index.ts/cli.ts and every package src/index.ts is an operation entry. Every other top-level export form is enumerated by scripts/s4-contracts-inventory.test.mjs and must be listed in scope.rootSurfaceExclusions; an unclassified form fails the test."
     ],
     "excluded": [
       {
@@ -43,11 +43,11 @@
         "reason": "Wildcard re-exports are surface wiring."
       },
       {
-        "form": "export type ",
+        "form": "export type",
         "reason": "Type-only declarations have no runtime operation."
       },
       {
-        "form": "export interface ",
+        "form": "export interface",
         "reason": "Type-only declarations have no runtime operation."
       },
       {
@@ -59,12 +59,36 @@
         "reason": "Generator declarations are outside the declaration-form operation set."
       },
       {
-        "form": "export let ",
+        "form": "export let",
         "reason": "Mutable root bindings are not operation roots."
       },
       {
-        "form": "export var ",
+        "form": "export var",
         "reason": "Mutable root bindings are not operation roots."
+      },
+      {
+        "form": "export namespace",
+        "reason": "Namespace declarations are not runtime operation roots."
+      },
+      {
+        "form": "export enum",
+        "reason": "Enum declarations are value shapes, not operation roots."
+      },
+      {
+        "form": "export const enum",
+        "reason": "Const enum declarations have no runtime operation body."
+      },
+      {
+        "form": "export import",
+        "reason": "Import-equals aliases are module wiring, not operations."
+      },
+      {
+        "form": "export declare",
+        "reason": "Ambient declarations have no runtime implementation."
+      },
+      {
+        "form": "export abstract class",
+        "reason": "Abstract classes have no runtime operation body."
       }
     ]
   },
@@ -495,14 +519,10 @@
         "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
         "line": 459
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/composition-dag.ts",
-          "line": 858
-        }
-      ],
+      "callers": [],
       "reason": "Body-verified: transaction(work) takes the semaphore, records fiber ownership, BEGIN IMMEDIATE, commits on success and rolls back via the ensuring finalizer on failure/interruption.",
-      "symbol": "transaction"
+      "symbol": "transaction",
+      "callerlessReason": "Public root export transaction; no in-repo call site found."
     },
     {
       "id": "sql-service-query-sync",
@@ -634,14 +654,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 430
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 430
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "fetchWithTransientRetry"
+      "symbol": "fetchWithTransientRetry",
+      "callerlessReason": "Public root export fetchWithTransientRetry; no in-repo call site found."
     },
     {
       "id": "root-index-resolveendpointexecutioneffort",
@@ -651,14 +667,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 448
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 448
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "resolveEndpointExecutionEffort"
+      "symbol": "resolveEndpointExecutionEffort",
+      "callerlessReason": "Public root export resolveEndpointExecutionEffort; no in-repo call site found."
     },
     {
       "id": "root-index-openai-codex-subscription-model-matrix",
@@ -668,14 +680,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 630
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 630
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX"
+      "symbol": "OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX",
+      "callerlessReason": "Public root export OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX; no in-repo call site found."
     },
     {
       "id": "root-index-openai-codex-subscription-model-ids",
@@ -685,14 +693,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 749
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 749
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS"
+      "symbol": "OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS",
+      "callerlessReason": "Public root export OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS; no in-repo call site found."
     },
     {
       "id": "root-index-openai-codex-subscription-model-exclusions",
@@ -702,14 +706,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 771
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 771
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "OPENAI_CODEX_SUBSCRIPTION_MODEL_EXCLUSIONS"
+      "symbol": "OPENAI_CODEX_SUBSCRIPTION_MODEL_EXCLUSIONS",
+      "callerlessReason": "Public root export OPENAI_CODEX_SUBSCRIPTION_MODEL_EXCLUSIONS; no in-repo call site found."
     },
     {
       "id": "root-index-normalizereasoningeffortpolicy",
@@ -719,14 +719,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 1008
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 1008
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "normalizeReasoningEffortPolicy"
+      "symbol": "normalizeReasoningEffortPolicy",
+      "callerlessReason": "Public root export normalizeReasoningEffortPolicy; no in-repo call site found."
     },
     {
       "id": "root-index-resolveeffortpolicy",
@@ -736,14 +732,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 1028
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 1028
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "resolveEffortPolicy"
+      "symbol": "resolveEffortPolicy",
+      "callerlessReason": "Public root export resolveEffortPolicy; no in-repo call site found."
     },
     {
       "id": "root-index-difficulty-classifier-version",
@@ -753,14 +745,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 1511
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 1511
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "DIFFICULTY_CLASSIFIER_VERSION"
+      "symbol": "DIFFICULTY_CLASSIFIER_VERSION",
+      "callerlessReason": "Public root export DIFFICULTY_CLASSIFIER_VERSION; no in-repo call site found."
     },
     {
       "id": "root-index-computedifficultyfeatures",
@@ -770,14 +758,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 1535
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 1535
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "computeDifficultyFeatures"
+      "symbol": "computeDifficultyFeatures",
+      "callerlessReason": "Public root export computeDifficultyFeatures; no in-repo call site found."
     },
     {
       "id": "root-index-shouldinvalidatedifficultyclassifierversion",
@@ -804,14 +788,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 1572
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 1572
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "classifyDifficultyFromSignals"
+      "symbol": "classifyDifficultyFromSignals",
+      "callerlessReason": "Public root export classifyDifficultyFromSignals; no in-repo call site found."
     },
     {
       "id": "root-index-difficulty-classifier-max-messages",
@@ -821,14 +801,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 1770
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 1765
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "DIFFICULTY_CLASSIFIER_MAX_MESSAGES"
+      "symbol": "DIFFICULTY_CLASSIFIER_MAX_MESSAGES",
+      "callerlessReason": "Public root export DIFFICULTY_CLASSIFIER_MAX_MESSAGES; no in-repo call site found."
     },
     {
       "id": "root-index-difficulty-classifier-max-chars-per-message",
@@ -838,14 +814,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 1771
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 1766
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "DIFFICULTY_CLASSIFIER_MAX_CHARS_PER_MESSAGE"
+      "symbol": "DIFFICULTY_CLASSIFIER_MAX_CHARS_PER_MESSAGE",
+      "callerlessReason": "Public root export DIFFICULTY_CLASSIFIER_MAX_CHARS_PER_MESSAGE; no in-repo call site found."
     },
     {
       "id": "root-index-difficulty-classifier-max-json-bytes",
@@ -855,14 +827,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 1772
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 1767
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "DIFFICULTY_CLASSIFIER_MAX_JSON_BYTES"
+      "symbol": "DIFFICULTY_CLASSIFIER_MAX_JSON_BYTES",
+      "callerlessReason": "Public root export DIFFICULTY_CLASSIFIER_MAX_JSON_BYTES; no in-repo call site found."
     },
     {
       "id": "root-index-builddifficultyclassifiermessages",
@@ -872,14 +840,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 1774
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 1774
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "buildDifficultyClassifierMessages"
+      "symbol": "buildDifficultyClassifierMessages",
+      "callerlessReason": "Public root export buildDifficultyClassifierMessages; no in-repo call site found."
     },
     {
       "id": "root-index-controller-max-transcript-bytes",
@@ -889,14 +853,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 1843
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 1843
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "CONTROLLER_MAX_TRANSCRIPT_BYTES"
+      "symbol": "CONTROLLER_MAX_TRANSCRIPT_BYTES",
+      "callerlessReason": "Public root export CONTROLLER_MAX_TRANSCRIPT_BYTES; no in-repo call site found."
     },
     {
       "id": "root-index-buildcontrollerroutingmessages",
@@ -906,14 +866,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 1863
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 1863
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "buildControllerRoutingMessages"
+      "symbol": "buildControllerRoutingMessages",
+      "callerlessReason": "Public root export buildControllerRoutingMessages; no in-repo call site found."
     },
     {
       "id": "root-index-buildcompactcontrollerroutingmessages",
@@ -923,14 +879,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 1899
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 1899
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "buildCompactControllerRoutingMessages"
+      "symbol": "buildCompactControllerRoutingMessages",
+      "callerlessReason": "Public root export buildCompactControllerRoutingMessages; no in-repo call site found."
     },
     {
       "id": "root-index-inferheuristiccontrollerguidance",
@@ -940,14 +892,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 1971
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 1971
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "inferHeuristicControllerGuidance"
+      "symbol": "inferHeuristicControllerGuidance",
+      "callerlessReason": "Public root export inferHeuristicControllerGuidance; no in-repo call site found."
     },
     {
       "id": "root-index-mergecontrollerguidancedefaults",
@@ -957,14 +905,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 2025
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 2025
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "mergeControllerGuidanceDefaults"
+      "symbol": "mergeControllerGuidanceDefaults",
+      "callerlessReason": "Public root export mergeControllerGuidanceDefaults; no in-repo call site found."
     },
     {
       "id": "root-index-expandpreferredendpointidstoeffortarms",
@@ -974,14 +918,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 2489
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 2489
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "expandPreferredEndpointIdsToEffortArms"
+      "symbol": "expandPreferredEndpointIdsToEffortArms",
+      "callerlessReason": "Public root export expandPreferredEndpointIdsToEffortArms; no in-repo call site found."
     },
     {
       "id": "root-index-resolveobserveddifficultybucketforplan",
@@ -991,14 +931,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 2574
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 2574
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "resolveObservedDifficultyBucketForPlan"
+      "symbol": "resolveObservedDifficultyBucketForPlan",
+      "callerlessReason": "Public root export resolveObservedDifficultyBucketForPlan; no in-repo call site found."
     },
     {
       "id": "root-index-resolvebridgeexecutioncost",
@@ -1008,14 +944,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 3092
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 3092
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "resolveBridgeExecutionCost"
+      "symbol": "resolveBridgeExecutionCost",
+      "callerlessReason": "Public root export resolveBridgeExecutionCost; no in-repo call site found."
     },
     {
       "id": "root-index-buildruntimetelemetrysnapshot",
@@ -1025,14 +957,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 3127
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 3127
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "buildRuntimeTelemetrySnapshot"
+      "symbol": "buildRuntimeTelemetrySnapshot",
+      "callerlessReason": "Public root export buildRuntimeTelemetrySnapshot; no in-repo call site found."
     },
     {
       "id": "root-index-tocachecontinuityscopedescriptor",
@@ -1042,14 +970,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 4754
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 4754
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "toCacheContinuityScopeDescriptor"
+      "symbol": "toCacheContinuityScopeDescriptor",
+      "callerlessReason": "Public root export toCacheContinuityScopeDescriptor; no in-repo call site found."
     },
     {
       "id": "root-index-readcachecontinuityroutehints",
@@ -1059,14 +983,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 4873
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 4873
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "readCacheContinuityRouteHints"
+      "symbol": "readCacheContinuityRouteHints",
+      "callerlessReason": "Public root export readCacheContinuityRouteHints; no in-repo call site found."
     },
     {
       "id": "root-index-persistcachecontinuityoutcome",
@@ -1076,14 +996,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 4890
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 4890
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "persistCacheContinuityOutcome"
+      "symbol": "persistCacheContinuityOutcome",
+      "callerlessReason": "Public root export persistCacheContinuityOutcome; no in-repo call site found."
     },
     {
       "id": "root-index-classifyupstreamexecutionfailure",
@@ -1093,14 +1009,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 5036
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 5036
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "classifyUpstreamExecutionFailure"
+      "symbol": "classifyUpstreamExecutionFailure",
+      "callerlessReason": "Public root export classifyUpstreamExecutionFailure; no in-repo call site found."
     },
     {
       "id": "root-index-shouldretryupstreamexecutiononsameendpoint",
@@ -1110,14 +1022,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 5270
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 5270
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "shouldRetryUpstreamExecutionOnSameEndpoint"
+      "symbol": "shouldRetryUpstreamExecutionOnSameEndpoint",
+      "callerlessReason": "Public root export shouldRetryUpstreamExecutionOnSameEndpoint; no in-repo call site found."
     },
     {
       "id": "root-index-classifyexecutionfailureifneeded",
@@ -1127,14 +1035,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 5299
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 5299
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "classifyExecutionFailureIfNeeded"
+      "symbol": "classifyExecutionFailureIfNeeded",
+      "callerlessReason": "Public root export classifyExecutionFailureIfNeeded; no in-repo call site found."
     },
     {
       "id": "root-index-hassubstantivestreamdelta",
@@ -1144,14 +1048,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 5346
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 5346
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "hasSubstantiveStreamDelta"
+      "symbol": "hasSubstantiveStreamDelta",
+      "callerlessReason": "Public root export hasSubstantiveStreamDelta; no in-repo call site found."
     },
     {
       "id": "root-index-buildterminalstreamerrorpayload",
@@ -1161,14 +1061,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 5976
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 5976
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "buildTerminalStreamErrorPayload"
+      "symbol": "buildTerminalStreamErrorPayload",
+      "callerlessReason": "Public root export buildTerminalStreamErrorPayload; no in-repo call site found."
     },
     {
       "id": "root-index-isruntimebootstrapblock",
@@ -1178,14 +1074,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 6019
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 6019
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "isRuntimeBootstrapBlock"
+      "symbol": "isRuntimeBootstrapBlock",
+      "callerlessReason": "Public root export isRuntimeBootstrapBlock; no in-repo call site found."
     },
     {
       "id": "root-index-readobservedprofilesforrouting",
@@ -1195,14 +1087,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 6332
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 6332
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "readObservedProfilesForRouting"
+      "symbol": "readObservedProfilesForRouting",
+      "callerlessReason": "Public root export readObservedProfilesForRouting; no in-repo call site found."
     },
     {
       "id": "root-index-projectbenchmarkdecisionevidence",
@@ -1212,14 +1100,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 6467
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 6467
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "projectBenchmarkDecisionEvidence"
+      "symbol": "projectBenchmarkDecisionEvidence",
+      "callerlessReason": "Public root export projectBenchmarkDecisionEvidence; no in-repo call site found."
     },
     {
       "id": "root-index-projecttelemetrydecisionevidence",
@@ -1229,14 +1113,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 6546
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 6546
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "projectTelemetryDecisionEvidence"
+      "symbol": "projectTelemetryDecisionEvidence",
+      "callerlessReason": "Public root export projectTelemetryDecisionEvidence; no in-repo call site found."
     },
     {
       "id": "root-index-summarizeselectiondiagnosticsfromdecision",
@@ -1246,14 +1126,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 6704
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 6704
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "summarizeSelectionDiagnosticsFromDecision"
+      "symbol": "summarizeSelectionDiagnosticsFromDecision",
+      "callerlessReason": "Public root export summarizeSelectionDiagnosticsFromDecision; no in-repo call site found."
     },
     {
       "id": "root-index-createruntimeexecutioncatalogcache",
@@ -1263,14 +1139,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 7337
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 7337
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "createRuntimeExecutionCatalogCache"
+      "symbol": "createRuntimeExecutionCatalogCache",
+      "callerlessReason": "Public root export createRuntimeExecutionCatalogCache; no in-repo call site found."
     },
     {
       "id": "root-index-createrolemodelnormalizedintentobservation",
@@ -1280,14 +1152,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 8380
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 8380
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "createRoleModelNormalizedIntentObservation"
+      "symbol": "createRoleModelNormalizedIntentObservation",
+      "callerlessReason": "Public root export createRoleModelNormalizedIntentObservation; no in-repo call site found."
     },
     {
       "id": "root-index-buildrequestclassification",
@@ -1297,14 +1165,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 8613
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts",
-          "line": 8014
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "buildRequestClassification"
+      "symbol": "buildRequestClassification",
+      "callerlessReason": "Public root export buildRequestClassification; no in-repo call site found."
     },
     {
       "id": "root-index-buildrequestclassificationforplan",
@@ -1314,14 +1178,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 8683
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 8683
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "buildRequestClassificationForPlan"
+      "symbol": "buildRequestClassificationForPlan",
+      "callerlessReason": "Public root export buildRequestClassificationForPlan; no in-repo call site found."
     },
     {
       "id": "root-index-createmodellistresponse",
@@ -1348,14 +1208,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 9241
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 764
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "createRuntimeModelRecords"
+      "symbol": "createRuntimeModelRecords",
+      "callerlessReason": "Public root export createRuntimeModelRecords; no in-repo call site found."
     },
     {
       "id": "root-index-resolveendpointwebsearchsupport",
@@ -1365,14 +1221,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 9389
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 9389
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "resolveEndpointWebSearchSupport"
+      "symbol": "resolveEndpointWebSearchSupport",
+      "callerlessReason": "Public root export resolveEndpointWebSearchSupport; no in-repo call site found."
     },
     {
       "id": "root-index-classifybridgeroutepass",
@@ -1382,14 +1234,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 10009
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 10009
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "classifyBridgeRoutePass"
+      "symbol": "classifyBridgeRoutePass",
+      "callerlessReason": "Public root export classifyBridgeRoutePass; no in-repo call site found."
     },
     {
       "id": "root-index-applyreasoningefforttomodelpool",
@@ -1399,14 +1247,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 10046
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 10046
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "applyReasoningEffortToModelPool"
+      "symbol": "applyReasoningEffortToModelPool",
+      "callerlessReason": "Public root export applyReasoningEffortToModelPool; no in-repo call site found."
     },
     {
       "id": "root-index-createdownstreamopenaiproviderconfig",
@@ -1416,14 +1260,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 10341
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 10341
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "createDownstreamOpenAIProviderConfig"
+      "symbol": "createDownstreamOpenAIProviderConfig",
+      "callerlessReason": "Public root export createDownstreamOpenAIProviderConfig; no in-repo call site found."
     },
     {
       "id": "root-index-infertaxonomytoolclasses",
@@ -1433,14 +1273,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 10848
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 10848
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "inferTaxonomyToolClasses"
+      "symbol": "inferTaxonomyToolClasses",
+      "callerlessReason": "Public root export inferTaxonomyToolClasses; no in-repo call site found."
     },
     {
       "id": "root-index-mapchatcompletionsrequest",
@@ -1467,14 +1303,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 11303
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 11303
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "mapResponsesRequest"
+      "symbol": "mapResponsesRequest",
+      "callerlessReason": "Public root export mapResponsesRequest; no in-repo call site found."
     },
     {
       "id": "root-index-writeunhandledbridgeerror",
@@ -1484,14 +1316,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 11612
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 11612
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "writeUnhandledBridgeError"
+      "symbol": "writeUnhandledBridgeError",
+      "callerlessReason": "Public root export writeUnhandledBridgeError; no in-repo call site found."
     },
     {
       "id": "root-index-resolveliveattempttimeoutms",
@@ -1501,14 +1329,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 11724
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 11724
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "resolveLiveAttemptTimeoutMs"
+      "symbol": "resolveLiveAttemptTimeoutMs",
+      "callerlessReason": "Public root export resolveLiveAttemptTimeoutMs; no in-repo call site found."
     },
     {
       "id": "root-index-loadmcpconnectorconfigs",
@@ -1518,14 +1342,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 12142
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 12142
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "loadMcpConnectorConfigs"
+      "symbol": "loadMcpConnectorConfigs",
+      "callerlessReason": "Public root export loadMcpConnectorConfigs; no in-repo call site found."
     },
     {
       "id": "root-index-createrequestscopedtoolregistry",
@@ -1535,14 +1355,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 12239
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 12239
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "createRequestScopedToolRegistry"
+      "symbol": "createRequestScopedToolRegistry",
+      "callerlessReason": "Public root export createRequestScopedToolRegistry; no in-repo call site found."
     },
     {
       "id": "root-index-routeruntimerequest",
@@ -1569,14 +1385,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 12369
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/bench-routing/src/reasoning-extraction.test.ts",
-          "line": 64
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "guardSoleCandidateThroughputDeny"
+      "symbol": "guardSoleCandidateThroughputDeny",
+      "callerlessReason": "Public root export guardSoleCandidateThroughputDeny; no in-repo call site found."
     },
     {
       "id": "root-index-seedmanagedcodexworkspacefixture",
@@ -1586,14 +1398,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 12384
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 12384
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "seedManagedCodexWorkspaceFixture"
+      "symbol": "seedManagedCodexWorkspaceFixture",
+      "callerlessReason": "Public root export seedManagedCodexWorkspaceFixture; no in-repo call site found."
     },
     {
       "id": "root-index-istransientprovidertransporterror",
@@ -1603,14 +1411,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 13134
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 13134
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "isTransientProviderTransportError"
+      "symbol": "isTransientProviderTransportError",
+      "callerlessReason": "Public root export isTransientProviderTransportError; no in-repo call site found."
     },
     {
       "id": "root-index-resolveoauthdevicehttptimeoutms",
@@ -1620,14 +1424,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 13173
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 13173
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "resolveOauthDeviceHttpTimeoutMs"
+      "symbol": "resolveOauthDeviceHttpTimeoutMs",
+      "callerlessReason": "Public root export resolveOauthDeviceHttpTimeoutMs; no in-repo call site found."
     },
     {
       "id": "root-index-buildcodexdynamictools",
@@ -1637,14 +1437,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 13342
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 13342
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "buildCodexDynamicTools"
+      "symbol": "buildCodexDynamicTools",
+      "callerlessReason": "Public root export buildCodexDynamicTools; no in-repo call site found."
     },
     {
       "id": "root-index-normalizecodexsubscriptionmodelname",
@@ -1654,14 +1450,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 13397
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 13397
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "normalizeCodexSubscriptionModelName"
+      "symbol": "normalizeCodexSubscriptionModelName",
+      "callerlessReason": "Public root export normalizeCodexSubscriptionModelName; no in-repo call site found."
     },
     {
       "id": "root-index-createcodexsubscriptionresponsesexecutionadapter",
@@ -1671,14 +1463,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 14544
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 14544
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "createCodexSubscriptionResponsesExecutionAdapter"
+      "symbol": "createCodexSubscriptionResponsesExecutionAdapter",
+      "callerlessReason": "Public root export createCodexSubscriptionResponsesExecutionAdapter; no in-repo call site found."
     },
     {
       "id": "root-index-resolvestoredoauthtokenlocations",
@@ -1688,14 +1476,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 14701
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 14701
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "resolveStoredOauthTokenLocations"
+      "symbol": "resolveStoredOauthTokenLocations",
+      "callerlessReason": "Public root export resolveStoredOauthTokenLocations; no in-repo call site found."
     },
     {
       "id": "root-index-readproviderstreamtranscript",
@@ -1705,14 +1489,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 15489
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 15489
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "readProviderStreamTranscript"
+      "symbol": "readProviderStreamTranscript",
+      "callerlessReason": "Public root export readProviderStreamTranscript; no in-repo call site found."
     },
     {
       "id": "root-index-filterrouterregistrybyexecutionmode",
@@ -1722,14 +1502,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 15610
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 15610
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "filterRouterRegistryByExecutionMode"
+      "symbol": "filterRouterRegistryByExecutionMode",
+      "callerlessReason": "Public root export filterRouterRegistryByExecutionMode; no in-repo call site found."
     },
     {
       "id": "root-index-handlelocaldiagnosticsread",
@@ -1739,14 +1515,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 17101
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 17101
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "handleLocalDiagnosticsRead"
+      "symbol": "handleLocalDiagnosticsRead",
+      "callerlessReason": "Public root export handleLocalDiagnosticsRead; no in-repo call site found."
     },
     {
       "id": "root-index-resolveanonymouslearningreads",
@@ -1756,14 +1528,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 17196
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 17196
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "resolveAnonymousLearningReads"
+      "symbol": "resolveAnonymousLearningReads",
+      "callerlessReason": "Public root export resolveAnonymousLearningReads; no in-repo call site found."
     },
     {
       "id": "root-index-resolvedeviceownertrust",
@@ -1773,14 +1541,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 17223
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 17223
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "resolveDeviceOwnerTrust"
+      "symbol": "resolveDeviceOwnerTrust",
+      "callerlessReason": "Public root export resolveDeviceOwnerTrust; no in-repo call site found."
     },
     {
       "id": "root-index-projectlearningprofileestimate",
@@ -1790,14 +1554,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 17310
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 17310
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "projectLearningProfileEstimate"
+      "symbol": "projectLearningProfileEstimate",
+      "callerlessReason": "Public root export projectLearningProfileEstimate; no in-repo call site found."
     },
     {
       "id": "root-index-resolvelearningprofilerouteresult",
@@ -1807,14 +1567,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 17354
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 17354
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "resolveLearningProfileRouteResult"
+      "symbol": "resolveLearningProfileRouteResult",
+      "callerlessReason": "Public root export resolveLearningProfileRouteResult; no in-repo call site found."
     },
     {
       "id": "root-index-attachrouterpolicyresolution",
@@ -1824,14 +1580,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 17408
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 17408
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "attachRouterPolicyResolution"
+      "symbol": "attachRouterPolicyResolution",
+      "callerlessReason": "Public root export attachRouterPolicyResolution; no in-repo call site found."
     },
     {
       "id": "root-index-runtime-host-storage-registry",
@@ -1841,14 +1593,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 20551
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 20551
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "RUNTIME_HOST_STORAGE_REGISTRY"
+      "symbol": "RUNTIME_HOST_STORAGE_REGISTRY",
+      "callerlessReason": "Public root export RUNTIME_HOST_STORAGE_REGISTRY; no in-repo call site found."
     },
     {
       "id": "root-index-assertruntimehoststoragewriteallowed",
@@ -1858,14 +1606,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 20562
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 20562
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "assertRuntimeHostStorageWriteAllowed"
+      "symbol": "assertRuntimeHostStorageWriteAllowed",
+      "callerlessReason": "Public root export assertRuntimeHostStorageWriteAllowed; no in-repo call site found."
     },
     {
       "id": "root-index-isclientcausedmodulehealthescape",
@@ -1875,14 +1619,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 20612
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 20612
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "isClientCausedModuleHealthEscape"
+      "symbol": "isClientCausedModuleHealthEscape",
+      "callerlessReason": "Public root export isClientCausedModuleHealthEscape; no in-repo call site found."
     },
     {
       "id": "root-index-modulehealthcauseforescape",
@@ -1892,14 +1632,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 20619
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 20619
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "moduleHealthCauseForEscape"
+      "symbol": "moduleHealthCauseForEscape",
+      "callerlessReason": "Public root export moduleHealthCauseForEscape; no in-repo call site found."
     },
     {
       "id": "root-index-createmodulehealthcomposition",
@@ -1909,14 +1645,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 20628
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 20628
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "createModuleHealthComposition"
+      "symbol": "createModuleHealthComposition",
+      "callerlessReason": "Public root export createModuleHealthComposition; no in-repo call site found."
     },
     {
       "id": "root-index-wiremodulehealth",
@@ -1926,14 +1658,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 20697
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 20697
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "wireModuleHealth"
+      "symbol": "wireModuleHealth",
+      "callerlessReason": "Public root export wireModuleHealth; no in-repo call site found."
     },
     {
       "id": "root-index-createbridgerequestlistener",
@@ -1960,14 +1688,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 20772
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 20772
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "recordDirectContributionWith"
+      "symbol": "recordDirectContributionWith",
+      "callerlessReason": "Public root export recordDirectContributionWith; no in-repo call site found."
     },
     {
       "id": "root-index-recordroutecaptureathostedge",
@@ -1977,14 +1701,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 20828
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 20828
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "recordRouteCaptureAtHostEdge"
+      "symbol": "recordRouteCaptureAtHostEdge",
+      "callerlessReason": "Public root export recordRouteCaptureAtHostEdge; no in-repo call site found."
     },
     {
       "id": "root-index-bridgeservertransport",
@@ -1994,14 +1714,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 20844
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 20844
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "bridgeServerTransport"
+      "symbol": "bridgeServerTransport",
+      "callerlessReason": "Public root export bridgeServerTransport; no in-repo call site found."
     },
     {
       "id": "root-index-startbridgeserver",
@@ -2028,14 +1744,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 20981
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 20981
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "projectPublicProviderAttemptIds"
+      "symbol": "projectPublicProviderAttemptIds",
+      "callerlessReason": "Public root export projectPublicProviderAttemptIds; no in-repo call site found."
     },
     {
       "id": "root-index-fatalregistrydiagnostics",
@@ -2045,14 +1757,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 21012
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 21012
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "fatalRegistryDiagnostics"
+      "symbol": "fatalRegistryDiagnostics",
+      "callerlessReason": "Public root export fatalRegistryDiagnostics; no in-repo call site found."
     },
     {
       "id": "root-index-observability-snapshot-schema-version",
@@ -2096,14 +1804,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 21072
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 21072
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "runRetentionCleanupAt"
+      "symbol": "runRetentionCleanupAt",
+      "callerlessReason": "Public root export runRetentionCleanupAt; no in-repo call site found."
     },
     {
       "id": "root-index-draindeferredroutecapture",
@@ -2147,14 +1851,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 35644
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 35644
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "resolveStandaloneStaticRoot"
+      "symbol": "resolveStandaloneStaticRoot",
+      "callerlessReason": "Public root export resolveStandaloneStaticRoot; no in-repo call site found."
     },
     {
       "id": "root-index-resolvebridgeserveroptions",
@@ -2181,14 +1881,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 215
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 215
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "openReadOnlyStateDatabase"
+      "symbol": "openReadOnlyStateDatabase",
+      "callerlessReason": "Public root export openReadOnlyStateDatabase; no in-repo call site found."
     },
     {
       "id": "root-cli-setstatedatabaseservicefactoryfortests",
@@ -2198,14 +1894,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 224
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 224
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "setStateDatabaseServiceFactoryForTests"
+      "symbol": "setStateDatabaseServiceFactoryForTests",
+      "callerlessReason": "Public root export setStateDatabaseServiceFactoryForTests; no in-repo call site found."
     },
     {
       "id": "root-cli-readendpointmodelidforroutepackage",
@@ -2215,14 +1907,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 248
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 248
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "readEndpointModelIdForRoutePackage"
+      "symbol": "readEndpointModelIdForRoutePackage",
+      "callerlessReason": "Public root export readEndpointModelIdForRoutePackage; no in-repo call site found."
     },
     {
       "id": "root-cli-supervisedreplaybranchcapturerequestid",
@@ -2232,14 +1920,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 287
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 287
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "supervisedReplayBranchCaptureRequestId"
+      "symbol": "supervisedReplayBranchCaptureRequestId",
+      "callerlessReason": "Public root export supervisedReplayBranchCaptureRequestId; no in-repo call site found."
     },
     {
       "id": "root-cli-readroutecapturefromqueuereceipt",
@@ -2249,14 +1933,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 333
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 333
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "readRouteCaptureFromQueueReceipt"
+      "symbol": "readRouteCaptureFromQueueReceipt",
+      "callerlessReason": "Public root export readRouteCaptureFromQueueReceipt; no in-repo call site found."
     },
     {
       "id": "root-cli-resolveresumedhandoffjobrecord",
@@ -2266,14 +1946,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 392
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 392
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "resolveResumedHandoffJobRecord"
+      "symbol": "resolveResumedHandoffJobRecord",
+      "callerlessReason": "Public root export resolveResumedHandoffJobRecord; no in-repo call site found."
     },
     {
       "id": "root-cli-evaluationjobexistsfromgetjobanswer",
@@ -2283,14 +1959,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 406
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 406
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "evaluationJobExistsFromGetJobAnswer"
+      "symbol": "evaluationJobExistsFromGetJobAnswer",
+      "callerlessReason": "Public root export evaluationJobExistsFromGetJobAnswer; no in-repo call site found."
     },
     {
       "id": "root-cli-evaluationjobstatusfromgetjobanswer",
@@ -2300,14 +1972,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 459
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 459
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "evaluationJobStatusFromGetJobAnswer"
+      "symbol": "evaluationJobStatusFromGetJobAnswer",
+      "callerlessReason": "Public root export evaluationJobStatusFromGetJobAnswer; no in-repo call site found."
     },
     {
       "id": "root-cli-readpersistedcontrollerendpointid",
@@ -2317,14 +1985,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 516
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 516
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "readPersistedControllerEndpointId"
+      "symbol": "readPersistedControllerEndpointId",
+      "callerlessReason": "Public root export readPersistedControllerEndpointId; no in-repo call site found."
     },
     {
       "id": "root-cli-resolvechannelscopedreplayledgerlimits",
@@ -2334,14 +1998,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 533
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 533
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "resolveChannelScopedReplayLedgerLimits"
+      "symbol": "resolveChannelScopedReplayLedgerLimits",
+      "callerlessReason": "Public root export resolveChannelScopedReplayLedgerLimits; no in-repo call site found."
     },
     {
       "id": "root-cli-readcapturetaxonomyversion",
@@ -2351,14 +2011,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 807
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 807
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "readCaptureTaxonomyVersion"
+      "symbol": "readCaptureTaxonomyVersion",
+      "callerlessReason": "Public root export readCaptureTaxonomyVersion; no in-repo call site found."
     },
     {
       "id": "root-cli-readcaptureroleid",
@@ -2368,14 +2024,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 823
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts",
-          "line": 9145
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "readCaptureRoleId"
+      "symbol": "readCaptureRoleId",
+      "callerlessReason": "Public root export readCaptureRoleId; no in-repo call site found."
     },
     {
       "id": "root-cli-readcapturetasktypeid",
@@ -2385,14 +2037,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 846
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 846
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "readCaptureTaskTypeId"
+      "symbol": "readCaptureTaskTypeId",
+      "callerlessReason": "Public root export readCaptureTaskTypeId; no in-repo call site found."
     },
     {
       "id": "root-cli-replayrequestidfromproviderresultref",
@@ -2402,14 +2050,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 864
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 864
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "replayRequestIdFromProviderResultRef"
+      "symbol": "replayRequestIdFromProviderResultRef",
+      "callerlessReason": "Public root export replayRequestIdFromProviderResultRef; no in-repo call site found."
     },
     {
       "id": "root-cli-buildreplayappendexecution",
@@ -2419,14 +2063,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 899
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 899
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "buildReplayAppendExecution"
+      "symbol": "buildReplayAppendExecution",
+      "callerlessReason": "Public root export buildReplayAppendExecution; no in-repo call site found."
     },
     {
       "id": "root-cli-resolveresumedreplayappenddispatch",
@@ -2436,14 +2076,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 981
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 981
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "resolveResumedReplayAppendDispatch"
+      "symbol": "resolveResumedReplayAppendDispatch",
+      "callerlessReason": "Public root export resolveResumedReplayAppendDispatch; no in-repo call site found."
     },
     {
       "id": "root-cli-derivesupervisedreplaytrajectoryevents",
@@ -2453,14 +2089,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 1048
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 1048
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "deriveSupervisedReplayTrajectoryEvents"
+      "symbol": "deriveSupervisedReplayTrajectoryEvents",
+      "callerlessReason": "Public root export deriveSupervisedReplayTrajectoryEvents; no in-repo call site found."
     },
     {
       "id": "root-cli-derivelearnertrajectoryevidenceforreplay",
@@ -2470,14 +2102,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 1275
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 1275
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "deriveLearnerTrajectoryEvidenceForReplay"
+      "symbol": "deriveLearnerTrajectoryEvidenceForReplay",
+      "callerlessReason": "Public root export deriveLearnerTrajectoryEvidenceForReplay; no in-repo call site found."
     },
     {
       "id": "root-cli-finalization-signals-examined-limit",
@@ -2487,14 +2115,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 1420
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 1420
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "FINALIZATION_SIGNALS_EXAMINED_LIMIT"
+      "symbol": "FINALIZATION_SIGNALS_EXAMINED_LIMIT",
+      "callerlessReason": "Public root export FINALIZATION_SIGNALS_EXAMINED_LIMIT; no in-repo call site found."
     },
     {
       "id": "root-cli-finalization-signals-compute-limit",
@@ -2504,14 +2128,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 1428
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 1428
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "FINALIZATION_SIGNALS_COMPUTE_LIMIT"
+      "symbol": "FINALIZATION_SIGNALS_COMPUTE_LIMIT",
+      "callerlessReason": "Public root export FINALIZATION_SIGNALS_COMPUTE_LIMIT; no in-repo call site found."
     },
     {
       "id": "root-cli-finalization-signals-budget-ms",
@@ -2521,14 +2141,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 1431
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 1431
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "FINALIZATION_SIGNALS_BUDGET_MS"
+      "symbol": "FINALIZATION_SIGNALS_BUDGET_MS",
+      "callerlessReason": "Public root export FINALIZATION_SIGNALS_BUDGET_MS; no in-repo call site found."
     },
     {
       "id": "root-cli-sweepfinalizationsignalsforgroups",
@@ -2538,14 +2154,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 1444
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 1444
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "sweepFinalizationSignalsForGroups"
+      "symbol": "sweepFinalizationSignalsForGroups",
+      "callerlessReason": "Public root export sweepFinalizationSignalsForGroups; no in-repo call site found."
     },
     {
       "id": "root-cli-buildsupervisedreplayevaluationreferences",
@@ -2555,14 +2167,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 1618
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 1618
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "buildSupervisedReplayEvaluationReferences"
+      "symbol": "buildSupervisedReplayEvaluationReferences",
+      "callerlessReason": "Public root export buildSupervisedReplayEvaluationReferences; no in-repo call site found."
     },
     {
       "id": "root-cli-persistsupervisedreplayevaluationcasereferences",
@@ -2572,14 +2180,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 1798
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/track-b-runtime.ts",
-          "line": 10790
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "persistSupervisedReplayEvaluationCaseReferences"
+      "symbol": "persistSupervisedReplayEvaluationCaseReferences",
+      "callerlessReason": "Public root export persistSupervisedReplayEvaluationCaseReferences; no in-repo call site found."
     },
     {
       "id": "root-cli-persistsupervisedreplayevaluationreferencefacts",
@@ -2589,14 +2193,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 1907
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 1907
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "persistSupervisedReplayEvaluationReferenceFacts"
+      "symbol": "persistSupervisedReplayEvaluationReferenceFacts",
+      "callerlessReason": "Public root export persistSupervisedReplayEvaluationReferenceFacts; no in-repo call site found."
     },
     {
       "id": "root-cli-resolvepostobservationreleaseid",
@@ -2606,14 +2206,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 2025
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 2025
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "resolvePostObservationReleaseId"
+      "symbol": "resolvePostObservationReleaseId",
+      "callerlessReason": "Public root export resolvePostObservationReleaseId; no in-repo call site found."
     },
     {
       "id": "root-cli-classifylearnerpromotionresult",
@@ -2623,14 +2219,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 2057
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 2057
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "classifyLearnerPromotionResult"
+      "symbol": "classifyLearnerPromotionResult",
+      "callerlessReason": "Public root export classifyLearnerPromotionResult; no in-repo call site found."
     },
     {
       "id": "root-cli-finaliserefusaldispositiondetail",
@@ -2640,14 +2232,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 2075
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 2075
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "finaliseRefusalDispositionDetail"
+      "symbol": "finaliseRefusalDispositionDetail",
+      "callerlessReason": "Public root export finaliseRefusalDispositionDetail; no in-repo call site found."
     },
     {
       "id": "root-cli-finaliserefusaldispositionwrite",
@@ -2657,14 +2245,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 2097
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 2097
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "finaliseRefusalDispositionWrite"
+      "symbol": "finaliseRefusalDispositionWrite",
+      "callerlessReason": "Public root export finaliseRefusalDispositionWrite; no in-repo call site found."
     },
     {
       "id": "root-cli-createsupervisedreplayevaluationcompleter",
@@ -2674,14 +2258,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 2119
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 2119
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "createSupervisedReplayEvaluationCompleter"
+      "symbol": "createSupervisedReplayEvaluationCompleter",
+      "callerlessReason": "Public root export createSupervisedReplayEvaluationCompleter; no in-repo call site found."
     },
     {
       "id": "root-cli-parseanonymouslearningreadsflag",
@@ -2691,14 +2271,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 3084
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 3084
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "parseAnonymousLearningReadsFlag"
+      "symbol": "parseAnonymousLearningReadsFlag",
+      "callerlessReason": "Public root export parseAnonymousLearningReadsFlag; no in-repo call site found."
     },
     {
       "id": "root-cli-resolvemaxextrapaircomparisons",
@@ -2725,14 +2301,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 3111
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 3111
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "createRuntimeOperatorCallbacks"
+      "symbol": "createRuntimeOperatorCallbacks",
+      "callerlessReason": "Public root export createRuntimeOperatorCallbacks; no in-repo call site found."
     },
     {
       "id": "root-cli-requirepackagedtrackbmanifest",
@@ -2742,14 +2314,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 3356
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 3356
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "requirePackagedTrackBManifest"
+      "symbol": "requirePackagedTrackBManifest",
+      "callerlessReason": "Public root export requirePackagedTrackBManifest; no in-repo call site found."
     },
     {
       "id": "root-cli-createrun88stagepostobservation",
@@ -2759,14 +2327,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 3408
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 3408
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "createRun88StagePostObservation"
+      "symbol": "createRun88StagePostObservation",
+      "callerlessReason": "Public root export createRun88StagePostObservation; no in-repo call site found."
     },
     {
       "id": "root-cli-projectclistartupreadiness",
@@ -2793,14 +2357,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 3469
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 3469
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "runQaStartupInvoke"
+      "symbol": "runQaStartupInvoke",
+      "callerlessReason": "Public root export runQaStartupInvoke; no in-repo call site found."
     },
     {
       "id": "root-cli-awaitcliextensionruntime",
@@ -2810,14 +2370,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 3495
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 3495
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "awaitCliExtensionRuntime"
+      "symbol": "awaitCliExtensionRuntime",
+      "callerlessReason": "Public root export awaitCliExtensionRuntime; no in-repo call site found."
     },
     {
       "id": "root-cli-createcliextensionruntimeowner",
@@ -2827,14 +2383,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 3530
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 3530
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "createCliExtensionRuntimeOwner"
+      "symbol": "createCliExtensionRuntimeOwner",
+      "callerlessReason": "Public root export createCliExtensionRuntimeOwner; no in-repo call site found."
     },
     {
       "id": "root-cli-negotiatepackagedtrackbstartup",
@@ -2844,14 +2396,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 3729
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 3729
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "negotiatePackagedTrackBStartup"
+      "symbol": "negotiatePackagedTrackBStartup",
+      "callerlessReason": "Public root export negotiatePackagedTrackBStartup; no in-repo call site found."
     },
     {
       "id": "root-cli-resolveclifixtureroot",
@@ -2861,14 +2409,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 3938
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 3938
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "resolveCliFixtureRoot"
+      "symbol": "resolveCliFixtureRoot",
+      "callerlessReason": "Public root export resolveCliFixtureRoot; no in-repo call site found."
     },
     {
       "id": "root-cli-flattenstoredegradationreadback",
@@ -2878,14 +2422,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 3994
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 3994
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "flattenStoreDegradationReadback"
+      "symbol": "flattenStoreDegradationReadback",
+      "callerlessReason": "Public root export flattenStoreDegradationReadback; no in-repo call site found."
     },
     {
       "id": "root-cli-readstoredegradationreceiptsfromruntime",
@@ -2895,14 +2435,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 4052
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 4052
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "readStoreDegradationReceiptsFromRuntime"
+      "symbol": "readStoreDegradationReceiptsFromRuntime",
+      "callerlessReason": "Public root export readStoreDegradationReceiptsFromRuntime; no in-repo call site found."
     },
     {
       "id": "root-cli-startdurablerouteadvisoryrefresh",
@@ -2912,14 +2448,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 4132
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 4132
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "startDurableRouteAdvisoryRefresh"
+      "symbol": "startDurableRouteAdvisoryRefresh",
+      "callerlessReason": "Public root export startDurableRouteAdvisoryRefresh; no in-repo call site found."
     },
     {
       "id": "root-cli-startcliextensionruntimewatchdog",
@@ -2929,14 +2461,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 4297
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 4297
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "startCliExtensionRuntimeWatchdog"
+      "symbol": "startCliExtensionRuntimeWatchdog",
+      "callerlessReason": "Public root export startCliExtensionRuntimeWatchdog; no in-repo call site found."
     },
     {
       "id": "root-cli-validatepackagedrun88identity",
@@ -2946,14 +2474,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 4356
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 4356
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "validatePackagedRun88Identity"
+      "symbol": "validatePackagedRun88Identity",
+      "callerlessReason": "Public root export validatePackagedRun88Identity; no in-repo call site found."
     },
     {
       "id": "root-cli-runclibackendbranch",
@@ -2963,14 +2487,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 4374
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 4374
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "runCliBackendBranch"
+      "symbol": "runCliBackendBranch",
+      "callerlessReason": "Public root export runCliBackendBranch; no in-repo call site found."
     },
     {
       "id": "root-cli-completeclistartupreadiness",
@@ -2997,14 +2517,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 4403
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 4403
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "createCliServerOptions"
+      "symbol": "createCliServerOptions",
+      "callerlessReason": "Public root export createCliServerOptions; no in-repo call site found."
     },
     {
       "id": "root-cli-applyrecommendationservicelauncherconfig",
@@ -3014,14 +2530,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 4624
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 4624
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "applyRecommendationServiceLauncherConfig"
+      "symbol": "applyRecommendationServiceLauncherConfig",
+      "callerlessReason": "Public root export applyRecommendationServiceLauncherConfig; no in-repo call site found."
     },
     {
       "id": "root-cli-resolvereplaycandidatebudgetreservation",
@@ -3031,14 +2543,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 4721
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 4721
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "resolveReplayCandidateBudgetReservation"
+      "symbol": "resolveReplayCandidateBudgetReservation",
+      "callerlessReason": "Public root export resolveReplayCandidateBudgetReservation; no in-repo call site found."
     },
     {
       "id": "root-cli-resolveproductionreplayauthorizationnoncestorepath",
@@ -3048,14 +2556,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 4745
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 4745
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "resolveProductionReplayAuthorizationNonceStorePath"
+      "symbol": "resolveProductionReplayAuthorizationNonceStorePath",
+      "callerlessReason": "Public root export resolveProductionReplayAuthorizationNonceStorePath; no in-repo call site found."
     },
     {
       "id": "root-cli-resolveproductionreplaydispatchledgerpath",
@@ -3065,14 +2569,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 4764
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 4764
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "resolveProductionReplayDispatchLedgerPath"
+      "symbol": "resolveProductionReplayDispatchLedgerPath",
+      "callerlessReason": "Public root export resolveProductionReplayDispatchLedgerPath; no in-repo call site found."
     },
     {
       "id": "root-cli-createproductionreplaydispatchledger",
@@ -3082,14 +2582,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 4783
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 4783
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "createProductionReplayDispatchLedger"
+      "symbol": "createProductionReplayDispatchLedger",
+      "callerlessReason": "Public root export createProductionReplayDispatchLedger; no in-repo call site found."
     },
     {
       "id": "root-cli-createproductionreplayadapter",
@@ -3099,14 +2595,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
         "line": 4966
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 4966
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found.",
-      "symbol": "createProductionReplayAdapter"
+      "symbol": "createProductionReplayAdapter",
+      "callerlessReason": "Public root export createProductionReplayAdapter; no in-repo call site found."
     },
     {
       "id": "root-cli-main",
@@ -3150,14 +2642,10 @@
         "file": "role-model-router/packages/adapter-execution/src/index.ts",
         "line": 431
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/adapter-execution/src/index.ts",
-          "line": 431
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/adapter-execution/src/index.ts; no separate in-repo caller found.",
-      "symbol": "resolveExecutionTarget"
+      "symbol": "resolveExecutionTarget",
+      "callerlessReason": "Public root export resolveExecutionTarget; no in-repo call site found."
     },
     {
       "id": "root-index-resolveusageeventcostestimate",
@@ -3167,14 +2655,10 @@
         "file": "role-model-router/packages/adapter-execution/src/index.ts",
         "line": 708
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/adapter-execution/src/index.ts",
-          "line": 708
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/adapter-execution/src/index.ts; no separate in-repo caller found.",
-      "symbol": "resolveUsageEventCostEstimate"
+      "symbol": "resolveUsageEventCostEstimate",
+      "callerlessReason": "Public root export resolveUsageEventCostEstimate; no in-repo call site found."
     },
     {
       "id": "root-index-executeroutedrequest",
@@ -3218,14 +2702,10 @@
         "file": "role-model-router/packages/bench-core/src/index.ts",
         "line": 7
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/bench-core/src/index.ts",
-          "line": 7
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/bench-core/src/index.ts; no separate in-repo caller found.",
-      "symbol": "createBenchmarkSuite"
+      "symbol": "createBenchmarkSuite",
+      "callerlessReason": "Public root export createBenchmarkSuite; no in-repo call site found."
     },
     {
       "id": "root-index-judgeaverage",
@@ -3388,14 +2868,10 @@
         "file": "role-model-router/packages/bench-routing/src/index.ts",
         "line": 98
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/bench-routing/src/index.ts",
-          "line": 98
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; no separate in-repo caller found.",
-      "symbol": "JUDGE_UNAVAILABLE_HEURISTIC_CAP"
+      "symbol": "JUDGE_UNAVAILABLE_HEURISTIC_CAP",
+      "callerlessReason": "Public root export JUDGE_UNAVAILABLE_HEURISTIC_CAP; no in-repo call site found."
     },
     {
       "id": "root-index-mapcategorytodifficultybucket",
@@ -3405,14 +2881,10 @@
         "file": "role-model-router/packages/bench-routing/src/index.ts",
         "line": 114
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/bench-routing/src/index.ts",
-          "line": 114
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; no separate in-repo caller found.",
-      "symbol": "mapCategoryToDifficultyBucket"
+      "symbol": "mapCategoryToDifficultyBucket",
+      "callerlessReason": "Public root export mapCategoryToDifficultyBucket; no in-repo call site found."
     },
     {
       "id": "root-index-loadroutingcapabilitysuite",
@@ -3456,14 +2928,10 @@
         "file": "role-model-router/packages/bench-routing/src/index.ts",
         "line": 140
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/bench-routing/src/index.ts",
-          "line": 140
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; no separate in-repo caller found.",
-      "symbol": "summarizePrompt"
+      "symbol": "summarizePrompt",
+      "callerlessReason": "Public root export summarizePrompt; no in-repo call site found."
     },
     {
       "id": "root-index-judge-grading-system-prompt",
@@ -3490,14 +2958,10 @@
         "file": "role-model-router/packages/bench-routing/src/index.ts",
         "line": 188
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/bench-routing/src/index.ts",
-          "line": 188
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; no separate in-repo caller found.",
-      "symbol": "JUDGE_SELF_GRADE_STRICT_ADDENDUM"
+      "symbol": "JUDGE_SELF_GRADE_STRICT_ADDENDUM",
+      "callerlessReason": "Public root export JUDGE_SELF_GRADE_STRICT_ADDENDUM; no in-repo call site found."
     },
     {
       "id": "root-index-compare-grading-system-prompt",
@@ -3507,14 +2971,10 @@
         "file": "role-model-router/packages/bench-routing/src/index.ts",
         "line": 191
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/bench-routing/src/index.ts",
-          "line": 191
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; no separate in-repo caller found.",
-      "symbol": "COMPARE_GRADING_SYSTEM_PROMPT"
+      "symbol": "COMPARE_GRADING_SYSTEM_PROMPT",
+      "callerlessReason": "Public root export COMPARE_GRADING_SYSTEM_PROMPT; no in-repo call site found."
     },
     {
       "id": "root-index-capjudgescoreforgroundedtruthmismatch",
@@ -3626,14 +3086,10 @@
         "file": "role-model-router/packages/catalog/src/index.ts",
         "line": 317
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/catalog/src/index.ts",
-          "line": 317
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/catalog/src/index.ts; no separate in-repo caller found.",
-      "symbol": "serializeNormalizedCatalog"
+      "symbol": "serializeNormalizedCatalog",
+      "callerlessReason": "Public root export serializeNormalizedCatalog; no in-repo call site found."
     },
     {
       "id": "root-index-hydratenormalizedcatalog",
@@ -3643,14 +3099,10 @@
         "file": "role-model-router/packages/catalog/src/index.ts",
         "line": 368
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/catalog/src/index.ts",
-          "line": 368
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/catalog/src/index.ts; no separate in-repo caller found.",
-      "symbol": "hydrateNormalizedCatalog"
+      "symbol": "hydrateNormalizedCatalog",
+      "callerlessReason": "Public root export hydrateNormalizedCatalog; no in-repo call site found."
     },
     {
       "id": "root-index-readnormalizedcatalogfile",
@@ -3677,14 +3129,10 @@
         "file": "role-model-router/packages/catalog/src/index.ts",
         "line": 523
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/catalog/src/index.ts",
-          "line": 523
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/catalog/src/index.ts; no separate in-repo caller found.",
-      "symbol": "deriveVendorVersionLedger"
+      "symbol": "deriveVendorVersionLedger",
+      "callerlessReason": "Public root export deriveVendorVersionLedger; no in-repo call site found."
     },
     {
       "id": "root-index-normalizecatalogsnapshot",
@@ -3694,14 +3142,10 @@
         "file": "role-model-router/packages/catalog/src/index.ts",
         "line": 540
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/catalog/src/index.ts",
-          "line": 540
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/catalog/src/index.ts; no separate in-repo caller found.",
-      "symbol": "normalizeCatalogSnapshot"
+      "symbol": "normalizeCatalogSnapshot",
+      "callerlessReason": "Public root export normalizeCatalogSnapshot; no in-repo call site found."
     },
     {
       "id": "root-index-exportcatalogartifacts",
@@ -3762,14 +3206,10 @@
         "file": "role-model-router/packages/openai-compat/src/index.ts",
         "line": 3
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/openai-compat/src/index.ts",
-          "line": 3
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/openai-compat/src/index.ts; no separate in-repo caller found.",
-      "symbol": "toOpenAIModelDescriptor"
+      "symbol": "toOpenAIModelDescriptor",
+      "callerlessReason": "Public root export toOpenAIModelDescriptor; no in-repo call site found."
     },
     {
       "id": "root-index-processstoptimeouterror",
@@ -3779,14 +3219,10 @@
         "file": "role-model-router/packages/process-supervisor/src/index.ts",
         "line": 39
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/process-supervisor/src/index.ts",
-          "line": 39
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/process-supervisor/src/index.ts; no separate in-repo caller found.",
-      "symbol": "ProcessStopTimeoutError"
+      "symbol": "ProcessStopTimeoutError",
+      "callerlessReason": "Public root export ProcessStopTimeoutError; no in-repo call site found."
     },
     {
       "id": "root-index-processsupervisor",
@@ -3813,14 +3249,10 @@
         "file": "role-model-router/packages/process-supervisor/src/index.ts",
         "line": 674
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/process-supervisor/src/index.ts",
-          "line": 674
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/process-supervisor/src/index.ts; no separate in-repo caller found.",
-      "symbol": "VendorScope"
+      "symbol": "VendorScope",
+      "callerlessReason": "Public root export VendorScope; no in-repo call site found."
     },
     {
       "id": "root-index-startscopedvendor",
@@ -3830,14 +3262,10 @@
         "file": "role-model-router/packages/process-supervisor/src/index.ts",
         "line": 717
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/process-supervisor/src/index.ts",
-          "line": 717
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/process-supervisor/src/index.ts; no separate in-repo caller found.",
-      "symbol": "startScopedVendor"
+      "symbol": "startScopedVendor",
+      "callerlessReason": "Public root export startScopedVendor; no in-repo call site found."
     },
     {
       "id": "root-index-freshness-halflife-ms",
@@ -3847,14 +3275,10 @@
         "file": "role-model-router/packages/profile-aggregator/src/index.ts",
         "line": 68
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/profile-aggregator/src/index.ts",
-          "line": 68
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/profile-aggregator/src/index.ts; no separate in-repo caller found.",
-      "symbol": "FRESHNESS_HALFLIFE_MS"
+      "symbol": "FRESHNESS_HALFLIFE_MS",
+      "callerlessReason": "Public root export FRESHNESS_HALFLIFE_MS; no in-repo call site found."
     },
     {
       "id": "root-index-confidence-sample-target",
@@ -3864,14 +3288,10 @@
         "file": "role-model-router/packages/profile-aggregator/src/index.ts",
         "line": 69
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/profile-aggregator/src/index.ts",
-          "line": 69
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/profile-aggregator/src/index.ts; no separate in-repo caller found.",
-      "symbol": "CONFIDENCE_SAMPLE_TARGET"
+      "symbol": "CONFIDENCE_SAMPLE_TARGET",
+      "callerlessReason": "Public root export CONFIDENCE_SAMPLE_TARGET; no in-repo call site found."
     },
     {
       "id": "root-index-islivesourcetype",
@@ -3881,14 +3301,10 @@
         "file": "role-model-router/packages/profile-aggregator/src/index.ts",
         "line": 79
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/profile-aggregator/src/index.ts",
-          "line": 79
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/profile-aggregator/src/index.ts; no separate in-repo caller found.",
-      "symbol": "isLiveSourceType"
+      "symbol": "isLiveSourceType",
+      "callerlessReason": "Public root export isLiveSourceType; no in-repo call site found."
     },
     {
       "id": "root-index-validateobservedperformanceprofileconsistency",
@@ -3898,14 +3314,10 @@
         "file": "role-model-router/packages/profile-aggregator/src/index.ts",
         "line": 123
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/profile-aggregator/src/index.ts",
-          "line": 123
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/profile-aggregator/src/index.ts; no separate in-repo caller found.",
-      "symbol": "validateObservedPerformanceProfileConsistency"
+      "symbol": "validateObservedPerformanceProfileConsistency",
+      "callerlessReason": "Public root export validateObservedPerformanceProfileConsistency; no in-repo call site found."
     },
     {
       "id": "root-index-aggregateobservedperformancesamples",
@@ -3949,14 +3361,10 @@
         "file": "role-model-router/packages/profile-aggregator/src/index.ts",
         "line": 314
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/profile-aggregator/src/index.ts",
-          "line": 314
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/profile-aggregator/src/index.ts; no separate in-repo caller found.",
-      "symbol": "aggregateObservedPerformance"
+      "symbol": "aggregateObservedPerformance",
+      "callerlessReason": "Public root export aggregateObservedPerformance; no in-repo call site found."
     },
     {
       "id": "root-index-formatruntimeeligibilityverdictline",
@@ -3966,14 +3374,10 @@
         "file": "role-model-router/packages/protocol-routing/src/index.ts",
         "line": 109
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/protocol-routing/src/index.ts",
-          "line": 109
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/protocol-routing/src/index.ts; no separate in-repo caller found.",
-      "symbol": "formatRuntimeEligibilityVerdictLine"
+      "symbol": "formatRuntimeEligibilityVerdictLine",
+      "callerlessReason": "Public root export formatRuntimeEligibilityVerdictLine; no in-repo call site found."
     },
     {
       "id": "root-index-projectruntimerouteinput",
@@ -3983,14 +3387,10 @@
         "file": "role-model-router/packages/protocol-routing/src/index.ts",
         "line": 287
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/protocol-routing/src/index.ts",
-          "line": 287
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/protocol-routing/src/index.ts; no separate in-repo caller found.",
-      "symbol": "projectRuntimeRouteInput"
+      "symbol": "projectRuntimeRouteInput",
+      "callerlessReason": "Public root export projectRuntimeRouteInput; no in-repo call site found."
     },
     {
       "id": "root-index-routeruntimerequest-x",
@@ -4017,14 +3417,10 @@
         "file": "role-model-router/packages/provider-account/src/index.ts",
         "line": 3
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/provider-account/src/index.ts",
-          "line": 3
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/provider-account/src/index.ts; no separate in-repo caller found.",
-      "symbol": "SUPPORTED_AUTH_MODES"
+      "symbol": "SUPPORTED_AUTH_MODES",
+      "callerlessReason": "Public root export SUPPORTED_AUTH_MODES; no in-repo call site found."
     },
     {
       "id": "root-index-validateprovideraccounts",
@@ -4051,14 +3447,10 @@
         "file": "role-model-router/packages/provider-acp/src/index.ts",
         "line": 10
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/provider-acp/src/index.ts",
-          "line": 10
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/provider-acp/src/index.ts; no separate in-repo caller found.",
-      "symbol": "detectAcpEndpoints"
+      "symbol": "detectAcpEndpoints",
+      "callerlessReason": "Public root export detectAcpEndpoints; no in-repo call site found."
     },
     {
       "id": "root-index-createanthropicprovideradapter",
@@ -4119,14 +3511,10 @@
         "file": "role-model-router/packages/provider-cli/src/index.ts",
         "line": 9
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/provider-cli/src/index.ts",
-          "line": 9
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/provider-cli/src/index.ts; no separate in-repo caller found.",
-      "symbol": "detectCliEndpoints"
+      "symbol": "detectCliEndpoints",
+      "callerlessReason": "Public root export detectCliEndpoints; no in-repo call site found."
     },
     {
       "id": "root-index-createlitellmprovideradapter",
@@ -4153,14 +3541,10 @@
         "file": "role-model-router/packages/provider-mcp/src/index.ts",
         "line": 41
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/provider-mcp/src/index.ts",
-          "line": 41
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/provider-mcp/src/index.ts; no separate in-repo caller found.",
-      "symbol": "detectMcpEndpoints"
+      "symbol": "detectMcpEndpoints",
+      "callerlessReason": "Public root export detectMcpEndpoints; no in-repo call site found."
     },
     {
       "id": "root-index-createmcpconnectordefinitions",
@@ -4289,14 +3673,10 @@
         "file": "role-model-router/packages/runtime-observability/src/index.ts",
         "line": 413
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/runtime-observability/src/index.ts",
-          "line": 413
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/runtime-observability/src/index.ts; no separate in-repo caller found.",
-      "symbol": "normalizeRuntimeEffortReceipt"
+      "symbol": "normalizeRuntimeEffortReceipt",
+      "callerlessReason": "Public root export normalizeRuntimeEffortReceipt; no in-repo call site found."
     },
     {
       "id": "root-index-toobservedsourcetype",
@@ -4306,14 +3686,10 @@
         "file": "role-model-router/packages/runtime-observability/src/index.ts",
         "line": 460
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/runtime-observability/src/index.ts",
-          "line": 460
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/runtime-observability/src/index.ts; no separate in-repo caller found.",
-      "symbol": "toObservedSourceType"
+      "symbol": "toObservedSourceType",
+      "callerlessReason": "Public root export toObservedSourceType; no in-repo call site found."
     },
     {
       "id": "root-index-resolveobservedcostper1ktokens",
@@ -4323,14 +3699,10 @@
         "file": "role-model-router/packages/runtime-observability/src/index.ts",
         "line": 715
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/runtime-observability/src/index.ts",
-          "line": 715
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/runtime-observability/src/index.ts; no separate in-repo caller found.",
-      "symbol": "resolveObservedCostPer1kTokens"
+      "symbol": "resolveObservedCostPer1kTokens",
+      "callerlessReason": "Public root export resolveObservedCostPer1kTokens; no in-repo call site found."
     },
     {
       "id": "root-index-extracttaxonomyfields",
@@ -4340,14 +3712,10 @@
         "file": "role-model-router/packages/runtime-observability/src/index.ts",
         "line": 1192
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/runtime-observability/src/index.ts",
-          "line": 1192
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/runtime-observability/src/index.ts; no separate in-repo caller found.",
-      "symbol": "extractTaxonomyFields"
+      "symbol": "extractTaxonomyFields",
+      "callerlessReason": "Public root export extractTaxonomyFields; no in-repo call site found."
     },
     {
       "id": "root-index-createruntimeobservationbundle",
@@ -4374,14 +3742,10 @@
         "file": "role-model-router/packages/runtime-web/src/index.ts",
         "line": 1
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/runtime-web/src/index.ts",
-          "line": 1
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/runtime-web/src/index.ts; no separate in-repo caller found.",
-      "symbol": "browserRuntimeFamilies"
+      "symbol": "browserRuntimeFamilies",
+      "callerlessReason": "Public root export browserRuntimeFamilies; no in-repo call site found."
     },
     {
       "id": "root-index-sqlite-storage-registry",
@@ -4391,14 +3755,10 @@
         "file": "role-model-router/packages/sqlite-memory/src/index.ts",
         "line": 705
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
-          "line": 705
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found.",
-      "symbol": "SQLITE_STORAGE_REGISTRY"
+      "symbol": "SQLITE_STORAGE_REGISTRY",
+      "callerlessReason": "Public root export SQLITE_STORAGE_REGISTRY; no in-repo call site found."
     },
     {
       "id": "root-index-runtime-telemetry-traffic-classes",
@@ -4408,14 +3768,10 @@
         "file": "role-model-router/packages/sqlite-memory/src/index.ts",
         "line": 1223
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
-          "line": 1223
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found.",
-      "symbol": "RUNTIME_TELEMETRY_TRAFFIC_CLASSES"
+      "symbol": "RUNTIME_TELEMETRY_TRAFFIC_CLASSES",
+      "callerlessReason": "Public root export RUNTIME_TELEMETRY_TRAFFIC_CLASSES; no in-repo call site found."
     },
     {
       "id": "root-index-default-live-traffic-classes",
@@ -4425,14 +3781,10 @@
         "file": "role-model-router/packages/sqlite-memory/src/index.ts",
         "line": 1252
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
-          "line": 1252
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found.",
-      "symbol": "DEFAULT_LIVE_TRAFFIC_CLASSES"
+      "symbol": "DEFAULT_LIVE_TRAFFIC_CLASSES",
+      "callerlessReason": "Public root export DEFAULT_LIVE_TRAFFIC_CLASSES; no in-repo call site found."
     },
     {
       "id": "root-index-requestclassfromobservationsample",
@@ -4442,14 +3794,10 @@
         "file": "role-model-router/packages/sqlite-memory/src/index.ts",
         "line": 1262
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
-          "line": 1262
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found.",
-      "symbol": "requestClassFromObservationSample"
+      "symbol": "requestClassFromObservationSample",
+      "callerlessReason": "Public root export requestClassFromObservationSample; no in-repo call site found."
     },
     {
       "id": "root-index-resolvesqlitememorylocation",
@@ -4510,14 +3858,10 @@
         "file": "role-model-router/packages/sqlite-memory/src/index.ts",
         "line": 2199
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 3285
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/cli.ts:3285.",
-      "symbol": "upsertProviderAccount"
+      "symbol": "upsertProviderAccount",
+      "callerlessReason": "Public root export upsertProviderAccount; no in-repo call site found."
     },
     {
       "id": "root-index-listprovideraccounts",
@@ -4748,14 +4092,10 @@
         "file": "role-model-router/packages/sqlite-memory/src/index.ts",
         "line": 2787
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
-          "line": 2787
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found.",
-      "symbol": "readRetrievalReceipts"
+      "symbol": "readRetrievalReceipts",
+      "callerlessReason": "Public root export readRetrievalReceipts; no in-repo call site found."
     },
     {
       "id": "root-index-readruntimemaintenancepolicy",
@@ -4833,14 +4173,10 @@
         "file": "role-model-router/packages/sqlite-memory/src/index.ts",
         "line": 3891
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
-          "line": 3891
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found.",
-      "symbol": "configurePerformanceHistoryPolicy"
+      "symbol": "configurePerformanceHistoryPolicy",
+      "callerlessReason": "Public root export configurePerformanceHistoryPolicy; no in-repo call site found."
     },
     {
       "id": "root-index-rollbackperformancehistorypolicy",
@@ -4850,14 +4186,10 @@
         "file": "role-model-router/packages/sqlite-memory/src/index.ts",
         "line": 3977
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
-          "line": 3977
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found.",
-      "symbol": "rollbackPerformanceHistoryPolicy"
+      "symbol": "rollbackPerformanceHistoryPolicy",
+      "callerlessReason": "Public root export rollbackPerformanceHistoryPolicy; no in-repo call site found."
     },
     {
       "id": "root-index-readperformancehistorystatus",
@@ -4867,14 +4199,10 @@
         "file": "role-model-router/packages/sqlite-memory/src/index.ts",
         "line": 4031
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
-          "line": 4031
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found.",
-      "symbol": "readPerformanceHistoryStatus"
+      "symbol": "readPerformanceHistoryStatus",
+      "callerlessReason": "Public root export readPerformanceHistoryStatus; no in-repo call site found."
     },
     {
       "id": "root-index-runsqliteretentionmaintenance",
@@ -4884,14 +4212,10 @@
         "file": "role-model-router/packages/sqlite-memory/src/index.ts",
         "line": 4081
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
-          "line": 4081
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found.",
-      "symbol": "runSqliteRetentionMaintenance"
+      "symbol": "runSqliteRetentionMaintenance",
+      "callerlessReason": "Public root export runSqliteRetentionMaintenance; no in-repo call site found."
     },
     {
       "id": "root-index-clearobservedbenchmarkdataforendpoint",
@@ -5054,14 +4378,10 @@
         "file": "role-model-router/packages/sqlite-memory/src/index.ts",
         "line": 5261
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
-          "line": 5261
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found.",
-      "symbol": "validateBoundedStorageInventory"
+      "symbol": "validateBoundedStorageInventory",
+      "callerlessReason": "Public root export validateBoundedStorageInventory; no in-repo call site found."
     },
     {
       "id": "root-index-readobservationtelemetrycolumns",
@@ -5071,14 +4391,10 @@
         "file": "role-model-router/packages/sqlite-memory/src/index.ts",
         "line": 5338
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
-          "line": 5338
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found.",
-      "symbol": "readObservationTelemetryColumns"
+      "symbol": "readObservationTelemetryColumns",
+      "callerlessReason": "Public root export readObservationTelemetryColumns; no in-repo call site found."
     },
     {
       "id": "root-index-readobservationtelemetrycolumnsbatch",
@@ -5088,14 +4404,10 @@
         "file": "role-model-router/packages/sqlite-memory/src/index.ts",
         "line": 5365
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
-          "line": 5365
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found.",
-      "symbol": "readObservationTelemetryColumnsBatch"
+      "symbol": "readObservationTelemetryColumnsBatch",
+      "callerlessReason": "Public root export readObservationTelemetryColumnsBatch; no in-repo call site found."
     },
     {
       "id": "root-index-readobservationtelemetrysnapshotsbatch",
@@ -5105,14 +4417,10 @@
         "file": "role-model-router/packages/sqlite-memory/src/index.ts",
         "line": 5397
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
-          "line": 5397
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found.",
-      "symbol": "readObservationTelemetrySnapshotsBatch"
+      "symbol": "readObservationTelemetrySnapshotsBatch",
+      "callerlessReason": "Public root export readObservationTelemetrySnapshotsBatch; no in-repo call site found."
     },
     {
       "id": "root-index-readobservedperformancesamples",
@@ -5547,14 +4855,10 @@
         "file": "role-model-router/packages/tasks/src/index.ts",
         "line": 3
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/tasks/src/index.ts",
-          "line": 3
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/tasks/src/index.ts; no separate in-repo caller found.",
-      "symbol": "defaultTasks"
+      "symbol": "defaultTasks",
+      "callerlessReason": "Public root export defaultTasks; no in-repo call site found."
     },
     {
       "id": "root-index-createtoolregistry",
@@ -5598,14 +4902,10 @@
         "file": "role-model-router/packages/trace/src/index.ts",
         "line": 22
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/trace/src/index.ts",
-          "line": 22
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/trace/src/index.ts; no separate in-repo caller found.",
-      "symbol": "writeTraceArtifacts"
+      "symbol": "writeTraceArtifacts",
+      "callerlessReason": "Public root export writeTraceArtifacts; no in-repo call site found."
     },
     {
       "id": "root-index-readtraceartifacts",
@@ -5615,14 +4915,10 @@
         "file": "role-model-router/packages/trace/src/index.ts",
         "line": 42
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/trace/src/index.ts",
-          "line": 42
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/trace/src/index.ts; no separate in-repo caller found.",
-      "symbol": "readTraceArtifacts"
+      "symbol": "readTraceArtifacts",
+      "callerlessReason": "Public root export readTraceArtifacts; no in-repo call site found."
     },
     {
       "id": "root-index-validatetracelinkage",
@@ -5632,14 +4928,10 @@
         "file": "role-model-router/packages/trace/src/index.ts",
         "line": 66
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/trace/src/index.ts",
-          "line": 66
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/trace/src/index.ts; no separate in-repo caller found.",
-      "symbol": "validateTraceLinkage"
+      "symbol": "validateTraceLinkage",
+      "callerlessReason": "Public root export validateTraceLinkage; no in-repo call site found."
     },
     {
       "id": "root-index-appendusageevent",
@@ -5649,14 +4941,10 @@
         "file": "role-model-router/packages/usage/src/index.ts",
         "line": 31
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/usage/src/index.ts",
-          "line": 31
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/usage/src/index.ts; no separate in-repo caller found.",
-      "symbol": "appendUsageEvent"
+      "symbol": "appendUsageEvent",
+      "callerlessReason": "Public root export appendUsageEvent; no in-repo call site found."
     },
     {
       "id": "root-index-readusageevents",
@@ -5666,14 +4954,10 @@
         "file": "role-model-router/packages/usage/src/index.ts",
         "line": 43
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/usage/src/index.ts",
-          "line": 43
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/usage/src/index.ts; no separate in-repo caller found.",
-      "symbol": "readUsageEvents"
+      "symbol": "readUsageEvents",
+      "callerlessReason": "Public root export readUsageEvents; no in-repo call site found."
     },
     {
       "id": "root-index-readusageeventbyrequestid",
@@ -5683,14 +4967,10 @@
         "file": "role-model-router/packages/usage/src/index.ts",
         "line": 52
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/usage/src/index.ts",
-          "line": 52
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/usage/src/index.ts; no separate in-repo caller found.",
-      "symbol": "readUsageEventByRequestId"
+      "symbol": "readUsageEventByRequestId",
+      "callerlessReason": "Public root export readUsageEventByRequestId; no in-repo call site found."
     },
     {
       "id": "root-index-summarizeusageevents",
@@ -5700,14 +4980,10 @@
         "file": "role-model-router/packages/usage/src/index.ts",
         "line": 70
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/usage/src/index.ts",
-          "line": 70
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/usage/src/index.ts; no separate in-repo caller found.",
-      "symbol": "summarizeUsageEvents"
+      "symbol": "summarizeUsageEvents",
+      "callerlessReason": "Public root export summarizeUsageEvents; no in-repo call site found."
     },
     {
       "id": "root-index-validateusagelinkage",
@@ -5717,14 +4993,10 @@
         "file": "role-model-router/packages/usage/src/index.ts",
         "line": 97
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/usage/src/index.ts",
-          "line": 97
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/usage/src/index.ts; no separate in-repo caller found.",
-      "symbol": "validateUsageLinkage"
+      "symbol": "validateUsageLinkage",
+      "callerlessReason": "Public root export validateUsageLinkage; no in-repo call site found."
     },
     {
       "id": "root-index-parsevendorstreampayloads",
@@ -5768,14 +5040,10 @@
         "file": "role-model-router/packages/vendor-abstraction/src/index.ts",
         "line": 198
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/vendor-abstraction/src/index.ts",
-          "line": 198
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/vendor-abstraction/src/index.ts; no separate in-repo caller found.",
-      "symbol": "normalizeVendorError"
+      "symbol": "normalizeVendorError",
+      "callerlessReason": "Public root export normalizeVendorError; no in-repo call site found."
     },
     {
       "id": "root-index-createvendornotconfigurederror",
@@ -5802,14 +5070,10 @@
         "file": "role-model-router/packages/vendor-litellm/src/index.ts",
         "line": 157
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/vendor-litellm/src/index.ts",
-          "line": 157
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/vendor-litellm/src/index.ts; no separate in-repo caller found.",
-      "symbol": "renderLiteLLMConfig"
+      "symbol": "renderLiteLLMConfig",
+      "callerlessReason": "Public root export renderLiteLLMConfig; no in-repo call site found."
     },
     {
       "id": "root-index-ensurelitellmcommand",
@@ -5819,14 +5083,10 @@
         "file": "role-model-router/packages/vendor-litellm/src/index.ts",
         "line": 300
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/vendor-litellm/src/index.ts",
-          "line": 300
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/vendor-litellm/src/index.ts; no separate in-repo caller found.",
-      "symbol": "ensureLiteLLMCommand"
+      "symbol": "ensureLiteLLMCommand",
+      "callerlessReason": "Public root export ensureLiteLLMCommand; no in-repo call site found."
     },
     {
       "id": "root-index-startlitellmvendor",
@@ -5853,14 +5113,10 @@
         "file": "role-model-router/packages/vendor-llama-swap/src/index.ts",
         "line": 116
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/vendor-llama-swap/src/index.ts",
-          "line": 116
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/vendor-llama-swap/src/index.ts; no separate in-repo caller found.",
-      "symbol": "renderLlamaSwapConfig"
+      "symbol": "renderLlamaSwapConfig",
+      "callerlessReason": "Public root export renderLlamaSwapConfig; no in-repo call site found."
     },
     {
       "id": "root-index-readllamaswapassetdefinition",
@@ -5887,14 +5143,10 @@
         "file": "role-model-router/packages/vendor-llama-swap/src/index.ts",
         "line": 258
       },
-      "callers": [
-        {
-          "file": "role-model-router/packages/vendor-llama-swap/src/index.ts",
-          "line": 258
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/vendor-llama-swap/src/index.ts; no separate in-repo caller found.",
-      "symbol": "resolveProvisionedLlamaSwapCommand"
+      "symbol": "resolveProvisionedLlamaSwapCommand",
+      "callerlessReason": "Public root export resolveProvisionedLlamaSwapCommand; no in-repo call site found."
     },
     {
       "id": "root-index-startllamaswapvendor",

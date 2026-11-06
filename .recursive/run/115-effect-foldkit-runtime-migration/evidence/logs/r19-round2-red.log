@@ -1,0 +1,101 @@
+✔ the hand-written sample inventory validates (121.7358ms)
+✖ the real inventory validates against the code (9557.9352ms)
+✔ every declaration-form runtime root operation is listed in the ledger (114.0947ms)
+✖ every top-level export form is classified as an operation or an explicit exclusion (155.7366ms)
+✔ the inventory covers every kind and every disposition (11.5433ms)
+✔ a deliberately wrong citation fails (17093.9494ms)
+✔ R19/B0: the SQL service is a live product surface, never excluded as callerless (36.7987ms)
+✔ S301 reworded false SQL exclusion is rejected by the structured guard (24.5673ms)
+✔ a caller citation that does not reference the operation is rejected (8654.8754ms)
+✔ a caller citing its own definition line is rejected (8515.2046ms)
+✔ comments and string mentions cannot satisfy a caller token (2.0954ms)
+✔ duplicate ids, unknown dispositions and unknown kinds are rejected (22044.9172ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 10
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 66958.328
+
+✖ failing tests:
+
+test at scripts\s4-contracts-inventory.test.mjs:229:1
+✖ the real inventory validates against the code (9557.9352ms)
+  AssertionError [ERR_ASSERTION]: module-health-writer: callers[0] cites its own definition line: role-model-router/apps/runtime-host-bridge/src/module-health-writer.ts:133
+  + actual - expected
+  
+  + [
+  +   'module-health-writer: callers[0] cites its own definition line: role-model-router/apps/runtime-host-bridge/src/module-health-writer.ts:133'
+  + ]
+  - []
+  
+      at assertValid (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/s4-contracts-inventory.test.mjs:178:10)
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/s4-contracts-inventory.test.mjs:230:3)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 'module-health-writer: callers[0] cites its own definition line: role-model-router/apps/runtime-host-bridge/src/module-health-writer.ts:133' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at scripts\s4-contracts-inventory.test.mjs:275:1
+✖ every top-level export form is classified as an operation or an explicit exclusion (155.7366ms)
+  AssertionError [ERR_ASSERTION]: excluded forms missing from scope.rootSurfaceExclusions: export { at role-model-router/apps/runtime-host-bridge/src/index.ts:201; export { at role-model-router/apps/runtime-host-bridge/src/index.ts:416; export { at role-model-router/packages/bench-routing/src/index.ts:679; export { at role-model-router/packages/bench-routing/src/index.ts:695; export { at role-model-router/packages/bench-routing/src/index.ts:703; export { at role-model-router/packages/bench-routing/src/index.ts:713; export { at role-model-router/packages/catalog/src/index.ts:665; export { at role-model-router/packages/catalog/src/index.ts:674; export { at role-model-router/packages/catalog/src/index.ts:681; export { at role-model-router/packages/profile-aggregator/src/index.ts:298; export { at role-model-router/packages/ui/src/index.ts:9; export { at role-model-router/packages/ui/src/index.ts:25; export { at role-model-router/packages/ui/src/index.ts:27; export { at role-model-router/packages/ui/src/index.ts:40; export { at role-model-router/packages/ui/src/index.ts:52; export { at role-model-router/packages/ui/src/index.ts:59; export { at role-model-router/packages/ui/src/index.ts:93; export { at role-model-router/packages/ui/src/index.ts:101; export { at role-model-router/packages/ui/src/index.ts:111; export { at role-model-router/packages/ui/src/index.ts:123; export { at role-model-router/packages/ui/src/index.ts:130; export { at role-model-router/packages/ui/src/index.ts:139; export { at role-model-router/packages/ui/src/index.ts:151; export { at role-model-router/packages/ui/src/index.ts:165; export { at role-model-router/packages/ui/src/index.ts:176; export { at role-model-router/packages/ui/src/index.ts:184; export { at role-model-router/packages/ui/src/index.ts:193; export { at role-model-router/packages/ui/src/index.ts:200; export { at role-model-router/packages/ui/src/index.ts:206
+  + actual - expected
+  
+  + [
+  +   'export { at role-model-router/apps/runtime-host-bridge/src/index.ts:201',
+  +   'export { at role-model-router/apps/runtime-host-bridge/src/index.ts:416',
+  +   'export { at role-model-router/packages/bench-routing/src/index.ts:679',
+  +   'export { at role-model-router/packages/bench-routing/src/index.ts:695',
+  +   'export { at role-model-router/packages/bench-routing/src/index.ts:703',
+  +   'export { at role-model-router/packages/bench-routing/src/index.ts:713',
+  +   'export { at role-model-router/packages/catalog/src/index.ts:665',
+  +   'export { at role-model-router/packages/catalog/src/index.ts:674',
+  +   'export { at role-model-router/packages/catalog/src/index.ts:681',
+  +   'export { at role-model-router/packages/profile-aggregator/src/index.ts:298',
+  +   'export { at role-model-router/packages/ui/src/index.ts:9',
+  +   'export { at role-model-router/packages/ui/src/index.ts:25',
+  +   'export { at role-model-router/packages/ui/src/index.ts:27',
+  +   'export { at role-model-router/packages/ui/src/index.ts:40',
+  +   'export { at role-model-router/packages/ui/src/index.ts:52',
+  +   'export { at role-model-router/packages/ui/src/index.ts:59',
+  +   'export { at role-model-router/packages/ui/src/index.ts:93',
+  +   'export { at role-model-router/packages/ui/src/index.ts:101',
+  +   'export { at role-model-router/packages/ui/src/index.ts:111',
+  +   'export { at role-model-router/packages/ui/src/index.ts:123',
+  +   'export { at role-model-router/packages/ui/src/index.ts:130',
+  +   'export { at role-model-router/packages/ui/src/index.ts:139',
+  +   'export { at role-model-router/packages/ui/src/index.ts:151',
+  +   'export { at role-model-router/packages/ui/src/index.ts:165',
+  +   'export { at role-model-router/packages/ui/src/index.ts:176',
+  +   'export { at role-model-router/packages/ui/src/index.ts:184',
+  +   'export { at role-model-router/packages/ui/src/index.ts:193',
+  +   'export { at role-model-router/packages/ui/src/index.ts:200',
+  +   'export { at role-model-router/packages/ui/src/index.ts:206'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/s4-contracts-inventory.test.mjs:311:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 'export { at role-model-router/apps/runtime-host-bridge/src/index.ts:201', 'export { at role-model-router/apps/runtime-host-bridge/src/index.ts:416', 'export { at role-model-router/packages/bench-routing/src/index.ts:679', 'export { at role-model-router/packages/bench-routing/src/index.ts:695', 'export { at role-model-router/packages/bench-routing/src/index.ts:703', 'export { at role-model-router/packages/bench-routing/src/index.ts:713', 'export { at role-model-router/packages/catalog/src/index.ts:665', 'export { at role-model-router/packages/catalog/src/index.ts:674', 'export { at role-model-router/packages/catalog/src/index.ts:681', 'export { at role-model-router/packages/profile-aggregator/src/index.ts:298', 'export { at role-model-router/packages/ui/src/index.ts:9', 'export { at role-model-router/packages/ui/src/index.ts:25', 'export { at role-model-router/packages/ui/src/index.ts:27', 'export { at role-model-router/packages/ui/src/index.ts:40', 'export { at role-model-router/packages/ui/src/index.ts:52', 'export { at role-model-router/packages/ui/src/index.ts:59', 'export { at role-model-router/packages/ui/src/index.ts:93', 'export { at role-model-router/packages/ui/src/index.ts:101', 'export { at role-model-router/packages/ui/src/index.ts:111', 'export { at role-model-router/packages/ui/src/index.ts:123', 'export { at role-model-router/packages/ui/src/index.ts:130', 'export { at role-model-router/packages/ui/src/index.ts:139', 'export { at role-model-router/packages/ui/src/index.ts:151', 'export { at role-model-router/packages/ui/src/index.ts:165', 'export { at role-model-router/packages/ui/src/index.ts:176', 'export { at role-model-router/packages/ui/src/index.ts:184', 'export { at role-model-router/packages/ui/src/index.ts:193', 'export { at role-model-router/packages/ui/src/index.ts:200', 'export { at role-model-router/packages/ui/src/index.ts:206' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

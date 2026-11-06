@@ -28,6 +28,41 @@ const linesOf = (file) => readFileSync(join(REPO_ROOT, file), "utf8").split(/\r?
 
 const lineTextAt = (file, line) => linesOf(file)[line - 1] ?? "";
 
+/** Blank strings, template literals and comments so a mention cannot satisfy a caller citation. */
+function maskNonCode(source) {
+  const chars = source.split("");
+  let i = 0;
+  const blank = (index) => { if (chars[index] !== "\n") chars[index] = " "; };
+  const skipString = (quote) => {
+    i += 1;
+    while (i < source.length) {
+      if (source[i] === "\\") { blank(i); i += 1; if (i < source.length) blank(i); i += 1; continue; }
+      if (source[i] === quote) { i += 1; return; }
+      blank(i); i += 1;
+    }
+  };
+  const skipTemplate = () => {
+    i += 1;
+    while (i < source.length) {
+      if (source[i] === "\\") { blank(i); i += 1; if (i < source.length) blank(i); i += 1; continue; }
+      if (source[i] === "`") { i += 1; return; }
+      blank(i); i += 1;
+    }
+  };
+  while (i < source.length) {
+    if (source[i] === "/" && source[i + 1] === "/") { while (i < source.length && source[i] !== "\n") { blank(i); i += 1; } continue; }
+    if (source[i] === "/" && source[i + 1] === "*") {
+      blank(i); blank(i + 1); i += 2;
+      while (i < source.length && !(source[i] === "*" && source[i + 1] === "/")) { blank(i); i += 1; }
+      if (i < source.length) { blank(i); blank(i + 1); i += 2; } continue;
+    }
+    if (source[i] === '"' || source[i] === "'") { skipString(source[i]); continue; }
+    if (source[i] === "`") { skipTemplate(); continue; }
+    i += 1;
+  }
+  return chars.join("");
+}
+
 const checkCitation = (issues, id, label, citation, symbol) => {
   if (citation === null || typeof citation !== "object") {
     issues.push(`${id}: ${label} is not an object`);
@@ -57,10 +92,13 @@ const checkCitation = (issues, id, label, citation, symbol) => {
     issues.push(`${id}: ${label} cites a blank line: ${file}:${line}`);
     return;
   }
-  if (symbol !== undefined && !new RegExp(`\\b${symbol}\\b`).test(text)) {
-    issues.push(
-      `${id}: ${label} does not reference ${symbol} at ${file}:${line} (caller citations must contain the operation token)`,
-    );
+  if (symbol !== undefined) {
+    const code = maskNonCode(text);
+    if (!new RegExp(`\\b${symbol}\\b`).test(code)) {
+      issues.push(
+        `${id}: ${label} does not reference ${symbol} at ${file}:${line} (caller citations must contain a code token, not a comment/string)`,
+      );
+    }
   }
 };
 
@@ -119,11 +157,17 @@ export const validateInventory = (inventory) => {
       }
     }
     if (!Array.isArray(entry.callers) || entry.callers.length === 0) {
-      issues.push(`${id}: callers must cite at least one file:line`);
+      if (typeof entry.callerlessReason !== "string" || entry.callerlessReason.trim().length === 0) {
+        issues.push(`${id}: callers must cite at least one file:line, or callerlessReason must explain a public root`);
+      }
     } else {
-      entry.callers.forEach((caller, index) =>
-        checkCitation(issues, id, `callers[${index}]`, caller, entry.symbol),
-      );
+      entry.callers.forEach((caller, index) => {
+        if (caller.file === entry.definition.file && caller.line === entry.definition.line) {
+          issues.push(`${id}: callers[${index}] cites its own definition line: ${caller.file}:${caller.line}`);
+          return;
+        }
+        checkCitation(issues, id, `callers[${index}]`, caller, entry.symbol);
+      });
     }
   }
   return issues;
@@ -228,34 +272,47 @@ test("every declaration-form runtime root operation is listed in the ledger", ()
   );
 });
 
-test("non-declaration root exports are explicitly excluded from operation coverage", () => {
+test("every top-level export form is classified as an operation or an explicit exclusion", () => {
   const inventory = loadInventory();
-  const forms = new Map([
-    ["export {", "re-export blocks are surface wiring, not operations"],
-    ["export *", "wildcard re-exports are surface wiring"],
-    ["export interface ", "type-only declarations have no runtime operation"],
-    ["export type ", "type-only declarations have no runtime operation"],
-    ["export default", "default exports are not used as operation roots"],
-    ["export function*", "generator declarations are not in the declaration-form set"],
-    ["export let ", "mutable root bindings are not operation roots"],
-    ["export var ", "mutable root bindings are not operation roots"],
-  ]);
-  const found = new Set();
+  const excluded = new Map(
+    (inventory.scope.rootSurfaceExclusions ?? []).map((entry) => [entry.form, entry.reason]),
+  );
+  const unclassified = [];
+  const excludedButNotDeclared = [];
+  const classification = (line) => {
+    const text = line.trimStart();
+    if (!text.startsWith("export ")) return null;
+    if (/^export\s+(?:async\s+)?function\*/.test(text)) return { kind: "excluded", form: "export function*" };
+    if (/^export\s+(?:async\s+)?function\s/.test(text)) return { kind: "operation" };
+    if (/^export\s+const\s/.test(text)) return { kind: "operation" };
+    if (/^export\s+class\s/.test(text)) return { kind: "operation" };
+    if (/^export\s+(?:type|interface|namespace|enum|declare|abstract\s+class|const\s+enum|import)\b/.test(text)) {
+      const form = text.match(/^export\s+((?:async\s+)?(?:type|interface|namespace|enum|declare|abstract\s+class|const\s+enum|import))\b/)[0];
+      return { kind: "excluded", form };
+    }
+    if (/^export\s+(?:let|var)\s/.test(text)) return { kind: "excluded", form: text.match(/^export\s+(?:let|var)/)[0] };
+    if (/^export\s+default\b/.test(text)) return { kind: "excluded", form: "export default" };
+    if (/^export\s*\{/.test(text)) return { kind: "excluded", form: "export {" };
+    if (/^export\s*\*/.test(text)) return { kind: "excluded", form: "export *" };
+    return { kind: "unclassified" };
+  };
   for (const file of rootOperationFiles()) {
-    for (const line of readFileSync(join(REPO_ROOT, file), "utf8").split(/\r?\n/)) {
-      for (const form of forms.keys()) if (line.startsWith(form)) found.add(form);
+    for (const [index, line] of readFileSync(join(REPO_ROOT, file), "utf8").split(/\r?\n/).entries()) {
+      const result = classification(line);
+      if (result === null) continue;
+      if (result.kind === "unclassified") {
+        unclassified.push(`${file}:${index + 1}: ${line.trim()}`);
+      } else if (result.kind === "excluded" && !excluded.has(result.form)) {
+        excludedButNotDeclared.push(`${result.form} at ${file}:${index + 1}`);
+      }
     }
   }
-  assert.ok(found.size > 0, "expected non-declaration export forms in the root files");
-  const declared = new Set(
-    (inventory.scope.rootSurfaceExclusions ?? []).map((entry) => entry.form),
+  assert.deepEqual(unclassified, [], `unclassified export forms: ${unclassified.join("; ")}`);
+  assert.deepEqual(
+    excludedButNotDeclared,
+    [],
+    `excluded forms missing from scope.rootSurfaceExclusions: ${excludedButNotDeclared.join("; ")}`,
   );
-  for (const form of found) {
-    assert.ok(
-      declared.has(form),
-      `root export form "${form}" is neither inventoried nor explicitly excluded: ${forms.get(form)}`,
-    );
-  }
 });
 
 test("the inventory covers every kind and every disposition", () => {
@@ -390,6 +447,26 @@ test("a caller citation that does not reference the operation is rejected", () =
     issues.some((issue) => issue.includes("does not reference")),
     `expected a semantic caller failure, got: ${issues.join("; ")}`,
   );
+});
+
+test("a caller citing its own definition line is rejected", () => {
+  const inventory = loadInventory();
+  const entry = inventory.entries.find((candidate) => candidate.id === "module-health-writer");
+  entry.callers[0] = { file: entry.definition.file, line: entry.definition.line };
+  const issues = validateInventory(inventory);
+  assert.ok(
+    issues.some((issue) => issue.includes("cites its own definition line")),
+    `expected an own-definition failure, got: ${issues.join("; ")}`,
+  );
+});
+
+test("comments and string mentions cannot satisfy a caller token", () => {
+  const symbol = "makeModuleHealthWriter";
+  assert.equal(maskNonCode(`// ${symbol}`).includes(symbol), false);
+  assert.equal(maskNonCode(`/* ${symbol} */`).includes(symbol), false);
+  assert.equal(maskNonCode(`"${symbol}"`).includes(symbol), false);
+  assert.equal(maskNonCode(`describe("${symbol}", () => {})`).includes(symbol), false);
+  assert.equal(maskNonCode(`${symbol}({ capacity: 1 })`).includes(symbol), true);
 });
 
 test("duplicate ids, unknown dispositions and unknown kinds are rejected", () => {
