@@ -1,0 +1,29 @@
+S650 R23 rich graph hydration GREEN
+basis: HEAD 0a0aebcf + worktree (R5/R14 committed)
+scope: production graph-store ownership + typed SQL-row/artifact join
+
+RED: evidence/logs/s650-r23-graph-red.log (3/3 failed: graphStore undefined)
+
+NEW SUITE (host bridge)
+  pnpm exec vitest run test/s650-r23-graph-hydration.test.ts
+  3 passed: production storage owns a graph store; persisted SQL pointer hydrates rich graph and joins identity; content-hash mismatch refuses hydration
+  EXIT_CODE=0
+
+STORAGE REGRESSIONS
+  test/s650-r23-graph-hydration.test.ts + s341-backend-storage.test.ts + s610-r23-residuals.test.ts
+  3 files / 12 tests passed, EXIT_CODE=0
+
+SQL PACKAGE REGRESSIONS (unchanged code)
+  sqlite-service (11), s268-mixed-owner (7), s273-cleanup (11), s307-maintenance-owner-fence (9), s18a-sql-truth (10)
+  5 files / 48 tests passed, EXIT_CODE=0
+
+TYPECHECK
+  pnpm run typecheck (runtime-host-bridge, tsc --noEmit) EXIT_CODE=0
+
+ANTI-SLOP
+  observation-graph.ts clean; s650 graph test clean; composition-dag.ts region 827-845 no findings (file clean)
+
+FILES
+  role-model-router/apps/runtime-host-bridge/src/composition-dag.ts (prod graph authority)
+  role-model-router/apps/runtime-host-bridge/src/observation-graph.ts (new typed hydration reader)
+  role-model-router/apps/runtime-host-bridge/test/s650-r23-graph-hydration.test.ts (new)

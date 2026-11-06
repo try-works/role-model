@@ -830,8 +830,11 @@ export const composeBackendStorage = (input: BackendStorageInput): BackendStorag
     runtimeStateRoot: input.runtimeStateRoot,
     scopeId: input.scopeId,
   });
+  // S650 (R23): rich observations are the production read path too, not a fixtures-only path.
+  // The only case without a local graph authority is a configured Track-B operations endpoint,
+  // which owns the graph remotely.
   const graphStore =
-    input.useFixtures && (input.trackBOperationsEndpoint ?? "") === ""
+    (input.trackBOperationsEndpoint ?? "") === ""
       ? createTrackBFileGraphStore({
           rootPath: path.join(input.runtimeStateRoot, input.scopeId, "track-b-graph"),
           scopeId: input.scopeId,

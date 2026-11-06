@@ -1,0 +1,10 @@
+S650 R23 graph hydration RED
+basis: HEAD 0a0aebcf + worktree (R5/R14 committed)
+command: pnpm exec vitest run test/s650-r23-graph-hydration.test.ts
+workdir: role-model-router/apps/runtime-host-bridge
+
+  s650-r23-graph-hydration.test.ts (3 tests | 3 failed) 732ms
+    x production storage owns a graph store instead of falling back to a compact row -> expected undefined to be defined
+    x a persisted SQL pointer hydrates the rich graph and joins its identity -> expected undefined to be defined
+    x a content-hash mismatch refuses hydration instead of returning a partial graph -> expected undefined to be defined
+EXIT_CODE=1
