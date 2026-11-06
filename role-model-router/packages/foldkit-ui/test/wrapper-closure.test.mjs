@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
@@ -69,21 +70,62 @@ test("@foldkit/oxlint-plugin is pinned at 0.15.3 and vendored with the UI payloa
   assert.match(provenance, /0\.169\.0/);
 });
 
-test("the packaged wrapper closure receipt covers every entry and the packaged client", () => {
-  const receiptPath = path.join(
-    REPO_ROOT,
-    ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/r6-packaged-wrapper-closure.json",
+const EVIDENCE = path.join(REPO_ROOT, ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs");
+const sha256 = (file) => createHash("sha256").update(readFileSync(file)).digest("hex");
+
+function validatePackagedReceipt(receipt) {
+  assert.match(receipt.publicCommit, /^[a-f0-9]{40}$/);
+  assert.match(receipt.publicSourceTree, /^[a-f0-9]{40}$/);
+  assert.match(receipt.executableSha256, /^[a-f0-9]{64}$/);
+  assert.ok(path.isAbsolute(receipt.releaseRoot), "releaseRoot must be absolute");
+  assert.equal(
+    path.resolve(receipt.releaseManifestPath),
+    path.join(receipt.releaseRoot, "manifest.json"),
+    "releaseRoot is foreign to the recorded release manifest",
   );
-  assert.ok(
-    existsSync(receiptPath),
-    `missing packaged wrapper closure receipt: ${receiptPath}. Run the packaged build and scripts/generate-r6-closure-receipt.mjs.`,
-  );
-  const receipt = JSON.parse(readFileSync(receiptPath, "utf8"));
+  const evidenceManifest = path.join(EVIDENCE, receipt.evidence.releaseManifestPath);
+  const evidenceBundle = path.join(EVIDENCE, receipt.evidence.clientBundlePath);
+  const evidenceExeSha = path.join(EVIDENCE, receipt.evidence.executableSha256Path);
+  for (const file of [evidenceManifest, evidenceBundle, evidenceExeSha]) {
+    assert.ok(existsSync(file), `packaged receipt evidence missing: ${file}`);
+  }
+  const manifest = JSON.parse(readFileSync(evidenceManifest, "utf8"));
+  assert.equal(sha256(evidenceManifest), receipt.releaseManifestSha256);
+  assert.equal(sha256(evidenceManifest), receipt.evidence.releaseManifestSha256);
+  assert.equal(manifest.commit, receipt.publicCommit);
+  assert.equal(manifest.source_tree, receipt.publicSourceTree);
+  assert.equal(manifest.executable_sha256, receipt.executableSha256);
+  assert.equal(sha256(evidenceBundle), receipt.clientBundleSha256);
+  assert.equal(sha256(evidenceBundle), receipt.evidence.clientBundleSha256);
+  assert.match(readFileSync(evidenceExeSha, "utf8"), new RegExp(`^\\s*${receipt.executableSha256}\\b`));
   assert.equal(receipt.entries.length, 30);
-  assert.equal(receipt.packagedClient.assetCount > 0, true);
   for (const entry of receipt.entries) {
-    assert.ok(entry.subpath && entry.importSha256 && entry.typesSha256, entry.subpath);
+    assert.equal(entry.embeddedInPackagedClient, true, entry.subpath);
     assert.match(entry.importSha256, /^[a-f0-9]{64}$/);
     assert.match(entry.typesSha256, /^[a-f0-9]{64}$/);
   }
+  return receipt;
+}
+
+test("the packaged wrapper closure receipt is generated from and verified against the packaged release", () => {
+  const receiptPath = path.join(EVIDENCE, "r6-packaged-wrapper-closure.json");
+  assert.ok(existsSync(receiptPath), "missing packaged wrapper closure receipt");
+  const receipt = validatePackagedReceipt(JSON.parse(readFileSync(receiptPath, "utf8")));
+  assert.equal(receipt.entries.length, 30);
+});
+
+test("a receipt with a foreign releaseRoot is rejected", () => {
+  const receipt = JSON.parse(readFileSync(path.join(EVIDENCE, "r6-packaged-wrapper-closure.json"), "utf8"));
+  assert.throws(
+    () => validatePackagedReceipt({ ...receipt, releaseRoot: "D:/foreign/release" }),
+    /releaseRoot is foreign/,
+  );
+});
+
+test("a receipt with a missing executable hash is rejected", () => {
+  const receipt = JSON.parse(readFileSync(path.join(EVIDENCE, "r6-packaged-wrapper-closure.json"), "utf8"));
+  assert.throws(
+    () => validatePackagedReceipt({ ...receipt, executableSha256: "" }),
+    /executableSha256/,
+  );
 });

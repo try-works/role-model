@@ -1,0 +1,127 @@
+✔ publishes . with a built import and declaration (7628.1489ms)
+✔ publishes ./anchor with a built import and declaration (38.2643ms)
+✔ publishes ./animation with a built import and declaration (19.5957ms)
+✔ publishes ./button with a built import and declaration (31.1497ms)
+✔ publishes ./calendar with a built import and declaration (22.6597ms)
+✔ publishes ./checkbox with a built import and declaration (21.737ms)
+✔ publishes ./combobox with a built import and declaration (18.9864ms)
+✔ publishes ./datePicker with a built import and declaration (213.6678ms)
+✔ publishes ./dialog with a built import and declaration (23.5195ms)
+✔ publishes ./disclosure with a built import and declaration (18.3224ms)
+✔ publishes ./dragAndDrop with a built import and declaration (13.9283ms)
+✔ publishes ./fieldset with a built import and declaration (5.3357ms)
+✔ publishes ./fileDrop with a built import and declaration (16.4536ms)
+✔ publishes ./hoverIntent with a built import and declaration (23.976ms)
+✔ publishes ./input with a built import and declaration (15.2453ms)
+✔ publishes ./listbox with a built import and declaration (19.6799ms)
+✔ publishes ./menu with a built import and declaration (19.6667ms)
+✔ publishes ./meter with a built import and declaration (15.4396ms)
+✔ publishes ./nav with a built import and declaration (16.5633ms)
+✔ publishes ./popover with a built import and declaration (29.4111ms)
+✔ publishes ./progress with a built import and declaration (27.2961ms)
+✔ publishes ./radioGroup with a built import and declaration (22.0536ms)
+✔ publishes ./select with a built import and declaration (21.102ms)
+✔ publishes ./slider with a built import and declaration (27.4393ms)
+✔ publishes ./switch with a built import and declaration (19.9327ms)
+✔ publishes ./tabs with a built import and declaration (17.4507ms)
+✔ publishes ./textarea with a built import and declaration (13.3738ms)
+✔ publishes ./toast with a built import and declaration (26.8026ms)
+✔ publishes ./tooltip with a built import and declaration (15.3524ms)
+✔ publishes ./virtualList with a built import and declaration (30.8817ms)
+✔ the wrapper exports map is exactly the derived entry surface (4.672ms)
+✔ the built wrapper graph is browser-safe and excludes the Vite plugin (48.0765ms)
+✔ @foldkit/oxlint-plugin is pinned at 0.15.3 and vendored with the UI payload (6.5772ms)
+✖ the packaged wrapper closure receipt is generated from and verified against the packaged release (18.5709ms)
+✖ a receipt with a foreign releaseRoot is rejected (9.7655ms)
+✖ a receipt with a missing executable hash is rejected (5.9085ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 33
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 9578.987
+
+✖ failing tests:
+
+test at role-model-router\packages\foldkit-ui\test\wrapper-closure.test.mjs:110:1
+✖ the packaged wrapper closure receipt is generated from and verified against the packaged release (18.5709ms)
+  AssertionError [ERR_ASSERTION]: The "string" argument must be of type string. Received type undefined (undefined)
+      at validatePackagedReceipt (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:77:10)
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:113:19)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: /^[a-f0-9]{40}$/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at role-model-router\packages\foldkit-ui\test\wrapper-closure.test.mjs:117:1
+✖ a receipt with a foreign releaseRoot is rejected (9.7655ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /releaseRoot is foreign/. Input:
+  
+  'AssertionError [ERR_ASSERTION]: The "string" argument must be of type string. Received type undefined (undefined)'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:119:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: AssertionError [ERR_ASSERTION]: The "string" argument must be of type string. Received type undefined (undefined)
+        at validatePackagedReceipt (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:77:10)
+        at file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:120:11
+        at getActual (node:assert:611:5)
+        at strict.throws (node:assert:759:24)
+        at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:119:10)
+        at Test.runInAsyncScope (node:async_hooks:214:14)
+        at Test.run (node:internal/test_runner/test:1106:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+        at Test.postRun (node:internal/test_runner/test:1235:19)
+        at Test.run (node:internal/test_runner/test:1163:12),
+    expected: /releaseRoot is foreign/,
+    operator: 'throws',
+    diff: 'simple'
+  }
+
+test at role-model-router\packages\foldkit-ui\test\wrapper-closure.test.mjs:125:1
+✖ a receipt with a missing executable hash is rejected (5.9085ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /executableSha256/. Input:
+  
+  'AssertionError [ERR_ASSERTION]: The "string" argument must be of type string. Received type undefined (undefined)'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:127:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: AssertionError [ERR_ASSERTION]: The "string" argument must be of type string. Received type undefined (undefined)
+        at validatePackagedReceipt (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:77:10)
+        at file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:128:11
+        at getActual (node:assert:611:5)
+        at strict.throws (node:assert:759:24)
+        at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:127:10)
+        at Test.runInAsyncScope (node:async_hooks:214:14)
+        at Test.run (node:internal/test_runner/test:1106:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+        at Test.postRun (node:internal/test_runner/test:1235:19)
+        at Test.run (node:internal/test_runner/test:1163:12),
+    expected: /executableSha256/,
+    operator: 'throws',
+    diff: 'simple'
+  }
