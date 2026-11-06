@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import {
   chmod,
@@ -798,11 +799,17 @@ async function stageUiShellSelection(releaseDir: string, releaseId: string): Pro
       );
     }
   }
-  await rm(path.join(releaseDir, "build", "client"), { recursive: true, force: true });
-  await cp(path.join(shellsRoot, "foldkit"), path.join(releaseDir, "build", "client"), {
-    recursive: true,
-    force: true,
-  });
+  const clientRoot = path.join(releaseDir, "build", "client");
+  const clientStage = path.join(releaseDir, "build", `.client-${process.pid}.stage`);
+  const clientPrevious = path.join(releaseDir, "build", ".client-previous");
+  await rm(clientStage, { recursive: true, force: true });
+  await cp(path.join(shellsRoot, "foldkit"), clientStage, { recursive: true, force: true });
+  if (existsSync(clientRoot)) {
+    await rm(clientPrevious, { recursive: true, force: true });
+    await rename(clientRoot, clientPrevious);
+  }
+  await rename(clientStage, clientRoot);
+  await rm(clientPrevious, { recursive: true, force: true });
   const registry = {
     schemaVersion: "role-model.ui-shells.v1",
     releaseId,

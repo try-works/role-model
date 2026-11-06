@@ -43,6 +43,9 @@ export function assertShellRegistry(registry) {
   if (registry.docsSite !== DOCS_SITE) {
     throw new Error("UI shell registry must record the Fumadocs/React docs-site exception");
   }
+  if (typeof registry.docsSiteArtifact !== "string" || registry.docsSiteArtifact.trim().length === 0) {
+    throw new Error("UI shell registry must state whether the docs artifact is staged");
+  }
   return registry;
 }
 

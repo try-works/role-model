@@ -127,6 +127,11 @@ if (existsSync(packageClient) && path.resolve(staticRoot) !== path.resolve(packa
 const shellRegistryPath = path.join(packageDir, "build", "ui-shells.json");
 if (existsSync(shellRegistryPath)) {
   const registry = assertShellRegistry(JSON.parse(readFileSync(shellRegistryPath, "utf8")));
+  const releaseManifest = JSON.parse(readFileSync(manifest, "utf8"));
+  if (releaseManifest.version !== undefined && registry.releaseId !== releaseManifest.version) {
+    console.log(`FAIL ui shell: registry releaseId ${registry.releaseId} does not match package version ${releaseManifest.version}`);
+    process.exit(2);
+  }
   const expectedShell = value("--expect-ui-shell");
   if (expectedShell !== undefined && registry.active !== expectedShell) {
     console.log(`FAIL ui shell: release is active "${String(registry.active)}", expected "${expectedShell}"`);

@@ -1,8 +1,89 @@
 {
-  "schemaVersion": "role-model.r37.db-preservation.v1",
+  "schemaVersion": "role-model.r37.db-preservation.v2",
   "stateRoot": "D:/DEV/rm-clean/r37-state",
-  "before": "9d2455ea1ac6830ac923cdddb061b870c7cfb7cfc53af68e27d09fc8010efcba",
-  "duringReact": "9d2455ea1ac6830ac923cdddb061b870c7cfb7cfc53af68e27d09fc8010efcba",
-  "after": "9d2455ea1ac6830ac923cdddb061b870c7cfb7cfc53af68e27d09fc8010efcba",
+  "command": "walk stateRoot for *.sqlite/*.db/state.json; sha256 each; aggregate sha256(path NUL sha NUL)",
+  "files": [
+    {
+      "path": "standalone-runtime-dev/track-b/extensions/extension-runtime-state.json",
+      "sha256": "e70ed3ab1880f4c573d16de2eb3615738361e93d3d1f6862b942fb7cf7332893",
+      "bytes": 2001
+    },
+    {
+      "path": "standalone-runtime-dev/track-b/extensions/workers/artifact-store/durable-output.sqlite",
+      "sha256": "612d6125d6cad4f90d0608b6fb574404f9a5d70f4e66b9afdf796c8526b04db8",
+      "bytes": 16384
+    },
+    {
+      "path": "standalone-runtime-dev/track-b/extensions/workers/background-evidence-scheduler/durable-output.sqlite",
+      "sha256": "612d6125d6cad4f90d0608b6fb574404f9a5d70f4e66b9afdf796c8526b04db8",
+      "bytes": 16384
+    },
+    {
+      "path": "standalone-runtime-dev/track-b/extensions/workers/crowdsourced-learning/durable-output.sqlite",
+      "sha256": "612d6125d6cad4f90d0608b6fb574404f9a5d70f4e66b9afdf796c8526b04db8",
+      "bytes": 16384
+    },
+    {
+      "path": "standalone-runtime-dev/track-b/extensions/workers/evaluation-core/durable-output.sqlite",
+      "sha256": "612d6125d6cad4f90d0608b6fb574404f9a5d70f4e66b9afdf796c8526b04db8",
+      "bytes": 16384
+    },
+    {
+      "path": "standalone-runtime-dev/track-b/extensions/workers/evaluation-runner-local/durable-output.sqlite",
+      "sha256": "612d6125d6cad4f90d0608b6fb574404f9a5d70f4e66b9afdf796c8526b04db8",
+      "bytes": 16384
+    },
+    {
+      "path": "standalone-runtime-dev/track-b/extensions/workers/event-log/durable-output.sqlite",
+      "sha256": "612d6125d6cad4f90d0608b6fb574404f9a5d70f4e66b9afdf796c8526b04db8",
+      "bytes": 16384
+    },
+    {
+      "path": "standalone-runtime-dev/track-b/extensions/workers/knowledge-store/durable-output.sqlite",
+      "sha256": "612d6125d6cad4f90d0608b6fb574404f9a5d70f4e66b9afdf796c8526b04db8",
+      "bytes": 16384
+    },
+    {
+      "path": "standalone-runtime-dev/track-b/extensions/workers/knowledge-worker/durable-output.sqlite",
+      "sha256": "612d6125d6cad4f90d0608b6fb574404f9a5d70f4e66b9afdf796c8526b04db8",
+      "bytes": 16384
+    },
+    {
+      "path": "standalone-runtime-dev/track-b/extensions/workers/memory-store/durable-output.sqlite",
+      "sha256": "612d6125d6cad4f90d0608b6fb574404f9a5d70f4e66b9afdf796c8526b04db8",
+      "bytes": 16384
+    },
+    {
+      "path": "standalone-runtime-dev/track-b/extensions/workers/profile-learner/durable-output.sqlite",
+      "sha256": "612d6125d6cad4f90d0608b6fb574404f9a5d70f4e66b9afdf796c8526b04db8",
+      "bytes": 16384
+    },
+    {
+      "path": "standalone-runtime-dev/track-b/extensions/workers/replay-core/durable-output.sqlite",
+      "sha256": "612d6125d6cad4f90d0608b6fb574404f9a5d70f4e66b9afdf796c8526b04db8",
+      "bytes": 16384
+    },
+    {
+      "path": "standalone-runtime-dev/track-b/extensions/workers/repository-context/durable-output.sqlite",
+      "sha256": "612d6125d6cad4f90d0608b6fb574404f9a5d70f4e66b9afdf796c8526b04db8",
+      "bytes": 16384
+    },
+    {
+      "path": "standalone-runtime-dev/track-b/extensions/workers/trajectory-signals/durable-output.sqlite",
+      "sha256": "612d6125d6cad4f90d0608b6fb574404f9a5d70f4e66b9afdf796c8526b04db8",
+      "bytes": 16384
+    },
+    {
+      "path": "state.json",
+      "sha256": "6fc145f370afd13f738d1fdf404dc1fe6bdc97f247f316a2d4b336c0407b3814",
+      "bytes": 15
+    }
+  ],
+  "aggregateSha256": "ab462ccd8c26a58cd2c8072f1941e3f818618b0c0d05b3eb1e5dff70831d4ae7",
+  "equals": {
+    "before": "ab462ccd8c26a58cd2c8072f1941e3f818618b0c0d05b3eb1e5dff70831d4ae7",
+    "duringReact": "ab462ccd8c26a58cd2c8072f1941e3f818618b0c0d05b3eb1e5dff70831d4ae7",
+    "after": "ab462ccd8c26a58cd2c8072f1941e3f818618b0c0d05b3eb1e5dff70831d4ae7"
+  },
   "databaseBytesUnchanged": true
 }
