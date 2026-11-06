@@ -1,10 +1,11 @@
 {
-  "schemaVersion": "role-model.s4-contracts-inventory.v1",
+  "schemaVersion": "role-model.s4-contracts-inventory.v2",
   "requirement": "R19 (current contracts/extraction B0)",
   "scope": {
     "included": [
       "role-model-router/packages/** (first-party workspace packages)",
-      "role-model-router/apps/runtime-host-bridge/src/** (host application)"
+      "role-model-router/apps/runtime-host-bridge/src/** (host application)",
+      "EXHAUSTIVE: every top-level export in the host index.ts/cli.ts plus every package src/index.ts is an operation entry; scripts/s4-contracts-inventory.test.mjs enumerates them and fails on omission."
     ],
     "excluded": [
       {
@@ -181,7 +182,7 @@
         },
         {
           "file": "role-model-router/apps/runtime-host-bridge/test/module-health-writer.test.ts",
-          "line": 34
+          "line": 35
         }
       ],
       "reason": "Cause.reasons classification and Effect.onExit at the writer observe edge; constructed once by the S10b composition."
@@ -694,6 +695,4982 @@
         }
       ],
       "reason": "Body-verified: isOpen() reads the open Ref synchronously; no Effect."
+    },
+    {
+      "id": "root-index-fetchwithtransientretry",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 430
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 430
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-resolveendpointexecutioneffort",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 448
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 448
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-openai-codex-subscription-model-matrix",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 630
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 630
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-openai-codex-subscription-model-ids",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 749
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 749
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-openai-codex-subscription-model-exclusions",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 771
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 771
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-normalizereasoningeffortpolicy",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 1008
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 1008
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-resolveeffortpolicy",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 1028
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 1028
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-difficulty-classifier-version",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 1511
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 1511
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-computedifficultyfeatures",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 1535
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 1535
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-shouldinvalidatedifficultyclassifierversion",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 1565
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 1509
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-classifydifficultyfromsignals",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 1572
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 1572
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-difficulty-classifier-max-messages",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 1770
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 1765
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-difficulty-classifier-max-chars-per-message",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 1771
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 1766
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-difficulty-classifier-max-json-bytes",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 1772
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 1767
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-builddifficultyclassifiermessages",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 1774
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 1774
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-controller-max-transcript-bytes",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 1843
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 1843
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-buildcontrollerroutingmessages",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 1863
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 1863
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-buildcompactcontrollerroutingmessages",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 1899
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 1899
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-inferheuristiccontrollerguidance",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 1971
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 1971
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-mergecontrollerguidancedefaults",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 2025
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 2025
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-expandpreferredendpointidstoeffortarms",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 2489
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 2489
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-resolveobserveddifficultybucketforplan",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 2574
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 2574
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-resolvebridgeexecutioncost",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 3092
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 3092
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-buildruntimetelemetrysnapshot",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 3127
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 3127
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-tocachecontinuityscopedescriptor",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 4754
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 4754
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-readcachecontinuityroutehints",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 4873
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 4873
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-persistcachecontinuityoutcome",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 4890
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 4890
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-classifyupstreamexecutionfailure",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 5036
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 5036
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-shouldretryupstreamexecutiononsameendpoint",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 5270
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 5270
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-classifyexecutionfailureifneeded",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 5299
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 5299
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-hassubstantivestreamdelta",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 5346
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 5346
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-buildterminalstreamerrorpayload",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 5976
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 5976
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-isruntimebootstrapblock",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 6019
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 6019
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-readobservedprofilesforrouting",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 6332
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 6332
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-projectbenchmarkdecisionevidence",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 6467
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 6467
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-projecttelemetrydecisionevidence",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 6546
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 6546
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-summarizeselectiondiagnosticsfromdecision",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 6704
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 6704
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-createruntimeexecutioncatalogcache",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 7337
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 7337
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-createrolemodelnormalizedintentobservation",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 8380
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 8380
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-buildrequestclassification",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 8613
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 8613
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-buildrequestclassificationforplan",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 8683
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 8683
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-createmodellistresponse",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 9098
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 9098
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-createruntimemodelrecords",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 9241
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 764
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-resolveendpointwebsearchsupport",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 9389
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 9389
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-classifybridgeroutepass",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 10009
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 10009
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-applyreasoningefforttomodelpool",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 10046
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 10046
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-createdownstreamopenaiproviderconfig",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 10341
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 10341
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-infertaxonomytoolclasses",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 10848
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 10848
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-mapchatcompletionsrequest",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 11001
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 11001
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-mapresponsesrequest",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 11303
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 11303
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-writeunhandledbridgeerror",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 11612
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 11612
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-resolveliveattempttimeoutms",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 11724
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 11724
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-loadmcpconnectorconfigs",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 12142
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 12142
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-createrequestscopedtoolregistry",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 12239
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 12239
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-routeruntimerequest",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 12355
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 65
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-guardsolecandidatethroughputdeny",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 12369
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 12369
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-seedmanagedcodexworkspacefixture",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 12384
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 12384
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-istransientprovidertransporterror",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 13134
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 13134
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-resolveoauthdevicehttptimeoutms",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 13173
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 13173
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-buildcodexdynamictools",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 13342
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 13342
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-normalizecodexsubscriptionmodelname",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 13397
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 13397
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-createcodexsubscriptionresponsesexecutionadapter",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 14544
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 14544
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-resolvestoredoauthtokenlocations",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 14701
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 14701
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-readproviderstreamtranscript",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 15489
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 15489
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-filterrouterregistrybyexecutionmode",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 15610
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 15610
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-handlelocaldiagnosticsread",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 17101
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 17101
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-resolveanonymouslearningreads",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 17196
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 17196
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-resolvedeviceownertrust",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 17223
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 17223
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-projectlearningprofileestimate",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 17310
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 17310
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-resolvelearningprofilerouteresult",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 17354
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 17354
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-attachrouterpolicyresolution",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 17408
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 17408
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-runtime-host-storage-registry",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 20551
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 20551
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-assertruntimehoststoragewriteallowed",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 20562
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 20562
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-isclientcausedmodulehealthescape",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 20612
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 20612
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-modulehealthcauseforescape",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 20619
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 20619
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-createmodulehealthcomposition",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 20628
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 20628
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-wiremodulehealth",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 20697
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 20697
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-createbridgerequestlistener",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 20724
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 20602
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-recorddirectcontributionwith",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 20772
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 20772
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-recordroutecaptureathostedge",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 20828
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 20828
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-bridgeservertransport",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 20844
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 20844
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-startbridgeserver",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 20946
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 45
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/cli.ts:45."
+    },
+    {
+      "id": "root-index-projectpublicproviderattemptids",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 20981
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 20981
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-fatalregistrydiagnostics",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 21012
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 21012
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-observability-snapshot-schema-version",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 21052
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 18188
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-openretentioncleanupdatabase",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 21068
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/composition-dag.ts",
+          "line": 826
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/composition-dag.ts:826."
+    },
+    {
+      "id": "root-index-runretentioncleanupat",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 21072
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 21072
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-draindeferredroutecapture",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 21093
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 43
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/cli.ts:43."
+    },
+    {
+      "id": "root-index-createruntimebridgebackend",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 21098
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 42
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/cli.ts:42."
+    },
+    {
+      "id": "root-index-resolvestandalonestaticroot",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 35644
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 35644
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-resolvebridgeserveroptions",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+        "line": 35678
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 44
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/cli.ts:44."
+    },
+    {
+      "id": "root-cli-openreadonlystatedatabase",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 215
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 215
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-setstatedatabaseservicefactoryfortests",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 224
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 224
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-readendpointmodelidforroutepackage",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 248
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 248
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-supervisedreplaybranchcapturerequestid",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 287
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 287
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-readroutecapturefromqueuereceipt",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 333
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 333
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-resolveresumedhandoffjobrecord",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 392
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 392
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-evaluationjobexistsfromgetjobanswer",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 406
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 406
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-evaluationjobstatusfromgetjobanswer",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 459
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 459
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-readpersistedcontrollerendpointid",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 516
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 516
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-resolvechannelscopedreplayledgerlimits",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 533
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 533
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-readcapturetaxonomyversion",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 807
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 807
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-readcaptureroleid",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 823
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 823
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-readcapturetasktypeid",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 846
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 846
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-replayrequestidfromproviderresultref",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 864
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 864
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-buildreplayappendexecution",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 899
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 899
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-resolveresumedreplayappenddispatch",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 981
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 981
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-derivesupervisedreplaytrajectoryevents",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 1048
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 1048
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-derivelearnertrajectoryevidenceforreplay",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 1275
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 1275
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-finalization-signals-examined-limit",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 1420
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 1420
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-finalization-signals-compute-limit",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 1428
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 1428
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-finalization-signals-budget-ms",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 1431
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 1431
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-sweepfinalizationsignalsforgroups",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 1444
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 1444
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-buildsupervisedreplayevaluationreferences",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 1618
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 1618
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-persistsupervisedreplayevaluationcasereferences",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 1798
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 1798
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-persistsupervisedreplayevaluationreferencefacts",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 1907
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 1907
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-resolvepostobservationreleaseid",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 2025
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 2025
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-classifylearnerpromotionresult",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 2057
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 2057
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-finaliserefusaldispositiondetail",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 2075
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 2075
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-finaliserefusaldispositionwrite",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 2097
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 2097
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-createsupervisedreplayevaluationcompleter",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 2119
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 2119
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-parseanonymouslearningreadsflag",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 3084
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 3084
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-resolvemaxextrapaircomparisons",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 3101
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 2920
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-createruntimeoperatorcallbacks",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 3111
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 3111
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-requirepackagedtrackbmanifest",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 3356
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 3356
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-createrun88stagepostobservation",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 3408
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 3408
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-projectclistartupreadiness",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 3457
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 3457
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-runqastartupinvoke",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 3469
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 3469
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-awaitcliextensionruntime",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 3495
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 3495
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-createcliextensionruntimeowner",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 3530
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 3530
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-negotiatepackagedtrackbstartup",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 3729
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 3729
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-resolveclifixtureroot",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 3938
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 3938
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-flattenstoredegradationreadback",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 3994
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 3994
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-readstoredegradationreceiptsfromruntime",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 4052
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 4052
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-startdurablerouteadvisoryrefresh",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 4132
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 4132
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-startcliextensionruntimewatchdog",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 4297
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 4297
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-validatepackagedrun88identity",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 4356
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 4356
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-runclibackendbranch",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 4374
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 4374
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-completeclistartupreadiness",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 4395
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 4392
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-createcliserveroptions",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 4403
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 4403
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-applyrecommendationservicelauncherconfig",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 4624
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 4624
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-resolvereplaycandidatebudgetreservation",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 4721
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 4721
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-resolveproductionreplayauthorizationnoncestorepath",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 4745
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 4745
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-resolveproductionreplaydispatchledgerpath",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 4764
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 4764
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-createproductionreplaydispatchledger",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 4783
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 4783
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-createproductionreplayadapter",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 4966
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 4966
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-cli-main",
+      "kind": "operation",
+      "disposition": "retained",
+      "definition": {
+        "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+        "line": 5040
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli-entry.ts",
+          "line": 1
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/cli.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/cli-entry.ts:1."
+    },
+    {
+      "id": "root-index-normalizetoolcallarguments",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/adapter-execution/src/index.ts",
+        "line": 386
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/adapter-execution/src/index.ts",
+          "line": 386
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/adapter-execution/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-resolveexecutiontarget",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/adapter-execution/src/index.ts",
+        "line": 431
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/adapter-execution/src/index.ts",
+          "line": 431
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/adapter-execution/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-resolveusageeventcostestimate",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/adapter-execution/src/index.ts",
+        "line": 708
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/adapter-execution/src/index.ts",
+          "line": 708
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/adapter-execution/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-executeroutedrequest",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/adapter-execution/src/index.ts",
+        "line": 813
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/adapter-execution/src/cli.ts",
+          "line": 34
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/adapter-execution/src/index.ts; first in-repo reference is role-model-router/packages/adapter-execution/src/cli.ts:34."
+    },
+    {
+      "id": "root-index-executeliveroutedrequest",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/adapter-execution/src/index.ts",
+        "line": 839
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 247
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/adapter-execution/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:247."
+    },
+    {
+      "id": "root-index-createbenchmarksuite",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-core/src/index.ts",
+        "line": 7
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/bench-core/src/index.ts",
+          "line": 7
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-core/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-judgeaverage",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-judge/src/index.ts",
+        "line": 1
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/bench-judge/src/index.ts",
+          "line": 1
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-judge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-judge-json-only-follow-up",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-judge/src/index.ts",
+        "line": 46
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts",
+          "line": 28
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-judge/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts:28."
+    },
+    {
+      "id": "root-index-buildjudgegradingprompt",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-judge/src/index.ts",
+        "line": 52
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/bench-judge/src/index.test.ts",
+          "line": 5
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-judge/src/index.ts; first in-repo reference is role-model-router/packages/bench-judge/src/index.test.ts:5."
+    },
+    {
+      "id": "root-index-extractjudgegradingjsontext",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-judge/src/index.ts",
+        "line": 250
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/benchmark-reasoning.ts",
+          "line": 3
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-judge/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/benchmark-reasoning.ts:3."
+    },
+    {
+      "id": "root-index-parsejudgegradingresponse",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-judge/src/index.ts",
+        "line": 271
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts",
+          "line": 32
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-judge/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts:32."
+    },
+    {
+      "id": "root-index-buildcomparegradingprompt",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-judge/src/index.ts",
+        "line": 327
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/bench-judge/src/index.test.ts",
+          "line": 4
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-judge/src/index.ts; first in-repo reference is role-model-router/packages/bench-judge/src/index.test.ts:4."
+    },
+    {
+      "id": "root-index-extractcomparegradingjsontext",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-judge/src/index.ts",
+        "line": 404
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/benchmark-reasoning.ts",
+          "line": 2
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-judge/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/benchmark-reasoning.ts:2."
+    },
+    {
+      "id": "root-index-parsecomparegradingresponse",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-judge/src/index.ts",
+        "line": 425
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts",
+          "line": 31
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-judge/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts:31."
+    },
+    {
+      "id": "root-index-graderesponseheuristically",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-judge/src/index.ts",
+        "line": 458
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/bench-judge/src/index.ts",
+          "line": 458
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-judge/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-judge-unavailable-heuristic-cap",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-routing/src/index.ts",
+        "line": 98
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/bench-routing/src/index.ts",
+          "line": 98
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-mapcategorytodifficultybucket",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-routing/src/index.ts",
+        "line": 114
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/bench-routing/src/index.ts",
+          "line": 114
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-loadroutingcapabilitysuite",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-routing/src/index.ts",
+        "line": 118
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts",
+          "line": 21
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts:21."
+    },
+    {
+      "id": "root-index-selectbenchmarkcases",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-routing/src/index.ts",
+        "line": 126
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts",
+          "line": 22
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts:22."
+    },
+    {
+      "id": "root-index-summarizeprompt",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-routing/src/index.ts",
+        "line": 140
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/bench-routing/src/index.ts",
+          "line": 140
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-judge-grading-system-prompt",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-routing/src/index.ts",
+        "line": 185
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts",
+          "line": 7
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts:7."
+    },
+    {
+      "id": "root-index-judge-self-grade-strict-addendum",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-routing/src/index.ts",
+        "line": 188
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/bench-routing/src/index.ts",
+          "line": 188
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-compare-grading-system-prompt",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-routing/src/index.ts",
+        "line": 191
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/bench-routing/src/index.ts",
+          "line": 191
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-capjudgescoreforgroundedtruthmismatch",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-routing/src/index.ts",
+        "line": 430
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/bench-routing/src/index.test.ts",
+          "line": 9
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; first in-repo reference is role-model-router/packages/bench-routing/src/index.test.ts:9."
+    },
+    {
+      "id": "root-index-gradebenchmarkcase",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-routing/src/index.ts",
+        "line": 449
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts",
+          "line": 19
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts:19."
+    },
+    {
+      "id": "root-index-buildjudgerequestmessages",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-routing/src/index.ts",
+        "line": 518
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts",
+          "line": 13
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts:13."
+    },
+    {
+      "id": "root-index-buildheuristiccompareranking",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-routing/src/index.ts",
+        "line": 558
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts",
+          "line": 11
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts:11."
+    },
+    {
+      "id": "root-index-buildcomparerequestmessages",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-routing/src/index.ts",
+        "line": 579
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts",
+          "line": 10
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts:10."
+    },
+    {
+      "id": "root-index-summarizeendpointgrade",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/bench-routing/src/index.ts",
+        "line": 639
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts",
+          "line": 24
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/bench-routing/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts:24."
+    },
+    {
+      "id": "root-index-serializenormalizedcatalog",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/catalog/src/index.ts",
+        "line": 317
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/catalog/src/index.ts",
+          "line": 317
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/catalog/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-hydratenormalizedcatalog",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/catalog/src/index.ts",
+        "line": 368
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/catalog/src/index.ts",
+          "line": 368
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/catalog/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-readnormalizedcatalogfile",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/catalog/src/index.ts",
+        "line": 469
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 375
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/catalog/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:375."
+    },
+    {
+      "id": "root-index-derivevendorversionledger",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/catalog/src/index.ts",
+        "line": 523
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/catalog/src/index.ts",
+          "line": 523
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/catalog/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-normalizecatalogsnapshot",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/catalog/src/index.ts",
+        "line": 540
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/catalog/src/index.ts",
+          "line": 540
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/catalog/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-exportcatalogartifacts",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/catalog/src/index.ts",
+        "line": 631
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/catalog/src/cli.ts",
+          "line": 5
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/catalog/src/index.ts; first in-repo reference is role-model-router/packages/catalog/src/cli.ts:5."
+    },
+    {
+      "id": "root-index-assemblecontextenvelope",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/context-envelope/src/index.ts",
+        "line": 52
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 40
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/context-envelope/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:40."
+    },
+    {
+      "id": "root-index-buildendpointregistry",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/endpoint-registry/src/index.ts",
+        "line": 333
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 50
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/endpoint-registry/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:50."
+    },
+    {
+      "id": "root-index-toopenaimodeldescriptor",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/openai-compat/src/index.ts",
+        "line": 3
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/openai-compat/src/index.ts",
+          "line": 3
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/openai-compat/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-processstoptimeouterror",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/process-supervisor/src/index.ts",
+        "line": 39
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/process-supervisor/src/index.ts",
+          "line": 39
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/process-supervisor/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-processsupervisor",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/process-supervisor/src/index.ts",
+        "line": 372
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 54
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/process-supervisor/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:54."
+    },
+    {
+      "id": "root-index-vendorscope",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/process-supervisor/src/index.ts",
+        "line": 674
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/process-supervisor/src/index.ts",
+          "line": 674
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/process-supervisor/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-startscopedvendor",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/process-supervisor/src/index.ts",
+        "line": 717
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/process-supervisor/src/index.ts",
+          "line": 717
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/process-supervisor/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-freshness-halflife-ms",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/profile-aggregator/src/index.ts",
+        "line": 68
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/profile-aggregator/src/index.ts",
+          "line": 68
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/profile-aggregator/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-confidence-sample-target",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/profile-aggregator/src/index.ts",
+        "line": 69
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/profile-aggregator/src/index.ts",
+          "line": 69
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/profile-aggregator/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-islivesourcetype",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/profile-aggregator/src/index.ts",
+        "line": 79
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/profile-aggregator/src/index.ts",
+          "line": 79
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/profile-aggregator/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-validateobservedperformanceprofileconsistency",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/profile-aggregator/src/index.ts",
+        "line": 123
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/profile-aggregator/src/index.ts",
+          "line": 123
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/profile-aggregator/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-aggregateobservedperformancesamples",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/profile-aggregator/src/index.ts",
+        "line": 134
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/profile-aggregator/src/index.ts",
+          "line": 134
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/profile-aggregator/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-aggregateoperationalperformancesamples",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/profile-aggregator/src/index.ts",
+        "line": 266
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 57
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/profile-aggregator/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:57."
+    },
+    {
+      "id": "root-index-aggregateobservedperformance",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/profile-aggregator/src/index.ts",
+        "line": 314
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/profile-aggregator/src/index.ts",
+          "line": 314
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/profile-aggregator/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-formatruntimeeligibilityverdictline",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/protocol-routing/src/index.ts",
+        "line": 109
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/protocol-routing/src/index.ts",
+          "line": 109
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/protocol-routing/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-projectruntimerouteinput",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/protocol-routing/src/index.ts",
+        "line": 287
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/protocol-routing/src/index.ts",
+          "line": 287
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/protocol-routing/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-routeruntimerequest-x",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/protocol-routing/src/index.ts",
+        "line": 353
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 65
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/protocol-routing/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:65."
+    },
+    {
+      "id": "root-index-supported-auth-modes",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/provider-account/src/index.ts",
+        "line": 3
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/provider-account/src/index.ts",
+          "line": 3
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/provider-account/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-validateprovideraccounts",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/provider-account/src/index.ts",
+        "line": 303
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 70
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/provider-account/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:70."
+    },
+    {
+      "id": "root-index-detectacpendpoints",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/provider-acp/src/index.ts",
+        "line": 10
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/provider-acp/src/index.ts",
+          "line": 10
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/provider-acp/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-createanthropicprovideradapter",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/provider-anthropic/src/index.ts",
+        "line": 10
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 72
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/provider-anthropic/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:72."
+    },
+    {
+      "id": "root-index-buildanthropicrequest",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/provider-anthropic/src/index.ts",
+        "line": 119
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/provider-anthropic/src/index.ts",
+          "line": 35
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/provider-anthropic/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-normalizeanthropicresponse",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/provider-anthropic/src/index.ts",
+        "line": 156
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/provider-anthropic/src/index.ts",
+          "line": 36
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/provider-anthropic/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-detectcliendpoints",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/provider-cli/src/index.ts",
+        "line": 9
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/provider-cli/src/index.ts",
+          "line": 9
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/provider-cli/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-createlitellmprovideradapter",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/provider-litellm/src/index.ts",
+        "line": 90
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 73
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/provider-litellm/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:73."
+    },
+    {
+      "id": "root-index-detectmcpendpoints",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/provider-mcp/src/index.ts",
+        "line": 41
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/provider-mcp/src/index.ts",
+          "line": 41
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/provider-mcp/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-createmcpconnectordefinitions",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/provider-mcp/src/index.ts",
+        "line": 75
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 76
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/provider-mcp/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:76."
+    },
+    {
+      "id": "root-index-createopenaiprovideradapter",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/provider-openai/src/index.ts",
+        "line": 12
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 78
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/provider-openai/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:78."
+    },
+    {
+      "id": "root-index-resolveopenaiproviderupstreammodelid",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/provider-openai/src/index.ts",
+        "line": 100
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/remote-health-probe.ts",
+          "line": 3
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/provider-openai/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/remote-health-probe.ts:3."
+    },
+    {
+      "id": "root-index-buildopenairequest",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/provider-openai/src/index.ts",
+        "line": 933
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/provider-litellm/src/index.ts",
+          "line": 8
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/provider-openai/src/index.ts; first in-repo reference is role-model-router/packages/provider-litellm/src/index.ts:8."
+    },
+    {
+      "id": "root-index-normalizeopenairesponse",
+      "kind": "operation",
+      "disposition": "adapter",
+      "definition": {
+        "file": "role-model-router/packages/provider-openai/src/index.ts",
+        "line": 1074
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/provider-litellm/src/index.ts",
+          "line": 8
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/provider-openai/src/index.ts; first in-repo reference is role-model-router/packages/provider-litellm/src/index.ts:8."
+    },
+    {
+      "id": "root-index-createretrievalreceipt",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/retrieval-receipt/src/index.ts",
+        "line": 43
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 79
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/retrieval-receipt/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:79."
+    },
+    {
+      "id": "root-index-defaultroles",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/roles/src/index.ts",
+        "line": 3
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 7676
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/roles/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:7676."
+    },
+    {
+      "id": "root-index-normalizeruntimeeffortreceipt",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/runtime-observability/src/index.ts",
+        "line": 413
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/runtime-observability/src/index.ts",
+          "line": 413
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/runtime-observability/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-toobservedsourcetype",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/runtime-observability/src/index.ts",
+        "line": 460
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/runtime-observability/src/index.ts",
+          "line": 460
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/runtime-observability/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-resolveobservedcostper1ktokens",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/runtime-observability/src/index.ts",
+        "line": 715
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/runtime-observability/src/index.ts",
+          "line": 715
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/runtime-observability/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-extracttaxonomyfields",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/runtime-observability/src/index.ts",
+        "line": 1192
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/runtime-observability/src/index.ts",
+          "line": 1192
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/runtime-observability/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-createruntimeobservationbundle",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/runtime-observability/src/index.ts",
+        "line": 1194
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 91
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/runtime-observability/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:91."
+    },
+    {
+      "id": "root-index-browserruntimefamilies",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/runtime-web/src/index.ts",
+        "line": 1
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/runtime-web/src/index.ts",
+          "line": 1
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/runtime-web/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-sqlite-storage-registry",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 705
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+          "line": 705
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-runtime-telemetry-traffic-classes",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 1223
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+          "line": 1223
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-default-live-traffic-classes",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 1252
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+          "line": 1252
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-requestclassfromobservationsample",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 1262
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+          "line": 1262
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-resolvesqlitememorylocation",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 1530
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/route-challenge-evidence.ts",
+          "line": 4
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/route-challenge-evidence.ts:4."
+    },
+    {
+      "id": "root-index-initializesqlitememory",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 2042
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/composition-dag.ts",
+          "line": 4
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/composition-dag.ts:4."
+    },
+    {
+      "id": "root-index-persistprovideraccounts",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 2142
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 111
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:111."
+    },
+    {
+      "id": "root-index-upsertprovideraccount",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 2199
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
+          "line": 3285
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/cli.ts:3285."
+    },
+    {
+      "id": "root-index-listprovideraccounts",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 2206
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 103
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:103."
+    },
+    {
+      "id": "root-index-upsertruntimeendpoint",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 2261
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 141
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:141."
+    },
+    {
+      "id": "root-index-upsertruntimeendpointsatomically",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 2296
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 142
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:142."
+    },
+    {
+      "id": "root-index-listruntimeendpoints",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 2342
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 106
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:106."
+    },
+    {
+      "id": "root-index-upsertruntimecontrollerassignment",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 2377
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 138
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:138."
+    },
+    {
+      "id": "root-index-readruntimecontrollerassignment",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 2395
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 127
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:127."
+    },
+    {
+      "id": "root-index-deleteruntimecontrollerassignment",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 2417
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 100
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:100."
+    },
+    {
+      "id": "root-index-upsertproviderdeviceauthsession",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 2425
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 137
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:137."
+    },
+    {
+      "id": "root-index-readproviderdeviceauthsession",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 2472
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 126
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:126."
+    },
+    {
+      "id": "root-index-listproviderdeviceauthsessions",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 2521
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 146
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:146."
+    },
+    {
+      "id": "root-index-persistcontinuitysnapshot",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 2568
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 110
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:110."
+    },
+    {
+      "id": "root-index-readconversationcontinuity",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 2645
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 117
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:117."
+    },
+    {
+      "id": "root-index-persistretrievalreceipt",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 2777
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 112
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:112."
+    },
+    {
+      "id": "root-index-readretrievalreceipts",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 2787
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+          "line": 2787
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-readruntimemaintenancepolicy",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 3793
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 128
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:128."
+    },
+    {
+      "id": "root-index-upsertruntimemaintenancevalue",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 3810
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 139
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:139."
+    },
+    {
+      "id": "root-index-upsertobservedthroughputpenaltystate",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 3824
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 136
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:136."
+    },
+    {
+      "id": "root-index-readobservedthroughputpenaltystate",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 3855
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 125
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:125."
+    },
+    {
+      "id": "root-index-configureperformancehistorypolicy",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 3891
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+          "line": 3891
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-rollbackperformancehistorypolicy",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 3977
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+          "line": 3977
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-readperformancehistorystatus",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 4031
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+          "line": 4031
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-runsqliteretentionmaintenance",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 4081
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+          "line": 4081
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-clearobservedbenchmarkdataforendpoint",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 4467
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 99
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:99."
+    },
+    {
+      "id": "root-index-clearallobservedbenchmarkdata",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 4516
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 97
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:97."
+    },
+    {
+      "id": "root-index-clearbenchmarkrunartifacts",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 4571
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 98
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:98."
+    },
+    {
+      "id": "root-index-persistobservedbenchmarksample",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 4590
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts",
+          "line": 37
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts:37."
+    },
+    {
+      "id": "root-index-updateruntimetelemetryclientlatency",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 4713
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 134
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:134."
+    },
+    {
+      "id": "root-index-persistruntimeobservationbundle",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 4738
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 113
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:113."
+    },
+    {
+      "id": "root-index-persistruntimetelemetryfailure",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 5114
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 114
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:114."
+    },
+    {
+      "id": "root-index-readruntimeobservationbundle",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 5217
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 129
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:129."
+    },
+    {
+      "id": "root-index-readruntimeobservationstoragerecord",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 5235
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 130
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:130."
+    },
+    {
+      "id": "root-index-validateboundedstorageinventory",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 5261
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+          "line": 5261
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-readobservationtelemetrycolumns",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 5338
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+          "line": 5338
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-readobservationtelemetrycolumnsbatch",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 5365
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+          "line": 5365
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-readobservationtelemetrysnapshotsbatch",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 5397
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+          "line": 5397
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-readobservedperformancesamples",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 5431
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 124
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:124."
+    },
+    {
+      "id": "root-index-readlatestbenchmarkprofilesbyendpointids",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 5455
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 120
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:120."
+    },
+    {
+      "id": "root-index-readlivetasktelemetryscoresbyendpointids",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 5537
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 123
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:123."
+    },
+    {
+      "id": "root-index-readendpointlatencybuckets",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 5633
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 119
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:119."
+    },
+    {
+      "id": "root-index-benchmark-sample-run-stalled-after-ms",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 5731
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 94
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:94."
+    },
+    {
+      "id": "root-index-readbenchmarksampleruns",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 5765
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 116
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:116."
+    },
+    {
+      "id": "root-index-readlatestobservedprofile",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 5856
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 121
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:121."
+    },
+    {
+      "id": "root-index-readlatestobservedprofilesbyendpointids",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 5882
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 122
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:122."
+    },
+    {
+      "id": "root-index-readadvisorymaxdifficultyrecommendation",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 5959
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 115
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:115."
+    },
+    {
+      "id": "root-index-buildadvisorymaxdifficultyrecommendation",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 5975
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 95
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:95."
+    },
+    {
+      "id": "root-index-upsertdifficultyclassificationcache",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 6001
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 135
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:135."
+    },
+    {
+      "id": "root-index-readdifficultyclassificationcache",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 6013
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 118
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:118."
+    },
+    {
+      "id": "root-index-listrecentruntimeobservations",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 6028
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 104
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:104."
+    },
+    {
+      "id": "root-index-listrecentruntimerequestids",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 6054
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 105
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:105."
+    },
+    {
+      "id": "root-index-listruntimetelemetryrecords",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 6069
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 108
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:108."
+    },
+    {
+      "id": "root-index-readruntimetelemetrysourcesummaries",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 6278
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 132
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:132."
+    },
+    {
+      "id": "root-index-readruntimetelemetryrecord",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 6296
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 131
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:131."
+    },
+    {
+      "id": "root-index-readruntimetelemetrysummary",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 6311
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 133
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:133."
+    },
+    {
+      "id": "root-index-listruntimetelemetrycomparisonrows",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 6322
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 107
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:107."
+    },
+    {
+      "id": "root-index-exportruntimestate",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 6425
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/validate-operations.ts",
+          "line": 12
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/validate-operations.ts:12."
+    },
+    {
+      "id": "root-index-backupruntimestate",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 6497
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/validate-operations.ts",
+          "line": 10
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/validate-operations.ts:10."
+    },
+    {
+      "id": "root-index-deleteruntimestate",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 6511
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/validate-operations.ts",
+          "line": 11
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/validate-operations.ts:11."
+    },
+    {
+      "id": "root-index-restoreruntimestate",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 6517
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/validate-operations.ts",
+          "line": 15
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/validate-operations.ts:15."
+    },
+    {
+      "id": "root-index-insertswapevent",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 6541
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 102
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:102."
+    },
+    {
+      "id": "root-index-listswapevents",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/sqlite-memory/src/index.ts",
+        "line": 6551
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 109
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/sqlite-memory/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:109."
+    },
+    {
+      "id": "root-index-defaulttasks",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/tasks/src/index.ts",
+        "line": 3
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/tasks/src/index.ts",
+          "line": 3
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/tasks/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-createtoolregistry",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/tool-registry/src/index.ts",
+        "line": 50
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 152
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/tool-registry/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:152."
+    },
+    {
+      "id": "root-index-executetoolcalls",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/tool-registry/src/index.ts",
+        "line": 111
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 153
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/tool-registry/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:153."
+    },
+    {
+      "id": "root-index-writetraceartifacts",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/trace/src/index.ts",
+        "line": 22
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/trace/src/index.ts",
+          "line": 22
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/trace/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-readtraceartifacts",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/trace/src/index.ts",
+        "line": 42
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/trace/src/index.ts",
+          "line": 42
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/trace/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-validatetracelinkage",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/trace/src/index.ts",
+        "line": 66
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/trace/src/index.ts",
+          "line": 66
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/trace/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-appendusageevent",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/usage/src/index.ts",
+        "line": 31
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/usage/src/index.ts",
+          "line": 31
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/usage/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-readusageevents",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/usage/src/index.ts",
+        "line": 43
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/usage/src/index.ts",
+          "line": 43
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/usage/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-readusageeventbyrequestid",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/usage/src/index.ts",
+        "line": 52
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/usage/src/index.ts",
+          "line": 52
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/usage/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-summarizeusageevents",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/usage/src/index.ts",
+        "line": 70
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/usage/src/index.ts",
+          "line": 70
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/usage/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-validateusagelinkage",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/usage/src/index.ts",
+        "line": 97
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/usage/src/index.ts",
+          "line": 97
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/usage/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-parsevendorstreampayloads",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/vendor-abstraction/src/index.ts",
+        "line": 85
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/vendor-abstraction/src/index.ts",
+          "line": 85
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/vendor-abstraction/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-readvendorstreamtranscript",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/vendor-abstraction/src/index.ts",
+        "line": 110
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/vendor-abstraction/src/index.ts",
+          "line": 110
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/vendor-abstraction/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-normalizevendorerror",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/vendor-abstraction/src/index.ts",
+        "line": 198
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/vendor-abstraction/src/index.ts",
+          "line": 198
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/vendor-abstraction/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-createvendornotconfigurederror",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/vendor-abstraction/src/index.ts",
+        "line": 248
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 250
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/vendor-abstraction/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:250."
+    },
+    {
+      "id": "root-index-renderlitellmconfig",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/vendor-litellm/src/index.ts",
+        "line": 157
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/vendor-litellm/src/index.ts",
+          "line": 157
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/vendor-litellm/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-ensurelitellmcommand",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/vendor-litellm/src/index.ts",
+        "line": 300
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/vendor-litellm/src/index.ts",
+          "line": 300
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/vendor-litellm/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-startlitellmvendor",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/vendor-litellm/src/index.ts",
+        "line": 507
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 251
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/vendor-litellm/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:251."
+    },
+    {
+      "id": "root-index-renderllamaswapconfig",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/vendor-llama-swap/src/index.ts",
+        "line": 116
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/vendor-llama-swap/src/index.ts",
+          "line": 116
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/vendor-llama-swap/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-readllamaswapassetdefinition",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/vendor-llama-swap/src/index.ts",
+        "line": 153
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/runtime-assets.ts",
+          "line": 7
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/vendor-llama-swap/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/runtime-assets.ts:7."
+    },
+    {
+      "id": "root-index-resolveprovisionedllamaswapcommand",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/vendor-llama-swap/src/index.ts",
+        "line": 258
+      },
+      "callers": [
+        {
+          "file": "role-model-router/packages/vendor-llama-swap/src/index.ts",
+          "line": 258
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/vendor-llama-swap/src/index.ts; no separate in-repo caller found."
+    },
+    {
+      "id": "root-index-startllamaswapvendor",
+      "kind": "operation",
+      "disposition": "pure",
+      "definition": {
+        "file": "role-model-router/packages/vendor-llama-swap/src/index.ts",
+        "line": 333
+      },
+      "callers": [
+        {
+          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
+          "line": 252
+        }
+      ],
+      "reason": "Root export enumerated from role-model-router/packages/vendor-llama-swap/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:252."
     }
   ]
 }

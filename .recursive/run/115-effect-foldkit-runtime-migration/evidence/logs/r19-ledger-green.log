@@ -1,0 +1,16 @@
+✔ the hand-written sample inventory validates (108.4784ms)
+✔ the real inventory validates against the code (14269.8228ms)
+✔ every root export is listed in the operation ledger (no silent omission) (266.7531ms)
+✔ the inventory covers every kind and every disposition (11.5186ms)
+✔ a deliberately wrong citation fails (31745.3673ms)
+✔ R19/B0: the SQL service is a live product surface, never excluded as callerless (11.5153ms)
+✔ S301 reworded false SQL exclusion is rejected by the structured guard (15.9879ms)
+✔ duplicate ids, unknown dispositions and unknown kinds are rejected (38273.023ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 85207.7955
