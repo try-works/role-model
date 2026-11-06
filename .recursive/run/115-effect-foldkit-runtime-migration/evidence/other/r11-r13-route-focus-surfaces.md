@@ -29,6 +29,7 @@ Status: GREEN in source/tests; packaged focus verification pending a clean share
   `r11-route-map-red.log`/`r11-route-map-green.log`,
   `r13-surface-disposition-red.log`/`r13-surface-disposition-green.log`.
 - Targeted GREEN: s26b 4/4, s654 3/3, s655 3/3; `runtime-ui-next` tsc 0 and client build PASS.
+- Full runtime-ui-next suite: 124 files / 1033 tests passed (single-fork run).
 - Commit: `10f385d1`.
 
 ## Packaged-host focus check
