@@ -135,6 +135,14 @@ describe("S652 RM3 behaviour matrix", () => {
   it("documents reduced-motion and cn-merge dispositions", () => {
     expect(RM3_BEHAVIOR_MATRIX.reducedMotion).toMatch(/no animation|reduced-motion/i);
     expect(RM3_BEHAVIOR_MATRIX.cnMerge).toMatch(/concat|tailwind-merge/i);
+    const css = readFileSync(
+      path.resolve(
+        import.meta.dirname,
+        "../../../../role-model-router/apps/runtime-ui/app/app.css",
+      ),
+      "utf8",
+    );
+    expect(css).toContain("prefers-reduced-motion");
   });
 });
 
@@ -188,6 +196,7 @@ describe("S653 overlay dialog", () => {
       "utf8",
     );
     expect(source).toContain("h.OnCancelPreventDefault(Message.RequestedClose())");
+    expect(source).toContain("h.OnClick(Message.RequestedClose())");
     const closed = dialogUpdate(model, DialogMessage.RequestedClose());
     expect(closed.model.isOpen).toBe(false);
     expect(closed.outMessage?._tag).toBe("Closed");
