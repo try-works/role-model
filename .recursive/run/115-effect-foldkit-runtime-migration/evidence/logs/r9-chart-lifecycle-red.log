@@ -1,0 +1,59 @@
+### R9/R10 chart resize/live/lifecycle RED
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+ ❯ test/s651-chart-resize-live-lifecycle.test.ts (4 tests | 3 failed) 481ms
+   × S651 chart resize policy > uses CSS scaling, not a resize observer, and preserves a finite zero-size viewBox 30ms
+     → expected undefined to be 'css' // Object.is equality
+   × S651 chart resize policy > updates the SAME chart instance in place and drops the obsolete series 141ms
+     → Expected element matching "svg" to have attribute data-chart-resize-policy="css" but the attribute is not present.
+   × S651 pure-SVG lifecycle matrix > declares a reviewed disposition for every lifecycle item 2ms
+     → Cannot convert undefined or null to object
+   ✓ S651 pure-SVG lifecycle matrix > is deterministic under changed DPR/timezone and repeated mounts (no ambient state)  300ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s651-chart-resize-live-lifecycle.test.ts > S651 chart resize policy > uses CSS scaling, not a resize observer, and preserves a finite zero-size viewBox
+AssertionError: expected undefined to be 'css' // Object.is equality
+
+- Expected: 
+"css"
+
++ Received: 
+undefined
+
+ ❯ test/s651-chart-resize-live-lifecycle.test.ts:83:33
+     81| describe("S651 chart resize policy", () => {
+     82|   it("uses CSS scaling, not a resize observer, and preserves a finite …
+     83|     expect(CHART_RESIZE_POLICY).toBe("css");
+       |                                 ^
+     84|     Scene.scene(
+     85|       { update, view },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/s651-chart-resize-live-lifecycle.test.ts > S651 chart resize policy > updates the SAME chart instance in place and drops the obsolete series
+Error: Expected element matching "svg" to have attribute data-chart-resize-policy="css" but the attribute is not present.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/s651-chart-resize-live-lifecycle.test.ts > S651 pure-SVG lifecycle matrix > declares a reviewed disposition for every lifecycle item
+TypeError: Cannot convert undefined or null to object
+ ❯ test/s651-chart-resize-live-lifecycle.test.ts:133:19
+    131| describe("S651 pure-SVG lifecycle matrix", () => {
+    132|   it("declares a reviewed disposition for every lifecycle item", () =>…
+    133|     expect(Object.keys(CHART_LIFECYCLE_DISPOSITIONS).sort()).toEqual([
+       |                   ^
+    134|       "canvasAnimation",
+    135|       "devicePixelRatioAndTimezone",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 1 passed (4)
+   Start at  17:50:21
+   Duration  15.54s (transform 7.60s, setup 0ms, collect 12.19s, tests 481ms, environment 1ms, prepare 1.22s)
+
+undefined
+D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\foldkit:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/s651-chart-resize-live-lifecycle.test.ts
