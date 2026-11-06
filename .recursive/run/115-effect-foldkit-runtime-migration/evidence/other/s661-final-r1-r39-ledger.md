@@ -21,7 +21,7 @@ private manifest `7cc4b103…`, evidence commit db93cb3c, FINAL-PACKAGE.json tie
 | R13 | PARTIAL | ported routes + de-preview; command-palette/media-capture OWNER-DISPOSITIONED (no host API); device-auth ported. |
 | R14 | VERIFIED | packaged selfcheck 0diff at HEAD (shared contract + fresh 0diff). |
 | R15 | NOT-RUN | needs isolated ordinary DSH/pi client + real provider (DeepSeek + Kimi via Moonshot OAuth). |
-| R16 | PARTIAL | R-vs-C compare stale; fresh R/D/C needs the final candidate + isolated config. |
+| R16 | VERIFIED (bounded) | fresh R-vs-C at final candidate: 6 same, 2 approved-intentional channel metadata, 1 environmental, 0 regressions (r16-fresh-r-vs-c-receipt.json). D (pre-migration dev) not an independent pair (dev is this migration's squash). |
 | R17 | PARTIAL | J3/J4/J6 mock; joined J1-J6 real journeys need the isolated client + real provider. |
 | R18 | PARTIAL | per-slice receipts exist; final current-SHA receipt set partially consolidated in FINAL-PACKAGE.json. |
 | R19 | VERIFIED | exhaustive declaration-form ledger (338 entries) + token-masked caller validation (bounded). |
@@ -43,7 +43,7 @@ private manifest `7cc4b103…`, evidence commit db93cb3c, FINAL-PACKAGE.json tie
 | R35 | OWNER-DISPOSITION | E2 deferred (owner-scope-decision). |
 | R36 | PARTIAL | disjoint scopes + independent reviews; no M11 join artifact (s660). |
 | R37 | VERIFIED (bounded) | reversible shell cutover + rollback (driver staging, atomic select, HTTP + DB proof); minor caveats. |
-| R38 | NOT-RUN | no approved fixed-workload budget matrix (needs owner-approved thresholds). |
+| R38 | PARTIAL | identity fixed + thresholds drafted (s662); full measurement + approval pending owner. |
 | R39 | PARTIAL | maintained scripts + CI advisory; blocking toggle not flipped (needs a dispatch run). |
 
 ## Remaining blockers (exact unblock conditions)
