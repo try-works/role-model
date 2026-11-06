@@ -1,0 +1,12 @@
+✔ matching public tree and embedded distribution digests are accepted (6.5922ms)
+✔ a distribution built from a different public tree is rejected with the exact mismatch (4.1126ms)
+✔ a package embedding a different private distribution digest is rejected (1.8007ms)
+✔ distributionIdentityOf requires every identity field (6.5521ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 717.9892
