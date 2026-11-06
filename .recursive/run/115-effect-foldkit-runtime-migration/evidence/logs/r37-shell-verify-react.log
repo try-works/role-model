@@ -1,2 +1,2 @@
-PASS ui shell: active=react retainedReact=0.0.20-756-g5e81b83e stateSchema=role-model.runtime-state.v1
+PASS ui shell: active=react retainedReact=0.0.20-761-g3f7779fb stateSchema=role-model.runtime-state.v1
 PASS ui shell switch selection

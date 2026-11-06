@@ -1,0 +1,55 @@
+{
+  "exe": "D:\\DEV\\rm-clean\\r5-lockstep-pub\\role-model-router\\dist\\release\\win32-x64\\role-model-dev.exe",
+  "exeSha256": "5e0810c05664741a5944213a3fdbd4a20a18e698e970c6e3e2a9eac7437c8357",
+  "manifestSha256": "5e0810c05664741a5944213a3fdbd4a20a18e698e970c6e3e2a9eac7437c8357",
+  "version": "0.0.20-761-g3f7779fb",
+  "commit": "3f7779fbd3753ad87a81b571404c95085bfb7e3f",
+  "sourceTree": "172fab4c79379ca47adfa5926d4e64374a5c3b9e",
+  "pageUrl": "http://127.0.0.1:58505/diagnostics/42",
+  "originalDiagnosticsStatus": 200,
+  "injected": {
+    "bounds": {
+      "limit": 20,
+      "maxCodeBytes": 512,
+      "maxIdentityBytes": 256,
+      "maxRecords": 50,
+      "maxResponseBytes": 16384
+    },
+    "conditions": {
+      "dropped": true,
+      "stale": true
+    },
+    "cursor": null,
+    "identity": {
+      "buildId": "",
+      "instanceId": "packaged-defect"
+    },
+    "loss": {
+      "dropped": 12,
+      "windowMs": 600000
+    },
+    "recordCount": 1,
+    "records": [
+      {
+        "atMs": 1793970052020,
+        "code": "cause.fail",
+        "count": 1,
+        "level": "error"
+      }
+    ],
+    "schemaVersion": "role-model.local-diagnostics-read.v1",
+    "staleness": {
+      "ageMs": 900000,
+      "ruleMs": 300000,
+      "stale": true
+    },
+    "state": "stale",
+    "totalAvailable": 1,
+    "truncated": false
+  },
+  "renderedState": "stale",
+  "renderedBuild": "missing",
+  "renderedText": "Skip to content\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLearning\nDiagnostics\nDiagnostics: 42\n\nStale: the newest record is 15m old (rule 5m).\n\nrule 5m · age 15m\n\nalso dropped: 12 record(s) in the last 10m\n\nERROR\ncause.fail\n×1\n\ninstance: packaged-defect · build: missing\n\nbounded read: 50 records / 16384 bytes / identity ≤256 B / code ≤512 B\n\nRefresh diagnostics",
+  "screenshot": "D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/.recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/r21-diagnostics-final.png",
+  "result": "PASS"
+}

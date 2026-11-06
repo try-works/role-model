@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "role-model.final-package.v1",
+  "generatedAt": "2026-11-06T13:18:07.406Z",
+  "version": "0.0.20-761-g3f7779fb",
+  "executable": {
+    "path": "D:/DEV/rm-clean/r5-lockstep-pub/role-model-router/dist/release/win32-x64/role-model-dev.exe",
+    "sha256": "5e0810c05664741a5944213a3fdbd4a20a18e698e970c6e3e2a9eac7437c8357",
+    "size": 104950272
+  },
+  "public": {
+    "worktree": "D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration",
+    "commit": "3f7779fbd3753ad87a81b571404c95085bfb7e3f",
+    "tree": "172fab4c79379ca47adfa5926d4e64374a5c3b9e"
+  },
+  "private": {
+    "worktree": "D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration",
+    "commit": "a42bf5517999f26a228364f3d4eec4ce5c00333e",
+    "tree": "afa728f947dc83e64543d499bdb75ea522e48b87"
+  },
+  "privateDistribution": {
+    "manifest": "D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/dist/run00-dev/track-b-runtime-manifest.json",
+    "manifestSha256": "7cc4b103cd10f20158bd8f6129d7db2820374b889f030215117b3859ae417cf1",
+    "sidecarSha256": "171f46908aabac6099ef98c779200ede6421ec40bcfc0dd2f67963c7e4fb6efb"
+  },
+  "uiShells": {
+    "schemaVersion": "role-model.ui-shells.v1",
+    "releaseId": "0.0.20-761-g3f7779fb",
+    "active": "foldkit",
+    "shells": {
+      "foldkit": "build/shells/foldkit",
+      "react": "build/shells/react"
+    },
+    "retainedReactRelease": "0.0.20-761-g3f7779fb",
+    "stateSchemaVersion": "role-model.runtime-state.v1",
+    "docsSite": "fumadocs-react-retained-exception",
+    "docsSiteArtifact": "not-staged-in-runtime-release; Fumadocs/React docs remain a separate deployment (explicit exception)",
+    "rollback": "node scripts/runtime/package-ui-shell.mjs --release <release> --select react; restart the candidate. state.json and the runtime database are untouched."
+  },
+  "verification": {
+    "full": "D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/.recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/final-verify.log",
+    "shellFoldkit": "D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/.recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/r37-shell-verify-foldkit.log",
+    "shellReact": "D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/.recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/r37-shell-verify-react.log",
+    "r37HttpFoldkit": "D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/.recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/r37-http-foldkit.log",
+    "r37HttpReact": "D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/.recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/r37-http-react.log",
+    "r37Db": "D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/.recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/r37-db-preservation.json",
+    "r6Receipt": "D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/.recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/r6-packaged-wrapper-closure.json",
+    "r21DiagnosticsReceipt": "D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/.recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/r21-diagnostics-final.json",
+    "r21DiagnosticsScreenshot": "D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/.recursive/run/115-effect-foldkit-runtime-migration/evidence/logs/r21-diagnostics-final.png"
+  },
+  "slices": [
+    "R5 node platform closure",
+    "R6 foldkit-ui packaged closure",
+    "R7/R8/R9/R10/R11/R13/R14",
+    "R19 ledger",
+    "R20 diagnostics",
+    "R21 packaged diagnostics",
+    "R23 SQL",
+    "R27 composition",
+    "R37 cutover/rollback"
+  ]
+}

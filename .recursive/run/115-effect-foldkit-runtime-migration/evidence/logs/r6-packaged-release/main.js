@@ -90448,6 +90448,7 @@ var scrollShellToTopCommand = public_exports22.define("ScrollShellToTop", {
   messages: [Message.NavigationCompleted],
   execute: Effect_exports.sync(() => {
     globalThis.window?.scrollTo({ behavior: "auto", top: 0 });
+    globalThis.document?.getElementById("main-content")?.focus({ preventScroll: true });
     return Message.NavigationCompleted();
   })
 });
@@ -106660,6 +106661,7 @@ var view2 = (model, h2) => ({
               h2.DataAttribute("slot", "role-model-page-content"),
               h2.DataAttribute("shell-main", ""),
               h2.Id("main-content"),
+              h2.Tabindex(-1),
               h2.DataAttribute("refresh-revision", String(model.refresh.lastAppliedRevision)),
               h2.DataAttribute("refresh-state", model.refresh.status)
             ],
