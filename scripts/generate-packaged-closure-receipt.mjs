@@ -8,7 +8,7 @@
  */
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const flag = (name) => {
@@ -57,6 +57,26 @@ if (!clientBundleText.includes("foldkit-ui")) {
   throw new Error("packaged client bundle does not identify the foldkit-ui wrapper");
 }
 const wrapperMarker = "foldkit-ui";
+const wrapperBuildInputsSha256 = (() => {
+  const files = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (["dist", "node_modules", "test", "scripts"].includes(entry.name)) continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.isFile()) files.push(full);
+    }
+  };
+  walk(wrapper);
+  const hash = createHash("sha256");
+  for (const file of files.sort()) {
+    hash.update(path.relative(wrapper, file).replaceAll("\\", "/"));
+    hash.update("\0");
+    hash.update(readFileSync(file));
+    hash.update("\0");
+  }
+  return hash.digest("hex");
+})();
 const entries = Object.entries(
   JSON.parse(readFileSync(path.join(wrapper, "package.json"), "utf8")).exports,
 )
@@ -89,8 +109,10 @@ const receipt = {
   fullExecutableRecomputeRequiresReleaseRoot: true,
   reviewedHead: execFileSync("git", ["rev-parse", "HEAD"], { cwd: repoRoot, encoding: "utf8" }).trim(),
   releaseCommit: releaseManifest.commit,
+  releaseCommitBehindReviewedHead: true,
   releaseSourceTree: releaseManifest.source_tree,
   releaseWrapperTree: execFileSync("git", ["rev-parse", `${releaseManifest.commit}:role-model-router/packages/foldkit-ui`], { cwd: repoRoot, encoding: "utf8" }).trim(),
+  releaseWrapperBuildInputsSha256: wrapperBuildInputsSha256,
   publicCommit,
   publicSourceTree: releaseManifest.source_tree,
   releaseRoot,

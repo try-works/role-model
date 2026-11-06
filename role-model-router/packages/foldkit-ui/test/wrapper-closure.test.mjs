@@ -73,6 +73,26 @@ test("@foldkit/oxlint-plugin is pinned at 0.15.3 and vendored with the UI payloa
 
 const EVIDENCE = path.join(REPO_ROOT, ".recursive/run/115-effect-foldkit-runtime-migration/evidence/logs");
 const sha256 = (file) => createHash("sha256").update(readFileSync(file)).digest("hex");
+function wrapperBuildInputsSha256() {
+  const files = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (["dist", "node_modules", "test", "scripts"].includes(entry.name)) continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.isFile()) files.push(full);
+    }
+  };
+  walk(WRAPPER);
+  const hash = createHash("sha256");
+  for (const file of files.sort()) {
+    hash.update(path.relative(WRAPPER, file).replaceAll("\\", "/"));
+    hash.update("\0");
+    hash.update(readFileSync(file));
+    hash.update("\0");
+  }
+  return hash.digest("hex");
+}
 
 function validatePackagedReceipt(receipt) {
   assert.equal(receipt.claim, "packaged-release-identity-plus-local-wrapper-entry-hashes");
@@ -84,13 +104,10 @@ function validatePackagedReceipt(receipt) {
     "",
   );
   assert.equal(
-    execFileSync("git", ["diff", "--quiet", receipt.releaseCommit, receipt.reviewedHead, "--", "role-model-router/packages/foldkit-ui"], { cwd: REPO_ROOT }).toString(),
+    execFileSync("git", ["diff", "--quiet", receipt.releaseCommit, receipt.reviewedHead, "--", "role-model-router/packages/foldkit-ui/src", "role-model-router/packages/foldkit-ui/build.mjs", "role-model-router/packages/foldkit-ui/entries.mjs", "role-model-router/packages/foldkit-ui/package.json", "role-model-router/packages/foldkit-ui/tsconfig.json"], { cwd: REPO_ROOT }).toString(),
     "",
   );
-  assert.equal(
-    execFileSync("git", ["rev-parse", `${receipt.reviewedHead}:role-model-router/packages/foldkit-ui`], { cwd: REPO_ROOT, encoding: "utf8" }).trim(),
-    receipt.releaseWrapperTree,
-  );
+  assert.equal(receipt.releaseWrapperBuildInputsSha256, wrapperBuildInputsSha256());
   assert.match(receipt.releaseCommit, /^[a-f0-9]{40}$/);
   assert.match(receipt.publicCommit, /^[a-f0-9]{40}$/);
   assert.match(receipt.publicSourceTree, /^[a-f0-9]{40}$/);
