@@ -1,0 +1,47 @@
+### R7 provenance ledgers RED
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui
+
+ ❯ src/rm3-provenance.test.ts (2 tests | 2 failed) 41ms
+   × R7 RM3 provenance ledgers > records the Foldcn gap against the Crease-first rule 31ms
+     → ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\ui\FOLDCN-GAP.md'
+   × R7 RM3 provenance ledgers > maps every adapted RM3 source to a pinned upstream file, hash, licence and owner 4ms
+     → ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\ui\RM3-ADAPTED-SOURCES.md'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/rm3-provenance.test.ts > R7 RM3 provenance ledgers > records the Foldcn gap against the Crease-first rule
+Error: ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\ui\FOLDCN-GAP.md'
+ ❯ read src/rm3-provenance.test.ts:7:36
+      5| 
+      6| const repoRoot = path.resolve(import.meta.dirname, "../../../..");
+      7| const read = (relative: string) => readFileSync(path.join(repoRoot, re…
+       |                                    ^
+      8| const hash = (relative: string) =>
+      9|   createHash("sha256").update(readFileSync(path.join(repoRoot, relativ…
+ ❯ src/rm3-provenance.test.ts:13:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/rm3-provenance.test.ts > R7 RM3 provenance ledgers > maps every adapted RM3 source to a pinned upstream file, hash, licence and owner
+Error: ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\ui\RM3-ADAPTED-SOURCES.md'
+ ❯ read src/rm3-provenance.test.ts:7:36
+      5| 
+      6| const repoRoot = path.resolve(import.meta.dirname, "../../../..");
+      7| const read = (relative: string) => readFileSync(path.join(repoRoot, re…
+       |                                    ^
+      8| const hash = (relative: string) =>
+      9|   createHash("sha256").update(readFileSync(path.join(repoRoot, relativ…
+ ❯ src/rm3-provenance.test.ts:21:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  18:57:44
+   Duration  2.92s (transform 216ms, setup 0ms, collect 182ms, tests 41ms, environment 1ms, prepare 1.01s)
+
+undefined
+D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/rm3-provenance.test.ts

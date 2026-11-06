@@ -1,0 +1,24 @@
+### R7 provenance + R8 matrix GREEN
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui
+
+ ✓ src/rm3-provenance.test.ts (2 tests) 24ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  19:09:14
+   Duration  2.80s (transform 139ms, setup 0ms, collect 115ms, tests 24ms, environment 1ms, prepare 742ms)
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+ ✓ test/s12b-rm3-button.scene.test.ts (7 tests) 90ms
+ ✓ test/s12c-foldkit-input.scene.test.ts (3 tests) 85ms
+ ✓ test/s12c-foldkit-textarea.scene.test.ts (3 tests) 87ms
+ ✓ test/s652-rm3-behavior-matrix.scene.test.ts (9 tests) 173ms
+
+ Test Files  4 passed (4)
+      Tests  22 passed (22)
+   Start at  19:09:28
+   Duration  17.78s (transform 10.38s, setup 0ms, collect 51.13s, tests 436ms, environment 5ms, prepare 6.79s)
+

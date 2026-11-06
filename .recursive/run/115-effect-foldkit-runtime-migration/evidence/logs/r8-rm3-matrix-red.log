@@ -1,0 +1,31 @@
+### R8 RM3 matrix RED
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s652-rm3-behavior-matrix.scene.test.ts [ test/s652-rm3-behavior-matrix.scene.test.ts ]
+Error: Cannot find module '../../ui/src/rm3-matrix' imported from 'D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit/test/s652-rm3-behavior-matrix.scene.test.ts'
+ ❯ test/s652-rm3-behavior-matrix.scene.test.ts:14:1
+     12| import { rm3ButtonClassName, view as buttonView } from "../../ui/src/f…
+     13| import { RM3_FIELD_CLASS, view as inputView } from "../../ui/src/foldk…
+     14| import { RM3_BEHAVIOR_MATRIX } from "../../ui/src/rm3-matrix";
+       | ^
+     15| import {
+     16|   boot as dialogBoot,
+
+Caused by: Error: Failed to load url ../../ui/src/rm3-matrix (resolved id: ../../ui/src/rm3-matrix) in D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit/test/s652-rm3-behavior-matrix.scene.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  19:01:22
+   Duration  15.38s (transform 7.76s, setup 0ms, collect 0ms, tests 0ms, environment 1ms, prepare 1.20s)
+
+undefined
+D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\foldkit:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/s652-rm3-behavior-matrix.scene.test.ts
