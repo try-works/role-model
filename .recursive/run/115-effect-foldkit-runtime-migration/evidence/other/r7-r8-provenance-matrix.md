@@ -37,3 +37,14 @@ behaviour is now pinned by Scene tests.
   packaged UI lane rather than this Scene matrix.
 - Existing `s12c-foldkit-checkbox` caller-hook test fails standalone with `document is not defined`
   (pre-existing environment issue; unrelated to these changes) and is excluded from the GREEN log.
+
+## Review repair (s9b-reviewer)
+- R7.1: the provenance test now walks `vendor/**` and `role-model-router/**` (excluding node_modules/dist/build/.turbo) and fails on any token-family reference outside `FOLDCN-GAP.md`; the ledger was edited not to repeat the excluded name.
+- R7.2: every first-party source under `packages/ui/src` has exactly one ledger row; upstream rows verify the actual SHA-256, first-party-only rows carry the explicit marker, and duplicate rows fail.
+- R8.3: light/dark now compares the real token contrast (>=4.5:1, and different) from `rm3-tokens.css`, not wrapper names.
+- R8.4: the viewport is set to 390px and the compiled 40rem (640px) breakpoint is parsed; the base `w-full` block layout is asserted.
+- R8.5: a real Space keydown on the focused checkbox dispatches and toggles `aria-checked`; the checkbox now owns the Space/Enter default-toggle handler (preventDefault suppresses the synthetic click).
+- R8.6: disabled button + native-disabled input + closed dialog state are exercised.
+- R8.7: the reduced-motion media block is parsed and must contain `animation: none` for the shipped animated classes.
+- Logs: `r7-rm3-provenance-repair-red.log`, `r8-rm3-matrix-repair-red.log`, `r7-r8-repair-green.log`.
+- Commit: `dfb55c14`.
