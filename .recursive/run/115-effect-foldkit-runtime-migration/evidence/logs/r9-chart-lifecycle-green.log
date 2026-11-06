@@ -1,0 +1,25 @@
+### R9/R10 chart resize/live/lifecycle GREEN
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+ ✓ test/s13e-chart-interaction.scene.test.ts (4 tests) 198ms
+ ✓ test/s13b-foldkit-chart.test.ts (13 tests) 297ms
+ ✓ test/s651-chart-resize-live-lifecycle.test.ts (4 tests) 424ms
+
+ Test Files  3 passed (3)
+      Tests  21 passed (21)
+   Start at  18:01:38
+   Duration  13.14s (transform 7.22s, setup 0ms, collect 30.76s, tests 919ms, environment 3ms, prepare 2.86s)
+
+
+### ui-parity chart-only render policy GREEN
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+ ✓ test/chart-render-change.test.ts (3 tests) 22ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  18:01:56
+   Duration  2.61s (transform 269ms, setup 0ms, collect 277ms, tests 22ms, environment 1ms, prepare 781ms)
+

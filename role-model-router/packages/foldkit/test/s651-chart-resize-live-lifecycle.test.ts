@@ -96,7 +96,11 @@ describe("S651 chart resize policy", () => {
     const source = readFileSync(
       path.join(import.meta.dirname, "../../ui/src/foldkit-chart.ts"),
       "utf8",
-    );
+    )
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("//"))
+      .join("\n");
     for (const forbidden of [
       "ResizeObserver",
       "requestAnimationFrame",
@@ -131,11 +135,11 @@ describe("S651 chart resize policy", () => {
 describe("S651 pure-SVG lifecycle matrix", () => {
   it("declares a reviewed disposition for every lifecycle item", () => {
     expect(Object.keys(CHART_LIFECYCLE_DISPOSITIONS).sort()).toEqual([
-      "canvasAnimation",
-      "devicePixelRatioAndTimezone",
+      "fixedDprAndTimezone",
       "fontReadiness",
       "hiddenZeroSize",
       "mountUnmount",
+      "rasterAnimation",
       "repeatedMountHeap",
     ]);
     for (const disposition of Object.values(CHART_LIFECYCLE_DISPOSITIONS))

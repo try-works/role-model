@@ -44,6 +44,28 @@ import type { ChartTooltip } from "./foldkit-chart-interaction.js";
 
 export const CHART_WIDTH = 640;
 export const CHART_HEIGHT = 220;
+
+/**
+ * R9/R10 resize policy: CSS-only. The SVG keeps its intrinsic 640 x height viewBox and scales through
+ * CSS (w-full, max-w-[640px], h-auto, preserveAspectRatio); the renderer never observes its host, so
+ * a hidden or zero-width container cannot produce NaN coordinates, a layout read, or an observer
+ * lifecycle to leak. A future measured policy must be an explicit, tested opt-in, not an ambient read.
+ */
+export const CHART_RESIZE_POLICY = "css" as const;
+
+/**
+ * R10 lifecycle dispositions for this pure-SVG renderer. There is no canvas, mount, observer or font
+ * measurement to own; the remaining browser-only budget (heap growth across repeated mounts) is
+ * covered by the deterministic repeated-render test and is called out here for owner review.
+ */
+export const CHART_LIFECYCLE_DISPOSITIONS = {
+  mountUnmount: "pure view: no mount, observer, effect or global listener is created",
+  hiddenZeroSize: "CSS scaling keeps the 640-wide viewBox finite at zero host width",
+  fontReadiness: "no text measurement or font readiness read; SVG text uses explicit font-size",
+  fixedDprAndTimezone: "no DPR, clock, Date, Intl or timezone read in the renderer",
+  repeatedMountHeap: "no module/global state; 50 repeated renders are byte-identical (heap not instrumented)",
+  rasterAnimation: "not applicable: no raster surface or animation completion exists",
+} as const;
 export const CHART_REASON_MAX_LENGTH = 160;
 const CHART_LEFT = 56;
 const CHART_RIGHT = 16;
@@ -634,9 +656,11 @@ export const view = <Message>(config: Rm3ChartConfig<Message>, h: HtmlBuilder<Me
       [
         h.Xmlns("http://www.w3.org/2000/svg"),
         h.ViewBox(`0 0 ${String(CHART_WIDTH)} ${String(height)}`),
+        h.PreserveAspectRatio("xMidYMid meet"),
+        h.DataAttribute("chart-resize-policy", CHART_RESIZE_POLICY),
         h.Role("img"),
         h.AriaLabel(config.ariaLabel ?? `${config.title} chart`),
-        h.Class("rm3-chart-svg h-auto w-[640px] max-w-full"),
+        h.Class("rm3-chart-svg h-auto w-full max-w-[640px]"),
       ],
       [...grid, xAxis, ...xLabels, ...seriesNodes, ...(tooltipNode === null ? [] : [tooltipNode])],
     ),
