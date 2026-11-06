@@ -9,7 +9,7 @@
  * Run: node --test scripts/s4-contracts-inventory.test.mjs
  */
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -18,7 +18,7 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const RUN_DIR = join(REPO_ROOT, ".recursive/run/115-effect-foldkit-runtime-migration");
 const INVENTORY_PATH = join(RUN_DIR, "evidence/other/s4-contracts-inventory.json");
 const KINDS = new Set(["caller", "operation", "resource"]);
-const DISPOSITIONS = new Set(["adapter", "convert", "existing-effect", "pure"]);
+const DISPOSITIONS = new Set(["adapter", "convert", "existing-effect", "pure", "retained"]);
 const DEFINITION_ROOTS = [
   "role-model-router/apps/runtime-host-bridge/src/",
   "role-model-router/packages/",
@@ -179,12 +179,60 @@ test("the real inventory validates against the code", () => {
   assertValid(loadInventory());
 });
 
+const HOST_SRC = "role-model-router/apps/runtime-host-bridge/src";
+const PACKAGES_SRC = "role-model-router/packages";
+
+/** Root source files: the host entrypoints plus every package public index. */
+function rootOperationFiles() {
+  const files = [`${HOST_SRC}/index.ts`, `${HOST_SRC}/cli.ts`];
+  for (const packageName of readdirSync(PACKAGES_SRC, { withFileTypes: true })) {
+    if (!packageName.isDirectory()) continue;
+    const candidate = `${PACKAGES_SRC}/${packageName.name}/src/index.ts`;
+    if (existsSync(join(REPO_ROOT, candidate))) files.push(candidate);
+  }
+  return files;
+}
+
+/** Every top-level exported operation/resource in the root files. */
+export function enumerateRootOperations() {
+  const operations = [];
+  for (const file of rootOperationFiles()) {
+    const lines = readFileSync(join(REPO_ROOT, file), "utf8").split(/\r?\n/);
+    lines.forEach((line, index) => {
+      const match = line.match(/^export (?:async )?(?:function|const|class) ([A-Za-z0-9_]+)/);
+      if (match) operations.push({ file, line: index + 1, name: match[1] });
+    });
+  }
+  return operations;
+}
+
+test("every root export is listed in the operation ledger (no silent omission)", () => {
+  const inventory = loadInventory();
+  const covered = new Set(
+    inventory.entries.map((entry) => `${entry.definition.file}:${entry.definition.line}`),
+  );
+  const operations = enumerateRootOperations();
+  assert.ok(operations.length > 250, `root surface unexpectedly small: ${operations.length}`);
+  const missing = operations.filter((op) => !covered.has(`${op.file}:${op.line}`));
+  assert.deepEqual(
+    missing.map((op) => `${op.file}:${op.line} ${op.name}`),
+    [],
+    `root operations missing from the inventory: ${missing.length}`,
+  );
+});
+
 test("the inventory covers every kind and every disposition", () => {
   const inventory = loadInventory();
   const kinds = new Set(inventory.entries.map((entry) => entry.kind));
   const dispositions = new Set(inventory.entries.map((entry) => entry.disposition));
   assert.deepEqual([...kinds].sort(), ["caller", "operation", "resource"]);
-  assert.deepEqual([...dispositions].sort(), ["adapter", "convert", "existing-effect", "pure"]);
+  assert.deepEqual([...dispositions].sort(), [
+    "adapter",
+    "convert",
+    "existing-effect",
+    "pure",
+    "retained",
+  ]);
   assert.ok(inventory.entries.length >= 12, "inventory is smaller than the required surface set");
 });
 
