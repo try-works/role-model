@@ -272,6 +272,9 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
   const variants = selectedProvider?.variants ?? [];
   const selectedVariant =
     variants.find((variant) => variant.variantId === draft.variantId) ?? variants[0];
+  // S664: the connect card must route OAuth2 device-code variants (Moonshot/Kimi Code) to the
+  // device-authorization flow instead of asking for an API key and failing activation.
+  const requiresDeviceAuth = (selectedVariant?.authMode ?? "") === "oauth2-device-code";
   const modelIds = selectedVariant?.modelIds ?? selectedProvider?.modelIds ?? [];
   const connectionId =
     draft.providerAccountId.length > 0
@@ -366,30 +369,37 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
                       ),
                     ]),
                   ),
-                  field(
-                    "Credential reference",
-                    h.input([
-                      h.AriaLabel("Credential reference"),
-                      h.Type("text"),
-                      h.Class(inputClass),
-                      h.Attribute("value", credentialRef),
-                      h.OnInput((value: string) =>
-                        Message.ProviderAccountFieldChanged({ field: "credentialRef", value }),
-                      ),
-                    ]),
-                  ),
-                  field(
-                    "API key (optional)",
-                    h.input([
-                      h.AriaLabel("API key (optional)"),
-                      h.Type("password"),
-                      h.Class(inputClass),
-                      h.Attribute("value", draft.apiKey),
-                      h.OnInput((value: string) =>
-                        Message.ProviderAccountFieldChanged({ field: "apiKey", value }),
-                      ),
-                    ]),
-                  ),
+                  ...(requiresDeviceAuth
+                    ? []
+                    : [
+                        field(
+                          "Credential reference",
+                          h.input([
+                            h.AriaLabel("Credential reference"),
+                            h.Type("text"),
+                            h.Class(inputClass),
+                            h.Attribute("value", credentialRef),
+                            h.OnInput((value: string) =>
+                              Message.ProviderAccountFieldChanged({
+                                field: "credentialRef",
+                                value,
+                              }),
+                            ),
+                          ]),
+                        ),
+                        field(
+                          "API key (optional)",
+                          h.input([
+                            h.AriaLabel("API key (optional)"),
+                            h.Type("password"),
+                            h.Class(inputClass),
+                            h.Attribute("value", draft.apiKey),
+                            h.OnInput((value: string) =>
+                              Message.ProviderAccountFieldChanged({ field: "apiKey", value }),
+                            ),
+                          ]),
+                        ),
+                      ]),
                   field(
                     "Model",
                     h.select(
@@ -420,21 +430,79 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
                       ],
                     ),
                   ),
-                  h.button(
-                    [
-                      h.Type("button"),
-                      h.AriaDisabled(ctx.providerAccount.status === "saving"),
-                      h.OnClick(Message.ProviderAccountCreateRequested({})),
-                      h.Class(
-                        "inline-flex h-[34px] w-fit items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-foreground",
-                      ),
-                    ],
-                    [
-                      ctx.providerAccount.status === "saving"
-                        ? "Saving configuration…"
-                        : "Save configuration",
-                    ],
-                  ),
+                  ...(requiresDeviceAuth
+                    ? [
+                        h.div(
+                          [
+                            h.Class(
+                              "grid gap-2 rounded-md border border-border bg-secondary/40 p-3",
+                            ),
+                          ],
+                          [
+                            h.p(
+                              [h.Class("font-sans text-[12px] text-muted-foreground")],
+                              [
+                                "Kimi Code connects with OAuth device authorization. Press Connect, then approve the code in your browser.",
+                              ],
+                            ),
+                            h.button(
+                              [
+                                h.Type("button"),
+                                h.AriaDisabled(
+                                  ctx.deviceAuth.status === "starting" ||
+                                    ctx.deviceAuth.status === "pending" ||
+                                    ctx.deviceAuth.inflight === true,
+                                ),
+                                h.OnClick(Message.ProviderAccountDeviceAuthRequested({})),
+                                h.Class(
+                                  "inline-flex h-[34px] w-fit items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-foreground",
+                                ),
+                              ],
+                              [
+                                ctx.deviceAuth.status === "starting"
+                                  ? "Starting device authorization…"
+                                  : "Connect with Kimi (device authorization)",
+                              ],
+                            ),
+                            ...(ctx.deviceAuth.session?.userCode !== undefined
+                              ? [
+                                  h.p(
+                                    [h.Class("font-mono text-[13px] text-foreground")],
+                                    ["Code: " + ctx.deviceAuth.session.userCode],
+                                  ),
+                                ]
+                              : []),
+                            ...(ctx.deviceAuth.error !== undefined
+                              ? [
+                                  h.p(
+                                    [
+                                      h.Role("alert"),
+                                      h.Class("font-sans text-[12px] text-danger"),
+                                    ],
+                                    [ctx.deviceAuth.error],
+                                  ),
+                                ]
+                              : []),
+                          ],
+                        ),
+                      ]
+                    : [
+                        h.button(
+                          [
+                            h.Type("button"),
+                            h.AriaDisabled(ctx.providerAccount.status === "saving"),
+                            h.OnClick(Message.ProviderAccountCreateRequested({})),
+                            h.Class(
+                              "inline-flex h-[34px] w-fit items-center justify-center rounded-md border border-border bg-secondary px-3 font-sans text-sm font-medium text-foreground",
+                            ),
+                          ],
+                          [
+                            ctx.providerAccount.status === "saving"
+                              ? "Saving configuration…"
+                              : "Save configuration",
+                          ],
+                        ),
+                      ]),
                   ...(ctx.providerAccount.notice !== undefined
                     ? [
                         h.p(

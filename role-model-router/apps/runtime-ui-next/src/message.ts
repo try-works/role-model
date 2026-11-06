@@ -524,6 +524,8 @@ export const Message: MessageUnion<{
   readonly ProviderAccountModelAdded: EmptyFields;
   readonly ProviderAccountModelRemoved: { readonly modelId: typeof Schema.String };
   readonly ProviderAccountCreateRequested: EmptyFields;
+  /** S664: connect an OAuth2 device-code provider (e.g. Moonshot/Kimi Code) from the connect card. */
+  readonly ProviderAccountDeviceAuthRequested: EmptyFields;
   readonly ProviderAccountCreateSucceeded: { readonly token: typeof Schema.Number };
   readonly ProviderAccountEndpointsActivated: { readonly token: typeof Schema.Number };
   readonly ProviderAccountUpdateKeyRequested: EmptyFields;
@@ -831,6 +833,7 @@ export const Message: MessageUnion<{
   ProviderAccountModelAdded: {},
   ProviderAccountModelRemoved: { modelId: Schema.String },
   ProviderAccountCreateRequested: {},
+  ProviderAccountDeviceAuthRequested: {},
   ProviderAccountCreateSucceeded: { token: Schema.Number },
   ProviderAccountEndpointsActivated: { token: Schema.Number },
   ProviderAccountUpdateKeyRequested: {},

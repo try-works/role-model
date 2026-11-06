@@ -4662,6 +4662,47 @@ export const createUpdate = (
           },
         };
       },
+      ProviderAccountDeviceAuthRequested: (): UpdateReturn<Model, Message> => {
+        // S664: the connect card drives the OAuth2 device-code flow for variants that declare
+        // authMode=oauth2-device-code (Moonshot/Kimi Code). Seed the device-auth draft from the
+        // provider-account draft, then start the same read->start->poll sequence the device form uses.
+        const state = model.providerAccount ?? initialProviderAccountState();
+        const deviceState = model.deviceAuth ?? initialDeviceAuthState();
+        if (
+          deviceState.inflight === true ||
+          deviceState.status === "starting" ||
+          deviceState.status === "pending"
+        ) {
+          return { model };
+        }
+        const modelId =
+          state.draft.modelInput.trim().length > 0
+            ? state.draft.modelInput.trim()
+            : (state.draft.selectedModelIds[0] ?? "");
+        const token = deviceState.token + 1;
+        return {
+          commands: [deviceAuthCommands.read({ token })],
+          model: {
+            ...model,
+            deviceAuth: {
+              ...deviceState,
+              draft: {
+                ...deviceState.draft,
+                authMode: "oauth2-device-code",
+                modelInput: modelId,
+                providerId: state.draft.providerId,
+                providerKind: state.draft.providerKind,
+                selectedModelIds: modelId.length > 0 ? [modelId] : [],
+                variantId: state.draft.variantId,
+              },
+              error: undefined,
+              session: undefined,
+              status: "starting",
+              token,
+            },
+          },
+        };
+      },
       ProviderAccountCreateRequested: (): UpdateReturn<Model, Message> => {
         const state = model.providerAccount ?? initialProviderAccountState();
         if (providerAccountBusy(state)) return { model };
