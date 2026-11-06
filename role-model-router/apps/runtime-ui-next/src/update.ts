@@ -5245,7 +5245,11 @@ export const createUpdate = (
       > => {
         const state = model.deviceAuth ?? initialDeviceAuthState();
         if (token !== state.token) return { model };
-        const plan = deviceAuthStartPlan(state, sessions);
+        const plan = deviceAuthStartPlan(
+          state,
+          sessions,
+          model.readbacks.roles.rows.map((row) => row.value),
+        );
         if (plan.kind === "invalid") {
           return {
             model: {

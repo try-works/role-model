@@ -6,7 +6,7 @@ import { defineDeviceAuthCommands } from "../src/commands";
 import { Message } from "../src/message";
 import type { Model } from "../src/model";
 import { initialProviderAccountState } from "../src/provider-account";
-import { initialDeviceAuthState } from "../src/features/device-auth/model";
+import { deviceAuthStartPlan, initialDeviceAuthState } from "../src/features/device-auth/model";
 import { view } from "../src/view";
 import { shellModel, shellUpdate } from "./support/runtime-shell";
 

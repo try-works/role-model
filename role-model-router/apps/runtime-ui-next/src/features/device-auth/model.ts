@@ -129,6 +129,12 @@ export type DeviceAuthStartPlan =
 export const deviceAuthStartPlan = (
   state: DeviceAuthState,
   sessions: readonly DeviceAuthSession[],
+  /**
+   * S666: a new model must start with all roles selected (the connect card's copy). The host's
+   * "include" mode with an empty roleIds list binds zero roles, so the caller passes the runtime
+   * role ids here and every binding carries them.
+   */
+  roleIds: readonly string[] = [],
 ): DeviceAuthStartPlan => {
   const errors = validateDeviceAuthDraft(state.draft);
   if (errors.length > 0) return { errors, kind: "invalid" };
@@ -147,10 +153,10 @@ export const deviceAuthStartPlan = (
       entitlementTags: ["chat"],
       modelRoleBindings: [...new Set(state.draft.selectedModelIds)].map((modelId) => ({
         disabledRoleIds: [],
-        enabledRoleIds: [],
+        enabledRoleIds: [...roleIds],
         modelId,
         roleAssignmentMode: "include" as const,
-        roleIds: [],
+        roleIds: [...roleIds],
       })),
       providerAccountId,
       providerId: state.draft.providerId.trim(),
