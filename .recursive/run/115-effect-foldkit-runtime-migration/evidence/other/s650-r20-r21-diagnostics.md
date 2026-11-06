@@ -36,3 +36,9 @@ Gap: a packaged/browser receipt through a freshly built candidate is NOT deliver
 - `role-model-router/apps/runtime-host-bridge/test/s369-diagnostics-query-source.test.ts`
 - `role-model-router/apps/runtime-host-bridge/test/s374-defect-readback.test.ts`
 - `role-model-router/apps/runtime-host-bridge/test/s650-r20-r21-diagnostics-live.test.ts`
+
+## Commits / shared-tree note
+
+- `1f6a8881` (an R6 lane commit) swept the staged R20 source/tests: `module-health-writer.ts`, `index.ts`, `module-health-writer.test.ts`, `run115-s10b-module-health-wiring.test.ts`, `s366-module-health-edge.test.ts`. The changes are present at HEAD but are attributed to that commit; this worker did not intend the cross-lane stage.
+- `c421d0d4` carries the R20/R21 evidence and `s650`/s374 tests.
+- `3917e839` carries the final s369 expectation repair.
