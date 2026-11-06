@@ -225,4 +225,33 @@ if (args.includes("--rendered")) {
     process.exit(audit.status ?? 2);
   }
 }
+
+// R21: packaged/browser diagnostics defect receipt. The candidate is launched again because the
+// journey verifier owns and closes its child; this leg injects a stale+loss+missing-build response
+// for the already-authorized diagnostics request and records the rendered page.
+if (args.includes("--diagnostics")) {
+  const receipt = value("--diagnostics-receipt") ?? path.resolve("r21-diagnostics-receipt.json");
+  const screenshot =
+    value("--diagnostics-screenshot") ?? path.resolve("r21-diagnostics-page.png");
+  const diagnostics = spawnSync(
+    process.execPath,
+    [
+      path.join("scripts", "runtime", "verify-packaged-diagnostics.mjs"),
+      "--exe",
+      executable,
+      "--manifest",
+      manifest,
+      "--static-root",
+      staticRoot,
+      "--fixture-root",
+      fixtureRoot,
+      "--receipt",
+      receipt,
+      "--screenshot",
+      screenshot,
+    ],
+    { encoding: "utf8", stdio: "inherit" },
+  );
+  if (diagnostics.status !== 0) process.exit(diagnostics.status ?? 2);
+}
 process.exit(0);

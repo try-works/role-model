@@ -1,0 +1,21 @@
+R21 packaged/browser diagnostics defect receipt
+candidate: 0.0.20-738-g5a7be8e3
+sha256: 4152d131f583fe89deca12cf5970d9f83c2f7ad578bb953a487daeea87be7c52
+commit: 5a7be8e32bd97558301770b61e8b7a77a95694b9
+source_tree: c9c6f25613028cf7ad70d5c8d5c1b8bf0ec66ada
+page: /diagnostics/42
+original diagnostics request status: 200 (loopback device-owner authorized)
+injected defect: state=stale, conditions={stale:true,dropped:true}, loss.dropped=12, identity.buildId="", record cause.fail
+
+RENDERED PAGE (PASS)
+  Diagnostics: 42
+  Stale: the newest record is 15m old (rule 5m).
+  rule 5m · age 15m
+  also dropped: 12 record(s) in the last 10m
+  ERROR cause.fail ×1
+  instance: packaged-defect · build: missing
+  bounded read: 50 records / 16384 bytes / identity ≤256 B / code ≤512 B
+
+receipt json: evidence/logs/r21-diagnostics-receipt.json
+screenshot: evidence/logs/r21-diagnostics-page.png
+EXIT_CODE=0

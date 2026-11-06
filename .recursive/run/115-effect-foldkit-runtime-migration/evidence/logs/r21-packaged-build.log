@@ -1,0 +1,24 @@
+R21 clean lockstep packaged build
+public frozen worktree: D:/DEV/rm-clean/r21-lockstep-pub @ 5a7be8e3 (descendant of requested 5e4491fa; HEAD had advanced)
+public tree: c9c6f25613028cf7ad70d5c8d5c1b8bf0ec66ada
+private distribution: D:/DEV/role-model-internal/.worktrees/115-effect-foldkit-runtime-migration/dist/run00-dev @ public tree c9c6f256...
+
+CLEAN
+  node scripts/runtime/package-lockstep.mjs --clean --public . -> PASS (no pre-existing dists)
+
+PACKAGE
+  env ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT=<private>/dist/run00-dev
+  pnpm run runtime:package-sea -> exit 0
+  output: role-model-router/dist/release/win32-x64/role-model-dev.exe
+  sha256: 4152d131f583fe89deca12cf5970d9f83c2f7ad578bb953a487daeea87be7c52
+  version: 0.0.20-738-g5a7be8e3
+  commit: 5a7be8e32bd97558301770b61e8b7a77a95694b9
+  source_tree: c9c6f25613028cf7ad70d5c8d5c1b8bf0ec66ada
+
+LOCKSTEP CHECK
+  node scripts/runtime/package-lockstep.mjs --public . --distribution <private>/dist/run00-dev --release role-model-router/dist/release/win32-x64
+  {"status":"PASS","publicSourceTree":"c9c6f256...","distributionManifestSha256":"936a03c0cc01de028a7cdd2091681baba08cbc718f3f2d679ae1da8eafc8dbba"}
+
+CANDIDATE VERIFIER
+  node scripts/runtime/verify-packaged-candidate.mjs --package-dir ... --static-root .../build/client --fixture-root ... --diagnostics
+  PASS health/models/telemetry/controller/learning/replay/evaluation/ui css/bundle/theme/chat/ui shell; EXIT_CODE=0
