@@ -1,0 +1,62 @@
+✔ publishes . with a built import and declaration (5189.7815ms)
+✔ publishes ./anchor with a built import and declaration (13.6589ms)
+✔ publishes ./animation with a built import and declaration (11.2442ms)
+✔ publishes ./button with a built import and declaration (12.5545ms)
+✔ publishes ./calendar with a built import and declaration (62.3364ms)
+✔ publishes ./checkbox with a built import and declaration (34.6345ms)
+✔ publishes ./combobox with a built import and declaration (20.3725ms)
+✔ publishes ./datePicker with a built import and declaration (24.5006ms)
+✔ publishes ./dialog with a built import and declaration (19.0333ms)
+✔ publishes ./disclosure with a built import and declaration (27.3489ms)
+✔ publishes ./dragAndDrop with a built import and declaration (23.2923ms)
+✔ publishes ./fieldset with a built import and declaration (6.1954ms)
+✔ publishes ./fileDrop with a built import and declaration (20.3443ms)
+✔ publishes ./hoverIntent with a built import and declaration (20.6771ms)
+✔ publishes ./input with a built import and declaration (17.2463ms)
+✔ publishes ./listbox with a built import and declaration (28.0783ms)
+✔ publishes ./menu with a built import and declaration (21.749ms)
+✔ publishes ./meter with a built import and declaration (15.2895ms)
+✔ publishes ./nav with a built import and declaration (17.3198ms)
+✔ publishes ./popover with a built import and declaration (23.5121ms)
+✔ publishes ./progress with a built import and declaration (21.1185ms)
+✔ publishes ./radioGroup with a built import and declaration (21.0203ms)
+✔ publishes ./select with a built import and declaration (26.2276ms)
+✔ publishes ./slider with a built import and declaration (19.54ms)
+✔ publishes ./switch with a built import and declaration (26.7222ms)
+✔ publishes ./tabs with a built import and declaration (19.0918ms)
+✔ publishes ./textarea with a built import and declaration (13.5281ms)
+✔ publishes ./toast with a built import and declaration (35.4491ms)
+✔ publishes ./tooltip with a built import and declaration (17.9871ms)
+✔ publishes ./virtualList with a built import and declaration (31.6644ms)
+✔ the wrapper exports map is exactly the derived entry surface (4.8377ms)
+✔ the built wrapper graph is browser-safe and excludes the Vite plugin (217.743ms)
+✔ @foldkit/oxlint-plugin is pinned at 0.15.3 and vendored with the UI payload (6.5383ms)
+✖ the packaged wrapper closure receipt covers every entry and the packaged client (3.4291ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 33
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6734.3956
+
+✖ failing tests:
+
+test at role-model-router\packages\foldkit-ui\test\wrapper-closure.test.mjs:72:1
+✖ the packaged wrapper closure receipt covers every entry and the packaged client (3.4291ms)
+  AssertionError [ERR_ASSERTION]: missing packaged wrapper closure receipt: D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\.recursive\run\115-effect-foldkit-runtime-migration\evidence\logs\r6-packaged-wrapper-closure.json. Run the packaged build and scripts/generate-r6-closure-receipt.mjs.
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit-ui/test/wrapper-closure.test.mjs:77:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
