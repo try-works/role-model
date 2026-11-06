@@ -1,0 +1,21 @@
+S650 R20/R21 diagnostics calibration GREEN
+basis: HEAD 9e130eb7 + worktree (R5/R14/R23/R27 + lockstep landed)
+
+RED: evidence/logs/s650-r20-calibration-red.log (2/2 failed: gate false; calibrated limits undefined)
+
+GREEN
+  pnpm exec vitest run test/module-health-writer.test.ts test/run115-s10b-module-health-wiring.test.ts test/s366-module-health-edge.test.ts test/s369-diagnostics-query-source.test.ts test/s374-defect-readback.test.ts test/s650-r20-r21-diagnostics-live.test.ts
+  6 files / 36 tests passed, EXIT_CODE=0
+  includes: calibrated gate ON, injected stale+loss through the authorized handleLocalDiagnosticsRead path, missing build normalized to "unknown"
+
+TYPECHECK
+  pnpm run typecheck (runtime-host-bridge) EXIT_CODE=0
+
+ANTI-SLOP
+  module-health-writer.ts, index.ts, s650 test, writer test: 0 findings
+
+LIMITS
+  recordCount 128; maxCodeBytes 96; ingressPerSecond 32; ttlMs 900000; queryCap 50
+
+R21 LIMIT
+  No current packaged candidate exists in the worktree (role-model-router/dist/release/win32-x64 absent); the packaged browser receipt through a freshly built candidate is NOT RUN here. Authorized read path defect is proven in-process by s650 and s374.

@@ -1,0 +1,8 @@
+S650 R20 diagnostics calibration RED
+basis: HEAD 9e130eb7 + worktree (R5/R14/R23/R27 + lockstep landed)
+command: pnpm exec vitest run test/module-health-writer.test.ts
+
+  module-health-writer.test.ts (19 tests | 2 failed)
+    x enables the calibrated limits gate -> expected false to be true
+    x applies the calibrated ingress, TTL and query bounds -> Cannot read properties of undefined (reading 'queryCap')
+EXIT_CODE=1

@@ -119,8 +119,8 @@ describe("S421 authorized defect readback (edge -> writer -> authorized read)", 
     expect(denied.body.records).toBeUndefined();
   });
 
-  it("stays disabled without calibration (default-off unchanged)", () => {
-    expect(createModuleHealthComposition({})).toBeUndefined();
+  it("uses calibrated defaults; an explicit unapproved enable stays disabled", () => {
+    expect(createModuleHealthComposition({})).toBeDefined();
     expect(createModuleHealthComposition({ diagnostics: { enabled: true } })).toBeUndefined();
   });
 });
