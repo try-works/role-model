@@ -371,6 +371,8 @@ const laneMain = async () => {
       path.join(checkoutRoot, "scripts", "runtime", "routing-e2e.mjs"),
       "--log",
       runLogPath,
+      "--exe",
+      exe,
     ];
     if (expectVersion !== undefined) argsForRun.push("--expect-version", expectVersion);
     record(
@@ -504,7 +506,12 @@ const laneMain = async () => {
   const surfaceStatus = surfaceResult?.status ?? "NOT_RUN";
   const surfaceVerdict = surfaceStatus === "PASSED" ? "0DIFF" : surfaceStatus;
   record(
-    `SELFCHECK SURFACE: ${surfaceVerdict} - ${surfaceResult?.reason ?? "capture did not produce a JSON result"}`,
+    `SELFCHECK SURFACE: ${surfaceVerdict} - ${
+      surfaceResult?.reason ??
+      (surfaceStatus === "PASSED"
+        ? "React and Foldkit markers and specimen entries agree across two identical runs"
+        : "capture did not produce a JSON result")
+    }`,
   );
   record(`SELFCHECK LOG: ${path.relative(checkoutRoot, surfaceLog).split(path.sep).join("/")}`);
   if (surfaceStatus !== "PASSED")
