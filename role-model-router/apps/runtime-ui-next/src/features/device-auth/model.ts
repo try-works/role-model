@@ -256,6 +256,8 @@ interface DeviceAuthFetchOptions {
 export interface DeviceAuthClient {
   readonly activate: (payload: DeviceActivationPayload) => Promise<unknown>;
   readonly list: () => Promise<readonly DeviceAuthSession[]>;
+  /** Optional so test doubles and older clients stay compatible; the real client implements it. */
+  readonly openUrl?: (url: string) => Promise<unknown>;
   readonly poll: (authRequestId: string) => Promise<DeviceAuthSession>;
   readonly start: (payload: DeviceAuthStartPayload) => Promise<DeviceAuthSession>;
 }
@@ -351,6 +353,7 @@ export const createDeviceAuthClient = (options: DeviceAuthFetchOptions = {}): De
   return {
     activate: async (payload) => request("/api/role-model/endpoints", "POST", payload),
     list: async () => parseList(await request("/api/role-model/accounts/device", "GET")),
+    openUrl: async (url) => request("/api/role-model/system/open-url", "POST", { url }),
     poll: async (authRequestId) =>
       parseSession(
         await request("/api/role-model/accounts/device/poll", "POST", { authRequestId }),

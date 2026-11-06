@@ -13,6 +13,7 @@ import type {
   DeviceAuthClient,
   DeviceAuthStartPayload,
 } from "./device-auth";
+import { deviceAuthVerificationUrl } from "./device-auth";
 import {
   type DiagnosticsReadResult,
   type DiagnosticsReader,
@@ -631,7 +632,20 @@ export const defineDeviceAuthCommands = (client: DeviceAuthClient) => ({
         Effect.exit(
           Effect.tryPromise({
             catch: (cause) => new Error(describeCause(cause)),
-            try: () => client.start(JSON.parse(payload) as DeviceAuthStartPayload),
+            // S665: the runtime triggers the OAuth flow in the user's browser (host open-url) once the
+            // device authorization is pending; failures stay best-effort so the code/link remain.
+            try: async () => {
+              const session = await client.start(JSON.parse(payload) as DeviceAuthStartPayload);
+              const authorizationUrl = deviceAuthVerificationUrl(session);
+              if (session.status === "pending" && authorizationUrl !== undefined) {
+                try {
+                  await client.openUrl?.(authorizationUrl);
+                } catch {
+                  // best effort: the connect card still renders the code and link
+                }
+              }
+              return session;
+            },
           }),
         ),
         (exit) =>

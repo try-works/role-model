@@ -22,6 +22,7 @@ import { localPeersPage as localPeersFeaturePage } from "./features/local/peers"
 import { card, filterBar, table } from "./features/s563-layout";
 import { systemExtensionsPage as systemExtensionsFeaturePage } from "./features/system/extensions";
 import { systemOperatorPage as systemOperatorFeaturePage } from "./features/system/operator";
+import { deviceAuthVerificationUrl } from "./device-auth";
 import { Message } from "./message";
 import {
   READBACK_SPECS,
@@ -275,6 +276,10 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
   // S664: the connect card must route OAuth2 device-code variants (Moonshot/Kimi Code) to the
   // device-authorization flow instead of asking for an API key and failing activation.
   const requiresDeviceAuth = (selectedVariant?.authMode ?? "") === "oauth2-device-code";
+  const deviceAuthorizationUrl =
+    ctx.deviceAuth.session !== undefined
+      ? deviceAuthVerificationUrl(ctx.deviceAuth.session)
+      : undefined;
   const modelIds = selectedVariant?.modelIds ?? selectedProvider?.modelIds ?? [];
   const connectionId =
     draft.providerAccountId.length > 0
@@ -469,6 +474,22 @@ export const providersPage = (ctx: ProvidersRouteContext): Html => {
                                   h.p(
                                     [h.Class("font-mono text-[13px] text-foreground")],
                                     ["Code: " + ctx.deviceAuth.session.userCode],
+                                  ),
+                                ]
+                              : []),
+                            ...(deviceAuthorizationUrl !== undefined
+                              ? [
+                                  h.a(
+                                    [
+                                      h.Href(deviceAuthorizationUrl),
+                                      h.Attribute("target", "_blank"),
+                                      h.Attribute("rel", "noopener noreferrer"),
+                                      h.DataAttribute("device-auth-open-url", ""),
+                                      h.Class(
+                                        "font-sans text-[12px] text-[var(--rm-accent)] underline",
+                                      ),
+                                    ],
+                                    ["Open Kimi authorization page"],
                                   ),
                                 ]
                               : []),
