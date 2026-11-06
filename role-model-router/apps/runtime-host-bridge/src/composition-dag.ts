@@ -411,6 +411,12 @@ export interface MetadataCacheOwnerContract extends MetadataCacheContract {
   readonly getSync: (key: string, now: number) => MetadataCacheValue | undefined;
   readonly setSync: (key: string, value: MetadataCacheValue, now: number) => void;
   readonly sizeSync: () => number;
+  /**
+   * R27: this host has no inference-result cache; the nearest real cache owner exposes the guard so
+   * a future stochastic-result cache cannot reuse one key across attempts. Distinct attempts differ.
+   */
+  readonly stochasticInferenceDedupe: false;
+  readonly stochasticKeyFor: (modelId: string, attemptId: string) => string;
 }
 
 export class MetadataCacheService extends Context.Service<
@@ -451,6 +457,14 @@ const makeMetadataCacheOwner = (
       Effect.runSync(cache.set(key, value, now));
     },
     sizeSync: () => Effect.runSync(cache.size()),
+    stochasticInferenceDedupe: STOCHASTIC_INFERENCE_DEDUPE,
+    stochasticKeyFor: (modelId, attemptId) =>
+      stochasticInferenceCacheKey({
+        attemptId,
+        authorityId,
+        configGeneration: generation,
+        modelId,
+      }),
   };
 };
 

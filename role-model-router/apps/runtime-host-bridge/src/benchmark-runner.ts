@@ -274,11 +274,14 @@ export interface BenchmarkRunEndpointGrade extends BenchmarkEndpointGrade {
   readonly reasoningEffort: string | null;
 }
 
-import { BenchmarkCancelledError } from "./benchmark-gate.js";
+import { BenchmarkBusyError, BenchmarkCancelledError, type BenchmarkGateServiceContract } from "./benchmark-gate.js";
 
 export interface BenchmarkRunnerDependencies {
   /** S330: gate cancellation signal. */
   readonly signal?: AbortSignal;
+
+  /** S650/R27: optional admission gate so two direct runner calls cannot overlap. */
+  readonly benchmarkGate?: BenchmarkGateServiceContract;
   readonly databasePath: string;
 
   readonly benchmarkArtifactRoot?: string;
@@ -1683,8 +1686,14 @@ export async function runRoutingCapabilityBenchmark(
   const cases = selectBenchmarkCases(suite, { mode, caseIds: request.caseIds });
 
   const runId = request.runId ?? randomUUID();
+
+  const admission = deps.benchmarkGate?.begin(runId);
+  if (admission !== undefined && !admission.ok) throw new BenchmarkBusyError(admission.activeRunId);
+
   const throwIfCancelled = (): void => {
-    if (deps.signal?.aborted) throw new BenchmarkCancelledError(runId);
+    if (deps.signal?.aborted || (admission?.ok === true && admission.signal.aborted)) {
+      throw new BenchmarkCancelledError(runId);
+    }
   };
   throwIfCancelled();
 
@@ -2395,10 +2404,12 @@ export async function runRoutingCapabilityBenchmark(
     });
 
     completeBenchmarkRunProgress(runId, result);
+    admission?.finish();
 
     return result;
   } catch (error) {
     failBenchmarkRunProgress(runId, failureCode);
+    admission?.finish();
 
     throw error;
   }

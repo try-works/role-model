@@ -1,0 +1,27 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:10388) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s650-r27-benchmark-overlap.test.ts (1 test) 389ms
+   ✓ S650 R27 benchmark cancellation/overlap > a second real runner on the same judge is refused with the first id and makes no upstream call; cancel rejects the first and a third gets a fresh slot  381ms
+(node:20992) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s331-benchmark-behavior.test.ts (2 tests) 419ms
+   ✓ S331 benchmark route behavior > route: first run accepted 202 with forwarded signal/runId, concurrent run 409, failure releases the slot  379ms
+(node:13380) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s318-metadata-cache.test.ts (5 tests) 53ms
+ ✓ test/s119-benchmark-gate.test.ts (4 tests) 30ms
+(node:21616) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s115-metadata-cache.test.ts (5 tests) 27ms
+(node:8032) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/s650-r27-metadata-cache.test.ts (3 tests) 34ms
+
+ Test Files  6 passed (6)
+      Tests  20 passed (20)
+   Start at  16:55:50
+   Duration  67.26s (transform 22.70s, setup 0ms, collect 55.95s, tests 953ms, environment 5ms, prepare 4.21s)
+

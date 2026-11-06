@@ -26,8 +26,8 @@ describe("S650 R27 metadata cache identity guards", () => {
   test("the production metadata cache owner exposes the stochastic key guard and no dedupe", () => {
     const owner = composeMetadataCacheOwner();
     expect(owner.stochasticInferenceDedupe).toBe(false);
-    const first = owner.stochasticKeyFor("attempt-1");
-    const second = owner.stochasticKeyFor("attempt-2");
+    const first = owner.stochasticKeyFor("model", "attempt-1");
+    const second = owner.stochasticKeyFor("model", "attempt-2");
     expect(first).not.toBe(second);
     expect(first).not.toBe(owner.keyFor("model"));
     owner.setSync(first, "inference-1", 0);

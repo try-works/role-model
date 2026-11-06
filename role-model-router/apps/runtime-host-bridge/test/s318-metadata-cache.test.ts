@@ -65,10 +65,11 @@ describe("S318 metadata cache identity", () => {
 
   test("narrowed no-dedup scope: the metadata cache has no stochastic-inference dedup API", () => {
     const owner = composeMetadataCacheOwner();
-    // NARROWED CLAIM: the metadata cache API is get/set/invalidate/size only; it has no in-flight coalescing or
-    // request-dedup surface, so it cannot collapse distinct inference requests. (The real provider path's
-    // stochastic execution is NOT exercised here - see the task doc's remaining-scope note.)
-    expect(Object.keys(owner).some((name) => /inflight|dedupe|coalesce/i.test(name))).toBe(false);
+    // S650: the cache has no in-flight coalescing surface, but it now exposes an explicit positive
+    // guard: stochastic attempts get distinct keys and dedupe is declared false.
+    expect(owner.stochasticInferenceDedupe).toBe(false);
+    expect(owner.stochasticKeyFor("m", "attempt-1")).not.toBe(owner.stochasticKeyFor("m", "attempt-2"));
+    expect(Object.keys(owner).some((name) => /inflight|coalesce/i.test(name))).toBe(false);
     expect(owner.getSync).toBeTypeOf("function");
     expect(owner.setSync).toBeTypeOf("function");
     const key = metadataCacheKey({ authorityId: "auth", configGeneration: 1, modelId: "m" });
