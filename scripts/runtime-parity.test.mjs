@@ -22,21 +22,22 @@ test("request-only selfcheck executes controls without claiming browser parity",
   assert.equal(output.checks.length, 10);
   assert.ok(output.checks.every((check) => check.passed));
 });
-test("full React selfcheck is NOT RUN until actual captures are available", () => {
-  // Force the no-browser branch deterministically: CI images may ship a Chromium build, and this test
-  // asserts the honest NOT_RUN verdict for a machine with no browser, not parity between captures.
-  const result = invoke(["--selfcheck"], {
-    CHROME_PATH: join(root, "__no-browser-installed-for-selfcheck-test__"),
+test("full React selfcheck is NOT RUN until actual captures are available", async () => {
+  // Call the runner with an explicit missing browser instead of spawning the CLI: CI images may ship a
+  // Chromium build, and this test asserts the honest NOT_RUN verdict for a machine with no browser,
+  // not parity between captures.
+  const { main } = await import("./runtime/parity-selfcheck.mjs");
+  const result = await main({
+    chromePath: join(root, "__no-browser-installed-for-selfcheck-test__"),
   });
-  assert.equal(result.status, 2);
-  const output = JSON.parse(result.stdout);
-  assert.equal(output.status, "NOT_RUN");
-  assert.equal(output.scope, "browser-parity");
+  assert.equal(result.exitCode, 2, JSON.stringify(result));
+  assert.equal(result.status, "NOT_RUN");
+  assert.equal(result.scope, "browser-parity");
   // The harness reports the concrete reason it could not capture: the React capture runner may be
   // unavailable, or the machine may expose no browser at all. Both are honest NOT_RUN results.
   assert.ok(
-    ["react-capture-runner-unavailable", "no-browser-available"].includes(output.reason),
-    `unexpected browser-parity reason: ${String(output.reason)}`,
+    ["react-capture-runner-unavailable", "no-browser-available"].includes(result.reason),
+    `unexpected browser-parity reason: ${String(result.reason)}`,
   );
 });
 test("unknown or combined modes fail without silently selecting fixture success", () => {
