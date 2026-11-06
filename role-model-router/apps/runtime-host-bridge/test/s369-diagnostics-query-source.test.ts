@@ -57,8 +57,8 @@ describe("S421 production diagnostics source is writer-owned", () => {
     await storage.close();
   });
 
-  it("stays disabled without the enabled flag AND calibration approval", () => {
-    expect(createModuleHealthComposition({})).toBeUndefined();
+  it("uses calibrated defaults; explicit enable still requires calibration approval", () => {
+    expect(createModuleHealthComposition({})).toBeDefined();
     expect(createModuleHealthComposition({ diagnostics: { enabled: true } })).toBeUndefined();
     expect(
       createModuleHealthComposition({ diagnostics: { calibration: { approved: true } } }),
