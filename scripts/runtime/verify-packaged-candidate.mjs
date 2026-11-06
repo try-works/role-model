@@ -13,6 +13,7 @@ import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
+import { assertShellRegistry } from "./package-ui-shell.mjs";
 import { staticRootIdentity } from "./ui-identity.mjs";
 
 const args = process.argv.slice(2);
@@ -125,7 +126,7 @@ if (existsSync(packageClient) && path.resolve(staticRoot) !== path.resolve(packa
 // build/client; verify the registry and that the served root is exactly the selected shell.
 const shellRegistryPath = path.join(packageDir, "build", "ui-shells.json");
 if (existsSync(shellRegistryPath)) {
-  const registry = JSON.parse(readFileSync(shellRegistryPath, "utf8"));
+  const registry = assertShellRegistry(JSON.parse(readFileSync(shellRegistryPath, "utf8")));
   const expectedShell = value("--expect-ui-shell");
   if (expectedShell !== undefined && registry.active !== expectedShell) {
     console.log(`FAIL ui shell: release is active "${String(registry.active)}", expected "${expectedShell}"`);

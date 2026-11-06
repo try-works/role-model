@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "role-model.r37.db-preservation.v1",
+  "stateRoot": "D:/DEV/rm-clean/r37-state",
+  "before": "0c4167eb887035f557017f6acdf52fe9e1c9ed80627d214479aae451a8d878dc",
+  "duringReact": "0c4167eb887035f557017f6acdf52fe9e1c9ed80627d214479aae451a8d878dc",
+  "after": "0c4167eb887035f557017f6acdf52fe9e1c9ed80627d214479aae451a8d878dc",
+  "databaseBytesUnchanged": true
+}

@@ -782,6 +782,49 @@ async function stageStandaloneReleaseFiles(releaseDir: string): Promise<void> {
   }
 }
 
+async function stageUiShellSelection(releaseDir: string, releaseId: string): Promise<void> {
+  const foldkitRoot = path.join(repoRoot, "role-model-router", "apps", "runtime-ui-next", "dist", "client");
+  const reactRoot = path.join(repoRoot, "role-model-router", "apps", "runtime-ui", "build", "client");
+  const shellsRoot = path.join(releaseDir, "build", "shells");
+  for (const [name, source] of [
+    ["foldkit", foldkitRoot],
+    ["react", reactRoot],
+  ] as const) {
+    try {
+      await cp(source, path.join(shellsRoot, name), { recursive: true, force: true });
+    } catch (error) {
+      throw new Error(
+        `R37 requires the matched ${name} UI shell; build it before packaging (${String((error as NodeJS.ErrnoException).code ?? error)}): ${source}`,
+      );
+    }
+  }
+  await rm(path.join(releaseDir, "build", "client"), { recursive: true, force: true });
+  await cp(path.join(shellsRoot, "foldkit"), path.join(releaseDir, "build", "client"), {
+    recursive: true,
+    force: true,
+  });
+  const registry = {
+    schemaVersion: "role-model.ui-shells.v1",
+    releaseId,
+    active: "foldkit",
+    shells: {
+      foldkit: "build/shells/foldkit",
+      react: "build/shells/react",
+    },
+    retainedReactRelease: releaseId,
+    stateSchemaVersion: "role-model.runtime-state.v1",
+    docsSite: "fumadocs-react-retained-exception",
+    docsSiteArtifact:
+      "not-staged-in-runtime-release; Fumadocs/React docs remain a separate deployment (explicit exception)",
+    rollback:
+      'node scripts/runtime/package-ui-shell.mjs --release <release> --select react; restart the candidate. state.json and the runtime database are untouched.',
+  };
+  const registryPath = path.join(releaseDir, "build", "ui-shells.json");
+  const temporary = `${registryPath}.${process.pid}.tmp`;
+  await writeFile(temporary, `${JSON.stringify(registry, null, 2)}\n`, "utf8");
+  await rename(temporary, registryPath);
+}
+
 export async function stampReleaseTreeModificationTimes(
   releaseDir: string,
   packageBuildDate: Date,
@@ -1019,6 +1062,7 @@ export async function packageSeaRuntime(): Promise<{
   await injectSeaBlob(outputPath, blobPath);
 
   await stageStandaloneReleaseFiles(releaseDir);
+  await stageUiShellSelection(releaseDir, versionInfo.version);
   // S624: the packaged client is an input to the executable's identity. If the release
   // directory still carries an executable older than the client it ships, the review build is
   // mixing generations; fail instead of publishing a manifest that names a stale binary.

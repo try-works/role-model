@@ -7,7 +7,7 @@
  * reversible by re-running selectShell and does not touch state.json or the
  * runtime database.
  */
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const REGISTRY = "build/ui-shells.json";
@@ -16,7 +16,10 @@ const DOCS_SITE = "fumadocs-react-retained-exception";
 
 const writeRegistry = (releaseDir, registry) => {
   mkdirSync(path.join(releaseDir, "build"), { recursive: true });
-  writeFileSync(path.join(releaseDir, REGISTRY), `${JSON.stringify(registry, null, 2)}\n`, "utf8");
+  const target = path.join(releaseDir, REGISTRY);
+  const temporary = `${target}.${process.pid}.tmp`;
+  writeFileSync(temporary, `${JSON.stringify(registry, null, 2)}\n`, "utf8");
+  renameSync(temporary, target);
 };
 
 export function assertShellRegistry(registry) {
@@ -52,10 +55,18 @@ export function selectShell({ releaseDir, shell }) {
   const source = path.join(releaseDir, shellPath);
   if (!existsSync(source)) throw new Error(`UI shell artifact is missing: ${source}`);
   const client = path.join(releaseDir, "build", "client");
-  rmSync(client, { recursive: true, force: true });
-  cpSync(source, client, { recursive: true });
+  const temporary = path.join(releaseDir, "build", `.client-${process.pid}.tmp`);
+  const previous = path.join(releaseDir, "build", ".client-previous");
+  rmSync(temporary, { recursive: true, force: true });
+  cpSync(source, temporary, { recursive: true });
+  if (existsSync(client)) {
+    rmSync(previous, { recursive: true, force: true });
+    renameSync(client, previous);
+  }
+  renameSync(temporary, client);
   const next = { ...registry, active: shell };
   writeRegistry(releaseDir, next);
+  rmSync(previous, { recursive: true, force: true });
   return next;
 }
 
@@ -80,6 +91,8 @@ export function stageShells({
     retainedReactRelease: releaseId,
     stateSchemaVersion,
     docsSite: DOCS_SITE,
+    docsSiteArtifact:
+      "not-staged-in-runtime-release; Fumadocs/React docs remain a separate deployment (explicit exception)",
     rollback: 'selectShell({ releaseDir, shell: "react" }) then restart the candidate; state.json and the runtime database are untouched.',
   };
   assertShellRegistry(registry);

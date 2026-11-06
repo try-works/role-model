@@ -3,7 +3,8 @@
   "release": {
     "version": "0.0.20-730-g807900de",
     "executable": "role-model-dev.exe",
-    "executableSha256": "3d3ff364506e4cbe50f8e0ad42bcae16109562ba349a813e778c5b6aa3c626a7"
+    "executableSha256": "3d3ff364506e4cbe50f8e0ad42bcae16109562ba349a813e778c5b6aa3c626a7",
+    "driver": "package-sea.ts stageUiShellSelection + scripts/runtime/package-ui-shell.mjs"
   },
   "shells": {
     "foldkitIndexSha256": "f7ff9085ce284384dbba91286a4bf98c9be2e1e180f66ccac23c0c66aecf3937",
@@ -28,7 +29,20 @@
     "reactServedEntryClient": true,
     "foldkitRestored": true,
     "stateFileBeforeAfter": "{\"pending\":1}\r\n",
-    "statePreserved": true
+    "statePreserved": true,
+    "httpFoldkit": true,
+    "httpReact": true,
+    "dbPreservation": {
+      "schemaVersion": "role-model.r37.db-preservation.v1",
+      "stateRoot": "D:/DEV/rm-clean/r37-state",
+      "before": "0c4167eb887035f557017f6acdf52fe9e1c9ed80627d214479aae451a8d878dc",
+      "duringReact": "0c4167eb887035f557017f6acdf52fe9e1c9ed80627d214479aae451a8d878dc",
+      "after": "0c4167eb887035f557017f6acdf52fe9e1c9ed80627d214479aae451a8d878dc",
+      "databaseBytesUnchanged": true
+    }
   },
-  "docsSiteException": "fumadocs-react-retained-exception"
+  "docsSiteException": {
+    "label": "fumadocs-react-retained-exception",
+    "artifact": "not-staged-in-runtime-release; explicit exception"
+  }
 }

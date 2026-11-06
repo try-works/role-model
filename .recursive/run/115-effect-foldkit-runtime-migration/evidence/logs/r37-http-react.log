@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "shell": "react",
+  "port": 53609,
+  "indexMarker": "entry.client",
+  "htmlBytes": 4945
+}
