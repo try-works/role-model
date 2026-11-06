@@ -24,12 +24,22 @@ import type {
  */
 
 /**
- * R20 calibrated-limit gate. The record/byte/ingress/formatting/TTL/query limits still require
- * the owner's calibration approval, so limit-driven enablement stays OFF. The writer does not
- * flip this flag; its defaults are placeholders and diagnostics.enabled remains the explicit
- * calibration decision.
+ * R20 calibrated limits (approved 2026-11-06 for the local diagnostics lane).
+ *
+ * These are the concrete bounds the writer and the authorized read path enforce: 128 buffered
+ * records, 96 bytes per code label, 32 new records/second, a 15-minute record TTL, and at most
+ * 50 records in one query page (the reader's MAX_DIAGNOSTICS_RECORDS). They replace the earlier
+ * placeholders and are the calibration decision that enables the writer.
  */
-export const MODULE_HEALTH_LIMITS_ENABLED = false;
+export const MODULE_HEALTH_LIMITS_ENABLED = true;
+
+export const MODULE_HEALTH_CALIBRATED_LIMITS = Object.freeze({
+  ingressPerSecond: 32,
+  maxCodeBytes: 96,
+  queryCap: 50,
+  recordCount: 128,
+  ttlMs: 900_000,
+});
 
 export type ModuleHealthEscape =
   | Cause.Cause<unknown>
@@ -41,9 +51,9 @@ export type ModuleHealthEscape =
   | null
   | undefined;
 
-export const MODULE_HEALTH_DEFAULT_CAPACITY = 64;
+export const MODULE_HEALTH_DEFAULT_CAPACITY = MODULE_HEALTH_CALIBRATED_LIMITS.recordCount;
 export const MODULE_HEALTH_MAX_CAPACITY = 256;
-export const MODULE_HEALTH_DEFAULT_MAX_CODE_BYTES = 96;
+export const MODULE_HEALTH_DEFAULT_MAX_CODE_BYTES = MODULE_HEALTH_CALIBRATED_LIMITS.maxCodeBytes;
 export const MODULE_HEALTH_MAX_CODE_BYTES = 512;
 const MAX_REASONS_PER_CAUSE = 8;
 
@@ -57,6 +67,12 @@ export interface ModuleHealthWriterConfig {
   readonly now?: () => number;
   /** Byte cap for the record's bounded code. */
   readonly maxCodeBytes?: number;
+  /** Maximum newly accepted records per second; excess is counted as loss. */
+  readonly ingressPerSecond?: number;
+  /** Records older than this age are omitted from the read source (they stay in the bounded buffer). */
+  readonly ttlMs?: number;
+  /** Maximum records one read source exposes (the reader's page cap is separate). */
+  readonly queryCap?: number;
   /** Test/observability seam; a throw here is an outage, never a caller failure. */
   readonly onRecord?: (record: LocalDiagnosticRecord) => void;
 }
@@ -93,6 +109,9 @@ const clampCodeBytes = (value: number | undefined): number => {
   return Math.min(value, MODULE_HEALTH_MAX_CODE_BYTES);
 };
 
+const positiveInteger = (value: number | undefined, fallback: number): number =>
+  value !== undefined && Number.isInteger(value) && value > 0 ? value : fallback;
+
 /** Truncate to at most maxBytes UTF-8 bytes without splitting a code point. */
 const boundedUtf8 = (value: string, maxBytes: number): string => {
   if (Buffer.byteLength(value, "utf8") <= maxBytes) {
@@ -116,11 +135,19 @@ export const makeModuleHealthWriter = (
 ): ModuleHealthWriter => {
   const capacity = clampCapacity(config.capacity);
   const maxCodeBytes = clampCodeBytes(config.maxCodeBytes);
+  const ingressPerSecond = positiveInteger(
+    config.ingressPerSecond,
+    MODULE_HEALTH_CALIBRATED_LIMITS.ingressPerSecond,
+  );
+  const ttlMs = positiveInteger(config.ttlMs, MODULE_HEALTH_CALIBRATED_LIMITS.ttlMs);
+  const queryCap = positiveInteger(config.queryCap, MODULE_HEALTH_CALIBRATED_LIMITS.queryCap);
   const buffer: LocalDiagnosticRecord[] = [];
   let dropped = 0;
   let firstDropAtMs: number | undefined;
   let lastDropAtMs: number | undefined;
   let outageCount = 0;
+  let ingressTokens = ingressPerSecond;
+  let ingressRefillAtMs: number | undefined;
 
   const now = (): number => {
     try {
@@ -132,10 +159,35 @@ export const makeModuleHealthWriter = (
     }
   };
 
+  const recordDrop = (atMs: number): void => {
+    dropped += 1;
+    firstDropAtMs ??= atMs;
+    lastDropAtMs = atMs;
+  };
+
   const push = (level: LocalDiagnosticLevel, code: string, count = 1): void => {
     try {
+      const atMs = now();
+      if (ingressRefillAtMs === undefined) {
+        ingressRefillAtMs = atMs;
+      } else {
+        const elapsedMs = Math.max(0, atMs - ingressRefillAtMs);
+        if (elapsedMs > 0) {
+          ingressTokens = Math.min(
+            ingressPerSecond,
+            ingressTokens + (elapsedMs / 1_000) * ingressPerSecond,
+          );
+          ingressRefillAtMs = atMs;
+        }
+      }
+      if (ingressTokens < 1) {
+        // The ingress calibration is a real bound: excess observations are counted, not stored.
+        recordDrop(atMs);
+        return;
+      }
+      ingressTokens -= 1;
       const record: LocalDiagnosticRecord = {
-        atMs: now(),
+        atMs,
         code: boundedUtf8(code, maxCodeBytes),
         count,
         level,
@@ -143,9 +195,7 @@ export const makeModuleHealthWriter = (
       buffer.unshift(record);
       if (buffer.length > capacity) {
         buffer.pop();
-        dropped += 1;
-        firstDropAtMs ??= record.atMs;
-        lastDropAtMs = record.atMs;
+        recordDrop(atMs);
       }
       try {
         config.onRecord?.(record);
@@ -248,6 +298,11 @@ export const makeModuleHealthWriter = (
 
   const records = (): ReadonlyArray<LocalDiagnosticRecord> => buffer.slice();
 
+  const readRecords = (): ReadonlyArray<LocalDiagnosticRecord> => {
+    const cutoff = now() - ttlMs;
+    return buffer.filter((record) => record.atMs >= cutoff).slice(0, queryCap);
+  };
+
   const loss = (): LocalDiagnosticsLoss => ({
     dropped,
     windowMs:
@@ -257,12 +312,14 @@ export const makeModuleHealthWriter = (
   });
 
   const source = (): LocalDiagnosticsSource => ({
-    buildId: config.buildId ?? "unknown",
-    enabled: true,
-    instanceId: config.instanceId ?? "unknown",
+    buildId: config.buildId?.trim() || "unknown",
+    enabled: MODULE_HEALTH_LIMITS_ENABLED,
+    instanceId: config.instanceId?.trim() || "unknown",
+    // The newest RECORDED time stays authoritative even after TTL removes it from the page, so the
+    // reader can report stale/empty rather than pretending an aged-out writer never recorded.
     lastRecordAtMs: () => buffer[0]?.atMs ?? null,
     loss,
-    records,
+    records: readRecords,
   });
 
   return {

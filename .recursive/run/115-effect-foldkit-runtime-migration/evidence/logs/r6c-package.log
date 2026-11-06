@@ -1,0 +1,1335 @@
+
+> role-model@0.0.0 runtime:package-sea D:\DEV\rm-clean\r5-lockstep-pub
+> corepack pnpm --filter @role-model-router/runtime-ui-next run build && corepack pnpm --filter @role-model-router/runtime-host-bridge... build && corepack pnpm --filter @role-model-router/runtime-host-bridge run package-sea
+
+
+> @role-model-router/runtime-ui-next@0.0.0 build D:\DEV\rm-clean\r5-lockstep-pub\role-model-router\apps\runtime-ui-next
+> node build.mjs
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-4STSKWU4.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:10:7:
+      10 │ import "./chunks/chunk-4STSKWU4.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-G7FCNRLD.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:11:7:
+      11 │ import "./chunks/chunk-G7FCNRLD.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-6OZLRZTD.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:12:7:
+      12 │ import "./chunks/chunk-6OZLRZTD.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-BJEAGMFJ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:13:7:
+      13 │ import "./chunks/chunk-BJEAGMFJ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-I4YX557V.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:14:7:
+      14 │ import "./chunks/chunk-I4YX557V.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-JE2NUWVJ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:15:7:
+      15 │ import "./chunks/chunk-JE2NUWVJ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-TWTHXUXJ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:16:7:
+      16 │ import "./chunks/chunk-TWTHXUXJ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-OKIURE5F.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:17:7:
+      17 │ import "./chunks/chunk-OKIURE5F.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-UJR5PS42.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:18:7:
+      18 │ import "./chunks/chunk-UJR5PS42.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-WT7FSGNF.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:19:7:
+      19 │ import "./chunks/chunk-WT7FSGNF.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-AOXFZHSZ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:20:7:
+      20 │ import "./chunks/chunk-AOXFZHSZ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-QXWUX5SJ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:21:7:
+      21 │ import "./chunks/chunk-QXWUX5SJ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-SDYEQFGM.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:22:7:
+      22 │ import "./chunks/chunk-SDYEQFGM.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-SDN2SMYH.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:23:7:
+      23 │ import "./chunks/chunk-SDN2SMYH.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-ZDOKCVNC.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:24:7:
+      24 │ import "./chunks/chunk-ZDOKCVNC.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-MEUZ6YAO.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:25:7:
+      25 │ import "./chunks/chunk-MEUZ6YAO.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-POYQ2OZG.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:26:7:
+      26 │ import "./chunks/chunk-POYQ2OZG.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-MKJNWH6I.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:27:7:
+      27 │ import "./chunks/chunk-MKJNWH6I.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-Z3AAYTV6.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:28:7:
+      28 │ import "./chunks/chunk-Z3AAYTV6.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-NUOGK222.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:29:7:
+      29 │ import "./chunks/chunk-NUOGK222.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-WSFCRVEQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/runtime.js:30:7:
+      30 │ import "./chunks/chunk-WSFCRVEQ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-4STSKWU4.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:43:7:
+      43 │ import "./chunks/chunk-4STSKWU4.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-G7FCNRLD.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:44:7:
+      44 │ import "./chunks/chunk-G7FCNRLD.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-6OZLRZTD.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:45:7:
+      45 │ import "./chunks/chunk-6OZLRZTD.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-BJEAGMFJ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:46:7:
+      46 │ import "./chunks/chunk-BJEAGMFJ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-I4YX557V.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:47:7:
+      47 │ import "./chunks/chunk-I4YX557V.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-JE2NUWVJ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:48:7:
+      48 │ import "./chunks/chunk-JE2NUWVJ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-BIXHPPHX.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:52:7:
+      52 │ import "./chunks/chunk-BIXHPPHX.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-TWTHXUXJ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:53:7:
+      53 │ import "./chunks/chunk-TWTHXUXJ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-STI663BB.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:57:7:
+      57 │ import "./chunks/chunk-STI663BB.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-5N7LVHBN.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:58:7:
+      58 │ import "./chunks/chunk-5N7LVHBN.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-OKIURE5F.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:59:7:
+      59 │ import "./chunks/chunk-OKIURE5F.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-UJR5PS42.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:60:7:
+      60 │ import "./chunks/chunk-UJR5PS42.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-WT7FSGNF.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:61:7:
+      61 │ import "./chunks/chunk-WT7FSGNF.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-AOXFZHSZ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:62:7:
+      62 │ import "./chunks/chunk-AOXFZHSZ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-COPIW5ZV.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:79:7:
+      79 │ import "./chunks/chunk-COPIW5ZV.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-SIAIAVIQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:89:7:
+      89 │ import "./chunks/chunk-SIAIAVIQ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-QXWUX5SJ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:90:7:
+      90 │ import "./chunks/chunk-QXWUX5SJ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-SDYEQFGM.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:91:7:
+      91 │ import "./chunks/chunk-SDYEQFGM.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-QTSWUVEK.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:95:7:
+      95 │ import "./chunks/chunk-QTSWUVEK.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-SDN2SMYH.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:96:7:
+      96 │ import "./chunks/chunk-SDN2SMYH.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-ZDOKCVNC.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:97:7:
+      97 │ import "./chunks/chunk-ZDOKCVNC.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-MEUZ6YAO.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:98:7:
+      98 │ import "./chunks/chunk-MEUZ6YAO.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-POYQ2OZG.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:99:7:
+      99 │ import "./chunks/chunk-POYQ2OZG.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-MKJNWH6I.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:103:7:
+      103 │ import "./chunks/chunk-MKJNWH6I.js";
+          ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-Z3AAYTV6.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:104:7:
+      104 │ import "./chunks/chunk-Z3AAYTV6.js";
+          ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-NUOGK222.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:105:7:
+      105 │ import "./chunks/chunk-NUOGK222.js";
+          ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-WSFCRVEQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/index.js:106:7:
+      106 │ import "./chunks/chunk-WSFCRVEQ.js";
+          ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-2F3AVNKM.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/message.js:1:7:
+      1 │ import "./chunks/chunk-2F3AVNKM.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-WSFCRVEQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/message.js:6:7:
+      6 │ import "./chunks/chunk-WSFCRVEQ.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-ITT3JSS4.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/url.js:1:7:
+      1 │ import "./chunks/chunk-ITT3JSS4.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-AOXFZHSZ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/url.js:7:7:
+      7 │ import "./chunks/chunk-AOXFZHSZ.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-WSFCRVEQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/url.js:8:7:
+      8 │ import "./chunks/chunk-WSFCRVEQ.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-WT7FSGNF.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/navigation.js:12:7:
+      12 │ import "./chunks/chunk-WT7FSGNF.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-AOXFZHSZ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/navigation.js:13:7:
+      13 │ import "./chunks/chunk-AOXFZHSZ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-SDYEQFGM.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/navigation.js:14:7:
+      14 │ import "./chunks/chunk-SDYEQFGM.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-WSFCRVEQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/navigation.js:15:7:
+      15 │ import "./chunks/chunk-WSFCRVEQ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit-ui/dist/chunks/chunk-6WCKTQK2.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit-ui/dist/dialog.js:18:7:
+      18 │ import "./chunks/chunk-6WCKTQK2.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit-ui/package.json:161:2:
+      161 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit-ui/dist/chunks/chunk-BXFQBQPU.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit-ui/dist/dialog.js:19:7:
+      19 │ import "./chunks/chunk-BXFQBQPU.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit-ui/package.json:161:2:
+      161 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit-ui/dist/chunks/chunk-WSFCRVEQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit-ui/dist/dialog.js:20:7:
+      20 │ import "./chunks/chunk-WSFCRVEQ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit-ui/package.json:161:2:
+      161 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit-ui/dist/chunks/chunk-QWI4ELDX.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit-ui/dist/listbox.js:23:7:
+      23 │ import "./chunks/chunk-QWI4ELDX.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit-ui/package.json:161:2:
+      161 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit-ui/dist/chunks/chunk-QOOPLAA4.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit-ui/dist/listbox.js:24:7:
+      24 │ import "./chunks/chunk-QOOPLAA4.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit-ui/package.json:161:2:
+      161 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit-ui/dist/chunks/chunk-ESYQHHAC.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit-ui/dist/listbox.js:25:7:
+      25 │ import "./chunks/chunk-ESYQHHAC.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit-ui/package.json:161:2:
+      161 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit-ui/dist/chunks/chunk-RK5KZEYN.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit-ui/dist/listbox.js:26:7:
+      26 │ import "./chunks/chunk-RK5KZEYN.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit-ui/package.json:161:2:
+      161 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit-ui/dist/chunks/chunk-6WCKTQK2.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit-ui/dist/listbox.js:27:7:
+      27 │ import "./chunks/chunk-6WCKTQK2.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit-ui/package.json:161:2:
+      161 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit-ui/dist/chunks/chunk-H7EAWFBD.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit-ui/dist/listbox.js:28:7:
+      28 │ import "./chunks/chunk-H7EAWFBD.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit-ui/package.json:161:2:
+      161 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit-ui/dist/chunks/chunk-BXFQBQPU.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit-ui/dist/listbox.js:29:7:
+      29 │ import "./chunks/chunk-BXFQBQPU.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit-ui/package.json:161:2:
+      161 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit-ui/dist/chunks/chunk-WSFCRVEQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit-ui/dist/listbox.js:30:7:
+      30 │ import "./chunks/chunk-WSFCRVEQ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit-ui/package.json:161:2:
+      161 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-6FU6G6TM.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/html.js:1:7:
+      1 │ import "./chunks/chunk-6FU6G6TM.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-MEUZ6YAO.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/html.js:14:7:
+      14 │ import "./chunks/chunk-MEUZ6YAO.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-POYQ2OZG.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/html.js:15:7:
+      15 │ import "./chunks/chunk-POYQ2OZG.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-NUOGK222.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/html.js:16:7:
+      16 │ import "./chunks/chunk-NUOGK222.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-WSFCRVEQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/html.js:17:7:
+      17 │ import "./chunks/chunk-WSFCRVEQ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/effect-platform-browser/dist/chunks/chunk-WSFCRVEQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/effect-platform-browser/dist/index.js:52:7:
+      52 │ import "./chunks/chunk-WSFCRVEQ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/effect-platform-browser/package.json:101:2:
+      101 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-SDYEQFGM.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/command.js:13:7:
+      13 │ import "./chunks/chunk-SDYEQFGM.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-WSFCRVEQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/command.js:14:7:
+      14 │ import "./chunks/chunk-WSFCRVEQ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-Z3AAYTV6.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/dom.js:26:7:
+      26 │ import "./chunks/chunk-Z3AAYTV6.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-NUOGK222.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/dom.js:27:7:
+      27 │ import "./chunks/chunk-NUOGK222.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-WSFCRVEQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/dom.js:28:7:
+      28 │ import "./chunks/chunk-WSFCRVEQ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-IN64MOLP.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/render.js:1:7:
+      1 │ import "./chunks/chunk-IN64MOLP.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-WSFCRVEQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/render.js:6:7:
+      6 │ import "./chunks/chunk-WSFCRVEQ.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-HSKR2JFF.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/struct.js:1:7:
+      1 │ import "./chunks/chunk-HSKR2JFF.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-WSFCRVEQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/struct.js:6:7:
+      6 │ import "./chunks/chunk-WSFCRVEQ.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit-ui/dist/chunks/chunk-WSFCRVEQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit-ui/dist/button.js:4:7:
+      4 │ import "./chunks/chunk-WSFCRVEQ.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit-ui/package.json:161:2:
+      161 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-OKIURE5F.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/devtools-host.js:10:7:
+      10 │ import "./chunks/chunk-OKIURE5F.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-ZDOKCVNC.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/devtools-host.js:14:7:
+      14 │ import "./chunks/chunk-ZDOKCVNC.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-MEUZ6YAO.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/devtools-host.js:15:7:
+      15 │ import "./chunks/chunk-MEUZ6YAO.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-POYQ2OZG.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/devtools-host.js:16:7:
+      16 │ import "./chunks/chunk-POYQ2OZG.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-NUOGK222.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/devtools-host.js:17:7:
+      17 │ import "./chunks/chunk-NUOGK222.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-WSFCRVEQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/devtools-host.js:18:7:
+      18 │ import "./chunks/chunk-WSFCRVEQ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-GSDQPX5E.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/mount.js:1:7:
+      1 │ import "./chunks/chunk-GSDQPX5E.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-WSFCRVEQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/mount.js:11:7:
+      11 │ import "./chunks/chunk-WSFCRVEQ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-7JYCQ5BN.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/submodel.js:1:7:
+      1 │ import "./chunks/chunk-7JYCQ5BN.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-MEUZ6YAO.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/submodel.js:5:7:
+      5 │ import "./chunks/chunk-MEUZ6YAO.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-WSFCRVEQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/submodel.js:6:7:
+      6 │ import "./chunks/chunk-WSFCRVEQ.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-SWJPMOYV.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/update.js:1:7:
+      1 │ import "./chunks/chunk-SWJPMOYV.js";
+        ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-SIAIAVIQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/update.js:12:7:
+      12 │ import "./chunks/chunk-SIAIAVIQ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-QXWUX5SJ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/update.js:13:7:
+      13 │ import "./chunks/chunk-QXWUX5SJ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-SDYEQFGM.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/update.js:14:7:
+      14 │ import "./chunks/chunk-SDYEQFGM.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+▲ [WARNING] Ignoring this import because "../../packages/foldkit/dist/chunks/chunk-WSFCRVEQ.js" was marked as having no side effects [ignored-bare-import]
+
+    ../../packages/foldkit/dist/update.js:15:7:
+      15 │ import "./chunks/chunk-WSFCRVEQ.js";
+         ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  "sideEffects" is false in the enclosing "package.json" file:
+
+    ../../packages/foldkit/package.json:196:2:
+      196 │   "sideEffects": false,
+          ╵   ~~~~~~~~~~~~~
+
+100 warnings
+
+  dist\client\assets\main.js      3.6mb ⚠️
+  dist\client\assets\main.js.map  6.8mb
+
+⚡ Done in 2088ms
+[style-build] falling back to ../runtime-ui/node_modules for vite; run pnpm install so this package owns its toolchain.
+[style-build] falling back to ../runtime-ui/node_modules for @tailwindcss/vite; run pnpm install so this package owns its toolchain.
+
+/assets/fonts/geist-latin-400-normal.woff2 referenced in /assets/fonts/geist-latin-400-normal.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/assets/fonts/geist-latin-500-normal.woff2 referenced in /assets/fonts/geist-latin-500-normal.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/assets/fonts/geist-latin-600-normal.woff2 referenced in /assets/fonts/geist-latin-600-normal.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/assets/fonts/geist-latin-700-normal.woff2 referenced in /assets/fonts/geist-latin-700-normal.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/assets/fonts/geist-mono-latin-400-normal.woff2 referenced in /assets/fonts/geist-mono-latin-400-normal.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/assets/fonts/geist-mono-latin-500-normal.woff2 referenced in /assets/fonts/geist-mono-latin-500-normal.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/assets/fonts/geist-mono-latin-600-normal.woff2 referenced in /assets/fonts/geist-mono-latin-600-normal.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/assets/fonts/geist-mono-latin-700-normal.woff2 referenced in /assets/fonts/geist-mono-latin-700-normal.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+{"status":"PASS","outDir":"D:\\DEV\\rm-clean\\r5-lockstep-pub\\role-model-router\\apps\\runtime-ui-next\\dist\\client"}
+Scope: 29 of 55 workspace projects
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+packages/protocol-types build$ tsc -p tsconfig.json
+role-model-router/packages/effect build$ node build.mjs
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+role-model-router/packages/bench-judge build: Done
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+role-model-router/packages/catalog build: Done
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+packages/protocol-types build: Done
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+.../packages/process-supervisor build: Done
+role-model-router/packages/tool-registry build: Done
+.../packages/vendor-abstraction build: Done
+role-model-router/packages/effect build: ▲ [WARNING] Cannot find base config file "../../tsconfig.base.json" [tsconfig.json]
+role-model-router/packages/effect build:     ../../../vendor/effect/packages/effect/tsconfig.json:3:13:
+role-model-router/packages/effect build:       3 │   "extends": "../../tsconfig.base.json",
+role-model-router/packages/effect build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+role-model-router/packages/effect build: ▲ [WARNING] Cannot find base config file "../../../tsconfig.base.json" [tsconfig.json]
+role-model-router/packages/effect build:     ../../../vendor/effect/packages/platform/node-shared/tsconfig.json:3:13:
+role-model-router/packages/effect build:       3 │   "extends": "../../../tsconfig.base.json",
+role-model-router/packages/effect build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+role-model-router/packages/effect build: ▲ [WARNING] Cannot find base config file "../../../tsconfig.base.json" [tsconfig.json]
+role-model-router/packages/effect build:     ../../../vendor/effect/packages/platform/node/tsconfig.json:3:13:
+role-model-router/packages/effect build:       3 │   "extends": "../../../tsconfig.base.json",
+role-model-router/packages/effect build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+role-model-router/packages/effect build: {"status":"PASS","package":"effect","entries":["Array","BigDecimal","ByteSize","Cache","Cause","Clock","Config","ConfigProvider","Console","Context","Crypto","Data","DateTime","Deferred","Duration","Effect","Effectable","ErrorReporter","ExecutionPlan","Exit","Fiber","FileSystem","Function","Graph","HashMap","Inspectable","Layer","Logger","ManagedRuntime","Match","Metric","MutableList","MutableRef","Option","Path","Pipeable","PlatformError","PubSub","Queue","Random","Record","Redacted","References","Result","Runtime","Schedule","Scheduler","Schema","SchemaIssue","SchemaParser","Scope","SemVer","SemVerRange","Semaphore","Stream","Struct","Terminal","Tracer","Types","Utils","ai","ai/AiError","ai/Chat","ai/DecisionModel","ai/EmbeddingModel","ai/LanguageModel","ai/McpClient","ai/McpClientError","ai/McpSchema","ai/McpServer","ai/Model","ai/ResponseIdTracker","ai/Telemetry","ai/Tokenizer","ai/Tool","ai/Toolkit","cli","cli/CliConfig","cli/CliOutput","cli/Prompt","cli/TerminalCapabilities","cluster","cluster/ClusterCron","cluster/ClusterSchema","cluster/Entity","cluster/EntityResource","cluster/Envelope","cluster/K8sHttpClient","cluster/MessageStorage","cluster/RunnerHealth","cluster/RunnerStorage","cluster/Runners","cluster/Sharding","cluster/ShardingConfig","cluster/Snowflake","devtools","devtools/DevToolsClient","encoding","encoding/Tar","encoding/Zip","eventlog","eventlog/EventJournal","eventlog/EventLog","eventlog/EventLogEncryption","eventlog/EventLogMessage","eventlog/EventLogRemote","eventlog/EventLogServer","eventlog/EventLogServerUnencrypted","graphql","graphql/GraphQLClientError","graphql/GraphQLProtocol","graphql/GraphQLResolver","http","http-api","http-api/HttpApi","http-api/HttpApiGroup","http-api/HttpApiGroup/","http-api/OpenApi","http/Cookies","http/Etag","http/FetchHttpClient","http/Headers","http/HttpClient","http/HttpClientError","http/HttpClientRequest","http/HttpClientResponse","http/HttpEffect","http/HttpIncomingMessage","http/HttpMiddleware","http/HttpPlatform","http/HttpRouter","http/HttpServer","http/HttpServerError","http/HttpServerRequest","http/Multipart","http/MultipartParser","http/MultipartParser/HeadersParser","http/UrlParams","index","net","net/AddressResolver","net/Dns","observability","observability/OtlpExporter","observability/OtlpSerialization","persistence","persistence/KeyValueStore","persistence/PersistedQueue","persistence/Persistence","persistence/RateLimiter","persistence/Redis","platform-node","platform-node-shared","platform-node-shared/NodeAddressResolver","platform-node-shared/NodeChildProcessSpawner","platform-node-shared/NodeClusterSocket","platform-node-shared/NodeCrypto","platform-node-shared/NodeDatagramSocket","platform-node-shared/NodeDns","platform-node-shared/NodeFileSystem","platform-node-shared/NodeHttpCompression","platform-node-shared/NodePath","platform-node-shared/NodeRuntime","platform-node-shared/NodeSink","platform-node-shared/NodeSocket","platform-node-shared/NodeSocketServer","platform-node-shared/NodeStdio","platform-node-shared/NodeStream","platform-node-shared/NodeTerminal","platform-node/NodeAddressResolver","platform-node/NodeChildProcessSpawner","platform-node/NodeClusterHttp","platform-node/NodeClusterSocket","platform-node/NodeCrypto","platform-node/NodeDatagramSocket","platform-node/NodeDns","platform-node/NodeFileSystem","platform-node/NodeHttpClient","platform-node/NodeHttpIncomingMessage","platform-node/NodeHttpPlatform","platform-node/NodeHttpServer","platform-node/NodeHttpServerRequest","platform-node/NodeMultipart","platform-node/NodeMultipartParser","platform-node/NodePath","platform-node/NodeRedis","platform-node/NodeRuntime","platform-node/NodeServices","platform-node/NodeSink","platform-node/NodeSocket","platform-node/NodeSocketServer","platform-node/NodeStdio","platform-node/NodeStream","platform-node/NodeTerminal","platform-node/NodeWorker","platform-node/NodeWorkerRunner","platform-node/Undici","process","process/ChildProcessSpawner","reactivity","reactivity/Hydration","reactivity/Reactivity","rpc","rpc/Rpc","rpc/RpcClient","rpc/RpcClientError","rpc/RpcSchema","rpc/RpcSerialization","rpc/RpcServer","rpc/RpcWorker","schema/SchemaCompiler","schema/index","socket","socket/DatagramSocket","socket/Socket","sql","sql/Migrator","sql/SqlClient","sql/SqlConnection","sql/SqlError","sql/Statement","testing","workers","workers/Transferable","workers/Worker","workers/WorkerError","workers/WorkerRunner","workflow","workflow/Activity","workflow/DurableDeferred","workflow/Workflow","workflow/WorkflowEngine"],"rekeyed":[{"subpath":"schema","key":"schema/index","shadows":"Schema"}],"types":"D:\\DEV\\rm-clean\\r5-lockstep-pub\\role-model-router\\packages\\effect\\dist\\types"}
+role-model-router/packages/effect build: Done
+role-model-router/packages/core build$ tsc -p tsconfig.json
+.../packages/profile-aggregator build$ tsc -p tsconfig.json
+.../packages/provider-account build$ tsc -p tsconfig.json
+role-model-router/packages/usage build$ tsc -p tsconfig.json
+.../packages/provider-account build: Done
+role-model-router/packages/bench-routing build$ tsc -p tsconfig.json
+role-model-router/packages/usage build: Done
+.../packages/vendor-llama-swap build$ tsc -p tsconfig.json
+.../packages/profile-aggregator build: Done
+.../packages/vendor-litellm build$ tsc -p tsconfig.json
+role-model-router/packages/bench-routing build: Done
+.../packages/sql-sqlite-node build$ node build.mjs && tsc -p tsconfig.service.json
+.../packages/vendor-llama-swap build: Done
+role-model-router/packages/effect-mq build$ node build.mjs
+.../packages/sql-sqlite-node build: ▲ [WARNING] Cannot find base config file "../../../tsconfig.base.json" [tsconfig.json]
+.../packages/sql-sqlite-node build:     ../../../vendor/effect/packages/sql/sqlite-node/tsconfig.json:3:13:
+.../packages/sql-sqlite-node build:       3 │   "extends": "../../../tsconfig.base.json",
+.../packages/sql-sqlite-node build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+role-model-router/packages/effect-mq build: ▲ [WARNING] Cannot find base config file "../../tsconfig.base.json" [tsconfig.json]
+role-model-router/packages/effect-mq build:     ../../../vendor/effect-mq/packages/effect-mq/tsconfig.json:2:13:
+role-model-router/packages/effect-mq build:       2 │   "extends": "../../tsconfig.base.json",
+role-model-router/packages/effect-mq build:         ╵              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+.../packages/sql-sqlite-node build: {"status":"PASS","package":"@effect/sql-sqlite-node","entries":["index"]}
+.../packages/vendor-litellm build: Done
+role-model-router/packages/effect-mq build: {"status":"PASS","package":"effect-mq","entries":["index","testing"]}
+role-model-router/packages/effect-mq build: Done
+role-model-router/packages/core build: Done
+.../packages/sql-sqlite-node build: Done
+role-model-router/packages/sqlite-memory build$ tsc -p tsconfig.json
+role-model-router/packages/trace build$ tsc -p tsconfig.json
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+role-model-router/packages/trace build: Done
+role-model-router/packages/sqlite-memory build: Done
+role-model-router/packages/provider-mcp build: Done
+.../packages/context-envelope build$ tsc -p tsconfig.json
+.../packages/context-envelope build: Done
+.../packages/retrieval-receipt build$ tsc -p tsconfig.json
+.../packages/retrieval-receipt build: Done
+.../packages/endpoint-registry build$ tsc -p tsconfig.json
+.../packages/endpoint-registry build: Done
+.../packages/protocol-routing build$ tsc -p tsconfig.json
+.../packages/protocol-routing build: Done
+.../packages/provider-anthropic build$ tsc -p tsconfig.json
+.../packages/adapter-execution build$ tsc -p tsconfig.json
+.../packages/provider-anthropic build: Done
+.../packages/adapter-execution build: Done
+.../packages/provider-openai build$ tsc -p tsconfig.json
+.../packages/runtime-observability build$ tsc -p tsconfig.json
+.../packages/runtime-observability build: Done
+.../packages/provider-openai build: Done
+.../packages/provider-litellm build$ tsc -p tsconfig.json
+.../packages/provider-litellm build: Done
+.../apps/runtime-host-bridge build$ tsc -p tsconfig.json
+.../apps/runtime-host-bridge build: Done
+
+> @role-model-router/runtime-host-bridge@0.0.0 package-sea D:\DEV\rm-clean\r5-lockstep-pub\role-model-router\apps\runtime-host-bridge
+> tsx src/package-sea.ts
+
+(node:17964) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    ../../packages/effect/dist/chunks/chunk-Y2MUQ5DM.js:194:7:
+      194 │     ...import.meta?.env
+          ╵        ~~~~~~~~~~~
+
+  You need to set the output format to "esm" for "import.meta" to work correctly.
+
+Wrote single executable preparation blob to ./dist/sea-prep.blob
+{
+  "outputPath": "D:\\DEV\\rm-clean\\r5-lockstep-pub\\role-model-router\\dist\\release\\win32-x64\\role-model-dev.exe",
+  "target": "win32-x64",
+  "sha256": "3d3ff364506e4cbe50f8e0ad42bcae16109562ba349a813e778c5b6aa3c626a7"
+}

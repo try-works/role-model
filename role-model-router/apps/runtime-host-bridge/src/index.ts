@@ -20592,12 +20592,12 @@ function appendRuntimeHttpTrace(
  *
  * The writer is constructed ONCE here (never per request) and its `source()` is handed to the
  * existing `readDiagnosticsSource` seam (index.ts:3493), which the authorized diagnostics read path
- * already consumes. Enablement is explicit and OFF by default: absent or `{ enabled: false }`
- * returns undefined, so the endpoint keeps answering the honest disabled state.
+ * already consumes. R20's calibrated defaults in `module-health-writer.ts` are the approval, so an
+ * absent config enables the writer; `{ enabled: false }` (or a rejected calibration) returns
+ * undefined and the endpoint keeps answering the honest disabled state.
  *
- * PLACEHOLDER limits: the writer's defaults (capacity 64, code 96 bytes) are placeholders. R20
- * requires calibrated/approved record/byte/ingress/formatting/TTL/query limits BEFORE enablement;
- * `diagnostics.enabled: true` is that calibration decision, not this composition.
+ * The approved limits are 128 buffered records, 96-byte code labels, 32 records/second ingress,
+ * a 15-minute TTL and a 50-record query page; the writer and the read source enforce them.
  *
  * REPORTING EDGE: createBridgeRequestListener's transport catch - the request program has settled
  * (its finalizers have run) and the unhandled-failure sink has not yet translated the failure to the
@@ -20629,8 +20629,18 @@ export function createModuleHealthComposition(
   options: Pick<StartBridgeServerOptions, "diagnostics">,
 ): ModuleHealthComposition | undefined {
   const config = options.diagnostics ?? {};
-  // DEFAULT OFF. Enablement is the R20 calibration decision; absent/false must not construct a writer.
-  if (config?.enabled !== true || config.calibration?.approved !== true) return undefined;
+  // R20 calibrated default: the approved limits in module-health-writer.ts are the calibration
+  // decision, so an absent config enables the writer. An explicit false (or a rejected
+  // calibration) still keeps the honest disabled state.
+  const explicitlyConfigured =
+    Object.prototype.hasOwnProperty.call(config, "enabled") ||
+    Object.prototype.hasOwnProperty.call(config, "calibration");
+  if (
+    explicitlyConfigured &&
+    (config.enabled !== true || config.calibration?.approved !== true)
+  ) {
+    return undefined;
+  }
   const writer = makeModuleHealthWriter({
     ...(config.buildId === undefined ? {} : { buildId: config.buildId }),
     ...(config.capacity === undefined ? {} : { capacity: config.capacity }),

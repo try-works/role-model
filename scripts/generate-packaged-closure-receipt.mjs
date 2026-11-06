@@ -7,6 +7,7 @@
  * Usage: node scripts/generate-packaged-closure-receipt.mjs --release <release-dir> [--evidence <dir>]
  */
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
@@ -26,6 +27,14 @@ const evidenceRelease = path.join(evidenceRoot, "r6-packaged-release");
 mkdirSync(evidenceRelease, { recursive: true });
 
 const sha256 = (file) => createHash("sha256").update(readFileSync(file)).digest("hex");
+const executableSlice = (file) => {
+  const bytes = readFileSync(file);
+  const width = Math.min(65536, bytes.length);
+  const head = bytes.subarray(0, width);
+  const tail = bytes.subarray(Math.max(width, bytes.length - width));
+  return { head, tail, digest: createHash("sha256").update(head).update(tail).digest("hex") };
+};
+const sliceSha256 = (file) => executableSlice(file).digest;
 const manifestPath = path.join(releaseRoot, "manifest.json");
 if (!existsSync(manifestPath)) throw new Error(`packaged release manifest missing: ${manifestPath}`);
 const releaseManifest = JSON.parse(readFileSync(manifestPath, "utf8"));
@@ -69,9 +78,19 @@ copyFileSync(clientBundlePath, path.join(evidenceRelease, "main.js"));
 const executableShaPath = `${executablePath}.sha256`;
 if (!existsSync(executableShaPath)) throw new Error("packaged executable .sha256 sidecar is missing");
 copyFileSync(executableShaPath, path.join(evidenceRelease, "executable.sha256"));
+const executableSliceArtifacts = executableSlice(executablePath);
+writeFileSync(path.join(evidenceRelease, "executable.head.bin"), executableSliceArtifacts.head);
+writeFileSync(path.join(evidenceRelease, "executable.tail.bin"), executableSliceArtifacts.tail);
 
 const receipt = {
   schemaVersion: "role-model.foldkit-ui.packaged-closure.v2",
+  claim: "packaged-release-identity-plus-local-wrapper-entry-hashes",
+  packagedClientEntryEmbedding: "not-claimed",
+  fullExecutableRecomputeRequiresReleaseRoot: true,
+  reviewedHead: execFileSync("git", ["rev-parse", "HEAD"], { cwd: repoRoot, encoding: "utf8" }).trim(),
+  releaseCommit: releaseManifest.commit,
+  releaseSourceTree: releaseManifest.source_tree,
+  releaseWrapperTree: execFileSync("git", ["rev-parse", `${releaseManifest.commit}:role-model-router/packages/foldkit-ui`], { cwd: repoRoot, encoding: "utf8" }).trim(),
   publicCommit,
   publicSourceTree: releaseManifest.source_tree,
   releaseRoot,
@@ -80,6 +99,8 @@ const receipt = {
   executablePath,
   executableSha256: executableSha,
   executableSize: statSync(executablePath).size,
+  executableSliceSha256: sliceSha256(executablePath),
+  executableSliceBytes: 65536,
   clientBundlePath,
   clientBundleSha256: sha256(clientBundlePath),
   evidence: {
@@ -89,7 +110,6 @@ const receipt = {
     clientBundleSha256: sha256(clientBundlePath),
     executableSha256Path: "r6-packaged-release/executable.sha256",
   },
-  clientBundleIdentifiesWrapper: clientBundleText.includes(wrapperMarker),
   wrapperMarker,
   entries,
 };

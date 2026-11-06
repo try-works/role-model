@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { readLocalDiagnostics } from "../src/local-diagnostics-read.js";
 import {
+  MODULE_HEALTH_CALIBRATED_LIMITS,
   MODULE_HEALTH_LIMITS_ENABLED,
   makeModuleHealthWriter,
 } from "../src/module-health-writer.js";
@@ -348,8 +349,42 @@ describe("module health writer", () => {
     expect(writer.outages()).toBe(0);
   });
 
-  it("keeps the calibrated limits gate OFF", () => {
-    expect(MODULE_HEALTH_LIMITS_ENABLED).toBe(false);
+  it("enables the calibrated limits gate", () => {
+    expect(MODULE_HEALTH_LIMITS_ENABLED).toBe(true);
+    expect(MODULE_HEALTH_CALIBRATED_LIMITS).toEqual({
+      ingressPerSecond: 32,
+      maxCodeBytes: 96,
+      queryCap: 50,
+      recordCount: 128,
+      ttlMs: 900_000,
+    });
+  });
+
+  it("applies the calibrated ingress, TTL and query bounds", () => {
+    let clock = 1_000_000;
+    const writer = makeModuleHealthWriter({
+      capacity: 128,
+      ingressPerSecond: 1_000,
+      now: () => clock,
+      ttlMs: 1_000,
+    });
+    for (let index = 0; index < 60; index += 1) {
+      writer.recordError(new Error("bounded"));
+    }
+    expect(writer.source().records()).toHaveLength(MODULE_HEALTH_CALIBRATED_LIMITS.queryCap);
+    expect(writer.records()).toHaveLength(60);
+    clock += 2_000;
+    expect(writer.source().records()).toEqual([]);
+
+    const rateLimited = makeModuleHealthWriter({
+      ingressPerSecond: 2,
+      now: () => 2_000_000,
+    });
+    for (let index = 0; index < 10; index += 1) {
+      rateLimited.recordError(new Error("burst"));
+    }
+    expect(rateLimited.records().length).toBeLessThanOrEqual(2);
+    expect(rateLimited.loss().dropped).toBeGreaterThan(0);
   });
 
   it("feeds the diagnostics read contract: identity, records, loss and empty state", () => {

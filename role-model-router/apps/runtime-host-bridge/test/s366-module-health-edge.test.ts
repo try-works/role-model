@@ -29,8 +29,8 @@ const codesOf = (composition: ReturnType<typeof createModuleHealthComposition>) 
     .map((record) => record.code) ?? [];
 
 describe("S365a calibrated module-health edge", () => {
-  it("requires enabled AND calibration approval (no silent default-on)", () => {
-    expect(createModuleHealthComposition({})).toBeUndefined();
+  it("requires explicit calibration approval when enablement is explicit", () => {
+    expect(createModuleHealthComposition({})).toBeDefined();
     expect(
       createModuleHealthComposition(
         baseOptions({ enabled: false, calibration: { approved: true } }),

@@ -94,10 +94,13 @@ describe("S10b module-health writer composition", () => {
     expect(result.body.recordCount).toBe(2);
   });
 
-  it("default: absent or disabled enablement leaves the read path answering disabled", () => {
-    expect(createModuleHealthComposition({})).toBeUndefined();
-    expect(createModuleHealthComposition({ diagnostics: {} })).toBeUndefined();
+  it("default: calibrated defaults enable, explicit disable and unapproved-enable stay disabled", () => {
+    const calibrated = createModuleHealthComposition({});
+    expect(calibrated).toBeDefined();
+    expect(calibrated?.source().enabled).toBe(true);
+    expect(createModuleHealthComposition({ diagnostics: {} })).toBeDefined();
     expect(createModuleHealthComposition({ diagnostics: { enabled: false } })).toBeUndefined();
+    expect(createModuleHealthComposition({ diagnostics: { enabled: true } })).toBeUndefined();
 
     const result = handleLocalDiagnosticsRead(request(authHeaders), {
       ...baseOptions,
