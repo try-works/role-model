@@ -1,0 +1,11 @@
+✔ stageShells retains both shells and marks the old React artifact for one release (431.4686ms)
+✔ selecting React and back is reversible and preserves non-UI state (664.3235ms)
+✔ an unknown shell is rejected instead of silently serving the old build (349.3033ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1975.1716

@@ -121,6 +121,37 @@ if (existsSync(packageClient) && path.resolve(staticRoot) !== path.resolve(packa
     process.exit(2);
   }
 }
+// R37: a release may carry both shells. The active selection is materialized into
+// build/client; verify the registry and that the served root is exactly the selected shell.
+const shellRegistryPath = path.join(packageDir, "build", "ui-shells.json");
+if (existsSync(shellRegistryPath)) {
+  const registry = JSON.parse(readFileSync(shellRegistryPath, "utf8"));
+  const expectedShell = value("--expect-ui-shell");
+  if (expectedShell !== undefined && registry.active !== expectedShell) {
+    console.log(`FAIL ui shell: release is active "${String(registry.active)}", expected "${expectedShell}"`);
+    process.exit(2);
+  }
+  const selectedPath = registry.shells?.[registry.active];
+  if (typeof selectedPath !== "string" || !existsSync(path.join(packageDir, selectedPath))) {
+    console.log("FAIL ui shell: active shell artifact is missing");
+    process.exit(2);
+  }
+  const selectedClient = path.join(packageDir, selectedPath);
+  const { differences } = staticRootIdentity({
+    packageClient: selectedClient,
+    staticRoot: path.join(packageDir, "build", "client"),
+  });
+  if (differences.length > 0) {
+    console.log(`FAIL ui shell: build/client is not the active "${registry.active}" shell: ${differences.slice(0, 3).join("; ")}`);
+    process.exit(2);
+  }
+  console.log(`PASS ui shell: active=${registry.active} retainedReact=${registry.retainedReactRelease} stateSchema=${registry.stateSchemaVersion}`);
+  if (args.includes("--shell-only")) {
+    console.log("PASS ui shell switch selection");
+    process.exit(0);
+  }
+}
+
 const result = spawnSync(
   process.execPath,
   [

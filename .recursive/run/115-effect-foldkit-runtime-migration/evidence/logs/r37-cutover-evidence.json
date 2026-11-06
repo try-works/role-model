@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "role-model.r37.cutover-evidence.v1",
+  "release": {
+    "version": "0.0.20-730-g807900de",
+    "executable": "role-model-dev.exe",
+    "executableSha256": "3d3ff364506e4cbe50f8e0ad42bcae16109562ba349a813e778c5b6aa3c626a7"
+  },
+  "shells": {
+    "foldkitIndexSha256": "f7ff9085ce284384dbba91286a4bf98c9be2e1e180f66ccac23c0c66aecf3937",
+    "reactIndexSha256": "57411656f0bd690dce8dddedb0119fd54cc391d267df1e73238ef5f0c33a2bb9",
+    "registry": {
+      "schemaVersion": "role-model.ui-shells.v1",
+      "releaseId": "0.0.20-730-g807900de",
+      "active": "foldkit",
+      "shells": {
+        "foldkit": "build/shells/foldkit",
+        "react": "build/shells/react"
+      },
+      "retainedReactRelease": "0.0.20-730-g807900de",
+      "stateSchemaVersion": "role-model.runtime-state.v1",
+      "docsSite": "fumadocs-react-retained-exception",
+      "rollback": "selectShell({ releaseDir, shell: \"react\" }) then restart the candidate; state.json and the runtime database are untouched."
+    }
+  },
+  "probes": {
+    "foldkitShellOnly": "PASS",
+    "reactShellOnly": "PASS",
+    "reactServedEntryClient": true,
+    "foldkitRestored": true,
+    "stateFileBeforeAfter": "{\"pending\":1}\r\n",
+    "statePreserved": true
+  },
+  "docsSiteException": "fumadocs-react-retained-exception"
+}
