@@ -2052,8 +2052,10 @@ export const composeServerOwner = (input: {
         const server = handle;
         if (server === null) return;
         const steps: Array<() => Promise<void>> = [];
-        if (input.transport.stopAccepting !== undefined)
-          steps.push(() => input.transport.stopAccepting?.(server));
+        if (input.transport.stopAccepting !== undefined) {
+          const stopAccepting = input.transport.stopAccepting;
+          steps.push(() => stopAccepting(server));
+        }
         if (input.transport.join !== undefined) {
           const joinTimeoutMs = input.joinTimeoutMs ?? 10_000;
           steps.push(
@@ -2082,7 +2084,10 @@ export const composeServerOwner = (input: {
             input.transport.interrupt?.(server);
           });
         steps.push(() => input.transport.close(server));
-        if (brandedBackend.close !== undefined) steps.push(() => brandedBackend.close?.());
+        if (brandedBackend.close !== undefined) {
+          const closeBackend = brandedBackend.close;
+          steps.push(() => closeBackend());
+        }
         await runReleaseAll(steps);
       })();
       return shutdownPromise;
