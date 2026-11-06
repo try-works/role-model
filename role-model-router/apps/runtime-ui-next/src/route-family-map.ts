@@ -1,0 +1,210 @@
+/**
+ * R11 maintained route-family map: the Foldkit route union vs the React runtime routes.ts files.
+ *
+ * Each Foldkit tag has one row. `consolidated` means several React files are now one Foldkit page;
+ * `new-only` means Foldkit adds a surface with no React source; `unported` files are listed with an
+ * explicit owner disposition in UNPORTED_REACT_ROUTES. Kept in sync by
+ * test/s654-route-family-map.test.ts and the s26a route inventory.
+ */
+export interface RouteFamilyRow {
+  readonly status: "ported" | "consolidated" | "new-only";
+  readonly reactFiles: readonly string[];
+  readonly note?: string;
+}
+
+export const FOLDKIT_ROUTE_TAGS = [
+  "Index",
+  "Diagnostics",
+  "Observability",
+  "StoreReceipts",
+  "Queues",
+  "LocalLogs",
+  "RouterCandidates",
+  "Requests",
+  "RequestDetail",
+  "RouterDecisions",
+  "RouterDecisionDetail",
+  "LocalPeers",
+  "SystemPeers",
+  "LocalPeerModels",
+  "QueuesConfiguration",
+  "IntegrationsDownstream",
+  "IntegrationsUpstream",
+  "LocalChoose",
+  "Studio",
+  "Learning",
+  "LearningConfiguration",
+  "LearningPacks",
+  "LearningDecisions",
+  "LearningEvidence",
+  "LearningHistory",
+  "LocalLlamaSwapModels",
+  "LocalPolicy",
+  "SystemOperator",
+  "SystemExtensions",
+  "Models",
+  "ModelsRoles",
+  "Benchmark",
+  "StorageRetention",
+  "Runtime",
+  "RuntimeConfig",
+  "SessionReadiness",
+  "Dashboard",
+  "LocalSwap",
+  "RouterStrategy",
+  "RouterWorkloads",
+  "RouterConfig",
+  "RouterAgentStrategy",
+  "ObserveActivity",
+  "ObserveLogs",
+  "ObserveRouting",
+  "Router",
+  "Providers",
+  "Endpoints",
+  "ControlController",
+  "NotFound",
+] as const;
+
+export type FoldkitRouteTag = (typeof FOLDKIT_ROUTE_TAGS)[number];
+
+export const ROUTE_FAMILY_MAP = {
+  Index: { status: "ported", reactFiles: ["index.tsx"] },
+  Diagnostics: { status: "new-only", reactFiles: [], note: "Foldkit diagnostics page, no React route." },
+  Observability: { status: "ported", reactFiles: ["observability-snapshot.tsx"] },
+  StoreReceipts: { status: "ported", reactFiles: ["store-degradation-receipts.tsx"] },
+  Queues: { status: "ported", reactFiles: ["observe-queues.tsx"] },
+  LocalLogs: { status: "ported", reactFiles: ["local-logs.tsx"] },
+  RouterCandidates: { status: "ported", reactFiles: ["router-candidates.tsx"] },
+  Requests: { status: "ported", reactFiles: ["requests.tsx"] },
+  RequestDetail: { status: "ported", reactFiles: ["request-detail.tsx"] },
+  RouterDecisions: { status: "ported", reactFiles: ["router-decisions.tsx"] },
+  RouterDecisionDetail: { status: "ported", reactFiles: ["router-decision-detail.tsx"] },
+  LocalPeers: { status: "ported", reactFiles: ["local-peers.tsx"] },
+  SystemPeers: { status: "ported", reactFiles: ["system-peers.tsx"] },
+  LocalPeerModels: { status: "ported", reactFiles: ["local-peer-models.tsx"] },
+  QueuesConfiguration: { status: "consolidated", reactFiles: ["observe-queues.tsx"], note: "Queues page owns configuration." },
+  IntegrationsDownstream: { status: "ported", reactFiles: ["integrations-downstream.tsx"] },
+  IntegrationsUpstream: { status: "ported", reactFiles: ["integrations-upstream.tsx"] },
+  LocalChoose: { status: "ported", reactFiles: ["local-choose.tsx"] },
+  Studio: { status: "consolidated", reactFiles: ["workbench.tsx", "studio-images.tsx", "studio-audio.tsx", "studio-rerank.tsx", "studio-advanced.tsx"], note: "One Studio workspace with tabs." },
+  Learning: { status: "consolidated", reactFiles: ["learning.tsx"], note: "Learning overview tab." },
+  LearningConfiguration: { status: "consolidated", reactFiles: ["learning.tsx"], note: "Learning configuration tab." },
+  LearningPacks: { status: "consolidated", reactFiles: ["learning.tsx"], note: "Learning packs tab." },
+  LearningDecisions: { status: "consolidated", reactFiles: ["learning.tsx"], note: "Learning decisions tab." },
+  LearningEvidence: { status: "consolidated", reactFiles: ["learning.tsx"], note: "Learning evidence tab." },
+  LearningHistory: { status: "consolidated", reactFiles: ["learning.tsx"], note: "Learning history tab." },
+  LocalLlamaSwapModels: { status: "ported", reactFiles: ["local-llama-swap-models.tsx"] },
+  LocalPolicy: { status: "ported", reactFiles: ["local-policy.tsx"] },
+  SystemOperator: { status: "ported", reactFiles: ["operator-controls.tsx"] },
+  SystemExtensions: { status: "ported", reactFiles: ["extensions.tsx"] },
+  Models: { status: "ported", reactFiles: ["control-models.tsx"] },
+  ModelsRoles: { status: "ported", reactFiles: ["control-roles.tsx"] },
+  Benchmark: { status: "ported", reactFiles: ["control-benchmark.tsx"] },
+  StorageRetention: { status: "ported", reactFiles: ["storage-retention.tsx"] },
+  Runtime: { status: "ported", reactFiles: ["runtime.tsx"] },
+  RuntimeConfig: { status: "ported", reactFiles: ["control-runtime-config.tsx"] },
+  SessionReadiness: { status: "ported", reactFiles: ["session-readiness.tsx"] },
+  Dashboard: { status: "ported", reactFiles: ["dashboard.tsx"] },
+  LocalSwap: { status: "ported", reactFiles: ["local-swap.tsx"] },
+  RouterStrategy: { status: "ported", reactFiles: ["control-routing-strategy.tsx"] },
+  RouterWorkloads: { status: "ported", reactFiles: ["workloads.tsx"] },
+  RouterConfig: { status: "ported", reactFiles: ["router-config.tsx"] },
+  RouterAgentStrategy: { status: "ported", reactFiles: ["agent-strategy.tsx"] },
+  ObserveActivity: { status: "ported", reactFiles: ["observe-activity.tsx"] },
+  ObserveLogs: { status: "ported", reactFiles: ["observe-logs.tsx"] },
+  ObserveRouting: { status: "ported", reactFiles: ["observe-routing.tsx"] },
+  Router: { status: "ported", reactFiles: ["router.tsx"] },
+  Providers: { status: "ported", reactFiles: ["providers.tsx"], note: "Providers page owns the device-auth card/modal." },
+  Endpoints: { status: "ported", reactFiles: ["endpoints.tsx"] },
+  ControlController: { status: "ported", reactFiles: ["control-controller.tsx"] },
+  NotFound: { status: "ported", reactFiles: ["not-found.tsx"] },
+} as const satisfies Record<FoldkitRouteTag, RouteFamilyRow>;
+
+/** React route files that are deliberately not a Foldkit route. */
+export const UNPORTED_REACT_ROUTES = [
+  {
+    file: "local-matrix.tsx",
+    disposition: "owner-disposition: reference-only swap matrix has no host read/write contract; deferred until an endpoint is inventoried.",
+  },
+  {
+    file: "local-models.tsx",
+    disposition: "owner-disposition: reference model library is covered by LocalChoose/LocalLlamaSwapModels; no separate host surface.",
+  },
+] as const;
+
+/** Non-route React files (shell/redirect infrastructure). */
+export const INFRASTRUCTURE_REACT_ROUTES = ["app-layout.tsx", "legacy-redirect.tsx"] as const;
+
+export const REACT_ROUTE_FILES = [
+  "agent-strategy.tsx",
+  "app-layout.tsx",
+  "control-benchmark.tsx",
+  "control-controller.tsx",
+  "control-models.tsx",
+  "control-roles.tsx",
+  "control-routing-strategy.tsx",
+  "control-runtime-config.tsx",
+  "dashboard.tsx",
+  "endpoints.tsx",
+  "extensions.tsx",
+  "index.tsx",
+  "integrations-downstream.tsx",
+  "integrations-upstream.tsx",
+  "learning.tsx",
+  "legacy-redirect.tsx",
+  "local-choose.tsx",
+  "local-llama-swap-models.tsx",
+  "local-logs.tsx",
+  "local-matrix.tsx",
+  "local-models.tsx",
+  "local-peer-models.tsx",
+  "local-peers.tsx",
+  "local-policy.tsx",
+  "local-swap.tsx",
+  "not-found.tsx",
+  "observability-snapshot.tsx",
+  "observe-activity.tsx",
+  "observe-logs.tsx",
+  "observe-queues.tsx",
+  "observe-routing.tsx",
+  "operator-controls.tsx",
+  "providers.tsx",
+  "request-detail.tsx",
+  "requests.tsx",
+  "router-candidates.tsx",
+  "router-config.tsx",
+  "router-decision-detail.tsx",
+  "router-decisions.tsx",
+  "router.tsx",
+  "runtime.tsx",
+  "session-readiness.tsx",
+  "storage-retention.tsx",
+  "store-degradation-receipts.tsx",
+  "studio-advanced.tsx",
+  "studio-audio.tsx",
+  "studio-images.tsx",
+  "studio-rerank.tsx",
+  "system-peers.tsx",
+  "workbench.tsx",
+  "workloads.tsx",
+] as const;
+
+/** R13 surfaces the review named explicitly. */
+export const SURFACE_DISPOSITIONS = {
+  commandPalette: {
+    status: "owner-disposition",
+    reason: "No React route, s26a inventory row, or host command-palette API; deferred rather than invented.",
+  },
+  mediaCapture: {
+    status: "owner-disposition",
+    reason: "Studio generation routes exist, but no media-capture host API or reference route is inventoried.",
+  },
+  deviceAuthUi: {
+    status: "ported",
+    reason: "Rendered by providersPage (device-auth card + modal) from the device-auth commands.",
+  },
+  previewEditors: {
+    status: "de-previewed",
+    reason: "The unused preview-only disclosure and dead disabled field helpers were removed; no disabled preview write controls remain.",
+  },
+} as const;

@@ -3096,6 +3096,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
               h.DataAttribute("slot", "role-model-page-content"),
               h.DataAttribute("shell-main", ""),
               h.Id("main-content"),
+              h.Tabindex(-1),
               h.DataAttribute("refresh-revision", String(model.refresh.lastAppliedRevision)),
               h.DataAttribute("refresh-state", model.refresh.status),
             ],

@@ -95,8 +95,8 @@ describe("S26b wave 1 shell entries", () => {
       "page",
     );
     expect(document.querySelector("a[data-nav='index']")?.getAttribute("aria-current")).toBeNull();
-    // No forced focus restoration: the activated navigation link keeps focus.
-    expect(document.activeElement).toBe(models);
+    // R11: focus moves to the main landmark; it does not stay on the stale nav trigger.
+    expect(document.activeElement?.id).toBe("main-content");
     expect(document.title).toBe("Models | RM3 Foldkit shell");
   });
 
@@ -199,7 +199,7 @@ describe("S26b wave 1 shell entries", () => {
         "scroll-to-top command",
       );
       expect(scrollTo).toHaveBeenCalledWith({ behavior: "auto", top: 0 });
-      expect(document.activeElement).toBe(models);
+      expect(document.activeElement?.id).toBe("main-content");
       expect(document.documentElement.dataset.theme).toBe("light");
     } finally {
       scrollTo.mockRestore();

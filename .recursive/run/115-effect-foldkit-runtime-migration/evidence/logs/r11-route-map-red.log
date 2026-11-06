@@ -1,0 +1,36 @@
+### R11 route-family mapping RED
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s654-route-family-map.test.ts [ test/s654-route-family-map.test.ts ]
+Error: Failed to resolve import "../src/route-family-map" from "test/s654-route-family-map.test.ts". Does the file exist?
+  Plugin: vite:import-analysis
+  File: D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next/test/s654-route-family-map.test.ts:11:7
+  8  |    SURFACE_DISPOSITIONS,
+  9  |    UNPORTED_REACT_ROUTES
+  10 |  } from "../src/route-family-map";
+     |          ^
+  11 |  const repoRoot = path.resolve(import.meta.dirname, "../../../..");
+  12 |  const nextRoot = path.join(repoRoot, "role-model-router/apps/runtime-ui-next");
+ ❯ TransformPluginContext._formatLog ../../../node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:29003:43
+ ❯ TransformPluginContext.error ../../../node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:29000:14
+ ❯ normalizeUrl ../../../node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:27123:18
+ ❯ ../../../node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:27181:32
+ ❯ TransformPluginContext.transform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:27149:4
+ ❯ EnvironmentPluginContainer.transform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:28801:14
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@25.6_2bbfacb116eb5c43fa200902981dfa09/node_modules/vite/dist/node/chunks/config.js:22670:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  20:02:32
+   Duration  14.30s (transform 125ms, setup 0ms, collect 0ms, tests 0ms, environment 10.33s, prepare 1.26s)
+
+undefined
+D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-ui-next:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/s654-route-family-map.test.ts

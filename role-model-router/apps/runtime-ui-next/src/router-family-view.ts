@@ -88,40 +88,6 @@ const controlButton = (label: string, message: Message | undefined, h: H): Html 
     [label],
   );
 
-const textField = (label: string, value: string, h: H): Html =>
-  h.label(
-    [h.Class("flex max-w-[420px] flex-col gap-1.5")],
-    [
-      h.span([h.Class(filterLabelClass)], [label]),
-      h.input([
-        h.Class(filterControlClass),
-        h.Type("text"),
-        h.Value(value),
-        h.Disabled(true),
-        h.AriaDisabled(true),
-      ]),
-    ],
-  );
-
-const selectField = (
-  label: string,
-  options: readonly string[],
-  selected: string | undefined,
-  h: H,
-): Html =>
-  h.label(
-    [h.Class("flex max-w-[420px] flex-col gap-1.5")],
-    [
-      h.span([h.Class(filterLabelClass)], [label]),
-      h.select(
-        [h.AriaLabel(label), h.Class(filterControlClass), h.Disabled(true)],
-        options.map((option) =>
-          h.option([h.Value(option), ...(option === selected ? [h.Selected(true)] : [])], [option]),
-        ),
-      ),
-    ],
-  );
-
 /** The readback parser owns meta's shape; pages render it opaquely as the endpoint identity column. */
 const wiredSelect = (
   label: string,
@@ -280,19 +246,6 @@ const family = (readbacks: ReadbacksState, prefixes: readonly string[]) => {
           : undefined;
   return { state, rows, message };
 };
-
-const previewDisclosure = (h: H): Html =>
-  h.p(
-    [
-      h.Class(
-        "mt-2 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-2 text-[12px] leading-5 text-[var(--rm-secondary)]",
-      ),
-      h.DataAttribute("preview-only", ""),
-    ],
-    [
-      "Preview only: these editors and controls are not wired to the runtime yet. Saving, templates, and add/remove actions are disabled and make no runtime writes.",
-    ],
-  );
 
 const familyShell = (routeName: string, state: string, children: readonly Html[], h: H): Html =>
   h.section(
