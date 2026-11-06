@@ -90,7 +90,8 @@
         "form": "export abstract class",
         "reason": "Abstract classes have no runtime operation body."
       }
-    ]
+    ],
+    "callerReferenceRule": "A caller citation must contain the operation token in code after stripping strings and comments; import, assignment and member/reference lines are accepted as references. Definition lines, describe blocks, comments, string mentions and masked-out mentions are rejected. Public roots with no in-repo reference carry callerlessReason instead of a false citation."
   },
   "entries": [
     {
@@ -593,14 +594,10 @@
         "file": "role-model-router/packages/sql-sqlite-node/src/service.ts",
         "line": 561
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/cli.ts",
-          "line": 220
-        }
-      ],
+      "callers": [],
       "reason": "Body-verified: close() serializes through the semaphore, marks closed once via Ref, closes the database in Effect.try.",
-      "symbol": "close"
+      "symbol": "close",
+      "callerlessReason": "Public root export close; only comment/definition mentions found, no in-repo call site."
     },
     {
       "id": "sql-service-close-sync",
@@ -771,14 +768,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 1565
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 1509
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "shouldInvalidateDifficultyClassifierVersion"
+      "symbol": "shouldInvalidateDifficultyClassifierVersion",
+      "callerlessReason": "Public root export shouldInvalidateDifficultyClassifierVersion; only comment/definition mentions found, no in-repo call site."
     },
     {
       "id": "root-index-classifydifficultyfromsignals",
@@ -1671,14 +1664,10 @@
         "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
         "line": 20724
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 20602
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/apps/runtime-host-bridge/src/index.ts; no separate in-repo caller found.",
-      "symbol": "createBridgeRequestListener"
+      "symbol": "createBridgeRequestListener",
+      "callerlessReason": "Public root export createBridgeRequestListener; only comment/definition mentions found, no in-repo call site."
     },
     {
       "id": "root-index-recorddirectcontributionwith",
@@ -3656,14 +3645,10 @@
         "file": "role-model-router/packages/roles/src/index.ts",
         "line": 3
       },
-      "callers": [
-        {
-          "file": "role-model-router/apps/runtime-host-bridge/src/index.ts",
-          "line": 7676
-        }
-      ],
+      "callers": [],
       "reason": "Root export enumerated from role-model-router/packages/roles/src/index.ts; first in-repo reference is role-model-router/apps/runtime-host-bridge/src/index.ts:7676.",
-      "symbol": "defaultRoles"
+      "symbol": "defaultRoles",
+      "callerlessReason": "Public root export defaultRoles; only comment/definition mentions found, no in-repo call site."
     },
     {
       "id": "root-index-normalizeruntimeeffortreceipt",

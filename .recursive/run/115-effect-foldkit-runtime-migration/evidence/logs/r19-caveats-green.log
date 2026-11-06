@@ -1,0 +1,21 @@
+✔ the hand-written sample inventory validates (85.3967ms)
+✔ the real inventory validates against the code (10454.6016ms)
+✔ every declaration-form runtime root operation is listed in the ledger (87.8962ms)
+✔ every top-level export form is classified as an operation or an explicit exclusion (138.0606ms)
+✔ the inventory covers every kind and every disposition (26.9679ms)
+✔ a deliberately wrong citation fails (26623.7737ms)
+✔ R19/B0: the SQL service is a live product surface, never excluded as callerless (15.3447ms)
+✔ S301 reworded false SQL exclusion is rejected by the structured guard (56.387ms)
+✔ a caller citation that does not reference the operation is rejected (13611.4305ms)
+✔ a caller citing its own definition line is rejected (11016.3719ms)
+✔ comments and string mentions cannot satisfy a caller token (1.3956ms)
+✔ the root export classifier handles const enum before const and masks multi-line comments (1.6869ms)
+✔ duplicate ids, unknown dispositions and unknown kinds are rejected (35908.342ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 98757.1235

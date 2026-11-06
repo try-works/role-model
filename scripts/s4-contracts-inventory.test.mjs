@@ -63,6 +63,10 @@ function maskNonCode(source) {
   return chars.join("");
 }
 
+function maskNonCodeLines(lines) {
+  return maskNonCode(lines.join("\n")).split("\n");
+}
+
 const checkCitation = (issues, id, label, citation, symbol) => {
   if (citation === null || typeof citation !== "object") {
     issues.push(`${id}: ${label} is not an object`);
@@ -93,7 +97,8 @@ const checkCitation = (issues, id, label, citation, symbol) => {
     return;
   }
   if (symbol !== undefined) {
-    const code = maskNonCode(text);
+    const maskedPrefix = maskNonCode(linesOf(file).slice(0, line).join("\n")).split("\n");
+    const code = maskedPrefix[line - 1] ?? "";
     if (!new RegExp(`\\b${symbol}\\b`).test(code)) {
       issues.push(
         `${id}: ${label} does not reference ${symbol} at ${file}:${line} (caller citations must contain a code token, not a comment/string)`,
@@ -245,6 +250,24 @@ function rootOperationFiles() {
 }
 
 /** Every top-level exported operation/resource in the root files. */
+export function classifyRootExportLine(line) {
+  const text = line.trimStart();
+  if (!text.startsWith("export ")) return null;
+  if (/^export\s+(?:async\s+)?function\*/.test(text)) return { kind: "excluded", form: "export function*" };
+  if (/^export\s+(?:async\s+)?function\s/.test(text)) return { kind: "operation" };
+  if (/^export\s+const\s+enum\b/.test(text)) return { kind: "excluded", form: "export const enum" };
+  if (/^export\s+const\s/.test(text)) return { kind: "operation" };
+  if (/^export\s+class\s/.test(text)) return { kind: "operation" };
+  if (/^export\s+(?:type|interface|namespace|enum|declare|abstract\s+class|import)\b/.test(text)) {
+    return { kind: "excluded", form: text.match(/^export\s+((?:type|interface|namespace|enum|declare|abstract\s+class|import))\b/)[0] };
+  }
+  if (/^export\s+(?:let|var)\s/.test(text)) return { kind: "excluded", form: text.match(/^export\s+(?:let|var)/)[0] };
+  if (/^export\s+default\b/.test(text)) return { kind: "excluded", form: "export default" };
+  if (/^export\s*\{/.test(text)) return { kind: "excluded", form: "export {" };
+  if (/^export\s*\*/.test(text)) return { kind: "excluded", form: "export *" };
+  return { kind: "unclassified" };
+}
+
 export function enumerateRootOperations() {
   const operations = [];
   for (const file of rootOperationFiles()) {
@@ -279,23 +302,7 @@ test("every top-level export form is classified as an operation or an explicit e
   );
   const unclassified = [];
   const excludedButNotDeclared = [];
-  const classification = (line) => {
-    const text = line.trimStart();
-    if (!text.startsWith("export ")) return null;
-    if (/^export\s+(?:async\s+)?function\*/.test(text)) return { kind: "excluded", form: "export function*" };
-    if (/^export\s+(?:async\s+)?function\s/.test(text)) return { kind: "operation" };
-    if (/^export\s+const\s/.test(text)) return { kind: "operation" };
-    if (/^export\s+class\s/.test(text)) return { kind: "operation" };
-    if (/^export\s+(?:type|interface|namespace|enum|declare|abstract\s+class|const\s+enum|import)\b/.test(text)) {
-      const form = text.match(/^export\s+((?:async\s+)?(?:type|interface|namespace|enum|declare|abstract\s+class|const\s+enum|import))\b/)[0];
-      return { kind: "excluded", form };
-    }
-    if (/^export\s+(?:let|var)\s/.test(text)) return { kind: "excluded", form: text.match(/^export\s+(?:let|var)/)[0] };
-    if (/^export\s+default\b/.test(text)) return { kind: "excluded", form: "export default" };
-    if (/^export\s*\{/.test(text)) return { kind: "excluded", form: "export {" };
-    if (/^export\s*\*/.test(text)) return { kind: "excluded", form: "export *" };
-    return { kind: "unclassified" };
-  };
+  const classification = classifyRootExportLine;
   for (const file of rootOperationFiles()) {
     for (const [index, line] of readFileSync(join(REPO_ROOT, file), "utf8").split(/\r?\n/).entries()) {
       const result = classification(line);
@@ -467,6 +474,16 @@ test("comments and string mentions cannot satisfy a caller token", () => {
   assert.equal(maskNonCode(`"${symbol}"`).includes(symbol), false);
   assert.equal(maskNonCode(`describe("${symbol}", () => {})`).includes(symbol), false);
   assert.equal(maskNonCode(`${symbol}({ capacity: 1 })`).includes(symbol), true);
+});
+
+test("the root export classifier handles const enum before const and masks multi-line comments", () => {
+  assert.deepEqual(classifyRootExportLine("export const enum Mode { A }"), {
+    kind: "excluded",
+    form: "export const enum",
+  });
+  const masked = maskNonCodeLines(["/**", " * makeModuleHealthWriter", " */", "const x = 1;"]).join("\n");
+  assert.equal(masked.includes("makeModuleHealthWriter"), false);
+  assert.equal(maskNonCodeLines(["const y = makeModuleHealthWriter();"]).join("\n").includes("makeModuleHealthWriter"), true);
 });
 
 test("duplicate ids, unknown dispositions and unknown kinds are rejected", () => {
