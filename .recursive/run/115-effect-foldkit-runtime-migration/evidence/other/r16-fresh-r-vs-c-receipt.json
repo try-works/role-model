@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "role-model.r16.fresh-r-vs-c.v1",
+  "generatedAt": "2026-11-06T13:25:25.928Z",
+  "tool": "scripts/runtime/compare-release.mjs",
+  "method": "GET (fixed comparator endpoints; no query/body)",
+  "identities": {
+    "left": {
+      "label": "R preserved artifact",
+      "version": "0.0.20",
+      "commit": "945a8906782a434e800a0ca2deb2e08ef1472e20",
+      "sourceTree": "d29e2a3c45ba3617cb0db7bad9fcb6ea0e0bd7b8",
+      "exe": "D:/role-model-router/0.0.20/role-model.exe",
+      "exeSha256": "718d71f51ea6cf4f4bcfddf82165695c52fbc6d59eaaa600a38f3c73df8e248a",
+      "channel": "production"
+    },
+    "right": {
+      "label": "C final candidate",
+      "version": "0.0.20-761-g3f7779fb",
+      "commit": "3f7779fb",
+      "sourceTree": "172fab4c79379ca47adfa5926d4e64374a5c3b9e",
+      "exe": "D:/DEV/rm-clean/r5-lockstep-pub/role-model-router/dist/release/win32-x64/role-model-dev.exe",
+      "exeSha256": "5e0810c05664741a5944213a3fdbd4a20a18e698e970c6e3e2a9eac7437c8357",
+      "channel": "development"
+    }
+  },
+  "surfaces": [
+    {
+      "path": "/healthz",
+      "method": "GET",
+      "leftStatus": 200,
+      "rightStatus": 200,
+      "classification": "approved-intentional",
+      "reason": "Only production-only channel binding keys are absent on the development candidate: runtime.release_id and runtime.private_distribution_sha256. Pre-existing R-to-D channel metadata, not a migration regression.",
+      "deltas": [
+        "-runtime.release_id",
+        "-runtime.private_distribution_sha256"
+      ]
+    },
+    {
+      "path": "/api/role-model/runtime/summary",
+      "method": "GET",
+      "leftStatus": 200,
+      "rightStatus": 200,
+      "classification": "approved-intentional",
+      "reason": "Same production-only channel binding keys absent; all operational fields match after identity stripping.",
+      "deltas": [
+        "-runtime.release_id",
+        "-runtime.private_distribution_sha256"
+      ]
+    },
+    {
+      "path": "/api/role-model/models",
+      "method": "GET",
+      "leftStatus": 200,
+      "rightStatus": 200,
+      "classification": "same"
+    },
+    {
+      "path": "/api/role-model/endpoints",
+      "method": "GET",
+      "leftStatus": 200,
+      "rightStatus": 200,
+      "classification": "same"
+    },
+    {
+      "path": "/api/role-model/router/summary",
+      "method": "GET",
+      "leftStatus": 200,
+      "rightStatus": 200,
+      "classification": "same"
+    },
+    {
+      "path": "/api/role-model/telemetry/summary",
+      "method": "GET",
+      "leftStatus": 200,
+      "rightStatus": 200,
+      "classification": "environmental",
+      "reason": "Counters/metrics are per-run environment state."
+    },
+    {
+      "path": "/api/role-model/operator/learning",
+      "method": "GET",
+      "leftStatus": 200,
+      "rightStatus": 200,
+      "classification": "same"
+    },
+    {
+      "path": "/api/role-model/operator/replay/jobs",
+      "method": "GET",
+      "leftStatus": 200,
+      "rightStatus": 200,
+      "classification": "same"
+    },
+    {
+      "path": "/api/role-model/operator/evaluation/jobs",
+      "method": "GET",
+      "leftStatus": 200,
+      "rightStatus": 200,
+      "classification": "same"
+    }
+  ],
+  "counts": {
+    "same": 6,
+    "additiveShape": 2,
+    "environmentState": 1,
+    "different": 0,
+    "notRun": 0
+  },
+  "deltaClasses": {
+    "preExistingRToD": [
+      "release_id/private_distribution_sha256 production channel metadata"
+    ],
+    "migrationRegression": [],
+    "approvedIntentional": [
+      "development channel omits production-only release binding fields"
+    ],
+    "knownBaselineDefect": [],
+    "absentInconclusiveEnvironmental": [
+      "telemetry summary counters"
+    ]
+  },
+  "rawLog": "D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/.recursive/run/115-effect-foldkit-runtime-migration/evidence/other/r16-compare-raw.log"
+}
