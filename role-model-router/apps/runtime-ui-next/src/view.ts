@@ -122,6 +122,10 @@ import {
   localPolicyFromReadback,
   renderReadbackPage,
 } from "./readback";
+import {
+  SELFCHECK_ENTRIES,
+  SELFCHECK_MARKER,
+} from "../../../packages/ui-parity/src/selfcheck-surface-core.js";
 import { AppRoute } from "./route";
 import { type StudioField, type StudioState, StudioTabSchema, studioIdle } from "./studio";
 
@@ -2406,41 +2410,26 @@ const routeContent = (ctx: RouteViewContext): Html => {
   } = ctx;
 
   // R14: the selfcheck surface is served by the catch-all route so the product route table is
-  // unchanged. Both clients render the same ordered specimen and publish its checksum.
-  const selfcheckEntries = [
-    { key: "heading", value: "RM3 selfcheck surface" },
-    { key: "button", value: "Save changes" },
-    { key: "input", value: "Operator token" },
-    { key: "badge", value: "READY" },
-    { key: "chart", value: "requests / hour" },
-    { key: "table", value: "4 rows" },
-  ] as const;
-  const selfcheckMarker = (() => {
-    const canonical = [...selfcheckEntries]
-      .sort((left, right) => (left.key < right.key ? -1 : left.key > right.key ? 1 : 0))
-      .map((entry) => `${entry.key}\u0000${entry.value}`)
-      .join("\u0001");
-    let hash = 0x811c9dc5;
-    for (let index = 0; index < canonical.length; index += 1) {
-      hash ^= canonical.charCodeAt(index);
-      hash = Math.imul(hash, 0x01000193) >>> 0;
-    }
-    return hash.toString(16).padStart(8, "0");
-  })();
+  // unchanged. Both clients import the same ordered specimen and checksum from ui-parity.
+  const selfcheckValue = (key: string): string => {
+    const entry = SELFCHECK_ENTRIES.find((candidate) => candidate.key === key);
+    if (entry === undefined) throw new Error(`selfcheck specimen is missing entry: ${key}`);
+    return entry.value;
+  };
   const selfcheckPage = (h: HtmlBuilder<Message>): Html => {
-    const entry = (key: string, value: string, label: string): Html =>
+    const entry = (key: string): Html =>
       h.div(
         [
           h.Class("rounded-md border border-[var(--rm-border)] p-3 text-sm"),
           h.DataAttribute("selfcheck-key", key),
-          h.DataAttribute("selfcheck-value", value),
+          h.DataAttribute("selfcheck-value", selfcheckValue(key)),
         ],
-        [label],
+        [selfcheckValue(key)],
       );
     return h.main(
       [
         h.Class("rm3-next-route min-h-screen bg-[var(--rm-bg)] p-4"),
-        h.DataAttribute("selfcheck-marker", selfcheckMarker),
+        h.DataAttribute("selfcheck-marker", SELFCHECK_MARKER),
         h.DataAttribute("selfcheck-surface", "rm3"),
       ],
       [
@@ -2450,21 +2439,21 @@ const routeContent = (ctx: RouteViewContext): Html => {
             h.div(
               [
                 h.DataAttribute("selfcheck-key", "heading"),
-                h.DataAttribute("selfcheck-value", "RM3 selfcheck surface"),
+                h.DataAttribute("selfcheck-value", selfcheckValue("heading")),
               ],
               [
                 h.p(
                   [h.Class("text-[11px] font-semibold uppercase tracking-[0.24em]")],
                   ["Selfcheck"],
                 ),
-                h.h1([h.Class("text-2xl font-semibold")], ["RM3 selfcheck surface"]),
+                h.h1([h.Class("text-2xl font-semibold")], [selfcheckValue("heading")]),
               ],
             ),
-            entry("button", "Save changes", "Save changes"),
-            entry("badge", "READY", "READY"),
-            entry("input", "Operator token", "Operator token"),
-            entry("chart", "requests / hour", "requests / hour"),
-            entry("table", "4 rows", "4 rows"),
+            entry("button"),
+            entry("badge"),
+            entry("input"),
+            entry("chart"),
+            entry("table"),
           ],
         ),
       ],

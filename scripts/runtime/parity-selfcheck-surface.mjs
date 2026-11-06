@@ -20,131 +20,18 @@ import { launchChrome } from "./parity-selfcheck.mjs";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const checkoutRoot = path.resolve(__dirname, "../..");
 
-export const SELFCHECK_PATH = "/selfcheck";
-export const SELFCHECK_TARGETS = ["react", "foldkit"];
+import {
+  SELFCHECK_ROUTE,
+  SELFCHECK_TARGETS,
+  evaluateSelfcheckSurfaceRuns,
+  parseSelfcheckSurfaceDom,
+} from "../../role-model-router/packages/ui-parity/src/selfcheck-surface-core.js";
 
-const decodeEntities = (value) =>
-  value
-    .replaceAll("&amp;", "&")
-    .replaceAll("&quot;", '"')
-    .replaceAll("&#39;", "'")
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">");
-
-/** Extracts the served marker and ordered specimen entries from a rendered /selfcheck document. */
-export const parseSelfcheckSurfaceDom = (html, targetId) => {
-  const text = String(html);
-  const markerMatch = /data-selfcheck-marker="([^"]+)"/.exec(text);
-  const entries = [];
-  const tagPattern = /<[^>]*\bdata-selfcheck-key="([^"]+)"[^>]*>/g;
-  for (const match of text.matchAll(tagPattern)) {
-    const tag = match[0];
-    const valueMatch = /data-selfcheck-value="([^"]+)"/.exec(tag);
-    if (valueMatch === null) continue;
-    entries.push({
-      key: decodeEntities(match[1]),
-      value: decodeEntities(valueMatch[1]),
-    });
-  }
-  return {
-    entries,
-    marker: markerMatch === null ? undefined : decodeEntities(markerMatch[1]),
-    targetId,
-  };
+export {
+  evaluateSelfcheckSurfaceRuns,
+  parseSelfcheckSurfaceDom,
 };
-
-const sameEntries = (left, right) =>
-  left.length === right.length &&
-  left.every(
-    (entry, index) => entry.key === right[index]?.key && entry.value === right[index]?.value,
-  );
-
-const captureFor = (runs, targetId, run) =>
-  runs[run]?.find((capture) => capture.targetId === targetId);
-
-/** Mirrors packages/ui-parity/src/selfcheck-surface.ts; unit-pinned in packaged-parity-lane.test.mjs. */
-export const evaluateSelfcheckSurfaceRuns = ({ chromeAvailable, runs }) => {
-  const base = { route: SELFCHECK_PATH, scope: "selfcheck-surface" };
-  if (!chromeAvailable)
-    return { ...base, reason: "no-browser-available", status: "NOT_RUN", verdict: "NOT_RUN" };
-  if (runs.length === 0)
-    return { ...base, reason: "no-capture", status: "NOT_RUN", verdict: "NOT_RUN" };
-  if (runs.length !== 2)
-    return {
-      ...base,
-      reason: `run-count: ${String(runs.length)}`,
-      status: "FAILED",
-      verdict: "DIVERGENCE",
-    };
-  for (const targetId of SELFCHECK_TARGETS) {
-    for (let run = 0; run < 2; run += 1) {
-      const capture = captureFor(runs, targetId, run);
-      if (capture === undefined)
-        return {
-          ...base,
-          reason: `capture-missing: ${targetId}[${String(run)}]`,
-          status: "FAILED",
-          verdict: "DIVERGENCE",
-        };
-      if (capture.marker === undefined || capture.marker.length === 0)
-        return {
-          ...base,
-          reason: `marker-missing: ${targetId}[${String(run)}]`,
-          status: "FAILED",
-          verdict: "DIVERGENCE",
-        };
-    }
-  }
-  const react = captureFor(runs, "react", 0);
-  const foldkit = captureFor(runs, "foldkit", 0);
-  const markers = { foldkit: foldkit?.marker, react: react?.marker };
-  if (react === undefined || foldkit === undefined)
-    return { ...base, reason: "capture-missing", status: "FAILED", verdict: "DIVERGENCE" };
-  if (react.marker !== foldkit.marker)
-    return {
-      ...base,
-      markers,
-      reason: `marker-mismatch: react=${String(react.marker)} foldkit=${String(foldkit.marker)}`,
-      status: "FAILED",
-      verdict: "DIVERGENCE",
-    };
-  if (!sameEntries(react.entries, foldkit.entries))
-    return {
-      ...base,
-      markers,
-      reason: "entry-mismatch: React and Foldkit rendered different specimens",
-      status: "FAILED",
-      verdict: "DIVERGENCE",
-    };
-  const deterministic = SELFCHECK_TARGETS.every((targetId) => {
-    const first = captureFor(runs, targetId, 0);
-    const second = captureFor(runs, targetId, 1);
-    return (
-      first !== undefined &&
-      second !== undefined &&
-      first.marker === second.marker &&
-      sameEntries(first.entries, second.entries)
-    );
-  });
-  if (!deterministic)
-    return {
-      ...base,
-      markers,
-      reason: "run-divergence: the two runs did not produce identical captures",
-      status: "FAILED",
-      verdict: "DIVERGENCE",
-    };
-  return {
-    ...base,
-    comparisons: {
-      deterministic: { equal: true },
-      reactVsFoldkit: { equal: true, marker: react.marker },
-    },
-    markers,
-    status: "PASSED",
-    verdict: "0DIFF",
-  };
-};
+export const SELFCHECK_PATH = SELFCHECK_ROUTE;
 
 const freePort = () =>
   new Promise((resolve, reject) => {
