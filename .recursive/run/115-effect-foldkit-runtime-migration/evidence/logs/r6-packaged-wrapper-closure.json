@@ -1,0 +1,159 @@
+{
+  "schemaVersion": "role-model.foldkit-ui.packaged-closure.v1",
+  "releaseRoot": "D:\\DEV\\rm-clean\\r5-lockstep-pub\\role-model-router\\dist\\release\\win32-x64",
+  "packagedClient": {
+    "assetCount": 1
+  },
+  "entries": [
+    {
+      "subpath": ".",
+      "importSha256": "2572d3e02c90fdd53d4ff61dffd74e2cc59f8ee3d193d2e200a45594d2da9821",
+      "typesSha256": "0e7037f9b2cda4ad47b7366548587da11ec8d284983c4208ccd9b54f1fc8ab9d"
+    },
+    {
+      "subpath": "./anchor",
+      "importSha256": "6fe4e0b8cbc2c200dd687a8b10bf8353928c68138b0dbc886cf0c6ff7b9d6b6d",
+      "typesSha256": "3add46f181ed19fb530cdec2a7504354cce2a9b52dc8df55e75ceb4349bc8587"
+    },
+    {
+      "subpath": "./animation",
+      "importSha256": "91bd1e6be27ce53888fb623f9aeb0b6fe3022fcbed73d2099ab0c71fed17a9e9",
+      "typesSha256": "e3cd839a0303123d9daa5427ff487b84e15c5352ac0f06992266dfcd9ccc0675"
+    },
+    {
+      "subpath": "./button",
+      "importSha256": "0ce1b24602e6b0ce819f6a21e9b49a7884b42a0df579282b25b258b92121a3e3",
+      "typesSha256": "e409a8b7bcb4054f2fffa453e86e737a5cb59c73ac095038d8b9cc2b715e47c3"
+    },
+    {
+      "subpath": "./calendar",
+      "importSha256": "b9d71e6b590473d24800fa9eed6f1114bc3c85dd5ced8b49cf96e5a94a1f4c42",
+      "typesSha256": "18f12c077047b07244c42816418e4c82425027ce510f6f8612adbad562db7b9c"
+    },
+    {
+      "subpath": "./checkbox",
+      "importSha256": "23f041e4083d9ca56695138546bbc562712d8ff89f70ab4bd6423f8659d95ffd",
+      "typesSha256": "1b92dfe343cd639c9b6c15eb4e9cc0ad6aa8170c57b3fc8ffddbab42b1621162"
+    },
+    {
+      "subpath": "./combobox",
+      "importSha256": "0ae507fc197f7a6d16519d32fa6d9360f0eba13a32ade131cc2fa70b10613ea2",
+      "typesSha256": "e44d349549c8f4bea2a49263dcf0b0abbeec6ee03179291d4f4fd541585283c6"
+    },
+    {
+      "subpath": "./datePicker",
+      "importSha256": "57b508098fd282b3f6b9f5dc5e97e63b75eeac710e27cb9cb1d370b6914d5ef2",
+      "typesSha256": "1635fa3914301e23e7e69968b1774efbb755ceedd4a7e771a56f00bf6b63f033"
+    },
+    {
+      "subpath": "./dialog",
+      "importSha256": "ee2324d86aca616a67cdea62fa88f9d14be845b46916a2232ba7cda43b36e6f4",
+      "typesSha256": "c4be52e345fb069b29f9c88f006dc3a190b52e87fd46cd397203485776262ec8"
+    },
+    {
+      "subpath": "./disclosure",
+      "importSha256": "0f0a68ed81cb701dd22ff71de506718d224384e62aa8f6786c32828ee9ad921d",
+      "typesSha256": "21c0ae2d1ad6f00d38f1899ad35c55a352a7816da78433dae1c0ceb3649aa862"
+    },
+    {
+      "subpath": "./dragAndDrop",
+      "importSha256": "7078de54f7ec978825871f49d81cdb5f27db3676b0c162bb2518d71643b04348",
+      "typesSha256": "fb8ca591cd10bc319135aad3486cbbef095e3f4cd05082bc8b9470091eb3d624"
+    },
+    {
+      "subpath": "./fieldset",
+      "importSha256": "ce517c56b744404dec2d93fb036153f2a6f5145718bb73342ae70986a22b5d89",
+      "typesSha256": "a061af28bd19678891adaf0ae9fe9a7e72dc38fbee1016631a877d248a8093a2"
+    },
+    {
+      "subpath": "./fileDrop",
+      "importSha256": "bb6e02f10ddadbdf53eeedfec4372f9b7bae2de11e40227675ad99bee510dfea",
+      "typesSha256": "baab7bfad4658411ce66c267c50fb6685ac9b8d8beecade73a73d7d9e994e887"
+    },
+    {
+      "subpath": "./hoverIntent",
+      "importSha256": "61740b3c1fec5978de419c94c29d820b35857b820591160aac31978352d4170a",
+      "typesSha256": "94734aeacd63998502236f4a544deb8c72e2041667afe3090f6720a45ad22ca6"
+    },
+    {
+      "subpath": "./input",
+      "importSha256": "a208d92ac6236893d158daef03b6ed4b2e4ee6300c7107c1dbce08cfbf77067e",
+      "typesSha256": "0fc4c11584f8bb91ee982d4167c2a142990864b8fc882405b5b66d963923e400"
+    },
+    {
+      "subpath": "./listbox",
+      "importSha256": "a4264cfc7f449012658ea6467d55a3639d9a1dba0dd3e2a431d452291a7eca89",
+      "typesSha256": "76e9aeb844ed12ca00534c24dd83b9a01ce7c705f0338fd4aecad867a9ad1b9e"
+    },
+    {
+      "subpath": "./menu",
+      "importSha256": "5c4eeac35595cc69f2fc41cc0ad6af6998b3ce12ecaa3232ca126d63b880c265",
+      "typesSha256": "7e428d1a5a5eb2b473e2e33c50582d6306db7a20fe864b34403a966222400c6d"
+    },
+    {
+      "subpath": "./meter",
+      "importSha256": "17c71d5cf128a0ca4b7f3f3d1cee788658c782d528a47b4c3b3b537277ee9ea1",
+      "typesSha256": "8e3032c419dfcc58957c3f4681e993ae6a4d4686ba0f29c5db3b411703515c09"
+    },
+    {
+      "subpath": "./nav",
+      "importSha256": "b218bbd00c9fafd294c3813ef41a8738205710d3767c62148b77f9f6a620b704",
+      "typesSha256": "7236ee38aba9b52b276e0838c5af24c67c4c8ab758fb18164738545a05c233ca"
+    },
+    {
+      "subpath": "./popover",
+      "importSha256": "549a3ae8abd88b35ba0e7f2f1190b1b9037bca58769ab8d80fcae20ec26f0d00",
+      "typesSha256": "8cefd16f42d3341d01c12f9f127f605b33a336007654e02110c0a8a88d8b7b0f"
+    },
+    {
+      "subpath": "./progress",
+      "importSha256": "d566043c81d85b20dfd7db4d7ae9eb1559a559343a6c5adf01b4e37757106f02",
+      "typesSha256": "29563dc9dc9aaa1b1a72fcee9df64dfc2059e77da8e27a337426d9a74a68126b"
+    },
+    {
+      "subpath": "./radioGroup",
+      "importSha256": "67240c47cee5873a7f8690a5f0d30d6d083bec6051587d331fad5eb7ea1cfc16",
+      "typesSha256": "d6e91e3febbbbf65d24f1f76cffa658ecd9eca9a040fe771094bd59a8ea42dca"
+    },
+    {
+      "subpath": "./select",
+      "importSha256": "6fc4c1cd7a6a48d1445af22ba68cc192e28abb02ca6b4f2ddcc8a7324bab9be9",
+      "typesSha256": "d3264002cbbd4195ccb9b24b3ea1794f392d9651841a2be7d8c6039d250dccbc"
+    },
+    {
+      "subpath": "./slider",
+      "importSha256": "76f3abbcede0169c428a7b87fd234308719cb0ce3d761da8045eb4684121e173",
+      "typesSha256": "027620a4c8078e44d81830c740e1a0d6cacdb9ea177aaef251aeaf37286c7912"
+    },
+    {
+      "subpath": "./switch",
+      "importSha256": "6d7aeee3aeb8f1aebbd8b948f4ca0453391e268974e89d9653ca5f007391bab0",
+      "typesSha256": "692fcac841286c7273b09d2b1408922200da2937b6557459ce40fc338345981e"
+    },
+    {
+      "subpath": "./tabs",
+      "importSha256": "062ed49d27b7895d5d3c9eeeb99c6110a9f9326da7640e89f3bad116544edc3a",
+      "typesSha256": "3b3c55ff041e578c40fd62992c1d8fb46bbbaf83f91bef33a8696c62a9892d7d"
+    },
+    {
+      "subpath": "./textarea",
+      "importSha256": "33914e62551fbb03e20a2ca228153535642cc4ba3b2500c1dfb72133803ea1db",
+      "typesSha256": "b11c601ad9c7fafa916a03c408cc9bde9910a16cb8109dfe60c26eec2bbcb011"
+    },
+    {
+      "subpath": "./toast",
+      "importSha256": "a342207b5aaecc9bde627078d1be41d373691ffd9fea9974ad8fd299c4c92f28",
+      "typesSha256": "3234e944cb8629eb67c66fafc1f981daf708241eb860f1db5981406af432273b"
+    },
+    {
+      "subpath": "./tooltip",
+      "importSha256": "404ab84f73206f6924805e8a6e3165c4bc5ec35d76c75e59ccba3b755d6ae0f9",
+      "typesSha256": "37bd061d4cf06a60fae2fdd34399af77899a7b7a3b8129fffa5e0ab322528397"
+    },
+    {
+      "subpath": "./virtualList",
+      "importSha256": "c6f30e5ec90050b723e2737dbe5e2a5661e828fe8617b1007b7455bb6ece71fd",
+      "typesSha256": "f159a7cdff0a9e50fa5b2bfbde8a7e460304063f70e78ec8184b3de41d5d8c0f"
+    }
+  ]
+}

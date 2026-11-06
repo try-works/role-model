@@ -1,0 +1,42 @@
+✔ publishes . with a built import and declaration (8668.8631ms)
+✔ publishes ./anchor with a built import and declaration (41.5692ms)
+✔ publishes ./animation with a built import and declaration (35.5192ms)
+✔ publishes ./button with a built import and declaration (24.7134ms)
+✔ publishes ./calendar with a built import and declaration (80.3065ms)
+✔ publishes ./checkbox with a built import and declaration (47.4181ms)
+✔ publishes ./combobox with a built import and declaration (90.3822ms)
+✔ publishes ./datePicker with a built import and declaration (118.9249ms)
+✔ publishes ./dialog with a built import and declaration (41.9876ms)
+✔ publishes ./disclosure with a built import and declaration (19.4235ms)
+✔ publishes ./dragAndDrop with a built import and declaration (27.8285ms)
+✔ publishes ./fieldset with a built import and declaration (8.9395ms)
+✔ publishes ./fileDrop with a built import and declaration (25.4296ms)
+✔ publishes ./hoverIntent with a built import and declaration (18.8837ms)
+✔ publishes ./input with a built import and declaration (23.9378ms)
+✔ publishes ./listbox with a built import and declaration (32.5007ms)
+✔ publishes ./menu with a built import and declaration (28.6913ms)
+✔ publishes ./meter with a built import and declaration (39.74ms)
+✔ publishes ./nav with a built import and declaration (21.243ms)
+✔ publishes ./popover with a built import and declaration (26.5953ms)
+✔ publishes ./progress with a built import and declaration (17.0158ms)
+✔ publishes ./radioGroup with a built import and declaration (34.7432ms)
+✔ publishes ./select with a built import and declaration (40.329ms)
+✔ publishes ./slider with a built import and declaration (30.6162ms)
+✔ publishes ./switch with a built import and declaration (36.7182ms)
+✔ publishes ./tabs with a built import and declaration (34.6394ms)
+✔ publishes ./textarea with a built import and declaration (24.354ms)
+✔ publishes ./toast with a built import and declaration (73.2324ms)
+✔ publishes ./tooltip with a built import and declaration (23.1377ms)
+✔ publishes ./virtualList with a built import and declaration (44.2856ms)
+✔ the wrapper exports map is exactly the derived entry surface (16.3834ms)
+✔ the built wrapper graph is browser-safe and excludes the Vite plugin (112.0146ms)
+✔ @foldkit/oxlint-plugin is pinned at 0.15.3 and vendored with the UI payload (308.9512ms)
+✔ the packaged wrapper closure receipt covers every entry and the packaged client (15.3898ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11401.4596
