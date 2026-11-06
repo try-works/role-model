@@ -28,7 +28,7 @@ const linesOf = (file) => readFileSync(join(REPO_ROOT, file), "utf8").split(/\r?
 
 const lineTextAt = (file, line) => linesOf(file)[line - 1] ?? "";
 
-const checkCitation = (issues, id, label, citation) => {
+const checkCitation = (issues, id, label, citation, symbol) => {
   if (citation === null || typeof citation !== "object") {
     issues.push(`${id}: ${label} is not an object`);
     return;
@@ -52,8 +52,15 @@ const checkCitation = (issues, id, label, citation) => {
     issues.push(`${id}: ${label} line ${line} is out of range for ${file} (${lines.length} lines)`);
     return;
   }
-  if ((lines[line - 1] ?? "").trim().length === 0) {
+  const text = lines[line - 1] ?? "";
+  if (text.trim().length === 0) {
     issues.push(`${id}: ${label} cites a blank line: ${file}:${line}`);
+    return;
+  }
+  if (symbol !== undefined && !new RegExp(`\\b${symbol}\\b`).test(text)) {
+    issues.push(
+      `${id}: ${label} does not reference ${symbol} at ${file}:${line} (caller citations must contain the operation token)`,
+    );
   }
 };
 
@@ -115,7 +122,7 @@ export const validateInventory = (inventory) => {
       issues.push(`${id}: callers must cite at least one file:line`);
     } else {
       entry.callers.forEach((caller, index) =>
-        checkCitation(issues, id, `callers[${index}]`, caller),
+        checkCitation(issues, id, `callers[${index}]`, caller, entry.symbol),
       );
     }
   }
@@ -206,7 +213,7 @@ export function enumerateRootOperations() {
   return operations;
 }
 
-test("every root export is listed in the operation ledger (no silent omission)", () => {
+test("every declaration-form runtime root operation is listed in the ledger", () => {
   const inventory = loadInventory();
   const covered = new Set(
     inventory.entries.map((entry) => `${entry.definition.file}:${entry.definition.line}`),
@@ -219,6 +226,36 @@ test("every root export is listed in the operation ledger (no silent omission)",
     [],
     `root operations missing from the inventory: ${missing.length}`,
   );
+});
+
+test("non-declaration root exports are explicitly excluded from operation coverage", () => {
+  const inventory = loadInventory();
+  const forms = new Map([
+    ["export {", "re-export blocks are surface wiring, not operations"],
+    ["export *", "wildcard re-exports are surface wiring"],
+    ["export interface ", "type-only declarations have no runtime operation"],
+    ["export type ", "type-only declarations have no runtime operation"],
+    ["export default", "default exports are not used as operation roots"],
+    ["export function*", "generator declarations are not in the declaration-form set"],
+    ["export let ", "mutable root bindings are not operation roots"],
+    ["export var ", "mutable root bindings are not operation roots"],
+  ]);
+  const found = new Set();
+  for (const file of rootOperationFiles()) {
+    for (const line of readFileSync(join(REPO_ROOT, file), "utf8").split(/\r?\n/)) {
+      for (const form of forms.keys()) if (line.startsWith(form)) found.add(form);
+    }
+  }
+  assert.ok(found.size > 0, "expected non-declaration export forms in the root files");
+  const declared = new Set(
+    (inventory.scope.rootSurfaceExclusions ?? []).map((entry) => entry.form),
+  );
+  for (const form of found) {
+    assert.ok(
+      declared.has(form),
+      `root export form "${form}" is neither inventoried nor explicitly excluded: ${forms.get(form)}`,
+    );
+  }
 });
 
 test("the inventory covers every kind and every disposition", () => {
@@ -337,6 +374,21 @@ test("S301 reworded false SQL exclusion is rejected by the structured guard", ()
   assert.ok(
     issues.some((issue) => issue.startsWith("sql-service-excluded")),
     `a reworded SQL exclusion must be rejected, got: ${issues.join("; ")}`,
+  );
+});
+
+test("a caller citation that does not reference the operation is rejected", () => {
+  const inventory = loadInventory();
+  const entry = inventory.entries.find((candidate) => candidate.id === "module-health-writer");
+  assert.ok(entry?.symbol, "the fixture entry must carry its operation symbol");
+  entry.callers[0] = {
+    file: "role-model-router/apps/runtime-host-bridge/src/index.ts",
+    line: 20522,
+  };
+  const issues = validateInventory(inventory);
+  assert.ok(
+    issues.some((issue) => issue.includes("does not reference")),
+    `expected a semantic caller failure, got: ${issues.join("; ")}`,
   );
 });
 

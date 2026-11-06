@@ -1,0 +1,18 @@
+✔ the hand-written sample inventory validates (97.9614ms)
+✔ the real inventory validates against the code (13909.1922ms)
+✔ every declaration-form runtime root operation is listed in the ledger (171.3622ms)
+✔ non-declaration root exports are explicitly excluded from operation coverage (291.0135ms)
+✔ the inventory covers every kind and every disposition (11.7313ms)
+✔ a deliberately wrong citation fails (23610.7342ms)
+✔ R19/B0: the SQL service is a live product surface, never excluded as callerless (11.1564ms)
+✔ S301 reworded false SQL exclusion is rejected by the structured guard (16.24ms)
+✔ a caller citation that does not reference the operation is rejected (10279.9508ms)
+✔ duplicate ids, unknown dispositions and unknown kinds are rejected (35253.2574ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 84319.1938
