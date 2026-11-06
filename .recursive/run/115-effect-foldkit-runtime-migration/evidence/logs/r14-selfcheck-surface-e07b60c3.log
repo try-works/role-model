@@ -1,0 +1,39 @@
+# R14 packaged selfcheck surface
+head=d64e0445
+exe=E:\role-model-run115\r14-release-e07b60c3\win32-x64\role-model-dev.exe
+react_static_root=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-ui\build\client
+foldkit_static_root=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-ui-next\dist\client
+chrome=C:/Program Files/Google/Chrome/Application/chrome.exe
+route=/selfcheck
+
+run=1 target=react marker=06b996f0 entries=6
+  heading=RM3 selfcheck surface
+  button=Save changes
+  badge=READY
+  input=Operator token
+  chart=requests / hour
+  table=4 rows
+run=1 target=foldkit marker=06b996f0 entries=6
+  heading=RM3 selfcheck surface
+  button=Save changes
+  badge=READY
+  input=Operator token
+  chart=requests / hour
+  table=4 rows
+run=2 target=react marker=06b996f0 entries=6
+  heading=RM3 selfcheck surface
+  button=Save changes
+  badge=READY
+  input=Operator token
+  chart=requests / hour
+  table=4 rows
+run=2 target=foldkit marker=06b996f0 entries=6
+  heading=RM3 selfcheck surface
+  button=Save changes
+  badge=READY
+  input=Operator token
+  chart=requests / hour
+  table=4 rows
+
+SELFCHECK 0DIFF: React and Foldkit markers agree (06b996f0) across two identical runs
+RESULT: PASSED

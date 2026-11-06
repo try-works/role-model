@@ -1,0 +1,15 @@
+version=healthy 0.0.20-722-ge07b60c3
+sha256=1412aa7270d35e168a16fd5c4f2cefd8a5eafa5822d72849383e902db9336a9d
+port=61243 state=E:\tmp\r39-candidate-state-38WZCQ fixtures=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\testdata\router-runtime\fixtures
+PASS health: healthy 0.0.20-722-ge07b60c3
+PASS models: 3 models
+PASS telemetry: requestCount 0
+PASS controller: openai.personal.primary.us-east-1.fast
+PASS learning: role-model.knowledge-worker.v1
+PASS replay jobs: 0 jobs
+PASS evaluation jobs: 0 jobs
+PASS ui css: 67953 bytes, both theme blocks
+PASS ui bundle: 3732376 bytes
+PASS ui theme boot: theme selected in CSS, no inline palette
+PASS chat completion: openai/gpt-4.1-mini-fast total_tokens=56
+PASS ui shell: 2194 bytes
