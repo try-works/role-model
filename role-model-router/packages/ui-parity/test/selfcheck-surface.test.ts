@@ -45,7 +45,7 @@ describe("selfcheck surface", () => {
     const react = { entries: SELFCHECK_ENTRIES, marker, targetId: "react" };
     const foldkit = {
       entries: SELFCHECK_ENTRIES.map((entry) =>
-        entry.key === "theme" ? { ...entry, value: "light" } : entry,
+        entry.key === "badge" ? { ...entry, value: "LIGHT" } : entry,
       ),
       marker,
       targetId: "foldkit",

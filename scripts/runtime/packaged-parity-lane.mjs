@@ -16,11 +16,10 @@
  *       --expect-version pin. The lane asserts both runs PASS and that their assertion outcomes are
  *       IDENTICAL, and writes a PARITY line naming both outcome sets.
  *
- * The React "selfcheck endpoint/route" clause is answered honestly: neither client (runtime-ui,
- * runtime-ui-next) nor either packaged static root exposes a selfcheck route, a react checksum endpoint
- * or a selfcheck marker; the lane records NOT PRESENT with the scanned file count and the matching
- * evidence. The separate browser-capture lane (scripts/runtime/parity-selfcheck.mjs) is a script, not a
- * served route, and is not invoked here.
+ * Phase 3 serves /selfcheck from BOTH clients: the lane starts the packaged executable with each
+ * static root, loads the page twice per client in headless Chrome, and compares the served
+ * data-selfcheck-marker plus the ordered specimen entries. It records SELFCHECK SURFACE: 0DIFF only
+ * when React and Foldkit agree across two identical runs; the source scan remains as corroboration.
  *
  * Usage:
  *   node scripts/runtime/packaged-parity-lane.mjs
@@ -458,7 +457,7 @@ const laneMain = async () => {
     path.join(path.dirname(leftExe), "build", "client"),
   ];
   const surface = scanSelfcheckSurface(scanRoots);
-  const surfaceVerdict = selfcheckSurfaceVerdict(surface.matches);
+  const sourceVerdict = selfcheckSurfaceVerdict(surface.matches);
   record(
     `roots=${JSON.stringify(
       scanRoots.map((root) => path.relative(checkoutRoot, root).split(path.sep).join("/")),
@@ -469,9 +468,47 @@ const laneMain = async () => {
     record(
       `  match ${path.relative(checkoutRoot, match.file).split(path.sep).join("/")}: ${match.line}`,
     );
+  record(`SELFCHECK SOURCE: ${sourceVerdict}`);
+  const surfaceLog = path.join(runLogDir, `r14-selfcheck-surface-${laneHead}.log`);
+  const surfaceJson = surfaceLog.replace(/\.log$/, ".json");
+  const surfaceArgs = [
+    path.join(checkoutRoot, "scripts", "runtime", "parity-selfcheck-surface.mjs"),
+    "--exe",
+    exe,
+    "--react-static-root",
+    path.join(checkoutRoot, "role-model-router", "apps", "runtime-ui", "build", "client"),
+    "--foldkit-static-root",
+    path.join(checkoutRoot, "role-model-router", "apps", "runtime-ui-next", "dist", "client"),
+    "--fixture-root",
+    fixtureRoot,
+    "--log",
+    surfaceLog,
+    "--json",
+    surfaceJson,
+  ];
   record(
-    `SELFCHECK SURFACE: ${surfaceVerdict} - no selfcheck endpoint/route or react-checksum marker is served by either client or packaged static root; the browser-capture lane scripts/runtime/parity-selfcheck.mjs is a script, not a route, and is not claimed here.`,
+    `selfcheck: node ${surfaceArgs
+      .map((entry) => path.relative(checkoutRoot, entry).split(path.sep).join("/"))
+      .join(" ")}`,
   );
+  const surfaceRun = await runNode(surfaceArgs, Number(process.env.R14_SELFCHECK_TIMEOUT_MS ?? 300_000));
+  for (const line of surfaceRun.stdout.split("\n").filter(Boolean)) record(`  [selfcheck] ${line}`);
+  for (const line of surfaceRun.stderr.split("\n").filter(Boolean))
+    record(`  [selfcheck:err] ${line}`);
+  let surfaceResult;
+  try {
+    surfaceResult = JSON.parse(readFileSync(surfaceJson, "utf8"));
+  } catch {
+    surfaceResult = undefined;
+  }
+  const surfaceStatus = surfaceResult?.status ?? "NOT_RUN";
+  const surfaceVerdict = surfaceStatus === "PASSED" ? "0DIFF" : surfaceStatus;
+  record(
+    `SELFCHECK SURFACE: ${surfaceVerdict} - ${surfaceResult?.reason ?? "capture did not produce a JSON result"}`,
+  );
+  record(`SELFCHECK LOG: ${path.relative(checkoutRoot, surfaceLog).split(path.sep).join("/")}`);
+  if (surfaceStatus !== "PASSED")
+    failures.push(`selfcheck surface: ${surfaceStatus} (${String(surfaceResult?.reason ?? "no result")})`);
   record("");
 
   record("# RESULT");

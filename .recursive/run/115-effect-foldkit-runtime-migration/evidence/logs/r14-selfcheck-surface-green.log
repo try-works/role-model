@@ -1,0 +1,87 @@
+### ui-parity selfcheck surface GREEN
+
+> @role-model-router/ui-parity@0.0.0 test D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\ui-parity
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui-parity
+
+ ✓ test/selfcheck-surface.test.ts (4 tests) 41ms
+ ✓ test/structure.test.ts (33 tests) 123ms
+ ✓ test/compare.test.ts (35 tests) 101ms
+ ✓ test/target-contract.test.ts (58 tests) 213ms
+ ✓ test/selfcheck.test.ts (2 tests) 139ms
+
+ Test Files  5 passed (5)
+      Tests  132 passed (132)
+   Start at  15:18:05
+   Duration  5.41s (transform 2.49s, setup 0ms, collect 3.86s, tests 616ms, environment 7ms, prepare 7.75s)
+
+
+### packaged lane helper GREEN
+▶ packaged parity lane helpers
+  ✔ parses PASS/FAIL assertion outcomes in order and ignores narrating lines (8.3347ms)
+  ✔ reports PARITY for identical outcomes and DIVERGENCE for a changed one (2.2238ms)
+  ✔ reports INCOMPLETE when a run produced no assertion outcomes (0.9954ms)
+  ✔ classifies a compare-release summary: same/additive/environment is parity, different is not (3.1301ms)
+  ✔ states the selfcheck surface honestly (1.0029ms)
+✔ packaged parity lane helpers (22.2945ms)
+▶ selfcheck surface scan is not fooled by minified bundles
+  ✔ ignores react+digest co-occurrence inside a one-line bundle but reports a route marker in source (50.7177ms)
+✔ selfcheck surface scan is not fooled by minified bundles (51.473ms)
+▶ served selfcheck surface
+  ✔ extracts the served marker and ordered specimen entries from rendered DOM (3.1563ms)
+  ✔ reports 0DIFF for identical packaged React and Foldkit surfaces across a double run (3.3313ms)
+  ✔ reports the divergence instead of 0DIFF when an entry differs (1.71ms)
+✔ served selfcheck surface (9.9891ms)
+ℹ tests 9
+ℹ suites 3
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 897.4856
+
+### packaged selfcheck surface probe (current builds + packaged host)
+# R14 packaged selfcheck surface
+head=544a2c9f
+exe=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\dist\release\win32-x64\role-model-dev.exe
+react_static_root=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-ui\build\client
+foldkit_static_root=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-ui-next\dist\client
+chrome=C:/Program Files/Google/Chrome/Application/chrome.exe
+route=/selfcheck
+
+run=1 target=react marker=06b996f0 entries=6
+  heading=RM3 selfcheck surface
+  button=Save changes
+  badge=READY
+  input=Operator token
+  chart=requests / hour
+  table=4 rows
+run=1 target=foldkit marker=06b996f0 entries=6
+  heading=RM3 selfcheck surface
+  button=Save changes
+  badge=READY
+  input=Operator token
+  chart=requests / hour
+  table=4 rows
+run=2 target=react marker=06b996f0 entries=6
+  heading=RM3 selfcheck surface
+  button=Save changes
+  badge=READY
+  input=Operator token
+  chart=requests / hour
+  table=4 rows
+run=2 target=foldkit marker=06b996f0 entries=6
+  heading=RM3 selfcheck surface
+  button=Save changes
+  badge=READY
+  input=Operator token
+  chart=requests / hour
+  table=4 rows
+
+SELFCHECK 0DIFF: React and Foldkit markers agree (06b996f0) across two identical runs
+RESULT: PASSED
+log=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\.recursive\run\115-effect-foldkit-runtime-migration\evidence\logs\r14-selfcheck-surface-green-surface.log
+json=D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\.recursive\run\115-effect-foldkit-runtime-migration\evidence\logs\r14-selfcheck-surface-green-surface.json

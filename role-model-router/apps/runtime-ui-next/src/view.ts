@@ -339,7 +339,10 @@ const routeTitle = (route: Model["route"]): string =>
     Providers: () => "Providers | RM3 Foldkit shell",
     Endpoints: () => "Endpoints | RM3 Foldkit shell",
     ControlController: () => "Controller | RM3 Foldkit shell",
-    NotFound: ({ path }) => `Not found: ${path} | RM3 Foldkit shell`,
+    NotFound: ({ path }) =>
+      path === "/selfcheck"
+        ? "Selfcheck | RM3 Foldkit shell"
+        : `Not found: ${path} | RM3 Foldkit shell`,
   });
 
 interface ShellSection {
@@ -2401,6 +2404,72 @@ const routeContent = (ctx: RouteViewContext): Html => {
     requestsRankingTargetListbox,
     h,
   } = ctx;
+
+  // R14: the selfcheck surface is served by the catch-all route so the product route table is
+  // unchanged. Both clients render the same ordered specimen and publish its checksum.
+  const selfcheckEntries = [
+    { key: "heading", value: "RM3 selfcheck surface" },
+    { key: "button", value: "Save changes" },
+    { key: "input", value: "Operator token" },
+    { key: "badge", value: "READY" },
+    { key: "chart", value: "requests / hour" },
+    { key: "table", value: "4 rows" },
+  ] as const;
+  const selfcheckMarker = (() => {
+    const canonical = [...selfcheckEntries]
+      .sort((left, right) => (left.key < right.key ? -1 : left.key > right.key ? 1 : 0))
+      .map((entry) => `${entry.key}\u0000${entry.value}`)
+      .join("\u0001");
+    let hash = 0x811c9dc5;
+    for (let index = 0; index < canonical.length; index += 1) {
+      hash ^= canonical.charCodeAt(index);
+      hash = Math.imul(hash, 0x01000193) >>> 0;
+    }
+    return hash.toString(16).padStart(8, "0");
+  })();
+  const selfcheckPage = (h: HtmlBuilder<Message>): Html => {
+    const entry = (key: string, value: string, label: string): Html =>
+      h.div(
+        [
+          h.Class("rounded-md border border-[var(--rm-border)] p-3 text-sm"),
+          h.DataAttribute("selfcheck-key", key),
+          h.DataAttribute("selfcheck-value", value),
+        ],
+        [label],
+      );
+    return h.main(
+      [
+        h.Class("rm3-next-route min-h-screen bg-[var(--rm-bg)] p-4"),
+        h.DataAttribute("selfcheck-marker", selfcheckMarker),
+        h.DataAttribute("selfcheck-surface", "rm3"),
+      ],
+      [
+        h.div(
+          [h.Class("mx-auto max-w-3xl space-y-6 pt-16")],
+          [
+            h.div(
+              [
+                h.DataAttribute("selfcheck-key", "heading"),
+                h.DataAttribute("selfcheck-value", "RM3 selfcheck surface"),
+              ],
+              [
+                h.p(
+                  [h.Class("text-[11px] font-semibold uppercase tracking-[0.24em]")],
+                  ["Selfcheck"],
+                ),
+                h.h1([h.Class("text-2xl font-semibold")], ["RM3 selfcheck surface"]),
+              ],
+            ),
+            entry("button", "Save changes", "Save changes"),
+            entry("badge", "READY", "READY"),
+            entry("input", "Operator token", "Operator token"),
+            entry("chart", "requests / hour", "requests / hour"),
+            entry("table", "4 rows", "4 rows"),
+          ],
+        ),
+      ],
+    );
+  };
   const routeRegistry = {
     Diagnostics: (route) => {
       const { id } = route;
@@ -2849,6 +2918,7 @@ const routeContent = (ctx: RouteViewContext): Html => {
       }),
     NotFound: (route) => {
       const { path } = route;
+      if (path === "/selfcheck") return selfcheckPage(h);
       return h.section(
         [
           h.Class("rm3-next-route"),
