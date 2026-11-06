@@ -1,0 +1,40 @@
+# S667 - real-owner-model verification on :3480 (fixtures removed)
+
+Date: 2026-11-07. Runtime: 0.0.20-761-g3f7779fb, exe 5e0810c0... served on 127.0.0.1:3480
+with the worktree client (S664/S665/S666). State root D:/DEV/rm-clean/r761-live-state.
+
+## Fixtures removed
+- Seeded fixture accounts deleted from the state DB (standalone-runtime-dev/memory/memory.sqlite):
+  openai.personal.primary (openai/gpt-4.1-mini-fast), anthropic.team.shared (claude-3.7-sonnet).
+- Runtime relaunched WITHOUT --fixture-root so the fixture provider-accounts.json is not re-seeded.
+- Confirmed: GET /api/role-model/accounts = deepseek.personal.deepseek-api-key, moonshot.personal.kimi-code only.
+
+## Owner's real models kept
+- deepseek.personal.deepseek-api-key (local-file API key): deepseek/deepseek-flash, deepseek/deepseek-v4-pro.
+- moonshot.personal.kimi-code (OAuth2 device code, all 28 roles): moonshot/kimi-k2.6, kimi-k2.7-code, kimi-k3.
+
+## Real inference (POST /v1/chat/completions, real provider calls)
+| model | finish | content | usage |
+|---|---|---|---|
+| deepseek/deepseek-flash | stop | OK | 35/9/44 |
+| deepseek/deepseek-v4-pro | stop | OK | 88/21/109 |
+| moonshot/kimi-k2.6 | stop | OK | 91/33/124 |
+| moonshot/kimi-k2.7-code | stop | OK | 91/34/125 |
+| moonshot/kimi-k3 | stop | OK | 91/37/128 |
+
+Streaming (kimi-k3, stream=true): HTTP 200, 49 SSE events, terminal [DONE], 9821 bytes.
+
+## Routing + capture
+- GET /v1/models lists only the real aliases/endpoints (deepseek/*, moonshot/*).
+- Telemetry /api/role-model/telemetry/requests recorded the live requests with endpointId,
+  reasoningEffort, roleIds (28), eligibleEndpointIds, statusFamily=success, payload byte counts.
+- Router /api/role-model/router/decisions returns 9 captured decisions.
+
+## UI readbacks (client bundle at :3480)
+- /control/providers: 2 accounts, moonshot 2 endpoints + deepseek, each model healthy with 28 roles.
+- /control/endpoints: DeepSeek V4.1 Flash 2, DeepSeek V4 Pro 1, Kimi K2.6 1, Kimi K2.7 Code 1, Kimi K3 4; no fixture models.
+- /models and /router render with no fixture models.
+
+## Remaining acceptance-lane items
+- Role/controller-initiated routing (requestedRoleId from guidance) not exercised in this receipt;
+  the direct-alias lane is verified. R15's ordinary-client (DSH/pi) lane still needs the client config.
