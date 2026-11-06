@@ -28,7 +28,7 @@ test("S177: the filter select carries an aria-label", () => {
 });
 
 test("S177: no select is added without a name in the port", () => {
-  const tags = [...source.matchAll(/h\.select\(\[([\s\S]*?)\],/g)].map((match) => match[1]);
+  const tags = [...source.matchAll(/h\.select\(\s*\[([\s\S]*?)\]\s*,/g)].map((match) => match[1]);
   assert.ok(tags.length > 0, "the port still builds selects");
   for (const tag of tags) {
     assert.match(

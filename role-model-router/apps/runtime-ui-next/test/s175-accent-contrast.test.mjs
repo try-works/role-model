@@ -21,7 +21,9 @@ test("S175: no accent-filled control uses text-white", () => {
 });
 
 test("S175: accent fills pair with the accent ink token", () => {
-  const classStrings = [...source.matchAll(/Class\("([^"]*)"\)/g)].map((match) => match[1]);
+  const classStrings = [
+    ...source.matchAll(/Class\(\s*(?:"([^"]*)"|`([^`]*)`|'([^']*)')\s*,?\s*\)/g),
+  ].map((match) => match[1] ?? match[2] ?? match[3] ?? "");
   const accentFills = classStrings.filter((value) => value.includes("bg-[var(--rm-accent)]"));
   assert.ok(accentFills.length > 0, "the shell still has accent-filled controls");
   for (const value of accentFills) {
