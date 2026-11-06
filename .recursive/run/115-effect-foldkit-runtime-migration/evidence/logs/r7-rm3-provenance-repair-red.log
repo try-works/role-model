@@ -1,0 +1,54 @@
+### R7 provenance repair RED
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui
+
+ ❯ src/rm3-provenance.test.ts (2 tests | 2 failed) 32492ms
+   × R7 RM3 provenance ledgers > proves Foldcn is absent from vendor and role-model-router, not just the prose 32451ms
+     → Foldcn references outside role-model-router/packages/ui/FOLDCN-GAP.md: role-model-router/packages/ui/src/rm3-provenance.test.ts: expected [ Array(1) ] to deeply equal []
+   × R7 RM3 provenance ledgers > gives every first-party RM3 component exactly one row with a verified upstream hash or first-party marker 24ms
+     → missing ledger row: badge.tsx: expected undefined to be defined
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/rm3-provenance.test.ts > R7 RM3 provenance ledgers > proves Foldcn is absent from vendor and role-model-router, not just the prose
+AssertionError: Foldcn references outside role-model-router/packages/ui/FOLDCN-GAP.md: role-model-router/packages/ui/src/rm3-provenance.test.ts: expected [ Array(1) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "role-model-router/packages/ui/src/rm3-provenance.test.ts",
++ ]
+
+ ❯ src/rm3-provenance.test.ts:68:77
+     66|   it("proves Foldcn is absent from vendor and role-model-router, not j…
+     67|     const hits = [...scanForbidden("vendor", GAP), ...scanForbidden("r…
+     68|     expect(hits, `${FOLDCN} references outside ${GAP}: ${hits.join(", …
+       |                                                                             ^
+     69|   });
+     70| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/rm3-provenance.test.ts > R7 RM3 provenance ledgers > gives every first-party RM3 component exactly one row with a verified upstream hash or first-party marker
+AssertionError: missing ledger row: badge.tsx: expected undefined to be defined
+ ❯ src/rm3-provenance.test.ts:77:52
+     75|     for (const source of sources) {
+     76|       const row = rows.get(source);
+     77|       expect(row, `missing ledger row: ${source}`).toBeDefined();
+       |                                                    ^
+     78|       const [, upstream, pin, digest, licence, owner] = row ?? [];
+     79|       expect(owner?.length).toBeGreaterThan(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  19:34:28
+   Duration  38.89s (transform 411ms, setup 0ms, collect 392ms, tests 32.49s, environment 3ms, prepare 1.80s)
+
+undefined
+D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/rm3-provenance.test.ts

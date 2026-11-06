@@ -1,0 +1,23 @@
+### R7 provenance repair GREEN
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui
+
+ ✓ src/rm3-provenance.test.ts (2 tests) 15577ms
+   ✓ R7 RM3 provenance ledgers > proves Foldcn is absent from vendor and role-model-router, not just the prose  15523ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  19:51:52
+   Duration  18.53s (transform 348ms, setup 0ms, collect 226ms, tests 15.58s, environment 1ms, prepare 1.16s)
+
+### R8 strengthened matrix GREEN
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/foldkit
+
+ ✓ test/s652-rm3-behavior-matrix.scene.test.ts (10 tests) 188ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  19:52:16
+   Duration  16.14s (transform 7.64s, setup 0ms, collect 12.52s, tests 188ms, environment 1ms, prepare 1.10s)
+

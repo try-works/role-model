@@ -1,0 +1,47 @@
+### R7 provenance repair GREEN
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/ui
+
+ ❯ src/rm3-provenance.test.ts (2 tests | 2 failed) 23484ms
+   × R7 RM3 provenance ledgers > proves Foldcn is absent from vendor and role-model-router, not just the prose 23443ms
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   × R7 RM3 provenance ledgers > gives every first-party RM3 component exactly one row with a verified upstream hash or first-party marker 34ms
+     → missing ledger row: rm3-matrix.ts: expected undefined to be defined
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/rm3-provenance.test.ts > R7 RM3 provenance ledgers > proves Foldcn is absent from vendor and role-model-router, not just the prose
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ src/rm3-provenance.test.ts:66:3
+     64| 
+     65| describe("R7 RM3 provenance ledgers", () => {
+     66|   it(`proves ${FOLDCN} is absent from vendor and role-model-router, no…
+       |   ^
+     67|     const hits = [...scanForbidden("vendor", GAP), ...scanForbidden("r…
+     68|     expect(hits, `${FOLDCN} references outside ${GAP}: ${hits.join(", …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/rm3-provenance.test.ts > R7 RM3 provenance ledgers > gives every first-party RM3 component exactly one row with a verified upstream hash or first-party marker
+AssertionError: missing ledger row: rm3-matrix.ts: expected undefined to be defined
+ ❯ src/rm3-provenance.test.ts:77:52
+     75|     for (const source of sources) {
+     76|       const row = rows.get(source);
+     77|       expect(row, `missing ledger row: ${source}`).toBeDefined();
+       |                                                    ^
+     78|       const [, upstream, pin, digest, licence, owner] = row ?? [];
+     79|       expect(owner?.length).toBeGreaterThan(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  19:38:41
+   Duration  30.81s (transform 744ms, setup 0ms, collect 439ms, tests 23.48s, environment 1ms, prepare 2.42s)
+
+undefined
+D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/rm3-provenance.test.ts

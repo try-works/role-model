@@ -1,4 +1,5 @@
 import type { Attribute, Html, HtmlBuilder } from "@role-model-router/foldkit/html";
+import { Option } from "effect";
 
 import { RM3_FIELD_LABEL_CLASS } from "./foldkit-input";
 
@@ -159,6 +160,15 @@ export function view<Message>(
     attributes.push(onClick);
   } else {
     attributes.push(h.OnClick(onToggle(!isChecked)));
+    // R8 keyboard: the default toggle also honours Space/Enter directly. Preventing the
+    // keydown default suppresses the browser's synthetic click, so one key press toggles once.
+    attributes.push(
+      h.OnKeyDownPreventDefault((key) =>
+        key === " " || key === "Enter"
+          ? Option.some(onToggle(!isChecked))
+          : Option.none(),
+      ),
+    );
   }
   if (onPointerDown !== undefined) {
     attributes.push(onPointerDown);
