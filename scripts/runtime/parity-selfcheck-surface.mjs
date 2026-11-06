@@ -242,7 +242,7 @@ const resolveChrome = () => {
     "/usr/bin/google-chrome",
     "/usr/bin/chromium",
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-  ].filter((candidate) => candidate.length > 0);
+  ].filter((candidate) => Boolean(candidate));
   return candidates.find((candidate) => existsSync(candidate));
 };
 
