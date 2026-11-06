@@ -11,7 +11,9 @@ import type { Return as UpdateReturn } from "../dist/types/update.js";
 import { defineMessageUnion } from "../dist/message.js";
 
 import { rm3ButtonClassName, view as buttonView } from "../../ui/src/foldkit-button";
+import { view as checkboxView } from "../../ui/src/foldkit-checkbox";
 import { RM3_FIELD_CLASS, view as inputView } from "../../ui/src/foldkit-input";
+import { view as textareaView } from "../../ui/src/foldkit-textarea";
 import { cn } from "../../ui/src/lib/utils";
 import { RM3_BEHAVIOR_MATRIX } from "../../ui/src/rm3-matrix";
 import {
@@ -38,10 +40,27 @@ const surface = (h: HtmlBuilder<Message>): Html =>
     [h.DataAttribute("theme", "dark")],
     [
       buttonView<Message>({ children: ["Save"], onClick: Message.Pressed() }, h),
+      checkboxView(
+        {
+          ariaLabel: "Enable feature",
+          isChecked: false,
+          onToggle: () => Message.Pressed(),
+        },
+        h,
+      ),
       inputView(
         {
           id: "name",
           label: "Name",
+          value: "",
+          onInput: (value) => Message.Changed({ value }),
+        },
+        h,
+      ),
+      textareaView(
+        {
+          id: "notes",
+          label: "Notes",
           value: "",
           onInput: (value) => Message.Changed({ value }),
         },
@@ -78,6 +97,8 @@ describe("S652 RM3 behaviour matrix", () => {
         Scene.expect(Scene.role("button")).toHaveAccessibleName("Save"),
         Scene.expect(Scene.role("textbox")).toHaveAttr("id", "name"),
         Scene.expect(Scene.role("textbox")).toHaveClass("w-full"),
+        Scene.expectAll(Scene.all.role("textbox")).toHaveCount(2),
+        Scene.expect(Scene.role("checkbox")).toHaveAccessibleName("Enable feature"),
       );
     }
   });
@@ -102,6 +123,8 @@ describe("S652 RM3 behaviour matrix", () => {
       Scene.expect(Scene.role("button")).toHaveAccessibleName("Save"),
       Scene.expect(Scene.role("textbox")).toHaveAttr("id", "name"),
       Scene.expect(Scene.role("textbox")).toHaveAccessibleName("Name"),
+      Scene.expect(Scene.role("checkbox")).toHaveAccessibleName("Enable feature"),
+      Scene.expectAll(Scene.all.role("textbox")).toHaveCount(2),
     );
   });
 
