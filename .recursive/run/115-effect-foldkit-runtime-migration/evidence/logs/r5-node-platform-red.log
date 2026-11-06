@@ -1,0 +1,67 @@
+✖ both Node platform wrappers exist and publish exactly the vendored subpaths (5.3424ms)
+✖ the built Node graph externalises only the declared peers and never bundles vendor sources (1.0064ms)
+✔ the browser wrappers never import a Node platform wrapper (263.6192ms)
+✖ every Node wrapper entry resolves through its export and imports a namespace (1.0636ms)
+✔ the browser entry assembly still resolves its own vendored package (58.72ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 2
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 562.3571
+
+✖ failing tests:
+
+test at scripts\effect-platform-node-graph.test.mjs:73:1
+✖ both Node platform wrappers exist and publish exactly the vendored subpaths (5.3424ms)
+  AssertionError [ERR_ASSERTION]: missing Node platform wrapper @effect/platform-node-shared at D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\effect-platform-node-shared
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/effect-platform-node-graph.test.mjs:75:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at scripts\effect-platform-node-graph.test.mjs:94:1
+✖ the built Node graph externalises only the declared peers and never bundles vendor sources (1.0064ms)
+  AssertionError [ERR_ASSERTION]: build output missing for @effect/platform-node-shared: run node build.mjs
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/effect-platform-node-graph.test.mjs:97:12)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at scripts\effect-platform-node-graph.test.mjs:136:1
+✖ every Node wrapper entry resolves through its export and imports a namespace (1.0636ms)
+  Error: ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\packages\effect-platform-node-shared\package.json'
+      at readFileSync (node:fs:440:20)
+      at readJson (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/effect-platform-node-graph.test.mjs:45:39)
+      at TestContext.<anonymous> (file:///D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/scripts/effect-platform-node-graph.test.mjs:138:22)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'D:\\DEV\\role-model\\.worktrees\\115-effect-foldkit-runtime-migration\\role-model-router\\packages\\effect-platform-node-shared\\package.json'
+  }
