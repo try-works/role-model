@@ -1,0 +1,19 @@
+
+> role-model@0.0.0 runtime:verify-packaged-candidate D:\DEV\rm-clean\r5-pkg-src
+> node scripts/runtime/verify-packaged-candidate.mjs
+
+version=healthy 0.0.20-706-g544a2c9f
+sha256=5defa3c5bfc022f23590b83c7493db96daf0c7d97faf06a76e15809da8c33ec2
+port=50368 state=E:\tmp\r39-candidate-state-hQ9Ao2 fixtures=D:\DEV\rm-clean\r5-pkg-src\testdata\router-runtime\fixtures
+PASS health: healthy 0.0.20-706-g544a2c9f
+PASS models: 3 models
+PASS telemetry: requestCount 0
+PASS controller: openai.personal.primary.us-east-1.fast
+PASS learning: role-model.knowledge-worker.v1
+PASS replay jobs: 0 jobs
+PASS evaluation jobs: 0 jobs
+PASS ui css: 67781 bytes, both theme blocks
+PASS ui bundle: 3729761 bytes
+PASS ui theme boot: theme selected in CSS, no inline palette
+PASS chat completion: openai/gpt-4.1-mini-fast total_tokens=56
+PASS ui shell: 2194 bytes
