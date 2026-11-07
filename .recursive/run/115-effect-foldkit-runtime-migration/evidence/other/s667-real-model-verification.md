@@ -124,3 +124,18 @@ judgeEndpointId: moonshot.personal.kimi-code.global.kimi-k3, mode: quick } -> ru
 - Progress readback: endpointIndex=1/2, caseIndex=1/12, completedSteps=0/60 at start, incrementing.
 - UI progress panel: "Phase 1 of 3 · Recording responses", "7 / 60 steps",
   "model 1/2: deepseek/deepseek-flash" — the off-by-one is gone in the live build.
+## Completed real benchmark (run a0475d47, 2026-11-07)
+POST /api/role-model/benchmark/runs { endpointIds: [deepseek-flash-max, kimi-k3-high],
+judgeEndpointId: kimi-k3, mode: quick } -> completed, outcome=partial, steps 60/60,
+caseCounts {total 24, passed 19, failed 5}.
+Grades (judge method "judge", real LLM grading):
+- deepseek.personal.deepseek-api-key.global.deepseek-flash-max (deepseek/deepseek-flash) overall 0.7667, 12 cases
+- moonshot.personal.kimi-code.global.kimi-k3-high (moonshot/kimi-k3) overall 0.475, 12 cases
+Sample graded cases: p17-tools-multi-hard=1, x01-max-signal=0.55, h01-implement-two-sum=1.
+Progress counters verified live at start: endpointIndex 1/2, caseIndex 1/12, steps 0/60; UI panel
+"model 1/2: deepseek/deepseek-flash". Artifact root under the runtime state root.
+
+## Packaging note (S669 follow-up)
+runtime:package-sea in this worktree refuses: "development packaging requires the exact private
+distribution". Baking the S664-S668 UI fixes into a new exe needs the paired private build
+(lockstep), so :3480 currently serves the worktree client build for those fixes.
