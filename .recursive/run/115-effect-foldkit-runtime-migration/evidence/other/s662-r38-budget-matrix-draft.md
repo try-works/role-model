@@ -52,3 +52,15 @@ End-to-end latency (p50, live telemetry) and estimated cost per request:
 
 DISPOSITION: PARTIAL — identity fixed, thresholds proposed, live latency/cost measured; approval
 plus the burst/degraded/rollback legs remain owner-gated.
+## Burst leg measured (2026-11-07, real model)
+6 concurrent POST /v1/chat/completions to deepseek/deepseek-flash (max_tokens 30):
+- 6/6 HTTP 200, 0 failures, wall 4.5 s, p50 2.8 s, p95 4.3 s (real token usage per request).
+This is the "burst" leg of the R38 backend budget; the degraded/collector-down legs still need an
+operator-approved fault harness.
+
+## R39 workflow verification (2026-11-07)
+node --test scripts/r39-workflow-flags.test.mjs -> 7/7 PASS, including "the advisory flag can be
+flipped to blocking" and "every --flag the workflow passes exists". .github/workflows/build-binaries.yml
+gates each R39 step with continue-on-error: ${{ vars.R39_VERIFY_BLOCKING != 'true' }} and the guard
+code throws when a required R39 step "did NOT RUN" while blocking. So R39's mechanical half is
+verified; only the GitHub repo variable flip + one dispatch run remain (owner-gated).
