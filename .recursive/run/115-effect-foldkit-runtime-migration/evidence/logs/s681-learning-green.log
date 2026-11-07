@@ -1,10 +1,10 @@
 
  RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
 
- ✓ test/s681-learning-readback.test.ts (4 tests) 43ms
+ ✓ test/s681-learning-readback.test.ts (4 tests) 61ms
 
  Test Files  1 passed (1)
       Tests  4 passed (4)
-   Start at  16:09:46
-   Duration  11.78s (transform 4.42s, setup 0ms, collect 6.98s, tests 43ms, environment 3.10s, prepare 651ms)
+   Start at  16:15:24
+   Duration  12.57s (transform 4.61s, setup 0ms, collect 7.29s, tests 61ms, environment 3.30s, prepare 677ms)
 
