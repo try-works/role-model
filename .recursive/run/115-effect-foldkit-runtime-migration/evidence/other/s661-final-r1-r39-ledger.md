@@ -37,7 +37,7 @@ private manifest `7cc4b103…`, evidence commit db93cb3c, FINAL-PACKAGE.json tie
 | R29 | VERIFIED | full recovery matrix (stale lease/interrupted/failed ack/corrupt+restore/partial publication). |
 | R30 | VERIFIED | clause-complete two-host/lease/evidence-before-ack receipt. |
 | R31 | VERIFIED | integrated trial/learning/contribution receipt. |
-| R32 | PARTIAL | private capture->queue->projection Layers (dd026406); public/private packaged cross-repo proof not produced. |
+| R32 | VERIFIED (bounded) | private Layers built at b4688938 and staged into the 818 packaged exe (track-b manifest e1d678a8, 13 extensions); live chain proof: captures -> replay.dispatch queue (18 dispatches, 9 counterfactuals) -> 12 evaluation jobs with evidence artifacts -> learning (10 indexed) with outcome-ok track-b ticks (s677). Bound: individual graph node IDs not walked. | private capture->queue->projection Layers (dd026406); public/private packaged cross-repo proof not produced. |
 | R33 | VERIFIED (bounded) | B10 ledger double-PASS; honest 0-converted / 60-adapter / 6-pure (retention, not conversion). |
 | R34 | OWNER-DISPOSITION | E1 deferred (owner-scope-decision). |
 | R35 | OWNER-DISPOSITION | E2 deferred (owner-scope-decision). |
