@@ -85,3 +85,20 @@ Each request pinned deepseek/deepseek-v4-pro with role coder and a different x-r
   /v1/chat/completions because that surface requires a pinned model alias; the controller evaluates
   candidates for the pinned model. Cross-provider selection belongs to the role/controller surface
   (Studio/agent), which remains to be exercised.
+## Observe / learning / error-path surfaces (2026-11-07)
+- /api/role-model/telemetry/rows: 16 endpoint rows with real token counts, estimated cost,
+  latency, role bindings; the invalid-model probe is recorded as routing.failed.pre-execution
+  (failureCount 1) proving the error path is captured.
+- /api/metrics/page: real request rows (model does/not-exist visible as the failed probe).
+- /api/role-model/operator/learning: knowledge worker available (sqlite_fts5_bm25, 0 candidates,
+  0 indexed documents) — learning pipeline live, no data yet.
+- Header capture: x-client-request-id=client-cap-001 recorded as clientRequestId.
+- Prompt cache: promptCacheSupported=true but cachedRequestCount=0 over repeated identical
+  deepseek-flash prompts (provider-side cache minimum prefix/window); recorded, not a failure.
+- Invalid model -> clean 400 capability_eligibility_error/no_eligible_target.
+
+## R15/R17 status after this verification
+- R15 real-provider lane: real DeepSeek + real Kimi (OAuth) inference verified through the packaged
+  runtime surface; the strict "ordinary DSH/pi CLI" client is still open (dsh binary not on PATH).
+- R17 joined journey: provider -> decision -> capture -> UI -> restart verified; the graph/payload
+  join and the private replay root remain.
