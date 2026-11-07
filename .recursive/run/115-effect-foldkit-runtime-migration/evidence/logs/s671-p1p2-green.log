@@ -1,0 +1,66 @@
+FENCE
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:31376) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/s594-r30-evidence-fence.test.ts > R30 attempt fence > leaves the persisted-queue job unacknowledged when the handler records no evidence
+[run101] replay.dispatch job failed terminally:req-fence-missing attempts=1/1 replay.dispatch attempt fence rejected evidence_missing for req-fence-missing
+
+ ✓ test/s594-r30-evidence-fence.test.ts (8 tests) 1771ms
+   ✓ R30 attempt fence > acks a persisted-queue retry from an already-completed fence without rerunning the handler  551ms
+   ✓ R30 attempt fence > acks a persisted-queue job only after the handler records durable evidence  316ms
+   ✓ R30 attempt fence > leaves the persisted-queue job unacknowledged when the handler records no evidence  328ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  12:34:47
+   Duration  20.16s (transform 10.06s, setup 0ms, collect 16.10s, tests 1.77s, environment 1ms, prepare 733ms)
+
+LEDGER
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/run100-replay-budget-channel-enforcement.test.ts (7 tests) 246ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  12:35:19
+   Duration  26.85s (transform 11.90s, setup 0ms, collect 22.35s, tests 246ms, environment 1ms, prepare 1.77s)
+
+CAPTURE
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:30820) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/run98-a40-route-capture-queue.test.ts (8 tests) 2110ms
+   ✓ a40 L2: a boundary failure keeps the capture for retry instead of losing it  427ms
+   ✓ a40 L2: a capture that keeps failing reaches a typed terminal disposition  309ms
+   ✓ a40 L2: a capture past its deadline is expired instead of retried  331ms
+   ✓ a40 L2: a delivered capture records a typed delivered receipt  323ms
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  12:35:56
+   Duration  5.98s (transform 504ms, setup 0ms, collect 540ms, tests 2.11s, environment 1ms, prepare 988ms)
+
+AUTO
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:30332) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/replay-claimed-capture-smoke.test.ts > a claimed capture is replayed from its root metadata when the pending page omits it
+[run104-pending] captures=1 scoped=1 first=claimed-capture only=claimed-capture pendingCount=n/a captureCount=n/a
+
+stderr | test/replay-claimed-capture-smoke.test.ts > the claimed capture fallback carries the source model identity to the planner
+[run104-pending] captures=1 scoped=1 first=claimed-model-capture only=claimed-model-capture pendingCount=n/a captureCount=n/a
+
+ ✓ test/replay-claimed-capture-smoke.test.ts (3 tests) 260ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  12:36:15
+   Duration  28.68s (transform 14.37s, setup 0ms, collect 25.21s, tests 260ms, environment 1ms, prepare 1.17s)
+

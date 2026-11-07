@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { expect, test } from "vitest";
 import { startAutoReplayLoop } from "../src/track-b-auto-replay-runtime.js";
-import type { AutoReplayCapture } from "../src/track-b-auto-replay.js";
+import { type AutoReplayCapture, runAutoReplayTick } from "../src/track-b-auto-replay.js";
 import { createReplayLedger } from "../src/track-b-replay-ledger.js";
 import { buildReplayPolicySet } from "../src/track-b-replay-policy.js";
 
@@ -158,5 +158,36 @@ test("the claimed capture fallback carries the source model identity to the plan
   const dispatched = calls.flatMap((call) => call.candidates);
   expect(dispatched).toContain("endpoint-pro-max");
   expect(dispatched).not.toContain("endpoint-alt-flash-high");
+  await rm(directory, { recursive: true, force: true });
+});
+
+test("runAutoReplayTick skips a capture whose durable disposition is already terminal", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "settled-tick-smoke-"));
+  let calls = 0;
+  const settled: AutoReplayCapture = {
+    captureRef: "settled-capture",
+    sourceEndpointId: "endpoint-b",
+    hasRecordedToolResults: false,
+    roleId: "scientist",
+    taskTypeId: "scientist.data.interpret",
+    replayDispositionSettled: true,
+  };
+  const result = await runAutoReplayTick({
+    captures: [settled],
+    configuredEndpointIds: ["endpoint-a", "endpoint-b"],
+    healthyEndpointIds: ["endpoint-a", "endpoint-b"],
+    ledger: createReplayLedger({ filePath: `${directory}/ledger.json`, now: () => 1_000 }),
+    policySet: buildReplayPolicySet(),
+    executor: async () => {
+      calls += 1;
+      return {
+        terminal: true,
+        branches: [{ endpointId: "endpoint-a", outcome: "complete" as const }],
+      };
+    },
+  });
+  expect(calls).toBe(0);
+  expect(result.processed).toBe(0);
+  expect(result.dispositions).toEqual([]);
   await rm(directory, { recursive: true, force: true });
 });
