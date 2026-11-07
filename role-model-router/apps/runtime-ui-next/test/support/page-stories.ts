@@ -127,7 +127,9 @@ export const PAGE_STORIES = {
       { level: 2, text: "Evidence" },
       { level: 2, text: "Evidence loss by reason" },
     ],
-    tables: [{ headers: ["Guardrail", "Bound", "Observed", "Verdict"], rows: 4 }],
+    // The page renders its guardrail/evidence tables only once the readback is ok; the captured
+    // story is the default (idle) render, which shows the loading state instead of empty tables.
+    tables: [],
     combos: [],
     inputs: ["Not needed on this machine — only for other clients"],
     textLen: 1940,

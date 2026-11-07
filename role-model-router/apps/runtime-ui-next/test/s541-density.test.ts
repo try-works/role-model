@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import type { Model } from "../src/model";
 import type { AppRoute } from "../src/route";
 import { type StudioState, studioIdle } from "../src/studio";
+import { learningLadderRowKey, parseLearningLadderPayload } from "../src/learning-ranking";
 import { view } from "../src/view";
 import { shellModel } from "./support/runtime-shell";
 
@@ -15,6 +16,33 @@ const readback = (rows: readonly { id: string; label: string; value: string; met
   token: 1,
 });
 const row = { id: "row-1", label: "First row", value: "ready", meta: "host" };
+const ladder = parseLearningLadderPayload({
+  ladders: [
+    {
+      active: true,
+      completeness: { admitted: 2, configured: 3 },
+      ladderVersion: 4,
+      rankedCount: 5,
+      roleId: "role.alpha",
+      rolledBack: { atMs: 1, on: false, reason: null },
+      rungs: [{ endpointId: "provider.a", rank: 1, status: "available" }],
+      state: "complete",
+      taskTypeId: "task.code",
+      taxonomyVersion: "v1",
+      topEndpoints: [
+        { endpointId: "provider.a", rank: 1, status: "available" },
+        { endpointId: "provider.b", rank: 2, status: "unavailable" },
+      ],
+    },
+  ],
+});
+if (!ladder.ok) throw new Error(ladder.error);
+const ladderRow = {
+  id: `ladder:${learningLadderRowKey(ladder.rows[0]!)}`,
+  label: "role.alpha · task.code",
+  meta: JSON.stringify(ladder.rows[0]),
+  value: "active",
+};
 
 const renderText = async (
   tag: AppRoute["_tag"],
@@ -99,7 +127,7 @@ describe("S541 learning/models/studio density envelope", () => {
     });
     await expectEnvelope(
       "LearningPacks",
-      { learningPacks: readback([row]) },
+      { learningPacks: readback([ladderRow]) },
       ["ROLE · TASK", "TOP ENDPOINTS", "ACTIVATION"],
       [],
     );
@@ -107,13 +135,13 @@ describe("S541 learning/models/studio density envelope", () => {
   it("learning evidence carries the cohort metric block", async () => {
     await expectTitles(
       "LearningEvidence",
-      ["Evidence", "Guardrail", "Bound", "Observed", "Verdict", "Evidence loss by reason"],
+      ["Evidence", "Evidence loss by reason"],
       { learningEvidence: readback([row]) },
     );
     await expectEnvelope(
       "LearningEvidence",
       { learningEvidence: readback([row]) },
-      ["Guardrail", "Bound", "Observed", "Verdict", "REASON", "COUNT", "DETAIL"],
+      ["GUARDRAIL", "BOUND", "OBSERVED", "VERDICT", "REASON", "COUNT", "DETAIL"],
       [],
     );
   });

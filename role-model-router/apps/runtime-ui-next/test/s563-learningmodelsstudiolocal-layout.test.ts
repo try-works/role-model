@@ -6,10 +6,38 @@ import type { Model } from "../src/model";
 import { emptyReadbacks } from "../src/readback";
 import type { AppRoute } from "../src/route";
 import { type StudioState, studioIdle } from "../src/studio";
+import { learningLadderRowKey, parseLearningLadderPayload } from "../src/learning-ranking";
 import { view } from "../src/view";
 import { shellModel } from "./support/runtime-shell";
 
 const row = { id: "row-1", label: "First row", value: "ready", meta: "host" };
+const ladder = parseLearningLadderPayload({
+  ladders: [
+    {
+      active: true,
+      completeness: { admitted: 2, configured: 3 },
+      ladderVersion: 4,
+      rankedCount: 5,
+      roleId: "role.alpha",
+      rolledBack: { atMs: 1, on: false, reason: null },
+      rungs: [{ endpointId: "provider.a", rank: 1, status: "available" }],
+      state: "complete",
+      taskTypeId: "task.code",
+      taxonomyVersion: "v1",
+      topEndpoints: [
+        { endpointId: "provider.a", rank: 1, status: "available" },
+        { endpointId: "provider.b", rank: 2, status: "unavailable" },
+      ],
+    },
+  ],
+});
+if (!ladder.ok) throw new Error(ladder.error);
+const ladderRow = {
+  id: `ladder:${learningLadderRowKey(ladder.rows[0]!)}`,
+  label: "role.alpha · task.code",
+  meta: JSON.stringify(ladder.rows[0]),
+  value: "active",
+};
 const readback = (rows = [row]) => ({ rows, status: "ok" as const, token: 1 });
 
 const renderPage = async (
@@ -75,7 +103,7 @@ const expectControls = (container: HTMLElement, names: readonly string[]) => {
 const learningReadbacks = () => ({
   learning: readback(),
   learningConfiguration: readback(),
-  learningPacks: readback(),
+  learningPacks: readback([ladderRow]),
   learningDecisions: readback(),
   learningEvidence: readback(),
   learningHistory: readback(),
@@ -124,7 +152,7 @@ describe("S563 learning/models/studio/local reference layout", () => {
   it("learning evidence", async () => {
     const page = await renderPage("LearningEvidence", learningReadbacks());
     expectOrder(page, ["Evidence", "Evidence loss by reason"]);
-    expectColumns(page, ["Guardrail", "Bound", "Observed", "Verdict", "REASON", "COUNT", "DETAIL"]);
+    expectColumns(page, ["GUARDRAIL", "BOUND", "OBSERVED", "VERDICT", "REASON", "COUNT", "DETAIL"]);
     expectControls(page, []);
   });
 

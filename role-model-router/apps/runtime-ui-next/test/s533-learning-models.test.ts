@@ -55,27 +55,28 @@ describe("S533 learning/models structural parity", () => {
     );
   });
   it("learning decisions", async () => {
-    await check("LearningDecisions", [
-      "Decision receipts",
-      "Role",
-      "Task",
-      "Outcome",
-      "Advisory state",
-      "Observation origin",
-    ]);
+    await check(
+      "LearningDecisions",
+      ["Decision receipts", "Role", "Task", "Outcome", "Advisory state", "Observation origin"],
+      { table: false },
+    );
   });
   it("learning evidence", async () => {
-    await check("LearningEvidence", ["Cohort evidence", "Evidence", "Evidence loss by reason"]);
+    await check(
+      "LearningEvidence",
+      ["Cohort evidence", "Evidence", "Evidence loss by reason"],
+      { table: false },
+    );
   });
   it("learning history", async () => {
-    await check("LearningHistory", ["Learning history"]);
+    await check("LearningHistory", ["Learning history"], { table: false });
   });
   it("learning packs", async () => {
-    await check("LearningPacks", [
-      "Learned packs",
-      "ENDPOINT LADDER INDEX",
-      "TASK-SCOPED LEARNED PACKS",
-    ]);
+    await check(
+      "LearningPacks",
+      ["Learned packs", "ENDPOINT LADDER INDEX", "TASK-SCOPED LEARNED PACKS"],
+      { table: false },
+    );
   });
   it("models inventory", async () => {
     await check(

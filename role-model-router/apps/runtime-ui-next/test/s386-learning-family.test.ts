@@ -122,12 +122,19 @@ describe("S379c Learning family canonical URLs", () => {
 });
 
 describe("S379c Learning family pages (real per-panel readbacks)", () => {
-  const body = { items: [{ id: "row-1", label: "First row", value: "ready" }] };
-  const json = () =>
+  const jsonOf = (body: unknown) =>
     new Response(JSON.stringify(body), {
       headers: { "content-type": "application/json" },
       status: 200,
     });
+  const decisionsBody = {
+    decisions: [{ decisionId: "row-1", routePackage: "First row", advisoryState: "ready" }],
+  };
+  const historyBody = {
+    buckets: [
+      { startMs: 1700000000000, endMs: 1700003600000, replays: 1, refusals: 0, deferred: 0, branches: 0 },
+    ],
+  };
 
   it("renders loading then ok on the decisions panel", async () => {
     let release: (() => void) | undefined;
@@ -136,7 +143,7 @@ describe("S379c Learning family pages (real per-panel readbacks)", () => {
     });
     mountAt("/learning/decisions", "s386-decisions", async () => {
       await gate;
-      return json();
+      return jsonOf(decisionsBody);
     });
     expect(await waitForRouteState("learning-decisions", "loading", "decisions loading")).toBe(
       "loading",
@@ -162,10 +169,10 @@ describe("S379c Learning family pages (real per-panel readbacks)", () => {
   });
 
   it("renders the history panel from its own readback", async () => {
-    mountAt("/learning/history", "s386-history", async () => json());
+    mountAt("/learning/history", "s386-history", async () => jsonOf(historyBody));
     expect(await waitForRouteState("learning-history", "ok", "history ok")).toBe("ok");
     expect(document.querySelector("[data-route='learning-history']")?.textContent).toContain(
-      "First row",
+      "replays 1",
     );
   });
 });
