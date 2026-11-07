@@ -1,0 +1,17 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sqlite-memory
+
+(node:32956) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/recursive-87-history-policy.test.ts (5 tests) 2570ms
+   ✓ SP3 bounds raw performance history, bytes, rebuild work, late data, and restart state  959ms
+   ✓ S671 a failure between prune and rollup leaves the history consistent  379ms
+   ✓ Phase 3.5 wall-clock aging and policy rollback restore the prior physical history  420ms
+   ✓ Phase 3.5 normal benchmark writes expire stale samples against wall clock  310ms
+   ✓ Phase 3.5 policy rollback archives have a fixed retention bound  493ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  10:59:30
+   Duration  8.02s (transform 2.01s, setup 0ms, collect 2.30s, tests 2.57s, environment 1ms, prepare 1.07s)
+

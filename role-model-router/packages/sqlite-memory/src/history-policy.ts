@@ -161,22 +161,35 @@ export function enforcePerformanceHistoryPolicy(
     }
   }
   const remove = database.prepare(`DELETE FROM ${table} WHERE sample_id=?`);
-  for (const sampleId of pruned) remove.run(sampleId);
-  database
-    .prepare(
-      `INSERT OR REPLACE INTO performance_history_rollups
-       (endpoint_id,difficulty_bucket,raw_sample_count,raw_bytes,last_rebuild_scanned_samples,newest_timestamp_ms,updated_at_ms)
-       VALUES (?,?,?,?,?,?,?)`,
-    )
-    .run(
-      input.endpointId,
-      input.difficultyBucket ?? "",
-      retained.length,
-      rawBytes,
-      retained.length,
-      retained[0]?.timestamp_ms ?? null,
-      Date.now(),
-    );
+  // R32/S671: pruning rows and writing the rollup are one atomic state transition. The caller may
+  // already hold a transaction (configurePerformanceHistoryPolicy does), in which case its rollback
+  // owns atomicity and this function must not start a nested one.
+  const ownsTransaction = database.isTransaction !== true;
+  if (ownsTransaction) database.exec("BEGIN IMMEDIATE");
+  try {
+    for (const sampleId of pruned) remove.run(sampleId);
+    database
+      .prepare(
+        `INSERT OR REPLACE INTO performance_history_rollups
+         (endpoint_id,difficulty_bucket,raw_sample_count,raw_bytes,last_rebuild_scanned_samples,newest_timestamp_ms,updated_at_ms)
+         VALUES (?,?,?,?,?,?,?)`,
+      )
+      .run(
+        input.endpointId,
+        input.difficultyBucket ?? "",
+        retained.length,
+        rawBytes,
+        retained.length,
+        retained[0]?.timestamp_ms ?? null,
+        Date.now(),
+      );
+    if (ownsTransaction) database.exec("COMMIT");
+  } catch (error) {
+    if (ownsTransaction) {
+      try { database.exec("ROLLBACK"); } catch { /* preserve the original failure */ }
+    }
+    throw error;
+  }
   return {
     sampleJson: [...retained].reverse().map((row) => row.sample_json),
     rawBytes,

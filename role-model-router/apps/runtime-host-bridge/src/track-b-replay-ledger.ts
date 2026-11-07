@@ -33,6 +33,15 @@ export interface ReplayLedgerLimits {
   readonly enforced: boolean;
 }
 
+export class ReplayLedgerCorruptError extends Error {
+  readonly filePath: string;
+  constructor(filePath: string, message: string, cause?: unknown) {
+    super(`replay ledger ${filePath} is corrupt: ${message}`, { cause });
+    this.name = "ReplayLedgerCorruptError";
+    this.filePath = filePath;
+  }
+}
+
 export const DEFAULT_REPLAY_LEDGER_LIMITS: ReplayLedgerLimits = Object.freeze({
   counterfactualsPerDay: 100,
   dispatchesPerDay: 300,
@@ -246,14 +255,35 @@ export function createReplayLedger(options: {
   };
 
   const load = (): LedgerFile => {
+    let raw: string;
     try {
-      const parsed = JSON.parse(readFileSync(options.filePath, "utf8")) as LedgerFile;
-      if (parsed && typeof parsed === "object" && parsed.windows) return parsed;
-    } catch {
-      // A missing or unreadable ledger starts empty; the schema version is written
-      // on the first mutation so corruption cannot silently pass as accounting.
+      raw = readFileSync(options.filePath, "utf8");
+    } catch (error) {
+      // A genuinely missing ledger starts empty; a read failure is not corruption.
+      if ((error as { code?: string })?.code === "ENOENT") {
+        return { schemaVersion: REPLAY_LEDGER_SCHEMA_VERSION, windows: {} };
+      }
+      throw new ReplayLedgerCorruptError(options.filePath, "the replay ledger could not be read", error);
     }
-    return { schemaVersion: REPLAY_LEDGER_SCHEMA_VERSION, windows: {} };
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (error) {
+      throw new ReplayLedgerCorruptError(options.filePath, "the replay ledger is not valid JSON", error);
+    }
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      (parsed as { schemaVersion?: unknown }).schemaVersion !== REPLAY_LEDGER_SCHEMA_VERSION ||
+      !(parsed as { windows?: unknown }).windows ||
+      typeof (parsed as { windows?: unknown }).windows !== "object"
+    ) {
+      throw new ReplayLedgerCorruptError(
+        options.filePath,
+        "the replay ledger has an unsupported schema",
+      );
+    }
+    return parsed as LedgerFile;
   };
 
   const persist = (file: LedgerFile): void => {

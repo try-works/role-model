@@ -999,9 +999,19 @@ export async function runAutoReplayTick(input: {
     maxAgeMs: input.reservationTtlMs ?? DEFAULT_REPLAY_RESERVATION_TTL_MS,
   });
   const dispositions: AutoReplayDisposition[] = [];
+  let cursor: string | null = input.startCursor ?? null;
+  let resumeCursor: string | null = null;
   const emit = (row: AutoReplayDisposition): void => {
     dispositions.push(row);
     input.dispositionSink?.(row);
+    // Advance only for a committed terminal outcome. The first deferred/failed outcome
+    // records the last terminal cursor; the returned cursor rewinds there so the next
+    // tick re-presents that capture and never resumes past the unprocessed tail.
+    if (row.outcome === "deferred") {
+      if (resumeCursor === null) resumeCursor = cursor;
+    } else {
+      cursor = row.captureRef;
+    }
   };
 
   let skipped = false;
@@ -1021,7 +1031,6 @@ export async function runAutoReplayTick(input: {
   let refused = 0;
   let deferred = 0;
   let queued = 0;
-  let cursor: string | null = input.startCursor ?? null;
   let budgetExhausted = false;
 
   for (const capture of pending) {
@@ -1035,7 +1044,6 @@ export async function runAutoReplayTick(input: {
       break;
     }
     processed += 1;
-    cursor = capture.captureRef;
     // Namespaced accounting identity only. The capture and actual policy contract are unchanged.
     const dispatchRoundId =
       input.requireRouteClassification === true ? input.dispatchRoundId : undefined;
@@ -1537,5 +1545,14 @@ export async function runAutoReplayTick(input: {
     });
   }
 
-  return { processed, replayed, refused, deferred, queued, dispositions, cursor, budgetExhausted };
+  return {
+    processed,
+    replayed,
+    refused,
+    deferred,
+    queued,
+    dispositions,
+    cursor: resumeCursor ?? cursor,
+    budgetExhausted,
+  };
 }

@@ -1,0 +1,64 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:33720) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop fetches pending captures, replays them, and writes dispositions
+[run104-pending] captures=2 scoped=2 first=req-1,req-2 only=none pendingCount=2 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop survives executor failure and reports it without throwing
+[run104-pending] captures=1 scoped=1 first=req-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop never overlaps ticks and stops cleanly
+[run104-pending] captures=1 scoped=1 first=req-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop degrades when the private boundary is unavailable
+[track-b-auto-replay] tick failed: operations boundary unavailable
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop pauses and resumes without disabling routing
+[run104-pending] captures=1 scoped=1 first=req-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop reports bounded operator status
+[run104-pending] captures=1 scoped=1 first=req-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop re-reads configured endpoints on every tick
+[run104-pending] captures=1 scoped=1 first=req-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop re-reads configured endpoints on every tick
+[run104-pending] captures=1 scoped=1 first=req-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop uses the capture's source endpoint to pick distinct candidates
+[run104-pending] captures=1 scoped=1 first=req-object-1 only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop refuses replay-produced captures reported by the private boundary
+[run104-pending] captures=2 scoped=2 first=req-live-1,replay-req-live-1-1e03652ce6770a82 only=none pendingCount=n/a captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run98 addendum 04 liveness sweeps still run while a long work tick is in flight
+[run104-pending] captures=1 scoped=1 first=req-long-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run98 addendum 04 a disposition is recorded per capture instead of only when the tick ends
+[run104-pending] captures=2 scoped=2 first=req-slow-1,req-slow-2 only=none pendingCount=2 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run98 addendum 04 a hung replay execution is bounded instead of stalling the producer
+[run104-pending] captures=1 scoped=1 first=req-hung-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop re-reads endpoint health and never dispatches a degraded candidate
+[run104-pending] captures=1 scoped=1 first=req-health-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run97 auto loop re-reads endpoint health and never dispatches a degraded candidate
+[run104-pending] captures=1 scoped=1 first=req-health-1 only=none pendingCount=1 captureCount=n/a
+
+stderr | test/run97-replay-auto-loop.test.ts > run98 addendum 04 the tick stops starting captures once its wall-clock budget is spent
+[run104-pending] captures=4 scoped=4 first=req-1,req-2,req-3 only=none pendingCount=4 captureCount=n/a
+
+ ✓ test/run97-replay-auto-loop.test.ts (15 tests) 1683ms
+   ✓ run97 auto loop fetches pending captures, replays them, and writes dispositions  417ms
+ ✓ test/run97-replay-auto-producer.test.ts (8 tests) 870ms
+   ✓ run97 auto producer replays pending captures with no manual call  444ms
+ ✓ test/run97-replay-ledger.test.ts (10 tests) 224ms
+
+ Test Files  3 passed (3)
+      Tests  33 passed (33)
+   Start at  10:58:53
+   Duration  30.19s (transform 9.20s, setup 0ms, collect 21.74s, tests 2.78s, environment 3ms, prepare 2.09s)
+
