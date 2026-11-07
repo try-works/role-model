@@ -70,3 +70,18 @@ x-role-model-requested-role-id: coder (model moonshot/kimi-k3):
 - Telemetry decision records routingMode="controller", selectedStrategy="quality",
   requestedRoleId="coder", endpoint moonshot.personal.kimi-code.global.kimi-k3, statusFamily="success".
 - This exercises the guidance/controller lane (not just the caller-header lane).
+## All four routing modes verified with real models (2026-11-07)
+Each request pinned deepseek/deepseek-v4-pro with role coder and a different x-role-model-routing-mode:
+| mode | strategy | selected endpoint | result |
+|---|---|---|---|
+| baseline | balanced | deepseek-v4-pro-high | real finish=stop OK |
+| difficulty | cost | deepseek-v4-pro | real finish=stop OK |
+| controller | cost | deepseek-v4-pro-max | real finish=stop OK |
+| hybrid | cost | deepseek-v4-pro-max | real finish=stop OK |
+
+- The controller decision path is exercised (the controller model is deepseek/deepseek-flash per /api/role-model/controller).
+- Router UI: /router renders Candidates + Decisions tabs with real data, no fixtures.
+- Multi-provider selection across providers in ONE decision is not directly triggerable through
+  /v1/chat/completions because that surface requires a pinned model alias; the controller evaluates
+  candidates for the pinned model. Cross-provider selection belongs to the role/controller surface
+  (Studio/agent), which remains to be exercised.
