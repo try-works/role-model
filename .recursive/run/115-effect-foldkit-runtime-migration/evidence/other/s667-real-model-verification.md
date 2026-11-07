@@ -102,3 +102,10 @@ Each request pinned deepseek/deepseek-v4-pro with role coder and a different x-r
   runtime surface; the strict "ordinary DSH/pi CLI" client is still open (dsh binary not on PATH).
 - R17 joined journey: provider -> decision -> capture -> UI -> restart verified; the graph/payload
   join and the private replay root remain.
+## Benchmark UI fixes (2026-11-07, S667 follow-up)
+- Off-by-one: the Foldkit benchmark progress rendered "model 2/4" for the first endpoint because it added
+  +1 to the host's already-1-based endpointIndex/caseIndex. The reference React app uses them directly.
+  Fixed in features/models/routes.ts and s638 updated; s638+s642 12/12 pass; commit 161b340b.
+- Fixture models: the live :3480 has zero fixture endpoints (13 real endpoints, 5 real models). The
+  owner's screenshot was a stale client tab loaded before the fixture removal/restart; a fresh load of
+  /system/benchmark shows only deepseek/moonshot and no active run (the restart stopped the stale run).
