@@ -1,0 +1,38 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run97-replay-auto-producer.test.ts (8 tests | 1 failed | 7 skipped) 322ms
+   ↓ run97 auto producer replays pending captures with no manual call
+   ↓ run97 auto producer refuses with a declared code instead of skipping work
+   ↓ run97 auto producer is idempotent and defers when the budget is exhausted
+   ↓ run97 auto producer bounds each tick and reports the cursor
+   × S671 a mid-batch executor failure does not advance the cursor past the unprocessed tail 313ms
+     → expected 'req-3' to be 'req-1' // Object.is equality
+   ↓ run97 transient admission failures defer instead of terminally refusing
+   ↓ run97 executor failure detail is recorded on the disposition
+   ↓ run97 auto producer refuses replay-produced captures instead of replaying them again
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run97-replay-auto-producer.test.ts > S671 a mid-batch executor failure does not advance the cursor past the unprocessed tail
+AssertionError: expected 'req-3' to be 'req-1' // Object.is equality
+
+Expected: "req-1"
+Received: "req-3"
+
+ ❯ test/run97-replay-auto-producer.test.ts:188:26
+    186|     });
+    187|     expect(firstSeen).toEqual(["req-1", "req-2", "req-3"]);
+    188|     expect(first.cursor).toBe("req-1");
+       |                          ^
+    189|     expect(first.deferred).toBe(1);
+    190| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 skipped (8)
+   Start at  10:56:33
+   Duration  18.83s (transform 9.52s, setup 0ms, collect 16.14s, tests 322ms, environment 2ms, prepare 1.08s)
+

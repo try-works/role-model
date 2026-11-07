@@ -118,6 +118,55 @@ test("SP3 bounds raw performance history, bytes, rebuild work, late data, and re
   ).toThrow(/unsupported performance history policy/i);
 });
 
+test("S671 a failure between prune and rollup leaves the history consistent", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "s671-history-prune-"));
+  const initialized = sqliteMemory.initializeSqliteMemory({
+    runtimeStateRoot: root,
+    scopeId: "s671",
+    channel: "development",
+  });
+  for (let index = 0; index < 5; index += 1) {
+    const timestampMs = 1_000 + index;
+    sqliteMemory.persistObservedBenchmarkSample({
+      databasePath: initialized.databasePath,
+      nowMs: timestampMs,
+      sample: {
+        endpoint_id: "s671-endpoint",
+        endpoint_version: "v1",
+        source_type: "benchmark",
+        timestamp_ms: timestampMs,
+        latency_ms: index + 1,
+        success: true,
+      },
+    });
+  }
+  const database = new DatabaseSync(initialized.databasePath);
+  try {
+    sqliteMemory.ensurePerformanceHistorySchema(database);
+    sqliteMemory.writePerformanceHistoryPolicy(database, {
+      schemaVersion: "role-model.performance-history-policy.v1",
+      maxSamplesPerEndpoint: 1,
+      maxAgeMs: 365 * 24 * 60 * 60 * 1_000,
+      maxBytesPerEndpoint: 8 * 1024 * 1024,
+      maxRebuildSamples: 1,
+    });
+    database.exec(`CREATE TRIGGER s671_fail_rollup BEFORE INSERT ON performance_history_rollups
+      BEGIN SELECT RAISE(ABORT, 's671 injected rollup failure'); END;`);
+    expect(() =>
+      sqliteMemory.enforcePerformanceHistoryPolicy(database, {
+        endpointId: "s671-endpoint",
+        nowMs: 10_000,
+      }),
+    ).toThrow(/s671 injected rollup failure/);
+    const count = database
+      .prepare("SELECT COUNT(*) AS count FROM observed_performance_samples WHERE endpoint_id=?")
+      .get("s671-endpoint") as { count: number };
+    expect(count.count).toBe(5);
+  } finally {
+    database.close();
+  }
+});
+
 test("Phase 3.5 wall-clock aging and policy rollback restore the prior physical history", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "run87-history-rollback-"));
   const initialized = sqliteMemory.initializeSqliteMemory({

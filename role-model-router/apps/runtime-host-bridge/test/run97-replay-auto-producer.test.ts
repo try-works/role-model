@@ -161,6 +161,57 @@ test("run97 auto producer bounds each tick and reports the cursor", async () => 
   }
 });
 
+test("S671 a mid-batch executor failure does not advance the cursor past the unprocessed tail", async () => {
+  const { ledger, cleanup } = tempLedger();
+  try {
+    const captures = ["req-1", "req-2", "req-3"].map((captureRef) => ({
+      captureRef,
+      sourceEndpointId: "endpoint-a",
+      hasRecordedToolResults: true,
+    }));
+    const firstSeen: string[] = [];
+    const first = await runAutoReplayTick({
+      captures,
+      configuredEndpointIds: configured,
+      ledger,
+      policySet: buildReplayPolicySet(),
+      executor: async ({ capture, candidates }) => {
+        firstSeen.push(capture.captureRef);
+        if (capture.captureRef === "req-2") throw new Error("provider unavailable");
+        return {
+          terminal: true,
+          branches: candidates.map((endpointId) => ({ endpointId, outcome: "complete" as const })),
+        };
+      },
+    });
+    expect(firstSeen).toEqual(["req-1", "req-2", "req-3"]);
+    expect(first.cursor).toBe("req-1");
+    expect(first.deferred).toBe(1);
+
+    const secondSeen: string[] = [];
+    const second = await runAutoReplayTick({
+      captures,
+      configuredEndpointIds: configured,
+      ledger,
+      policySet: buildReplayPolicySet(),
+      startCursor: first.cursor,
+      executor: async ({ capture, candidates }) => {
+        secondSeen.push(capture.captureRef);
+        return {
+          terminal: true,
+          branches: candidates.map((endpointId) => ({ endpointId, outcome: "complete" as const })),
+        };
+      },
+    });
+    // req-2 is re-presented; req-3 already reached a terminal ledger state, so the
+    // second tick reconciles it without another executor call.
+    expect(secondSeen).toEqual(["req-2"]);
+    expect(second.cursor).toBe("req-3");
+  } finally {
+    cleanup();
+  }
+});
+
 test("run97 transient admission failures defer instead of terminally refusing", async () => {
   const { ledger, cleanup } = tempLedger();
   try {

@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
@@ -17,6 +17,25 @@ function tempFile(): { file: string; cleanup: () => void } {
     cleanup: () => rmSync(dir, { recursive: true, force: true }),
   };
 }
+
+test("S671 a corrupt ledger fails closed without overwriting the file", () => {
+  const { file, cleanup } = tempFile();
+  try {
+    const corrupt = "{ this is not a ledger";
+    writeFileSync(file, corrupt, "utf8");
+    const ledger = createReplayLedger({
+      filePath: file,
+      now: () => Date.parse("2026-09-12T06:00:00Z"),
+    });
+    expect(() => ledger.status()).toThrow(/replay ledger .* corrupt/i);
+    expect(() =>
+      ledger.reserve({ captureRef: "req-1", policySetDigest: "p", candidateDispatches: 1 }),
+    ).toThrow(/corrupt/i);
+    expect(readFileSync(file, "utf8")).toBe(corrupt);
+  } finally {
+    cleanup();
+  }
+});
 
 test("run97 ledger windows are UTC calendar days", () => {
   expect(replayBudgetWindow(Date.parse("2026-09-12T23:59:59Z"))).toBe("2026-09-12");

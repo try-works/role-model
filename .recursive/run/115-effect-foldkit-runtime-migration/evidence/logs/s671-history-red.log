@@ -1,0 +1,40 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/packages/sqlite-memory
+
+(node:31908) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/recursive-87-history-policy.test.ts (5 tests | 1 failed | 4 skipped) 497ms
+   ↓ SP3 bounds raw performance history, bytes, rebuild work, late data, and restart state
+   × S671 a failure between prune and rollup leaves the history consistent 492ms
+     → expected 1 to be 5 // Object.is equality
+   ↓ Phase 3.5 wall-clock aging and policy rollback restore the prior physical history
+   ↓ Phase 3.5 normal benchmark writes expire stale samples against wall clock
+   ↓ Phase 3.5 policy rollback archives have a fixed retention bound
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/recursive-87-history-policy.test.ts > S671 a failure between prune and rollup leaves the history consistent
+AssertionError: expected 1 to be 5 // Object.is equality
+
+- Expected
++ Received
+
+- 5
++ 1
+
+ ❯ test/recursive-87-history-policy.test.ts:164:25
+    162|       .prepare("SELECT COUNT(*) AS count FROM observed_performance_sam…
+    163|       .get("s671-endpoint") as { count: number };
+    164|     expect(count.count).toBe(5);
+       |                         ^
+    165|   } finally {
+    166|     database.close();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 skipped (5)
+   Start at  10:56:59
+   Duration  6.17s (transform 1.69s, setup 0ms, collect 2.13s, tests 497ms, environment 1ms, prepare 1.24s)
+

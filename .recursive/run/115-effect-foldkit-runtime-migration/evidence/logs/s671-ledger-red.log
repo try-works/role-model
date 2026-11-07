@@ -1,0 +1,43 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/run97-replay-ledger.test.ts (10 tests | 1 failed | 9 skipped) 132ms
+   × S671 a corrupt ledger fails closed without overwriting the file 124ms
+     → expected [Function] to throw an error
+   ↓ run97 ledger windows are UTC calendar days
+   ↓ run97 ledger limits are operator-configurable with validated overrides
+   ↓ run97 a configured ceiling replaces the default and is receipted on the window
+   ↓ run97 ledger admits up to the daily counterfactual and dispatch ceilings
+   ↓ run97 ledger refuses when the daily dispatch ceiling would be exceeded
+   ↓ run97 ledger rejects a second terminal counterfactual for the same capture and policy set
+   ↓ run97 ledger counts retries and derived dispatches against the same window
+   ↓ run97 ledger persists across restarts and reconciles by window
+   ↓ run97 ledger keeps a completed counterfactual terminal across instances, retries, and releases
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run97-replay-ledger.test.ts > S671 a corrupt ledger fails closed without overwriting the file
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ test/run97-replay-ledger.test.ts:30:35
+     28|       now: () => Date.parse("2026-09-12T06:00:00Z"),
+     29|     });
+     30|     expect(() => ledger.status()).toThrow(/replay ledger .* corrupt/i);
+       |                                   ^
+     31|     expect(() =>
+     32|       ledger.reserve({ captureRef: "req-1", policySetDigest: "p", cand…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 skipped (10)
+   Start at  10:56:20
+   Duration  4.86s (transform 1.40s, setup 0ms, collect 1.78s, tests 132ms, environment 1ms, prepare 1.12s)
+
