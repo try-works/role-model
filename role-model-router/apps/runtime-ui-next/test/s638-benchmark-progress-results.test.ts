@@ -296,12 +296,14 @@ describe("S638 benchmark progress and per-case results", () => {
     }
   });
   it("marks a failed poll as failed progress instead of leaving the run spinning", () => {
-    const base = shellModel();
+    const base = shellModel({ route: { _tag: "Benchmark" } });
     const model = shellModel({
       modelsView: {
         ...base.modelsView,
         benchmarkProgress: { ...runningProgress },
+        benchmarkRunToken: 0,
       },
+      route: { _tag: "Benchmark" },
     });
     const result = shellUpdate(
       model,

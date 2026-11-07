@@ -718,6 +718,30 @@ export const createUpdate = (
     };
   };
 
+  // S673: leaving Benchmark abandons its transient run view. The run token is kept so a late poll is
+  // still fenced, but action/progress must not remain visible on another route.
+  const clearBenchmarkTransient = (
+    before: Model,
+    after: Model,
+    nextRoute: AppRoute,
+  ): Model => {
+    if (
+      before.route._tag !== "Benchmark" ||
+      nextRoute._tag === "Benchmark" ||
+      after.modelsView === undefined
+    )
+      return after;
+    return {
+      ...after,
+      modelsView: {
+        ...after.modelsView,
+        benchmarkAction: undefined,
+        benchmarkProgress: undefined,
+        benchmarkRunRequestedEndpointIds: undefined,
+      },
+    };
+  };
+
   const navigateToRoute = (
     model: Model,
     route: AppRoute,
@@ -1232,8 +1256,9 @@ export const createUpdate = (
           return { model: { ...model, pendingRedirectHref: undefined } };
         }
         const result = navigateToRoute(model, resolved.route, resolved.canonicalUrl);
+        const routedModel = clearBenchmarkTransient(model, result.model, resolved.route);
         if (resolved.redirectHref === undefined) {
-          return { ...result, model: { ...result.model, pendingRedirectHref: undefined } };
+          return { ...result, model: { ...routedModel, pendingRedirectHref: undefined } };
         }
         return {
           ...result,
@@ -1241,7 +1266,7 @@ export const createUpdate = (
             ...(result.commands ?? []),
             replaceLegacyUrlCommand({ href: resolved.redirectHref }),
           ],
-          model: { ...result.model, pendingRedirectHref: resolved.redirectHref },
+          model: { ...routedModel, pendingRedirectHref: resolved.redirectHref },
         };
       },
       Clicked: (): UpdateReturn<Model, Message> => ({
@@ -1429,6 +1454,24 @@ export const createUpdate = (
                 // A failed resync is sticky: contiguous progress must not clear it.
                 message: current.status === "stale" ? current.message : undefined,
                 status: current.status === "stale" ? "stale" : "live",
+              },
+            },
+          };
+        }
+        const controlKey = controlKeyForRouteTag(model.route._tag);
+        if (controlKey !== null) {
+          const token = model.controls[controlKey].token + 1;
+          return {
+            commands: [readControl({ key: controlKey, token })],
+            model: {
+              ...model,
+              controls: { ...model.controls, [controlKey]: loadingControl(token) },
+              refresh: {
+                ...current,
+                lastAppliedRevision: revision,
+                message: "resyncing after a revision gap",
+                resyncToken: current.resyncToken + 1,
+                status: "stale",
               },
             },
           };
@@ -2339,6 +2382,11 @@ export const createUpdate = (
         Message
       > => {
         const state = model.modelsView ?? {};
+        if (
+          state.benchmarkProgress?.status === "running" ||
+          state.benchmarkAction?.status === "saving"
+        )
+          return { model };
         const current = new Set(state.benchmarkSelectedEndpointIds ?? benchmarkEndpointIds(model));
         if (selected) current.add(endpointId);
         else current.delete(endpointId);
@@ -2500,6 +2548,12 @@ export const createUpdate = (
         Message
       > => {
         const state = model.modelsView ?? {};
+        if (
+          model.route._tag !== "Benchmark" &&
+          state.benchmarkAction === undefined &&
+          state.benchmarkProgress === undefined
+        )
+          return { model };
         // S671: fence on the run generation (not a readback token) so a readback landing between the
         // start request and this response cannot drop the start and strand the panel on "running".
         if (token !== state.benchmarkRunToken) return { model };
@@ -2523,6 +2577,12 @@ export const createUpdate = (
         Message
       > => {
         const state = model.modelsView ?? {};
+        if (
+          model.route._tag !== "Benchmark" &&
+          state.benchmarkAction === undefined &&
+          state.benchmarkProgress === undefined
+        )
+          return { model };
         // S671: a late failure from a superseded start must not clear a newer run.
         if (token !== state.benchmarkRunToken) return { model };
         return {
@@ -2551,6 +2611,12 @@ export const createUpdate = (
         }
         const progress = benchmarkProgressFrom(raw);
         const state = model.modelsView ?? {};
+        if (
+          model.route._tag !== "Benchmark" &&
+          state.benchmarkAction === undefined &&
+          state.benchmarkProgress === undefined
+        )
+          return { model };
         if (progress === undefined) return { model };
         // S671: a poll belongs to a run generation; a stale poll must not advance or re-poll a newer run.
         if (token !== state.benchmarkRunToken) return { model };
@@ -2619,6 +2685,12 @@ export const createUpdate = (
         Message
       > => {
         const state = model.modelsView ?? {};
+        if (
+          model.route._tag !== "Benchmark" &&
+          state.benchmarkAction === undefined &&
+          state.benchmarkProgress === undefined
+        )
+          return { model };
         const progress = state.benchmarkProgress;
         // S671: a failure belongs to one run generation; a stale failure must not fail a newer run.
         if (token !== state.benchmarkRunToken) return { model };
@@ -3812,6 +3884,10 @@ export const createUpdate = (
       }: Extract<Message, { readonly _tag: "ControlLoaded" }>): UpdateReturn<Model, Message> => {
         if (token !== model.controls[key].token) return { model };
         const previous = model.controls[key];
+        // S673: a control read must not clear a pending action it does not own; the action result is
+        // fenced on the control token and applies after this snapshot.
+        const actionStatus =
+          previous.actionStatus === "pending" ? "pending" : snapshot.actionStatus;
         return {
           model: {
             ...model,
@@ -3819,11 +3895,17 @@ export const createUpdate = (
               ...model.controls,
               [key]: {
                 ...snapshot,
+                actionMessage: previous.actionStatus === "pending" ? previous.actionMessage : snapshot.actionMessage,
+                actionStatus,
                 notice: previous.notice,
                 selectedEndpointId: previous.selectedEndpointId ?? snapshot.selectedEndpointId,
                 token,
               },
             },
+            refresh:
+              snapshot.status === "error"
+                ? model.refresh
+                : { ...model.refresh, message: undefined, status: "live" },
           },
         };
       },
@@ -3900,9 +3982,11 @@ export const createUpdate = (
               }
             : model.learningRanking;
         const previous = model.readbacks.localPolicy;
+        // S673: an error is an error even when older rows are still displayed; keep the stale rows but
+        // do not claim the read is ready.
         const nextReadback =
           key === "localPolicy" && previous.rows.length > 0
-            ? { ...previous, message, status: "ok" as const, token }
+            ? { ...previous, message, status: "error" as const, token }
             : failedReadback(message, token);
         return {
           model: {
@@ -4056,6 +4140,9 @@ export const createUpdate = (
                           message: "Benchmark running…",
                           status: "saving" as const,
                         },
+                        // S673: the active-run read starts a poll; it must seed the same run generation
+                        // the poll response is fenced on.
+                        benchmarkRunToken: token + 1,
                       }
                     : {}),
                   benchmarkProgress: progress,
@@ -4895,7 +4982,9 @@ export const createUpdate = (
         Message
       > => {
         const state = model.providerAccount ?? initialProviderAccountState();
-        // The activation command is the last step of a save; accept its result even if a later save changed the token.
+        // S673: activation is the last step of one save chain; a result from an older generation must
+        // not clear the pending state of a newer chain.
+        if (token < state.token) return { model };
         const catalogToken = model.readbacks.providerCatalog.token + 1;
         const providersToken = model.readbacks.integrationProviders.token + 1;
         const modelsToken = model.readbacks.configuredModels.token + 1;

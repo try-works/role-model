@@ -277,11 +277,12 @@ describe("S624 benchmark remaining gaps", () => {
         },
       }),
     );
+    const startToken = modelFor().readbacks.benchmarkSummary.token + 1;
     const started = shellUpdate(
-      modelFor(),
+      modelFor({ benchmarkRunToken: startToken }),
       Message.BenchmarkRunStarted({
         runId: "run-1",
-        token: modelFor().readbacks.benchmarkSummary.token + 1,
+        token: startToken,
       }),
     );
     const pollArgs = (started.commands ?? [])[0] as unknown as {

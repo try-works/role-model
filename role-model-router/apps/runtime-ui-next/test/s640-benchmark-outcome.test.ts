@@ -189,7 +189,10 @@ describe("S640 benchmark host outcome fields", () => {
   });
 
   it("retains host caseCounts/outcome when a polled snapshot arrives", () => {
-    const base = shellModel({ route: { _tag: "Benchmark" } });
+    const base = shellModel({
+      modelsView: { benchmarkRunToken: 1 },
+      route: { _tag: "Benchmark" },
+    });
     const polled = shellUpdate(
       base,
       Message.BenchmarkRunPolled({

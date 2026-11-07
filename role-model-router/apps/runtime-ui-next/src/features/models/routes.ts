@@ -2414,6 +2414,7 @@ export const benchmarkRoute = (
                                   h.input([
                                     h.Type("checkbox"),
                                     h.Checked(isSelected),
+                                    h.Disabled(running),
                                     h.AriaLabel(`Select ${meta.modelId ?? endpointId}`),
                                     h.OnChange(() =>
                                       Message.BenchmarkEndpointSelected({

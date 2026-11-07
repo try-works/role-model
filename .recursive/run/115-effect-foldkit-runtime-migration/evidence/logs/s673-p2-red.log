@@ -1,0 +1,186 @@
+### S673 P2 RED
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s673-state-machine-p2.test.ts (7 tests | 7 failed) 431ms
+   × S673 M1/M4 route change cancels off-route benchmark mutation > clears transient run state when leaving Benchmark 85ms
+     → Url.fromString is not a function
+   × S673 M1/M4 route change cancels off-route benchmark mutation > ignores a poll that arrives after leaving Benchmark 6ms
+     → Url.fromString is not a function
+   × S673 M4 benchmark selection is frozen while a run is in flight > ignores selecting another endpoint during the run 97ms
+     → Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
+    'ep-a',
++   'ep-b'
+  ]
+
+   × S673 M9 control-route revision gap re-reads the control > issues ReadControl and clears stale when the control loads 185ms
+     → Expected values to be strictly equal:
++ actual - expected
+
++ 'ReadReadback'
+- 'ReadControl'
+       ^
+
+   × S673 M2 localPolicy read failure keeps the error state > does not rewrite a failed read with prior rows to ok 16ms
+     → Expected values to be strictly equal:
+
+'ok' !== 'error'
+
+   × S673 M3 control action generation survives a read > a control load does not clear a pending action 13ms
+     → Expected values to be strictly equal:
+
+'idle' !== 'pending'
+
+   × S673 M5 provider activation is generation-fenced > ignores an activation result older than the current generation 18ms
+     → Expected values to be strictly equal:
+
+'saved' !== 'saving'
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s673-state-machine-p2.test.ts > S673 M1/M4 route change cancels off-route benchmark mutation > clears transient run state when leaving Benchmark
+TypeError: Url.fromString is not a function
+ ❯ urlOf test/s673-state-machine-p2.test.ts:16:55
+     14|  * localPolicy read failure, control action generation, provider activ…
+     15|  */
+     16| const urlOf = (href: string) => Option.getOrThrow(Url.fromString(`http…
+       |                                                       ^
+     17| 
+     18| const benchmarkModel = () => {
+ ❯ test/s673-state-machine-p2.test.ts:34:74
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  test/s673-state-machine-p2.test.ts > S673 M1/M4 route change cancels off-route benchmark mutation > ignores a poll that arrives after leaving Benchmark
+TypeError: Url.fromString is not a function
+ ❯ urlOf test/s673-state-machine-p2.test.ts:16:55
+     14|  * localPolicy read failure, control action generation, provider activ…
+     15|  */
+     16| const urlOf = (href: string) => Option.getOrThrow(Url.fromString(`http…
+       |                                                       ^
+     17| 
+     18| const benchmarkModel = () => {
+ ❯ test/s673-state-machine-p2.test.ts:41:74
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  test/s673-state-machine-p2.test.ts > S673 M4 benchmark selection is frozen while a run is in flight > ignores selecting another endpoint during the run
+AssertionError: Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
+    'ep-a',
++   'ep-b'
+  ]
+
+
+- Expected
++ Received
+
+  [
+    "ep-a",
++   "ep-b",
+  ]
+
+ ❯ test/s673-state-machine-p2.test.ts:59:12
+     57|       Message.BenchmarkEndpointSelected({ endpointId: "ep-b", selected…
+     58|     );
+     59|     assert.deepEqual(selected.model.modelsView?.benchmarkSelectedEndpo…
+       |            ^
+     60|   });
+     61| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  test/s673-state-machine-p2.test.ts > S673 M9 control-route revision gap re-reads the control > issues ReadControl and clears stale when the control loads
+AssertionError: Expected values to be strictly equal:
++ actual - expected
+
++ 'ReadReadback'
+- 'ReadControl'
+       ^
+
+
+Expected: "ReadControl"
+Received: "ReadReadback"
+
+ ❯ test/s673-state-machine-p2.test.ts:72:12
+     70|     const gap = shellUpdate(model, Message.RuntimeRevisionReceived({ r…
+     71|     const command = (gap.commands ?? [])[0] as unknown as { readonly n…
+     72|     assert.equal(command?.name, "ReadControl");
+       |            ^
+     73|     assert.equal(command?.args?.key, "providers");
+     74|     assert.equal(gap.model.controls.providers.status, "loading");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  test/s673-state-machine-p2.test.ts > S673 M2 localPolicy read failure keeps the error state > does not rewrite a failed read with prior rows to ok
+AssertionError: Expected values to be strictly equal:
+
+'ok' !== 'error'
+
+
+Expected: "error"
+Received: "ok"
+
+ ❯ test/s673-state-machine-p2.test.ts:108:12
+    106|       Message.ReadbackFailed({ key: "localPolicy", message: "refresh f…
+    107|     );
+    108|     assert.equal(failed.model.readbacks.localPolicy.status, "error");
+       |            ^
+    109|     assert.equal(failed.model.readbacks.localPolicy.message, "refresh …
+    110|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  test/s673-state-machine-p2.test.ts > S673 M3 control action generation survives a read > a control load does not clear a pending action
+AssertionError: Expected values to be strictly equal:
+
+'idle' !== 'pending'
+
+
+Expected: "pending"
+Received: "idle"
+
+ ❯ test/s673-state-machine-p2.test.ts:130:12
+    128|       }),
+    129|     );
+    130|     assert.equal(loaded.model.controls.providers.actionStatus, "pendin…
+       |            ^
+    131|   });
+    132| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  test/s673-state-machine-p2.test.ts > S673 M5 provider activation is generation-fenced > ignores an activation result older than the current generation
+AssertionError: Expected values to be strictly equal:
+
+'saved' !== 'saving'
+
+
+ Test Files  1 failed (1)
+      Tests  7 failed (7)
+   Start at  12:08:34
+   Duration  45.56s (transform 21.18s, setup 0ms, collect 36.94s, tests 431ms, environment 5.71s, prepare 880ms)
+
+
+Expected: "saving"
+Received: "saved"
+
+ ❯ test/s673-state-machine-p2.test.ts:163:12
+    161|     });
+    162|     const stale = shellUpdate(model, Message.ProviderAccountEndpointsA…
+    163|     assert.equal(stale.model.providerAccount?.status, "saving");
+       |            ^
+    164|     assert.equal(stale.model.providerAccount?.pendingAction, "create");
+    165|     assert.equal(stale.model.providerAccount?.token, 2);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+undefined
+D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-ui-next:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/s673-state-machine-p2.test.ts

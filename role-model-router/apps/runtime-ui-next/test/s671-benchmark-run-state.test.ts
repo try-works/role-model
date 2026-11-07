@@ -12,6 +12,7 @@ import { shellModel, shellUpdate } from "./support/runtime-shell";
 const modelWithRun = (runToken: number, runId = "run-A") => {
   const base = shellModel();
   return shellModel({
+    route: { _tag: "Benchmark" },
     modelsView: {
       ...base.modelsView,
       benchmarkAction: { status: "saving" },
@@ -48,6 +49,7 @@ describe("S671 benchmark run generation fencing", () => {
   it("applies a start response even when a readback token moved in between", () => {
     const base = shellModel();
     const model = shellModel({
+      route: { _tag: "Benchmark" },
       readbacks: {
         ...base.readbacks,
         benchmarkSummary: { ...base.readbacks.benchmarkSummary, token: 99 },
@@ -63,6 +65,7 @@ describe("S671 benchmark run generation fencing", () => {
   it("ignores a start response from a superseded generation", () => {
     const base = shellModel();
     const model = shellModel({
+      route: { _tag: "Benchmark" },
       modelsView: { ...base.modelsView, benchmarkRunToken: 4, benchmarkAction: { status: "saving" } },
     });
     const result = shellUpdate(model, Message.BenchmarkRunStarted({ runId: "run-A", token: 2 }));

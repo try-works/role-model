@@ -187,7 +187,10 @@ describe("S642 benchmark request and progress coherence", () => {
   });
 
   it("ignores a polled snapshot from another run and keeps polling the started run", () => {
-    const base = shellModel({ route: { _tag: "Benchmark" } });
+    const base = shellModel({
+      modelsView: { benchmarkRunToken: 1 },
+      route: { _tag: "Benchmark" },
+    });
     const started = shellUpdate(base, Message.BenchmarkRunStarted({ runId: "run-A", token: 1 }));
     const stale = shellUpdate(
       started.model,
@@ -199,7 +202,7 @@ describe("S642 benchmark request and progress coherence", () => {
           status: "running",
           totalSteps: 60,
         }),
-        token: 2,
+        token: 1,
       }),
     );
     expect(stale.model.modelsView?.benchmarkProgress?.runId).toBe("run-A");

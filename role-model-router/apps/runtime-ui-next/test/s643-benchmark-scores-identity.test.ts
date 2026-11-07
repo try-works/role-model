@@ -144,7 +144,10 @@ describe("S643 benchmark scores identity and run reconciliation", () => {
   });
 
   it("refreshes the benchmark summary when a run completes", () => {
-    const base = shellModel({ route: { _tag: "Benchmark" } });
+    const base = shellModel({
+      modelsView: { benchmarkRunToken: 1 },
+      route: { _tag: "Benchmark" },
+    });
     const started = shellUpdate(base, Message.BenchmarkRunStarted({ runId: "run-A", token: 1 }));
     const completed = shellUpdate(
       started.model,
@@ -155,7 +158,7 @@ describe("S643 benchmark scores identity and run reconciliation", () => {
           status: "completed",
           totalSteps: 60,
         }),
-        token: 2,
+        token: 1,
       }),
     );
     const keys = (completed.commands ?? [])
