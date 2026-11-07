@@ -7,6 +7,7 @@ import { afterEach, describe, expect, test } from "vitest";
 
 import { readBenchmarkRunProgress } from "../src/benchmark-progress.js";
 import { runRoutingCapabilityBenchmark } from "../src/benchmark-runner.js";
+import { BenchmarkCancelledError, makeBenchmarkGateOwner } from "../src/benchmark-gate.js";
 
 function initBenchmarkDatabase(databasePath: string): void {
   const database = new DatabaseSync(databasePath);
@@ -155,5 +156,56 @@ describe("benchmark runner endpoint accounting", () => {
     expect(["failed", "partial"]).toContain(result.outcome);
     expect(result.caseCounts.total).toBe(1);
     expect(result.caseCounts.failed).toBe(1);
+  });
+
+  test("a pre-aborted signal releases the gate instead of leaking BENCHMARK_BUSY", async () => {
+    const databasePath = await setup();
+    const endpoints = [endpoint("ep-a", "model-a")];
+    const gate = makeBenchmarkGateOwner({ mode: "reject-overlap" });
+    const controller = new AbortController();
+    controller.abort();
+    await expect(
+      runRoutingCapabilityBenchmark(
+        {
+          databasePath,
+          benchmarkArtifactRoot: artifactRoot,
+          benchmarkGate: gate,
+          signal: controller.signal,
+          listConfiguredEndpoints: async () => endpoints,
+          deriveEndpointVersion: () => "v1",
+          executeChatCompletions: async () => ({ contentText: '{"answer":"ok"}' }),
+        },
+        {
+          runId: "run-aborted",
+          endpointIds: ["ep-a"],
+          judgeEndpointId: null,
+          mode: "quick",
+          caseIds: ["h04-tool-read-router"],
+          useJudge: false,
+        },
+      ),
+    ).rejects.toBeInstanceOf(BenchmarkCancelledError);
+    // The admission must be released, so a second run is not refused as busy.
+    expect(gate.running()).toBe(false);
+    const result = await runRoutingCapabilityBenchmark(
+      {
+        databasePath,
+        benchmarkArtifactRoot: artifactRoot,
+        benchmarkGate: gate,
+        listConfiguredEndpoints: async () => endpoints,
+        deriveEndpointVersion: () => "v1",
+        executeChatCompletions: async () => ({ contentText: '{"answer":"ok"}' }),
+      },
+      {
+        runId: "run-after-abort",
+        endpointIds: ["ep-a"],
+        judgeEndpointId: null,
+        mode: "quick",
+        caseIds: ["h04-tool-read-router"],
+        useJudge: false,
+      },
+    );
+    expect(result.runId).toBe("run-after-abort");
+    expect(gate.running()).toBe(false);
   });
 });

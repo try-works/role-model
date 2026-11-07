@@ -1742,31 +1742,44 @@ export async function runRoutingCapabilityBenchmark(
       throw new BenchmarkCancelledError(runId);
     }
   };
-  throwIfCancelled();
+  // S671: a pre-aborted signal must not leak the admission (the finish lives in the main
+  // try/catch below, which has not been entered yet at this point).
+  try {
+    throwIfCancelled();
+  } catch (error) {
+    admission?.finish();
+    throw error;
+  }
 
   const startedAtMs = Date.now();
 
   const artifactRoot = resolveBenchmarkArtifactRoot(deps);
 
-  createBenchmarkRunProgress({
-    runId,
+  try {
+    createBenchmarkRunProgress({
+      runId,
 
-    mode,
+      mode,
 
-    endpointCount: request.endpointIds?.length ?? 0,
+      endpointCount: request.endpointIds?.length ?? 0,
 
-    requestedEndpointCount: request.endpointIds?.length ?? 0,
+      requestedEndpointCount: request.endpointIds?.length ?? 0,
 
-    caseCount: cases.length,
+      caseCount: cases.length,
 
-    judgeEndpointId: request.judgeEndpointId ?? null,
+      judgeEndpointId: request.judgeEndpointId ?? null,
 
-    useJudge,
+      useJudge,
 
-    compareCaseCount: useJudge && (request.endpointIds?.length ?? 0) >= 2 ? cases.length : 0,
+      compareCaseCount: useJudge && (request.endpointIds?.length ?? 0) >= 2 ? cases.length : 0,
 
-    artifactRoot,
-  });
+      artifactRoot,
+    });
+  } catch (error) {
+    // S671: a progress-creation failure must not leak the admission either.
+    admission?.finish();
+    throw error;
+  }
 
   let failureCode:
     | "benchmark_initialization_failed"
