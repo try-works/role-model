@@ -8,7 +8,7 @@ private manifest `7cc4b103…`, evidence commit db93cb3c, FINAL-PACKAGE.json tie
 |---|---|---|
 | R1 | VERIFIED | identities re-pinned at execution SHA (s651); final package records public/private tree + manifest sha. |
 | R2 | SUPERSEDED | owner "use agent teams" replaces the CLI deepseek-flash worker route; native teammates have no per-worker config/jsonl (s660). |
-| R3 | PARTIAL | strict RED->GREEN + independent review per slice; formal Phase-3 recursive lock not produced (s660). |
+| R3 | PARTIAL (lock artifact added) | strict RED->GREEN + independent review per slice; the S671-S678 increment now has a real recursive lock: addenda/03-implementation-summary.addendum-01.md, Status LOCKED, LockedAt 2026-11-07T05:49:00Z, LockHash 3fee121c57312d479c40017fe113c019b673e04affdfe451b8cd75d8e834e52d; the run-wide 03-implementation-summary remains DRAFT with its pre-existing audit FAIL/unexplained-file blockers (s660). |
 | R4 | VERIFIED (bounded) | Effect@4.0.6 pin + consumer typecheck; live-consumer baseline = final packaged verify real chat completion (openai/gpt-4.1-mini-fast, 56 tokens). |
 | R5 | VERIFIED | Node platform-node/node-shared closure via effect wrapper (29+17 entries), browser no-leak assert, packaged. |
 | R6 | VERIFIED | foldkit-ui 30-entry closure, oxlint 0.15.3 pin, Vite exclusion, honest receipt (identity + local wrapper hashes; not per-entry embed). |
