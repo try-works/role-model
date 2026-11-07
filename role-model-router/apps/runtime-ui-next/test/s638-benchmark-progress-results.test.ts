@@ -295,4 +295,23 @@ describe("S638 benchmark progress and per-case results", () => {
       container.remove();
     }
   });
+  it("marks a failed poll as failed progress instead of leaving the run spinning", () => {
+    const base = shellModel();
+    const model = shellModel({
+      modelsView: {
+        ...base.modelsView,
+        benchmarkProgress: { ...runningProgress },
+      },
+    });
+    const result = shellUpdate(
+      model,
+      Message.BenchmarkRunPollFailed({
+        message: "Benchmark run poll failed: the runtime did not respond",
+        token: 0,
+      }),
+    );
+    expect(result.model.modelsView?.benchmarkProgress?.status).toBe("failed");
+    expect(result.model.modelsView?.benchmarkProgress?.message).toContain("did not respond");
+    expect(result.model.modelsView?.benchmarkAction?.status).toBe("error");
+  });
 });

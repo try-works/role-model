@@ -1510,7 +1510,10 @@ export const defineModelsCommands = (client: ModelsClient) => ({
                     token,
                   })
                 : Message.BenchmarkRunPollFailed({
-                    message: `Benchmark run poll failed: HTTP ${String(Exit.isSuccess(exit) ? exit.value.status : 0)}`,
+                    // S668: a transport failure (status 0) is not an HTTP status; say what happened.
+                    message: Exit.isSuccess(exit)
+                      ? `Benchmark run poll failed: HTTP ${String(exit.value.status)}`
+                      : "Benchmark run poll failed: the runtime did not respond (it may have restarted). Reload the page and restart the run.",
                     token,
                   }),
             ),

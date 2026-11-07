@@ -2605,10 +2605,21 @@ export const createUpdate = (
         Message
       > => {
         const state = model.modelsView ?? {};
+        const progress = state.benchmarkProgress;
+        // S668: a failed poll must stop the "running" panel (a runtime restart mid-run used to leave
+        // it spinning at the last step forever) and carry the real reason.
+        const nextProgress =
+          progress !== undefined && progress.status === "running"
+            ? { ...progress, message, status: "failed" as const }
+            : progress;
         return {
           model: {
             ...model,
-            modelsView: { ...state, benchmarkAction: { message, status: "error" } },
+            modelsView: {
+              ...state,
+              benchmarkAction: { message, status: "error" },
+              ...(nextProgress === undefined ? {} : { benchmarkProgress: nextProgress }),
+            },
           },
         };
       },
