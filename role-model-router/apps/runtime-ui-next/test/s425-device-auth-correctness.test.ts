@@ -547,6 +547,8 @@ describe("S442 pending view (scene + real client bridge)", () => {
         ),
         Message.DeviceAuthPollCancelCompleted({}),
       ),
+      // S672: cancel now closes the session modal in the same transition.
+      Command.resolve(Dialog.CloseDialog, Dialog.Message.CompletedCloseDialog()),
       Mount.expectEnded(Dialog.AcquireResources),
       sceneExpect(role("button", { name: "Cancel" })).toBeAbsent(),
       sceneExpect(role("button", { name: "Start device authorization" })).toBeEnabled(),

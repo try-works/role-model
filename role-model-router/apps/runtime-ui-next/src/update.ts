@@ -5525,19 +5525,25 @@ export const createUpdate = (
         // S459: interrupt the scheduled poll so cancel ends the sleep/request lifetime; the advanced
         // token stays the fence for any result already in flight when the interrupt landed.
         const authRequestId = state.session?.authRequestId;
+        const closed = closeDeviceAuthDialog({
+          ...model,
+          deviceAuth: deviceAuthCancelledState(state),
+        });
+        const closeCommands = Command.mapMessages(closed.commands, (message) =>
+          Message.GotDeviceAuthDialogMessage({ message }),
+        );
         return {
-          commands:
-            authRequestId === undefined
-              ? undefined
+          commands: [
+            ...(authRequestId === undefined
+              ? []
               : [
                   deviceAuthCommands.poll.Interrupt({ authRequestId }, () =>
                     Message.DeviceAuthPollCancelCompleted({}),
                   ),
-                ],
-          model: closeDeviceAuthDialog({
-            ...model,
-            deviceAuth: deviceAuthCancelledState(state),
-          }),
+                ]),
+            ...closeCommands,
+          ],
+          model: closed.model,
         };
       },
       DeviceAuthPollCancelCompleted: (): UpdateReturn<Model, Message> => ({ model }),
@@ -5555,24 +5561,29 @@ export const createUpdate = (
         const endpointsToken = model.readbacks.modelEndpoints.token + 1;
         const modelsToken = model.readbacks.configuredModels.token + 1;
         const controlProvidersToken = model.controls.providers.token + 1;
+        const closed = closeDeviceAuthDialog({
+          ...model,
+          deviceAuth: { ...state, error: undefined },
+          readbacks: {
+            ...model.readbacks,
+            configuredModels: loadingReadback(modelsToken),
+            modelEndpoints: loadingReadback(endpointsToken),
+            providerAccounts: loadingReadback(accountsToken),
+          },
+          controls: { ...model.controls, providers: loadingControl(controlProvidersToken) },
+        });
+        const closeCommands = Command.mapMessages(closed.commands, (message) =>
+          Message.GotDeviceAuthDialogMessage({ message }),
+        );
         return {
           commands: [
+            ...closeCommands,
             readReadback({ key: "providerAccounts", token: accountsToken }),
             readReadback({ key: "modelEndpoints", token: endpointsToken }),
             readReadback({ key: "configuredModels", token: modelsToken }),
             readControl({ key: "providers", token: controlProvidersToken }),
           ],
-          model: closeDeviceAuthDialog({
-            ...model,
-            deviceAuth: { ...state, error: undefined },
-            readbacks: {
-              ...model.readbacks,
-              configuredModels: loadingReadback(modelsToken),
-              modelEndpoints: loadingReadback(endpointsToken),
-              providerAccounts: loadingReadback(accountsToken),
-            },
-            controls: { ...model.controls, providers: loadingControl(controlProvidersToken) },
-          }),
+          model: closed.model,
         };
       },
     };

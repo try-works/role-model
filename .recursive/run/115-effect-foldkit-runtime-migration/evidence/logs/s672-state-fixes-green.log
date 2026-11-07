@@ -2,13 +2,30 @@
 
  RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
 
- ✓ test/s220-runtime-config-transitions.test.ts (3 tests) 90ms
- ✓ test/s257-runtime-config-invalid-save.test.ts (2 tests) 86ms
- ✓ test/s221-config-confirm-command.test.ts (3 tests) 120ms
- ✓ test/s672-state-machine-fixes.test.ts (3 tests) 141ms
+ ✓ test/s499-device-auth-dialog.test.ts (1 test) 464ms
+   ✓ S499 device-auth session dialog > renders the pending session inside a real modal dialog with the code and aria-modal  458ms
+ ✓ test/s664-oauth-connect.test.ts (5 tests) 794ms
+   ✓ S664 OAuth connect routing > routes the Kimi Code (oauth2-device-code) variant to the device-authorization action  369ms
+ ✓ test/s459-auth-cancel.test.ts (5 tests) 5625ms
+   ✓ S459 device-auth poll cancellation lifetime > R1 cancel immediately after the poll is scheduled issues no poll request  1399ms
+   ✓ S459 device-auth poll cancellation lifetime > R2 cancel during the poll delay issues no poll request  1438ms
+   ✓ S459 device-auth poll cancellation lifetime > R3 cancel after a response with the next poll scheduled keeps exactly one request  1347ms
+   ✓ S459 device-auth poll cancellation lifetime > R4 a restart after cancel schedules a new authorization whose poll still runs  1407ms
+ ✓ test/s425-device-auth-correctness.test.ts (17 tests) 14248ms
+   ✓ S442 pending view (scene + real client bridge) > start click restores the host pending session and renders the code + safe link  5808ms
+   ✓ S442 pending view (scene + real client bridge) > a real minimal pending poll keeps the code and link after the first poll  2318ms
+   ✓ S442 pending view (scene + real client bridge) > refuses an unsafe verification URL protocol instead of linking it  5288ms
+   ✓ S442 pending view (scene + real client bridge) > renders the pending verification link as a keyboard-focusable anchor (tabindex 0)  460ms
+ ✓ test/s256-runtime-config-rendering-scene.test.ts (5 tests) 361ms
+ ✓ test/s397-device-auth-form.test.ts (15 tests) 583ms
+   ✓ S398 device-authorization retry control (scene + real client) > start click dispatches the read, its real client result renders retry, and retry click re-dispatches it  392ms
+ ✓ test/s221-config-confirm-command.test.ts (3 tests) 129ms
+ ✓ test/s220-runtime-config-transitions.test.ts (3 tests) 106ms
+ ✓ test/s672-state-machine-fixes.test.ts (3 tests) 196ms
+ ✓ test/s257-runtime-config-invalid-save.test.ts (2 tests) 153ms
 
- Test Files  4 passed (4)
-      Tests  11 passed (11)
-   Start at  10:42:19
-   Duration  39.67s (transform 20.08s, setup 0ms, collect 127.75s, tests 436ms, environment 21.20s, prepare 3.14s)
+ Test Files  10 passed (10)
+      Tests  59 passed (59)
+   Start at  11:08:17
+   Duration  71.56s (transform 17.75s, setup 0ms, collect 161.90s, tests 22.66s, environment 56.72s, prepare 9.02s)
 
