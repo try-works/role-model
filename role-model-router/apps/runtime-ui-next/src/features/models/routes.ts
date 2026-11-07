@@ -1580,7 +1580,7 @@ const benchmarkPhaseCopy = (
   const model =
     progress.currentEndpointModelId === undefined
       ? null
-      : `model ${String((progress.endpointIndex ?? 0) + 1)}/${String(progress.endpointCount ?? 0)}: ${progress.currentEndpointModelId}`;
+      : `model ${String(progress.endpointIndex ?? 0)}/${String(progress.endpointCount ?? 0)}: ${progress.currentEndpointModelId}`;
   // A case index beyond the steps already completed is a stale/incoherent snapshot; do not render it.
   const caseCoherent =
     progress.caseIndex === undefined ||
@@ -1589,7 +1589,7 @@ const benchmarkPhaseCopy = (
   const testCase =
     !caseCoherent || progress.currentCaseId === undefined
       ? null
-      : `case ${String((progress.caseIndex ?? 0) + 1)}/${String(progress.caseCount ?? 0)} (${progress.currentCaseId})`;
+      : `case ${String(progress.caseIndex ?? 0)}/${String(progress.caseCount ?? 0)} (${progress.currentCaseId})`;
   if (progress.runPhase === "compare") {
     return {
       detail: [

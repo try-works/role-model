@@ -106,7 +106,7 @@ describe("S638 benchmark progress and per-case results", () => {
     );
     const detail = container.querySelector("[data-benchmark-progress-detail]")?.textContent ?? "";
     // The reference compare phase lists the case only (describeBenchmarkProgress), not the endpoint.
-    expect(detail).toContain("case 5/12 (case-4)");
+    expect(detail).toContain("case 4/12 (case-4)");
     expect(detail).toContain("ranking subjects for this case");
     expect(
       container.querySelector("[data-benchmark-progress-bar]")?.getAttribute("style"),
