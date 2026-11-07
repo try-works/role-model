@@ -31,3 +31,23 @@ then restored the original file.
 R15 ordinary-client lane: VERIFIED for DeepSeek via pi (real request, captured decision/telemetry);
 the multi-provider clause is satisfied at the runtime level (Kimi verified via the raw client), with the
 pi extension's alias requirement recorded as the remaining client-config nuance.
+
+## Alias routing (2026-11-07, owner-required)
+The pi role-model extension discovers aliases from ROLE_MODEL_ENDPOINT (default :3456) and sends the
+selected alias as the request model. :3480 originally exposed no aliases (no unified runtime config), so
+alias requests were rejected. Fix/verification:
+1. Wrote D:/DEV/rm-clean/r761-live-state/runtime-config.yaml with model_aliases
+   (default/baseline/difficulty/controller/hybrid/researcher .remote-only) mapping to the owner's real
+   models (deepseek-flash, deepseek-v4-pro, kimi-k3) and relaunched :3480 with
+   --unified-runtime-config.
+2. /v1/models on :3480 now lists the aliases (baseline.remote-only, difficulty.remote-only,
+   controller.remote-only, hybrid.remote-only, ...).
+3. Direct alias routing verified via curl: all four aliases returned real finish=stop "OK" responses
+   (baseline/difficulty/hybrid -> deepseek-flash, controller -> deepseek-v4-pro).
+4. pi end-to-end: with ROLE_MODEL_ENDPOINT=http://127.0.0.1:3480 and the provider repointed to :3480,
+   `pi -p --provider role-model --model difficulty.remote-only "Reply with exactly: OK"` printed **OK**.
+5. Telemetry proves alias resolution: requestedModelId="difficulty.remote-only" ->
+   model="moonshot/kimi-k2.7-code" (one run) and "deepseek/deepseek-v4-pro" (another), status success;
+   controller.remote-only -> deepseek-v4-pro-max; hybrid.remote-only -> deepseek-flash.
+
+pi config restored to the original after verification. Alias routing: VERIFIED (direct + via pi).
