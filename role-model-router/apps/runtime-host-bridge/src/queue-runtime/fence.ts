@@ -259,6 +259,9 @@ export function openAttemptFenceStore({
   const expireAttempt = database.prepare(
     "UPDATE queue_attempt_fence SET state = 'expired' WHERE job_id = ? AND attempt = ? AND lease_id = ?",
   );
+  const expireActiveForKill = database.prepare(
+    "UPDATE queue_attempt_fence SET state = 'expired' WHERE job_id = ? AND state = 'active'",
+  );
   const insertKill = database.prepare(
     "INSERT INTO queue_attempt_kill (job_id, killed_at) VALUES (?, ?) ON CONFLICT(job_id) DO UPDATE SET killed_at = excluded.killed_at",
   );
@@ -374,7 +377,9 @@ export function openAttemptFenceStore({
     },
 
     kill(jobId) {
-      insertKill.run(jobId ?? GLOBAL_KILL, now());
+      const target = jobId ?? GLOBAL_KILL;
+      insertKill.run(target, now());
+      expireActiveForKill.run(target);
     },
 
     readAttempt(jobId, attempt) {

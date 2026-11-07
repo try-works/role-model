@@ -4,7 +4,9 @@ import path from "node:path";
 
 import { expect, test } from "vitest";
 
+import { mkdirSync } from "node:fs";
 import {
+  ReplayLedgerBusyError,
   createReplayLedger,
   replayBudgetAvailable,
   resolveReplayLedgerLimits,
@@ -54,6 +56,21 @@ test("run100 the default ceiling is enforced, so production keeps the delivery g
     expect(refused.accepted).toBe(false);
     if (!refused.accepted) expect(refused.code).toBe("budget_exhausted");
   } finally {
+    cleanup();
+  }
+});
+
+test("run100 a concurrent writer lock blocks the reservation instead of double-spending it", () => {
+  const { file, cleanup } = tempFile();
+  const previous = process.env.REPLAY_LEDGER_LOCK_TIMEOUT_MS;
+  process.env.REPLAY_LEDGER_LOCK_TIMEOUT_MS = "25";
+  try {
+    const ledger = createReplayLedger({ filePath: file, limits: { counterfactualsPerDay: 1, dispatchesPerDay: 1, hardCounterfactualLimit: null, enforced: true } });
+    mkdirSync(`${file}.lock`);
+    expect(() => ledger.reserve({ captureRef: "req-locked", policySetDigest: "p", candidateDispatches: 1 })).toThrow(ReplayLedgerBusyError);
+  } finally {
+    if (previous === undefined) delete process.env.REPLAY_LEDGER_LOCK_TIMEOUT_MS;
+    else process.env.REPLAY_LEDGER_LOCK_TIMEOUT_MS = previous;
     cleanup();
   }
 });

@@ -24198,24 +24198,33 @@ export async function createRuntimeBridgeBackend(
     );
     const pendingReceiptPath = path.join(receiptRoot, `${activationBatchId}.pending.json`);
     const committedReceiptPath = path.join(receiptRoot, `${activationBatchId}.committed.json`);
+    const failedReceiptPath = path.join(receiptRoot, `${activationBatchId}.failed.json`);
     type ActivationBatchReceipt = {
       schemaVersion: "runtime-endpoint-activation-batch.v1";
       activationBatchId: string;
       payloadSha256: string;
-      status: "pending" | "committed";
+      status: "pending" | "committed" | "failed";
+      error?: string;
       endpoints: readonly ReturnType<typeof activateRuntimeEndpoint>[];
     };
     const receiptPath = existsSync(committedReceiptPath)
       ? committedReceiptPath
-      : existsSync(pendingReceiptPath)
-        ? pendingReceiptPath
-        : null;
+      : existsSync(failedReceiptPath)
+        ? failedReceiptPath
+        : existsSync(pendingReceiptPath)
+          ? pendingReceiptPath
+          : null;
     const existingReceipt = receiptPath
       ? (JSON.parse(readFileSync(receiptPath, "utf8")) as ActivationBatchReceipt)
       : null;
     if (existingReceipt && existingReceipt.payloadSha256 !== payloadSha256) {
       throw new Error(
         `Activation batch ${activationBatchId} was already bound to a different payload.`,
+      );
+    }
+    if (existingReceipt?.status === "failed") {
+      throw new Error(
+        `Activation batch ${activationBatchId} previously failed: ${existingReceipt.error ?? "unknown error"}`,
       );
     }
     if (existingReceipt?.status === "committed") {
@@ -24282,7 +24291,12 @@ export async function createRuntimeBridgeBackend(
 
     const writeReceipt = (receipt: ActivationBatchReceipt): void => {
       mkdirSync(receiptRoot, { recursive: true });
-      const targetPath = receipt.status === "pending" ? pendingReceiptPath : committedReceiptPath;
+      const targetPath =
+        receipt.status === "pending"
+          ? pendingReceiptPath
+          : receipt.status === "failed"
+            ? failedReceiptPath
+            : committedReceiptPath;
       if (existsSync(targetPath)) {
         return;
       }
@@ -24369,7 +24383,14 @@ export async function createRuntimeBridgeBackend(
       });
     }
 
-    const admissionResults = await Promise.all(
+    let admissionResults: Array<{
+      endpoint: (typeof resolved)[number];
+      lifecycleState: "active" | "degraded";
+      healthStatus: string;
+      oauthAuthenticated: boolean;
+    }>;
+    try {
+      admissionResults = await Promise.all(
       resolved.map(async (entry) => {
         const account = currentAccounts.find(
           (candidate) => candidate.providerAccountId === entry.result.providerAccountId,
@@ -24400,7 +24421,34 @@ export async function createRuntimeBridgeBackend(
           oauthAuthenticated,
         };
       }),
-    );
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "activation admission failed";
+      upsertSqliteRuntimeEndpointsAtomically({
+        databasePath: initialization.databasePath,
+        endpoints: resolved.map((entry) => ({
+          endpointId: entry.result.endpointId,
+          providerAccountId: entry.result.providerAccountId,
+          modelId: entry.result.modelId,
+          region: entry.region,
+          endpointKind: entry.endpointKind,
+          servingSource: entry.servingSource,
+          lifecycleState: "degraded" as const,
+          healthStatus: "admission-failed",
+          reasoningEffort: entry.identity.reasoningEffort,
+        })),
+      });
+      writeReceipt({
+        schemaVersion: "runtime-endpoint-activation-batch.v1",
+        activationBatchId,
+        payloadSha256,
+        status: "failed",
+        endpoints: resolved.map(({ result }) => result),
+        error: message,
+      });
+      rebuildCurrentState();
+      throw error;
+    }
     upsertSqliteRuntimeEndpointsAtomically({
       databasePath: initialization.databasePath,
       endpoints: admissionResults.map(({ endpoint, lifecycleState, healthStatus }) => ({

@@ -1035,6 +1035,12 @@ export async function runAutoReplayTick(input: {
 
   for (const capture of pending) {
     if (processed >= maxCapturesPerTick) break;
+    if (capture.replayDispositionSettled) {
+      // S671: the durable store already holds a terminal disposition. Never let a
+      // later deferred projection overwrite it, and do not re-dispatch paid work.
+      cursor = capture.captureRef;
+      continue;
+    }
     // Run 98 addendum 04 follow-on: stop *starting* captures once the tick's budget is spent, so a
     // tick made of several minutes-long replays cannot hold the loop open for tens of minutes. The
     // capture already running finishes under the `L4` executor bound; the rest are left for the

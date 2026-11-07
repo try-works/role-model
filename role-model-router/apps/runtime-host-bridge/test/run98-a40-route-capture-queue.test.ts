@@ -56,6 +56,34 @@ test("a40 L2: the drain delivers queued captures in order and records a receipt 
   expect(receipts.map((receipt) => receipt.requestId).sort()).toEqual(["req-a40-a", "req-a40-b"]);
 });
 
+test("a40/S671: two concurrent drains cannot run the same claimed capture twice", async () => {
+  const queue = await makeQueue();
+  await queue.enqueue(capture("req-a40-concurrent"));
+  let runs = 0;
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let started!: () => void;
+  const entered = new Promise<void>((resolve) => {
+    started = resolve;
+  });
+  const handler = async () => {
+    runs += 1;
+    started();
+    await gate;
+    return { status: "captured" };
+  };
+  const first = queue.drain(handler);
+  await entered;
+  const second = await queue.drain(handler);
+  expect(second).toMatchObject({ delivered: 0, failed: 0 });
+  release();
+  await first;
+  expect(runs).toBe(1);
+  expect(await queue.readReceipts()).toHaveLength(1);
+});
+
 test("a40 L2: a boundary failure keeps the capture for retry instead of losing it", async () => {
   const queue = await makeQueue();
   await queue.enqueue(capture("req-a40-retry"));

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -108,7 +109,9 @@ function captureQueueSchema(database: DatabaseSync): void {
       last_error TEXT,
       next_attempt_at_ms INTEGER NOT NULL,
       enqueued_at_ms INTEGER NOT NULL,
-      deadline_at_ms INTEGER NOT NULL
+      deadline_at_ms INTEGER NOT NULL,
+      claim_id TEXT,
+      claim_expires_at_ms INTEGER
     );
     CREATE INDEX IF NOT EXISTS track_b_route_capture_pending_order
       ON track_b_route_capture_pending(next_attempt_at_ms, enqueued_at_ms, request_id);
@@ -125,6 +128,14 @@ function captureQueueSchema(database: DatabaseSync): void {
   if (!columns.some((column) => column.name === "deadline_at_ms")) {
     database.exec(
       "ALTER TABLE track_b_route_capture_pending ADD COLUMN deadline_at_ms INTEGER NOT NULL DEFAULT 0",
+    );
+  }
+  if (!columns.some((column) => column.name === "claim_id")) {
+    database.exec("ALTER TABLE track_b_route_capture_pending ADD COLUMN claim_id TEXT");
+  }
+  if (!columns.some((column) => column.name === "claim_expires_at_ms")) {
+    database.exec(
+      "ALTER TABLE track_b_route_capture_pending ADD COLUMN claim_expires_at_ms INTEGER",
     );
   }
 }
@@ -298,37 +309,60 @@ export function createTrackBRouteCaptureQueue(options: {
       let delivered = 0;
       let failed = 0;
       for (let iteration = 0; iteration < maxItems; iteration += 1) {
+        const claimId = randomUUID();
+        const claimExpiresAtMs = nowMs + 15 * 60 * 1000;
         const claimed = await exclusive(async () =>
           withDatabase((database) => {
-            const row = database
-              .prepare(
-                `SELECT request_id, routing_decision_id, endpoint_id, payload_json, attempts,
-                        deadline_at_ms
-                 FROM track_b_route_capture_pending
-                 WHERE next_attempt_at_ms <= ?
-                 ORDER BY enqueued_at_ms, request_id LIMIT 1`,
-              )
-              .get(nowMs) as
-              | {
-                  request_id: string;
-                  routing_decision_id: string;
-                  endpoint_id: string;
-                  payload_json: string;
-                  attempts: number;
-                  deadline_at_ms: number;
-                }
-              | undefined;
-            if (!row) return null;
-            return {
-              item: {
-                requestId: row.request_id,
-                routingDecisionId: row.routing_decision_id,
-                endpointId: row.endpoint_id,
-                payload: parsePayload(row.payload_json),
-              } as TrackBRouteCaptureQueueItem,
-              attempts: row.attempts,
-              deadlineAtMs: row.deadline_at_ms,
-            };
+            database.exec("BEGIN IMMEDIATE");
+            try {
+              const row = database
+                .prepare(
+                  `SELECT request_id, routing_decision_id, endpoint_id, payload_json, attempts,
+                          deadline_at_ms
+                   FROM track_b_route_capture_pending
+                   WHERE next_attempt_at_ms <= ?
+                     AND (claim_expires_at_ms IS NULL OR claim_expires_at_ms <= ?)
+                   ORDER BY enqueued_at_ms, request_id LIMIT 1`,
+                )
+                .get(nowMs, nowMs) as
+                | {
+                    request_id: string;
+                    routing_decision_id: string;
+                    endpoint_id: string;
+                    payload_json: string;
+                    attempts: number;
+                    deadline_at_ms: number;
+                  }
+                | undefined;
+              if (!row) {
+                database.exec("COMMIT");
+                return null;
+              }
+              const updated = database
+                .prepare(
+                  `UPDATE track_b_route_capture_pending
+                   SET claim_id = ?, claim_expires_at_ms = ?
+                   WHERE request_id = ?
+                     AND (claim_expires_at_ms IS NULL OR claim_expires_at_ms <= ?)`,
+                )
+                .run(claimId, claimExpiresAtMs, row.request_id, nowMs);
+              database.exec("COMMIT");
+              if (Number(updated.changes) === 0) return null;
+              return {
+                item: {
+                  requestId: row.request_id,
+                  routingDecisionId: row.routing_decision_id,
+                  endpointId: row.endpoint_id,
+                  payload: parsePayload(row.payload_json),
+                } as TrackBRouteCaptureQueueItem,
+                attempts: row.attempts,
+                deadlineAtMs: row.deadline_at_ms,
+                claimId,
+              };
+            } catch (error) {
+              database.exec("ROLLBACK");
+              throw error;
+            }
           }),
         );
         if (!claimed) break;
@@ -343,12 +377,13 @@ export function createTrackBRouteCaptureQueue(options: {
               withDatabase((database) => {
                 database
                   .prepare(
-                    "UPDATE track_b_route_capture_pending SET next_attempt_at_ms=?, last_error=? WHERE request_id=?",
+                    "UPDATE track_b_route_capture_pending SET next_attempt_at_ms=?, last_error=?, claim_id=NULL, claim_expires_at_ms=NULL WHERE request_id=? AND claim_id=?",
                   )
                   .run(
                     deferredUntilMs,
                     `deferred: boundary unavailable until ${new Date(deferredUntilMs).toISOString()}`,
                     claimed.item.requestId,
+                    claimed.claimId,
                   );
               }),
             );
@@ -358,18 +393,22 @@ export function createTrackBRouteCaptureQueue(options: {
             withDatabase((database) => {
               database.exec("BEGIN IMMEDIATE");
               try {
-                database
-                  .prepare("DELETE FROM track_b_route_capture_pending WHERE request_id=?")
-                  .run(claimed.item.requestId);
-                database
+                const deleted = database
                   .prepare(
-                    "INSERT OR REPLACE INTO track_b_route_capture_receipts (request_id, result_json, completed_at_ms) VALUES (?, ?, ?)",
+                    "DELETE FROM track_b_route_capture_pending WHERE request_id=? AND claim_id=?",
                   )
-                  .run(
-                    claimed.item.requestId,
-                    JSON.stringify({ status: "delivered", result: result ?? null }),
-                    Date.now(),
-                  );
+                  .run(claimed.item.requestId, claimed.claimId);
+                if (Number(deleted.changes) > 0) {
+                  database
+                    .prepare(
+                      "INSERT OR REPLACE INTO track_b_route_capture_receipts (request_id, result_json, completed_at_ms) VALUES (?, ?, ?)",
+                    )
+                    .run(
+                      claimed.item.requestId,
+                      JSON.stringify({ status: "delivered", result: result ?? null }),
+                      Date.now(),
+                    );
+                }
                 database.exec("COMMIT");
               } catch (error) {
                 database.exec("ROLLBACK");
@@ -392,22 +431,26 @@ export function createTrackBRouteCaptureQueue(options: {
               withDatabase((database) => {
                 database.exec("BEGIN IMMEDIATE");
                 try {
-                  database
-                    .prepare("DELETE FROM track_b_route_capture_pending WHERE request_id=?")
-                    .run(claimed.item.requestId);
-                  database
+                  const deleted = database
                     .prepare(
-                      "INSERT OR REPLACE INTO track_b_route_capture_receipts (request_id, result_json, completed_at_ms) VALUES (?, ?, ?)",
+                      "DELETE FROM track_b_route_capture_pending WHERE request_id=? AND claim_id=?",
                     )
-                    .run(
-                      claimed.item.requestId,
-                      JSON.stringify({
-                        status: expired ? "expired" : "failed",
-                        attempts,
-                        lastError,
-                      }),
-                      Date.now(),
-                    );
+                    .run(claimed.item.requestId, claimed.claimId);
+                  if (Number(deleted.changes) > 0) {
+                    database
+                      .prepare(
+                        "INSERT OR REPLACE INTO track_b_route_capture_receipts (request_id, result_json, completed_at_ms) VALUES (?, ?, ?)",
+                      )
+                      .run(
+                        claimed.item.requestId,
+                        JSON.stringify({
+                          status: expired ? "expired" : "failed",
+                          attempts,
+                          lastError,
+                        }),
+                        Date.now(),
+                      );
+                  }
                   database.exec("COMMIT");
                 } catch (error) {
                   database.exec("ROLLBACK");
@@ -422,10 +465,10 @@ export function createTrackBRouteCaptureQueue(options: {
                 database
                   .prepare(
                     `UPDATE track_b_route_capture_pending
-                     SET attempts=?, last_error=?, next_attempt_at_ms=?
-                     WHERE request_id=?`,
+                     SET attempts=?, last_error=?, next_attempt_at_ms=?, claim_id=NULL, claim_expires_at_ms=NULL
+                     WHERE request_id=? AND claim_id=?`,
                   )
-                  .run(attempts, lastError, nowMs + backoffMs, claimed.item.requestId);
+                  .run(attempts, lastError, nowMs + backoffMs, claimed.item.requestId, claimed.claimId);
               }),
             );
           }

@@ -111,6 +111,7 @@ describe("R30 attempt fence", () => {
       leaseMs: 60_000,
     });
     fence.kill("job-killed");
+    expect(fence.readAttempt("job-killed", 1)).toMatchObject({ state: "expired" });
 
     expect(() => fence.recordEvidence(lease, { output: "late" })).toThrow(
       AttemptFenceRejectedError,

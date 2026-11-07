@@ -1,5 +1,13 @@
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 
 import { assertReplayReceiptMetadataOnly } from "./track-b-replay-retention.js";
@@ -41,6 +49,47 @@ export class ReplayLedgerCorruptError extends Error {
     this.filePath = filePath;
   }
 }
+
+export class ReplayLedgerBusyError extends Error {
+  readonly filePath: string;
+  constructor(filePath: string) {
+    super(`replay ledger ${filePath} is locked by another writer`);
+    this.name = "ReplayLedgerBusyError";
+    this.filePath = filePath;
+  }
+}
+
+const sleepSync = (ms: number): void => {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+};
+
+/** Cross-process reservation lock: mkdir is atomic on Windows and POSIX. */
+const withLedgerLock = <T>(filePath: string, run: () => T): T => {
+  const lockPath = `${filePath}.lock`;
+  const timeoutMs = Number(process.env.REPLAY_LEDGER_LOCK_TIMEOUT_MS ?? 5_000);
+  const deadline = Date.now() + (Number.isFinite(timeoutMs) ? timeoutMs : 5_000);
+  for (;;) {
+    try {
+      mkdirSync(lockPath);
+      break;
+    } catch (error) {
+      if ((error as { code?: string }).code !== "EEXIST") throw error;
+      try {
+        if (Date.now() - statSync(lockPath).mtimeMs > 30_000) {
+          rmSync(lockPath, { force: true, recursive: true });
+          continue;
+        }
+      } catch {}
+      if (Date.now() >= deadline) throw new ReplayLedgerBusyError(filePath);
+      sleepSync(25);
+    }
+  }
+  try {
+    return run();
+  } finally {
+    rmSync(lockPath, { force: true, recursive: true });
+  }
+};
 
 export const DEFAULT_REPLAY_LEDGER_LIMITS: ReplayLedgerLimits = Object.freeze({
   counterfactualsPerDay: 100,
@@ -325,6 +374,7 @@ export function createReplayLedger(options: {
   return {
     filePath: options.filePath,
     reserve(input) {
+      return withLedgerLock(options.filePath, () => {
       const limits = currentLimits();
       const atMs = now();
       const file = load();
@@ -379,6 +429,7 @@ export function createReplayLedger(options: {
       });
       persist(file);
       return { accepted: true, reservationId, window: replayBudgetWindow(atMs) };
+      });
     },
     release(reservationId) {
       const file = load();
