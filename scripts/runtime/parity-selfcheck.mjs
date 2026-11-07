@@ -809,8 +809,27 @@ const captureServed = async ({
   }
 };
 
+/** S681: the same Chromium-family discovery the rendered-UI audit uses, so the parity lane runs
+ * wherever the audit runs. A set-but-missing CHROME_PATH is authoritative: it means NOT RUN. */
+const BROWSER_CANDIDATES = [
+  "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+  "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+  "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+  "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
+  "/usr/bin/google-chrome",
+  "/usr/bin/chromium",
+  "/usr/bin/chromium-browser",
+];
+
+export const resolveChromePath = (env = process.env) => {
+  if (env.CHROME_PATH !== undefined) {
+    return existsSync(env.CHROME_PATH) ? env.CHROME_PATH : undefined;
+  }
+  return BROWSER_CANDIDATES.find((candidate) => existsSync(candidate));
+};
+
 export const main = async ({
-  chromePath = process.env.CHROME_PATH,
+  chromePath = resolveChromePath(),
   evidenceDir,
   executablePath,
   fixtureRoot,

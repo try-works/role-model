@@ -17,6 +17,7 @@ import {
   partitionCaptureIssues,
   planTargets,
   relocateTempRootForDrive,
+  resolveChromePath,
   resolveRequiredTempDrive,
   runMutationCheck,
   runSelfcheck,
@@ -530,8 +531,9 @@ const driveOfPath = (targetPath) => {
 test("S342c PARITY_SELFCHECK_TEMP_DRIVE selects the required drive for the selfcheck path", async () => {
   const tempDir = path.join(os.tmpdir(), "s342c-parity");
   mkdirSync(tempDir, { recursive: true });
-  const result = await withTempDriveEnv({ PARITY: driveOfPath(os.tmpdir()), tmp: tempDir }, () =>
-    main({ repoRoot: tempDir, targets: [] }),
+  const missingChrome = path.join(tempDir, "no-chrome.exe");
+const result = await withTempDriveEnv({ PARITY: driveOfPath(os.tmpdir()), tmp: tempDir }, () =>
+    main({ chromePath: missingChrome, repoRoot: tempDir, targets: [] }),
   );
   assert.notEqual(result.status, "FAILED");
   assert.equal(result.reason?.includes("not on the required drive") ?? false, false);
@@ -542,7 +544,7 @@ test("S342c an unavailable PARITY_SELFCHECK_TEMP_DRIVE keeps the existing fail-f
   mkdirSync(tempDir, { recursive: true });
   const otherDrive = driveOfPath(os.tmpdir()).toUpperCase() === "Z:" ? "Y:" : "Z:";
   const result = await withTempDriveEnv({ PARITY: otherDrive, tmp: tempDir }, () =>
-    main({ repoRoot: tempDir, targets: [] }),
+    main({ chromePath: path.join(tempDir, "no-chrome.exe"), repoRoot: tempDir, targets: [] }),
   );
   assert.equal(result.status, "FAILED");
   assert.equal(result.exitCode, 1);
@@ -657,4 +659,13 @@ test("S681: the selfcheck temp root relocates onto the required drive when it ex
     assert.equal(path.parse(relocated).root.toUpperCase(), `${otherDrive}\\`.toUpperCase());
     assert.equal(existsSync(relocated), true);
   }
+});
+test("S681: parity chrome discovery mirrors the audit and honours CHROME_PATH", () => {
+  // A set-but-missing CHROME_PATH is authoritative: no silent fallback to another browser.
+  assert.equal(resolveChromePath({ CHROME_PATH: path.join(os.tmpdir(), "no-chrome.exe") }), undefined);
+  // A set-and-existing CHROME_PATH wins over discovery.
+  assert.equal(resolveChromePath({ CHROME_PATH: process.execPath }), process.execPath);
+  // Unset: a discovered candidate or undefined, never a crash.
+  const discovered = resolveChromePath({});
+  assert.ok(discovered === undefined || typeof discovered === "string");
 });
