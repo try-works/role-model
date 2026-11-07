@@ -1514,6 +1514,8 @@ export const defineModelsCommands = (client: ModelsClient) => ({
                     message: Exit.isSuccess(exit)
                       ? `Benchmark run poll failed: HTTP ${String(exit.value.status)}`
                       : "Benchmark run poll failed: the runtime did not respond (it may have restarted). Reload the page and restart the run.",
+                    // S671: carry the run id so the update can fence a stale failure.
+                    runId,
                     token,
                   }),
             ),

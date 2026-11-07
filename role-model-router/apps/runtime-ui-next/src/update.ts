@@ -2468,13 +2468,16 @@ export const createUpdate = (
         const rawMode = (state.benchmarkMode ?? "quick").toLowerCase().includes("full")
           ? "full"
           : "quick";
+        // S671: the run chain owns its own monotonic generation token; coupling it to a readback
+        // token let a completed readback drop a real start and leave the panel running forever.
+        const runToken = (state.benchmarkRunToken ?? 0) + 1;
         return {
           commands: [
             modelsCommands.runBenchmark({
               endpointIdsJson: JSON.stringify(selected),
               judgeEndpointId: judge,
               mode: rawMode,
-              token: model.readbacks.benchmarkSummary.token + 1,
+              token: runToken,
             }),
           ],
           model: {
@@ -2483,6 +2486,7 @@ export const createUpdate = (
               ...state,
               benchmarkAction: { status: "saving" },
               benchmarkRunRequestedEndpointIds: [...selected],
+              benchmarkRunToken: runToken,
             },
           },
         };
@@ -2495,9 +2499,11 @@ export const createUpdate = (
         Message
       > => {
         const state = model.modelsView ?? {};
-        if (token !== model.readbacks.benchmarkSummary.token + 1) return { model };
+        // S671: fence on the run generation (not a readback token) so a readback landing between the
+        // start request and this response cannot drop the start and strand the panel on "running".
+        if (token !== state.benchmarkRunToken) return { model };
         return {
-          commands: [modelsCommands.pollBenchmarkRun({ runId, token: token + 1 })],
+          commands: [modelsCommands.pollBenchmarkRun({ runId, token })],
           model: {
             ...model,
             modelsView: {
@@ -2510,11 +2516,14 @@ export const createUpdate = (
       },
       BenchmarkRunStartFailed: ({
         message,
+        token,
       }: Extract<Message, { readonly _tag: "BenchmarkRunStartFailed" }>): UpdateReturn<
         Model,
         Message
       > => {
         const state = model.modelsView ?? {};
+        // S671: a late failure from a superseded start must not clear a newer run.
+        if (token !== state.benchmarkRunToken) return { model };
         return {
           model: {
             ...model,
@@ -2542,6 +2551,8 @@ export const createUpdate = (
         const progress = benchmarkProgressFrom(raw);
         const state = model.modelsView ?? {};
         if (progress === undefined) return { model };
+        // S671: a poll belongs to a run generation; a stale poll must not advance or re-poll a newer run.
+        if (token !== state.benchmarkRunToken) return { model };
         const runId = progress.runId;
         const status = progress.status;
         // A snapshot from another run (or from before the client started this run) must never replace the panel:
@@ -2550,13 +2561,13 @@ export const createUpdate = (
           state.benchmarkProgress?.status === "running" ? state.benchmarkProgress.runId : undefined;
         if (expectedRunId !== undefined && runId !== expectedRunId) {
           return {
-            commands: [modelsCommands.pollBenchmarkRun({ runId: expectedRunId, token: token + 1 })],
+            commands: [modelsCommands.pollBenchmarkRun({ runId: expectedRunId, token })],
             model,
           };
         }
         if (status === "running") {
           return {
-            commands: [modelsCommands.pollBenchmarkRun({ runId, token: token + 1 })],
+            commands: [modelsCommands.pollBenchmarkRun({ runId, token })],
             model: {
               ...model,
               modelsView: {
@@ -2600,12 +2611,19 @@ export const createUpdate = (
       },
       BenchmarkRunPollFailed: ({
         message,
+        runId,
+        token,
       }: Extract<Message, { readonly _tag: "BenchmarkRunPollFailed" }>): UpdateReturn<
         Model,
         Message
       > => {
         const state = model.modelsView ?? {};
         const progress = state.benchmarkProgress;
+        // S671: a failure belongs to one run generation; a stale failure must not fail a newer run.
+        if (token !== state.benchmarkRunToken) return { model };
+        if (runId !== undefined && progress?.runId !== undefined && runId !== progress.runId) {
+          return { model };
+        }
         // S668: a failed poll must stop the "running" panel (a runtime restart mid-run used to leave
         // it spinning at the last step forever) and carry the real reason.
         const nextProgress =

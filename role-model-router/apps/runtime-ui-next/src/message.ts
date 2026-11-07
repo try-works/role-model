@@ -279,6 +279,7 @@ export const Message: MessageUnion<{
   };
   readonly BenchmarkRunPollFailed: {
     readonly message: typeof Schema.String;
+    readonly runId: Schema.optional<typeof Schema.String>;
     readonly token: typeof Schema.Number;
   };
   readonly BenchmarkRunDetailRequested: { readonly runId: typeof Schema.String };
@@ -706,7 +707,11 @@ export const Message: MessageUnion<{
   BenchmarkRunStartFailed: { message: Schema.String, token: Schema.Number },
   BenchmarkRunPollRequested: { runId: Schema.String, token: Schema.Number },
   BenchmarkRunPolled: { progressJson: Schema.String, token: Schema.Number },
-  BenchmarkRunPollFailed: { message: Schema.String, token: Schema.Number },
+  BenchmarkRunPollFailed: {
+    message: Schema.String,
+    runId: Schema.optional(Schema.String),
+    token: Schema.Number,
+  },
   BenchmarkRunDetailRequested: { runId: Schema.String },
   BenchmarkRunDetailLoaded: { json: Schema.String, runId: Schema.String, token: Schema.Number },
   BenchmarkRunDetailFailed: { message: Schema.String, runId: Schema.String, token: Schema.Number },

@@ -191,6 +191,7 @@ const modelsFields = {
       benchmarkClearPending: Schema.optional(Schema.Boolean),
       benchmarkJudge: Schema.optional(Schema.String),
       benchmarkMode: Schema.optional(Schema.String),
+      benchmarkRunToken: Schema.optional(Schema.Number),
       benchmarkProgress: Schema.optional(
         Schema.Struct({
           caseCount: Schema.optional(Schema.Number),
