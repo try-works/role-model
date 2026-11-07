@@ -369,6 +369,10 @@ export const modelsRoute = (
                                       ? "true"
                                       : "false",
                                   ),
+                                  // The card's visible text spans several lines; an explicit single-line
+                                  // accessible name keeps the control name readable to screen readers and
+                                  // avoids the R39 rendered-UI audit's multi-line-name finding.
+                                  h.AriaLabel(`Select model ${card.displayName}`),
                                   h.Class(
                                     `flex w-full items-start gap-2.5 border-b border-[var(--rm-border)] px-3 py-2.5 text-left last:border-b-0 border-l-[3px] ${
                                       card.id === selected?.id
