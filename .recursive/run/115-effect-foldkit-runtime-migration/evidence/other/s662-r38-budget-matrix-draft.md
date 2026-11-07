@@ -64,3 +64,7 @@ flipped to blocking" and "every --flag the workflow passes exists". .github/work
 gates each R39 step with continue-on-error: ${{ vars.R39_VERIFY_BLOCKING != 'true' }} and the guard
 code throws when a required R39 step "did NOT RUN" while blocking. So R39's mechanical half is
 verified; only the GitHub repo variable flip + one dispatch run remain (owner-gated).
+
+## OWNER APPROVAL (2026-11-07)
+The owner approved the s662 threshold matrix ("approve s662"). R38 is approved; the remaining R38 work
+is the degraded/collector-down measurement legs, which now proceed against the approved budget.
