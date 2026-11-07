@@ -1,0 +1,104 @@
+### S672 state-machine fixes RED
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s672-state-machine-fixes.test.ts (3 tests | 3 failed) 117ms
+   × S672 runtime-config save must not clobber a newer draft > drops the saved snapshot when the user edits after confirming 87ms
+     → the newer draft must not be replaced by the server snapshot
++ actual - expected
+
++ '{\n  "a": 4\n}'
+- '{"a":3}'
+
+   × S672 device-auth cancel/activated closes the modal > cancel closes the dialog and clears the modal key 17ms
+     → cancel must close the modal
+
+true !== false
+
+   × S672 device-auth cancel/activated closes the modal > activation closes the dialog after connected 7ms
+     → activation must close the modal
+
+true !== false
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s672-state-machine-fixes.test.ts > S672 runtime-config save must not clobber a newer draft > drops the saved snapshot when the user edits after confirming
+AssertionError: the newer draft must not be replaced by the server snapshot
++ actual - expected
+
++ '{\n  "a": 4\n}'
+- '{"a":3}'
+
+
+- Expected
++ Received
+
+- {"a":3}
++ {
++   "a": 4
++ }
+
+ ❯ test/s672-state-machine-fixes.test.ts:51:12
+     49|       }),
+     50|     );
+     51|     assert.equal(
+       |            ^
+     52|       saved.model.runtimeConfigEditor?.text,
+     53|       '{"a":3}',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/s672-state-machine-fixes.test.ts > S672 device-auth cancel/activated closes the modal > cancel closes the dialog and clears the modal key
+AssertionError: cancel must close the modal
+
+true !== false
+
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ test/s672-state-machine-fixes.test.ts:93:12
+     91|     const next = shellUpdate(deviceModel(), Message.DeviceAuthCancelle…
+     92|     assert.equal(next.model.deviceAuth?.status, "draft");
+     93|     assert.equal(next.model.deviceAuthDialog?.isOpen, false, "cancel m…
+       |            ^
+     94|     assert.equal(next.model.deviceAuthModalKey, undefined);
+     95|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/s672-state-machine-fixes.test.ts > S672 device-auth cancel/activated closes the modal > activation closes the dialog after connected
+AssertionError: activation must close the modal
+
+true !== false
+
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ test/s672-state-machine-fixes.test.ts:101:12
+     99|     assert.equal(next.model.deviceAuth?.status, "pending");
+    100|     assert.equal(next.model.deviceAuth?.inflight, true);
+    101|     assert.equal(next.model.deviceAuthDialog?.isOpen, false, "activati…
+       |            ^
+    102|     assert.equal(next.model.deviceAuthModalKey, undefined);
+    103|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  10:39:11
+   Duration  25.86s (transform 11.65s, setup 0ms, collect 19.16s, tests 117ms, environment 3.99s, prepare 862ms)
+
+undefined
+D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-ui-next:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/s672-state-machine-fixes.test.ts

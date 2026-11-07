@@ -2243,10 +2243,13 @@ const runtimeConfigPage = (
         ? [
             h.textarea([
               h.Class(
-                "mt-3 min-h-[220px] w-full rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-bg)] p-2 font-mono text-[12px] text-[var(--rm-fg)]",
+                "mt-3 min-h-[220px] w-full rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-bg)] p-2 font-mono text-[12px] text-[var(--rm-fg)] disabled:opacity-60",
               ),
               h.DataAttribute("runtime-config-editor", ""),
               h.Value(editor.text),
+              // S672: while a confirmed save is in flight the draft is frozen; the token bump in
+              // RuntimeConfigTextChanged remains the fence for programmatic edits.
+              h.Disabled(editor.status === "pending"),
               h.OnInput((text) => Message.RuntimeConfigTextChanged({ text })),
             ]),
           ]

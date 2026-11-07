@@ -5,6 +5,7 @@ import type { Return as UpdateReturn } from "@role-model-router/foldkit/update";
 import { type Url, toString as urlToString } from "@role-model-router/foldkit/url";
 import { Effect, Schema } from "effect";
 import {
+  closeDeviceAuthDialog,
   deviceAuthCancelledState,
   deviceAuthFailedState,
   withDeviceAuthDialog,
@@ -4257,6 +4258,9 @@ export const createUpdate = (
               message: undefined,
               notice: undefined,
               status: "editing",
+              // S672: an edit owns a new generation. A save already in flight keeps its old token and
+              // can no longer overwrite the newer draft when it lands.
+              token: current.token + 1,
               text,
             },
           },
@@ -5530,7 +5534,10 @@ export const createUpdate = (
                     Message.DeviceAuthPollCancelCompleted({}),
                   ),
                 ],
-          model: { ...model, deviceAuth: deviceAuthCancelledState(state) },
+          model: closeDeviceAuthDialog({
+            ...model,
+            deviceAuth: deviceAuthCancelledState(state),
+          }),
         };
       },
       DeviceAuthPollCancelCompleted: (): UpdateReturn<Model, Message> => ({ model }),
@@ -5555,7 +5562,7 @@ export const createUpdate = (
             readReadback({ key: "configuredModels", token: modelsToken }),
             readControl({ key: "providers", token: controlProvidersToken }),
           ],
-          model: {
+          model: closeDeviceAuthDialog({
             ...model,
             deviceAuth: { ...state, error: undefined },
             readbacks: {
@@ -5565,7 +5572,7 @@ export const createUpdate = (
               providerAccounts: loadingReadback(accountsToken),
             },
             controls: { ...model.controls, providers: loadingControl(controlProvidersToken) },
-          },
+          }),
         };
       },
     };

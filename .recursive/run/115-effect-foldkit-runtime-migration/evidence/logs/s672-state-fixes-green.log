@@ -1,0 +1,14 @@
+### S672 state-machine fixes GREEN
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s220-runtime-config-transitions.test.ts (3 tests) 90ms
+ ✓ test/s257-runtime-config-invalid-save.test.ts (2 tests) 86ms
+ ✓ test/s221-config-confirm-command.test.ts (3 tests) 120ms
+ ✓ test/s672-state-machine-fixes.test.ts (3 tests) 141ms
+
+ Test Files  4 passed (4)
+      Tests  11 passed (11)
+   Start at  10:42:19
+   Duration  39.67s (transform 20.08s, setup 0ms, collect 127.75s, tests 436ms, environment 21.20s, prepare 3.14s)
+

@@ -1,3 +1,5 @@
+import * as Dialog from "@role-model-router/foldkit-ui/dialog";
+
 import type { Model } from "../../model";
 import { openDeviceAuthDialog } from "../../ui/dialog";
 import type { DeviceAuthSession, DeviceAuthState } from "./model";
@@ -13,6 +15,16 @@ export const withDeviceAuthDialog = (model: Model, session: DeviceAuthSession): 
     deviceAuthModalKey: key,
   };
 };
+
+/** S672: every terminal/cancel transition closes the session modal, not just the deviceAuth slice. */
+export const closeDeviceAuthDialog = (model: Model): Model => ({
+  ...model,
+  deviceAuthDialog:
+    model.deviceAuthDialog === undefined
+      ? undefined
+      : Dialog.close(model.deviceAuthDialog).model,
+  deviceAuthModalKey: undefined,
+});
 
 export const deviceAuthCancelledState = (state: DeviceAuthState): DeviceAuthState => ({
   ...state,
