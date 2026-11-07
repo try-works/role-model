@@ -23,7 +23,7 @@ private manifest `7cc4b103…`, evidence commit db93cb3c, FINAL-PACKAGE.json tie
 | R15 | PARTIAL | real DeepSeek (flash/v4-pro) + real Kimi (k2.6/k2.7-code/k3 via Moonshot OAuth) inference verified through the packaged runtime on :3480 with all 4 routing modes, role header, capture, restart (s667); the strict ordinary DSH/pi CLI client lane remains open (dsh binary not on PATH). |
 | R16 | VERIFIED (bounded) | fresh R-vs-C at final candidate: 6 same, 2 approved-intentional channel metadata, 1 environmental, 0 regressions (r16-fresh-r-vs-c-receipt.json). D (pre-migration dev) not an independent pair (dev is this migration's squash). |
 | R17 | PARTIAL | joined provider→decision→capture→UI→restart verified with the owner's real models (s667); the graph/payload join (J5) and the private replay root (J6) remain. |
-| R18 | PARTIAL | per-slice receipts exist; final current-SHA receipt set partially consolidated in FINAL-PACKAGE.json. |
+| R18 | PARTIAL | current receipt set consolidated at HEAD 7956435a (s669) with the packaged candidate pinned and stale receipts retired; the only open item is a full package-sea rebuild so the S664-S668 UI fixes live inside one exe (needs the paired private distribution). |
 | R19 | VERIFIED | exhaustive declaration-form ledger (338 entries) + token-masked caller validation (bounded). |
 | R20 | VERIFIED | calibrated + enabled diagnostics (128/96B/32s/15m/50). |
 | R21 | VERIFIED | packaged/browser diagnostics defect receipt (authorized 200, stale/dropped/build-missing/cause). |
@@ -32,7 +32,7 @@ private manifest `7cc4b103…`, evidence commit db93cb3c, FINAL-PACKAGE.json tie
 | R24 | VERIFIED | (pre-goal) SQL blocking/PRAGMA truth. |
 | R25 | VERIFIED | (pre-goal) routing producer. |
 | R26 | VERIFIED | (pre-goal) SSE/transport retry schedule. |
-| R27 | VERIFIED | metadata cache identity + never-dedupe-stochastic + runner-overlap harness (both caveats closed). |
+| R27 | VERIFIED | metadata cache identity + never-dedupe-stochastic + runner-overlap harness (both caveats closed); additionally the benchmark progress off-by-one (S668) and poll-failure handling verified live with real models, and a real judge-graded run completed (deepseek-flash 0.7667, kimi-k3 0.475; s667). |
 | R28 | VERIFIED | EventLog prune off-by-one fix + honest storageContract. |
 | R29 | VERIFIED | full recovery matrix (stale lease/interrupted/failed ack/corrupt+restore/partial publication). |
 | R30 | VERIFIED | clause-complete two-host/lease/evidence-before-ack receipt. |
