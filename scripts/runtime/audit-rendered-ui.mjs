@@ -533,76 +533,6 @@ for (const route of routes) {
   );
 }
 
-// S218: a crash only appears when something is clicked. Sweep every enabled button on every route
-// and fail on the crash banner - the cheapest way to find the next "targetId is not defined".
-if (args.includes("--click-sweep")) {
-  for (const route of routes) {
-    await send("Page.navigate", { url: base + route }, sessionId);
-    await new Promise((resolve) =>
-      setTimeout(resolve, Number(process.env.AUDIT_SWEEP_SETTLE_MS ?? 1200)),
-    );
-    const outcome = await send(
-      "Runtime.evaluate",
-      {
-        expression: `(async () => {
-        const buttons = [...document.querySelectorAll("button")].filter((b) => !b.disabled && b.offsetParent !== null);
-        const clicked = [];
-        for (const button of buttons.slice(0, 12)) {
-          button.click();
-          clicked.push((button.innerText || button.getAttribute("aria-label") || "?").trim().slice(0, 24));
-          await new Promise((resolve) => setTimeout(resolve, 250));
-          if (document.body.innerText.includes("Application Crash")) {
-            return "crash after: " + clicked.join(" | ") + " :: " + (document.body.innerText.match(/Application Crash[\s\S]{0,160}/) || [""])[0].replace(/\s+/g, " ").slice(0, 140);
-          }
-        }
-        return "clicked " + String(clicked.length);
-      })()`,
-        awaitPromise: true,
-        returnByValue: true,
-      },
-      sessionId,
-    );
-    const value = String(outcome.result?.value ?? "");
-    const okSweep = value.startsWith("clicked");
-    report.push(`${okSweep ? "PASS " : "FAIL "}click sweep ${route}: ${value}`);
-    if (!okSweep) failures.push(`click sweep ${route}: ${value}`);
-  }
-}
-// S217: clicking a control action crashed the packaged UI with "targetId is not defined" while every
-// rendered route passed. Drive one control action and require an outcome message instead of a crash.
-if (args.includes("--control-action")) {
-  await send("Page.navigate", { url: `${base}/control/providers` }, sessionId);
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-  await send(
-    "Runtime.evaluate",
-    {
-      expression:
-        '(() => { const b = document.querySelector("[data-control-action]"); if (!b) return "no-button"; b.click(); return "clicked"; })()',
-      returnByValue: true,
-    },
-    sessionId,
-  );
-  let controlOutcome = null;
-  const controlDeadline = Date.now() + Number(process.env.AUDIT_CONTROL_TIMEOUT_MS ?? 15000);
-  while (Date.now() < controlDeadline) {
-    const state = await send(
-      "Runtime.evaluate",
-      {
-        expression:
-          '(() => { if (document.body.innerText.includes("Application Crash")) return "crash"; const m = document.querySelector("[data-control-action-message]"); if (m) return "message:" + (m.innerText || "").slice(0, 80); return "pending"; })()',
-        returnByValue: true,
-      },
-      sessionId,
-    );
-    controlOutcome = String(state.result?.value ?? "");
-    if (controlOutcome !== "pending") break;
-    await new Promise((resolve) => setTimeout(resolve, 300));
-  }
-  const controlLine = `control action: ${String(controlOutcome)}`;
-  const okControl = controlOutcome?.startsWith("message:");
-  report.push((okControl ? "PASS " : "FAIL ") + controlLine);
-  if (!okControl) failures.push(controlLine);
-}
 // S207: a rendered page is not a working page. Drive one real Studio request and require the
 // response element to report success - the defect this caught was a 400 on the very first click.
 if (args.includes("--studio-run")) {
@@ -689,6 +619,77 @@ if (args.includes("--studio-run")) {
     }),
   }))
     console.log(line);
+}
+
+// S218: a crash only appears when something is clicked. Sweep every enabled button on every route
+// and fail on the crash banner - the cheapest way to find the next "targetId is not defined".
+if (args.includes("--click-sweep")) {
+  for (const route of routes) {
+    await send("Page.navigate", { url: base + route }, sessionId);
+    await new Promise((resolve) =>
+      setTimeout(resolve, Number(process.env.AUDIT_SWEEP_SETTLE_MS ?? 1200)),
+    );
+    const outcome = await send(
+      "Runtime.evaluate",
+      {
+        expression: `(async () => {
+        const buttons = [...document.querySelectorAll("button")].filter((b) => !b.disabled && b.offsetParent !== null);
+        const clicked = [];
+        for (const button of buttons.slice(0, 12)) {
+          button.click();
+          clicked.push((button.innerText || button.getAttribute("aria-label") || "?").trim().slice(0, 24));
+          await new Promise((resolve) => setTimeout(resolve, 250));
+          if (document.body.innerText.includes("Application Crash")) {
+            return "crash after: " + clicked.join(" | ") + " :: " + (document.body.innerText.match(/Application Crash[\s\S]{0,160}/) || [""])[0].replace(/\s+/g, " ").slice(0, 140);
+          }
+        }
+        return "clicked " + String(clicked.length);
+      })()`,
+        awaitPromise: true,
+        returnByValue: true,
+      },
+      sessionId,
+    );
+    const value = String(outcome.result?.value ?? "");
+    const okSweep = value.startsWith("clicked");
+    report.push(`${okSweep ? "PASS " : "FAIL "}click sweep ${route}: ${value}`);
+    if (!okSweep) failures.push(`click sweep ${route}: ${value}`);
+  }
+}
+// S217: clicking a control action crashed the packaged UI with "targetId is not defined" while every
+// rendered route passed. Drive one control action and require an outcome message instead of a crash.
+if (args.includes("--control-action")) {
+  await send("Page.navigate", { url: `${base}/control/providers` }, sessionId);
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  await send(
+    "Runtime.evaluate",
+    {
+      expression:
+        '(() => { const b = document.querySelector("[data-control-action]"); if (!b) return "no-button"; b.click(); return "clicked"; })()',
+      returnByValue: true,
+    },
+    sessionId,
+  );
+  let controlOutcome = null;
+  const controlDeadline = Date.now() + Number(process.env.AUDIT_CONTROL_TIMEOUT_MS ?? 15000);
+  while (Date.now() < controlDeadline) {
+    const state = await send(
+      "Runtime.evaluate",
+      {
+        expression:
+          '(() => { if (document.body.innerText.includes("Application Crash")) return "crash"; const m = document.querySelector("[data-control-action-message]"); if (m) return "message:" + (m.innerText || "").slice(0, 80); return "pending"; })()',
+        returnByValue: true,
+      },
+      sessionId,
+    );
+    controlOutcome = String(state.result?.value ?? "");
+    if (controlOutcome !== "pending") break;
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+  const controlLine = `control action: ${String(controlOutcome)}`;
+  const okControl = controlOutcome?.startsWith("message:");
+  report.push((okControl ? "PASS " : "FAIL ") + controlLine);
+  if (!okControl) failures.push(controlLine);
 }
 for (const line of report) console.log(line);
 console.log(
