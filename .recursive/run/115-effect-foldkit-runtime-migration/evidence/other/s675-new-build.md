@@ -27,3 +27,11 @@ Exit 0.
 
 This is the packaged new build carrying: the S664-S673 UI fixes, the host S671 fixes (gate/terminal/
 activation/fence/ledger lock/capture claim/disposition), and the private Track-B P0/P1 fixes.
+
+## Track-B durable evidence binding activated (2026-11-07)
+The dev state root had no managed artifact keys, so track-b auto-replay reported
+"managed artifact digest key not found" and "outcome degraded" on every tick. Provisioned a dev key
+pair (32 random bytes each) at D:/DEV/rm-clean/r761-live-state/managed-keys/{artifact-digest,artifact-encryption}.key
+and relaunched the 818 build: `[track-b-auto-replay] tick done (outcome ok)`. The private
+capture->queue->projection/replay chain is now active on :3480, which unblocks exercising R17 J5/J6
+(graph/payload join + private replay root) with real captures.
