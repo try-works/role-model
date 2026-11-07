@@ -16,3 +16,17 @@ Run: https://github.com/try-works/role-model/actions/runs/42334159509 (databaseI
 ## Status
 Run dispatched and in progress at time of writing. Outcome (success/failure) recorded in
 s673-r39-dispatch-outcome.md when the run completes.
+## Outcome (2026-11-07)
+Run 42334159509 finished **cancelled** (fail-fast after job failures).
+- build linux-x64: FAILED at step "Package SEA runtime" (exit 1).
+- build win32-x64: FAILED at step "Package SEA runtime" (exit 1).
+- build darwin-arm64: cancelled by fail-fast.
+Cause: the build-binaries workflow requires the exact paired private distribution (the same
+"development packaging requires the exact private distribution" constraint that blocks the local
+package-sea). The branch does not carry the paired private inputs, so packaging fails BEFORE the R39
+rendered-UI steps are reached; the R39 steps were therefore not exercised in this run.
+
+Net: R39_VERIFY_BLOCKING is now true (blocking wiring verified separately by 7/7 flag tests), and one
+current-HEAD dispatch was made. The dispatch could not verify R39 end-to-end because the build pipeline
+stops at packaging on a branch without the paired private distribution. Unblock: dispatch from a ref
+that carries the paired private inputs (or the paired toolchain), then the R39 steps run blocking.
