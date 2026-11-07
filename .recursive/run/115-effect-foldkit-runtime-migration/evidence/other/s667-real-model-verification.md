@@ -139,3 +139,14 @@ Progress counters verified live at start: endpointIndex 1/2, caseIndex 1/12, ste
 runtime:package-sea in this worktree refuses: "development packaging requires the exact private
 distribution". Baking the S664-S668 UI fixes into a new exe needs the paired private build
 (lockstep), so :3480 currently serves the worktree client build for those fixes.
+## Track-B evidence binding on the dev :3480 (2026-11-07)
+Runtime log repeats:
+  [route-evidence-binding] failed: managed artifact digest key not found for the durable evaluation authority
+  [track-b-auto-replay] tick done (outcome degraded)
+Cause: resolveDurableEvaluationAuthority (track-b-runtime.ts:487-518) requires a managed
+artifact-digest.key under <stateRoot>/managed-keys or <stateRoot>/<scope>/track-b/managed-keys;
+the development channel does not auto-generate one (resolveManagedArtifactKeyFiles returns {} for
+development). The hand-seeded r761-live-state has no managed keys, so the private
+capture->queue->projection evidence binding honestly degrades. This is an environment limitation
+(keys are provisioned by the release pipeline for stage/production), not a code defect; the
+degradation is surfaced rather than hidden.
