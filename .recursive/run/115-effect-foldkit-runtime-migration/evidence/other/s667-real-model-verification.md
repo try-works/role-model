@@ -118,3 +118,9 @@ s638 8/8. Commit 6d492b56; client rebuilt; :3480 restarted.
 - The 16-endpoint list and "model 2/4" in the same screenshot were the pre-restart client tab
   (assets are served no-store; the tab kept its old in-memory bundle across restarts). A fresh load
   shows "13 of 13 selected", no fixtures, and a new run starts at model 1/N.
+## Live benchmark run with real models (2026-11-07)
+Started POST /api/role-model/benchmark/runs { endpointIds: [deepseek-flash-max, kimi-k3-high],
+judgeEndpointId: moonshot.personal.kimi-code.global.kimi-k3, mode: quick } -> runId a0475d47...
+- Progress readback: endpointIndex=1/2, caseIndex=1/12, completedSteps=0/60 at start, incrementing.
+- UI progress panel: "Phase 1 of 3 · Recording responses", "7 / 60 steps",
+  "model 1/2: deepseek/deepseek-flash" — the off-by-one is gone in the live build.
