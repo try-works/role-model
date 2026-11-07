@@ -43,7 +43,7 @@ private manifest `7cc4b103…`, evidence commit db93cb3c, FINAL-PACKAGE.json tie
 | R35 | OWNER-DISPOSITION | E2 deferred (owner-scope-decision). |
 | R36 | PARTIAL | disjoint scopes + independent reviews; no M11 join artifact (s660). |
 | R37 | VERIFIED (bounded) | reversible shell cutover + rollback (driver staging, atomic select, HTTP + DB proof); minor caveats. |
-| R38 | PARTIAL (approved) | owner APPROVED the s662 threshold matrix; live latency/cost measured + burst leg (6 concurrent, 0 failures, p50 2.8s/p95 4.3s) recorded in s662; the degraded/collector-down fault legs remain unmeasured. |
+| R38 | VERIFIED (bounded) | owner APPROVED the matrix; live latency/cost + burst leg (6 concurrent, 0 failures) + degraded/interference leg (readbacks while 6 completions run: 10/10 OK, p50 26ms, p95 233ms <= 250ms budget) measured on the 818 build (s662); the collector-down leg needs a fault harness and is not claimed. |
 | R39 | PARTIAL | R39_VERIFY_BLOCKING=true set + one current-HEAD dispatch run 42334159509 attempted (s673); run cancelled at "Package SEA runtime" (paired private distribution missing) before the R39 steps ran, so R39 is not end-to-end verified. Unblock: dispatch from a ref carrying the paired private inputs. |
 
 ## Remaining blockers (exact unblock conditions)

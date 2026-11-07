@@ -68,3 +68,10 @@ verified; only the GitHub repo variable flip + one dispatch run remain (owner-ga
 ## OWNER APPROVAL (2026-11-07)
 The owner approved the s662 threshold matrix ("approve s662"). R38 is approved; the remaining R38 work
 is the degraded/collector-down measurement legs, which now proceed against the approved budget.
+
+## Degraded/interference leg measured (2026-11-07, 818 build)
+While 6 concurrent real chat completions ran (all 200 OK, 2.2-5.0 s each), 10 sequential readbacks of
+/api/role-model/telemetry/requests were sampled: all 200 OK, p50 26 ms, **p95 233 ms**, max 233 ms.
+This is under the proposed "backend quiet latency (readback) p95 <= 250 ms" budget even under burst
+interference — the degraded/interference leg passes for the readback surface. The collector-down leg
+(telemetry collector unavailable) still needs a fault harness; it is not claimed.
