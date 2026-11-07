@@ -150,3 +150,11 @@ development). The hand-seeded r761-live-state has no managed keys, so the privat
 capture->queue->projection evidence binding honestly degrades. This is an environment limitation
 (keys are provisioned by the release pipeline for stage/production), not a code defect; the
 degradation is surfaced rather than hidden.
+## Owner's 4-endpoint real benchmark completed (run ee97c6bf, 2026-11-07)
+mode quick, judge moonshot.personal.kimi-code.global.kimi-k3-max; 48 cases (32 passed / 16 failed), outcome partial.
+Grades (judge method "judge"):
+- deepseek.personal.deepseek-api-key.global.deepseek-flash-high (deepseek/deepseek-flash) overall 0.7542
+- deepseek.personal.deepseek-api-key.global.deepseek-v4-pro-high (deepseek/deepseek-v4-pro) overall 0.6667
+- moonshot.personal.kimi-code.global.kimi-k2.7-code (moonshot/kimi-k2.7-code) overall 0.35
+- moonshot.personal.kimi-code.global.kimi-k3-high (moonshot/kimi-k3) overall 0.4333
+All 4 requested endpoints executed (skipped 0). Progress counters stayed correct throughout (endpoint/case 1-based).
