@@ -245,7 +245,7 @@ jobs:
 
       - name: Select exact paired release identity
         id: release_identity
-        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production' || (env.ROLE_MODEL_BUILD_CHANNEL == 'development' && env.PRIVATE_PAIRED_SHA != '')
         shell: pwsh
         run: |
           if ($env:ROLE_MODEL_BUILD_CHANNEL -eq "production") {
@@ -327,7 +327,7 @@ jobs:
           fi
 
       - name: Checkout exact private release revision
-        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production' || (env.ROLE_MODEL_BUILD_CHANNEL == 'development' && env.PRIVATE_PAIRED_SHA != '')
         uses: actions/checkout@v4
         with:
           repository: try-works/role-model-internal
@@ -358,7 +358,7 @@ jobs:
           fi
 
       - name: Build exact private release distribution
-        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production'
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production' || (env.ROLE_MODEL_BUILD_CHANNEL == 'development' && env.PRIVATE_PAIRED_SHA != '')
         working-directory: .cache/paired-private
         env:
           ROLE_MODEL_PUBLIC_WORKTREE: ${{ github.workspace }}
@@ -369,7 +369,7 @@ jobs:
 
       - name: Package SEA runtime
         env:
-          ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT: ${{ (env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production') && format('{0}/.cache/paired-private/dist/run00-dev', github.workspace) || '' }}
+          ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT: ${{ (env.ROLE_MODEL_BUILD_CHANNEL == 'stage' || env.ROLE_MODEL_BUILD_CHANNEL == 'production' || (env.ROLE_MODEL_BUILD_CHANNEL == 'development' && env.PRIVATE_PAIRED_SHA != '')) && format('{0}/.cache/paired-private/dist/run00-dev', github.workspace) || '' }}
           RUN88_RELEASE_ID: ${{ steps.release_identity.outputs.release_id || env.RUN88_RELEASE_ID }}
         run: pnpm run runtime:package-sea
 
