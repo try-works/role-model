@@ -36,3 +36,19 @@ quiet/burst/degraded/collector-down latency/blocking/cancel/handles/lock/rollbac
 DISPOSITION: PARTIAL — identity fixed and thresholds proposed; full measurement requires owner
 approval of the thresholds and a load harness. No PASS is claimed until the owner approves and the
 degraded/rollback legs are measured.
+## Measured live (2026-11-07, real models on :3480)
+End-to-end latency (p50, live telemetry) and estimated cost per request:
+- deepseek-flash: ~1.0-2.2 s; deepseek-v4-pro: ~0.5-1.0 s (both sub-second-to-2 s, cheapest ~$1e-5).
+- kimi-k2.6 ~3.0 s, kimi-k2.7-code ~2.3 s, kimi-k3 ~4.3-5.4 s (~$0.001-0.004/request).
+- OUTLIER (recorded): one kimi-k2.7-code benchmark case took 613,708 ms (~10.2 min); a second
+  kimi-k3-high case took 18,423 ms. No per-case timeout exists, so provider latency is unbounded
+  (see the R27 timeout finding in s667).
+- ui bundle main.js = 3,739,830 bytes (~3.73 MB) at HEAD (S664-S668 client).
+
+## Implication for the threshold matrix
+- The "backend quiet latency" threshold must be a p95 that tolerates a long tail; the 10-minute
+  kimi outlier shows the current runner has no ceiling. A per-case timeout (e.g. 180 s) plus a
+  p95 latency budget (e.g. <= 60 s) is proposed as part of R38/R27 closure.
+
+DISPOSITION: PARTIAL — identity fixed, thresholds proposed, live latency/cost measured; approval
+plus the burst/degraded/rollback legs remain owner-gated.
