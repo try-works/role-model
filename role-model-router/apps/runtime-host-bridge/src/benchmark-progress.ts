@@ -173,8 +173,9 @@ export function completeBenchmarkRunProgress(
   result: BenchmarkRunResult,
 ): BenchmarkRunProgressSnapshot | null {
   const current = activeRuns.get(runId);
-  if (!current) {
-    return null;
+  // S671: terminal progress is final; a late completion/failure must not overwrite another terminal.
+  if (!current || current.status !== "running") {
+    return current ?? null;
   }
   const next: BenchmarkRunProgressSnapshot = {
     ...current,
@@ -196,8 +197,9 @@ export function failBenchmarkRunProgress(
   errorCode: BenchmarkRunErrorCode,
 ): BenchmarkRunProgressSnapshot | null {
   const current = activeRuns.get(runId);
-  if (!current) {
-    return null;
+  // S671: terminal progress is final; a late failure must not reclassify a completed run.
+  if (!current || current.status !== "running") {
+    return current ?? null;
   }
   const next: BenchmarkRunProgressSnapshot = {
     ...current,

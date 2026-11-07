@@ -69,4 +69,53 @@ describe("benchmark-progress", () => {
         "Configured model membership changed during the benchmark. Run it again after model changes are complete.",
     });
   });
+
+  test("terminal status is final: a late failure cannot reclassify a completed run", () => {
+    createBenchmarkRunProgress({
+      runId: "run-terminal",
+      mode: "quick",
+      endpointCount: 1,
+      caseCount: 1,
+      judgeEndpointId: "judge.endpoint",
+      useJudge: false,
+      compareCaseCount: 0,
+    });
+    completeBenchmarkRunProgress("run-terminal", {
+      runId: "run-terminal",
+      suiteId: "routing-capability-v2",
+      mode: "quick",
+      judgeEndpointId: null,
+      startedAtMs: 1,
+      completedAtMs: 2,
+      artifactRoot: "run-terminal",
+      endpointGrades: [],
+    });
+    const failed = failBenchmarkRunProgress("run-terminal", "benchmark_execution_failed");
+    expect(failed?.status).toBe("completed");
+    expect(readBenchmarkRunProgress("run-terminal")?.status).toBe("completed");
+  });
+
+  test("terminal status is final: a late completion cannot reclassify a failed run", () => {
+    createBenchmarkRunProgress({
+      runId: "run-terminal-failed",
+      mode: "quick",
+      endpointCount: 1,
+      caseCount: 1,
+      judgeEndpointId: "judge.endpoint",
+      useJudge: false,
+      compareCaseCount: 0,
+    });
+    failBenchmarkRunProgress("run-terminal-failed", "benchmark_execution_failed");
+    completeBenchmarkRunProgress("run-terminal-failed", {
+      runId: "run-terminal-failed",
+      suiteId: "routing-capability-v2",
+      mode: "quick",
+      judgeEndpointId: null,
+      startedAtMs: 1,
+      completedAtMs: 2,
+      artifactRoot: "run-terminal-failed",
+      endpointGrades: [],
+    });
+    expect(readBenchmarkRunProgress("run-terminal-failed")?.status).toBe("failed");
+  });
 });
