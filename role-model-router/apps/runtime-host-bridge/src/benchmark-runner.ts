@@ -282,6 +282,9 @@ export interface BenchmarkRunnerDependencies {
 
   /** S650/R27: optional admission gate so two direct runner calls cannot overlap. */
   readonly benchmarkGate?: BenchmarkGateServiceContract;
+
+  /** S669: per-case execution ceiling. A hung provider request otherwise stalls the whole run. */
+  readonly caseTimeoutMs?: number;
   readonly databasePath: string;
 
   readonly benchmarkArtifactRoot?: string;
@@ -455,6 +458,50 @@ async function executeBenchmarkTurn(
 
     buildBenchmarkExecutionRequestOptions(endpoint.endpointId),
   );
+}
+
+/** S669: bound a single case so a hung provider request cannot stall the whole run forever. */
+async function runCaseWithTimeout(
+  deps: BenchmarkRunnerDependencies,
+  endpoint: { endpointId: string; modelId: string },
+  caseItem: RoutingBenchmarkCase,
+  timeoutMs: number | undefined,
+): Promise<{
+  actualResponse: string;
+  rawResponse: string;
+  formattedDeliverable: string;
+  extractionMethod: string;
+  structuredToolNames: readonly string[];
+  latencyMs: number;
+  failure: boolean;
+  answerTurns: number;
+}> {
+  if (timeoutMs === undefined || timeoutMs <= 0) {
+    return runCaseOnEndpoint(deps, endpoint, caseItem);
+  }
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`benchmark case timed out after ${timeoutMs} ms`)),
+      timeoutMs,
+    );
+  });
+  try {
+    return await Promise.race([runCaseOnEndpoint(deps, endpoint, caseItem), timeout]);
+  } catch {
+    return {
+      actualResponse: "",
+      answerTurns: 0,
+      extractionMethod: "timeout",
+      failure: true,
+      formattedDeliverable: "",
+      latencyMs: timeoutMs,
+      rawResponse: "",
+      structuredToolNames: [],
+    };
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
 }
 
 async function runCaseOnEndpoint(
@@ -1865,7 +1912,7 @@ export async function runRoutingCapabilityBenchmark(
           activeJudgeEndpointId: judgeEndpoint.endpointId,
         });
 
-        const execution = await runCaseOnEndpoint(deps, endpoint, caseItem);
+        const execution = await runCaseWithTimeout(deps, endpoint, caseItem, deps.caseTimeoutMs);
 
         const persisted = await persistResponseRecord(artifactRoot, {
           runId,

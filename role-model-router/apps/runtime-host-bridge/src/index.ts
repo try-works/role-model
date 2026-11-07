@@ -34483,6 +34483,9 @@ export async function createRuntimeBridgeBackend(
           signal,
           databasePath: initialization.databasePath,
           benchmarkArtifactRoot,
+          // S669: bound a single benchmark case so a hung provider request cannot stall the whole
+          // run (10 minutes is generous enough for slow reasoning but still ceilings a true hang).
+          caseTimeoutMs: 600_000,
           listConfiguredEndpoints: async () => {
             const [endpoints, candidates] = await Promise.all([
               backend.listEndpoints(),

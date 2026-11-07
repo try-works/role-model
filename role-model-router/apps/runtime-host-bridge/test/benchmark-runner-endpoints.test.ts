@@ -125,4 +125,35 @@ describe("benchmark runner endpoint accounting", () => {
       endpointCount: 2,
     });
   });
+
+  test("bounds a hung provider case with caseTimeoutMs and records it as failed instead of stalling", async () => {
+    const databasePath = await setup();
+    const endpoints = [endpoint("ep-hung", "model/hung")];
+    const startedAt = Date.now();
+    const result = await runRoutingCapabilityBenchmark(
+      {
+        databasePath,
+        benchmarkArtifactRoot: artifactRoot,
+        listConfiguredEndpoints: async () => endpoints,
+        deriveEndpointVersion: () => "v1",
+        // A provider request that never resolves must not stall the run forever.
+        executeChatCompletions: () => new Promise(() => {}),
+        caseTimeoutMs: 250,
+      },
+      {
+        runId: "run-hung-case",
+        endpointIds: ["ep-hung"],
+        judgeEndpointId: null,
+        mode: "quick",
+        caseIds: ["h04-tool-read-router"],
+        useJudge: false,
+      },
+    );
+    const elapsed = Date.now() - startedAt;
+    // The run must complete promptly rather than hang, and the case must be recorded as failed.
+    expect(elapsed).toBeLessThan(10_000);
+    expect(["failed", "partial"]).toContain(result.outcome);
+    expect(result.caseCounts.total).toBe(1);
+    expect(result.caseCounts.failed).toBe(1);
+  });
 });
