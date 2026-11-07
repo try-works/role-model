@@ -1,0 +1,78 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s681-learning-readback.test.ts (4 tests | 3 failed) 58ms
+   ✓ S681 learning readback parsing > parses the live knowledge payload plus ladders 19ms
+   × S681 learning readback parsing > combines records and ladders instead of reporting empty 19ms
+     → expected 'empty' to be 'ok' // Object.is equality
+   × S681 learning readback parsing > turns policy, decisions, measurement, history, profile and advisory into named rows 13ms
+     → expected [ '0' ] to deeply equal ArrayContaining ["stage", "judgeMode"]
+   × S681 learning readback parsing > distinguishes genuinely empty records+ladders from malformed payloads 4ms
+     → expected 'ok' to be 'error' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s681-learning-readback.test.ts > S681 learning readback parsing > combines records and ladders instead of reporting empty
+AssertionError: expected 'empty' to be 'ok' // Object.is equality
+
+Expected: "ok"
+Received: "empty"
+
+ ❯ test/s681-learning-readback.test.ts:124:26
+    122|   it("combines records and ladders instead of reporting empty", () => {
+    123|     const state = READBACK_SPECS.learningPacks.parse(packPayload, 1);
+    124|     expect(state.status).toBe("ok");
+       |                          ^
+    125|     expect(state.rows).toHaveLength(2);
+    126|     expect(state.scopeId).toBe("standalone-runtime-dev");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/s681-learning-readback.test.ts > S681 learning readback parsing > turns policy, decisions, measurement, history, profile and advisory into named rows
+AssertionError: expected [ '0' ] to deeply equal ArrayContaining ["stage", "judgeMode"]
+
+- Expected
++ Received
+
+- ArrayContaining [
+-   "stage",
+-   "judgeMode",
++ [
++   "0",
+  ]
+
+ ❯ test/s681-learning-readback.test.ts:132:46
+    130|   it("turns policy, decisions, measurement, history, profile and advis…
+    131|     const policy = READBACK_SPECS.learningConfiguration.parse(policyPa…
+    132|     expect(policy.rows.map((row) => row.id)).toEqual(expect.arrayConta…
+       |                                              ^
+    133| 
+    134|     const decisions = READBACK_SPECS.learningDecisions.parse(decisions…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/s681-learning-readback.test.ts > S681 learning readback parsing > distinguishes genuinely empty records+ladders from malformed payloads
+AssertionError: expected 'ok' to be 'error' // Object.is equality
+
+Expected: "error"
+Received: "ok"
+
+ ❯ test/s681-learning-readback.test.ts:159:30
+    157|       1,
+    158|     );
+    159|     expect(malformed.status).toBe("error");
+       |                              ^
+    160|   });
+    161| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 1 passed (4)
+   Start at  16:08:59
+   Duration  13.00s (transform 4.88s, setup 0ms, collect 7.70s, tests 58ms, environment 3.44s, prepare 608ms)
+
+undefined
+D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-ui-next:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/s681-learning-readback.test.ts

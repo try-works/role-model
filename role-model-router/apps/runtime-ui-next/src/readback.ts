@@ -932,6 +932,147 @@ export const withLocalPolicyDraft = (
   };
 };
 
+const learningScope = (record: Record<string, unknown> | undefined): { scopeId?: string } => {
+  const raw = record?.scopeId;
+  return Schema.is(Schema.String)(raw) && raw.trim().length > 0 ? { scopeId: raw.trim() } : {};
+};
+
+const parseLearningPacks = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  if (record === undefined) return failedReadback("Learning packs read failed: invalid response", token);
+  const records = record.records;
+  const ladders = record.ladders;
+  if (records !== undefined && !Array.isArray(records)) {
+    return failedReadback("Learning packs read failed: records is not an array", token);
+  }
+  if (ladders !== undefined && !Array.isArray(ladders)) {
+    return failedReadback("Learning packs read failed: ladders is not an array", token);
+  }
+  const rows: ReadbackRow[] = [];
+  for (const [index, value] of (Array.isArray(records) ? records : []).entries()) {
+    const entry = asRecord(value) ?? {};
+    const id = String(entry.recordId ?? entry.id ?? entry.packId ?? `record:${String(index)}`);
+    const label = String(entry.label ?? entry.title ?? entry.kind ?? entry.name ?? id);
+    rows.push(row(id, label, String(entry.value ?? entry.status ?? entry.summary ?? ""), JSON.stringify(entry)));
+  }
+  const parsed = parseLearningLadderPayload({ ladders: Array.isArray(ladders) ? ladders : [] } as LearningPayloadJson);
+  if (!parsed.ok) return failedReadback(`Learning ranking read failed: ${parsed.error}`, token);
+  for (const ladder of parsed.rows) {
+    rows.push(
+      row(
+        `ladder:${learningLadderRowKey(ladder)}`,
+        `${ladder.roleId} \u00b7 ${ladder.taskTypeId}`,
+        ladder.rolledBack?.on === true ? "rolled back" : `active · ${String(ladder.rankedCount)} ranked`,
+        JSON.stringify(ladder),
+      ),
+    );
+  }
+  const scoped = learningScope(record);
+  return rows.length === 0 ? { rows: [], status: "empty", token, ...scoped } : { ...okRows(rows, token), ...scoped };
+};
+
+const parseLearningPolicy = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  if (record === undefined) return failedReadback("Learning configuration read failed: invalid response", token);
+  const effective = asRecord(record.effective);
+  if (effective === undefined) return failedReadback("Learning configuration read failed: effective policy missing", token);
+  const rows: ReadbackRow[] = [];
+  if (record.policyVersion !== undefined) {
+    rows.push(row("policyVersion", "Policy version", String(record.policyVersion), String(record.digest ?? "")));
+  }
+  for (const [key, value] of Object.entries(effective)) {
+    rows.push(row(key, key, String(value), "effective"));
+  }
+  return rows.length === 0 ? { rows: [], status: "empty", token } : okRows(rows, token);
+};
+
+const parseLearningDecisionList = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  if (record === undefined) return failedReadback("Learning decisions read failed: invalid response", token);
+  const list = record.decisions;
+  if (!Array.isArray(list)) {
+    return failedReadback("Learning decisions read failed: decisions is not an array", token);
+  }
+  const rows = list.slice(0, 40).map((value, index) => {
+    const entry = asRecord(value) ?? {};
+    const id = String(entry.decisionId ?? entry.id ?? `decision:${String(index)}`);
+    const label = String(entry.routePackage ?? entry.label ?? id);
+    return row(id, label, String(entry.advisoryState ?? entry.selection ?? entry.mode ?? ""), JSON.stringify(entry));
+  });
+  const scoped = learningScope(record);
+  return rows.length === 0 ? { rows: [], status: "empty", token, ...scoped } : { ...okRows(rows, token), ...scoped };
+};
+
+const parseLearningMeasurement = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  if (record === undefined) return failedReadback("Learning evidence read failed: invalid response", token);
+  const refs = Array.isArray(record.receiptRefs) ? record.receiptRefs : [];
+  const rows = [
+    row("routeDecisionId", "Route decision", String(record.routeDecisionId ?? "—"), "measurement"),
+    row("minSamples", "Minimum samples", String(record.minSamples ?? "—"), "measurement"),
+    row("pairedHoldoutTasks", "Paired holdout tasks", String(record.pairedHoldoutTasks ?? 0), "measurement"),
+    row("receiptRefs", "Receipts", String(refs.length), "measurement"),
+  ];
+  return okRows(rows, token);
+};
+
+const parseLearningHistory = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  if (record === undefined) return failedReadback("Learning history read failed: invalid response", token);
+  const buckets = record.buckets;
+  if (!Array.isArray(buckets)) {
+    return failedReadback("Learning history read failed: buckets is not an array", token);
+  }
+  const rows = buckets.map((value, index) => {
+    const bucket = asRecord(value) ?? {};
+    const start = new Date(Number(bucket.startMs ?? 0)).toISOString();
+    const end = new Date(Number(bucket.endMs ?? 0)).toISOString();
+    return row(
+      `bucket:${String(index)}`,
+      `${start} \u2192 ${end}`,
+      `replays ${String(bucket.replays ?? 0)} · refusals ${String(bucket.refusals ?? 0)} · deferred ${String(bucket.deferred ?? 0)} · branches ${String(bucket.branches ?? 0)}`,
+      JSON.stringify(bucket),
+    );
+  });
+  const scoped = learningScope(record);
+  return rows.length === 0 ? { rows: [], status: "empty", token, ...scoped } : { ...okRows(rows, token), ...scoped };
+};
+
+const parseLearningProfile = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  if (record === undefined) return failedReadback("Learning profile read failed: invalid response", token);
+  const rows: ReadbackRow[] = [
+    row("state", "State", String(record.state ?? "—"), String(record.reason ?? "")),
+    row("generation", "Generation", String(record.generation ?? "—"), "profile"),
+    row("estimateState", "Estimate state", String(record.estimateState ?? "—"), "profile"),
+    row("sampleCount", "Sample count", String(record.sampleCount ?? 0), "profile"),
+  ];
+  const effects = asRecord(record.effects) ?? {};
+  for (const [key, value] of Object.entries(effects)) {
+    const effect = asRecord(value) ?? {};
+    rows.push(
+      row(
+        `effect:${key}`,
+        `Effect ${key}`,
+        `samples ${String(effect.sampleCount ?? 0)} · estimate ${String(effect.estimate ?? "—")}`,
+        JSON.stringify(effect),
+      ),
+    );
+  }
+  return okRows(rows, token);
+};
+
+const parseLearningAdvisory = (body: unknown, token: number): ReadbackState => {
+  const record = asRecord(body);
+  if (record === undefined) return failedReadback("Learning advisory read failed: invalid response", token);
+  const rows = [
+    row("state", "State", String(record.state ?? "—"), "advisory"),
+    row("confidence", "Confidence", String(record.confidence ?? "—"), "advisory"),
+    row("source", "Source", String(record.source ?? "—"), "advisory"),
+  ];
+  return okRows(rows, token);
+};
+
 const parseLearning = (body: unknown, token: number): ReadbackState => {
   const record = asRecord(body);
   const knowledge = asRecord(record?.knowledge);
@@ -1632,35 +1773,35 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     emptyText: "No learning configuration rows.",
     key: "learningConfiguration",
     label: "Learning configuration",
-    parse: parseLearningFamily("Learning configuration"),
+    parse: parseLearningPolicy,
     path: READBACK_PATHS.learningConfiguration,
   },
   learningPacks: {
     emptyText: "No learning packs rows.",
     key: "learningPacks",
     label: "Learning packs",
-    parse: parseLearningFamily("Learning packs"),
+    parse: parseLearningPacks,
     path: READBACK_PATHS.learningPacks,
   },
   learningDecisions: {
     emptyText: "No learning decisions rows.",
     key: "learningDecisions",
     label: "Learning decisions",
-    parse: parseLearningFamily("Learning decisions"),
+    parse: parseLearningDecisionList,
     path: READBACK_PATHS.learningDecisions,
   },
   learningEvidence: {
     emptyText: "No learning evidence rows.",
     key: "learningEvidence",
     label: "Learning evidence",
-    parse: parseLearningFamily("Learning evidence"),
+    parse: parseLearningMeasurement,
     path: READBACK_PATHS.learningEvidence,
   },
   learningHistory: {
     emptyText: "No learning history rows.",
     key: "learningHistory",
     label: "Learning history",
-    parse: parseLearningFamily("Learning history"),
+    parse: parseLearningHistory,
     path: READBACK_PATHS.learningHistory,
   },
   localLlamaSwapModels: {
@@ -1696,14 +1837,14 @@ export const READBACK_SPECS: Readonly<Record<ReadbackKey, ReadbackRouteSpec>> = 
     emptyText: "No learning profile rows.",
     key: "learningProfile",
     label: "Learning profile",
-    parse: parseLearningFamily("Learning profile"),
+    parse: parseLearningProfile,
     path: READBACK_PATHS.learningProfile,
   },
   learningAdvisory: {
     emptyText: "No learning advisory rows.",
     key: "learningAdvisory",
     label: "Learning advisory",
-    parse: parseLearningFamily("Learning advisory"),
+    parse: parseLearningAdvisory,
     path: READBACK_PATHS.learningAdvisory,
   },
   contribution: {
