@@ -318,6 +318,7 @@ jobs:
       - name: Build Foldkit wrapper packages
         if: env.ROLE_MODEL_BUILD_CHANNEL == 'development' && env.PRIVATE_PAIRED_SHA != ''
         run: |
+          corepack pnpm --filter @role-model-router/effect-platform-browser run build
           corepack pnpm --filter @role-model-router/foldkit run build
           corepack pnpm --filter @role-model-router/foldkit-ui run build
 
