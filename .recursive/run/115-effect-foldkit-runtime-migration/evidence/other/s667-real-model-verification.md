@@ -158,3 +158,16 @@ Grades (judge method "judge"):
 - moonshot.personal.kimi-code.global.kimi-k2.7-code (moonshot/kimi-k2.7-code) overall 0.35
 - moonshot.personal.kimi-code.global.kimi-k3-high (moonshot/kimi-k3) overall 0.4333
 All 4 requested endpoints executed (skipped 0). Progress counters stayed correct throughout (endpoint/case 1-based).
+## UI confirmation of the fixed benchmark (owner screenshot, 2026-11-07)
+/system/benchmark after the S668 build:
+- "4 of 13 selected" (13 real endpoints, zero fixture rows; the earlier 16-row stale tab is gone).
+- "Benchmark completed." phase 3 of 3 · Complete, 100%, 108/108 steps.
+- Completed · ee97c6bf... · Outcome: partial · "32/48 cases executed — 16 failed".
+- Grades: deepseek-flash 75% (11/12), deepseek-v4-pro 67% (10/12), kimi-k2.7-code 35% (5/12),
+  kimi-k3 43% (6/12) — with judge rationale text per failing case.
+
+## S669: per-case timeout for the benchmark runner
+Added caseTimeoutMs to BenchmarkRunnerDependencies (default unset; production sets 600000 ms) and a
+runCaseWithTimeout wrapper; a hung provider request now fails that case instead of stalling the run.
+Test: a never-resolving executeChatCompletions with caseTimeoutMs=250 completes promptly with the
+case recorded failed. benchmark-runner tests 22/22. Commit 7d009224.
