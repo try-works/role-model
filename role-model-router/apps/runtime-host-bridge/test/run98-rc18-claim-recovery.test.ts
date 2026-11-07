@@ -149,6 +149,41 @@ describe("run98 rc18 replay intent claim recovery", () => {
     });
   });
 
+  it("surfaces a rejected enqueue instead of reporting empty", async () => {
+    const enqueued: string[] = [];
+    const claimed: string[] = [];
+    const scheduler: ReplayIntentScheduler = {
+      async enqueue(input) {
+        enqueued.push(input.jobId);
+        return { accepted: false };
+      },
+      async claim(input) {
+        claimed.push(input?.jobId ?? "");
+        return null;
+      },
+      async complete() {
+        return { completed: true };
+      },
+      async fail() {
+        return { failed: true };
+      },
+    };
+    const outcome = await claimReplayIntentWithRecovery({
+      scheduler,
+      replayJobId: "replay-job:1",
+      scope: "standalone-runtime-stage",
+      deadlineAtMs: 1_700_000_000_000,
+    });
+    expect(outcome).toMatchObject({
+      state: "rejected",
+      reason: "scheduler_intent_rejected",
+      attempts: 1,
+      intentId: "replay-intent:replay-job:1",
+    });
+    expect(enqueued).toEqual(["replay-intent:replay-job:1"]);
+    expect(claimed).toEqual([]);
+  });
+
   it("returns an empty outcome when the scheduler has no work", async () => {
     const { scheduler } = schedulerWith([null]);
     const outcome = await claimReplayIntentWithRecovery({

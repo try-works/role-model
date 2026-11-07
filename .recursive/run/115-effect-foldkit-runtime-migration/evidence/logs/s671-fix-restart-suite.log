@@ -1,0 +1,30 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:31880) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+stdout | test/restart-rehydration.test.ts > restart rehydration > repairs stale standalone Kimi OAuth credentials from fresher bridge tokens on restart and restores endpoint eligibility
+[run115] eligibility candidates=2 eligible=1 codes=CAPABILITY_MISSING=1,POLICY_DENY_ENDPOINT=1 request=req-kimi-standalone-restart-repair-001 alias=- model=- effort=- pass=live allow=[moonshot.personal.kimi-code.global.kimi-k2.5] denied=[cli.local.coder]
+
+ ✓ test/restart-rehydration.test.ts (15 tests) 99673ms
+   ✓ restart rehydration > restores activated endpoints and session readiness summary after backend restart  7411ms
+   ✓ restart rehydration > keeps restarted remote endpoints healthy when provider /models returns unprefixed ids  11574ms
+   ✓ restart rehydration > does not count expired pending device authorization as an active readiness blocker after restart  7394ms
+   ✓ restart rehydration > archives orphan pending authorizations and orphan credential files instead of counting them as active readiness  7934ms
+   ✓ restart rehydration > archives invalid persisted provider accounts instead of surfacing them as active lifecycle records  7970ms
+   ✓ restart rehydration > surfaces failed pending authorization polling in bootstrap stage details after restart  6712ms
+   ✓ restart rehydration > classifies failed startup OAuth refresh as expired auth after restart  5883ms
+   ✓ restart rehydration > repairs stale bridge Kimi OAuth credentials from fresher standalone runtime tokens on restart  6750ms
+   ✓ restart rehydration > repairs stale standalone Kimi OAuth credentials from fresher bridge tokens on restart and restores endpoint eligibility  6085ms
+   ✓ restart rehydration > sanitizes stale activation and endpoint evidence without expanding configured membership  5242ms
+   ✓ restart rehydration > refreshes Kimi OAuth after restart by honoring the stored token device id  5089ms
+   ✓ restart rehydration > polls the earliest-expiring pending authorizations first and surfaces deferred count  7044ms
+   ✓ restart rehydration > cleans up a pending Codex Subscription device-code session after restart  4977ms
+   ✓ restart rehydration > normalizes legacy local peer role bindings during restart rehydration  5998ms
+   ✓ restart rehydration > defers persisted peer auto-reload entries during restart bootstrap when peers are not configured  3591ms
+
+ Test Files  1 passed (1)
+      Tests  15 passed (15)
+   Start at  10:56:01
+   Duration  143.04s (transform 26.04s, setup 0ms, collect 40.69s, tests 99.67s, environment 1ms, prepare 1.02s)
+

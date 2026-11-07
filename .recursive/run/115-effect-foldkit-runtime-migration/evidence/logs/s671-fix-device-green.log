@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:19860) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/restart-rehydration.test.ts (15 tests | 14 skipped) 6622ms
+   ✓ restart rehydration > does not count expired pending device authorization as an active readiness blocker after restart  6614ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 14 skipped (15)
+   Start at  11:02:24
+   Duration  37.48s (transform 17.78s, setup 0ms, collect 28.51s, tests 6.62s, environment 1ms, prepare 659ms)
+

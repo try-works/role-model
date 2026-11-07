@@ -1886,6 +1886,12 @@ export type ReplayIntentClaimOutcome =
   | { readonly state: "claimed"; readonly claim: ReplayIntentClaim }
   | { readonly state: "empty" }
   | {
+      readonly state: "rejected";
+      readonly reason: "scheduler_intent_rejected";
+      readonly attempts: number;
+      readonly intentId: string;
+    }
+  | {
       readonly state: "expired";
       readonly reason: "scheduler_intent_expired";
       readonly attempts: number;
@@ -1914,11 +1920,19 @@ export async function claimReplayIntentWithRecovery(input: {
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const intentId = attempt === 1 ? baseIntentId : `${baseIntentId}:retry-${attempt - 1}`;
     lastIntentId = intentId;
-    await input.scheduler.enqueue({
+    const enqueued = await input.scheduler.enqueue({
       jobId: intentId,
       replayJobId: input.replayJobId,
       deadlineAtMs: input.deadlineAtMs,
     });
+    if (!enqueued.accepted) {
+      return {
+        state: "rejected",
+        reason: "scheduler_intent_rejected",
+        attempts: attempt,
+        intentId,
+      };
+    }
     const result = await input.scheduler.claim({ jobId: intentId });
     if (result === null) return { state: "empty" };
     if ((result as ReplayIntentExpired).expired === true) continue;
@@ -3807,6 +3821,15 @@ export async function runSupervisedReplay(input: {
       if (outcome.state === "expired") {
         return { ...finalized, schedulerState: "intent_expired" };
       }
+      if (outcome.state === "rejected") {
+        return {
+          ...finalized,
+          schedulerState: "intent_rejected",
+          schedulerReason: outcome.reason,
+          schedulerAttempts: outcome.attempts,
+          schedulerIntentId: outcome.intentId,
+        };
+      }
     }
     return finalized;
   }
@@ -3851,6 +3874,16 @@ export async function runSupervisedReplay(input: {
         schedulerState: "intent_expired",
         schedulerReason: schedulerOutcome.reason,
         schedulerAttempts: schedulerOutcome.attempts,
+      };
+    }
+    if (schedulerOutcome.state === "rejected") {
+      return {
+        jobId,
+        state: "deferred",
+        schedulerState: "intent_rejected",
+        schedulerReason: schedulerOutcome.reason,
+        schedulerAttempts: schedulerOutcome.attempts,
+        schedulerIntentId: schedulerOutcome.intentId,
       };
     }
     schedulerClaim = schedulerOutcome.claim;

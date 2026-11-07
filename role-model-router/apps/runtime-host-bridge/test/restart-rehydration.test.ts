@@ -399,6 +399,12 @@ describe("restart rehydration", () => {
             }),
           ]),
         );
+
+        const sessions = await secondBackend.listProviderDeviceAuthorizations();
+        const expiredSession = sessions.find(
+          (session) => session.providerAccountId === "moonshot.personal.kimi-code",
+        );
+        expect(expiredSession?.status).toBe("expired");
       } finally {
         await secondBackend.shutdown();
       }

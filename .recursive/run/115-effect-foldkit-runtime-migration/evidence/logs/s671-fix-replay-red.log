@@ -1,0 +1,50 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:25864) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/run98-rc18-claim-recovery.test.ts (7 tests | 1 failed | 6 skipped) 56ms
+   ↓ run98 rc18 replay intent claim recovery > decodes a claim delivered inside the packaged durable-output envelope
+   ↓ run98 rc18 replay intent claim recovery > decodes a claim nested one level deeper under businessOutput.value
+   ↓ run98 rc18 replay intent claim recovery > recovers an expired intent with a fresh intent for the same durable replay job
+   ↓ run98 rc18 replay intent claim recovery > reports a bounded expired outcome instead of throwing when the retry also expires
+   × run98 rc18 replay intent claim recovery > surfaces a rejected enqueue instead of reporting empty 50ms
+     → expected { state: 'empty' } to match object { state: 'rejected', …(3) }
+   ↓ run98 rc18 replay intent claim recovery > returns an empty outcome when the scheduler has no work
+   ↓ run98 rc18 replay intent claim recovery > names the offending fields when a claim receipt is genuinely malformed
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/run98-rc18-claim-recovery.test.ts > run98 rc18 replay intent claim recovery > surfaces a rejected enqueue instead of reporting empty
+AssertionError: expected { state: 'empty' } to match object { state: 'rejected', …(3) }
+
+- Expected
++ Received
+
+  {
+-   "attempts": 1,
+-   "intentId": "replay-intent:replay-job:1",
+-   "reason": "scheduler_intent_rejected",
+-   "state": "rejected",
++   "state": "empty",
+  }
+
+ ❯ test/run98-rc18-claim-recovery.test.ts:177:21
+    175|       deadlineAtMs: 1_700_000_000_000,
+    176|     });
+    177|     expect(outcome).toMatchObject({
+       |                     ^
+    178|       state: "rejected",
+    179|       reason: "scheduler_intent_rejected",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 skipped (7)
+   Start at  10:40:43
+   Duration  18.30s (transform 9.72s, setup 0ms, collect 16.51s, tests 56ms, environment 1ms, prepare 570ms)
+
+undefined
+D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/run98-rc18-claim-recovery.test.ts -t surfaces a rejected enqueue

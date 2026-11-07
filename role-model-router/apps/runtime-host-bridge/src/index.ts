@@ -22035,8 +22035,9 @@ export async function createRuntimeBridgeBackend(
     }
     return hydratedAccounts;
   };
-  const listCurrentProviderDeviceAuthorizations = (): DeviceAuthorizationReadbackResult[] =>
-    listProviderDeviceAuthSessions({ databasePath: initialization.databasePath })
+  const listCurrentProviderDeviceAuthorizations = (): DeviceAuthorizationReadbackResult[] => {
+    const nowMs = Date.now();
+    return listProviderDeviceAuthSessions({ databasePath: initialization.databasePath })
       .filter(
         (
           session,
@@ -22046,19 +22047,38 @@ export async function createRuntimeBridgeBackend(
           session.status === "expired" ||
           session.status === "failed",
       )
-      .map((session) => ({
-        authRequestId: session.authRequestId,
-        providerAccountId: session.providerAccountId,
-        providerId: session.providerId,
-        variantId: session.variantId,
-        status: session.status,
-        userCode: session.userCode,
-        verificationUri: session.verificationUri,
-        verificationUriComplete: session.verificationUriComplete,
-        intervalSeconds: session.intervalSeconds,
-        expiresAtMs: session.expiresAtMs,
-        ...(session.lastError ? { lastError: session.lastError } : {}),
-      }));
+      .map((session) => {
+        // S671: the poll path terminalizes an expired pending session; the read path must
+        // apply the same rule and persist it, or a never-polled expired session reports
+        // pending forever.
+        const expired = session.status === "pending" && session.expiresAtMs <= nowMs;
+        if (expired) {
+          upsertProviderDeviceAuthSession({
+            databasePath: initialization.databasePath,
+            session: {
+              ...session,
+              status: "expired",
+              lastError: "Device code expired.",
+            },
+          });
+        }
+        return {
+          authRequestId: session.authRequestId,
+          providerAccountId: session.providerAccountId,
+          providerId: session.providerId,
+          variantId: session.variantId,
+          status: expired ? "expired" : session.status,
+          userCode: session.userCode,
+          verificationUri: session.verificationUri,
+          verificationUriComplete: session.verificationUriComplete,
+          intervalSeconds: session.intervalSeconds,
+          expiresAtMs: session.expiresAtMs,
+          ...(session.lastError || expired
+            ? { lastError: expired ? "Device code expired." : (session.lastError ?? undefined) }
+            : {}),
+        };
+      });
+  };
   const supersedePendingCodexSubscriptionSessions = async (
     providerAccountId: string,
   ): Promise<void> => {
@@ -22178,7 +22198,9 @@ export async function createRuntimeBridgeBackend(
       (authorization) => authorization.status === "pending" && authorization.expiresAtMs > nowMs,
     );
     const expiredPendingAuthorizations = deviceAuthorizations.filter(
-      (authorization) => authorization.status === "pending" && authorization.expiresAtMs <= nowMs,
+      (authorization) =>
+        authorization.status === "expired" ||
+        (authorization.status === "pending" && authorization.expiresAtMs <= nowMs),
     );
     const pendingAccountIds = new Set(
       pendingAuthorizations.map((authorization) => authorization.providerAccountId),

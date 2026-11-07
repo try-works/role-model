@@ -1,0 +1,50 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-host-bridge
+
+(node:18276) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/restart-rehydration.test.ts (15 tests | 1 failed | 14 skipped) 8591ms
+   ↓ restart rehydration > restores activated endpoints and session readiness summary after backend restart
+   ↓ restart rehydration > keeps restarted remote endpoints healthy when provider /models returns unprefixed ids
+   × restart rehydration > does not count expired pending device authorization as an active readiness blocker after restart 8581ms
+     → expected 'pending' to be 'expired' // Object.is equality
+   ↓ restart rehydration > archives orphan pending authorizations and orphan credential files instead of counting them as active readiness
+   ↓ restart rehydration > archives invalid persisted provider accounts instead of surfacing them as active lifecycle records
+   ↓ restart rehydration > surfaces failed pending authorization polling in bootstrap stage details after restart
+   ↓ restart rehydration > classifies failed startup OAuth refresh as expired auth after restart
+   ↓ restart rehydration > repairs stale bridge Kimi OAuth credentials from fresher standalone runtime tokens on restart
+   ↓ restart rehydration > repairs stale standalone Kimi OAuth credentials from fresher bridge tokens on restart and restores endpoint eligibility
+   ↓ restart rehydration > sanitizes stale activation and endpoint evidence without expanding configured membership
+   ↓ restart rehydration > refreshes Kimi OAuth after restart by honoring the stored token device id
+   ↓ restart rehydration > polls the earliest-expiring pending authorizations first and surfaces deferred count
+   ↓ restart rehydration > cleans up a pending Codex Subscription device-code session after restart
+   ↓ restart rehydration > normalizes legacy local peer role bindings during restart rehydration
+   ↓ restart rehydration > defers persisted peer auto-reload entries during restart bootstrap when peers are not configured
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/restart-rehydration.test.ts > restart rehydration > does not count expired pending device authorization as an active readiness blocker after restart
+AssertionError: expected 'pending' to be 'expired' // Object.is equality
+
+Expected: "expired"
+Received: "pending"
+
+ ❯ test/restart-rehydration.test.ts:407:40
+    405|           (session) => session.providerAccountId === "moonshot.persona…
+    406|         );
+    407|         expect(expiredSession?.status).toBe("expired");
+       |                                        ^
+    408|       } finally {
+    409|         await secondBackend.shutdown();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 14 skipped (15)
+   Start at  10:42:43
+   Duration  52.53s (transform 25.69s, setup 0ms, collect 40.65s, tests 8.59s, environment 1ms, prepare 1.07s)
+
+undefined
+D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/restart-rehydration.test.ts -t does not count expired pending device authorization
