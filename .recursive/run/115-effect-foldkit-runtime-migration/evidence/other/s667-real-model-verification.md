@@ -63,3 +63,10 @@ POST /v1/chat/completions with header x-role-model-requested-role-id: coder for 
   caller header) — the header lane is verified; the guidance inference lane is the next test.
 - Ordinary DSH/pi CLI client (dsh binary not on PATH in this environment); the OpenAI-compatible
   surface is verified with real credentials.
+## Controller-mode routing (2026-11-07)
+POST /v1/chat/completions with headers x-role-model-routing-mode: controller +
+x-role-model-requested-role-id: coder (model moonshot/kimi-k3):
+- Real response served by moonshot/kimi-k3 (finish=length at max_tokens=200, real content).
+- Telemetry decision records routingMode="controller", selectedStrategy="quality",
+  requestedRoleId="coder", endpoint moonshot.personal.kimi-code.global.kimi-k3, statusFamily="success".
+- This exercises the guidance/controller lane (not just the caller-header lane).
