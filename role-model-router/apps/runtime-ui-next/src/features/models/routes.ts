@@ -543,6 +543,9 @@ export const modelsRoute = (
                                   h.Type("button"),
                                   h.DataAttribute("models-role-toggle", String(role)),
                                   h.AriaPressed(enabled ? "true" : "false"),
+                                  // The checkmark span is decorative and the row text is multi-line; a
+                                  // single-line accessible name keeps the toggle's name readable.
+                                  h.AriaLabel(`Toggle ${role} role`),
                                   h.Class("flex w-full items-center gap-3 py-2 text-left"),
                                   // Remote/account-managed toggles upsert the provider account modelRoleBindings; local
                                   // peers/llama-swap use the local model-role route.
