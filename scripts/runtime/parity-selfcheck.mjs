@@ -220,6 +220,27 @@ export const runMutationCheck = async ({
 
 export const DEFAULT_TEMP_DRIVE = "E:";
 
+/**
+ * S681: the GitHub Windows runner keeps the workspace on D: while os.tmpdir() is on C:. The selfcheck
+ * temp root must live on the required drive, so relocate it there when that drive exists. When the
+ * drive is unavailable the original root is kept and enforceTempRoot still fails fast.
+ */
+export const relocateTempRootForDrive = ({ requiredDrive, tempRoot }) => {
+  const drive = String(requiredDrive ?? "")
+    .toUpperCase()
+    .replace(/[\\/]$/, "");
+  const parsedRoot = path.parse(tempRoot).root;
+  const windowsRoot = /^[A-Za-z]:[\\/]$/.test(parsedRoot);
+  if (!windowsRoot || !/^[A-Za-z]:$/.test(drive) || parsedRoot.toUpperCase().startsWith(drive)) {
+    return tempRoot;
+  }
+  try {
+    return mkdtempSync(path.join(`${drive}\\`, "parity-selfcheck-"));
+  } catch {
+    return tempRoot;
+  }
+};
+
 /** S343c: the required temp drive env override; blank/whitespace values fall back to the default. */
 export const resolveRequiredTempDrive = (value) => {
   const trimmed = String(value ?? "").trim();
@@ -800,7 +821,10 @@ export const main = async ({
   runCount = DEFAULT_RUN_COUNT,
   targets: injectedTargets,
 } = {}) => {
-  const tempRoot = os.tmpdir();
+  const tempRoot = relocateTempRootForDrive({
+    requiredDrive: requiredTempDrive,
+    tempRoot: os.tmpdir(),
+  });
   const targets = injectedTargets ?? resolveTargets({ repoRoot });
   const exe =
     executablePath ??

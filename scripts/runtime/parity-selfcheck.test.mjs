@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
@@ -16,6 +16,7 @@ import {
   main,
   partitionCaptureIssues,
   planTargets,
+  relocateTempRootForDrive,
   resolveRequiredTempDrive,
   runMutationCheck,
   runSelfcheck,
@@ -625,4 +626,35 @@ test("S616: a not-loaded capture maps to NOT_RUN, other capture failures stay FA
   assert.equal(timeout.status, "FAILED");
   assert.equal(timeout.exitCode, 1);
   assert.match(timeout.reason, /capture-failed/);
+});
+test("S681: the selfcheck temp root relocates onto the required drive when it exists", () => {
+  // A POSIX temp root has no drive to relocate; the guard handles it separately.
+  if (path.parse(os.tmpdir()).root === "/") {
+    assert.equal(
+      relocateTempRootForDrive({ requiredDrive: "E:", tempRoot: os.tmpdir() }),
+      os.tmpdir(),
+    );
+    return;
+  }
+  const currentRoot = path.parse(os.tmpdir()).root.toUpperCase();
+  // Same drive: the existing root is kept.
+  assert.equal(
+    relocateTempRootForDrive({ requiredDrive: currentRoot, tempRoot: os.tmpdir() }),
+    os.tmpdir(),
+  );
+  // A drive that does not exist keeps the original root so enforceTempRoot still fails fast.
+  assert.equal(
+    relocateTempRootForDrive({ requiredDrive: "Q:", tempRoot: os.tmpdir() }),
+    os.tmpdir(),
+  );
+  // A drive that exists (the repo drive on the GitHub Windows runner) is used for the temp root.
+  const otherDrive = currentRoot === "D:" ? "C:" : "D:";
+  const relocated = relocateTempRootForDrive({
+    requiredDrive: otherDrive,
+    tempRoot: os.tmpdir(),
+  });
+  if (relocated !== os.tmpdir()) {
+    assert.equal(path.parse(relocated).root.toUpperCase(), `${otherDrive}\\`.toUpperCase());
+    assert.equal(existsSync(relocated), true);
+  }
 });
