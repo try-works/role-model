@@ -33,3 +33,16 @@ for a missing drive is preserved). Parity selfcheck unit tests 34/34.
 ## Ledger
 R39 moves from PARTIAL to VERIFIED: the blocking gates ran and passed on a real CI run for the paired
 development build. The stage-vs-production comparison remains a production-release step.
+
+## Final green run (confirmation, 2026-11-07)
+Run 42360636643 (HEAD a8077559, channel=development, private_sha=b4688938): **build win32-x64 success,
+build linux-x64 success, build darwin-x64 success** (darwin-arm64 cancelled by matrix policy).
+The win32 job now passes every step after packaging, including:
+- Verify packaged client journeys (R39): success (blocking),
+- Audit rendered UI (R39): success (blocking),
+- Parity selfcheck lane (R14): success (after the temp-root relocation and the shared browser discovery).
+
+The parity lane needed two fixes found only on the real runner: relocate the selfcheck temp root onto
+the required drive (the runner keeps the workspace on D: while os.tmpdir() is C:), and discover the
+Chromium-family browser the same way the rendered-UI audit does (CHROME_PATH, then the standard
+Chrome/Edge/chromium paths). Both have unit tests; parity selfcheck suite 36/36.
