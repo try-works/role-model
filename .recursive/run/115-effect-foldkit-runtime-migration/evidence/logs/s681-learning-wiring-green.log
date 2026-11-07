@@ -1,0 +1,11 @@
+### S681 learning wiring GREEN
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ✓ test/s681-learning-wiring.test.ts (26 tests) 580ms
+
+ Test Files  1 passed (1)
+      Tests  26 passed (26)
+   Start at  16:11:41
+   Duration  21.35s (transform 9.79s, setup 0ms, collect 16.52s, tests 580ms, environment 2.75s, prepare 540ms)
+

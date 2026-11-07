@@ -9,7 +9,11 @@ import {
   referenceSection,
   referenceTable,
 } from "../layout/reference";
-import type { LearningRankingState } from "../learning-ranking/model";
+import {
+  type LearningRankingState,
+  learningLadderRowKey,
+  parseStoredLadderRow,
+} from "../learning-ranking/model";
 
 const stateOf = (readback: ReadbackState): string =>
   readback.status === "idle" ? "loading" : readback.status;
@@ -53,9 +57,128 @@ const loading = (message: string, h: HtmlBuilder<Message>, extra = ""): Html =>
     [message],
   );
 
-const hiddenTable = (table: Html, h: HtmlBuilder<Message>): Html =>
-  h.div([h.Class("hidden")], [table]);
+const errorState = (message: string, h: HtmlBuilder<Message>): Html =>
+  h.p(
+    [
+      h.DataAttribute("learning-state", "error"),
+      h.Role("alert"),
+      h.Class("mt-3 text-sm leading-5 text-[var(--rm-error)]"),
+    ],
+    [message],
+  );
 
+const emptyState = (message: string, h: HtmlBuilder<Message>): Html =>
+  h.p(
+    [
+      h.DataAttribute("learning-state", "empty"),
+      h.Role("status"),
+      h.Class("text-sm leading-5 text-[var(--rm-muted)]"),
+    ],
+    [message],
+  );
+
+/** One readback body: a placeholder only while idle/loading, then the real rows, empty text or error. */
+const readbackBody = (
+  readback: ReadbackState,
+  table: Html,
+  emptyText: string,
+  h: HtmlBuilder<Message>,
+): Html => {
+  if (readback.status === "idle" || readback.status === "loading")
+    return loading("Loading learning state…", h);
+  if (readback.status === "error")
+    return errorState(readback.message ?? "Learning readback failed.", h);
+  if (readback.status === "empty") return emptyState(emptyText, h);
+  return table;
+};
+
+const learningLadderTable = (
+  readback: ReadbackState,
+  ranking: LearningRankingState | undefined,
+  h: HtmlBuilder<Message>,
+): Html => {
+  const ladders = readback.rows.flatMap((entry) => {
+    if (!entry.id.startsWith("ladder:")) return [];
+    const ladder = parseStoredLadderRow(entry.meta);
+    return ladder === null ? [] : [ladder];
+  });
+  if (ladders.length === 0)
+    return emptyState("No endpoint ladder ranking rows reported.", h);
+  return h.div(
+    [h.DataAttribute("learning-ladder-table", "")],
+    [
+      h.table(
+        [h.Class("mt-2 w-full text-left text-[12px]")],
+        [
+          h.thead(
+            [],
+            [
+              h.tr(
+                [],
+                ["ROLE · TASK", "TOP ENDPOINTS", "ACTIVATION"].map((label) =>
+                  h.th([h.Class("border-b border-[var(--rm-border)] px-2 py-1")], [label]),
+                ),
+              ),
+            ],
+          ),
+          h.tbody(
+            [],
+            ladders.map((ladder) => {
+              const key = learningLadderRowKey(ladder, ranking?.scopeId);
+              const phase = ranking?.phases[key]?.phase ?? "idle";
+              const rolledBack = ladder.rolledBack?.on === true;
+              const label =
+                phase === "confirming"
+                  ? rolledBack
+                    ? "Confirm activate"
+                    : "Confirm roll back"
+                  : rolledBack
+                    ? "Activate"
+                    : "Roll back";
+              const top =
+                ladder.topEndpoints.length === 0
+                  ? "No ranked endpoints reported."
+                  : ladder.topEndpoints
+                      .map(
+                        (point) =>
+                          `${point.endpointId} (#${String(point.rank ?? "?")}, ${point.status ?? "unknown"})`,
+                      )
+                      .join("; ");
+              const keyAttribute = key.replaceAll("\u0000", "::");
+              return h.tr(
+                [h.DataAttribute("learning-ladder-row", keyAttribute)],
+                [
+                  h.td([h.Class("px-2 py-1")], [`${ladder.roleId} · ${ladder.taskTypeId}`]),
+                  h.td([h.Class("px-2 py-1")], [top]),
+                  h.td(
+                    [h.Class("px-2 py-1")],
+                    [
+                      h.button(
+                        [
+                          h.Type("button"),
+                          h.AriaDisabled(phase === "pending"),
+                          h.DataAttribute("learning-ladder-toggle", keyAttribute),
+                          h.OnClick(
+                            Message.LearningLadderToggleRequested({
+                              rolledBack: !rolledBack,
+                              roleId: ladder.roleId,
+                              taskTypeId: ladder.taskTypeId,
+                            }),
+                          ),
+                        ],
+                        [label],
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            }),
+          ),
+        ],
+      ),
+    ],
+  );
+};
 const livePanel = (h: HtmlBuilder<Message>): Html =>
   h.section(
     [
@@ -194,6 +317,9 @@ export const learningOverviewRoute = (
     enabled: "on",
     status: "idle" as const,
   };
+  const rows = readback.rows
+    .filter((row) => !row.id.startsWith("ladder:"))
+    .map((row) => [row.label, row.value, row.meta]);
   const autoQueueOn = autoQueue.enabled === "on";
   const autoQueueStatus =
     autoQueue.message ??
@@ -211,7 +337,26 @@ export const learningOverviewRoute = (
         "What the learning loop is doing right now, read from durable state.",
         [
           operatorToken("learning-overview-token", tokenValue, h),
-          h.div([h.Class("mt-4")], [loading("Loading learning state…", h)]),
+          h.div(
+            [h.Class("mt-4")],
+            [
+              readbackBody(
+                readback,
+                table(["STATE", "VALUE", "DETAIL"], rows, READBACK_SPECS.learning.emptyText, h),
+                READBACK_SPECS.learning.emptyText,
+                h,
+              ),
+              h.h3(
+                [
+                  h.Class(
+                    "mt-6 text-[11px] font-normal uppercase leading-4 tracking-[0.08em] text-[var(--rm-muted)]",
+                  ),
+                ],
+                ["ENDPOINT LADDER INDEX"],
+              ),
+              learningLadderTable(readback, ranking, h),
+            ],
+          ),
         ],
         h,
       ),
@@ -306,7 +451,7 @@ export const learningOverviewRoute = (
       referenceCard(
         "Recent decisions",
         "The newest replay decisions among the last 0 observations; the selection follows the configured activation stage. Each row is one decision with its observation count.",
-        [loading("Loading learning state…", h)],
+        [emptyState("No recent decision rows in this readback.", h)],
         h,
       ),
     ],
@@ -319,17 +464,36 @@ export const learningConfigurationRoute = (
   h: HtmlBuilder<Message>,
   tokenValue = "",
   action: Model["learningPackAction"] = undefined,
-): Html =>
-  page(
+): Html => {
+  const rows = readback.rows.map((row) => [row.label, row.value, row.meta]);
+  return page(
     "Learning configuration",
     "learning-configuration",
     readback,
     "Every activation parameter with its current value, unit, default and allowed range. Bounds are enforced here and again on the server.",
-    [h.div([h.Class("mt-4")], [loading("Loading learning state…", h, "min-h-[175px]")])],
+    [
+      h.div(
+        [h.Class("mt-4")],
+        [
+          readbackBody(
+            readback,
+            table(
+              ["PARAMETER", "VALUE", "DETAIL"],
+              rows,
+              READBACK_SPECS.learningConfiguration.emptyText,
+              h,
+            ),
+            READBACK_SPECS.learningConfiguration.emptyText,
+            h,
+          ),
+        ],
+      ),
+    ],
     h,
     tokenValue,
     action,
   );
+};
 
 export const learningPacksRoute = (
   readback: ReadbackState,
@@ -356,11 +520,7 @@ export const learningPacksRoute = (
         "One row per role · task: the top three ranked endpoints, how many configured endpoints are admitted, the per-task full-ranking detail, and the Activate / Roll back toggle.",
         h,
       ),
-      loading("Loading learning state…", h),
-      hiddenTable(
-        table(["ROLE · TASK", "TOP ENDPOINTS", "ACTIVATION"], rows, "Loading learning state…", h),
-        h,
-      ),
+      learningLadderTable(readback, undefined, h),
       h.h3(
         [
           h.Class(
@@ -369,14 +529,15 @@ export const learningPacksRoute = (
         ],
         ["TASK-SCOPED LEARNED PACKS"],
       ),
-      loading("Loading learning state…", h),
-      hiddenTable(
+      readbackBody(
+        readback,
         table(
           ["PACK", "VALIDATION", "STATE"],
           rows,
-          "No task-scoped pack records returned by the operator readback.",
+          READBACK_SPECS.learningPacks.emptyText,
           h,
         ),
+        READBACK_SPECS.learningPacks.emptyText,
         h,
       ),
       h.div(
@@ -477,14 +638,15 @@ export const learningDecisionsRoute = (
       h.div(
         [h.Class("mt-4")],
         [
-          loading("Loading learning state…", h),
-          hiddenTable(
+          readbackBody(
+            readback,
             table(
               ["DECISION", "OUTCOME", "ORIGIN", "EVIDENCE"],
               rows,
-              "Loading learning state…",
+              READBACK_SPECS.learningDecisions.emptyText,
               h,
             ),
+            READBACK_SPECS.learningDecisions.emptyText,
             h,
           ),
         ],
@@ -511,15 +673,21 @@ export const learningEvidenceRoute = (
         "Baseline-versus-advisory comparison on the paired holdout distribution with the guardrail verdicts.",
         [
           operatorToken("learning-evidence-token", tokenValue, h),
-          h.div([h.Class("mt-4")], [loading("Loading learning state…", h)]),
-          hiddenTable(
-            table(
-              ["Guardrail", "Bound", "Observed", "Verdict"],
-              [],
-              "No guardrail rows recorded yet.",
-              h,
-            ),
-            h,
+          h.div(
+            [h.Class("mt-4")],
+            [
+              readbackBody(
+                readback,
+                table(
+                  ["GUARDRAIL", "BOUND", "OBSERVED", "VERDICT"],
+                  rows,
+                  "No guardrail rows recorded yet.",
+                  h,
+                ),
+                "No guardrail rows recorded yet.",
+                h,
+              ),
+            ],
           ),
         ],
         h,
@@ -529,10 +697,21 @@ export const learningEvidenceRoute = (
         "Per-family evidence against the operator's floor and the learner's exclusions, read from the validation receipts the runtime recorded.",
         [
           operatorToken("learning-evidence-loss-token", tokenValue, h),
-          h.div([h.Class("mt-4")], [loading("Loading learning state…", h)]),
-          hiddenTable(
-            table(["REASON", "COUNT", "DETAIL"], rows, "No evidence-loss rows recorded yet.", h),
-            h,
+          h.div(
+            [h.Class("mt-4")],
+            [
+              readbackBody(
+                readback,
+                table(
+                  ["REASON", "COUNT", "DETAIL"],
+                  rows,
+                  READBACK_SPECS.learningEvidence.emptyText,
+                  h,
+                ),
+                READBACK_SPECS.learningEvidence.emptyText,
+                h,
+              ),
+            ],
           ),
         ],
         h,
@@ -555,9 +734,15 @@ export const learningHistoryRoute = (
     readback,
     "What the replay, evaluation and learning loop did over the window, read from durable state.",
     [
-      loading("Loading learning state…", h),
-      hiddenTable(
-        table(["BUCKET", "VALUE", "DETAIL"], rows, "No learning-history rows recorded yet.", h),
+      readbackBody(
+        readback,
+        table(
+          ["BUCKET", "VALUE", "DETAIL"],
+          rows,
+          READBACK_SPECS.learningHistory.emptyText,
+          h,
+        ),
+        READBACK_SPECS.learningHistory.emptyText,
         h,
       ),
     ],

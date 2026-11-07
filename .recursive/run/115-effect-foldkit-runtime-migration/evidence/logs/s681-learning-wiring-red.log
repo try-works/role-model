@@ -1,0 +1,213 @@
+### S681 learning wiring RED
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/115-effect-foldkit-runtime-migration/role-model-router/apps/runtime-ui-next
+
+ ❯ test/s681-learning-wiring.test.ts (26 tests | 19 failed) 416ms
+   ✓ S681 learning pages are wired to their readback > learning: idle and loading show only the loading placeholder 118ms
+   × S681 learning pages are wired to their readback > learning: ok shows the real rows visibly 26ms
+     → missing Alpha
+   × S681 learning pages are wired to their readback > learning: empty shows the spec empty text 13ms
+     → missing No knowledge worker state available.
+   × S681 learning pages are wired to their readback > learning: error shows the error message 14ms
+     → missing boom
+   ✓ S681 learning pages are wired to their readback > learningConfiguration: idle and loading show only the loading placeholder 10ms
+   × S681 learning pages are wired to their readback > learningConfiguration: ok shows the real rows visibly 6ms
+     → missing Alpha
+   × S681 learning pages are wired to their readback > learningConfiguration: empty shows the spec empty text 5ms
+     → missing No learning configuration rows.
+   × S681 learning pages are wired to their readback > learningConfiguration: error shows the error message 6ms
+     → unexpected Loading learning state…
+   ✓ S681 learning pages are wired to their readback > learningPacks: idle and loading show only the loading placeholder 23ms
+   × S681 learning pages are wired to their readback > learningPacks: ok shows the real rows visibly 13ms
+     → unexpected Loading learning state…
+   × S681 learning pages are wired to their readback > learningPacks: empty shows the spec empty text 10ms
+     → missing No learning packs rows.
+   × S681 learning pages are wired to their readback > learningPacks: error shows the error message 8ms
+     → unexpected Loading learning state…
+   ✓ S681 learning pages are wired to their readback > learningDecisions: idle and loading show only the loading placeholder 25ms
+   × S681 learning pages are wired to their readback > learningDecisions: ok shows the real rows visibly 12ms
+     → unexpected Loading learning state…
+   × S681 learning pages are wired to their readback > learningDecisions: empty shows the spec empty text 9ms
+     → missing No learning decisions rows.
+   × S681 learning pages are wired to their readback > learningDecisions: error shows the error message 10ms
+     → unexpected Loading learning state…
+   ✓ S681 learning pages are wired to their readback > learningEvidence: idle and loading show only the loading placeholder 20ms
+   × S681 learning pages are wired to their readback > learningEvidence: ok shows the real rows visibly 11ms
+     → unexpected Loading learning state…
+   × S681 learning pages are wired to their readback > learningEvidence: empty shows the spec empty text 9ms
+     → missing No learning evidence rows.
+   × S681 learning pages are wired to their readback > learningEvidence: error shows the error message 21ms
+     → missing boom
+   ✓ S681 learning pages are wired to their readback > learningHistory: idle and loading show only the loading placeholder 8ms
+   × S681 learning pages are wired to their readback > learningHistory: ok shows the real rows visibly 6ms
+     → unexpected Loading learning state…
+   × S681 learning pages are wired to their readback > learningHistory: empty shows the spec empty text 4ms
+     → missing No learning history rows.
+   × S681 learning pages are wired to their readback > learningHistory: error shows the error message 4ms
+     → unexpected Loading learning state…
+   × S681 learning pages are wired to their readback > renders the ladder columns and activation from the ladder payload rows 9ms
+     → hidden wrapper/table found
+   ✓ S681 learning pages are wired to their readback > keeps the pack rollback and kill-switch controls 9ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 19 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > learning: ok shows the real rows visibly
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > learningConfiguration: ok shows the real rows visibly
+Error: missing Alpha
+ ❯ fail test/s681-learning-wiring.test.ts:97:36
+     95| const LOADING = "Loading learning state…";
+     96| const fail = (html: string, label: string) => {
+     97|   if (!html.includes(label)) throw new Error(`missing ${label}`);
+       |                                    ^
+     98| };
+     99| const absent = (html: string, label: string) => {
+ ❯ test/s681-learning-wiring.test.ts:118:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/19]⎯
+
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > learning: empty shows the spec empty text
+Error: missing No knowledge worker state available.
+ ❯ fail test/s681-learning-wiring.test.ts:97:36
+     95| const LOADING = "Loading learning state…";
+     96| const fail = (html: string, label: string) => {
+     97|   if (!html.includes(label)) throw new Error(`missing ${label}`);
+       |                                    ^
+     98| };
+     99| const absent = (html: string, label: string) => {
+ ❯ test/s681-learning-wiring.test.ts:125:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/19]⎯
+
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > learning: error shows the error message
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > learningEvidence: error shows the error message
+Error: missing boom
+ ❯ fail test/s681-learning-wiring.test.ts:97:36
+     95| const LOADING = "Loading learning state…";
+     96| const fail = (html: string, label: string) => {
+     97|   if (!html.includes(label)) throw new Error(`missing ${label}`);
+       |                                    ^
+     98| };
+     99| const absent = (html: string, label: string) => {
+ ❯ test/s681-learning-wiring.test.ts:131:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/19]⎯
+
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > learningConfiguration: empty shows the spec empty text
+Error: missing No learning configuration rows.
+ ❯ fail test/s681-learning-wiring.test.ts:97:36
+     95| const LOADING = "Loading learning state…";
+     96| const fail = (html: string, label: string) => {
+     97|   if (!html.includes(label)) throw new Error(`missing ${label}`);
+       |                                    ^
+     98| };
+     99| const absent = (html: string, label: string) => {
+ ❯ test/s681-learning-wiring.test.ts:125:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/19]⎯
+
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > learningConfiguration: error shows the error message
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > learningPacks: error shows the error message
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > learningDecisions: error shows the error message
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > learningHistory: error shows the error message
+Error: unexpected Loading learning state…
+ ❯ absent test/s681-learning-wiring.test.ts:100:35
+     98| };
+     99| const absent = (html: string, label: string) => {
+    100|   if (html.includes(label)) throw new Error(`unexpected ${label}`);
+       |                                   ^
+    101| };
+    102| const noHidden = (html: string) => {
+ ❯ test/s681-learning-wiring.test.ts:132:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/19]⎯
+
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > learningPacks: ok shows the real rows visibly
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > learningDecisions: ok shows the real rows visibly
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > learningEvidence: ok shows the real rows visibly
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > learningHistory: ok shows the real rows visibly
+Error: unexpected Loading learning state…
+ ❯ absent test/s681-learning-wiring.test.ts:100:35
+     98| };
+     99| const absent = (html: string, label: string) => {
+    100|   if (html.includes(label)) throw new Error(`unexpected ${label}`);
+       |                                   ^
+    101| };
+    102| const noHidden = (html: string) => {
+ ❯ test/s681-learning-wiring.test.ts:119:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/19]⎯
+
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > learningPacks: empty shows the spec empty text
+Error: missing No learning packs rows.
+ ❯ fail test/s681-learning-wiring.test.ts:97:36
+     95| const LOADING = "Loading learning state…";
+     96| const fail = (html: string, label: string) => {
+     97|   if (!html.includes(label)) throw new Error(`missing ${label}`);
+       |                                    ^
+     98| };
+     99| const absent = (html: string, label: string) => {
+ ❯ test/s681-learning-wiring.test.ts:125:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/19]⎯
+
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > learningDecisions: empty shows the spec empty text
+Error: missing No learning decisions rows.
+ ❯ fail test/s681-learning-wiring.test.ts:97:36
+     95| const LOADING = "Loading learning state…";
+     96| const fail = (html: string, label: string) => {
+     97|   if (!html.includes(label)) throw new Error(`missing ${label}`);
+       |                                    ^
+     98| };
+     99| const absent = (html: string, label: string) => {
+ ❯ test/s681-learning-wiring.test.ts:125:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/19]⎯
+
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > learningEvidence: empty shows the spec empty text
+Error: missing No learning evidence rows.
+ ❯ fail test/s681-learning-wiring.test.ts:97:36
+     95| const LOADING = "Loading learning state…";
+     96| const fail = (html: string, label: string) => {
+     97|   if (!html.includes(label)) throw new Error(`missing ${label}`);
+       |                                    ^
+     98| };
+     99| const absent = (html: string, label: string) => {
+ ❯ test/s681-learning-wiring.test.ts:125:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/19]⎯
+
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > learningHistory: empty shows the spec empty text
+Error: missing No learning history rows.
+ ❯ fail test/s681-learning-wiring.test.ts:97:36
+     95| const LOADING = "Loading learning state…";
+     96| const fail = (html: string, label: string) => {
+     97|   if (!html.includes(label)) throw new Error(`missing ${label}`);
+       |                                    ^
+     98| };
+     99| const absent = (html: string, label: string) => {
+ ❯ test/s681-learning-wiring.test.ts:125:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/19]⎯
+
+ FAIL  test/s681-learning-wiring.test.ts > S681 learning pages are wired to their readback > renders the ladder columns and activation from the ladder payload rows
+Error: hidden wrapper/table found
+ ❯ noHidden test/s681-learning-wiring.test.ts:103:46
+    101| };
+    102| const noHidden = (html: string) => {
+    103|   if (/class="[^"]*hidden/.test(html)) throw new Error("hidden wrapper…
+       |                                              ^
+    104| };
+    105| 
+ ❯ test/s681-learning-wiring.test.ts:142:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/19]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  19 failed | 7 passed (26)
+   Start at  16:10:20
+   Duration  21.14s (transform 8.85s, setup 0ms, collect 14.95s, tests 416ms, environment 3.75s, prepare 688ms)
+
+undefined
+D:\DEV\role-model\.worktrees\115-effect-foldkit-runtime-migration\role-model-router\apps\runtime-ui-next:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/s681-learning-wiring.test.ts
