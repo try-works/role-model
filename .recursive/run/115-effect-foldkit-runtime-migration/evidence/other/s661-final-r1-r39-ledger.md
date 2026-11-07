@@ -44,7 +44,7 @@ private manifest `7cc4b103…`, evidence commit db93cb3c, FINAL-PACKAGE.json tie
 | R36 | PARTIAL | disjoint scopes + independent reviews; no M11 join artifact (s660). |
 | R37 | VERIFIED (bounded) | reversible shell cutover + rollback (driver staging, atomic select, HTTP + DB proof); minor caveats. |
 | R38 | PARTIAL | identity fixed + thresholds drafted (s662); full measurement + approval pending owner. |
-| R39 | VERIFIED (dispatch pending outcome) | R39_VERIFY_BLOCKING=true set in try-works/role-model + one current-HEAD dispatch run 42334159509 on branch recursive/115-effect-foldkit-runtime-migration (s673); run outcome pending. |
+| R39 | PARTIAL | R39_VERIFY_BLOCKING=true set + one current-HEAD dispatch run 42334159509 attempted (s673); run cancelled at "Package SEA runtime" (paired private distribution missing) before the R39 steps ran, so R39 is not end-to-end verified. Unblock: dispatch from a ref carrying the paired private inputs. |
 
 ## Remaining blockers (exact unblock conditions)
 1. R15/R16/R17: Moonshot OAuth to authorize a Kimi model + an isolated client profile for ordinary-client journeys.
