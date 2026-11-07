@@ -20,9 +20,9 @@ private manifest `7cc4b103…`, evidence commit db93cb3c, FINAL-PACKAGE.json tie
 | R12 | VERIFIED | (pre-goal) request/refresh compatibility. |
 | R13 | PARTIAL | ported routes + de-preview; command-palette/media-capture OWNER-DISPOSITIONED (no host API); device-auth ported. |
 | R14 | VERIFIED | packaged selfcheck 0diff at HEAD (shared contract + fresh 0diff). |
-| R15 | NOT-RUN | needs isolated ordinary DSH/pi client + real provider (DeepSeek + Kimi via Moonshot OAuth). |
+| R15 | PARTIAL | real DeepSeek (flash/v4-pro) + real Kimi (k2.6/k2.7-code/k3 via Moonshot OAuth) inference verified through the packaged runtime on :3480 with all 4 routing modes, role header, capture, restart (s667); the strict ordinary DSH/pi CLI client lane remains open (dsh binary not on PATH). |
 | R16 | VERIFIED (bounded) | fresh R-vs-C at final candidate: 6 same, 2 approved-intentional channel metadata, 1 environmental, 0 regressions (r16-fresh-r-vs-c-receipt.json). D (pre-migration dev) not an independent pair (dev is this migration's squash). |
-| R17 | PARTIAL | J3/J4/J6 mock; joined J1-J6 real journeys need the isolated client + real provider. |
+| R17 | PARTIAL | joined provider→decision→capture→UI→restart verified with the owner's real models (s667); the graph/payload join (J5) and the private replay root (J6) remain. |
 | R18 | PARTIAL | per-slice receipts exist; final current-SHA receipt set partially consolidated in FINAL-PACKAGE.json. |
 | R19 | VERIFIED | exhaustive declaration-form ledger (338 entries) + token-masked caller validation (bounded). |
 | R20 | VERIFIED | calibrated + enabled diagnostics (128/96B/32s/15m/50). |
