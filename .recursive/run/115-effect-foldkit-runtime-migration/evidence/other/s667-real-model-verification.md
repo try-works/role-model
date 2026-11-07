@@ -38,3 +38,28 @@ Streaming (kimi-k3, stream=true): HTTP 200, 49 SSE events, terminal [DONE], 9821
 ## Remaining acceptance-lane items
 - Role/controller-initiated routing (requestedRoleId from guidance) not exercised in this receipt;
   the direct-alias lane is verified. R15's ordinary-client (DSH/pi) lane still needs the client config.
+## Restart durability (2026-11-07)
+Stopped and relaunched the same exe on the same state root (still without --fixture-root):
+- accounts persisted (deepseek.personal.deepseek-api-key, moonshot.personal.kimi-code), 13 endpoints persisted,
+  11 telemetry rows persisted.
+- Real inference after restart: deepseek/deepseek-flash finish=stop "OK" (35/2/37);
+  moonshot/kimi-k3 finish=stop "OK" (91/26/117). Stored API key + OAuth token files survive restart.
+
+## Role-carrying request
+POST /v1/chat/completions with header x-role-model-requested-role-id: coder for moonshot/kimi-k3:
+- finish=stop "OK"; telemetry row records requestedRoleId="coder", roleIds=["coder"],
+  endpoint moonshot.personal.kimi-code.global.kimi-k3-max, statusFamily=success, real token usage.
+
+## Router surfaces (real data)
+- GET /api/role-model/router/candidates: real endpoints with 28 role bindings, capabilities,
+  operational profile (latency/failure/confidence), pricing, controllerEligible.
+- GET /api/role-model/telemetry/requests and /router/decisions: captured decisions with
+  endpoint, reasoningEffort, eligible endpoints, cost snapshot.
+- UI: /requests (telemetry ledger), /control/providers, /control/endpoints, /models, /router —
+  all render real models only, no fixture models.
+
+## Not yet exercised
+- Controller/guidance-initiated model selection (requestedRoleId inferred from guidance/heuristics, not
+  caller header) — the header lane is verified; the guidance inference lane is the next test.
+- Ordinary DSH/pi CLI client (dsh binary not on PATH in this environment); the OpenAI-compatible
+  surface is verified with real credentials.
