@@ -109,3 +109,12 @@ Each request pinned deepseek/deepseek-v4-pro with role coder and a different x-r
 - Fixture models: the live :3480 has zero fixture endpoints (13 real endpoints, 5 real models). The
   owner's screenshot was a stale client tab loaded before the fixture removal/restart; a fresh load of
   /system/benchmark shows only deepseek/moonshot and no active run (the restart stopped the stale run).
+## Benchmark poll failure (S668, 2026-11-07)
+Symptom: "Benchmark run poll failed: HTTP 0" with the phase panel stuck at the last step. Cause: the
+runtime was restarted while the old tab's benchmark poll was in flight, so the fetch failed with no
+status (0). Fix: BenchmarkRunPollFailed now marks a running progress as failed with the reason (panel
+stops spinning) and a transport failure says "the runtime did not respond (it may have restarted)".
+s638 8/8. Commit 6d492b56; client rebuilt; :3480 restarted.
+- The 16-endpoint list and "model 2/4" in the same screenshot were the pre-restart client tab
+  (assets are served no-store; the tab kept its old in-memory bundle across restarts). A fresh load
+  shows "13 of 13 selected", no fixtures, and a new run starts at model 1/N.
